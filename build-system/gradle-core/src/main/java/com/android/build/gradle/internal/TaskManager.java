@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_ASSETS;
+import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.FN_SPLIT_LIST;
@@ -1070,12 +1071,21 @@ public abstract class TaskManager {
                     splitsDiscoveryAndroidTask.getName());
         }
 
+        File symbolTableWithPackageName =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        FD_RES,
+                        "symbol-table-with-package",
+                        scope.getVariantConfiguration().getDirName(),
+                        "package-aware-r.txt");
+
         AndroidTask<ProcessAndroidResources> processAndroidResources =
                 androidTasks.create(
                         tasks,
                         createProcessAndroidResourcesConfigAction(
                                 scope,
                                 symbolLocation,
+                                symbolTableWithPackageName,
                                 resPackageOutputFolder,
                                 useAaptToGenerateLegacyMultidexMainDexProguardRules,
                                 mergeType,
@@ -1087,6 +1097,13 @@ public abstract class TaskManager {
         scope.addTaskOutput(
                 VariantScope.TaskOutputType.SYMBOL_LIST,
                 new File(symbolLocation.get(), FN_RESOURCE_TEXT),
+                taskName);
+
+        // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
+        // process resources for local subprojects.
+        scope.addTaskOutput(
+                VariantScope.TaskOutputType.SYMBOL_LIST_WITH_PACKAGE_NAME,
+                symbolTableWithPackageName,
                 taskName);
 
         scope.setProcessResourcesTask(processAndroidResources);
@@ -1102,6 +1119,7 @@ public abstract class TaskManager {
     protected ProcessAndroidResources.ConfigAction createProcessAndroidResourcesConfigAction(
             @NonNull VariantScope scope,
             @NonNull Supplier<File> symbolLocation,
+            @Nullable File symbolWithPackageName,
             @NonNull File resPackageOutputFolder,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
             @NonNull MergeType sourceTaskOutputType,
@@ -1109,6 +1127,7 @@ public abstract class TaskManager {
         return new ProcessAndroidResources.ConfigAction(
                 scope,
                 symbolLocation,
+                symbolWithPackageName,
                 resPackageOutputFolder,
                 useAaptToGenerateLegacyMultidexMainDexProguardRules,
                 sourceTaskOutputType,
@@ -2933,8 +2952,6 @@ public abstract class TaskManager {
                         scope.getVariantData(),
                         scope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
                         scope.getShrunkProcessedResourcesOutputDirectory(),
-                        androidBuilder,
-                        globalScope.getBuildCache(),
                         AaptGeneration.fromProjectOptions(projectOptions),
                         scope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST),
                         logger);

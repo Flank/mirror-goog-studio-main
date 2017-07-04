@@ -324,8 +324,9 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
             builder.addArgs("--preferred-density", preferredDensity);
         }
 
-        if (config.getSymbolOutputDir() != null && (config.getVariantType() == VariantType.LIBRARY
-                || !config.getLibraries().isEmpty())) {
+        if (config.getSymbolOutputDir() != null
+                && (config.getVariantType() == VariantType.LIBRARY
+                        || !config.getLibrarySymbolTableFiles().isEmpty())) {
             builder.addArgs(
                     "--output-text-symbols",
                     FileUtils.toExportableSystemDependentPath(config.getSymbolOutputDir()));

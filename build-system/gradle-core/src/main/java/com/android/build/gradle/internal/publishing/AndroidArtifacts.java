@@ -50,6 +50,7 @@ public class AndroidArtifacts {
     private static final String TYPE_EXT_ANNOTATIONS = "android-ext-annot";
     private static final String TYPE_PUBLIC_RES = "android-public-res";
     private static final String TYPE_SYMBOL = "android-symbol";
+    private static final String TYPE_SYMBOL_WITH_PACKAGE_NAME = "android-symbol-with-package-name";
     private static final String TYPE_PROGUARD_RULES = "android-proguad";
     private static final String TYPE_DATA_BINDING_ARTIFACT = "android-databinding";
     private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
@@ -124,6 +125,12 @@ public class AndroidArtifacts {
         ANDROID_RES(TYPE_ANDROID_RES),
         ASSETS(TYPE_ASSETS),
         SYMBOL_LIST(TYPE_SYMBOL),
+        /**
+         * The symbol list with the package name as the first line. As the r.txt format in the AAR
+         * cannot be changed, this is created by prepending the package name from the
+         * AndroidManifest.xml to the existing r.txt file.
+         */
+        SYMBOL_LIST_WITH_PACKAGE_NAME(TYPE_SYMBOL_WITH_PACKAGE_NAME),
         JNI(TYPE_JNI),
         ANNOTATIONS(TYPE_EXT_ANNOTATIONS),
         PUBLIC_RES(TYPE_PUBLIC_RES),

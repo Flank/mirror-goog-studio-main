@@ -74,8 +74,8 @@ public abstract class AbstractAapt implements Aapt {
      *       <ul>
      *         <li>Custom package for {@code R} (see {@link
      *             AaptPackageConfig#getCustomPackageForR()});
-     *         <li>Libraries (see {@link AaptPackageConfig#getLibraries()}); if none is set, an
-     *             empty list is assumed;
+     *         <li>Libraries (see {@link AaptPackageConfig#getLibrarySymbolTableFiles()}); if none
+     *             is set, an empty list is assumed;
      *         <li>Preferred density (see {@link AaptPackageConfig#getPreferredDensity()});
      *         <li>Proguard output file (see {@link AaptPackageConfig#getProguardOutputFile()});
      *         <li>Resource configs (see {@link AaptPackageConfig#getResourceConfigs()}); if none is
@@ -94,10 +94,10 @@ public abstract class AbstractAapt implements Aapt {
      *   <li>Either the source output directory ({@link AaptPackageConfig#getSourceOutputDir()}) or
      *       the resource output APK ({@link AaptPackageConfig#getResourceOutputApk()}) must be
      *       defined;
-     *   <li>If there are no libraries defined (see {@link AaptPackageConfig#getLibraries()}) then
-     *       the symbol output directory ({@link AaptPackageConfig#getSymbolOutputDir()}) and the
-     *       source output directory ({@link AaptPackageConfig#getSourceOutputDir()}) must
-     *       <i>not</i> be defined; (*)
+     *   <li>If there are no libraries defined (see {@link
+     *       AaptPackageConfig#getLibrarySymbolTableFiles()}) then the symbol output directory
+     *       ({@link AaptPackageConfig#getSymbolOutputDir()}) and the source output directory
+     *       ({@link AaptPackageConfig#getSourceOutputDir()}) must <i>not</i> be defined; (*)
      *   <li>If the build tools' version is {@code < 21}, then pseudo-localization is not allowed
      *       ({@link AaptPackageConfig#isPseudoLocalize()});
      *   <li>If the build tools' version is {@code < 21}, then fail on missing config entry ( {@code
@@ -147,8 +147,8 @@ public abstract class AbstractAapt implements Aapt {
         }
 
         if ((packageConfig.getSymbolOutputDir() != null
-                || packageConfig.getSourceOutputDir() != null)
-                && packageConfig.getLibraries().isEmpty()) {
+                        || packageConfig.getSourceOutputDir() != null)
+                && packageConfig.getLibrarySymbolTableFiles().isEmpty()) {
             /*
              * This rule seems to be broken some times. Not exactly why, but the original code
              * (from where this was refactored) allowed libraries to be set to empty and defining

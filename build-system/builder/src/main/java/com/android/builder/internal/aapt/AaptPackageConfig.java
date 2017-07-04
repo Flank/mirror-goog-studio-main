@@ -29,7 +29,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -39,28 +38,6 @@ import java.util.Set;
  * <p>To create a packaging configuration, use the provided builder, {@link Builder}.
  */
 public class AaptPackageConfig implements Cloneable {
-
-    public static class LibraryInfo {
-        @NonNull
-        private final File manifest;
-        @Nullable
-        private final File symbolFile;
-
-        public LibraryInfo(@NonNull File manifest, @Nullable File symbolFile) {
-            this.manifest = manifest;
-            this.symbolFile = symbolFile;
-        }
-
-        @NonNull
-        public File getManifest() {
-            return manifest;
-        }
-
-        @Nullable
-        public File getSymbolFile() {
-            return symbolFile;
-        }
-    }
 
     /**
      * The manifest file (see {@link Builder#setManifestFile(File)}).
@@ -88,11 +65,7 @@ public class AaptPackageConfig implements Cloneable {
     @Nullable
     private File mResourceOutputApk;
 
-    /**
-     * All libraries added (see {@link Builder#setLibraries(List)}).
-     */
-    @NonNull
-    private ImmutableList<LibraryInfo> mLibraries;
+    @NonNull private ImmutableSet<File> librarySymbolTableFiles;
 
     /**
      * Symbol output directory (see {@link Builder#setSymbolOutputDir(File)}).
@@ -194,7 +167,7 @@ public class AaptPackageConfig implements Cloneable {
 
     /** Creates a new instance of the the package configuration with default values. */
     private AaptPackageConfig() {
-        mLibraries = ImmutableList.of();
+        librarySymbolTableFiles = ImmutableSet.of();
         mVerbose = false;
         mResourceConfigs = ImmutableSet.of();
         mDependentFeatures = ImmutableSet.of();
@@ -261,13 +234,14 @@ public class AaptPackageConfig implements Cloneable {
     }
 
     /**
-     * Obtains all libraries added.
+     * The library symbol table files.
      *
-     * @return all libraries; returns an empty list if no libraries were added
+     * <p>These are R.txt files but with the package name as the first line. They can be parsed
+     * using {@link com.android.builder.symbols.SymbolIo#readTableWithPackage(File)}
      */
     @NonNull
-    public List<LibraryInfo> getLibraries() {
-        return mLibraries;
+    public Set<File> getLibrarySymbolTableFiles() {
+        return librarySymbolTableFiles;
     }
 
     /**
@@ -531,18 +505,17 @@ public class AaptPackageConfig implements Cloneable {
         }
 
         /**
-         * Sets the libraries in the package configuration. See
-         * {@link AbstractAapt#validatePackageConfig(AaptPackageConfig)} for details on field rules.
+         * Sets the library symbol table files in the package configuration. See {@link
+         * AbstractAapt#validatePackageConfig(AaptPackageConfig)} for details on field rules.
          *
          * @param libraries the list of libraries to add, {@code null} is treated as an empty set
-         * @return {@code this}
          */
         @NonNull
-        public Builder setLibraries(@Nullable List<LibraryInfo> libraries) {
+        public Builder setLibrarySymbolTableFiles(@Nullable Set<File> libraries) {
             if (libraries == null) {
-                mConfig.mLibraries = ImmutableList.of();
+                mConfig.librarySymbolTableFiles = ImmutableSet.of();
             } else {
-                mConfig.mLibraries = ImmutableList.copyOf(libraries);
+                mConfig.librarySymbolTableFiles = ImmutableSet.copyOf(libraries);
             }
 
             return this;

@@ -27,11 +27,15 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
+import com.google.common.jimfs.Jimfs;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.function.Supplier;
 import org.junit.Rule;
 import org.junit.Test;
@@ -559,5 +563,110 @@ public class SymbolIoTest {
                                 SymbolJavaType.INT_LIST,
                                 "{ 0x7f010000, 0x7f010001 } ",
                                 ImmutableList.of("android:max_width", "android:max_height")));
+    }
+
+    @Test
+    public void testPackageNameRead() throws Exception {
+        String content =
+                "com.example.lib\n"
+                        + "int drawable foobar 0x7f02000 \r\n"
+                        + "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } \r\n"
+                        + "int styleable LimitedSizeLinearLayout_max_width 0 \r\n"
+                        + "int styleable LimitedSizeLinearLayout_max_height 1 \r\n";
+        File file = mTemporaryFolder.newFile();
+        Files.write(content, file, Charsets.UTF_8);
+
+        SymbolTable table = SymbolIo.readTableWithPackage(file);
+
+        assertThat(table.getTablePackage()).isEqualTo("com.example.lib");
+        assertThat(table.allSymbols())
+                .containsExactly(
+                        Symbol.createSymbol(
+                                ResourceType.DRAWABLE, "foobar", SymbolJavaType.INT, "0x7f02000 "),
+                        Symbol.createSymbol(
+                                ResourceType.STYLEABLE,
+                                "LimitedSizeLinearLayout",
+                                SymbolJavaType.INT_LIST,
+                                "{ 0x7f010000, 0x7f010001 } ",
+                                ImmutableList.of("max_width", "max_height")));
+    }
+
+    @Test
+    public void testPackageNameWriteAndRead() throws Exception {
+        FileSystem fs = Jimfs.newFileSystem();
+
+        SymbolTable table =
+                SymbolTable.builder()
+                        .tablePackage("com.example.lib")
+                        .add(
+                                Symbol.createSymbol(
+                                        ResourceType.DRAWABLE,
+                                        "foobar",
+                                        SymbolJavaType.INT,
+                                        "0x7f02000 "))
+                        .add(
+                                Symbol.createSymbol(
+                                        ResourceType.STYLEABLE,
+                                        "LimitedSizeLinearLayout",
+                                        SymbolJavaType.INT_LIST,
+                                        "{ 0x7f010000, 0x7f010001 } ",
+                                        ImmutableList.of("max_width", "max_height")))
+                        .build();
+        Path rTxt = fs.getPath("r.txt");
+        SymbolIo.write(table, rTxt);
+
+        Path manifest = fs.getPath("AndroidManifest.xml");
+        java.nio.file.Files.write(
+                manifest,
+                ImmutableList.of("<manifest package=\"com.example.lib\"></manifest>"),
+                StandardCharsets.UTF_8);
+
+        Path output = fs.getPath("package-aware-r.txt");
+        SymbolIo.writeSymbolTableWithPackage(rTxt, manifest, output);
+
+        List<String> outputLines = java.nio.file.Files.readAllLines(output, StandardCharsets.UTF_8);
+        assertThat(outputLines)
+                .containsExactly(
+                        "com.example.lib",
+                        "int drawable foobar 0x7f02000 ",
+                        "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } ",
+                        "int styleable LimitedSizeLinearLayout_max_width 0",
+                        "int styleable LimitedSizeLinearLayout_max_height 1")
+                .inOrder();
+
+        assertThat(SymbolIo.readTableWithPackage(output)).isEqualTo(table);
+
+        // Simulate what might happen with AAPT1 on windows, that the first line ending will be \n
+        // but the rest will be \r\n
+        Path mixedLineEndings = fs.getPath("withAAPT1onWindows.txt");
+        try (BufferedWriter w =
+                java.nio.file.Files.newBufferedWriter(mixedLineEndings, StandardCharsets.UTF_8)) {
+            w.write(outputLines.get(0));
+            w.write('\n');
+            for (int i = 1; i < outputLines.size(); i++) {
+                w.write(outputLines.get(i));
+                w.write("\r\n");
+            }
+        }
+        assertThat(SymbolIo.readTableWithPackage(mixedLineEndings)).isEqualTo(table);
+    }
+
+    @Test
+    public void testPackageNameWithNoSymbolTableWrite() throws Exception {
+        FileSystem fs = Jimfs.newFileSystem();
+
+        Path doesNotExist = fs.getPath("r.txt");
+
+        Path manifest = fs.getPath("AndroidManifest.xml");
+        java.nio.file.Files.write(
+                manifest,
+                ImmutableList.of("<manifest package=\"com.example.lib\"></manifest>"),
+                StandardCharsets.UTF_8);
+
+        Path output = fs.getPath("package-aware-r.txt");
+        SymbolIo.writeSymbolTableWithPackage(doesNotExist, manifest, output);
+
+        List<String> outputLines = java.nio.file.Files.readAllLines(output, StandardCharsets.UTF_8);
+        assertThat(outputLines).containsExactly("com.example.lib");
     }
 }

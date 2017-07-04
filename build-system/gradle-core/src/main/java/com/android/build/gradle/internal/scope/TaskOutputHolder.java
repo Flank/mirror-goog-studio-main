@@ -64,6 +64,8 @@ public interface TaskOutputHolder {
         PACKAGED_RES,
         // R.txt output
         SYMBOL_LIST,
+        // Synthetic artifacts
+        SYMBOL_LIST_WITH_PACKAGE_NAME,
         // public.txt output
         PUBLIC_RES,
         SHRUNK_PROCESSED_RES,

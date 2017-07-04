@@ -21,8 +21,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_IDS_DECLARATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.MANIFEST;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SYMBOL_LIST;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI;
@@ -41,6 +39,7 @@ import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.OutputFactory;
@@ -63,7 +62,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.builder.internal.aapt.AaptPackageConfig.LibraryInfo;
 import com.android.builder.symbols.IdProvider;
 import com.android.builder.symbols.ResourceDirectoryParser;
 import com.android.builder.symbols.SymbolIo;
@@ -87,15 +85,14 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -103,8 +100,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.component.ComponentIdentifier;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
@@ -135,14 +130,14 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private Supplier<File> textSymbolOutputDir = () -> null;
 
+    @Nullable private File symbolsWithPackageNameOutputFile;
+
     private File proguardOutputFile;
 
     private File mainDexListProguardOutputFile;
 
-    @Nullable
-    private ArtifactCollection manifests;
-    @Nullable
-    private ArtifactCollection symbolFiles;
+    @Nullable private FileCollection symbolListsWithPackageNames;
+
     @Nullable private ArtifactCollection packageIdsFiles;
 
     private Supplier<String> packageForR;
@@ -164,8 +159,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     private InstantRunBuildContext buildContext;
 
     private FileCollection featureResourcePackages;
-
-    private List<LibraryInfo> computedLibraryInfo;
 
     private String originalApplicationId;
 
@@ -264,10 +257,6 @@ public class ProcessAndroidResources extends IncrementalTask {
         }
         Collection<BuildOutput> manifestsOutputs = BuildOutputs.load(taskInputType, manifestFiles);
 
-        // compute the library info list up front in the normal thread since it's resolving
-        // dependencies and we cannot do this in the executor threads.
-        getLibraryInfoList();
-
         final Set<File> packageIdFileSet =
                 packageIdsFiles != null
                         ? packageIdsFiles.getArtifactFiles().getAsFileTree().getFiles()
@@ -276,6 +265,8 @@ public class ProcessAndroidResources extends IncrementalTask {
         final Set<File> featureResourcePackages = this.featureResourcePackages.getFiles();
 
         SplitList splitList = isLibrary ? SplitList.EMPTY : SplitList.load(splitListInput);
+
+        Set<File> libraryInfoList = symbolListsWithPackageNames.getFiles();
 
         // do a first pass at the list so we generate the code synchronously since it's required
         // by the full splits asynchronous processing below.
@@ -289,6 +280,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     apkDataList.remove(apkData);
                     invokeAaptForSplit(
                             manifestsOutputs,
+                            libraryInfoList,
                             packageIdFileSet,
                             splitList,
                             featureResourcePackages,
@@ -306,6 +298,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                         () -> {
                             invokeAaptForSplit(
                                     manifestsOutputs,
+                                    libraryInfoList,
                                     packageIdFileSet,
                                     splitList,
                                     featureResourcePackages,
@@ -397,6 +390,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     void invokeAaptForSplit(
             Collection<BuildOutput> manifestsOutputs,
+            @NonNull Set<File> dependencySymbolTableFiles,
             @Nullable Set<File> packageIdFileSet,
             @NonNull SplitList splitList,
             @NonNull Set<File> featureResourcePackages,
@@ -518,7 +512,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
                 SymbolUtils.processLibraryMainSymbolTable(
                         symbolTable,
-                        generateCode ? getLibraryInfoList() : ImmutableList.of(),
+                        generateCode ? dependencySymbolTableFiles : ImmutableSet.of(),
                         packageForR,
                         manifestFile,
                         Preconditions.checkNotNull(srcOut),
@@ -543,8 +537,10 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 .setManifestFile(manifestFile)
                                 .setOptions(DslAdaptersKt.convert(aaptOptions))
                                 .setResourceDir(getInputResourcesDir().getSingleFile())
-                                .setLibraries(
-                                        generateCode ? getLibraryInfoList() : ImmutableList.of())
+                                .setLibrarySymbolTableFiles(
+                                        generateCode
+                                                ? dependencySymbolTableFiles
+                                                : ImmutableSet.of())
                                 .setCustomPackageForR(packageForR)
                                 .setSymbolOutputDir(symbolOutputDir)
                                 .setSourceOutputDir(srcOut)
@@ -563,9 +559,18 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 .setListResourceFiles(aaptGeneration == AaptGeneration.AAPT_V2);
 
                 builder.processResources(aapt, config);
+
                 if (LOG.isInfoEnabled()) {
                     LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
                 }
+            }
+            if (generateCode
+                    && (isLibrary || !dependencySymbolTableFiles.isEmpty())
+                    && symbolsWithPackageNameOutputFile != null) {
+                SymbolIo.writeSymbolTableWithPackage(
+                        Preconditions.checkNotNull(getTextSymbolOutputFile()).toPath(),
+                        manifestFile.toPath(),
+                        symbolsWithPackageNameOutputFile.toPath());
             }
 
             outputScope.addOutputForSplit(
@@ -642,43 +647,6 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @NonNull
-    @Internal
-    private List<LibraryInfo> getLibraryInfoList() {
-        if (computedLibraryInfo == null) {
-            if (symbolFiles != null && manifests != null) {
-                computedLibraryInfo = computeLibraryInfoList(symbolFiles, manifests);
-            } else {
-                computedLibraryInfo = ImmutableList.of();
-            }
-        }
-
-        return computedLibraryInfo;
-    }
-
-    @NonNull
-    public static List<LibraryInfo> computeLibraryInfoList(
-            @NonNull ArtifactCollection symbolFiles, @NonNull ArtifactCollection manifests) {
-        // first build a map for the optional symbols.
-        Map<ComponentIdentifier, File> symbolMap = new HashMap<>();
-        for (ResolvedArtifactResult artifactResult : symbolFiles.getArtifacts()) {
-            symbolMap.put(
-                    artifactResult.getId().getComponentIdentifier(), artifactResult.getFile());
-        }
-
-        // now loop through all the manifests and associate to a symbol file, if applicable.
-        Set<ResolvedArtifactResult> manifestArtifacts = manifests.getArtifacts();
-        List<LibraryInfo> libraryInfoList = new ArrayList<>(manifestArtifacts.size());
-        for (ResolvedArtifactResult artifactResult : manifestArtifacts) {
-            libraryInfoList.add(
-                    new LibraryInfo(
-                            artifactResult.getFile(),
-                            symbolMap.get(artifactResult.getId().getComponentIdentifier())));
-        }
-
-        return libraryInfoList;
-    }
-
-    @NonNull
     public static List<ApkData> getApksToGenerate(
             @NonNull OutputScope outputScope,
             @Nullable Set<String> supportedAbis,
@@ -728,6 +696,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {
         protected final VariantScope variantScope;
         protected final Supplier<File> symbolLocation;
+        private final File symbolsWithPackageNameOutputFile;
         @NonNull private final File resPackageOutputFolder;
         private final boolean generateLegacyMultidexMainDexProguardRules;
         private final TaskManager.MergeType sourceTaskOutputType;
@@ -737,6 +706,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         public ConfigAction(
                 @NonNull VariantScope scope,
                 @NonNull Supplier<File> symbolLocation,
+                @NonNull File symbolsWithPackageNameOutputFile,
                 @NonNull File resPackageOutputFolder,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @NonNull TaskManager.MergeType sourceTaskOutputType,
@@ -744,6 +714,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 boolean isLibrary) {
             this.variantScope = scope;
             this.symbolLocation = symbolLocation;
+            this.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
             this.resPackageOutputFolder = resPackageOutputFolder;
             this.generateLegacyMultidexMainDexProguardRules
                     = generateLegacyMultidexMainDexProguardRules;
@@ -820,11 +791,11 @@ public class ProcessAndroidResources extends IncrementalTask {
             processResources.multiOutputPolicy =
                     variantData.getOutputScope().getMultiOutputPolicy();
 
-                processResources.manifests = variantScope.getArtifactCollection(
-                        RUNTIME_CLASSPATH, ALL, MANIFEST);
-
-                processResources.symbolFiles = variantScope.getArtifactCollection(
-                        RUNTIME_CLASSPATH, ALL, SYMBOL_LIST);
+            processResources.symbolListsWithPackageNames =
+                    variantScope.getArtifactFileCollection(
+                            RUNTIME_CLASSPATH,
+                            ALL,
+                            AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME);
 
                 processResources.packageForR =
                         TaskInputHelper.memoize(
@@ -841,6 +812,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 processResources
                         .setSourceOutputDir(variantScope.getRClassSourceOutputDir());
             processResources.textSymbolOutputDir = symbolLocation;
+            processResources.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
 
             if (variantScope.getCodeShrinker() != null) {
                 processResources.setProguardOutputFile(
@@ -915,6 +887,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         public FeatureSplitConfigAction(
                 @NonNull VariantScope scope,
                 @NonNull Supplier<File> symbolLocation,
+                @Nullable File symbolsWithPackageName,
                 @NonNull File resPackageOutputFolder,
                 boolean generateLegacyMultidexMainDexProguardRules,
                 @NonNull TaskManager.MergeType mergeType,
@@ -922,6 +895,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             super(
                     scope,
                     symbolLocation,
+                    symbolsWithPackageName,
                     resPackageOutputFolder,
                     generateLegacyMultidexMainDexProguardRules,
                     mergeType,
@@ -1008,6 +982,13 @@ public class ProcessAndroidResources extends IncrementalTask {
     @org.gradle.api.tasks.OutputFile
     @Optional
     @Nullable
+    public File getSymbolslWithPackageNameOutputFile() {
+        return symbolsWithPackageNameOutputFile;
+    }
+
+    @org.gradle.api.tasks.OutputFile
+    @Optional
+    @Nullable
     public File getProguardOutputFile() {
         return proguardOutputFile;
     }
@@ -1034,16 +1015,9 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     @InputFiles
     @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getManifests() {
-        return manifests == null ? null : manifests.getArtifactFiles();
-    }
-
-    @InputFiles
-    @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public FileCollection getSymbolFiles() {
-        return symbolFiles == null ? null : symbolFiles.getArtifactFiles();
+    @PathSensitive(PathSensitivity.NONE)
+    public FileCollection getSymbolListsWithPackageNames() {
+        return symbolListsWithPackageNames;
     }
 
     @Input

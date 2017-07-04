@@ -45,6 +45,7 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLIC_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.RENDERSCRIPT_HEADERS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.SYMBOL_LIST;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.SYMBOL_LIST_WITH_PACKAGE_NAME;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -141,13 +142,18 @@ public class VariantPublishingSpec {
 
         variantSpec(
                         VariantType.LIBRARY,
-                        // manifest is published to both to compare and detect provided-only library dependencies.
+                        // manifest is published to both to compare and detect provided-only library
+                        // dependencies.
                         outputSpec(
                                 LIBRARY_MANIFEST, ArtifactType.MANIFEST, API_AND_RUNTIME_ELEMENTS),
                         outputSpec(MERGED_ASSETS, ArtifactType.ASSETS, RUNTIME_ELEMENTS_ONLY),
                         outputSpec(PACKAGED_RES, ArtifactType.ANDROID_RES, RUNTIME_ELEMENTS_ONLY),
                         outputSpec(PUBLIC_RES, ArtifactType.PUBLIC_RES, RUNTIME_ELEMENTS_ONLY),
                         outputSpec(SYMBOL_LIST, ArtifactType.SYMBOL_LIST, RUNTIME_ELEMENTS_ONLY),
+                        outputSpec(
+                                SYMBOL_LIST_WITH_PACKAGE_NAME,
+                                ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME,
+                                RUNTIME_ELEMENTS_ONLY),
                         outputSpec(AIDL_PARCELABLE, ArtifactType.AIDL, API_ELEMENTS_ONLY),
                         outputSpec(
                                 RENDERSCRIPT_HEADERS, ArtifactType.RENDERSCRIPT, API_ELEMENTS_ONLY),
@@ -167,7 +173,8 @@ public class VariantPublishingSpec {
                         outputSpec(LINT_JAR, ArtifactType.LINT, API_AND_RUNTIME_ELEMENTS))
                 .withTestingSpec(
                         VariantType.UNIT_TEST,
-                        // unit test need CLASSES_FOR_UNIT_TESTS instead of LIBRARY_CLASSES to get access to
+                        // unit test need CLASSES_FOR_UNIT_TESTS instead of LIBRARY_CLASSES to get
+                        // access to
                         // the R class. Also scope should be API+Runtime.
                         outputSpec(
                                 CLASSES_FOR_UNIT_TESTS,

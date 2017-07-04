@@ -817,7 +817,7 @@ public class AndroidBuilder {
             // For each dependency, load its symbol file.
             Set<SymbolTable> depSymbolTables =
                     SymbolUtils.loadDependenciesSymbolTables(
-                            aaptConfig.getLibraries(), mainPackageName);
+                            aaptConfig.getLibrarySymbolTableFiles(), mainPackageName);
 
             boolean finalIds = true;
             if (aaptConfig.getVariantType() == VariantType.LIBRARY) {

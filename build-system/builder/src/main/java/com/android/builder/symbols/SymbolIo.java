@@ -19,25 +19,33 @@ package com.android.builder.symbols;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.xml.AndroidManifestParser;
 import com.android.resources.ResourceType;
 import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 /**
  * Reads and writes symbol tables to files.
@@ -59,16 +67,50 @@ public final class SymbolIo {
     @NonNull
     public static SymbolTable read(@NonNull File file, @Nullable String tablePackage)
             throws IOException {
-        List<String> lines;
-        try {
-            lines = Files.readAllLines(file.toPath(), Charsets.UTF_8);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        List<String> lines = Files.readAllLines(file.toPath(), Charsets.UTF_8);
+
+        SymbolTable.Builder table = readLines(lines, 1, file.toPath());
+
+        if (tablePackage != null) {
+            table.tablePackage(tablePackage);
         }
 
+        return table.build();
+    }
+
+    /**
+     * Loads a symbol table from a synthetic namespaced symbol file.
+     *
+     * <p>This is just a symbol table, but with the addition of the table package as the first line.
+     *
+     * @param file the symbol file
+     * @return the table read
+     * @throws IOException failed to read the table
+     */
+    @NonNull
+    public static SymbolTable readTableWithPackage(@NonNull File file) throws IOException {
+        return readTableWithPackage(file.toPath());
+    }
+
+    public static SymbolTable readTableWithPackage(@NonNull Path file) throws IOException {
+
+        List<String> lines = Files.readAllLines(file, Charsets.UTF_8);
+
+        if (lines.isEmpty()) {
+            throw new IOException("Internal error: Symbol file with package cannot be empty.");
+        }
+
+        SymbolTable.Builder table = readLines(lines, 2, file);
+        table.tablePackage(lines.get(0).trim());
+
+        return table.build();
+    }
+
+    private static SymbolTable.Builder readLines(
+            @NonNull List<String> lines, int startLine, @NonNull Path file) throws IOException {
         SymbolTable.Builder table = SymbolTable.builder();
 
-        int lineIndex = 1;
+        int lineIndex = startLine;
         String line = null;
         try {
             final int count = lines.size();
@@ -140,15 +182,10 @@ public final class SymbolIo {
             throw new IOException(
                     String.format(
                             "File format error reading %s line %d: '%s'",
-                            file.getAbsolutePath(), lineIndex, line),
+                            file.toString(), lineIndex, line),
                     e);
         }
-
-        if (tablePackage != null) {
-            table.tablePackage(tablePackage);
-        }
-
-        return table.build();
+        return table;
     }
 
     private static class SymbolData {
@@ -211,6 +248,10 @@ public final class SymbolIo {
      * @throws UncheckedIOException I/O error
      */
     public static void write(@NonNull SymbolTable table, @NonNull File file) {
+        write(table, file.toPath());
+    }
+
+    public static void write(@NonNull SymbolTable table, @NonNull Path file) {
         List<String> lines = new ArrayList<>();
 
         for (Symbol s : table.allSymbols()) {
@@ -246,14 +287,45 @@ public final class SymbolIo {
             }
         }
 
-        try (BufferedOutputStream os =
-                new BufferedOutputStream(Files.newOutputStream(file.toPath()))) {
+        try (BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file))) {
             for (String line : lines) {
                 os.write(line.getBytes(Charsets.UTF_8));
                 os.write('\n');
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * Writes the symbol table with the package name as the first line.
+     *
+     * @param symbolTable The R.txt file. If it does not exist, the result will be a file containing
+     *     only the package name
+     * @param manifest The AndroidManifest.xml file for this library. The package name is extracted
+     *     and written as the first line of the output.
+     * @param outputFile The file to write the result to.
+     */
+    public static void writeSymbolTableWithPackage(
+            @NonNull Path symbolTable, @NonNull Path manifest, @NonNull Path outputFile)
+            throws IOException {
+        @Nullable String packageName;
+        try (InputStream is = new BufferedInputStream(Files.newInputStream(manifest))) {
+            packageName = AndroidManifestParser.parse(is).getPackage();
+        } catch (SAXException | ParserConfigurationException e) {
+            throw new IOException(e);
+        }
+        try (OutputStream os = new BufferedOutputStream(Files.newOutputStream(outputFile))) {
+            if (packageName != null) {
+                os.write(packageName.getBytes(Charsets.UTF_8));
+            }
+            os.write('\n');
+            if (!Files.exists(symbolTable)) {
+                return;
+            }
+            try (InputStream is = new BufferedInputStream(Files.newInputStream(symbolTable))) {
+                ByteStreams.copy(is, os);
+            }
         }
     }
 

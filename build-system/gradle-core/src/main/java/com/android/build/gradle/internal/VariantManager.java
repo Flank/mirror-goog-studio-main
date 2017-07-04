@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.dependency.AndroidTypeAttrCompatRule;
 import com.android.build.gradle.internal.dependency.AndroidTypeAttrDisambRule;
 import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
+import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
@@ -598,6 +599,16 @@ public class VariantManager implements VariantModel {
                                 AarTransform.class, config -> config.params(transformTarget));
                     });
         }
+
+        dependencies.registerTransform(
+                reg -> {
+                    reg.getFrom().attribute(ARTIFACT_FORMAT, explodedAarType);
+                    reg.getTo()
+                            .attribute(
+                                    ARTIFACT_FORMAT,
+                                    ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME.getType());
+                    reg.artifactTransform(LibrarySymbolTableTransform.class);
+                });
 
         for (String transformTarget : JarTransform.getTransformTargets()) {
             dependencies.registerTransform(

@@ -19,11 +19,9 @@ package com.android.builder.symbols;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.internal.aapt.AaptPackageConfig.LibraryInfo;
 import com.android.ide.common.xml.AndroidManifestParser;
 import com.android.ide.common.xml.ManifestData;
 import com.android.io.FileWrapper;
-import com.android.io.StreamException;
 import com.android.resources.ResourceType;
 import com.android.xml.AndroidManifest;
 import com.google.common.annotations.VisibleForTesting;
@@ -31,6 +29,7 @@ import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
@@ -40,7 +39,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -71,7 +69,7 @@ public final class SymbolUtils {
      */
     public static void processLibraryMainSymbolTable(
             @NonNull final SymbolTable librarySymbols,
-            @NonNull List<LibraryInfo> libraries,
+            @NonNull Set<File> libraries,
             @Nullable String mainPackageName,
             @NonNull File manifestFile,
             @NonNull File sourceOut,
@@ -249,39 +247,14 @@ public final class SymbolUtils {
      */
     @NonNull
     public static Set<SymbolTable> loadDependenciesSymbolTables(
-            @NonNull List<LibraryInfo> libraries,
-            @NonNull String mainPackageName)
-            throws IOException {
+            @NonNull Set<File> libraries, @NonNull String mainPackageName) throws IOException {
 
         // For each dependency, load its symbol file.
-        Set<SymbolTable> depSymbolTables = new HashSet<>();
-        for (LibraryInfo dependency : libraries) {
-            File depMan = dependency.getManifest();
-            String depPackageName;
-
-            try {
-                depPackageName = AndroidManifest.getPackage(new FileWrapper(depMan));
-            } catch (StreamException e) {
-                throw new RuntimeException(
-                        "Failed to read manifest " + depMan.getAbsolutePath(), e);
-            }
-
-            if (mainPackageName.equals(depPackageName)) {
-                throw new RuntimeException(
-                        String.format(
-                                "Error: A library uses the same package as this project: %s",
-                                depPackageName));
-            }
-
-            File rFile = dependency.getSymbolFile();
-            SymbolTable depSymbols =
-                    (rFile != null && rFile.exists())
-                            ? SymbolIo.read(rFile, depPackageName)
-                            : SymbolTable.builder().tablePackage(depPackageName).build();
-            depSymbolTables.add(depSymbols);
+        ImmutableSet.Builder<SymbolTable> depSymbolTables = ImmutableSet.builder();
+        for (File dependency : libraries) {
+            depSymbolTables.add(SymbolIo.readTableWithPackage(dependency));
         }
-
-        return depSymbolTables;
+        return depSymbolTables.build();
     }
 
     /**

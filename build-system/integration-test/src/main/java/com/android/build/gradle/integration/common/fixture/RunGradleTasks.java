@@ -149,6 +149,9 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         if (buildToolsVersion != null) {
             args.add("-PCUSTOM_BUILDTOOLS=" + buildToolsVersion);
         }
+        if (!isExpectingFailure) {
+            args.add("--stacktrace");
+        }
 
         int attempt = 0;
         while (true) {

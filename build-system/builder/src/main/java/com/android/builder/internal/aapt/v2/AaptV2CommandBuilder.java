@@ -261,8 +261,9 @@ public final class AaptV2CommandBuilder {
             builder.add("--preferred-density", preferredDensity);
         }
 
-        if (config.getSymbolOutputDir() != null && (config.getVariantType() == VariantType.LIBRARY
-                || !config.getLibraries().isEmpty())) {
+        if (config.getSymbolOutputDir() != null
+                && (config.getVariantType() == VariantType.LIBRARY
+                        || !config.getLibrarySymbolTableFiles().isEmpty())) {
             File rDotTxt = new File(config.getSymbolOutputDir(), "R.txt");
             builder.add("--output-text-symbols", rDotTxt.getAbsolutePath());
         }

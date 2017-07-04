@@ -49,7 +49,7 @@ import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.ide.common.res2.FileStatus;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
@@ -228,7 +228,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                 new AaptPackageConfig.Builder()
                         .setManifestFile(manifestFile)
                         .setResourceDir(resDir)
-                        .setLibraries(ImmutableList.of())
+                        .setLibrarySymbolTableFiles(ImmutableSet.of())
                         .setOptions(DslAdaptersKt.convert(new AaptOptions()))
                         .setVariantType(VariantType.LIBRARY);
 
