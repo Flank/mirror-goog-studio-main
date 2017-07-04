@@ -112,13 +112,31 @@ public final class AaptV2CommandBuilder {
         Preconditions.checkNotNull(manifestFile);
         builder.add("--manifest", manifestFile.getAbsolutePath());
 
+        File resourceOutputApk;
+        if (config.getResourceOutputApk() != null) {
+            resourceOutputApk = config.getResourceOutputApk();
+        } else {
+            // FIXME: Fix when aapt 2 support not providing -o (http://b.android.com/210026)
+            try {
+                File tmpOutput = File.createTempFile("aapt-", "-out");
+                tmpOutput.deleteOnExit();
+                resourceOutputApk = tmpOutput;
+            } catch (IOException e) {
+                throw new AaptException("No output apk defined and failed to create tmp file", e);
+            }
+        }
+        builder.add("-o", resourceOutputApk.getAbsolutePath());
+
         if (config.getResourceDir() != null) {
             try {
                 if (config.isListResourceFiles()) {
                     // AAPT2 only accepts individual files passed to the -R flag. In order to not
                     // pass every single resource file, instead create a temporary file containing a
                     // list of resource files and pass it as the only -R argument.
-                    File file = new File(intermediateDir, "aapt-resources-list.txt");
+                    File file =
+                            new File(
+                                    intermediateDir,
+                                    "resources-list-for-" + resourceOutputApk.getName() + ".txt");
 
                     // Resources list could have changed since last run.
                     FileUtils.deleteIfExists(file);
@@ -131,16 +149,13 @@ public final class AaptV2CommandBuilder {
                     }
                     builder.add("-R", "@" + file.getAbsolutePath());
                 } else {
-                    // TODO: Fix when aapt 2 supports -R directories (http://b.android.com/209331)
-                    // builder.addArgs("-R", config.getResourceDir().getAbsolutePath());
-
                     Files.walk(config.getResourceDir().toPath())
                             .filter(Files::isRegularFile)
                             .forEach((p) -> builder.add("-R", p.toString()));
                 }
             } catch (IOException e) {
-                    throw new AaptException("Failed to walk path " + config.getResourceDir());
-                }
+                throw new AaptException("Failed to walk path " + config.getResourceDir());
+            }
         }
 
         builder.add("--auto-add-overlay");
@@ -149,21 +164,6 @@ public final class AaptV2CommandBuilder {
         if (config.getSourceOutputDir() != null) {
             builder.add("--java", config.getSourceOutputDir().getAbsolutePath());
         }
-
-        String resourceOutputApk;
-        if (config.getResourceOutputApk() != null) {
-            resourceOutputApk = config.getResourceOutputApk().getAbsolutePath();
-        } else {
-            // FIXME: Fix when aapt 2 support not providing -o (http://b.android.com/210026)
-            try {
-                File tmpOutput = File.createTempFile("aapt-", "-out");
-                tmpOutput.deleteOnExit();
-                resourceOutputApk = tmpOutput.getAbsolutePath();
-            } catch (IOException e) {
-                throw new AaptException("No output apk defined and failed to create tmp file", e);
-            }
-        }
-        builder.add("-o", resourceOutputApk);
 
         if (config.getProguardOutputFile() != null) {
             builder.add("--proguard", config.getProguardOutputFile().getAbsolutePath());
