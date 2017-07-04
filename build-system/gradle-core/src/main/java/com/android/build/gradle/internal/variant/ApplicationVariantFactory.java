@@ -87,7 +87,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
         SplitFactory splitFactory = variant.getSplitFactory();
 
         // create its output
-        if (splitScope.getSplitHandlingPolicy() == SplitHandlingPolicy.PRE_21_POLICY) {
+        if (splitScope.getMultiOutputPolicy() == MultiOutputPolicy.MULTI_APK) {
 
             // if the abi list is not empty and we must generate a universal apk, add it.
             if (abis.isEmpty()) {

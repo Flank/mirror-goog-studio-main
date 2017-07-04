@@ -26,7 +26,7 @@ import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TransformGlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.DeploymentDevice;
 import com.android.build.gradle.options.ProjectOptions;
@@ -78,7 +78,7 @@ import org.gradle.api.Project;
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI),
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY),
                         projectOptions.get(BooleanOption.ENABLE_SEPARATE_APK_RESOURCES));
-        this.splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY, apkDatas);
+        this.splitScope = new SplitScope(MultiOutputPolicy.SPLITS, apkDatas);
     }
 
     @NonNull

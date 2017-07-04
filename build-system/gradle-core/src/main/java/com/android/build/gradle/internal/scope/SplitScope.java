@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.build.ApkInfo;
 import com.android.ide.common.internal.WaitableExecutor;
@@ -60,28 +60,26 @@ import org.gradle.tooling.BuildException;
  */
 public class SplitScope implements Serializable {
 
-    private final SplitHandlingPolicy splitHandlingPolicy;
+    private final MultiOutputPolicy multiOutputPolicy;
     private final List<ApkData> apkDatas;
     private final SetMultimap<VariantScope.OutputType, BuildOutput> splitOutputs =
             Multimaps.synchronizedSetMultimap(HashMultimap.create());
 
-    public SplitScope(SplitHandlingPolicy splitHandlingPolicy) {
-        this.splitHandlingPolicy = splitHandlingPolicy;
+    public SplitScope(MultiOutputPolicy multiOutputPolicy) {
+        this.multiOutputPolicy = multiOutputPolicy;
         this.apkDatas = new ArrayList<>();
     }
 
-    public SplitScope(SplitHandlingPolicy splitHandlingPolicy, Collection<ApkData> apkDatas) {
-        this.splitHandlingPolicy = splitHandlingPolicy;
+    public SplitScope(MultiOutputPolicy multiOutputPolicy, Collection<ApkData> apkDatas) {
+        this.multiOutputPolicy = multiOutputPolicy;
         this.apkDatas = new ArrayList<>(apkDatas);
     }
 
-    public SplitHandlingPolicy getSplitHandlingPolicy() {
-        return splitHandlingPolicy;
+    public MultiOutputPolicy getMultiOutputPolicy() {
+        return multiOutputPolicy;
     }
 
-    // TODO : make this method package private again once bazel can handle
-    // package private methods and sandbox testing.
-    public void addSplit(@NonNull ApkData apkData) {
+    void addSplit(@NonNull ApkData apkData) {
         apkDatas.add(apkData);
     }
 
@@ -339,12 +337,12 @@ public class SplitScope implements Serializable {
         SplitScope that = (SplitScope) o;
         return Objects.equals(splitOutputs, that.splitOutputs)
                 && Objects.equals(apkDatas, that.apkDatas)
-                && splitHandlingPolicy == that.splitHandlingPolicy;
+                && multiOutputPolicy == that.multiOutputPolicy;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), splitOutputs, apkDatas, splitHandlingPolicy);
+        return Objects.hash(super.hashCode(), splitOutputs, apkDatas, multiOutputPolicy);
     }
 
     public void addOutputForSplit(

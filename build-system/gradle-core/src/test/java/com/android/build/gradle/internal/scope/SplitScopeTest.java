@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.ide.common.build.ApkData;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableList;
@@ -51,7 +51,7 @@ public class SplitScopeTest {
 
     @Test
     public void testPersistence() throws IOException {
-        SplitScope splitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
+        SplitScope splitScope = new SplitScope(MultiOutputPolicy.MULTI_APK);
         SplitFactory splitFactory = new SplitFactory("project", variantConfiguration, splitScope);
 
         splitFactory.addUniversalApk();

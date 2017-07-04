@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
@@ -78,7 +78,7 @@ public interface PackagingScope extends TaskOutputHolder {
     FileCollection getJniFolders();
 
     @NonNull
-    SplitHandlingPolicy getSplitHandlingPolicy();
+    MultiOutputPolicy getSplitHandlingPolicy();
 
     @NonNull
     Set<String> getAbiFilters();

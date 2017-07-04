@@ -45,7 +45,7 @@ import com.android.build.gradle.internal.tasks.KnownFilesSaveData;
 import com.android.build.gradle.internal.tasks.KnownFilesSaveData.InputSet;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
@@ -963,7 +963,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             task.dexFolders = packagingScope.getDexFolders();
             task.javaResourceFiles = packagingScope.getJavaResources();
 
-            if (packagingScope.getSplitHandlingPolicy() == SplitHandlingPolicy.PRE_21_POLICY) {
+            if (packagingScope.getSplitHandlingPolicy() == MultiOutputPolicy.MULTI_APK) {
                 task.jniFolders = packagingScope.getJniFolders();
             } else {
                 Set<String> filters =

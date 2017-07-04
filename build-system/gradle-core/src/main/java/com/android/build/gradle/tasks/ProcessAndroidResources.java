@@ -54,7 +54,7 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
 import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuilder;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -147,7 +147,7 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     private Supplier<String> packageForR;
 
-    private SplitHandlingPolicy splitHandlingPolicy;
+    private MultiOutputPolicy multiOutputPolicy;
 
     private VariantType type;
 
@@ -206,7 +206,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     @NonNull
     @Internal
     private Set<String> getSplits(@NonNull SplitList splitList) throws IOException {
-        return SplitList.getSplits(splitList, splitHandlingPolicy);
+        return SplitList.getSplits(splitList, multiOutputPolicy);
     }
 
     @Input
@@ -330,7 +330,7 @@ public class ProcessAndroidResources extends IncrementalTask {
             throw new RuntimeException(e);
         }
 
-        if (splitHandlingPolicy == SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
+        if (multiOutputPolicy == MultiOutputPolicy.SPLITS) {
             // now populate the pure splits list in the SplitScope (this should eventually move
             // to the SplitDiscoveryTask.
             splitScope.deleteAllEntries(
@@ -816,8 +816,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                         variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
             }
 
-            processResources.splitHandlingPolicy =
-                    variantData.getSplitScope().getSplitHandlingPolicy();
+            processResources.multiOutputPolicy = variantData.getSplitScope().getMultiOutputPolicy();
 
                 processResources.manifests = variantScope.getArtifactCollection(
                         RUNTIME_CLASSPATH, ALL, MANIFEST);
@@ -1115,8 +1114,8 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @Input
-    public SplitHandlingPolicy getSplitHandlingPolicy() {
-        return splitHandlingPolicy;
+    public MultiOutputPolicy getMultiOutputPolicy() {
+        return multiOutputPolicy;
     }
 
     @Input

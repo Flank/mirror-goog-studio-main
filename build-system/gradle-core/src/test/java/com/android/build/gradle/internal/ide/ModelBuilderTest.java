@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.AndroidProject;
@@ -140,7 +140,7 @@ public class ModelBuilderTest {
 
         when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
 
-        SplitScope splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY);
+        SplitScope splitScope = new SplitScope(MultiOutputPolicy.SPLITS);
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
         Files.createParentDirs(apkOutput);
@@ -185,7 +185,7 @@ public class ModelBuilderTest {
         createVariantData(variantScope, variantConfiguration);
 
         when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
-        SplitScope splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY);
+        SplitScope splitScope = new SplitScope(MultiOutputPolicy.SPLITS);
         SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
@@ -258,7 +258,7 @@ public class ModelBuilderTest {
             expectedVariantNames.add(variantName);
             createVariantData(variantScope, variantConfiguration);
 
-            SplitScope splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY);
+            SplitScope splitScope = new SplitScope(MultiOutputPolicy.SPLITS);
             File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name" + i));
             File apkOutput = new File(variantOutputFolder, "main.apk");
             Files.createParentDirs(apkOutput);
@@ -322,7 +322,7 @@ public class ModelBuilderTest {
         when(variantManager.getVariantScopes())
                 .thenReturn(ImmutableList.of(variantScope, testVariantScope));
 
-        SplitScope splitScope = new SplitScope(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY);
+        SplitScope splitScope = new SplitScope(MultiOutputPolicy.SPLITS);
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
         Files.createParentDirs(apkOutput);

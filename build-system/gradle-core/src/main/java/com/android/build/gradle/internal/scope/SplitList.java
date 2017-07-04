@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.gson.Gson;
@@ -94,9 +94,9 @@ public class SplitList {
 
     @NonNull
     public static Set<String> getSplits(
-            @NonNull SplitList splitList, @NonNull SplitHandlingPolicy splitHandlingPolicy)
+            @NonNull SplitList splitList, @NonNull MultiOutputPolicy multiOutputPolicy)
             throws IOException {
-        return splitHandlingPolicy == SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
+        return multiOutputPolicy == MultiOutputPolicy.SPLITS
                 ? splitList.getResourcesSplit()
                 : ImmutableSet.of();
     }

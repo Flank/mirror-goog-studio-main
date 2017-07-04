@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.SplitScope;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
@@ -141,8 +141,8 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public SplitHandlingPolicy getSplitHandlingPolicy() {
-        return SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY;
+    public MultiOutputPolicy getSplitHandlingPolicy() {
+        return MultiOutputPolicy.SPLITS;
     }
 
     @NonNull

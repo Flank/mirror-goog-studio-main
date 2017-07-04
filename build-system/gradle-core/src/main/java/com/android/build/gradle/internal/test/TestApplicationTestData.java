@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.testing.TestData;
 import com.android.builder.testing.api.DeviceConfigProvider;
@@ -120,7 +120,7 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
         // if we have more than one, that means pure splits are in the equation.
         if (testedApkFiles.size() > 1 && splitSelectExe != null) {
 
-            SplitScope testedSplitScope = new SplitScope(SplitHandlingPolicy.PRE_21_POLICY);
+            SplitScope testedSplitScope = new SplitScope(MultiOutputPolicy.MULTI_APK);
             BuildOutputs.load(VariantScope.TaskOutputType.APK, testedApks);
 
             List<String> testedSplitApksPath = getSplitApks(testedSplitScope);

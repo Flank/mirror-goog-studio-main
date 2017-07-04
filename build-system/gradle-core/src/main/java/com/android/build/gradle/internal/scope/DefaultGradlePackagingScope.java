@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.dsl.DslAdaptersKt;
 import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
@@ -112,8 +112,8 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public SplitHandlingPolicy getSplitHandlingPolicy() {
-        return mVariantScope.getVariantData().getSplitScope().getSplitHandlingPolicy();
+    public MultiOutputPolicy getSplitHandlingPolicy() {
+        return mVariantScope.getVariantData().getSplitScope().getMultiOutputPolicy();
     }
 
     @NonNull

@@ -173,15 +173,15 @@ public abstract class BaseVariantData implements TaskContainer {
         this.taskManager = taskManager;
 
         // eventually, this will require a more open ended comparison.
-        SplitHandlingPolicy splitHandlingPolicy =
+        MultiOutputPolicy multiOutputPolicy =
                 androidConfig.getGeneratePureSplits()
                                 && variantConfiguration.getMinSdkVersionValue() >= 21
-                        ? SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY
-                        : SplitHandlingPolicy.PRE_21_POLICY;
+                        ? MultiOutputPolicy.SPLITS
+                        : MultiOutputPolicy.MULTI_APK;
 
         // warn the user in case we are forced to ignore the generatePureSplits flag.
         if (androidConfig.getGeneratePureSplits()
-                && splitHandlingPolicy != SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY) {
+                && multiOutputPolicy != MultiOutputPolicy.SPLITS) {
             Logging.getLogger(BaseVariantData.class).warn(
                     String.format("Variant %s, MinSdkVersion %s is too low (<21) "
                                     + "to support pure splits, reverting to full APKs",
@@ -200,7 +200,7 @@ public abstract class BaseVariantData implements TaskContainer {
                                 errorReporter,
                                 recorder),
                         this);
-        splitScope = new SplitScope(splitHandlingPolicy);
+        splitScope = new SplitScope(multiOutputPolicy);
         splitFactory =
                 new SplitFactory(
                         globalScope.getProjectBaseName(), variantConfiguration, splitScope);

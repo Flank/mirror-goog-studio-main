@@ -130,7 +130,7 @@ import com.android.build.gradle.internal.transforms.StripDebugSymbolTransform;
 import com.android.build.gradle.internal.variant.AndroidArtifactVariantData;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.options.BooleanOption;
@@ -1129,10 +1129,7 @@ public abstract class TaskManager {
         BaseVariantData variantData = scope.getVariantData();
 
         checkState(
-                variantData
-                        .getSplitScope()
-                        .getSplitHandlingPolicy()
-                        .equals(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY),
+                variantData.getSplitScope().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
                 "Can only create split resources tasks for pure splits.");
 
         File densityOrLanguagesPackages = scope.getSplitDensityOrLanguagesPackagesOutputDirectory();
@@ -1160,10 +1157,7 @@ public abstract class TaskManager {
         BaseVariantData variantData = scope.getVariantData();
 
         checkState(
-                variantData
-                        .getSplitScope()
-                        .getSplitHandlingPolicy()
-                        .equals(SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY),
+                variantData.getSplitScope().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
                 "split ABI tasks are only compatible with pure splits.");
 
         Set<String> filters = AbiSplitOptions.getAbiFilters(extension.getSplits().getAbiFilters());
@@ -2575,8 +2569,7 @@ public abstract class TaskManager {
                         : VariantScope.TaskOutputType.MERGED_MANIFESTS;
 
         final boolean splitsArePossible =
-                variantScope.getSplitScope().getSplitHandlingPolicy()
-                        == SplitHandlingPolicy.RELEASE_21_AND_AFTER_POLICY;
+                variantScope.getSplitScope().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
 
         FileCollection manifests = variantScope.getOutput(manifestType);
         // this is where the final APKs will be located.

@@ -46,7 +46,7 @@ import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.build.gradle.internal.variant.SplitHandlingPolicy;
+import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.ResourceUsageAnalyzer;
 import com.android.builder.core.AndroidBuilder;
@@ -116,7 +116,7 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final AaptOptions aaptOptions;
     @NonNull private final VariantType variantType;
     private final boolean isDebuggableBuildType;
-    @NonNull private final SplitHandlingPolicy splitHandlingPolicy;
+    @NonNull private final MultiOutputPolicy multiOutputPolicy;
 
     @NonNull private final File compressedResources;
 
@@ -156,7 +156,7 @@ public class ShrinkResourcesTransform extends Transform {
         this.aaptOptions = globalScope.getExtension().getAaptOptions();
         this.variantType = variantData.getType();
         this.isDebuggableBuildType = variantConfig.getBuildType().isDebuggable();
-        this.splitHandlingPolicy = variantData.getSplitScope().getSplitHandlingPolicy();
+        this.multiOutputPolicy = variantData.getSplitScope().getMultiOutputPolicy();
 
         this.compressedResources = compressedResources;
 
@@ -239,7 +239,7 @@ public class ShrinkResourcesTransform extends Transform {
                                 aaptOptions.getCruncherProcesses()));
         params.put("variantType", variantType.name());
         params.put("isDebuggableBuildType", isDebuggableBuildType);
-        params.put("splitHandlingPolicy", splitHandlingPolicy);
+        params.put("splitHandlingPolicy", multiOutputPolicy);
 
         return params;
     }
@@ -394,7 +394,7 @@ public class ShrinkResourcesTransform extends Transform {
                                 .setDebuggable(isDebuggableBuildType)
                                 .setResourceConfigs(
                                         splitList.getFilters(SplitList.RESOURCE_CONFIGS))
-                                .setSplits(SplitList.getSplits(splitList, splitHandlingPolicy));
+                                .setSplits(SplitList.getSplits(splitList, multiOutputPolicy));
 
                 androidBuilder.processResources(aapt, aaptPackageConfig);
             } else {
