@@ -478,21 +478,15 @@ public class ResourceResolver extends RenderResources {
         ResourceType resType = url.type;
         String resName = url.name;
         boolean isFramework = forceFramework || url.framework;
-        if (!isFramework) {
-            typeMap = mProjectResources.get(resType);
+        typeMap = !isFramework ? mProjectResources.get(resType) : mFrameworkResources.get(resType);
+        if (typeMap != null) {
             ResourceValue item = typeMap.get(resName);
             if (item != null) {
                 return item;
             }
-        } else {
-            typeMap = mFrameworkResources.get(resType);
-            if (typeMap != null) {
-                ResourceValue item = typeMap.get(resName);
-                if (item != null) {
-                    return item;
-                }
-            }
+        }
 
+        if (isFramework) {
             // if it was not found and the type is an id, it is possible that the ID was
             // generated dynamically when compiling the framework resources.
             // Look for it in the R map.

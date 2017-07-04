@@ -12,6 +12,7 @@ import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import com.google.common.collect.Lists;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -736,5 +737,17 @@ public class ResourceResolverTest extends TestCase {
 
         frameworkRepository.dispose();
         projectRepository.dispose();
+    }
+
+    public void testEmptyRepository() throws Exception {
+        // If the LocalResourceRespository fails to be loaded, the resolver will be created with empty maps. Make sure
+        // empty maps are valid inputs
+        ResourceResolver resolver =
+                ResourceResolver.create(
+                        Collections.emptyMap(), Collections.emptyMap(), null, false);
+        assertNotNull(ResourceResolver.copy(resolver));
+
+        assertNull(resolver.findResValue("@color/doesnt_exist", false));
+        assertNull(resolver.findResValue("@android:color/doesnt_exist", false));
     }
 }
