@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputProperty;
 import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -93,10 +93,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
 
     private Supplier<String> testLabel;
 
-    private SplitScope splitScope;
+    private OutputScope outputScope;
 
-    public SplitScope getSplitScope() {
-        return splitScope;
+    public OutputScope getOutputScope() {
+        return outputScope;
     }
 
     @Override
@@ -125,7 +125,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                 throw new RuntimeException("cannot find main APK");
             }
         }
-        List<ApkData> apkDatas = splitScope.getApkDatas();
+        List<ApkData> apkDatas = outputScope.getApkDatas();
         if (apkDatas.isEmpty()) {
             throw new RuntimeException("No output defined for test module, please file a bug");
         }
@@ -156,9 +156,10 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                         getPlaceholdersValues(),
                         manifestOutputFile,
                         getTmpDir());
-        splitScope.addOutputForSplit(
+        outputScope.addOutputForSplit(
                 VariantScope.TaskOutputType.MERGED_MANIFESTS, mainApkData, manifestOutputFile);
-        splitScope.save(VariantScope.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
+        outputScope.save(
+                VariantScope.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
     }
 
     @Nullable
@@ -311,7 +312,7 @@ public class ProcessTestManifest extends ManifestProcessorTask {
                     scope.getVariantConfiguration();
 
             processTestManifestTask.setTestManifestFile(config.getMainManifest());
-            processTestManifestTask.splitScope = scope.getSplitScope();
+            processTestManifestTask.outputScope = scope.getOutputScope();
 
             processTestManifestTask.setTmpDir(FileUtils.join(
                     scope.getGlobalScope().getIntermediatesDir(),

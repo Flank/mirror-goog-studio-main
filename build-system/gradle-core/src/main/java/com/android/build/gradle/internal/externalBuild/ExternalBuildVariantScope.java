@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.GenericVariantScopeImpl;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TransformGlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
@@ -55,7 +55,7 @@ import org.gradle.api.Project;
     private final InstantRunBuildContext mInstantRunBuildContext;
     private final AaptOptions aaptOptions;
     private final ManifestAttributeSupplier manifestAttributeSupplier;
-    private final SplitScope splitScope;
+    private final OutputScope outputScope;
 
     ExternalBuildVariantScope(
             @NonNull TransformGlobalScope globalScope,
@@ -78,13 +78,13 @@ import org.gradle.api.Project;
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI),
                         projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY),
                         projectOptions.get(BooleanOption.ENABLE_SEPARATE_APK_RESOURCES));
-        this.splitScope = new SplitScope(MultiOutputPolicy.SPLITS, apkDatas);
+        this.outputScope = new OutputScope(MultiOutputPolicy.SPLITS, apkDatas);
     }
 
     @NonNull
     @Override
-    public SplitScope getSplitScope() {
-        return splitScope;
+    public OutputScope getOutputScope() {
+        return outputScope;
     }
 
     @NonNull

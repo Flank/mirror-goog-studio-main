@@ -43,7 +43,7 @@ public class FeatureVariantData extends ApkVariantData implements TestedVariantD
         testVariants = Maps.newEnumMap(VariantType.class);
 
         // create default output
-        getSplitFactory().addMainApk();
+        getOutputFactory().addMainApk();
     }
 
     @Override

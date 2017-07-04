@@ -18,8 +18,8 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
-import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.tasks.BaseTask;
@@ -44,7 +44,7 @@ public class CopyOutputs extends BaseTask {
     FileCollection abiSplits;
     FileCollection resourcesSplits;
     File destinationDir;
-    SplitScope splitScope;
+    OutputScope outputScope;
 
     @OutputDirectory
     public java.io.File getDestinationDir() {
@@ -78,11 +78,11 @@ public class CopyOutputs extends BaseTask {
         parallelCopy(TaskOutputType.ABI_PACKAGED_SPLIT, abiSplits);
         parallelCopy(TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT, resourcesSplits);
         // now save the merged list.
-        splitScope.save(TaskOutputType.APK, getDestinationDir());
+        outputScope.save(TaskOutputType.APK, getDestinationDir());
     }
 
     private void parallelCopy(TaskOutputType inputType, FileCollection inputs) {
-        splitScope.parallelForEachOutput(
+        outputScope.parallelForEachOutput(
                 BuildOutputs.load(inputType, inputs),
                 inputType,
                 TaskOutputType.APK,
@@ -121,7 +121,7 @@ public class CopyOutputs extends BaseTask {
         @Override
         public void execute(@NonNull CopyOutputs task) {
             task.setVariantName(packagingScope.getFullVariantName());
-            task.splitScope = packagingScope.getSplitScope();
+            task.outputScope = packagingScope.getOutputScope();
             task.fullApks = packagingScope.getOutput(TaskOutputType.FULL_APK);
             task.abiSplits =
                     packagingScope.hasOutput(TaskOutputType.ABI_PACKAGED_SPLIT)

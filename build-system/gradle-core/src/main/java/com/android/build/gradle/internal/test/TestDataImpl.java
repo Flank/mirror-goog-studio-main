@@ -63,7 +63,7 @@ public class TestDataImpl extends AbstractTestDataImpl {
         this.testVariantData = testVariantData;
         this.testVariantConfig = testVariantData.getVariantConfiguration();
         if (testVariantData
-                        .getSplitScope()
+                        .getOutputScope()
                         .getSplitsByType(VariantOutput.OutputType.FULL_SPLIT)
                         .size()
                 > 1) {

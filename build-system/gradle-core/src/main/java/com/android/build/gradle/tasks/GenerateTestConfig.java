@@ -23,7 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -52,7 +52,7 @@ public class GenerateTestConfig extends DefaultTask {
     Path assetsDirectory;
     Path sdkHome;
     Path generatedJavaResourcesDirectory;
-    SplitScope splitScope;
+    OutputScope outputScope;
     FileCollection manifests;
 
     @InputFiles
@@ -66,11 +66,11 @@ public class GenerateTestConfig extends DefaultTask {
         checkNotNull(assetsDirectory);
         checkNotNull(sdkHome);
         generateTestConfigForOutput(
-                SplitScope.getOutput(
+                OutputScope.getOutput(
                         BuildOutputs.load(
                                 TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, manifests),
                         TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                        splitScope.getMainSplit()));
+                        outputScope.getMainSplit()));
     }
 
     @VisibleForTesting
@@ -159,7 +159,7 @@ public class GenerateTestConfig extends DefaultTask {
             task.assetsDirectory = assets.getSingleFile().toPath();
             task.manifests =
                     testedScope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
-            task.splitScope = testedScope.getSplitScope();
+            task.outputScope = testedScope.getOutputScope();
             task.sdkHome =
                     Paths.get(scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation());
         }

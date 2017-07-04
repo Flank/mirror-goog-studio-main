@@ -37,21 +37,21 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /** Factory for {@link ApkData} instances. Cannot be stored in any model related objects. */
-public class SplitFactory {
+public class OutputFactory {
 
     static final String UNIVERSAL = "universal";
 
     private final String projectBaseName;
     private final GradleVariantConfiguration variantConfiguration;
-    private final SplitScope splitScope;
+    private final OutputScope outputScope;
 
-    public SplitFactory(
+    public OutputFactory(
             String projectBaseName,
             GradleVariantConfiguration variantConfiguration,
-            SplitScope splitScope) {
+            OutputScope outputScope) {
         this.projectBaseName = projectBaseName;
         this.variantConfiguration = variantConfiguration;
-        this.splitScope = splitScope;
+        this.outputScope = outputScope;
     }
 
     private String getOutputFileName(String baseName) {
@@ -71,7 +71,7 @@ public class SplitFactory {
                 // the task output folder configuration.
                 new Main(baseName, variantConfiguration.getFullName(), "", defaultFilename);
         checkNoDuplicate(mainOutput);
-        splitScope.addSplit(mainOutput);
+        outputScope.addSplit(mainOutput);
         return mainOutput;
     }
 
@@ -88,12 +88,12 @@ public class SplitFactory {
                         variantConfiguration.computeFullNameWithSplits(UNIVERSAL),
                         getOutputFileName(baseName));
         checkNoDuplicate(mainApk);
-        splitScope.addSplit(mainApk);
+        outputScope.addSplit(mainApk);
         return mainApk;
     }
 
     private void checkNoDuplicate(ApkData newApkData) {
-        List<ApkData> splitsByType = splitScope.getSplitsByType(VariantOutput.OutputType.MAIN);
+        List<ApkData> splitsByType = outputScope.getSplitsByType(VariantOutput.OutputType.MAIN);
         if (!splitsByType.isEmpty()) {
             throw new RuntimeException(
                     "Cannot add "
@@ -122,7 +122,7 @@ public class SplitFactory {
                         variantConfiguration.computeFullNameWithSplits(filterName),
                         getOutputFileName(baseName),
                         filtersList);
-        splitScope.addSplit(apkData);
+        outputScope.addSplit(apkData);
         return apkData;
     }
 
@@ -149,7 +149,7 @@ public class SplitFactory {
                         variantConfiguration.getDirName(),
                         fileName,
                         filtersList);
-        splitScope.addSplit(apkData);
+        outputScope.addSplit(apkData);
         return apkData;
     }
 

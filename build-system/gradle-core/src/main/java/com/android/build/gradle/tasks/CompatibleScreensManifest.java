@@ -20,7 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
@@ -43,7 +43,6 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
-
 /**
  * Task to generate a manifest snippet that just contains a compatible-screens node with the given
  * density and the given list of screen sizes.
@@ -53,7 +52,7 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
 
     private Set<String> screenSizes;
     private File outputFolder;
-    private SplitScope splitScope;
+    private OutputScope outputScope;
     private Supplier<String> minSdkVersion;
 
     @Input
@@ -67,7 +66,7 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
 
     @Input
     List<ApkData> getSplits() {
-        return splitScope.getApkDatas();
+        return outputScope.getApkDatas();
     }
 
     @Input
@@ -92,10 +91,10 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
     @TaskAction
     public void generateAll() throws IOException {
         // process all outputs.
-        splitScope.parallelForEach(
+        outputScope.parallelForEach(
                 VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST, this::generate);
         // now write the metadata file.
-        splitScope.save(
+        outputScope.save(
                 ImmutableList.of(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST),
                 outputFolder);
     }
@@ -174,7 +173,7 @@ public class CompatibleScreensManifest extends DefaultAndroidTask {
 
         @Override
         public void execute(@NonNull CompatibleScreensManifest csmTask) {
-            csmTask.splitScope = scope.getSplitScope();
+            csmTask.outputScope = scope.getOutputScope();
             csmTask.setVariantName(scope.getFullVariantName());
             csmTask.setScreenSizes(screenSizes);
             csmTask.setOutputFolder(scope.getCompatibleScreensManifestDirectory());

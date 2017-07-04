@@ -2022,8 +2022,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @NonNull
-    public SplitScope getSplitScope() {
-        return variantData.getSplitScope();
+    public OutputScope getOutputScope() {
+        return variantData.getOutputScope();
     }
 
     @NonNull

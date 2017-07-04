@@ -150,7 +150,7 @@ public class ApiObjectFactory {
                         variantApi,
                         variantData);
         variantData
-                .getSplitScope()
+                .getOutputScope()
                 .getApkDatas()
                 .forEach(
                         apkData -> {

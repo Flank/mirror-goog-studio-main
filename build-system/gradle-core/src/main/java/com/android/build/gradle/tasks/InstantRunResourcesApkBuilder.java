@@ -24,8 +24,8 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.packaging.ApkCreatorFactories;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
-import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.tasks.BaseTask;
@@ -65,7 +65,7 @@ public class InstantRunResourcesApkBuilder extends BaseTask {
 
     private FileCollection resources;
 
-    private SplitScope splitScope;
+    private OutputScope outputScope;
     private TaskOutputHolder.TaskOutputType resInputType;
 
     @Nested
@@ -94,7 +94,7 @@ public class InstantRunResourcesApkBuilder extends BaseTask {
 
         Collection<BuildOutput> buildOutputs = BuildOutputs.load(resInputType, resources);
 
-        splitScope.parallelForEachOutput(
+        outputScope.parallelForEachOutput(
                 buildOutputs,
                 resInputType,
                 TaskOutputHolder.TaskOutputType.INSTANT_RUN_PACKAGED_RESOURCES,
@@ -109,7 +109,8 @@ public class InstantRunResourcesApkBuilder extends BaseTask {
                                         mangleApkName(apkData) + SdkConstants.DOT_ANDROID_PACKAGE);
                         Files.createParentDirs(outputFile);
 
-                        // packageCodeSplitApk uses a temporary directory for incremental runs. Since we don't
+                        // packageCodeSplitApk uses a temporary directory for incremental runs.
+                        // Since we don't
                         // do incremental builds here, make sure it gets an empty directory.
                         File tempDir =
                                 new File(supportDirectory, "package_" + mangleApkName(apkData));
@@ -167,7 +168,7 @@ public class InstantRunResourcesApkBuilder extends BaseTask {
         public void execute(@NonNull InstantRunResourcesApkBuilder resourcesApkBuilder) {
             resourcesApkBuilder.setVariantName(packagingScope.getFullVariantName());
             resourcesApkBuilder.resInputType = resInputType;
-            resourcesApkBuilder.splitScope = packagingScope.getSplitScope();
+            resourcesApkBuilder.outputScope = packagingScope.getOutputScope();
             resourcesApkBuilder.supportDirectory =
                     packagingScope.getIncrementalDir("instant-run-resources");
             resourcesApkBuilder.androidBuilder = packagingScope.getAndroidBuilder();

@@ -43,9 +43,9 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.SplitFactory;
+import com.android.build.gradle.internal.scope.OutputFactory;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.SplitList;
-import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -227,9 +227,9 @@ public class ProcessAndroidResources extends IncrementalTask {
 
     FileCollection splitListInput;
 
-    private SplitScope splitScope;
+    private OutputScope outputScope;
 
-    private SplitFactory splitFactory;
+    private OutputFactory outputFactory;
 
     private boolean bypassAapt;
     private boolean disableResMergeInLib;
@@ -251,9 +251,9 @@ public class ProcessAndroidResources extends IncrementalTask {
         WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
         List<ApkData> splitsToGenerate =
-                getSplitsToGenerate(splitScope, supportedAbis, buildTargetAbi, buildTargetDensity);
+                getApksToGenerate(outputScope, supportedAbis, buildTargetAbi, buildTargetDensity);
 
-        for (ApkData apkData : splitScope.getApkDatas()) {
+        for (ApkData apkData : outputScope.getApkDatas()) {
             if (!splitsToGenerate.contains(apkData)) {
                 getLogger()
                         .log(
@@ -333,7 +333,7 @@ public class ProcessAndroidResources extends IncrementalTask {
         if (multiOutputPolicy == MultiOutputPolicy.SPLITS) {
             // now populate the pure splits list in the SplitScope (this should eventually move
             // to the SplitDiscoveryTask.
-            splitScope.deleteAllEntries(
+            outputScope.deleteAllEntries(
                     VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES);
             splitList.forEach(
                     (filterType, filterValues) -> {
@@ -345,7 +345,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                         filterValues.forEach(
                                 filterValue -> {
                                     ApkData configurationApkData =
-                                            splitFactory.addConfigurationSplit(
+                                            outputFactory.addConfigurationSplit(
                                                     filterType,
                                                     filterValue,
                                                     "" /* replaced later */);
@@ -373,7 +373,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                     if (packagedResForSplit != null) {
                                         configurationApkData.setOutputFileName(
                                                 packagedResForSplit.getName());
-                                        splitScope.addOutputForSplit(
+                                        outputScope.addOutputForSplit(
                                                 VariantScope.TaskOutputType
                                                         .DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
                                                 configurationApkData,
@@ -388,7 +388,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                     });
         }
         // and save the metadata file.
-        splitScope.save(
+        outputScope.save(
                 ImmutableList.of(
                         VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
                         VariantScope.TaskOutputType.PROCESSED_RES),
@@ -438,7 +438,8 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         // FIX ME : there should be a better way to always get the manifest file to merge.
         // for instance, should the library task also output the .gson ?
-        BuildOutput manifestOutput = SplitScope.getOutput(manifestsOutputs, taskInputType, apkData);
+        BuildOutput manifestOutput =
+                OutputScope.getOutput(manifestsOutputs, taskInputType, apkData);
         if (manifestOutput == null) {
             throw new RuntimeException("Cannot find merged manifest file");
         }
@@ -567,7 +568,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                 }
             }
 
-            splitScope.addOutputForSplit(
+            outputScope.addOutputForSplit(
                     VariantScope.TaskOutputType.PROCESSED_RES,
                     apkData,
                     resOutBaseNameFile,
@@ -678,8 +679,8 @@ public class ProcessAndroidResources extends IncrementalTask {
     }
 
     @NonNull
-    public static List<ApkData> getSplitsToGenerate(
-            @NonNull SplitScope splitScope,
+    public static List<ApkData> getApksToGenerate(
+            @NonNull OutputScope outputScope,
             @Nullable Set<String> supportedAbis,
             @Nullable String buildTargetAbi,
             @Nullable String buildTargetDensity) {
@@ -689,23 +690,23 @@ public class ProcessAndroidResources extends IncrementalTask {
         // comply when the IDE restricts the full splits we should produce
         Density density = Density.getEnum(buildTargetDensity);
 
-        List<ApkData> splitsToGenerate =
+        List<ApkData> apksToGenerate =
                 buildTargetAbi == null
-                        ? splitScope.getApkDatas()
+                        ? outputScope.getApkDatas()
                         : SplitOutputMatcher.computeBestOutput(
-                                splitScope.getApkDatas(),
+                                outputScope.getApkDatas(),
                                 supportedAbis,
                                 density == null ? -1 : density.getDpiValue(),
                                 Arrays.asList(Strings.nullToEmpty(buildTargetAbi).split(",")));
 
-        if (splitsToGenerate.isEmpty()) {
+        if (apksToGenerate.isEmpty()) {
             Preconditions.checkNotNull(
                     buildTargetAbi,
                     "buildTargetAbi should not be null when no splits are computed");
             Preconditions.checkNotNull(
                     supportedAbis, "supportedAbis should not be null when no splits are computed");
             List<String> splits =
-                    splitScope
+                    outputScope
                             .getApkDatas()
                             .stream()
                             .map(ApkData::getFilterName)
@@ -721,7 +722,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                     : Joiner.on(", ").join(supportedAbis)));
         }
 
-        return splitsToGenerate;
+        return apksToGenerate;
     }
 
     public static class ConfigAction implements TaskConfigAction<ProcessAndroidResources> {
@@ -816,7 +817,8 @@ public class ProcessAndroidResources extends IncrementalTask {
                         variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
             }
 
-            processResources.multiOutputPolicy = variantData.getSplitScope().getMultiOutputPolicy();
+            processResources.multiOutputPolicy =
+                    variantData.getOutputScope().getMultiOutputPolicy();
 
                 processResources.manifests = variantScope.getArtifactCollection(
                         RUNTIME_CLASSPATH, ALL, MANIFEST);
@@ -851,8 +853,8 @@ public class ProcessAndroidResources extends IncrementalTask {
             }
 
             processResources.variantScope = variantScope;
-            processResources.splitScope = variantData.getSplitScope();
-            processResources.splitFactory = variantData.getSplitFactory();
+            processResources.outputScope = variantData.getOutputScope();
+            processResources.outputFactory = variantData.getOutputFactory();
             processResources.originalApplicationId =
                     variantScope.getVariantConfiguration().getOriginalApplicationId();
 
@@ -942,10 +944,10 @@ public class ProcessAndroidResources extends IncrementalTask {
     public File getManifestFile() {
         File manifestDirectory = Iterables.getFirst(manifestFiles.getFiles(), null);
         Preconditions.checkNotNull(manifestDirectory);
-        Preconditions.checkNotNull(splitScope.getMainSplit());
+        Preconditions.checkNotNull(outputScope.getMainSplit());
         return FileUtils.join(
                 manifestDirectory,
-                splitScope.getMainSplit().getDirName(),
+                outputScope.getMainSplit().getDirName(),
                 SdkConstants.ANDROID_MANIFEST_XML);
     }
 

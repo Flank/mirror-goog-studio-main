@@ -35,8 +35,8 @@ import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
-import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -192,7 +192,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected FileType instantRunFileType;
 
-    protected SplitScope splitScope;
+    protected OutputScope outputScope;
 
     protected String projectBaseName;
 
@@ -343,7 +343,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         if (outputFiles == null) {
             outputFiles =
                     computeOutputFiles(
-                            splitScope,
+                            outputScope,
                             BuildOutputs.load(taskInputType, resourceFiles),
                             taskInputType,
                             outputDirectory,
@@ -380,14 +380,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @NonNull
     private static Map<ApkData, File> computeOutputFiles(
-            @NonNull SplitScope splitScope,
+            @NonNull OutputScope outputScope,
             @NonNull Collection<BuildOutput> inputs,
             @NonNull VariantScope.OutputType inputType,
             @NonNull File outputDirectory,
             @Nullable OutputFileProvider outputFileProvider) {
         Map<ApkData, File> outputFiles = Maps.newHashMap();
-        for (ApkData split : splitScope.getApkDatas()) {
-            BuildOutput buildOutput = SplitScope.getOutput(inputs, inputType, split);
+        for (ApkData split : outputScope.getApkDatas()) {
+            BuildOutput buildOutput = OutputScope.getOutput(inputs, inputType, split);
             if (buildOutput != null) {
                 File outputFile =
                         outputFileProvider != null
@@ -418,7 +418,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
                             manifests);
             BuildOutput manifestOutput =
-                    SplitScope.getOutput(
+                    OutputScope.getOutput(
                             manifestFiles,
                             TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
                             apkData);
@@ -463,10 +463,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
         Collection<BuildOutput> mergedResources =
                 BuildOutputs.load(getTaskInputType(), resourceFiles);
-        splitScope.parallelForEachOutput(
+        outputScope.parallelForEachOutput(
                 mergedResources, getTaskInputType(), getTaskOutputType(), this::splitFullAction);
         // We also add this meta-data file to the @OutputFiles, see method getOutputFiles()
-        splitScope.save(getTaskOutputType(), outputDirectory);
+        outputScope.save(getTaskOutputType(), outputDirectory);
     }
 
     public File splitFullAction(@NonNull ApkData apkData, @Nullable File processedResources)
@@ -648,7 +648,8 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         String abiFilter = apkData.getFilter(com.android.build.OutputFile.FilterType.ABI);
 
         // find the manifest file for this split.
-        BuildOutput manifestForSplit = SplitScope.getOutput(manifestOutputs, manifestType, apkData);
+        BuildOutput manifestForSplit =
+                OutputScope.getOutput(manifestOutputs, manifestType, apkData);
 
         if (manifestForSplit == null || manifestForSplit.getOutputFile() == null) {
             throw new RuntimeException(
@@ -728,13 +729,13 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     @Override
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) throws IOException {
         checkNotNull(changedInputs, "changedInputs == null");
-        splitScope.parallelForEachOutput(
+        outputScope.parallelForEachOutput(
                 BuildOutputs.load(getTaskInputType(), resourceFiles),
                 getTaskInputType(),
                 getTaskOutputType(),
                 (split, output) -> splitIncrementalAction(split, output, changedInputs));
         // We also add this meta-data file to the @OutputFiles, see method getOutputFiles()
-        splitScope.save(getTaskOutputType(), outputDirectory);
+        outputScope.save(getTaskOutputType(), outputDirectory);
     }
 
     private File splitIncrementalAction(
@@ -878,7 +879,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         @NonNull protected final VariantScope.TaskOutputType inputResourceFilesType;
         @NonNull protected final FileCollection resourceFiles;
         @NonNull protected final File outputDirectory;
-        @NonNull protected final SplitScope splitScope;
+        @NonNull protected final OutputScope outputScope;
         @Nullable private final FileCache fileCache;
         @NonNull private final VariantScope.TaskOutputType manifestType;
 
@@ -891,7 +892,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 @NonNull FileCollection manifests,
                 @NonNull VariantScope.TaskOutputType manifestType,
                 @Nullable FileCache fileCache,
-                @NonNull SplitScope splitScope) {
+                @NonNull OutputScope outputScope) {
             this.project = packagingScope.getProject();
             this.packagingScope = checkNotNull(packagingScope);
             this.inputResourceFilesType = inputResourceFilesType;
@@ -901,7 +902,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             this.manifests = manifests;
             this.outputDirectory = outputDirectory;
             this.resourceFiles = resourceFiles;
-            this.splitScope = splitScope;
+            this.outputScope = outputScope;
             this.manifestType = manifestType;
             this.fileCache = fileCache;
         }
@@ -929,7 +930,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.outputDirectory = outputDirectory;
             packageAndroidArtifact.setIncrementalFolder(
                     packagingScope.getIncrementalDir(packageAndroidArtifact.getName()));
-            packageAndroidArtifact.splitScope = splitScope;
+            packageAndroidArtifact.outputScope = outputScope;
 
             packageAndroidArtifact.fileCache = fileCache;
             packageAndroidArtifact.aaptOptionsNoCompress =
@@ -963,7 +964,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             task.dexFolders = packagingScope.getDexFolders();
             task.javaResourceFiles = packagingScope.getJavaResources();
 
-            if (packagingScope.getSplitHandlingPolicy() == MultiOutputPolicy.MULTI_APK) {
+            if (packagingScope.getMultiOutputPolicy() == MultiOutputPolicy.MULTI_APK) {
                 task.jniFolders = packagingScope.getJniFolders();
             } else {
                 Set<String> filters =

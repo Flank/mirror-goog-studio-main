@@ -32,8 +32,8 @@ import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
-import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.AndroidBuilder;
@@ -76,7 +76,7 @@ public class InstantRunResourcesApkBuilderTest {
     @Mock FileCollection fileCollection;
     @Mock PackagingScope packagingScope;
     @Mock AndroidBuilder androidBuilder;
-    @Mock SplitScope splitScope;
+    @Mock OutputScope outputScope;
     @Mock CoreSigningConfig signingConfig;
     @Mock InstantRunBuildContext buildContext;
 
@@ -88,7 +88,7 @@ public class InstantRunResourcesApkBuilderTest {
 
         task = project.getTasks().create("test", InstantRunResourcesApkBuilder.class);
 
-        when(packagingScope.getSplitScope()).thenReturn(splitScope);
+        when(packagingScope.getOutputScope()).thenReturn(outputScope);
         when(packagingScope.getFullVariantName()).thenReturn("testVariant");
         when(packagingScope.getSigningConfig()).thenReturn(signingConfig);
         when(packagingScope.getAndroidBuilder()).thenReturn(androidBuilder);
@@ -142,8 +142,8 @@ public class InstantRunResourcesApkBuilderTest {
         when(fileTree.getFiles()).thenReturn(ImmutableSet.of());
         when(fileCollection.getAsFileTree()).thenReturn(fileTree);
 
-        ArgumentCaptor<SplitScope.SplitOutputAction> splitActionCaptor =
-                ArgumentCaptor.forClass(SplitScope.SplitOutputAction.class);
+        ArgumentCaptor<OutputScope.SplitOutputAction> splitActionCaptor =
+                ArgumentCaptor.forClass(OutputScope.SplitOutputAction.class);
 
         // invoke per split action with null values.
         doAnswer(
@@ -151,7 +151,7 @@ public class InstantRunResourcesApkBuilderTest {
                             splitActionCaptor.getValue().processSplit(null, null);
                             return null;
                         })
-                .when(splitScope)
+                .when(outputScope)
                 .parallelForEachOutput(
                         eq(ImmutableList.of()),
                         eq(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
@@ -221,8 +221,8 @@ public class InstantRunResourcesApkBuilderTest {
                 BuildOutputs.getMetadataFile(temporaryFolder.getRoot()),
                 Charsets.UTF_8);
 
-        ArgumentCaptor<SplitScope.SplitOutputAction> splitActionCaptor =
-                ArgumentCaptor.forClass(SplitScope.SplitOutputAction.class);
+        ArgumentCaptor<OutputScope.SplitOutputAction> splitActionCaptor =
+                ArgumentCaptor.forClass(OutputScope.SplitOutputAction.class);
 
         doAnswer(
                         invocation -> {
@@ -233,7 +233,7 @@ public class InstantRunResourcesApkBuilderTest {
                             }
                             return null;
                         })
-                .when(splitScope)
+                .when(outputScope)
                 .parallelForEachOutput(
                         any(Collection.class),
                         eq(TaskOutputHolder.TaskOutputType.PROCESSED_RES),

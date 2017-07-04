@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
@@ -56,7 +56,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
 
     private InstantRunBuildContext buildContext;
     private File instantRunSupportDir;
-    private SplitScope splitScope;
+    private OutputScope outputScope;
     private FileCollection instantRunManifests;
     private FileCollection processedRes;
 
@@ -111,7 +111,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
         for (BuildOutput mergedManifest : manifestsOutputs) {
 
             ApkInfo apkInfo = mergedManifest.getApkInfo();
-            ApkData apkData = splitScope.getSplit(apkInfo.getFilters());
+            ApkData apkData = outputScope.getSplit(apkInfo.getFilters());
             if (apkData == null
                     || !apkData.isEnabled()
                     || apkData.getType() == VariantOutput.OutputType.SPLIT) {
@@ -127,7 +127,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
             // the right one. then change the code above to use the same logic to get the manifest
             // file.
             BuildOutput output =
-                    SplitScope.getOutput(
+                    OutputScope.getOutput(
                             processedResOutputs,
                             TaskOutputHolder.TaskOutputType.PROCESSED_RES,
                             apkData);
@@ -138,7 +138,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
                                 + " split in "
                                 + Joiner.on(",")
                                         .join(
-                                                splitScope.getOutputs(
+                                                outputScope.getOutputs(
                                                         VariantScope.TaskOutputType
                                                                 .PROCESSED_RES)));
             }
@@ -253,7 +253,7 @@ public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
 
             task.instantRunManifests = instantRunMergedManifests;
             task.processedRes = processedResources;
-            task.splitScope = transformVariantScope.getSplitScope();
+            task.outputScope = transformVariantScope.getOutputScope();
             task.buildContext = instantRunVariantScope.getInstantRunBuildContext();
             task.instantRunSupportDir =
                     new File(instantRunVariantScope.getInstantRunSupportDir(), "manifestChecker");

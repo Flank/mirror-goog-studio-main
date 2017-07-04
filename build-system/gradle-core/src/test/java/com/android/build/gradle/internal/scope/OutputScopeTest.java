@@ -37,8 +37,8 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-/** Tests for the {@link SplitScope} class */
-public class SplitScopeTest {
+/** Tests for the {@link OutputScope} class */
+public class OutputScopeTest {
 
     @Mock private GradleVariantConfiguration variantConfiguration;
     @Mock private GlobalScope globalScope;
@@ -51,23 +51,24 @@ public class SplitScopeTest {
 
     @Test
     public void testPersistence() throws IOException {
-        SplitScope splitScope = new SplitScope(MultiOutputPolicy.MULTI_APK);
-        SplitFactory splitFactory = new SplitFactory("project", variantConfiguration, splitScope);
+        OutputScope outputScope = new OutputScope(MultiOutputPolicy.MULTI_APK);
+        OutputFactory outputFactory =
+                new OutputFactory("project", variantConfiguration, outputScope);
 
-        splitFactory.addUniversalApk();
+        outputFactory.addUniversalApk();
         ApkData densityApkData =
-                splitFactory.addFullSplit(
+                outputFactory.addFullSplit(
                         ImmutableList.of(Pair.of(OutputFile.FilterType.DENSITY, "xxhdpi")));
 
         // simulate output
         File outputForSplit = temporaryFolder.newFile();
-        splitScope.addOutputForSplit(
+        outputScope.addOutputForSplit(
                 VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST,
                 densityApkData,
                 outputForSplit);
 
         String persistedState =
-                splitScope.persist(
+                outputScope.persist(
                         ImmutableList.of(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST));
 
         // load the persisted state.

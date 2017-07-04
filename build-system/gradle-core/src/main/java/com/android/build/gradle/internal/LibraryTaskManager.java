@@ -554,12 +554,12 @@ public class LibraryTaskManager extends TaskManager {
                 variantScope.getMergeAssetsTask().getName());
         bundle.dependsOn(variantScope.getNdkBuildable());
 
-        Preconditions.checkNotNull(variantScope.getSplitScope().getMainSplit());
+        Preconditions.checkNotNull(variantScope.getOutputScope().getMainSplit());
         bundle.setDescription("Assembles a bundle containing the library in " +
                 variantConfig.getFullName() + ".");
         bundle.setDestinationDir(variantScope.getAarLocation());
         bundle.setArchiveNameSupplier(
-                () -> variantScope.getSplitScope().getMainSplit().getOutputFileName());
+                () -> variantScope.getOutputScope().getMainSplit().getOutputFileName());
         bundle.setExtension(BuilderConstants.EXT_LIB_ARCHIVE);
         bundle.from(variantScope.getOutput(TaskOutputType.LIBRARY_MANIFEST));
         bundle.from(variantBundleDir);
@@ -575,7 +575,7 @@ public class LibraryTaskManager extends TaskManager {
                                 new File(
                                         variantScope.getAarLocation(),
                                         variantScope
-                                                .getSplitScope()
+                                                .getOutputScope()
                                                 .getMainSplit()
                                                 .getOutputFileName()),
                 bundle.getName());

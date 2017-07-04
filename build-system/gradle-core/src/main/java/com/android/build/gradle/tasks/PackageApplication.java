@@ -21,8 +21,8 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.incremental.DexPackagingPolicy;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
-import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.profile.ProcessProfileWriter;
@@ -104,7 +104,7 @@ public class PackageApplication extends PackageAndroidArtifact {
                 @NonNull FileCollection resourceFiles,
                 @NonNull FileCollection manifests,
                 @NonNull VariantScope.TaskOutputType manifestType,
-                @NonNull SplitScope splitScope,
+                @NonNull OutputScope outputScope,
                 @Nullable FileCache fileCache,
                 @NonNull TaskOutputHolder.TaskOutputType expectedOutputType) {
             super(
@@ -116,7 +116,7 @@ public class PackageApplication extends PackageAndroidArtifact {
                     manifests,
                     manifestType,
                     fileCache,
-                    splitScope);
+                    outputScope);
             this.expectedOutputType = expectedOutputType;
         }
 
@@ -157,7 +157,7 @@ public class PackageApplication extends PackageAndroidArtifact {
                 @NonNull FileCollection manifests,
                 @NonNull VariantScope.TaskOutputType manifestType,
                 @Nullable FileCache fileCache,
-                @NonNull SplitScope splitScope) {
+                @NonNull OutputScope outputScope) {
             super(
                     scope,
                     outputFile.getParentFile(),
@@ -167,7 +167,7 @@ public class PackageApplication extends PackageAndroidArtifact {
                     manifests,
                     manifestType,
                     fileCache,
-                    splitScope);
+                    outputScope);
             mOutputFile = outputFile;
         }
 

@@ -38,9 +38,9 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.OutputFactory;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
-import com.android.build.gradle.internal.scope.SplitFactory;
-import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
@@ -155,7 +155,7 @@ class ExternalBuildTaskManager {
                         externalBuildContext.getBuildManifest().getResourceApk().getExecRootPath());
 
         ApkData mainApkData =
-                new SplitFactory.DefaultApkData(
+                new OutputFactory.DefaultApkData(
                         VariantOutput.OutputType.MAIN,
                         "",
                         "main",
@@ -237,14 +237,14 @@ class ExternalBuildTaskManager {
                         project, externalBuildContext, variantScope, transformManager,
                         manifestSigningConfig);
 
-        SplitScope splitScope = packagingScope.getSplitScope();
-        splitScope.addOutputForSplit(
+        OutputScope outputScope = packagingScope.getOutputScope();
+        outputScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, mainApkData, androidManifestFile);
-        splitScope.addOutputForSplit(
+        outputScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
                 mainApkData,
                 androidManifestFile);
-        splitScope.addOutputForSplit(
+        outputScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.PROCESSED_RES,
                 mainApkData,
                 processedAndroidResourcesFile);
@@ -293,7 +293,7 @@ class ExternalBuildTaskManager {
                                 project.files(processedAndroidResourcesFile),
                                 project.files(androidManifestFile),
                                 VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
-                                variantScope.getSplitScope(),
+                                variantScope.getOutputScope(),
                                 globalScope.getBuildCache(),
                                 TaskOutputHolder.TaskOutputType.APK));
 

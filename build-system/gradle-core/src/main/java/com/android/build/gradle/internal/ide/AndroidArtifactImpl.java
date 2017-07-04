@@ -23,7 +23,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
@@ -143,13 +143,14 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                                                 == OutputFile.OutputType.SPLIT)
                         .collect(Collectors.toList());
         if (splitApksOutput.isEmpty()) {
-            // we don't have split APKs so each output is mapped to a different AndroidArtifactOutput
+            // we don't have split APKs so each output is mapped to a different
+            // AndroidArtifactOutput
             return outputs.stream()
                     .map(
                             splitOutput ->
                                     new AndroidArtifactOutputImpl(
                                             splitOutput,
-                                            SplitScope.getOutput(
+                                            OutputScope.getOutput(
                                                     manifests,
                                                     TaskOutputHolder.TaskOutputType
                                                             .MERGED_MANIFESTS,
@@ -170,7 +171,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             return ImmutableList.of(
                     new AndroidArtifactOutputImpl(
                             mainApks.get(0),
-                            SplitScope.getOutput(
+                            OutputScope.getOutput(
                                     manifests,
                                     TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
                                     mainApks.get(0).getApkInfo()),

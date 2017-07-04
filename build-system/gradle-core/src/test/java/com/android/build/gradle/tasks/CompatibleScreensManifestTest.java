@@ -23,8 +23,8 @@ import com.android.SdkConstants;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
-import com.android.build.gradle.internal.scope.SplitFactory;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputFactory;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.ide.common.build.ApkData;
@@ -53,7 +53,7 @@ public class CompatibleScreensManifestTest {
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Mock VariantScope scope;
-    @Mock SplitScope splitScope;
+    @Mock OutputScope outputScope;
     @Mock GradleVariantConfiguration variantConfiguration;
     @Mock ProductFlavor productFlavor;
 
@@ -64,7 +64,7 @@ public class CompatibleScreensManifestTest {
         MockitoAnnotations.initMocks(this);
         when(scope.getFullVariantName()).thenReturn("fullVariantName");
         when(scope.getVariantConfiguration()).thenReturn(variantConfiguration);
-        when(scope.getSplitScope()).thenReturn(splitScope);
+        when(scope.getOutputScope()).thenReturn(outputScope);
         when(productFlavor.getMinSdkVersion()).thenReturn(new DefaultApiVersion(21, null));
         when(scope.getCompatibleScreensManifestDirectory()).thenReturn(temporaryFolder.getRoot());
         when(variantConfiguration.getMergedFlavor()).thenReturn(productFlavor);
@@ -97,9 +97,9 @@ public class CompatibleScreensManifestTest {
     @Test
     public void testNoSplit() throws IOException {
 
-        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
-        ApkData mainApk = splitFactory.addMainApk();
-        when(splitScope.getApkDatas()).thenReturn(ImmutableList.of(mainApk));
+        OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
+        ApkData mainApk = outputFactory.addMainApk();
+        when(outputScope.getApkDatas()).thenReturn(ImmutableList.of(mainApk));
 
         task.setVariantName("variant");
         task.setOutputFolder(temporaryFolder.getRoot());
@@ -114,11 +114,11 @@ public class CompatibleScreensManifestTest {
     @Test
     public void testSingleSplitWithMinSdkVersion() throws IOException {
 
-        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
+        OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
         ApkData splitApk =
-                splitFactory.addFullSplit(
+                outputFactory.addFullSplit(
                         ImmutableList.of(Pair.of(VariantOutput.FilterType.DENSITY, "xhdpi")));
-        when(splitScope.getApkDatas()).thenReturn(ImmutableList.of(splitApk));
+        when(outputScope.getApkDatas()).thenReturn(ImmutableList.of(splitApk));
 
         task.setVariantName("variant");
         task.setOutputFolder(temporaryFolder.getRoot());
@@ -142,11 +142,11 @@ public class CompatibleScreensManifestTest {
     @Test
     public void testSingleSplitWithoutMinSdkVersion() throws IOException {
 
-        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
+        OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
         ApkData splitApk =
-                splitFactory.addFullSplit(
+                outputFactory.addFullSplit(
                         ImmutableList.of(Pair.of(VariantOutput.FilterType.DENSITY, "xhdpi")));
-        when(splitScope.getApkDatas()).thenReturn(ImmutableList.of(splitApk));
+        when(outputScope.getApkDatas()).thenReturn(ImmutableList.of(splitApk));
 
         task.setVariantName("variant");
         task.setOutputFolder(temporaryFolder.getRoot());
@@ -166,14 +166,14 @@ public class CompatibleScreensManifestTest {
     @Test
     public void testMultipleSplitsWithMinSdkVersion() throws IOException {
 
-        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
+        OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
         ApkData xhdpiSplit =
-                splitFactory.addFullSplit(
+                outputFactory.addFullSplit(
                         ImmutableList.of(Pair.of(VariantOutput.FilterType.DENSITY, "xhdpi")));
         ApkData xxhdpiSplit =
-                splitFactory.addFullSplit(
+                outputFactory.addFullSplit(
                         ImmutableList.of(Pair.of(VariantOutput.FilterType.DENSITY, "xxhdpi")));
-        when(splitScope.getApkDatas()).thenReturn(ImmutableList.of(xhdpiSplit, xxhdpiSplit));
+        when(outputScope.getApkDatas()).thenReturn(ImmutableList.of(xhdpiSplit, xxhdpiSplit));
 
         task.setVariantName("variant");
         task.setOutputFolder(temporaryFolder.getRoot());

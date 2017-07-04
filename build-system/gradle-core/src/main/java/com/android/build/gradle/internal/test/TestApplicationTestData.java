@@ -22,7 +22,7 @@ import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
@@ -120,16 +120,16 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
         // if we have more than one, that means pure splits are in the equation.
         if (testedApkFiles.size() > 1 && splitSelectExe != null) {
 
-            SplitScope testedSplitScope = new SplitScope(MultiOutputPolicy.MULTI_APK);
+            OutputScope testedOutputScope = new OutputScope(MultiOutputPolicy.MULTI_APK);
             BuildOutputs.load(VariantScope.TaskOutputType.APK, testedApks);
 
-            List<String> testedSplitApksPath = getSplitApks(testedSplitScope);
+            List<String> testedSplitApksPath = getSplitApks(testedOutputScope);
             selectedApks.addAll(
                     SplitOutputMatcher.computeBestOutput(
                             processExecutor,
                             splitSelectExe,
                             deviceConfigProvider,
-                            getMainApk(testedSplitScope),
+                            getMainApk(testedOutputScope),
                             testedSplitApksPath));
         } else {
             // if we have only one or no split-select tool available, just install them all
@@ -171,8 +171,8 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
     }
 
     @NonNull
-    public static List<String> getSplitApks(SplitScope splitScope) {
-        return splitScope
+    public static List<String> getSplitApks(OutputScope outputScope) {
+        return outputScope
                 .getOutputs(TaskOutputHolder.TaskOutputType.APK)
                 .stream()
                 .filter(
@@ -190,10 +190,10 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
      * @return the tested main APK
      */
     @NonNull
-    private static File getMainApk(SplitScope splitScope) {
+    private static File getMainApk(OutputScope outputScope) {
 
         Optional<File> mainApk =
-                splitScope
+                outputScope
                         .getOutputs(TaskOutputHolder.TaskOutputType.APK)
                         .stream()
                         .filter(

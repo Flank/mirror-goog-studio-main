@@ -225,7 +225,7 @@ public class ApplicationTaskManager extends TaskManager {
 
         createStripNativeLibraryTask(tasks, variantScope);
 
-        if (variantScope.getSplitScope().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
+        if (variantScope.getOutputScope().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
             if (extension.getBuildToolsRevision().getMajor() < 21) {
                 throw new RuntimeException(
                         "Pure splits can only be used with buildtools 21 and later");

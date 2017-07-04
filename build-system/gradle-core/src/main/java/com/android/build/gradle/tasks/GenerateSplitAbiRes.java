@@ -24,8 +24,8 @@ import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
 import com.android.build.gradle.internal.dsl.DslAdaptersKt;
-import com.android.build.gradle.internal.scope.SplitFactory;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputFactory;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
@@ -71,8 +71,8 @@ public class GenerateSplitAbiRes extends BaseTask {
     private File outputDirectory;
     private boolean debuggable;
     private AaptOptions aaptOptions;
-    private SplitScope splitScope;
-    private SplitFactory splitFactory;
+    private OutputScope outputScope;
+    private OutputFactory outputFactory;
     private VariantType variantType;
     private VariantScope variantScope;
     private FileCache fileCache;
@@ -134,12 +134,12 @@ public class GenerateSplitAbiRes extends BaseTask {
     @TaskAction
     protected void doFullTaskAction() throws IOException, InterruptedException, ProcessException {
 
-        splitScope.deleteAllEntries(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES);
+        outputScope.deleteAllEntries(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES);
         for (String split : getSplits()) {
             File resPackageFile = getOutputFileForSplit(split);
 
             ApkData abiApkData =
-                    splitFactory.addConfigurationSplit(
+                    outputFactory.addConfigurationSplit(
                             OutputFile.FilterType.ABI, split, resPackageFile.getName());
             abiApkData.setVersionCode(variantScope.getVariantConfiguration().getVersionCode());
             abiApkData.setVersionName(variantScope.getVariantConfiguration().getVersionName());
@@ -240,13 +240,13 @@ public class GenerateSplitAbiRes extends BaseTask {
                     .setVariantType(variantType);
 
             getBuilder().processResources(aapt, aaptConfig);
-            splitScope.addOutputForSplit(
+            outputScope.addOutputForSplit(
                     VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
                     abiApkData,
                     resPackageFile);
         }
 
-        splitScope.save(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, outputDirectory);
+        outputScope.save(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, outputDirectory);
     }
 
     // FIX ME : this calculation should move to SplitScope.Split interface
@@ -307,8 +307,8 @@ public class GenerateSplitAbiRes extends BaseTask {
             generateSplitAbiRes.debuggable = config.getBuildType().isDebuggable();
             generateSplitAbiRes.aaptOptions =
                     scope.getGlobalScope().getExtension().getAaptOptions();
-            generateSplitAbiRes.splitScope = scope.getSplitScope();
-            generateSplitAbiRes.splitFactory = scope.getVariantData().getSplitFactory();
+            generateSplitAbiRes.outputScope = scope.getOutputScope();
+            generateSplitAbiRes.outputFactory = scope.getVariantData().getOutputFactory();
         }
     }
 }

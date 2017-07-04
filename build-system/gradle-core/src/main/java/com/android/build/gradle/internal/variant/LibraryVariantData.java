@@ -54,7 +54,7 @@ public class LibraryVariantData extends BaseVariantData implements TestedVariant
         testVariants = Maps.newEnumMap(VariantType.class);
 
         // create default output
-        getSplitFactory()
+        getOutputFactory()
                 .addMainOutput(
                         globalScope.getProjectBaseName()
                                 + "-"

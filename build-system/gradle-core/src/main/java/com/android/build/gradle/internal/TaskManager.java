@@ -1129,7 +1129,10 @@ public abstract class TaskManager {
         BaseVariantData variantData = scope.getVariantData();
 
         checkState(
-                variantData.getSplitScope().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
+                variantData
+                        .getOutputScope()
+                        .getMultiOutputPolicy()
+                        .equals(MultiOutputPolicy.SPLITS),
                 "Can only create split resources tasks for pure splits.");
 
         File densityOrLanguagesPackages = scope.getSplitDensityOrLanguagesPackagesOutputDirectory();
@@ -1157,7 +1160,10 @@ public abstract class TaskManager {
         BaseVariantData variantData = scope.getVariantData();
 
         checkState(
-                variantData.getSplitScope().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS),
+                variantData
+                        .getOutputScope()
+                        .getMultiOutputPolicy()
+                        .equals(MultiOutputPolicy.SPLITS),
                 "split ABI tasks are only compatible with pure splits.");
 
         Set<String> filters = AbiSplitOptions.getAbiFilters(extension.getSplits().getAbiFilters());
@@ -1166,7 +1172,7 @@ public abstract class TaskManager {
         }
 
         List<ApkData> fullApkDatas =
-                variantData.getSplitScope().getSplitsByType(OutputFile.OutputType.FULL_SPLIT);
+                variantData.getOutputScope().getSplitsByType(OutputFile.OutputType.FULL_SPLIT);
         if (!fullApkDatas.isEmpty()) {
             throw new RuntimeException(
                     "In release 21 and later, there cannot be full splits and pure splits, "
@@ -2569,7 +2575,7 @@ public abstract class TaskManager {
                         : VariantScope.TaskOutputType.MERGED_MANIFESTS;
 
         final boolean splitsArePossible =
-                variantScope.getSplitScope().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
+                variantScope.getOutputScope().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
 
         FileCollection manifests = variantScope.getOutput(manifestType);
         // this is where the final APKs will be located.
@@ -2602,7 +2608,7 @@ public abstract class TaskManager {
                                 variantScope.getOutput(resourceFilesInputType),
                                 manifests,
                                 manifestType,
-                                variantScope.getSplitScope(),
+                                variantScope.getOutputScope(),
                                 globalScope.getBuildCache(),
                                 taskOutputType));
         variantScope.addTaskOutput(taskOutputType, outputDirectory, packageApp.getName());
@@ -2635,7 +2641,7 @@ public abstract class TaskManager {
                                         manifests,
                                         VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
                                         globalScope.getBuildCache(),
-                                        variantScope.getSplitScope()));
+                                        variantScope.getOutputScope()));
             }
 
             // Make sure the MAIN artifact is registered after the RESOURCES one.

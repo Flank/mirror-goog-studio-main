@@ -78,7 +78,7 @@ public interface PackagingScope extends TaskOutputHolder {
     FileCollection getJniFolders();
 
     @NonNull
-    MultiOutputPolicy getSplitHandlingPolicy();
+    MultiOutputPolicy getMultiOutputPolicy();
 
     @NonNull
     Set<String> getAbiFilters();
@@ -125,7 +125,7 @@ public interface PackagingScope extends TaskOutputHolder {
     @NotNull
     ProjectOptions getProjectOptions();
 
-    SplitScope getSplitScope();
+    OutputScope getOutputScope();
 
     void addTask(TaskContainer.TaskKind taskKind, Task task);
 

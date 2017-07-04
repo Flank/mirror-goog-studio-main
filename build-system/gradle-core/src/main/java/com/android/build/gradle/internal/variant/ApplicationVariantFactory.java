@@ -31,8 +31,8 @@ import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.SplitFactory;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputFactory;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
@@ -83,30 +83,30 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                     .getCompatibleScreens());
         }
 
-        SplitScope splitScope = variant.getSplitScope();
-        SplitFactory splitFactory = variant.getSplitFactory();
+        OutputScope outputScope = variant.getOutputScope();
+        OutputFactory outputFactory = variant.getOutputFactory();
 
         // create its output
-        if (splitScope.getMultiOutputPolicy() == MultiOutputPolicy.MULTI_APK) {
+        if (outputScope.getMultiOutputPolicy() == MultiOutputPolicy.MULTI_APK) {
 
             // if the abi list is not empty and we must generate a universal apk, add it.
             if (abis.isEmpty()) {
                 // create the main APK or universal APK depending on whether or not we are going
                 // to produce full splits.
                 if (densities.isEmpty()) {
-                    splitFactory.addMainApk();
+                    outputFactory.addMainApk();
                 } else {
-                    splitFactory.addUniversalApk();
+                    outputFactory.addUniversalApk();
                 }
             } else {
                 if (extension.getSplits().getAbi().isEnable()
                         && extension.getSplits().getAbi().isUniversalApk()) {
-                    splitFactory.addUniversalApk();
+                    outputFactory.addUniversalApk();
                 }
                 // for each ABI, create a specific split that will contain all densities.
                 abis.forEach(
                         abi ->
-                                splitFactory.addFullSplit(
+                                outputFactory.addFullSplit(
                                         ImmutableList.of(Pair.of(OutputFile.FilterType.ABI, abi))));
             }
 
@@ -114,18 +114,18 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             for (String density : densities) {
                 if (!abis.isEmpty()) {
                     for (String abi : abis) {
-                        splitFactory.addFullSplit(
+                        outputFactory.addFullSplit(
                                 ImmutableList.of(
                                         Pair.of(OutputFile.FilterType.ABI, abi),
                                         Pair.of(OutputFile.FilterType.DENSITY, density)));
                     }
                 } else {
-                    splitFactory.addFullSplit(
+                    outputFactory.addFullSplit(
                             ImmutableList.of(Pair.of(OutputFile.FilterType.DENSITY, density)));
                 }
             }
         } else {
-            splitFactory.addMainApk();
+            outputFactory.addMainApk();
         }
 
         return variant;

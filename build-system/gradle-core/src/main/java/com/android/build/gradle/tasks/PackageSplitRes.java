@@ -20,7 +20,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
@@ -46,7 +46,7 @@ public class PackageSplitRes extends BaseTask {
 
     private SigningConfig signingConfig;
     private File incrementalDir;
-    private SplitScope splitScope;
+    private OutputScope outputScope;
     public FileCollection processedResources;
     public File splitResApkOutputDirectory;
 
@@ -69,7 +69,7 @@ public class PackageSplitRes extends BaseTask {
     @TaskAction
     protected void doFullTaskAction() throws IOException {
 
-        splitScope.parallelForEachOutput(
+        outputScope.parallelForEachOutput(
                 BuildOutputs.load(
                         VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
                         processedResources),
@@ -105,7 +105,7 @@ public class PackageSplitRes extends BaseTask {
                     }
                     return outFile;
                 });
-        splitScope.save(
+        outputScope.save(
                 VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
                 splitResApkOutputDirectory);
     }
@@ -145,7 +145,7 @@ public class PackageSplitRes extends BaseTask {
             BaseVariantData variantData = scope.getVariantData();
             final VariantConfiguration config = variantData.getVariantConfiguration();
 
-            packageSplitResourcesTask.splitScope = scope.getSplitScope();
+            packageSplitResourcesTask.outputScope = scope.getOutputScope();
             packageSplitResourcesTask.processedResources =
                     scope.getOutput(VariantScope.TaskOutputType.PROCESSED_RES);
             packageSplitResourcesTask.signingConfig = config.getSigningConfig();

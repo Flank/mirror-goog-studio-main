@@ -36,7 +36,7 @@ import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ApplicationId;
@@ -100,7 +100,7 @@ public class MergeManifests extends ManifestProcessorTask {
     private FileCollection compatibleScreensManifest;
     private FileCollection packageManifest;
     private List<Feature> optionalFeatures;
-    private SplitScope splitScope;
+    private OutputScope outputScope;
 
     private Set<String> supportedAbis;
     private String buildTargetAbi;
@@ -125,13 +125,13 @@ public class MergeManifests extends ManifestProcessorTask {
         @Nullable BuildOutput compatibleScreenManifestForSplit;
 
         List<ApkData> splitsToGenerate =
-                ProcessAndroidResources.getSplitsToGenerate(
-                        splitScope, supportedAbis, buildTargetAbi, buildTargetDensity);
+                ProcessAndroidResources.getApksToGenerate(
+                        outputScope, supportedAbis, buildTargetAbi, buildTargetDensity);
 
         // FIX ME : multi threading.
         for (ApkData apkData : splitsToGenerate) {
             compatibleScreenManifestForSplit =
-                    SplitScope.getOutput(
+                    OutputScope.getOutput(
                             compatibleScreenManifests,
                             VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST,
                             apkData);
@@ -176,21 +176,21 @@ public class MergeManifests extends ManifestProcessorTask {
                                     "split", mergedXmlDocument.getSplitName())
                             : ImmutableMap.of();
 
-            splitScope.addOutputForSplit(
+            outputScope.addOutputForSplit(
                     VariantScope.TaskOutputType.MERGED_MANIFESTS,
                     apkData,
                     manifestOutputFile,
                     properties);
-            splitScope.addOutputForSplit(
+            outputScope.addOutputForSplit(
                     VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
                     apkData,
                     instantRunManifestOutputFile,
                     properties);
         }
-        splitScope.save(
+        outputScope.save(
                 ImmutableList.of(VariantScope.TaskOutputType.MERGED_MANIFESTS),
                 getManifestOutputDirectory());
-        splitScope.save(
+        outputScope.save(
                 ImmutableList.of(VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS),
                 getInstantRunManifestOutputDirectory());
     }
@@ -223,7 +223,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
     @Input
     public List<Integer> getVersionCodes() {
-        return splitScope
+        return outputScope
                 .getApkDatas()
                 .stream()
                 .map(ApkData::getVersionCode)
@@ -233,7 +233,7 @@ public class MergeManifests extends ManifestProcessorTask {
     @Input
     @Optional
     public List<String> getVersionNames() {
-        return splitScope
+        return outputScope
                 .getApkDatas()
                 .stream()
                 .map(ApkData::getVersionName)
@@ -472,7 +472,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
             processManifestTask.setAndroidBuilder(androidBuilder);
             processManifestTask.setVariantName(config.getFullName());
-            processManifestTask.splitScope = variantData.getSplitScope();
+            processManifestTask.outputScope = variantData.getOutputScope();
 
             processManifestTask.setVariantConfiguration(config);
 

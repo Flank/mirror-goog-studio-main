@@ -44,37 +44,39 @@ import java.util.stream.Collectors;
 import org.gradle.tooling.BuildException;
 
 /**
- * Information about expected Outputs from a build. Expected outputs can contain :
+ * Information about expected Outputs from a build.
+ *
+ * <p>This will either contain:
  *
  * <ul>
- *   a single main APK
- * </ul>
- *
- * <ul>
- *   multiple FULL_APKs
- * </ul>
- *
- * <ul>
- *   a single main APK with multiple split APKs
+ *   <li>A single main APK
+ *   <li>Multiple full APKs when the {@code multiOutputPolicy} is {@link
+ *       MultiOutputPolicy#MULTI_APK}
+ *   <li>A single main APK with multiple split APKs (when the {@code multiOutputPolicy} is {@link
+ *       MultiOutputPolicy#SPLITS}
  * </ul>
  */
-public class SplitScope implements Serializable {
+public class OutputScope implements Serializable {
 
-    private final MultiOutputPolicy multiOutputPolicy;
-    private final List<ApkData> apkDatas;
+    @NonNull private final MultiOutputPolicy multiOutputPolicy;
+    @NonNull private final List<ApkData> apkDatas;
+
+    @NonNull
     private final SetMultimap<VariantScope.OutputType, BuildOutput> splitOutputs =
             Multimaps.synchronizedSetMultimap(HashMultimap.create());
 
-    public SplitScope(MultiOutputPolicy multiOutputPolicy) {
+    public OutputScope(@NonNull MultiOutputPolicy multiOutputPolicy) {
         this.multiOutputPolicy = multiOutputPolicy;
         this.apkDatas = new ArrayList<>();
     }
 
-    public SplitScope(MultiOutputPolicy multiOutputPolicy, Collection<ApkData> apkDatas) {
+    public OutputScope(
+            @NonNull MultiOutputPolicy multiOutputPolicy, @NonNull Collection<ApkData> apkDatas) {
         this.multiOutputPolicy = multiOutputPolicy;
         this.apkDatas = new ArrayList<>(apkDatas);
     }
 
+    @NonNull
     public MultiOutputPolicy getMultiOutputPolicy() {
         return multiOutputPolicy;
     }
@@ -116,7 +118,7 @@ public class SplitScope implements Serializable {
         Optional<ApkData> universal =
                 getApkDatas()
                         .stream()
-                        .filter(split -> split.getFilterName().equals(SplitFactory.UNIVERSAL))
+                        .filter(split -> split.getFilterName().equals(OutputFactory.UNIVERSAL))
                         .findFirst();
         if (universal.isPresent()) {
             return universal.get();
@@ -334,7 +336,7 @@ public class SplitScope implements Serializable {
         if (!super.equals(o)) {
             return false;
         }
-        SplitScope that = (SplitScope) o;
+        OutputScope that = (OutputScope) o;
         return Objects.equals(splitOutputs, that.splitOutputs)
                 && Objects.equals(apkDatas, that.apkDatas)
                 && multiOutputPolicy == that.multiOutputPolicy;

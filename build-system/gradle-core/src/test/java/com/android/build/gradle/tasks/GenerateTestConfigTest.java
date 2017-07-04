@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 
 import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.ide.common.build.ApkData;
 import com.android.utils.FileUtils;
@@ -44,7 +44,7 @@ import org.mockito.MockitoAnnotations;
 /** Test for {@link GenerateTestConfig}. */
 public class GenerateTestConfigTest {
 
-    @Mock SplitScope splitScope;
+    @Mock OutputScope outputScope;
 
     @Mock ApkData apkData;
 
@@ -67,7 +67,7 @@ public class GenerateTestConfigTest {
         generateTestConfig.sdkHome = fileSystem.getPath("/sdk");
         generateTestConfig.generatedJavaResourcesDirectory =
                 buildDirectory.resolve("generatedJavaResources");
-        generateTestConfig.splitScope = splitScope;
+        generateTestConfig.outputScope = outputScope;
 
         generateTestConfig.generateTestConfigForOutput(
                 new BuildOutput(

@@ -29,8 +29,8 @@ import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.SplitFactory;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputFactory;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.tasks.CheckManifest;
@@ -157,9 +157,9 @@ public abstract class BaseVariantData implements TaskContainer {
      */
     public boolean outputsAreSigned = false;
 
-    @NonNull private final SplitScope splitScope;
+    @NonNull private final OutputScope outputScope;
 
-    @NonNull private final SplitFactory splitFactory;
+    @NonNull private final OutputFactory outputFactory;
     public VariantOutputFactory variantOutputFactory;
 
     public BaseVariantData(
@@ -200,10 +200,10 @@ public abstract class BaseVariantData implements TaskContainer {
                                 errorReporter,
                                 recorder),
                         this);
-        splitScope = new SplitScope(multiOutputPolicy);
-        splitFactory =
-                new SplitFactory(
-                        globalScope.getProjectBaseName(), variantConfiguration, splitScope);
+        outputScope = new OutputScope(multiOutputPolicy);
+        outputFactory =
+                new OutputFactory(
+                        globalScope.getProjectBaseName(), variantConfiguration, outputScope);
 
         taskManager.configureScopeForNdk(scope);
 
@@ -237,13 +237,13 @@ public abstract class BaseVariantData implements TaskContainer {
     }
 
     @NonNull
-    public SplitScope getSplitScope() {
-        return splitScope;
+    public OutputScope getOutputScope() {
+        return outputScope;
     }
 
     @NonNull
-    public SplitFactory getSplitFactory() {
-        return splitFactory;
+    public OutputFactory getOutputFactory() {
+        return outputFactory;
     }
 
     @Override

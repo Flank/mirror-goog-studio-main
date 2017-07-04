@@ -41,8 +41,8 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.SplitList;
-import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -156,7 +156,7 @@ public class ShrinkResourcesTransform extends Transform {
         this.aaptOptions = globalScope.getExtension().getAaptOptions();
         this.variantType = variantData.getType();
         this.isDebuggableBuildType = variantConfig.getBuildType().isDebuggable();
-        this.multiOutputPolicy = variantData.getSplitScope().getMultiOutputPolicy();
+        this.multiOutputPolicy = variantData.getOutputScope().getMultiOutputPolicy();
 
         this.compressedResources = compressedResources;
 
@@ -265,15 +265,15 @@ public class ShrinkResourcesTransform extends Transform {
 
         SplitList splitList = SplitList.load(splitListInput);
         Collection<BuildOutput> uncompressedBuildOutputs = BuildOutputs.load(uncompressedResources);
-        SplitScope splitScope = variantData.getScope().getSplitScope();
-        splitScope.parallelForEachOutput(
+        OutputScope outputScope = variantData.getScope().getOutputScope();
+        outputScope.parallelForEachOutput(
                 uncompressedBuildOutputs,
                 TaskOutputType.PROCESSED_RES,
                 TaskOutputType.SHRUNK_PROCESSED_RES,
                 this::splitAction,
                 invocation,
                 splitList);
-        splitScope.save(TaskOutputType.SHRUNK_PROCESSED_RES, compressedResources);
+        outputScope.save(TaskOutputType.SHRUNK_PROCESSED_RES, compressedResources);
     }
 
     @Nullable
@@ -315,7 +315,7 @@ public class ShrinkResourcesTransform extends Transform {
 
         Collection<BuildOutput> mergedManifests = BuildOutputs.load(this.mergedManifests);
         BuildOutput mergedManifest =
-                SplitScope.getOutput(mergedManifests, TaskOutputType.MERGED_MANIFESTS, apkData);
+                OutputScope.getOutput(mergedManifests, TaskOutputType.MERGED_MANIFESTS, apkData);
         if (mergedManifest == null) {
             try {
                 FileUtils.copyFile(uncompressedResourceFile, compressedResourceFile);

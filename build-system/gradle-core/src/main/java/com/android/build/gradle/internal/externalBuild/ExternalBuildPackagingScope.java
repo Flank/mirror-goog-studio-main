@@ -25,8 +25,8 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
-import com.android.build.gradle.internal.scope.SplitScope;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.ProjectOptions;
@@ -141,7 +141,7 @@ public class ExternalBuildPackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public MultiOutputPolicy getSplitHandlingPolicy() {
+    public MultiOutputPolicy getMultiOutputPolicy() {
         return MultiOutputPolicy.SPLITS;
     }
 
@@ -237,8 +237,8 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     }
 
     @Override
-    public SplitScope getSplitScope() {
-        return mVariantScope.getSplitScope();
+    public OutputScope getOutputScope() {
+        return mVariantScope.getOutputScope();
     }
 
     // TaskOutputHolder

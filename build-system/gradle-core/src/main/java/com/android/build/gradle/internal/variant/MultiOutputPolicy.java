@@ -19,8 +19,8 @@ package com.android.build.gradle.internal.variant;
 /** Whether to use splits or multi-apk for this variant. */
 public enum MultiOutputPolicy {
     /**
-     * For releases before Lollipop, to reduce APK size, developers can configure their app build to
-     * create multiple APKs
+     * For releases before Lollipop (API 21), to reduce APK size, developers can configure their app
+     * build to create multiple APKs
      *
      * <p>Each APK is the entire application, but specialized to one device configuration along
      * split dimensions, which are ABI, density and language.
@@ -33,9 +33,9 @@ public enum MultiOutputPolicy {
     MULTI_APK,
 
     /**
-     * Android Lollipop supports split APKs, where the app is composed of a base APK containing
-     * common code and resources, and multiple split APKs containing just the resources or libraries
-     * for that dimension.
+     * Android Lollipop (API 21) supports split APKs, where the app is composed of a base APK
+     * containing common code and resources, and multiple split APKs containing just the resources
+     * or libraries for that dimension.
      *
      * <p>The dimensions are additive. For example if the app is distributed for three ABIs, with
      * five densities and 6 different languages, that will result in one base APK and 3+5+6 = 15

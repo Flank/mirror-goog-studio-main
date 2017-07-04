@@ -21,7 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
@@ -71,7 +71,7 @@ public class PackageSplitAbi extends BaseTask {
     private File incrementalDir;
 
     private Collection<String> aaptOptionsNoCompress;
-    private SplitScope splitScope;
+    private OutputScope outputScope;
 
     @InputFiles
     public FileCollection getProcessedAbiResources() {
@@ -85,7 +85,7 @@ public class PackageSplitAbi extends BaseTask {
 
     @Input
     public Set<String> getSplits() {
-        return splitScope
+        return outputScope
                 .getApkDatas()
                 .stream()
                 .map(ApkData::getFilterName)
@@ -124,7 +124,7 @@ public class PackageSplitAbi extends BaseTask {
 
         FileUtils.cleanOutputDir(incrementalDir);
 
-        splitScope.parallelForEachOutput(
+        outputScope.parallelForEachOutput(
                 BuildOutputs.load(
                         VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, processedAbiResources),
                 VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
@@ -158,7 +158,7 @@ public class PackageSplitAbi extends BaseTask {
                     }
                     return outFile;
                 });
-        splitScope.save(VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT, outputDirectory);
+        outputScope.save(VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT, outputDirectory);
     }
 
     private String getApkName(final ApkData apkData) {
@@ -200,7 +200,7 @@ public class PackageSplitAbi extends BaseTask {
         public void execute(@NonNull PackageSplitAbi packageSplitAbiTask) {
             VariantConfiguration config = this.scope.getVariantConfiguration();
             packageSplitAbiTask.processedAbiResources = processedAbiResources;
-            packageSplitAbiTask.splitScope = scope.getSplitScope();
+            packageSplitAbiTask.outputScope = scope.getOutputScope();
             packageSplitAbiTask.signingConfig = config.getSigningConfig();
             packageSplitAbiTask.outputDirectory = outputDirectory;
             packageSplitAbiTask.setAndroidBuilder(this.scope.getGlobalScope().getAndroidBuilder());

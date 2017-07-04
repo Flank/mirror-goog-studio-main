@@ -21,7 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -63,7 +63,7 @@ public class ProcessManifest extends ManifestProcessorTask {
 
     private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
             variantConfiguration;
-    private SplitScope splitScope;
+    private OutputScope outputScope;
 
     private File reportFile;
     private File manifestOutputFile;
@@ -101,20 +101,20 @@ public class ProcessManifest extends ManifestProcessorTask {
                                 "split", mergedXmlDocument.getSplitName())
                         : ImmutableMap.of();
 
-        splitScope.addOutputForSplit(
+        outputScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                splitScope.getMainSplit(),
+                outputScope.getMainSplit(),
                 manifestOutputFile,
                 properties);
-        splitScope.addOutputForSplit(
+        outputScope.addOutputForSplit(
                 TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
-                splitScope.getMainSplit(),
+                outputScope.getMainSplit(),
                 aaptFriendlyManifestOutputFile,
                 properties);
         try {
-            splitScope.save(
+            outputScope.save(
                     TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, getManifestOutputDirectory());
-            splitScope.save(
+            outputScope.save(
                     TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
                     getAaptFriendlyManifestOutputDirectory());
         } catch (IOException e) {
@@ -126,10 +126,10 @@ public class ProcessManifest extends ManifestProcessorTask {
     @Override
     @Internal
     public File getAaptFriendlyManifestOutputFile() {
-        Preconditions.checkNotNull(splitScope.getMainSplit());
+        Preconditions.checkNotNull(outputScope.getMainSplit());
         return FileUtils.join(
                 getAaptFriendlyManifestOutputDirectory(),
-                splitScope.getMainSplit().getDirName(),
+                outputScope.getMainSplit().getDirName(),
                 SdkConstants.ANDROID_MANIFEST_XML);
     }
 
@@ -280,7 +280,7 @@ public class ProcessManifest extends ManifestProcessorTask {
 
             processManifest.setAaptFriendlyManifestOutputDirectory(
                     scope.getAaptFriendlyManifestOutputDirectory());
-            processManifest.splitScope = scope.getSplitScope();
+            processManifest.outputScope = scope.getOutputScope();
 
             scope.getVariantData()
                     .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processManifest);

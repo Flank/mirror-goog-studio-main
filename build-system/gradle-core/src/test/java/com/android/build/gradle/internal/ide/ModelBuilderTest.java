@@ -30,8 +30,8 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.build.gradle.internal.scope.SplitFactory;
-import com.android.build.gradle.internal.scope.SplitScope;
+import com.android.build.gradle.internal.scope.OutputFactory;
+import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -140,16 +140,17 @@ public class ModelBuilderTest {
 
         when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
 
-        SplitScope splitScope = new SplitScope(MultiOutputPolicy.SPLITS);
+        OutputScope outputScope = new OutputScope(MultiOutputPolicy.SPLITS);
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
         Files.createParentDirs(apkOutput);
         Files.write("some apk", apkOutput, Charsets.UTF_8);
 
-        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
-        splitScope.addOutputForSplit(
-                TaskOutputHolder.TaskOutputType.APK, splitFactory.addMainApk(), apkOutput);
-        splitScope.save(ImmutableList.of(TaskOutputHolder.TaskOutputType.APK), variantOutputFolder);
+        OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
+        outputScope.addOutputForSplit(
+                TaskOutputHolder.TaskOutputType.APK, outputFactory.addMainApk(), apkOutput);
+        outputScope.save(
+                ImmutableList.of(TaskOutputHolder.TaskOutputType.APK), variantOutputFolder);
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();
@@ -185,26 +186,26 @@ public class ModelBuilderTest {
         createVariantData(variantScope, variantConfiguration);
 
         when(variantManager.getVariantScopes()).thenReturn(ImmutableList.of(variantScope));
-        SplitScope splitScope = new SplitScope(MultiOutputPolicy.SPLITS);
-        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
+        OutputScope outputScope = new OutputScope(MultiOutputPolicy.SPLITS);
+        OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
 
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
 
         File apkOutput = createApk(variantOutputFolder, "main.apk");
 
-        splitScope.addOutputForSplit(
-                TaskOutputHolder.TaskOutputType.APK, splitFactory.addMainApk(), apkOutput);
+        outputScope.addOutputForSplit(
+                TaskOutputHolder.TaskOutputType.APK, outputFactory.addMainApk(), apkOutput);
 
         for (int i = 0; i < 5; i++) {
             apkOutput = createApk(variantOutputFolder, "split_" + i + ".apk");
 
-            splitScope.addOutputForSplit(
+            outputScope.addOutputForSplit(
                     TaskOutputHolder.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
-                    splitFactory.addConfigurationSplit(
+                    outputFactory.addConfigurationSplit(
                             VariantOutput.FilterType.DENSITY, "hdpi", apkOutput.getName()),
                     apkOutput);
         }
-        splitScope.save(
+        outputScope.save(
                 ImmutableList.of(
                         TaskOutputHolder.TaskOutputType.APK,
                         TaskOutputHolder.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
@@ -258,16 +259,17 @@ public class ModelBuilderTest {
             expectedVariantNames.add(variantName);
             createVariantData(variantScope, variantConfiguration);
 
-            SplitScope splitScope = new SplitScope(MultiOutputPolicy.SPLITS);
+            OutputScope outputScope = new OutputScope(MultiOutputPolicy.SPLITS);
             File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name" + i));
             File apkOutput = new File(variantOutputFolder, "main.apk");
             Files.createParentDirs(apkOutput);
             Files.write("some apk", apkOutput, Charsets.UTF_8);
 
-            SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
-            splitScope.addOutputForSplit(
-                    TaskOutputHolder.TaskOutputType.APK, splitFactory.addMainApk(), apkOutput);
-            splitScope.save(
+            OutputFactory outputFactory =
+                    new OutputFactory(PROJECT, variantConfiguration, outputScope);
+            outputScope.addOutputForSplit(
+                    TaskOutputHolder.TaskOutputType.APK, outputFactory.addMainApk(), apkOutput);
+            outputScope.save(
                     ImmutableList.of(TaskOutputHolder.TaskOutputType.APK), variantOutputFolder);
             scopes.add(variantScope);
         }
@@ -322,16 +324,17 @@ public class ModelBuilderTest {
         when(variantManager.getVariantScopes())
                 .thenReturn(ImmutableList.of(variantScope, testVariantScope));
 
-        SplitScope splitScope = new SplitScope(MultiOutputPolicy.SPLITS);
+        OutputScope outputScope = new OutputScope(MultiOutputPolicy.SPLITS);
         File variantOutputFolder = new File(apkLocation, FileUtils.join("variant", "name"));
         File apkOutput = new File(variantOutputFolder, "main.apk");
         Files.createParentDirs(apkOutput);
         Files.write("some apk", apkOutput, Charsets.UTF_8);
 
-        SplitFactory splitFactory = new SplitFactory(PROJECT, variantConfiguration, splitScope);
-        splitScope.addOutputForSplit(
-                TaskOutputHolder.TaskOutputType.APK, splitFactory.addMainApk(), apkOutput);
-        splitScope.save(ImmutableList.of(TaskOutputHolder.TaskOutputType.APK), variantOutputFolder);
+        OutputFactory outputFactory = new OutputFactory(PROJECT, variantConfiguration, outputScope);
+        outputScope.addOutputForSplit(
+                TaskOutputHolder.TaskOutputType.APK, outputFactory.addMainApk(), apkOutput);
+        outputScope.save(
+                ImmutableList.of(TaskOutputHolder.TaskOutputType.APK), variantOutputFolder);
 
         ProjectBuildOutput projectBuildOutput = modelBuilder.buildMinimalisticModel();
         assertThat(projectBuildOutput).isNotNull();

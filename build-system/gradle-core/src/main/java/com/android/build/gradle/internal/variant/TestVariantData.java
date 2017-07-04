@@ -49,7 +49,7 @@ public class TestVariantData extends ApkVariantData {
         this.testedVariantData = testedVariantData;
 
         // create default output
-        getSplitFactory().addMainApk();
+        getOutputFactory().addMainApk();
     }
 
     @NonNull
