@@ -23,7 +23,6 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.builder.Version;
 import com.android.ide.common.util.BuildSessionVariable;
 import com.android.ide.common.util.JvmWideVariable;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
@@ -184,24 +183,30 @@ public final class BuildSessionHelper {
                     return pluginVersion;
                 });
 
-        if (pluginWasAlreadyApplied.get()) {
-            throw new IllegalStateException(
-                    String.format(
-                            "%1$s %2$s must not be applied to project %3$s"
-                                    + " since version %4$s was already applied to this project",
-                            pluginName,
-                            pluginVersion,
-                            projectDir.getAbsolutePath(),
-                            projectToPluginVersionMap.get(projectDir.getAbsolutePath())));
-        }
+        // We temporarily ignore the following checks since they may not work correctly when
+        // org.gradle.configureondemand is set to true (in that mode, during a sync, there are no
+        // buildFinished() events being fired that indicate the end of a build in between the times
+        // the plugin is applied). See https://issuetracker.google.com/issues/63329112.
+        // We will re-enable these checks later once we know how to handle the case correctly.
 
-        if (projectToPluginVersionMap.values().stream().distinct().count() > 1) {
-            throw new IllegalStateException(
-                    "Using multiple versions of the plugin is not allowed.\n\t"
-                            + Joiner.on("\n\t")
-                                    .withKeyValueSeparator(" is using " + pluginName + " ")
-                                    .join(projectToPluginVersionMap));
-        }
+        //if (pluginWasAlreadyApplied.get()) {
+        //    throw new IllegalStateException(
+        //            String.format(
+        //                    "%1$s %2$s must not be applied to project %3$s"
+        //                            + " since version %4$s was already applied to this project",
+        //                    pluginName,
+        //                    pluginVersion,
+        //                    projectDir.getAbsolutePath(),
+        //                    projectToPluginVersionMap.get(projectDir.getAbsolutePath())));
+        //}
+        //
+        //if (projectToPluginVersionMap.values().stream().distinct().count() > 1) {
+        //    throw new IllegalStateException(
+        //            "Using multiple versions of the plugin is not allowed.\n\t"
+        //                    + Joiner.on("\n\t")
+        //                            .withKeyValueSeparator(" is using " + pluginName + " ")
+        //                            .join(projectToPluginVersionMap));
+        //}
 
         return jvmWideMap;
     }
