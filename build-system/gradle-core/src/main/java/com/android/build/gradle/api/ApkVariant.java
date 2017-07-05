@@ -17,6 +17,7 @@
 package com.android.build.gradle.api;
 
 import com.android.annotations.Nullable;
+import com.android.build.gradle.tasks.PackageAndroidArtifact;
 
 /**
  * A Build variant and all its public data.
@@ -33,5 +34,9 @@ public interface ApkVariant extends BaseVariant, InstallableVariant, AndroidArti
     @Deprecated
     @Nullable
     Object getDex();
+
+    /** Returns the packaging task */
+    @Nullable
+    PackageAndroidArtifact getPackageApplication();
 
 }

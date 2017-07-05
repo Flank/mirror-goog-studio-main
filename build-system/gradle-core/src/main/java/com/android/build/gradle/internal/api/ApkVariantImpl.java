@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.api.ApkVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
+import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.model.ObjectFactory;
@@ -46,5 +47,11 @@ public abstract class ApkVariantImpl extends InstallableVariantImpl implements A
         throw new RuntimeException("Access to the dex task is now impossible, starting with 1.4.0\n"
                 + "1.4.0 introduces a new Transform API allowing manipulation of the .class files.\n"
                 + "See more information: https://developer.android.com/studio/plugins/index.html");
+    }
+
+    @Nullable
+    @Override
+    public PackageAndroidArtifact getPackageApplication() {
+        return getVariantData().getTaskByType(PackageAndroidArtifact.class);
     }
 }
