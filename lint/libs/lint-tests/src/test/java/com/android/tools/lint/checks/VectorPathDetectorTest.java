@@ -290,4 +290,36 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testValidMultipleLineOfPathDataPattern() {
+        // Regression test for https://issuetracker.google.com/issues/27515021
+        // (testing valid data)
+        lint().files(
+                xml("res/drawable/my_vector.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    android:height=\"16dp\"\n"
+                        + "    android:viewportHeight=\"16\"\n"
+                        + "    android:viewportWidth=\"16\"\n"
+                        + "    android:width=\"16dp\">\n"
+                        + "\n"
+                        + "    <path\n"
+                        + "        android:fillColor=\"#FFFF00FF\"\n"
+                        + "        android:pathData=\"M9.69758952,10.4615385 L13.6123406,10.4615385 C14.2852173,10.4615385\n"
+                        + "\t14.8461538,9.9121408 14.8461538,9.23442444 L14.8461538,1.84249863\n"
+                        + "C14.8461538,1.17296776 14.2937568,0.615384615 13.6123406,0.615384615\n"
+                        + " \tL1.31073636,0.615384615 C0.637859638,0.615384615 0.0769230769,1.16478227\n"
+                        + "\n"
+                        + "0.0769230769,1.84249863\tL0.0769230769,9.23442444 C0.0769230769,9.90395531\n"
+                        + " 0.629320101,10.4615385 1.31073636,10.4615385 L5.1043961,10.4615385\n"
+                        + "\t C5.12507441,10.5113515 5.16340706,10.5657803 5.2204207,10.622794\n"
+                        + "\r\n"
+                        + "L6.96901704,12.3713903 C7.21238046,12.6147537 7.59317013,12.6094967\t\n"
+                        + "7.83127651,12.3713903 L9.57987285,10.622794 C9.63729929,10.5653675\n"
+                        + "\t9.676186,10.5110368 9.69758952,10.4615385 Z\" />\n"
+                        + "</vector>"))
+                .incremental("res/drawable/my_vector.xml")
+                .run()
+                .expectClean();
+    }
 }

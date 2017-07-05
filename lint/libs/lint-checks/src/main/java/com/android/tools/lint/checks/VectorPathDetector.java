@@ -178,7 +178,6 @@ public class VectorPathDetector extends ResourceXmlDetector {
             // Fixed in lollipop
             return;
         }
-
         int start = 0;
         int end = 1;
         while (end < path.length()) {
@@ -225,6 +224,8 @@ public class VectorPathDetector extends ResourceXmlDetector {
                 switch (currentChar) {
                     case ' ':
                     case ',':
+                    case '\t':
+                    case '\n':
                         foundSeparator = true;
                         break;
                     case '-':
