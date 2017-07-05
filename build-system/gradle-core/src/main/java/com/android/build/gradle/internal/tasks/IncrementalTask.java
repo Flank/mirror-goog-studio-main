@@ -19,14 +19,43 @@ import com.android.ide.common.res2.FileStatus;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Map;
-import org.gradle.api.Action;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
-import org.gradle.api.tasks.incremental.InputFileDetails;
 
+/**
+ * A helper class to support the writing of tasks that support doing less work if they have already
+ * been fully built, for example if they only need to operate on the files that have changed between
+ * the previous build and the current one.
+ *
+ * <p>The API that inheriting classes are to implement consists of three methods, two of which are
+ * optional:
+ *
+ * <pre>{@code
+ * public class MyTask extends IncrementalTask {
+ *     // This is the only non-optional method. This will be run when it's not possible to run
+ *     // this task incrementally. By default, it is never possible to run your task
+ *     // incrementally. You must implement the next method to determine that.
+ *     @Override
+ *     protected void doFullTaskAction() throws Exception {}
+ *
+ *     // This is the method that determines if your task can be run incrementally. If it returns
+ *     // true, the next and last override method is run instead of doFullTaskAction().
+ *     @Override
+ *     protected boolean isIncremental() {}
+ *
+ *     // If you've determined that it's possible to save some time and only operate on the files
+ *     // that have changed between the previous build and now, you can define that in this
+ *     // method.
+ *     @Override
+ *     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs)
+ *        throws Exception {}
+ * }
+ *
+ * }</pre>
+ */
 public abstract class IncrementalTask extends BaseTask {
 
     public static final String MARKER_NAME = "build_was_incremental";
@@ -43,8 +72,6 @@ public abstract class IncrementalTask extends BaseTask {
     }
 
     /**
-     * Whether this task can support incremental update.
-     *
      * @return whether this task can support incremental update.
      */
     @Internal
@@ -53,50 +80,47 @@ public abstract class IncrementalTask extends BaseTask {
     }
 
     /**
-     * Actual task action. This is called when a full run is needed, which is always the case if
-     * {@link #isIncremental()} returns false.
+     * This method will be called in inheriting classes if it is determined that it is not possible
+     * to do this task incrementally.
      */
     protected abstract void doFullTaskAction() throws Exception;
 
     /**
      * Optional incremental task action. Only used if {@link #isIncremental()} returns true.
      *
-     * @param changedInputs the changed input files.
+     * @param changedInputs input files that have changed since the last run of this task.
      */
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs) throws Exception {
         // do nothing.
     }
 
-    /** Actual entry point for the action. Calls out to the doTaskAction as needed. */
+    /**
+     * Gradle's entry-point into this task. Determines whether or not it's possible to do this task
+     * incrementally and calls either doIncrementalTaskAction() if an incremental build is possible,
+     * and doFullTaskAction() if not.
+     */
     @TaskAction
     void taskAction(IncrementalTaskInputs inputs) throws Exception {
-        if (!isIncremental()) {
-            doFullTaskAction();
-            return;
-        }
-
-        if (!inputs.isIncremental()) {
+        if (!isIncremental() || !inputs.isIncremental()) {
             getProject().getLogger().info("Unable do incremental execution: full task run");
             doFullTaskAction();
             return;
         }
 
+        doIncrementalTaskAction(getChangedInputs(inputs));
+    }
+
+    private Map<File, FileStatus> getChangedInputs(IncrementalTaskInputs inputs) {
         final Map<File, FileStatus> changedInputs = Maps.newHashMap();
-        inputs.outOfDate(new Action<InputFileDetails>() {
-            @Override
-            public void execute(InputFileDetails change) {
-                changedInputs.put(change.getFile(), change.isAdded() ? FileStatus.NEW : FileStatus.CHANGED);
-            }
-        });
 
-        inputs.removed(new Action<InputFileDetails>() {
-            @Override
-            public void execute(InputFileDetails change) {
+        inputs.outOfDate(
+                change -> {
+                    FileStatus status = change.isAdded() ? FileStatus.NEW : FileStatus.CHANGED;
+                    changedInputs.put(change.getFile(), status);
+                });
 
-                changedInputs.put(change.getFile(), FileStatus.REMOVED);
-            }
-        });
+        inputs.removed(change -> changedInputs.put(change.getFile(), FileStatus.REMOVED));
 
-        doIncrementalTaskAction(changedInputs);
+        return changedInputs;
     }
 }
