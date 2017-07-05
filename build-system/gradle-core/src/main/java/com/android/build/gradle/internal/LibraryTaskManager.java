@@ -590,8 +590,12 @@ public class LibraryTaskManager extends TaskManager {
             VariantHelper.setupArchivesConfig(
                     project, variantScope.getVariantDependencies().getRuntimeClasspath());
 
-            // add the artifact that will be published
-            project.getArtifacts().add("archives", bundle);
+            // add the artifact that will be published.
+            // it must be default so that it can be found by other library modules during
+            // publishing to a maven repo. Adding it to "archives" only allows the current
+            // module to be published by not to be found by consumer who are themselves published
+            // (leading to their pom not containing dependencies).
+            project.getArtifacts().add("default", bundle);
         }
 
         recorder.record(
