@@ -78,7 +78,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     private boolean explainIssues = true;
     private boolean checkTestSources;
     private boolean checkGeneratedSources;
-    private boolean checkDependencies = true;
+    private boolean checkDependencies;
     @Nullable
     private File lintConfig;
     private boolean textReport;

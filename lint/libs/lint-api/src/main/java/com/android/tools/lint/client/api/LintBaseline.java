@@ -173,8 +173,15 @@ public class LintBaseline {
             // Keep in sync with isFixedMessage() below
             String message = String.format("%1$d errors/warnings were listed in the "
                     + "baseline file (%2$s) but not found in the project; perhaps they have "
-                    + "been fixed? Unmatched issue types: %3$s", fixedCount,
-                    getDisplayPath(project, baselineFile), issueTypes);
+                    + "been fixed?", fixedCount, getDisplayPath(project, baselineFile));
+            if (LintClient.Companion.isGradle() && project.getGradleProjectModel() != null &&
+                    !project.getGradleProjectModel().getLintOptions().isCheckDependencies()) {
+                message += " Another possible explanation is that lint recently stopped " +
+                        "analyzing (and including results from) dependent projects by default. " +
+                        "You can turn this back on with " +
+                        "`android.lintOptions.checkDependencies=true`.";
+            }
+            message += " Unmatched issue types: " + issueTypes;
             client.report(new Context(driver, project, project, baselineFile, null),
                     IssueRegistry.BASELINE,
                     client.getConfiguration(project, driver).getSeverity(IssueRegistry.BASELINE),

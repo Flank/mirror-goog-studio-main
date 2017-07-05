@@ -873,47 +873,46 @@ public class LintGradleProject extends Project {
 
                 // Dependencies
                 ConfigurationContainer configurations = gradleProject.getConfigurations();
-                for (Configuration compile : configurations) {
-                    for (Dependency dependency : compile.getDependencies()) {
-                        if (dependency instanceof ProjectDependency) {
-                            org.gradle.api.Project p =
-                                    ((ProjectDependency) dependency).getDependencyProject();
-                            if (p != null) {
-                                Project lintProject = getProject(lintClient, p.getName(), p,
-                                        variantName);
-                                if (lintProject != null) {
-                                    dependencies.add(lintProject);
-                                }
+                Configuration compileConfiguration = configurations.getByName("compileClasspath");
+                for (Dependency dependency : compileConfiguration.getAllDependencies()) {
+                    if (dependency instanceof ProjectDependency) {
+                        org.gradle.api.Project p =
+                                ((ProjectDependency) dependency).getDependencyProject();
+                        if (p != null) {
+                            Project lintProject = getProject(lintClient, p.getPath(), p,
+                                    variantName);
+                            if (lintProject != null) {
+                                dependencies.add(lintProject);
                             }
-                        } else if (dependency instanceof ExternalDependency) {
-                            String group = dependency.getGroup();
-                            String name = dependency.getName();
-                            String version = dependency.getVersion();
-                            if (name == null || group == null || version == null) {
-                                // This will be the case for example if you use something like
-                                //    repositories { flatDir { dirs 'myjars' } }
-                                //    dependencies { compile name: 'guava-18.0' }
-                                continue;
-                            }
-                            MavenCoordinatesImpl coordinates = new MavenCoordinatesImpl(group,
-                                    name, version);
-                            Project javaLib = javaLibraryProjectsByCoordinate.get(coordinates);
-                            //noinspection StatementWithEmptyBody
-                            if (javaLib != null) {
-                                dependencies.add(javaLib);
-                            } else {
-                                // Else: Create wrapper here. Unfortunately, we don't have a
-                                // pointer to the actual .jar file to add (getArtifacts()
-                                // typically returns an empty set), so we can't create
-                                // a real artifact (and creating a fake one and placing it here
-                                // is dangerous; it would mean putting one into the
-                                // map that would prevent a real definition from being inserted.
-                            }
-                        } else if (dependency instanceof FileCollectionDependency) {
-                            Set<File> files = ((FileCollectionDependency) dependency).resolve();
-                            if (files != null) {
-                                libs.addAll(files);
-                            }
+                        }
+                    } else if (dependency instanceof ExternalDependency) {
+                        String group = dependency.getGroup();
+                        String name = dependency.getName();
+                        String version = dependency.getVersion();
+                        if (name == null || group == null || version == null) {
+                            // This will be the case for example if you use something like
+                            //    repositories { flatDir { dirs 'myjars' } }
+                            //    dependencies { compile name: 'guava-18.0' }
+                            continue;
+                        }
+                        MavenCoordinatesImpl coordinates = new MavenCoordinatesImpl(group,
+                                name, version);
+                        Project javaLib = javaLibraryProjectsByCoordinate.get(coordinates);
+                        //noinspection StatementWithEmptyBody
+                        if (javaLib != null) {
+                            dependencies.add(javaLib);
+                        } else {
+                            // Else: Create wrapper here. Unfortunately, we don't have a
+                            // pointer to the actual .jar file to add (getArtifacts()
+                            // typically returns an empty set), so we can't create
+                            // a real artifact (and creating a fake one and placing it here
+                            // is dangerous; it would mean putting one into the
+                            // map that would prevent a real definition from being inserted.
+                        }
+                    } else if (dependency instanceof FileCollectionDependency) {
+                        Set<File> files = ((FileCollectionDependency) dependency).resolve();
+                        if (files != null) {
+                            libs.addAll(files);
                         }
                     }
                 }
@@ -968,26 +967,26 @@ public class LintGradleProject extends Project {
             // look up from Gradle project directly
             List<String> processedProjects = null;
             ConfigurationContainer configurations = gradleProject.getConfigurations();
-            for (Configuration compile : configurations) {
-                for (Dependency dependency : compile.getDependencies()) {
-                    if (dependency instanceof ProjectDependency) {
-                        org.gradle.api.Project p =
-                                ((ProjectDependency) dependency).getDependencyProject();
-                        if (p != null) {
-                            // Libraries don't have to use the same variant name as the
-                            // consuming app. In fact they're typically not: libraries generally
-                            // use the release variant. We can look up the variant name
-                            // in AndroidBundle#getProjectVariant, though it's always null
-                            // at the moment. So as a fallback, search for existing
-                            // code.
-                            Project depProject = getProject(client, p, variant.getName());
-                            if (depProject != null) {
-                                if (processedProjects == null) {
-                                    processedProjects = Lists.newArrayList();
-                                }
-                                processedProjects.add(p.getPath());
-                                lintProject.addDirectLibrary(depProject);
+            Configuration compileConfiguration = configurations
+                    .getByName(variant.getName() + "CompileClasspath");
+            for (Dependency dependency : compileConfiguration.getAllDependencies()) {
+                if (dependency instanceof ProjectDependency) {
+                    org.gradle.api.Project p =
+                            ((ProjectDependency) dependency).getDependencyProject();
+                    if (p != null) {
+                        // Libraries don't have to use the same variant name as the
+                        // consuming app. In fact they're typically not: libraries generally
+                        // use the release variant. We can look up the variant name
+                        // in AndroidBundle#getProjectVariant, though it's always null
+                        // at the moment. So as a fallback, search for existing
+                        // code.
+                        Project depProject = getProject(client, p, variant.getName());
+                        if (depProject != null) {
+                            if (processedProjects == null) {
+                                processedProjects = Lists.newArrayList();
                             }
+                            processedProjects.add(p.getPath());
+                            lintProject.addDirectLibrary(depProject);
                         }
                     }
                 }
@@ -1015,19 +1014,19 @@ public class LintGradleProject extends Project {
         @Nullable
         private Project getProject(
                 @NonNull LintGradleClient client,
-                @NonNull String name,
+                @NonNull String path,
                 @NonNull org.gradle.api.Project gradleProject,
                 @NonNull String variantName) {
-            Project cached = namedProjects.get(name);
+            Project cached = namedProjects.get(path);
             if (cached != null) {
                 // TODO: Are names unique across siblings?
                 return cached;
             }
-            org.gradle.api.Project namedProject = gradleProject.findProject(name);
+            org.gradle.api.Project namedProject = gradleProject.findProject(path);
             if (namedProject != null) {
                 Project project = getProject(client, namedProject, variantName);
                 if (project != null) {
-                    namedProjects.put(name, project);
+                    namedProjects.put(path, project);
                     return project;
                 }
             }

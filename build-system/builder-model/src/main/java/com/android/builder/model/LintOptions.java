@@ -224,7 +224,7 @@ public interface LintOptions {
 
     /**
      * Returns whether lint should check all dependencies too as part of its analysis. Default is
-     * true.
+     * false.
      */
     boolean isCheckDependencies();
 

@@ -273,7 +273,8 @@ public class TextReporter extends Reporter {
     }
 
     private void explainIssue(@NonNull StringBuilder output, @Nullable Issue issue) {
-        if (issue == null || !flags.isExplainIssues() || issue == IssueRegistry.LINT_ERROR) {
+        if (issue == null || !flags.isExplainIssues() || issue == IssueRegistry.LINT_ERROR
+                || issue == IssueRegistry.BASELINE) {
             return;
         }
 

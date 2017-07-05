@@ -452,10 +452,10 @@ public class Project {
     @NonNull
     public List<File> getGeneratedSourceFolders() {
         if (generatedSourceFolders == null) {
-            javaSourceFolders = client.getJavaSourceFolders(this);
+            generatedSourceFolders = client.getGeneratedSourceFolders(this);
         }
 
-        return javaSourceFolders;
+        return generatedSourceFolders;
     }
 
     /**

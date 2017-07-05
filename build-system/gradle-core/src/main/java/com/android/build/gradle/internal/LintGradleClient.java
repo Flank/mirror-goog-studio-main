@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal;
 
+import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import static java.io.File.separator;
 
@@ -196,6 +197,11 @@ public class LintGradleClient extends LintCliClient {
         return lintRequest;
     }
 
+    /** Whether lint should continue running after a baseline has been created */
+    public static boolean continueAfterBaseLineCreated() {
+        return VALUE_TRUE.equals(System.getProperty("lint.baselines.continue"));
+    }
+
     /** Run lint with the given registry and return the resulting warnings */
     @NonNull
     public Pair<List<Warning>,LintBaseline> run(@NonNull IssueRegistry registry)
@@ -203,6 +209,9 @@ public class LintGradleClient extends LintCliClient {
         int exitCode = run(registry, Collections.emptyList());
 
         if (exitCode == LintCliFlags.ERRNO_CREATED_BASELINE) {
+            if (continueAfterBaseLineCreated()) {
+                return Pair.of(Collections.emptyList(), driver.getBaseline());
+            }
             throw new GradleException("Aborting build since new baseline file was created");
         }
 

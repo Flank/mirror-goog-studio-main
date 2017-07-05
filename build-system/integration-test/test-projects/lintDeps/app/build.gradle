@@ -17,6 +17,7 @@ android {
         }
     }
     lintOptions {
+        checkDependencies true
         baseline file('lint-baseline.xml')
         xmlReport true
         xmlOutput file("lint-report.xml")

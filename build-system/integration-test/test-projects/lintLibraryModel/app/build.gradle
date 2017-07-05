@@ -18,6 +18,7 @@ android {
         check 'Assert', 'SdCardPath'
         absolutePaths false
         explainIssues false
+        checkDependencies true
     }
 }
 

@@ -249,7 +249,7 @@ public class Lint extends BaseTask {
                     Reporter reporter = Reporter.createXmlReporter(client, baselineFile, true);
                     reporter.write(stats, mergedWarnings);
                     System.err.println("Created baseline file " + baselineFile);
-                    if (VALUE_TRUE.equals(System.getProperty("lint.baselines.continue"))) {
+                    if (LintGradleClient.continueAfterBaseLineCreated()) {
                         return;
                     }
                     System.err.println("(Also breaking build in case this was not intentional.)");

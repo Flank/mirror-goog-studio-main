@@ -225,6 +225,15 @@ public class LintCliClient extends LintClient {
                         + "If not, investigate the baseline path in the lintOptions config\n"
                         + "or verify that the baseline file has been checked into version\n"
                         + "control.\n";
+
+                if (LintClient.Companion.isGradle()) {
+                    message += ""
+                            + "\n"
+                            + "You can set the system property lint.baselines.continue=true\n"
+                            + "if you want to create many missing baselines in one go.";
+
+                }
+
                 System.err.println(message);
                 return ERRNO_CREATED_BASELINE;
             }
