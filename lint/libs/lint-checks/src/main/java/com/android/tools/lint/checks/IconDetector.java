@@ -72,6 +72,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -973,13 +974,8 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
                         return d2.height - d1.height;
                     });
 
-                    boolean first = true;
+                    List<String> examples = Lists.newArrayList();
                     for (Map.Entry<File, Dimension> entry2 : entries) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            sb.append(", ");
-                        }
                         File file = entry2.getKey();
 
                         // Chain locations together
@@ -988,12 +984,15 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
                         location.setSecondary(linkedLocation);
                         Dimension dip = entry2.getValue();
                         Dimension px = pixelSizes.get(file);
-                        sb.append(LintUtils.getFileNameWithParent(context.getClient(), file));
-                        sb.append(": ");
-                        sb.append(String.format("%1$dx%2$d dp (%3$dx%4$d px)",
-                                dip.width, dip.height, px.width, px.height));
+                        String example =
+                                LintUtils.getFileNameWithParent(context.getClient(), file) +
+                                        ": " + String.format("%1$dx%2$d dp (%3$dx%4$d px)",
+                                        dip.width, dip.height, px.width, px.height);
+                        examples.add(example);
                     }
                     if (location != null) {
+                        Collections.sort(examples);
+                        sb.append(Joiner.on(", ").join(examples));
                         context.report(ICON_DIP_SIZE, location, sb.toString());
                     }
                 }
@@ -1035,6 +1034,7 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
             }
 
             if (!missing.isEmpty() && foundSome) {
+                Collections.sort(missing);
                 context.report(
                     ICON_MISSING_FOLDER,
                     Location.create(res),
@@ -1148,6 +1148,7 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
                             }
                         }
 
+                        Collections.sort(fileNames);
                         context.report(ICON_XML_AND_PNG, location,
                             String.format(
                                 "The following images appear both as density independent `.xml` files and as bitmap files: %1$s",
@@ -1191,6 +1192,7 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
                             }
                         }
                         if (!defined.isEmpty()) {
+                            Collections.sort(defined);
                             foundIn = String.format(" (found in %1$s)",
                                     LintUtils.formatList(defined,
                                             context.getDriver().isAbbreviating() ? 5 : -1));

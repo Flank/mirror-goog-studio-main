@@ -161,22 +161,22 @@ public class IconDetectorTest extends AbstractCheckTest {
 
     public void testNoDpi2() throws Exception {
         // Having additional icon names in the no-dpi folder should not cause any complaints
-        String expected = ""
-                + "res/drawable-xxxhdpi/frame.png: Warning: The image frame.png varies significantly in its density-independent (dip) size across the various density versions: drawable-ldpi/frame.png: 629x387 dp (472x290 px), drawable-mdpi/frame.png: 472x290 dp (472x290 px), drawable-hdpi/frame.png: 315x193 dp (472x290 px), drawable-xhdpi/frame.png: 236x145 dp (472x290 px), drawable-xxhdpi/frame.png: 157x97 dp (472x290 px), drawable-xxxhdpi/frame.png: 118x73 dp (472x290 px) [IconDipSize]\n"
-                + "    res/drawable-xxhdpi/frame.png: <No location-specific message\n"
-                + "    res/drawable-xhdpi/frame.png: <No location-specific message\n"
-                + "    res/drawable-hdpi/frame.png: <No location-specific message\n"
-                + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
-                + "    res/drawable-ldpi/frame.png: <No location-specific message\n"
-                + "res/drawable-xxxhdpi/frame.png: Warning: The following unrelated icon files have identical contents: frame.png, frame.png, frame.png, file1.png, file2.png, frame.png, frame.png, frame.png [IconDuplicates]\n"
-                + "    res/drawable-xxhdpi/frame.png: <No location-specific message\n"
-                + "    res/drawable-xhdpi/frame.png: <No location-specific message\n"
-                + "    res/drawable-nodpi/file2.png: <No location-specific message\n"
-                + "    res/drawable-nodpi/file1.png: <No location-specific message\n"
-                + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
-                + "    res/drawable-ldpi/frame.png: <No location-specific message\n"
-                + "    res/drawable-hdpi/frame.png: <No location-specific message\n"
-                + "0 errors, 2 warnings\n";
+        String expected = "" +
+                "res/drawable-xxxhdpi/frame.png: Warning: The image frame.png varies significantly in its density-independent (dip) size across the various density versions: drawable-hdpi/frame.png: 315x193 dp (472x290 px), drawable-ldpi/frame.png: 629x387 dp (472x290 px), drawable-mdpi/frame.png: 472x290 dp (472x290 px), drawable-xhdpi/frame.png: 236x145 dp (472x290 px), drawable-xxhdpi/frame.png: 157x97 dp (472x290 px), drawable-xxxhdpi/frame.png: 118x73 dp (472x290 px) [IconDipSize]\n" +
+                "    res/drawable-xxhdpi/frame.png: <No location-specific message\n" +
+                "    res/drawable-xhdpi/frame.png: <No location-specific message\n" +
+                "    res/drawable-hdpi/frame.png: <No location-specific message\n" +
+                "    res/drawable-mdpi/frame.png: <No location-specific message\n" +
+                "    res/drawable-ldpi/frame.png: <No location-specific message\n" +
+                "res/drawable-xxxhdpi/frame.png: Warning: The following unrelated icon files have identical contents: frame.png, frame.png, frame.png, file1.png, file2.png, frame.png, frame.png, frame.png [IconDuplicates]\n" +
+                "    res/drawable-xxhdpi/frame.png: <No location-specific message\n" +
+                "    res/drawable-xhdpi/frame.png: <No location-specific message\n" +
+                "    res/drawable-nodpi/file2.png: <No location-specific message\n" +
+                "    res/drawable-nodpi/file1.png: <No location-specific message\n" +
+                "    res/drawable-mdpi/frame.png: <No location-specific message\n" +
+                "    res/drawable-ldpi/frame.png: <No location-specific message\n" +
+                "    res/drawable-hdpi/frame.png: <No location-specific message\n" +
+                "0 errors, 2 warnings\n";
         lint().files(
                 image("res/drawable-mdpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
                 image("res/drawable-hdpi/frame.png", 472, 290).fill(0xFFFFFFFF).fill(10, 10, 362, 280, 0x00000000),
@@ -499,6 +499,25 @@ public class IconDetectorTest extends AbstractCheckTest {
                 image("res/drawable-mdpi/ic_launcher10.png", 48, 48).fill(0xFF00FF26),
                 image("res/drawable-mdpi/ic_launcher11.png", 48, 48).fill(0xFF00FF26),
                 image("res/drawable-mdpi/ic_launcher12.png", 48, 48).fill(0xFF00FF28))
+                .issues(ICON_DENSITIES)
+                .run()
+                .expect(expected);
+    }
+
+    public void testSourceFolders() throws Exception {
+        // Regression test for https://issuetracker.google.com/37684894
+        String expected = ""
+                + "res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: ic_launcher2.png (found in drawable-mdpi) [IconDensities]\n" +
+                "res/drawable-mdpi: Warning: Missing the following drawables in drawable-mdpi: ic_launcher1.png (found in drawable-hdpi, drawable-xhdpi, drawable-xxhdpi) [IconDensities]\n" +
+                "res/drawable-xhdpi: Warning: Missing the following drawables in drawable-xhdpi: ic_launcher2.png (found in drawable-mdpi) [IconDensities]\n" +
+                "res/drawable-xxhdpi: Warning: Missing the following drawables in drawable-xxhdpi: ic_launcher2.png (found in drawable-mdpi) [IconDensities]\n" +
+                "0 errors, 4 warnings\n";
+        lint().files(
+                image("res/drawable-hdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF16),
+                image("res/drawable-mdpi/ic_launcher2.png", 48, 48).fill(0xFF00FF16),
+                image("res/drawable-xhdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF17),
+                image("res/drawable-xxhdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF18),
+                image("res/drawable-xhdpi/ic_launcher1.png", 48, 48).fill(0xFF00FF18))
                 .issues(ICON_DENSITIES)
                 .run()
                 .expect(expected);

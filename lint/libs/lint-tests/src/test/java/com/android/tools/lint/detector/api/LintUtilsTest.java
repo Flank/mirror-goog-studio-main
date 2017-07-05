@@ -114,19 +114,21 @@ import org.w3c.dom.Element;
 @SuppressWarnings("javadoc")
 public class LintUtilsTest extends TestCase {
     public void testPrintList() throws Exception {
-        assertEquals("foo, bar, baz",
+        assertEquals("bar, baz, foo",
                 formatList(Arrays.asList("foo", "bar", "baz"), 3));
         assertEquals("foo, bar, baz",
-                formatList(Arrays.asList("foo", "bar", "baz"), 5));
+                formatList(Arrays.asList("foo", "bar", "baz"), 3, false));
+        assertEquals("foo, bar, baz",
+                formatList(Arrays.asList("foo", "bar", "baz"), 5, false));
 
         assertEquals("foo, bar, baz... (3 more)",
                 formatList(
-                        Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 3));
+                        Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 3, false));
         assertEquals("foo... (5 more)",
                 formatList(
-                        Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 1));
+                        Arrays.asList("foo", "bar", "baz", "4", "5", "6"), 1, false));
         assertEquals("foo, bar, baz",
-                formatList(Arrays.asList("foo", "bar", "baz"), 0));
+                formatList(Arrays.asList("foo", "bar", "baz"), 0, false));
     }
 
     public void testIsDataBindingExpression() {

@@ -232,10 +232,29 @@ public class LintUtils {
      *
      * @param strings the list of strings to print out as a comma separated list
      * @param maxItems the maximum number of items to print
-     * @return a comma separated list
+     * @return a comma separated list-string
      */
     @NonNull
     public static String formatList(@NonNull List<String> strings, int maxItems) {
+        return formatList(strings, maxItems, true);
+    }
+
+    /**
+     * Format a list of strings, and cut of the list at {@code maxItems} if the number of items are
+     * greater.
+     *
+     * @param strings  the list of strings to print out as a comma separated list
+     * @param maxItems the maximum number of items to print
+     * @param sort     whether the items should be sorted before printing.
+     * @return a comma separated list-string
+     */
+    public static String formatList(@NonNull List<String> strings, int maxItems, boolean sort) {
+        if (sort) {
+            List<String> sorted = Lists.newArrayList(strings);
+            Collections.sort(sorted);
+            strings = sorted;
+        }
+
         StringBuilder sb = new StringBuilder(20 * strings.size());
 
         for (int i = 0, n = strings.size(); i < n; i++) {
