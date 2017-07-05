@@ -29,7 +29,7 @@ import java.util.List;
  *
  * @author Glen Smith
  */
-class CSVReader {
+public class CSVReader {
 
     private BufferedReader br;
 

@@ -18,8 +18,8 @@ package com.android.ide.common.resources.sampledata;
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMultimap;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.Set;
 
 /** Utility class for parsing sample data CSV files. */
@@ -31,7 +31,7 @@ public class SampleDataCsvParser {
     }
 
     @NonNull
-    public static SampleDataCsvParser parse(@NonNull FileReader reader) throws IOException {
+    public static SampleDataCsvParser parse(@NonNull Reader reader) throws IOException {
         CSVReader csvReader = new CSVReader(reader);
         String[] headers = csvReader.readNext();
 
