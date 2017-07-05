@@ -18,7 +18,7 @@ apply plugin: 'kotlin-android-extensions'
 // TODO: The two macros above, addKotlinPlugins and addKotlinDependencies, are duplicating the work of addAllKotlinDependencies, when
 //       creating a new project (isNewProject == true). The only reason is the above bug on <apply plugin />
 <#macro addAllKotlinDependencies templatesRoot="../..">
-  <#if !isNewProject && (language!'Java')?string == 'Kotlin'>
+  <#if !isNewProject && (language!'Java')?string == 'Kotlin' && !hasDependency('org.jetbrains.kotlin:kotlin-stdlib')>
     <apply plugin="kotlin-android" />
     <apply plugin="kotlin-android-extensions" />
     <dependency mavenUrl="org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"/>
