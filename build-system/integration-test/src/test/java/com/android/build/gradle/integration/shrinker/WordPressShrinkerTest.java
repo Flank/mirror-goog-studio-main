@@ -22,6 +22,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.FileTreePrinter;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.apk.Apk;
@@ -41,6 +42,8 @@ public class WordPressShrinkerTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromExternalProject("gradle-perf-android-medium").create();
+
+    @Rule public FileTreePrinter testWatcher = new FileTreePrinter();
 
     @Before
     public void initializeProject() throws Exception {

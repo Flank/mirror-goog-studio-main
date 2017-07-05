@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.application;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.LoggingLevel;
+import com.android.build.gradle.integration.common.utils.FileTreePrinter;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.options.BooleanOption;
@@ -34,6 +35,8 @@ public class WordPressAppSmokeTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromExternalProject("gradle-perf-android-medium").create();
+
+    @Rule public FileTreePrinter testWatcher = new FileTreePrinter();
 
     @Before
     public void setUp() throws IOException {
@@ -59,4 +62,8 @@ public class WordPressAppSmokeTest {
 
         project.executor().withLoggingLevel(LoggingLevel.DEBUG).run("assembleVanillaDebug");
     }
+
+
+
+
 }
