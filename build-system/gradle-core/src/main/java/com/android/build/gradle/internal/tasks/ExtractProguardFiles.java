@@ -17,16 +17,43 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.build.gradle.ProguardFiles;
+import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.TaskAction;
 
 /**
  * Task to extract the default ProGuard rules from Java resources into files in the build directory.
  */
 public class ExtractProguardFiles extends DefaultTask {
+
+    private final ImmutableList<File> generatedFiles;
+
+    public ExtractProguardFiles() {
+        ImmutableList.Builder<File> outputs = ImmutableList.builder();
+
+        for (String name : ProguardFiles.KNOWN_FILE_NAMES) {
+            outputs.add(ProguardFiles.getDefaultProguardFile(name, getProject()));
+        }
+
+        this.generatedFiles = outputs.build();
+    }
+
+    @OutputFiles
+    public List<File> getGeneratedFiles() {
+        return generatedFiles;
+    }
+
     @TaskAction
     public void run() throws IOException {
-        ProguardFiles.extractBundledProguardFiles(getProject());
+        for (String name : ProguardFiles.KNOWN_FILE_NAMES) {
+            File defaultProguardFile = ProguardFiles.getDefaultProguardFile(name, getProject());
+            if (!defaultProguardFile.isFile()) {
+                ProguardFiles.createProguardFile(name, defaultProguardFile);
+            }
+        }
     }
 }

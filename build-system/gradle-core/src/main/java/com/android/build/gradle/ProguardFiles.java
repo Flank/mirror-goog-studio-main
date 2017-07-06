@@ -93,18 +93,6 @@ public class ProguardFiles {
                 name + "-" + Version.ANDROID_GRADLE_PLUGIN_VERSION);
     }
 
-    /**
-     * Extracts all default ProGuard files into the build directory.
-     */
-    public static void extractBundledProguardFiles(@NonNull Project project) throws IOException {
-        for (String name : KNOWN_FILE_NAMES) {
-            File defaultProguardFile = getDefaultProguardFile(name, project);
-            if (!defaultProguardFile.isFile()) {
-                createProguardFile(name, defaultProguardFile);
-            }
-        }
-    }
-
     @VisibleForTesting
     public static void createProguardFile(@NonNull String name, @NonNull File destination)
             throws IOException {

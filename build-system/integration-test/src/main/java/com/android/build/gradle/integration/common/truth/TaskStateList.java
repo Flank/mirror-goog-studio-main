@@ -110,8 +110,11 @@ public class TaskStateList {
     private static final Pattern INPUT_CHANGED_PATTERN =
             Pattern.compile("Value of input property '.*' has changed for task '(\\S+)'");
 
-    public static final Pattern EXECUTED_PATTERN
-            = Pattern.compile("Tasks to be executed: \\[(.*)\\]");
+    public static final Pattern EXECUTED_PATTERN =
+            Pattern.compile("Tasks to be executed: \\[(.*)\\]");
+
+    public static final Pattern NO_ACTIONS_PATTERN =
+            Pattern.compile("Skipping task '(.*)' as it has no actions.");
 
     @NonNull
     private final Map<String, TaskInfo> taskInfoList;
@@ -120,8 +123,6 @@ public class TaskStateList {
     @NonNull private final ImmutableSet<String> upToDateTasks;
     @NonNull private final ImmutableSet<String> notUpToDateTasks;
     @NonNull private final ImmutableSet<String> inputChangedTasks;
-    @NonNull private final ImmutableSet<String> skippedTasks;
-    @NonNull private final ImmutableSet<String> failedTasks;
 
     public TaskStateList(
             @NonNull List<ProgressEvent> progressEvents, @NonNull String gradleOutput) {
@@ -155,14 +156,17 @@ public class TaskStateList {
             }
         }
 
+        // "Anchor" tasks don't seem to emit TaskSkippedResult, but are not reported as executed
+        // by the gradle runner, even if they were not up-to-date.
+        skippedTasksBuilder.addAll(getNoActionsTasks(gradleOutput));
+
         orderedTasks = orderedTasksBuilder.build();
         allTasks = ImmutableSet.copyOf(orderedTasks);
         upToDateTasks = upToDateTasksBuilder.build();
         notUpToDateTasks = notUpToDateTasksBuilder.build();
-        failedTasks = failedTasksBuilder.build();
-        skippedTasks = skippedTasksBuilder.build();
         inputChangedTasks = getInputChangedTasks(gradleOutput, notUpToDateTasks);
-
+        ImmutableSet<String> failedTasks = failedTasksBuilder.build();
+        ImmutableSet<String> skippedTasks = skippedTasksBuilder.build();
 
         taskInfoList = Maps.newHashMapWithExpectedSize(orderedTasks.size());
 
@@ -194,6 +198,15 @@ public class TaskStateList {
                 throw new RuntimeException("Found unexpected input changed task " + candidate);
             }
             result.add(candidate);
+        }
+        return result.build();
+    }
+
+    private static ImmutableSet<String> getNoActionsTasks(@NonNull String gradleOutput) {
+        ImmutableSet.Builder<String> result = ImmutableSet.builder();
+        Matcher matcher = NO_ACTIONS_PATTERN.matcher(gradleOutput);
+        while (matcher.find()) {
+            result.add(matcher.group(1));
         }
         return result.build();
     }
