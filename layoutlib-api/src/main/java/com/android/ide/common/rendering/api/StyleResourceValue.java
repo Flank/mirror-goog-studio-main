@@ -16,7 +16,8 @@
 
 package com.android.ide.common.rendering.api;
 
-import com.android.ide.common.rendering.api.ItemResourceValue.Attribute;
+import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ import java.util.Map;
 public final class StyleResourceValue extends ResourceValue {
 
     private String mParentStyle = null;
-    private final Map<Attribute, ItemResourceValue> mItems = new HashMap<>();
+    private final Map<String, ItemResourceValue> mItems = new HashMap<>();
 
     public StyleResourceValue(ResourceUrl url, String parentStyle, String libraryName) {
         super(url, null, libraryName);
@@ -68,17 +69,27 @@ public final class StyleResourceValue extends ResourceValue {
         return getItem(name, isFrameworkAttr);
     }
 
+    @NonNull
+    private static String getItemKey(@NonNull String name, boolean isFrameworkAttr) {
+        if (isFrameworkAttr) {
+            return SdkConstants.PREFIX_ANDROID + name;
+        }
+
+        return name;
+    }
+
     /**
      * Finds a value in the list of items by name.
+     *
      * @param name the name of the resource
      * @param isFrameworkAttr is it in the framework namespace
      */
-    public ItemResourceValue getItem(String name, boolean isFrameworkAttr) {
-        return mItems.get(new Attribute(name, isFrameworkAttr));
+    public ItemResourceValue getItem(@NonNull String name, boolean isFrameworkAttr) {
+        return mItems.get(getItemKey(name, isFrameworkAttr));
     }
 
     public void addItem(ItemResourceValue value) {
-        mItems.put(value.getAttribute(), value);
+        mItems.put(getItemKey(value.getName(), value.isFrameworkAttr()), value);
     }
 
     @Override
@@ -96,15 +107,7 @@ public final class StyleResourceValue extends ResourceValue {
 
     /** Returns the names available in this style, intended for diagnostic purposes */
     public List<String> getNames() {
-        List<String> names = new ArrayList<>();
-        for (Attribute item : mItems.keySet()) {
-            String name = item.mName;
-            if (item.mIsFrameworkAttr) {
-                name = "android:" + name;
-            }
-            names.add(name);
-        }
-        return names;
+        return new ArrayList<>(mItems.keySet());
     }
 
     /**

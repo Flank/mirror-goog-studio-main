@@ -69,38 +69,4 @@ public class ItemResourceValue extends ResourceValue {
     public String toString() {
         return super.toString() + " (mIsFrameworkAttr=" + mIsFrameworkAttr + ")";
     }
-
-    Attribute getAttribute() {
-        return new Attribute(getName(), mIsFrameworkAttr);
-    }
-
-    static final class Attribute {
-        String mName;
-        boolean mIsFrameworkAttr;
-
-        Attribute(String name, boolean isFrameworkAttr) {
-            mName = name;
-            mIsFrameworkAttr = isFrameworkAttr;
-        }
-
-        @Override
-        public int hashCode() {
-            int booleanHash = mIsFrameworkAttr ? 1231 : 1237;  // see java.lang.Boolean#hashCode()
-            return 31 * booleanHash + mName.hashCode();
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof Attribute) {
-                Attribute attr = (Attribute) obj;
-                return mIsFrameworkAttr == attr.mIsFrameworkAttr && mName.equals(attr.mName);
-            }
-            return false;
-        }
-
-        @Override
-        public String toString() {
-            return mName + " (framework:" + mIsFrameworkAttr + ")";
-        }
-    }
 }

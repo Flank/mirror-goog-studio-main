@@ -16,6 +16,7 @@
 
 package com.android.ide.common.resources.configuration;
 
+import com.android.annotations.NonNull;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,25 +32,30 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
 
     public static final String NAME = "Screen Dimension";
 
-    /** Screen size 1 value. This is not size X or Y because the folder name always
-     * contains the biggest size first. So if the qualifier is 400x200, size 1 will always be
-     * 400 but that will be X in landscape and Y in portrait.
-     * Default value is <code>DEFAULT_SIZE</code> */
-    private int mValue1 = DEFAULT_SIZE;
+    /**
+     * Screen size 1 value. This is not size X or Y because the folder name always contains the
+     * biggest size first. So if the qualifier is 400x200, size 1 will always be 400 but that will
+     * be X in landscape and Y in portrait. Default value is <code>DEFAULT_SIZE</code>
+     */
+    private final int mValue1;
 
-    /** Screen size 2 value. This is not size X or Y because the folder name always
-     * contains the biggest size first. So if the qualifier is 400x200, size 2 will always be
-     * 200 but that will be Y in landscape and X in portrait.
-     * Default value is <code>DEFAULT_SIZE</code> */
-    private int mValue2 = DEFAULT_SIZE;
+    /**
+     * Screen size 2 value. This is not size X or Y because the folder name always contains the
+     * biggest size first. So if the qualifier is 400x200, size 2 will always be 200 but that will
+     * be Y in landscape and X in portrait. Default value is <code>DEFAULT_SIZE</code>
+     */
+    private final int mValue2;
 
-    public ScreenDimensionQualifier() {
-        // pass
-    }
+    private final String mShortDisplayValue;
 
     public ScreenDimensionQualifier(int value1, int value2) {
         mValue1 = value1;
         mValue2 = value2;
+        mShortDisplayValue = String.format("%1$dx%2$d", value1, value2);
+    }
+
+    public ScreenDimensionQualifier() {
+        this(DEFAULT_SIZE, DEFAULT_SIZE);
     }
 
     public int getValue1() {
@@ -126,17 +132,17 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
             int s1 = Integer.parseInt(size1);
             int s2 = Integer.parseInt(size2);
 
-            ScreenDimensionQualifier qualifier = new ScreenDimensionQualifier();
-
+            int value1;
+            int value2;
             if (s1 > s2) {
-                qualifier.mValue1 = s1;
-                qualifier.mValue2 = s2;
+                value1 = s1;
+                value2 = s2;
             } else {
-                qualifier.mValue1 = s2;
-                qualifier.mValue2 = s1;
+                value1 = s2;
+                value2 = s1;
             }
 
-            return qualifier;
+            return new ScreenDimensionQualifier(value1, value2);
         } catch (NumberFormatException e) {
             // looks like the string we extracted wasn't a valid number.
         }
@@ -144,27 +150,28 @@ public final class ScreenDimensionQualifier extends ResourceQualifier {
         return null;
     }
 
-    /**
-     * Returns the string used to represent this qualifier in the folder name.
-     */
+    /** Returns the string used to represent this qualifier in the folder name. */
     @Override
+    @NonNull
     public String getFolderSegment() {
-        return String.format("%1$dx%2$d", mValue1, mValue2); //$NON-NLS-1$
+        return mShortDisplayValue;
     }
 
     @Override
+    @NonNull
     public String getShortDisplayValue() {
         if (isValid()) {
-            return String.format("%1$dx%2$d", mValue1, mValue2);
+            return getFolderSegment();
         }
 
         return ""; //$NON-NLS-1$
     }
 
     @Override
+    @NonNull
     public String getLongDisplayValue() {
         if (isValid()) {
-            return String.format("Screen resolution %1$dx%2$d", mValue1, mValue2);
+            return "Screen resolution " + getFolderSegment();
         }
 
         return ""; //$NON-NLS-1$
