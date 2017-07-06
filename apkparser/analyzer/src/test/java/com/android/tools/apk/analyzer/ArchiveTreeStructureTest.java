@@ -63,26 +63,7 @@ public class ArchiveTreeStructureTest {
 
     @Test
     public void create() throws IOException {
-        String actual =
-                dumpTree(
-                        root,
-                        n -> {
-                            String path = n.getData().getPath().toString();
-                            Archive archive = n.getData().getArchive();
-                            ArchiveNode parentNode = n.getParent();
-                            if (parentNode != null
-                                    && parentNode.getData().getArchive() != archive) {
-                                return path;
-                            }
-                            while ((parentNode = n.getParent()) != null) {
-                                if (parentNode.getData().getArchive() != archive) {
-                                    path = n.getData().getPath().toString() + path;
-                                }
-                                n = parentNode;
-                                archive = n.getData().getArchive();
-                            }
-                            return path;
-                        });
+        String actual = dumpTree(root, n -> n.getData().getFullPathString());
         String expected =
                 "/\n"
                         + "/res/\n"
@@ -107,7 +88,7 @@ public class ArchiveTreeStructureTest {
                                     Locale.US,
                                     "%1$-10d %2$s",
                                     entry.getRawFileSize(),
-                                    entry.getPath());
+                                    entry.getFullPathString());
                         });
         String expected =
                 "170        /\n"
@@ -115,8 +96,8 @@ public class ArchiveTreeStructureTest {
                         + "6          /res/anim/\n"
                         + "6          /res/anim/fade.xml\n"
                         + "153        /instant-run.zip\n"
-                        + "2          /instant-run/\n"
-                        + "2          /instant-run/classes1.dex\n"
+                        + "2          /instant-run.zip/instant-run/\n"
+                        + "2          /instant-run.zip/instant-run/classes1.dex\n"
                         + "11         /AndroidManifest.xml";
         assertThat(actual).isEqualTo(expected);
     }
@@ -134,7 +115,7 @@ public class ArchiveTreeStructureTest {
                                     Locale.US,
                                     "%1$-10d %2$s",
                                     entry.getDownloadFileSize(),
-                                    entry.getPath());
+                                    entry.getFullPathString());
                         });
         String expected =
                 "172        /\n"
@@ -142,8 +123,8 @@ public class ArchiveTreeStructureTest {
                         + "8          /res/anim/\n"
                         + "8          /res/anim/fade.xml\n"
                         + "153        /instant-run.zip\n"
-                        + "4          /instant-run/\n"
-                        + "4          /instant-run/classes1.dex\n"
+                        + "4          /instant-run.zip/instant-run/\n"
+                        + "4          /instant-run.zip/instant-run/classes1.dex\n"
                         + "11         /AndroidManifest.xml";
         assertThat(actual).isEqualTo(expected);
     }
@@ -165,13 +146,13 @@ public class ArchiveTreeStructureTest {
                                     Locale.US,
                                     "%1$-10d %2$s",
                                     entry.getRawFileSize(),
-                                    entry.getPath());
+                                    entry.getFullPathString());
                         });
         String expected =
                 "170        /\n"
                         + "153        /instant-run.zip\n"
-                        + "2          /instant-run/\n"
-                        + "2          /instant-run/classes1.dex\n"
+                        + "2          /instant-run.zip/instant-run/\n"
+                        + "2          /instant-run.zip/instant-run/classes1.dex\n"
                         + "11         /AndroidManifest.xml\n"
                         + "6          /res/\n"
                         + "6          /res/anim/\n"

@@ -28,12 +28,15 @@ public class ArchiveEntry {
      * inner archive.
      */
     @NonNull private final Path path;
+    @NonNull private final String fullPathString;
     private long rawFileSize = -1;
     private long downloadFileSize = -1;
 
-    public ArchiveEntry(@NonNull Archive archive, @NonNull Path path) {
+    public ArchiveEntry(
+            @NonNull Archive archive, @NonNull Path path, @NonNull String fullPathString) {
         this.archive = archive;
         this.path = path;
+        this.fullPathString = fullPathString;
     }
 
     @NonNull
@@ -60,5 +63,10 @@ public class ArchiveEntry {
     @NonNull
     public Archive getArchive() {
         return archive;
+    }
+
+    @NonNull
+    public String getFullPathString() {
+        return fullPathString;
     }
 }

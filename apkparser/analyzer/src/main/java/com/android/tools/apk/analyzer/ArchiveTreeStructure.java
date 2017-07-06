@@ -62,8 +62,16 @@ public class ArchiveTreeStructure {
             };
 
     public static ArchiveNode create(@NonNull Archive archive) throws IOException {
+        return create(archive, "");
+    }
+
+    public static ArchiveNode create(@NonNull Archive archive, @NonNull String fullPathString)
+            throws IOException {
         Path contentRoot = archive.getContentRoot();
-        ArchiveTreeNode rootNode = new ArchiveTreeNode(new ArchiveEntry(archive, contentRoot));
+        ArchiveTreeNode rootNode =
+                new ArchiveTreeNode(
+                        new ArchiveEntry(
+                                archive, contentRoot, fullPathString + contentRoot.toString()));
 
         Stack<ArchiveTreeNode> stack = new Stack<>();
         stack.push(rootNode);
@@ -90,13 +98,26 @@ public class ArchiveTreeStructure {
                         Files.createDirectories(tempFile.getParent());
                         Files.copy(childPath, tempFile);
                         Archive tempArchive = Archives.openInnerZip(tempFile);
-                        ArchiveTreeNode newArchiveNode = (ArchiveTreeNode) create(tempArchive);
-                        childNode = new ArchiveTreeNode(new ArchiveEntry(tempArchive, childPath));
+                        ArchiveTreeNode newArchiveNode =
+                                (ArchiveTreeNode)
+                                        create(tempArchive, fullPathString + childPath.toString());
+                        childNode =
+                                new ArchiveTreeNode(
+                                        new InnerArchiveEntry(
+                                                archive,
+                                                childPath,
+                                                fullPathString + childPath.toString(),
+                                                tempArchive));
                         for (ArchiveNode archiveNodeChild : newArchiveNode.getChildren()) {
                             childNode.add((MutableTreeNode) archiveNodeChild);
                         }
                     } else {
-                        childNode = new ArchiveTreeNode(new ArchiveEntry(archive, childPath));
+                        childNode =
+                                new ArchiveTreeNode(
+                                        new ArchiveEntry(
+                                                archive,
+                                                childPath,
+                                                fullPathString + childPath.toString()));
                         if (Files.isDirectory(childPath)) {
                             stack.push(childNode);
                         }
@@ -116,8 +137,17 @@ public class ArchiveTreeStructure {
 
     public static void updateRawFileSizes(
             @NonNull ArchiveNode root, @NonNull ApkSizeCalculator calculator) {
-        Map<String, Long> rawFileSizes =
-                calculator.getRawSizePerFile(root.getData().getArchive().getPath());
+        Map<String, Long> rawFileSizes;
+        if (root.getData() instanceof InnerArchiveEntry) {
+            rawFileSizes =
+                    calculator.getRawSizePerFile(
+                            ((InnerArchiveEntry) root.getData())
+                                    .asArchiveEntry()
+                                    .getArchive()
+                                    .getPath());
+        } else {
+            rawFileSizes = calculator.getRawSizePerFile(root.getData().getArchive().getPath());
+        }
 
         // first set the file sizes for all child nodes
         ArchiveTreeStream.preOrderStream(root)
@@ -126,14 +156,7 @@ public class ArchiveTreeStructure {
                             ArchiveEntry data = node.getData();
                             if (node != root
                                     && data.getPath().getFileName() != null
-                                    && INNER_ZIP_EXTENSIONS
-                                            .stream()
-                                            .anyMatch(
-                                                    ext ->
-                                                            data.getPath()
-                                                                    .getFileName()
-                                                                    .toString()
-                                                                    .endsWith(ext))) {
+                                    && node.getData() instanceof InnerArchiveEntry) {
                                 updateRawFileSizes(node, calculator);
                             }
                             Long rawFileSize = rawFileSizes.get(data.getPath().toString());
@@ -160,8 +183,18 @@ public class ArchiveTreeStructure {
 
     public static void updateDownloadFileSizes(
             @NonNull ArchiveNode root, @NonNull ApkSizeCalculator calculator) {
-        Map<String, Long> downloadFileSizes =
-                calculator.getDownloadSizePerFile(root.getData().getArchive().getPath());
+        Map<String, Long> downloadFileSizes;
+        if (root.getData() instanceof InnerArchiveEntry) {
+            downloadFileSizes =
+                    calculator.getDownloadSizePerFile(
+                            ((InnerArchiveEntry) root.getData())
+                                    .asArchiveEntry()
+                                    .getArchive()
+                                    .getPath());
+        } else {
+            downloadFileSizes =
+                    calculator.getDownloadSizePerFile(root.getData().getArchive().getPath());
+        }
 
         // first set the file sizes for all child nodes
         ArchiveTreeStream.preOrderStream(root)
@@ -170,14 +203,7 @@ public class ArchiveTreeStructure {
                             ArchiveEntry data = node.getData();
                             if (node != root
                                     && data.getPath().getFileName() != null
-                                    && INNER_ZIP_EXTENSIONS
-                                            .stream()
-                                            .anyMatch(
-                                                    ext ->
-                                                            data.getPath()
-                                                                    .getFileName()
-                                                                    .toString()
-                                                                    .endsWith(ext))) {
+                                    && node.getData() instanceof InnerArchiveEntry) {
                                 updateDownloadFileSizes(node, calculator);
                             }
                             Long downloadFileSize =

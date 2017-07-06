@@ -18,7 +18,7 @@ package com.android.tools.apk.analyzer;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.annotations.VisibleForTesting;
+import com.android.annotations.Nullable;
 import com.android.tools.apk.analyzer.internal.AndroidArtifact;
 import com.android.tools.apk.analyzer.internal.ZipArtifact;
 import com.google.common.collect.FluentIterable;
@@ -53,7 +53,7 @@ public class Archives {
         return new AndroidArtifact(archive, fileSystem);
     }
 
-    @VisibleForTesting
+    @Nullable
     public static Archive getFirstManifestArchive(@NonNull ArchiveNode input) {
         FluentIterable<ArchiveNode> bfsIterable =
                 new TreeTraverser<ArchiveNode>() {
@@ -64,7 +64,13 @@ public class Archives {
                 }.breadthFirstTraversal(input);
 
         return StreamSupport.stream(bfsIterable.spliterator(), false)
-                .map(node -> node.getData().getArchive())
+                .map(
+                        node ->
+                                node.getData() instanceof InnerArchiveEntry
+                                        ? ((InnerArchiveEntry) node.getData())
+                                                .asArchiveEntry()
+                                                .getArchive()
+                                        : node.getData().getArchive())
                 .distinct()
                 .filter(
                         archive ->

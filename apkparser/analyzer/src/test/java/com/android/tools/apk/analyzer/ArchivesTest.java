@@ -89,7 +89,11 @@ public class ArchivesTest {
         ArchiveNode node = ArchiveTreeStructure.create(archive);
         Archive archive2 = Archives.getFirstManifestArchive(node);
         assertNotEquals(archive, archive2);
-        assertEquals(node.getChildren().get(0).getData().getArchive(), archive2);
+        assertEquals(
+                ((InnerArchiveEntry) node.getChildren().get(0).getData())
+                        .asArchiveEntry()
+                        .getArchive(),
+                archive2);
     }
 
     private static Path getArchivePath(String s) {
