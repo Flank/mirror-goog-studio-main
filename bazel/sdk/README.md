@@ -221,7 +221,7 @@ $ repo forall \
 # same topic (the topic will be set to your current branch name).
 # Be careful that someone else isn't using the same topic as you
 # at the same time!
-$ repo upload --cbr -t
+$ repo upload --no-verify --cbr -t
 
 # This opens an editor. Uncomment all SDK branches and save.
 ```
