@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
 import com.google.auto.value.AutoValue;
-import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -221,11 +221,31 @@ public abstract class SymbolTable {
          * @param tablePackage; must be a valid java package name
          */
         public Builder tablePackage(@NonNull String tablePackage) {
-            if (!tablePackage.isEmpty()) {
-                Arrays.asList(tablePackage.split("\\."))
-                        .forEach(p -> Preconditions.checkArgument(SourceVersion.isIdentifier(p)));
+            if (!tablePackage.isEmpty() && !SourceVersion.isName(tablePackage)) {
+                for (String segment : Splitter.on('.').split(tablePackage)) {
+                    if (!SourceVersion.isIdentifier(segment)) {
+                        throw new IllegalArgumentException(
+                                "Package '"
+                                        + tablePackage
+                                        + "' from AndroidManifest.xml is not a valid Java package name as '"
+                                        + segment
+                                        + "' is not a valid Java identifier.");
+                    }
+                    if (SourceVersion.isKeyword(segment)) {
+                        throw new IllegalArgumentException(
+                                "Package '"
+                                        + tablePackage
+                                        + "' from AndroidManifest.xml is not a valid Java package name as '"
+                                        + segment
+                                        + "' is a Java keyword.");
+                    }
+                }
+                // Shouldn't happen.
+                throw new IllegalArgumentException(
+                        "Package '"
+                                + tablePackage
+                                + "' from AndroidManifest.xml is not a valid Java package name.");
             }
-
             this.tablePackage = tablePackage;
             return this;
         }

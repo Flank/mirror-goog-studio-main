@@ -17,6 +17,7 @@
 package com.android.builder.symbols;
 
 import static com.android.builder.symbols.SymbolTestUtils.createSymbol;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -168,5 +169,29 @@ public class SymbolTableTest {
         SymbolTable t = SymbolTable.builder().add(createSymbol("attr", "b", "int", "d")).build();
         assertTrue(t.getSymbols().contains(ResourceType.ATTR, "b"));
         assertFalse(t.getSymbols().contains(ResourceType.STRING, "b"));
+    }
+
+    @Test
+    public void invalidPackageNameKeyword() {
+        try {
+            SymbolTable.builder().tablePackage("com.example.int");
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e)
+                    .hasMessage(
+                            "Package 'com.example.int' from AndroidManifest.xml is not a valid Java package name as 'int' is a Java keyword.");
+        }
+    }
+
+    @Test
+    public void invalidPackageNameNotIdentifier() {
+        try {
+            SymbolTable.builder().tablePackage("com.example.my-package");
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            assertThat(e)
+                    .hasMessage(
+                            "Package 'com.example.my-package' from AndroidManifest.xml is not a valid Java package name as 'my-package' is not a valid Java identifier.");
+        }
     }
 }
