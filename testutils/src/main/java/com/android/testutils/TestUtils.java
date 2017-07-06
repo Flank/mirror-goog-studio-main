@@ -42,7 +42,6 @@ public class TestUtils {
      * with the version in:
      *
      * <ul>
-     *   <li>buildSrc/base/build.gradle
      *   <li>buildSrc/base/dependencies.properties
      *   <li>tools/base/third_party/BUILD (this is generated from dependencies.properties)
      *   <li>tools/base/build-system/integration-test/BUILD
