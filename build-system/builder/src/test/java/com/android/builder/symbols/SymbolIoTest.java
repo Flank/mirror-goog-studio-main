@@ -506,4 +506,58 @@ public class SymbolIoTest {
                                 "{ 0x7f010000, 0x7f010001 } ",
                                 ImmutableList.of("max_width", "max_height")));
     }
+
+    @Test
+    public void checkWriteWithAndroidNamespace() throws Exception {
+        SymbolTable table =
+                SymbolTable.builder()
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable",
+                                        "LimitedSizeLinearLayout",
+                                        "int[]",
+                                        "{ 0x7f010000, 0x7f010001 }",
+                                        ImmutableList.of(
+                                                "android:max_width", "android:max_height")))
+                        .build();
+
+        String original =
+                ""
+                        + "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } \n"
+                        + "int styleable LimitedSizeLinearLayout_android_max_width 0 \n"
+                        + "int styleable LimitedSizeLinearLayout_android_max_height 1";
+        checkFileGeneration(
+                original,
+                () -> {
+                    File f;
+                    try {
+                        f = mTemporaryFolder.newFile();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return null;
+                    }
+                    SymbolIo.write(table, f);
+                    return f;
+                });
+    }
+
+    @Test
+    public void checkReadWithAndroidNamespace() throws Exception {
+        File txt = mTemporaryFolder.newFile();
+        String content =
+                ""
+                        + "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 } \r\n"
+                        + "int styleable LimitedSizeLinearLayout_android_max_width 0 \r\n"
+                        + "int styleable LimitedSizeLinearLayout_android_max_height 1 \r\n";
+        java.nio.file.Files.write(txt.toPath(), content.getBytes(StandardCharsets.UTF_8));
+        SymbolTable table = SymbolIo.read(txt, "com.example.app");
+        assertThat(table.allSymbols())
+                .containsExactly(
+                        Symbol.createSymbol(
+                                ResourceType.STYLEABLE,
+                                "LimitedSizeLinearLayout",
+                                SymbolJavaType.INT_LIST,
+                                "{ 0x7f010000, 0x7f010001 } ",
+                                ImmutableList.of("android:max_width", "android:max_height")));
+    }
 }

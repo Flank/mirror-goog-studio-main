@@ -239,7 +239,7 @@ public final class SymbolIo {
                                     + " "
                                     + s.getName()
                                     + "_"
-                                    + children.get(i)
+                                    + SymbolUtils.canonicalizeValueResourceName(children.get(i))
                                     + " "
                                     + i);
                 }
