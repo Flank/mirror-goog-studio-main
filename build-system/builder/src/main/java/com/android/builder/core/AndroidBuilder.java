@@ -37,11 +37,10 @@ import com.android.builder.internal.TestManifestGenerator;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.compiler.AidlProcessor;
-import com.android.builder.internal.compiler.LeafFolderGatherer;
+import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.internal.compiler.RenderScriptProcessor;
 import com.android.builder.internal.compiler.ShaderProcessor;
-import com.android.builder.internal.compiler.SourceSearcher;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SyncIssue;
@@ -52,6 +51,7 @@ import com.android.builder.symbols.RGeneration;
 import com.android.builder.symbols.SymbolIo;
 import com.android.builder.symbols.SymbolTable;
 import com.android.builder.symbols.SymbolUtils;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.CachedProcessOutputHandler;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.ProcessException;
@@ -94,6 +94,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -967,9 +968,14 @@ public class AndroidBuilder {
                 mProcessExecutor,
                 processOutputHandler);
 
-        SourceSearcher searcher = new SourceSearcher(sourceFolders, "aidl");
-        searcher.setUseExecutor(true);
-        searcher.search(processor);
+        for (File dir : sourceFolders) {
+            DirectoryWalker.builder()
+                    .root(dir.toPath())
+                    .extensions("aidl")
+                    .action(processor)
+                    .build()
+                    .walk();
+        }
     }
 
     /**
@@ -1019,7 +1025,7 @@ public class AndroidBuilder {
                 mProcessExecutor,
                 processOutputHandler);
 
-        processor.processFile(sourceFolder, aidlFile);
+        processor.call(sourceFolder.toPath(), aidlFile.toPath());
     }
 
     /**
@@ -1043,25 +1049,30 @@ public class AndroidBuilder {
         checkState(mTargetInfo != null,
                 "Cannot call compileAllShaderFiles() before setTargetInfo() is called.");
 
-        ShaderProcessor processor = new ShaderProcessor(
-                nkdLocation,
-                sourceFolder,
-                outputDir,
-                defaultArgs,
-                scopedArgs,
-                mProcessExecutor,
-                processOutputHandler);
+        Supplier<ShaderProcessor> processor =
+                () ->
+                        new ShaderProcessor(
+                                nkdLocation,
+                                sourceFolder,
+                                outputDir,
+                                defaultArgs,
+                                scopedArgs,
+                                mProcessExecutor,
+                                processOutputHandler,
+                                WaitableExecutor.useGlobalSharedThreadPool());
 
-        SourceSearcher searcher = new SourceSearcher(
-                sourceFolder,
-                ShaderProcessor.EXT_VERT,
-                ShaderProcessor.EXT_TESC,
-                ShaderProcessor.EXT_TESE,
-                ShaderProcessor.EXT_GEOM,
-                ShaderProcessor.EXT_FRAG,
-                ShaderProcessor.EXT_COMP);
-        searcher.setUseExecutor(true);
-        searcher.search(processor);
+        DirectoryWalker.builder()
+                .root(sourceFolder.toPath())
+                .extensions(
+                        ShaderProcessor.EXT_VERT,
+                        ShaderProcessor.EXT_TESC,
+                        ShaderProcessor.EXT_TESE,
+                        ShaderProcessor.EXT_GEOM,
+                        ShaderProcessor.EXT_FRAG,
+                        ShaderProcessor.EXT_COMP)
+                .action(processor)
+                .build()
+                .walk();
     }
 
     /**
@@ -1088,15 +1099,17 @@ public class AndroidBuilder {
         checkState(mTargetInfo != null,
                 "Cannot call compileAidlFile() before setTargetInfo() is called.");
 
-        ShaderProcessor processor = new ShaderProcessor(
-                nkdLocation,
-                sourceFolder,
-                outputDir,
-                defaultArgs,
-                scopedArgs,
-                mProcessExecutor,
-                processOutputHandler);
-        processor.processFile(sourceFolder, shaderFile);
+        ShaderProcessor processor =
+                new ShaderProcessor(
+                        nkdLocation,
+                        sourceFolder,
+                        outputDir,
+                        defaultArgs,
+                        scopedArgs,
+                        mProcessExecutor,
+                        processOutputHandler,
+                        null);
+        processor.call(sourceFolder.toPath(), shaderFile.toPath());
     }
 
     /**
@@ -1122,7 +1135,7 @@ public class AndroidBuilder {
      */
     public void compileAllRenderscriptFiles(
             @NonNull Collection<File> sourceFolders,
-            @NonNull List<File> importFolders,
+            @NonNull Collection<File> importFolders,
             @NonNull File sourceOutputDir,
             @NonNull File resOutputDir,
             @NonNull File objOutputDir,
@@ -1165,41 +1178,6 @@ public class AndroidBuilder {
                 abiFilters,
                 mLogger);
         processor.build(mProcessExecutor, processOutputHandler);
-    }
-
-    /**
-     * Computes and returns the leaf folders based on a given file extension.
-     *
-     * This looks through all the given root import folders, and recursively search for leaf
-     * folders containing files matching the given extensions. All the leaf folders are gathered
-     * and returned in the list.
-     *
-     * @param extension the extension to search for.
-     * @param importFolders an array of list of root folders.
-     * @return a list of leaf folder, never null.
-     */
-    @NonNull
-    @SafeVarargs
-    public static List<File> getLeafFolders(@NonNull String extension, Collection<File>... importFolders) {
-        List<File> results = Lists.newArrayList();
-
-        if (importFolders != null) {
-            for (Collection<File> folders : importFolders) {
-                SourceSearcher searcher = new SourceSearcher(folders, extension);
-                searcher.setUseExecutor(false);
-                LeafFolderGatherer processor = new LeafFolderGatherer();
-                try {
-                    searcher.search(processor);
-                } catch (InterruptedException | IOException | ProcessException e) {
-                    // wont happen as we're not using the executor, and our processor
-                    // doesn't throw those.
-                }
-
-                results.addAll(processor.getFolders());
-            }
-        }
-
-        return results;
     }
 
     @NonNull

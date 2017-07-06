@@ -27,13 +27,15 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.NdkTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
-import com.android.builder.core.AndroidBuilder;
+import com.android.builder.internal.compiler.DirectoryWalker;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.file.FileCollection;
@@ -191,15 +193,10 @@ public class RenderscriptCompile extends NdkTask {
 
         Set<File> sourceDirectories = sourceDirs.getFiles();
 
-        // get the import folders. If the .rsh files are not directly under the import folders,
-        // we need to get the leaf folders, as this is what llvm-rs-cc expects.
-        List<File> importFolders =
-                AndroidBuilder.getLeafFolders("rsh", getImportDirs().getFiles(), sourceDirectories);
-
         getBuilder()
                 .compileAllRenderscriptFiles(
                         sourceDirectories,
-                        importFolders,
+                        getImportFolders(),
                         sourceDestDir,
                         resDestDir,
                         objDestDir,
@@ -211,6 +208,29 @@ public class RenderscriptCompile extends NdkTask {
                         isSupportMode(),
                         getNdkConfig() == null ? null : getNdkConfig().getAbiFilters(),
                         new LoggedProcessOutputHandler(getILogger()));
+    }
+
+    // get the import folders. If the .rsh files are not directly under the import folders,
+    // we need to get the leaf folders, as this is what llvm-rs-cc expects.
+    @NonNull
+    private Collection<File> getImportFolders() throws IOException {
+        Set<File> results = Sets.newHashSet();
+
+        Collection<File> dirs = Lists.newArrayList();
+        dirs.addAll(getImportDirs().getFiles());
+        dirs.addAll(sourceDirs.getFiles());
+
+        for (File dir : dirs) {
+            // TODO(samwho): should "rsh" be a constant somewhere?
+            DirectoryWalker.builder()
+                    .root(dir.toPath())
+                    .extensions("rsh")
+                    .action((start, path) -> results.add(path.getParent().toFile()))
+                    .build()
+                    .walk();
+        }
+
+        return results;
     }
 
     // ----- ConfigAction -----

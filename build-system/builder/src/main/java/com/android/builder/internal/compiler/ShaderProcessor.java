@@ -24,6 +24,7 @@ import static com.android.SdkConstants.currentPlatform;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
@@ -32,13 +33,15 @@ import com.android.ide.common.process.ProcessResult;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 /**
  * A Source File processor for AIDL files. This compiles each aidl file found by the SourceSearcher.
  */
-public class ShaderProcessor implements SourceSearcher.SourceFileProcessor {
+public class ShaderProcessor implements DirectoryWalker.FileAction {
 
     public static final String EXT_VERT = "vert";
     public static final String EXT_TESC = "tesc";
@@ -65,6 +68,8 @@ public class ShaderProcessor implements SourceSearcher.SourceFileProcessor {
     @NonNull
     private  final ProcessOutputHandler mProcessOutputHandler;
 
+    @Nullable private final WaitableExecutor mExecutor;
+
     private File mGlslcLocation;
 
     public ShaderProcessor(
@@ -74,7 +79,8 @@ public class ShaderProcessor implements SourceSearcher.SourceFileProcessor {
             @NonNull List<String> defaultArgs,
             @NonNull Map<String, List<String>> scopedArgs,
             @NonNull ProcessExecutor processExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler) {
+            @NonNull ProcessOutputHandler processOutputHandler,
+            @Nullable WaitableExecutor executor) {
         mNdkLocation = ndkLocation;
         mSourceFolder = sourceFolder;
         mOutputDir = new File(outputDir, "shaders");
@@ -82,10 +88,12 @@ public class ShaderProcessor implements SourceSearcher.SourceFileProcessor {
         mScopedArgs = scopedArgs;
         mProcessExecutor = processExecutor;
         mProcessOutputHandler = processOutputHandler;
+        mExecutor = executor;
+
+        init();
     }
 
-    @Override
-    public void initOnFirstFile() {
+    public void init() {
         if (mNdkLocation == null) {
             throw new IllegalStateException("NDK location is missing. It is required to compile shaders.");
         }
@@ -126,33 +134,53 @@ public class ShaderProcessor implements SourceSearcher.SourceFileProcessor {
     }
 
     @Override
-    public void processFile(@NonNull File sourceFolder, @NonNull File sourceFile)
-            throws ProcessException, IOException {
-        ProcessInfoBuilder builder = new ProcessInfoBuilder();
-        builder.setExecutable(mGlslcLocation);
+    public void call(@NonNull Path start, @NonNull Path path) throws IOException {
+        Callable c =
+                () -> {
+                    ProcessInfoBuilder builder = new ProcessInfoBuilder();
+                    builder.setExecutable(mGlslcLocation);
 
-        // working dir for the includes
-        builder.addArgs("-I", mSourceFolder.getPath());
+                    // working dir for the includes
+                    builder.addArgs("-I", mSourceFolder.getPath());
 
-        // compute the output file path
-        String relativePath = FileUtils.relativePath(sourceFile, sourceFolder);
-        File destFile = new File(mOutputDir, relativePath + ".spv");
+                    // compute the output file path
+                    String relativePath = FileUtils.relativePath(path.toFile(), start.toFile());
+                    File destFile = new File(mOutputDir, relativePath + ".spv");
 
-        // add the args
-        builder.addArgs(getArgs(relativePath));
+                    // add the args
+                    builder.addArgs(getArgs(relativePath));
 
-        // the source file
-        builder.addArgs(sourceFile.getPath());
+                    // the source file
+                    builder.addArgs(path.toString());
 
-        // add the output file
-        builder.addArgs("-o", destFile.getPath());
+                    // add the output file
+                    builder.addArgs("-o", destFile.getPath());
 
-        // make sure the output file's parent folder is created.
-        FileUtils.mkdirs(destFile.getParentFile());
+                    // make sure the output file's parent folder is created.
+                    FileUtils.mkdirs(destFile.getParentFile());
 
-        ProcessResult result = mProcessExecutor.execute(
-                builder.createProcess(), mProcessOutputHandler);
-        result.rethrowFailure().assertNormalExitValue();
+                    ProcessResult result =
+                            mProcessExecutor.execute(
+                                    builder.createProcess(), mProcessOutputHandler);
+
+                    try {
+                        result.rethrowFailure().assertNormalExitValue();
+                    } catch (ProcessException pe) {
+                        throw new IOException(pe);
+                    }
+
+                    return null;
+                };
+
+        if (mExecutor != null) {
+            mExecutor.execute(c);
+        } else {
+            try {
+                c.call();
+            } catch (Exception e) {
+                throw new IOException(e);
+            }
+        }
     }
 
     @NonNull

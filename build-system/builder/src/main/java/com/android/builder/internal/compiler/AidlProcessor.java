@@ -27,18 +27,21 @@ import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.process.ProcessResult;
 import com.android.repository.io.FileOpUtils;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * A Source File processor for AIDL files. This compiles each aidl file found by the SourceSearcher.
  */
-public class AidlProcessor implements SourceSearcher.SourceFileProcessor {
+public class AidlProcessor implements DirectoryWalker.FileAction {
 
-    @NonNull
     private final String mAidlExecutable;
     @NonNull
     private final String mFrameworkLocation;
@@ -48,8 +51,7 @@ public class AidlProcessor implements SourceSearcher.SourceFileProcessor {
     private final File mSourceOutputDir;
     @Nullable
     private final File mPackagedOutputDir;
-    @Nullable
-    private Collection<String> mPackageWhiteList;
+    @NonNull private final Collection<String> mPackageWhiteList;
     @NonNull
     private final DependencyFileProcessor mDependencyFileProcessor;
     @NonNull
@@ -72,15 +74,18 @@ public class AidlProcessor implements SourceSearcher.SourceFileProcessor {
         mImportFolders = importFolders;
         mSourceOutputDir = sourceOutputDir;
         mPackagedOutputDir = packagedOutputDir;
-        mPackageWhiteList = packageWhiteList;
+        if (packageWhiteList == null) {
+            mPackageWhiteList = ImmutableSet.of();
+        } else {
+            mPackageWhiteList = Collections.unmodifiableSet(Sets.newHashSet(packageWhiteList));
+        }
         mDependencyFileProcessor = dependencyFileProcessor;
         mProcessExecutor = processExecutor;
         mProcessOutputHandler = processOutputHandler;
     }
 
     @Override
-    public void processFile(@NonNull File sourceFolder, @NonNull File sourceFile)
-            throws ProcessException, IOException {
+    public void call(@NonNull Path startDir, @NonNull Path path) throws IOException {
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
 
         builder.setExecutable(mAidlExecutable);
@@ -97,26 +102,28 @@ public class AidlProcessor implements SourceSearcher.SourceFileProcessor {
         File depFile = File.createTempFile("aidl", ".d");
         builder.addArgs("-d" + depFile.getAbsolutePath());
 
-        builder.addArgs(sourceFile.getAbsolutePath());
+        builder.addArgs(path.toAbsolutePath().toString());
 
         ProcessResult result = mProcessExecutor.execute(
                 builder.createProcess(), mProcessOutputHandler);
-        result.rethrowFailure().assertNormalExitValue();
+
+        try {
+            result.rethrowFailure().assertNormalExitValue();
+        } catch (ProcessException pe) {
+            throw new IOException(pe);
+        }
 
         // send the dependency file to the processor.
         DependencyData data = mDependencyFileProcessor.processFile(depFile);
 
         if (mPackagedOutputDir != null && data != null) {
-
-            boolean isParcelable = data.getOutputFiles().isEmpty();
-
             String relative =
                     FileUtils.toSystemIndependentPath(
                             FileOpUtils.makeRelative(
-                                    sourceFolder, sourceFile, FileOpUtils.create()));
-            boolean isWhiteListed =
-                    mPackageWhiteList != null && mPackageWhiteList.contains(relative);
+                                    startDir.toFile(), path.toFile(), FileOpUtils.create()));
 
+            boolean isParcelable = data.getOutputFiles().isEmpty();
+            boolean isWhiteListed = mPackageWhiteList.contains(relative);
             if (isParcelable || isWhiteListed)  {
                 // looks like a parcelable or is white-listed.
                 // Store it in the secondary output of the DependencyData object.
@@ -124,16 +131,11 @@ public class AidlProcessor implements SourceSearcher.SourceFileProcessor {
                 File destFile = new File(mPackagedOutputDir, relative);
                 //noinspection ResultOfMethodCallIgnored
                 destFile.getParentFile().mkdirs();
-                Files.copy(sourceFile, destFile);
+                Files.copy(path.toFile(), destFile);
                 data.addSecondaryOutputFile(destFile.getPath());
             }
         }
 
         FileUtils.delete(depFile);
-    }
-
-    @Override
-    public void initOnFirstFile() {
-        // do nothing
     }
 }
