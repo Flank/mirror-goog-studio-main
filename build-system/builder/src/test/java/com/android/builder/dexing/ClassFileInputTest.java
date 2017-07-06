@@ -174,10 +174,12 @@ public class ClassFileInputTest {
     private void validateEntries(@NonNull File rootPath, @NonNull List<String> fileNames)
             throws IOException {
         List<String> filesRead = Lists.newArrayList();
-        ClassFileInputs.fromPath(rootPath.toPath(), e -> true)
+        ClassFileInputs.fromPath(rootPath.toPath())
+                .entries(path -> true)
                 .forEach(
                         entry -> {
-                            String path = PathUtils.toSystemIndependentPath(entry.relativePath);
+                            String path =
+                                    PathUtils.toSystemIndependentPath(entry.getRelativePath());
                             filesRead.add(path);
                         });
         assertThat(filesRead).containsExactlyElementsIn(fileNames);
