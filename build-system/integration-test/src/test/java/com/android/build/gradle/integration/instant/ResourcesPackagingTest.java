@@ -30,6 +30,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
+import com.android.testutils.apk.Apk;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
@@ -86,33 +87,30 @@ public class ResourcesPackagingTest {
         assertThat(buildInfo.getArtifacts())
                 .hasSize(InstantRunSlicer.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES + extraApks);
         assertThat(
-                        buildInfo
-                                .getArtifacts()
-                                .stream()
-                                .filter(artifact -> artifact.type == InstantRunArtifactType.SPLIT)
-                                .count())
+                        InstantRunTestUtils.getArtifactsOfType(
+                                        buildInfo, InstantRunArtifactType.SPLIT)
+                                .size())
                 .isEqualTo(InstantRunSlicer.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES);
-        assertThat(
-                        buildInfo
-                                .getArtifacts()
-                                .stream()
-                                .filter(
-                                        artifact ->
-                                                artifact.type == InstantRunArtifactType.SPLIT_MAIN)
-                                .findAny())
-                .isPresent();
+
+        InstantRunArtifact splitMain =
+                InstantRunTestUtils.getOnlyArtifactOfType(
+                        buildInfo, InstantRunArtifactType.SPLIT_MAIN);
+        assertThat(splitMain.file).exists();
+
+        Apk containsResources;
         if (separateResourcesApk) {
-            assertThat(
-                            buildInfo
-                                    .getArtifacts()
-                                    .stream()
-                                    .filter(
-                                            artifact ->
-                                                    artifact.type
-                                                            == InstantRunArtifactType.RESOURCES)
-                                    .findAny())
-                    .isPresent();
+            containsResources =
+                    new Apk(
+                            InstantRunTestUtils.getOnlyArtifactOfType(
+                                            buildInfo, InstantRunArtifactType.RESOURCES)
+                                    .file);
+            assertThat(new Apk(splitMain.file)).doesNotContainResource("layout/main.xml");
+        } else {
+            containsResources = new Apk(splitMain.file);
         }
+
+        assertThat(containsResources).exists();
+        assertThat(containsResources).containsResource("layout/main.xml");
 
         // now modify a resource.
         TemporaryProjectModification.doTest(

@@ -57,6 +57,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 public final class InstantRunTestUtils {
 
@@ -222,6 +223,25 @@ public final class InstantRunTestUtils {
         InstantRunArtifact artifact = getOnlyArtifact(instantRunModel);
         assertThat(artifact.type).isEqualTo(InstantRunArtifactType.RESOURCES);
         return artifact;
+    }
+
+    public static List<InstantRunArtifact> getArtifactsOfType(
+            @NonNull InstantRunBuildInfo buildInfo, @NonNull InstantRunArtifactType type) {
+        return buildInfo
+                .getArtifacts()
+                .stream()
+                .filter(artifact -> artifact.type == type)
+                .collect(Collectors.toList());
+    }
+
+    public static InstantRunArtifact getOnlyArtifactOfType(
+            @NonNull InstantRunBuildInfo buildInfo, @NonNull InstantRunArtifactType type) {
+        List<InstantRunArtifact> artifacts = getArtifactsOfType(buildInfo, type);
+        if (artifacts.isEmpty()) {
+            throw new AssertionError(
+                    "Unable to find artifact of type " + type + " in build info " + buildInfo);
+        }
+        return Iterables.getOnlyElement(artifacts);
     }
 
     @NonNull
