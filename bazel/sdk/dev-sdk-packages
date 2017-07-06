@@ -24,8 +24,11 @@ platforms;android-23:**:{data/**,skins/**,templates/**,*-src.jar}
 platforms;android-21:**:{data/**,skins/**,templates/**,*-src.jar}
 platforms;android-19:**:{data/**,skins/**,templates/**,*-src.jar}
 
+# Tools and Emulator
 # mksdcard for AvdListDialogTest; support/*.txt for typo checking
 tools:{package.xml,mksdcard*,support/*.txt}
+# emulator isn't needed at this point and is stubbed out
+emulator:package.xml
 
 # Subset of docs happened to be used by tests
 docs:{package.xml,reference/android/*,reference/android/content/*,reference/android/widget/*}
