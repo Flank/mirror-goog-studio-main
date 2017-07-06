@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.fixture.TemporaryProjectModif
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.internal.transforms.InstantRunSlicer;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
@@ -34,6 +35,9 @@ import com.android.testutils.apk.Apk;
 import com.android.tools.fd.client.InstantRunArtifact;
 import com.android.tools.fd.client.InstantRunArtifactType;
 import com.android.tools.fd.client.InstantRunBuildInfo;
+import com.google.common.collect.Iterables;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -90,7 +94,8 @@ public class ResourcesPackagingTest {
                         InstantRunTestUtils.getArtifactsOfType(
                                         buildInfo, InstantRunArtifactType.SPLIT)
                                 .size())
-                .isEqualTo(InstantRunSlicer.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES);
+                // Subtract the main APK.
+                .isEqualTo(InstantRunSlicer.NUMBER_OF_SLICES_FOR_PROJECT_CLASSES + extraApks - 1);
 
         InstantRunArtifact splitMain =
                 InstantRunTestUtils.getOnlyArtifactOfType(
@@ -99,11 +104,18 @@ public class ResourcesPackagingTest {
 
         Apk containsResources;
         if (separateResourcesApk) {
-            containsResources =
-                    new Apk(
-                            InstantRunTestUtils.getOnlyArtifactOfType(
-                                            buildInfo, InstantRunArtifactType.RESOURCES)
-                                    .file);
+            List<InstantRunArtifact> resourceApk =
+                    InstantRunTestUtils.getArtifactsOfType(buildInfo, InstantRunArtifactType.SPLIT)
+                            .stream()
+                            .filter(
+                                    split ->
+                                            split.file
+                                                    .getName()
+                                                    .startsWith(
+                                                            InstantRunResourcesApkBuilder
+                                                                    .APK_FILE_NAME))
+                            .collect(Collectors.toList());
+            containsResources = new Apk(Iterables.getOnlyElement(resourceApk).file);
             assertThat(new Apk(splitMain.file)).doesNotContainResource("layout/main.xml");
         } else {
             containsResources = new Apk(splitMain.file);
@@ -134,7 +146,11 @@ public class ResourcesPackagingTest {
 
                     assertThat(modifiedBuildInfo.getArtifacts()).hasSize(1);
                     InstantRunArtifact resourcesApk = modifiedBuildInfo.getArtifacts().get(0);
-                    assertThat(resourcesApk.type).isEqualTo(InstantRunArtifactType.RESOURCES);
+                    assertThat(resourcesApk.type)
+                            .isEqualTo(
+                                    separateResourcesApk
+                                            ? InstantRunArtifactType.SPLIT
+                                            : InstantRunArtifactType.RESOURCES);
                     assertThat(resourcesApk.file.getName())
                             .endsWith(
                                     separateResourcesApk

@@ -257,7 +257,7 @@ public class InstantRunResourcesApkBuilderTest {
                             any(File.class),
                             any(ApkCreatorFactory.class));
 
-            verify(buildContext).addChangedFile(FileType.RESOURCES, expectedOutputFile);
+            verify(buildContext).addChangedFile(FileType.SPLIT, expectedOutputFile);
         }
     }
 }
