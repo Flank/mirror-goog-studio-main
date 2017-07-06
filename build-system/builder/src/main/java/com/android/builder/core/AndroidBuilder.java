@@ -811,7 +811,7 @@ public class AndroidBuilder {
             File mainRTxt = new File(aaptConfig.getSymbolOutputDir(), "R.txt");
             SymbolTable mainSymbols =
                     mainRTxt.isFile()
-                            ? SymbolIo.read(mainRTxt, mainPackageName)
+                            ? SymbolIo.readFromAapt(mainRTxt, mainPackageName)
                             : SymbolTable.builder().tablePackage(mainPackageName).build();
 
             // For each dependency, load its symbol file.

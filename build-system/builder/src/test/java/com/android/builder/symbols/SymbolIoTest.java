@@ -120,6 +120,31 @@ public class SymbolIoTest {
     }
 
     @Test
+    public void testStyleablesFromAapt() throws Exception {
+        String r =
+                "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 }\n"
+                        + "int styleable LimitedSizeLinearLayout_a 1\n"
+                        + "int styleable LimitedSizeLinearLayout_b 0\n";
+        File file = mTemporaryFolder.newFile();
+        Files.write(r, file, Charsets.UTF_8);
+
+        SymbolTable table = SymbolIo.readFromAapt(file, null);
+
+        SymbolTable expected =
+                SymbolTable.builder()
+                        .add(
+                                SymbolTestUtils.createSymbol(
+                                        "styleable",
+                                        "LimitedSizeLinearLayout",
+                                        "int[]",
+                                        "{ 0x7f010000, 0x7f010001 }",
+                                        ImmutableList.of("b", "a")))
+                        .build();
+        assertEquals(expected, table);
+    }
+
+
+    @Test
     public void writeReadSymbolFile() throws Exception {
         SymbolTable original =
                 SymbolTable.builder()
