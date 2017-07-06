@@ -67,7 +67,7 @@ public class MergeResourcesTest {
         task.setGeneratedResOutputDir(empty);
 
         folderSets = Lists.newArrayList();
-        task.setSourceFolderInputs(() -> folderSets);
+        task.setResSetSupplier(() -> folderSets);
     }
 
     @After
@@ -82,7 +82,6 @@ public class MergeResourcesTest {
         File file = new File("src/main");
         ResourceSet mainSet = createResourceSet(folderSets, BuilderConstants.MAIN, file);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file);
         assertThat(task.computeResourceSetList()).containsExactly(mainSet);
     }
 
@@ -92,7 +91,6 @@ public class MergeResourcesTest {
         File file2 = new File("src/main2");
         ResourceSet mainSet = createResourceSet(folderSets, BuilderConstants.MAIN, file, file2);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file, file2);
         assertThat(task.computeResourceSetList()).containsExactly(mainSet);
     }
 
@@ -104,7 +102,6 @@ public class MergeResourcesTest {
         File file2 = new File("src/debug");
         ResourceSet debugSet = createResourceSet(folderSets, "debug", file2);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file, file2);
         assertThat(task.computeResourceSetList()).containsExactly(mainSet, debugSet);
     }
 
@@ -116,7 +113,6 @@ public class MergeResourcesTest {
         File file2 = new File("foo/bar/1.0");
         List<ResourceSet> librarySets = setupLibraryDependencies(file2, ":path");
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file);
         assertThat(task.getLibraries().getFiles()).containsExactly(file2);
 
         List<ResourceSet> computedSets = task.computeResourceSetList();
@@ -131,7 +127,6 @@ public class MergeResourcesTest {
         File rsFile = new File("rs");
         setFileCollection(task::setRenderscriptResOutputDir, rsFile);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file);
         assertThat(task.computeResourceSetList()).containsExactly(mainSet);
         // rs file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, rsFile);
@@ -145,7 +140,6 @@ public class MergeResourcesTest {
         File genFile = new File("generated");
         setFileCollection(task::setGeneratedResOutputDir, genFile);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file);
         assertThat(task.computeResourceSetList()).containsExactly(mainSet);
         // generated file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, genFile);
@@ -159,7 +153,6 @@ public class MergeResourcesTest {
         File microFile = new File("micro");
         setFileCollection(task::setMicroApkResDirectory, microFile);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file);
         assertThat(task.computeResourceSetList()).containsExactly(mainSet);
         // micro file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, microFile);
@@ -173,7 +166,6 @@ public class MergeResourcesTest {
         File extraFile = new File("extra");
         setFileCollectionSupplier(task::setExtraGeneratedResFolders, extraFile);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file);
         assertThat(task.computeResourceSetList()).containsExactly(mainSet);
         // rs file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, extraFile);
@@ -212,7 +204,6 @@ public class MergeResourcesTest {
         File extraFile = new File("extra");
         setFileCollectionSupplier(task::setExtraGeneratedResFolders, extraFile);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file, file2, debugFile);
         assertThat(task.getLibraries().getFiles()).containsExactly(libFile, libFile2);
         assertThat(task.computeResourceSetList())
                 .containsExactly(librarySet2, librarySet, mainSet, debugSet)

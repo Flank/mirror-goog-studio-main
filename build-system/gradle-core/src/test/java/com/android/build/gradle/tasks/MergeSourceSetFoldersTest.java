@@ -77,7 +77,6 @@ public class MergeSourceSetFoldersTest {
         File file = new File("src/main");
         AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file);
         assertThat(task.computeAssetSetList()).containsExactly(mainSet);
     }
 
@@ -87,7 +86,6 @@ public class MergeSourceSetFoldersTest {
         File file2 = new File("src/main2");
         AssetSet mainSet = createAssetSet(folderSets, BuilderConstants.MAIN, file, file2);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file, file2);
         assertThat(task.computeAssetSetList()).containsExactly(mainSet);
     }
 
@@ -99,7 +97,6 @@ public class MergeSourceSetFoldersTest {
         File file2 = new File("src/debug");
         AssetSet debugSet = createAssetSet(folderSets, "debug", file2);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file, file2);
         assertThat(task.computeAssetSetList()).containsExactly(mainSet, debugSet);
     }
 
@@ -111,7 +108,6 @@ public class MergeSourceSetFoldersTest {
         File file2 = new File("foo/bar/1.0");
         List<AssetSet> librarySets = setupLibraryDependencies(file2, ":path");
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file);
         assertThat(task.getLibraries().getFiles()).containsExactly(file2);
         assertThat(task.computeAssetSetList()).containsExactly(librarySets.get(0), mainSet).inOrder();
     }
@@ -124,7 +120,6 @@ public class MergeSourceSetFoldersTest {
         File shaderFile = new File("shader");
         setFileCollection(task::setShadersOutputDir, shaderFile);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file);
         assertThat(task.computeAssetSetList()).containsExactly(mainSet);
         // shader file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, shaderFile);
@@ -138,7 +133,6 @@ public class MergeSourceSetFoldersTest {
         File copyApkFile = new File("copyApk");
         setFileCollection(task::setCopyApk, copyApkFile);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file);
         assertThat(task.computeAssetSetList()).containsExactly(mainSet);
         // copyApk file should have been added to the main resource sets.
         assertThat(mainSet.getSourceFiles()).containsExactly(file, copyApkFile);
@@ -171,7 +165,6 @@ public class MergeSourceSetFoldersTest {
         File copyApkFile = new File("copyApk");
         setFileCollection(task::setCopyApk, copyApkFile);
 
-        assertThat(task.getSourceFolderInputs()).containsExactly(file, file2, debugFile);
         assertThat(task.getLibraries().getFiles()).containsExactly(libFile, libFile2);
         assertThat(task.computeAssetSetList())
                 .containsExactly(librarySet2, librarySet, mainSet, debugSet)

@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
+import com.android.builder.model.SourceProvider;
 import com.android.ide.common.res2.AssetMerger;
 import com.android.ide.common.res2.AssetSet;
 import com.android.ide.common.res2.FileStatus;
@@ -40,12 +41,13 @@ import com.android.ide.common.res2.MergingException;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.inject.Inject;
 import org.gradle.api.Project;
@@ -80,6 +82,10 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
     // ----- PRIVATE TASK API -----
 
+    // file inputs as raw files, lazy behind a memoized/bypassed supplier
+    private Supplier<Collection<File>> sourceFolderInputs;
+
+    // supplier of the assets set, for execution only.
     private Supplier<List<AssetSet>> assetSetSupplier;
 
     // for the dependencies
@@ -273,15 +279,8 @@ public class MergeSourceSetFolders extends IncrementalTask {
     // input list for the source folder based asset folders.
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public Set<File> getSourceFolderInputs() {
-        List<AssetSet> sets = assetSetSupplier.get();
-        // collect the files.
-        Set<File> assetSetFolders = Sets.newHashSetWithExpectedSize(sets.size());
-        for (AssetSet assetSet : sets) {
-            assetSetFolders.addAll(assetSet.getSourceFiles());
-        }
-
-        return assetSetFolders;
+    public Collection<File> getSourceFolderInputs() {
+        return sourceFolderInputs.get();
     }
 
     /**
@@ -397,7 +396,13 @@ public class MergeSourceSetFolders extends IncrementalTask {
 
             variantData.mergeAssetsTask = mergeAssetsTask;
 
-            mergeAssetsTask.assetSetSupplier = TaskInputHelper.memoize(variantConfig::getAssetSets);
+            final Function<SourceProvider, Collection<File>> assetDirFunction =
+                    SourceProvider::getAssetsDirectories;
+            mergeAssetsTask.assetSetSupplier =
+                    () -> variantConfig.getSourceFilesAsAssetSets(assetDirFunction);
+            mergeAssetsTask.sourceFolderInputs =
+                    TaskInputHelper.bypassFileSupplier(
+                            () -> variantConfig.getSourceFiles(assetDirFunction));
 
             mergeAssetsTask.shadersOutputDir = project.files(scope.getShadersOutputDir());
             if (variantData.copyApkTask != null) {
@@ -436,7 +441,14 @@ public class MergeSourceSetFolders extends IncrementalTask {
             BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
-            mergeAssetsTask.assetSetSupplier = TaskInputHelper.memoize(variantConfig::getJniLibsSets);
+            final Function<SourceProvider, Collection<File>> assetDirFunction =
+                    SourceProvider::getJniLibsDirectories;
+            mergeAssetsTask.assetSetSupplier =
+                    () -> variantConfig.getSourceFilesAsAssetSets(assetDirFunction);
+            mergeAssetsTask.sourceFolderInputs =
+                    TaskInputHelper.bypassFileSupplier(
+                            () -> variantConfig.getSourceFiles(assetDirFunction));
+
             mergeAssetsTask.setOutputDir(scope.getMergeNativeLibsOutputDir());
         }
     }
@@ -459,7 +471,14 @@ public class MergeSourceSetFolders extends IncrementalTask {
             BaseVariantData variantData = scope.getVariantData();
             final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
-            mergeAssetsTask.assetSetSupplier = TaskInputHelper.memoize(variantConfig::getShaderSets);
+            final Function<SourceProvider, Collection<File>> assetDirFunction =
+                    SourceProvider::getShadersDirectories;
+            mergeAssetsTask.assetSetSupplier =
+                    () -> variantConfig.getSourceFilesAsAssetSets(assetDirFunction);
+            mergeAssetsTask.sourceFolderInputs =
+                    TaskInputHelper.bypassFileSupplier(
+                            () -> variantConfig.getSourceFiles(assetDirFunction));
+
             mergeAssetsTask.setOutputDir(scope.getMergeShadersOutputDir());
         }
     }

@@ -455,7 +455,7 @@ public abstract class BaseVariantData implements TaskContainer {
      */
     public void calculateFilters(Splits splits) {
         List<File> folders = Lists.newArrayList(getGeneratedResFolders());
-        folders.addAll(variantConfiguration.getResourceFolders());
+        folders.addAll(variantConfiguration.getSourceFiles(SourceProvider::getResDirectories));
         densityFilters = getFilters(folders, DiscoverableFilterType.DENSITY, splits);
         languageFilters = getFilters(folders, DiscoverableFilterType.LANGUAGE, splits);
         abiFilters = getFilters(folders, DiscoverableFilterType.ABI, splits);
@@ -506,7 +506,8 @@ public abstract class BaseVariantData implements TaskContainer {
     @NonNull
     public List<String> discoverListOfResourceConfigs() {
         List<String> resFoldersOnDisk = new ArrayList<String>();
-        Set<File> resourceFolders = variantConfiguration.getResourceFolders();
+        Set<File> resourceFolders =
+                variantConfiguration.getSourceFiles(SourceProvider::getResDirectories);
         resFoldersOnDisk.addAll(getAllFilters(
                 resourceFolders,
                 DiscoverableFilterType.LANGUAGE.folderPrefix,

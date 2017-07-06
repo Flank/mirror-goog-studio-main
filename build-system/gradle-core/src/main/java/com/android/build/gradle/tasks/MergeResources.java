@@ -34,6 +34,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.internal.aapt.Aapt;
+import com.android.builder.model.SourceProvider;
 import com.android.builder.model.VectorDrawablesOptions;
 import com.android.builder.png.VectorDrawableRenderer;
 import com.android.builder.utils.FileCache;
@@ -63,7 +64,6 @@ import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -119,8 +119,10 @@ public class MergeResources extends IncrementalTask {
 
     @Nullable private FileCache fileCache;
 
-    // actual inputs
-    private Supplier<List<ResourceSet>> sourceFolderInputs;
+    // file inputs as raw files, lazy behind a memoized/bypassed supplier
+    private Supplier<Collection<File>> sourceFolderInputs;
+    private Supplier<List<ResourceSet>> resSetSupplier;
+
     private List<ResourceSet> processedInputs;
 
     private ArtifactCollection libraries;
@@ -467,7 +469,6 @@ public class MergeResources extends IncrementalTask {
      */
     private void cleanup() {
         fileValidity.clear();
-        sourceFolderInputs = null;
         processedInputs = null;
     }
 
@@ -533,22 +534,10 @@ public class MergeResources extends IncrementalTask {
         this.libraries = libraries;
     }
 
-    @VisibleForTesting
-    void setSourceFolderInputs(@NonNull Supplier<List<ResourceSet>> sourceFolderInputs) {
-        this.sourceFolderInputs = sourceFolderInputs;
-    }
-
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public Set<File> getSourceFolderInputs() {
-        List<ResourceSet> inputs = sourceFolderInputs.get();
-        Set<File> files = Sets.newHashSetWithExpectedSize(inputs.size());
-
-        for (ResourceSet resourceSet : inputs) {
-            files.addAll(resourceSet.getSourceFiles());
-        }
-
-        return files;
+    public Collection<File> getSourceFolderInputs() {
+        return sourceFolderInputs.get();
     }
 
     @OutputDirectory
@@ -660,13 +649,18 @@ public class MergeResources extends IncrementalTask {
         return pseudoLocalesEnabled;
     }
 
+    @VisibleForTesting
+    void setResSetSupplier(@NonNull Supplier<List<ResourceSet>> resSetSupplier) {
+        this.resSetSupplier = resSetSupplier;
+    }
+
     /**
      * Compute the list of resource set to be used during execution based all the inputs.
      */
     @VisibleForTesting
     @NonNull
     List<ResourceSet> computeResourceSetList() {
-        List<ResourceSet> sourceFolderSets = sourceFolderInputs.get();
+        List<ResourceSet> sourceFolderSets = resSetSupplier.get();
         int size = sourceFolderSets.size() + 4;
         if (libraries != null) {
             size += libraries.getArtifacts().size();
@@ -823,8 +817,14 @@ public class MergeResources extends IncrementalTask {
                         RUNTIME_CLASSPATH, ALL, ANDROID_RES);
             }
 
-            mergeResourcesTask.sourceFolderInputs = TaskInputHelper.memoize(
-                    () -> variantData.getVariantConfiguration().getResourceSets(validateEnabled));
+            mergeResourcesTask.resSetSupplier =
+                    () -> variantData.getVariantConfiguration().getResourceSets(validateEnabled);
+            mergeResourcesTask.sourceFolderInputs =
+                    TaskInputHelper.bypassFileSupplier(
+                            () ->
+                                    variantData
+                                            .getVariantConfiguration()
+                                            .getSourceFiles(SourceProvider::getResDirectories));
             mergeResourcesTask.extraGeneratedResFolders = variantData.getExtraGeneratedResFolders();
             mergeResourcesTask.renderscriptResOutputDir = project.files(scope.getRenderscriptResOutputDir());
             mergeResourcesTask.generatedResOutputDir = project.files(scope.getGeneratedResOutputDir());
