@@ -19,7 +19,8 @@
     <orderEntry type="module" module-name="java-psi-api" exported="" />
     <orderEntry type="module" module-name="java-psi-impl" />
     <orderEntry type="module" module-name="manifest-merger" exported="" />
-    <orderEntry type="library" exported="" name="uast" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="module" module-name="uast-common" exported="" />
+    <orderEntry type="module" module-name="uast-java" exported="" />
   </component>
 </module>

@@ -18,7 +18,8 @@ iml_module(
         "//tools/base/layoutlib-api:studio.layoutlib-api",
         "//tools/idea/java/java-psi-api",
         "//tools/base/build-system:studio.manifest-merger",
-        "//tools/idea/.idea/libraries:uast",
+        "//tools/idea/uast/uast-common",
+        "//tools/idea/uast/uast-java",
     ],
     # do not sort: must match IML order
     deps = [
@@ -34,8 +35,9 @@ iml_module(
         "//tools/idea/java/java-psi-api[module]",
         "//tools/idea/java/java-psi-impl[module]",
         "//tools/base/build-system:studio.manifest-merger[module]",
-        "//tools/idea/.idea/libraries:uast",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/idea/uast/uast-common[module]",
+        "//tools/idea/uast/uast-java[module]",
     ],
 )
 
