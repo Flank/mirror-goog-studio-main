@@ -1,3 +1,5 @@
+load("//tools/base/bazel:android.bzl", "select_android")
+
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
@@ -18,7 +20,6 @@ cc_library(
         "fs/memory_file_system.cc",
         "fs/path.cc",
         "installer.cc",
-        "log.cc",
         "package_manager.cc",
         "process_manager.cc",
         "socket_utils.cc",
@@ -38,7 +39,14 @@ cc_library(
             "filesystem_notifier.cc",
             "thread_name.cc",
         ],
-    }),
+    }) + select_android(
+        [
+            "log.android.cc",
+        ],
+        [
+            "log.cc",
+        ],
+    ),
     hdrs = [
         "activity_manager.h",
         "android_studio_version.h",

@@ -86,7 +86,7 @@ jni_library = rule(
   fragments = ["cpp"],
 )
 
-def _select_android(android, default):
+def select_android(android, default):
   return select({
         "//tools/base/bazel:android_cpu_x86": android,
         "//tools/base/bazel:android_cpu_x86_64": android,
@@ -104,11 +104,11 @@ def dex_library(name, jars=[], visibility=[]):
     tools = ["//prebuilts/studio/sdk:dx-preview"],
   )
 
-ANDROID_COPTS = _select_android([
+ANDROID_COPTS = select_android([
     "-fPIC",
   ], [])
 
-ANDROID_LINKOPTS = _select_android([
+ANDROID_LINKOPTS = select_android([
     "-llog",
     "-lm",
     "-ldl",
