@@ -26,17 +26,17 @@ public class ServiceCastDetectorTest extends AbstractCheckTest {
     }
 
     public void testServiceCast() {
-        String expected = ""
-                + "src/test/pkg/SystemServiceTest.java:13: Error: Suspicious cast to DisplayManager for a DEVICE_POLICY_SERVICE: expected DevicePolicyManager [ServiceCast]\n"
-                + "        DisplayManager displayServiceWrong = (DisplayManager) getSystemService(\n"
-                + "                                             ^\n"
-                + "src/test/pkg/SystemServiceTest.java:16: Error: Suspicious cast to WallpaperManager for a WALLPAPER_SERVICE: expected WallpaperService [ServiceCast]\n"
-                + "        WallpaperManager wallPaperWrong = (WallpaperManager) getSystemService(WALLPAPER_SERVICE);\n"
-                + "                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/SystemServiceTest.java:22: Error: Suspicious cast to DisplayManager for a DEVICE_POLICY_SERVICE: expected DevicePolicyManager [ServiceCast]\n"
-                + "        DisplayManager displayServiceWrong = (DisplayManager) context\n"
-                + "                                             ^\n"
-                + "3 errors, 0 warnings\n";
+        String expected = "" +
+                "src/test/pkg/SystemServiceTest.java:13: Error: Suspicious cast to DisplayManager for a DEVICE_POLICY_SERVICE: expected DevicePolicyManager [ServiceCast]\n" +
+                "        DisplayManager displayServiceWrong = (DisplayManager) getSystemService(\n" +
+                "                                             ^\n" +
+                "src/test/pkg/SystemServiceTest.java:16: Error: Suspicious cast to WallpaperService for a WALLPAPER_SERVICE: expected WallpaperManager [ServiceCast]\n" +
+                "        WallpaperService wallPaperWrong = (WallpaperService) getSystemService(WALLPAPER_SERVICE);\n" +
+                "                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/SystemServiceTest.java:22: Error: Suspicious cast to DisplayManager for a DEVICE_POLICY_SERVICE: expected DevicePolicyManager [ServiceCast]\n" +
+                "        DisplayManager displayServiceWrong = (DisplayManager) context\n" +
+                "                                             ^\n" +
+                "3 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
                 java(""
@@ -54,8 +54,8 @@ public class ServiceCastDetectorTest extends AbstractCheckTest {
                         + "        DisplayManager displayServiceOk = (DisplayManager) getSystemService(DISPLAY_SERVICE);\n"
                         + "        DisplayManager displayServiceWrong = (DisplayManager) getSystemService(\n"
                         + "                DEVICE_POLICY_SERVICE);\n"
-                        + "        WallpaperService wallPaperOk = (WallpaperService) getSystemService(WALLPAPER_SERVICE);\n"
-                        + "        WallpaperManager wallPaperWrong = (WallpaperManager) getSystemService(WALLPAPER_SERVICE);\n"
+                        + "        WallpaperManager wallPaperOk = (WallpaperManager) getSystemService(WALLPAPER_SERVICE);\n"
+                        + "        WallpaperService wallPaperWrong = (WallpaperService) getSystemService(WALLPAPER_SERVICE);\n"
                         + "    }\n"
                         + "\n"
                         + "    public void test2(Context context) {\n"

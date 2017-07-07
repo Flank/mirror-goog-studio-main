@@ -73,6 +73,7 @@ public class LogDetectorTest extends AbstractCheckTest {
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "11 errors, 2 warnings\n";
 
+        //noinspection all // sample code
         lint().files(
                 java("src/test/pkg/LogTest.java", ""
                         + "package test.pkg;\n"
@@ -184,5 +185,29 @@ public class LogDetectorTest extends AbstractCheckTest {
                         + "}"))
                 .run()
                 .expect(expected);
+    }
+
+    public void testNoMaxLength() throws Exception {
+        // As of API level 24 there's no limit of 23 chars anymore
+        //noinspection all // sample code
+        lint().files(
+                manifest().minSdk(24),
+                java("src/test/pkg/LogTest.java", ""
+                        + "package test.pkg;\n"
+                        + "\n"
+                        + "import android.annotation.SuppressLint;\n"
+                        + "import android.util.Log;\n"
+                        + "import static android.util.Log.DEBUG;\n"
+                        + "\n"
+                        + "public class LogTest2 {\n"
+                        + "    public void checkLongTag(boolean shouldLog) {\n"
+                        + "        if (shouldLog) {\n"
+                        + "            // String literal tags\n"
+                        + "            Log.d(\"really_really_really_really_really_long_tag\", \"message\"); // error: too long\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}"))
+                .run()
+                .expectClean();
     }
 }

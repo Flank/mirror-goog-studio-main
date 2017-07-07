@@ -1893,9 +1893,15 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/ActionTest.java:55: Error: Missing permissions required by intent ActionTest.ACTION_CALL: android.permission.CALL_PHONE [MissingPermission]\n"
                 + "        context.sendBroadcast(intent, \"\");\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/ActionTest.java:56: Error: Missing permissions required by Context.sendBroadcastAsUser: android.permission.INTERACT_ACROSS_USERS [MissingPermission]\n"
+                + "        context.sendBroadcastAsUser(intent, null);\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "src/test/pkg/ActionTest.java:56: Error: Missing permissions required by intent ActionTest.ACTION_CALL: android.permission.CALL_PHONE [MissingPermission]\n"
                 + "        context.sendBroadcastAsUser(intent, null);\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "src/test/pkg/ActionTest.java:57: Error: Missing permissions required by Context.sendStickyBroadcast: android.permission.BROADCAST_STICKY [MissingPermission]\n"
+                + "        context.sendStickyBroadcast(intent);\n"
+                + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "src/test/pkg/ActionTest.java:57: Error: Missing permissions required by intent ActionTest.ACTION_CALL: android.permission.CALL_PHONE [MissingPermission]\n"
                 + "        context.sendStickyBroadcast(intent);\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
@@ -1920,7 +1926,7 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 + "src/test/pkg/ActionTest.java:88: Error: Missing permissions required to read ActionTest.BOOKMARKS_URI: com.android.browser.permission.READ_HISTORY_BOOKMARKS [MissingPermission]\n"
                 + "        myWriteResolverMethod(BOOKMARKS_URI);\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "19 errors, 0 warnings\n",
+                + "21 errors, 0 warnings\n",
 
                 lintProject(
                         getManifestWithPermissions(14, 23),

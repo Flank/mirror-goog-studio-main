@@ -1066,8 +1066,6 @@ public class SupportAnnotationDetectorAdditionalTest extends AbstractCheckTest {
                         + "        intent = new Intent(ACTION_CALL);\n"
                         + "        /*Missing permissions required by intent X.ACTION_CALL: android.permission.CALL_PHONE*/context.sendBroadcast(intent)/**/;\n"
                         + "        /*Missing permissions required by intent X.ACTION_CALL: android.permission.CALL_PHONE*/context.sendBroadcast(intent, \"\")/**/;\n"
-                        + "        /*Missing permissions required by intent X.ACTION_CALL: android.permission.CALL_PHONE*/context.sendBroadcastAsUser(intent, null)/**/;\n"
-                        + "        /*Missing permissions required by intent X.ACTION_CALL: android.permission.CALL_PHONE*/context.sendStickyBroadcast(intent)/**/;\n"
                         + "    }\n"
                         + "\n"
                         + "    public static void contentResolvers(Context context, ContentResolver resolver) {\n"

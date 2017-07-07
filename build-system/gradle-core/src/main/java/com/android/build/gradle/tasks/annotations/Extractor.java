@@ -653,6 +653,8 @@ public class Extractor {
                 && !fqn.endsWith(".Widget")
                 && !fqn.endsWith(".TargetApi")
                 && !fqn.endsWith(".SystemApi")
+                && !fqn.endsWith(".TestApi")
+                && !fqn.endsWith(".SuppressAutoDoc")
                 && !fqn.endsWith(".SuppressLint")
                 && !fqn.endsWith(".SdkConstant");
     }
@@ -1663,13 +1665,20 @@ public class Extractor {
                         continue;
                     }
                     empty = false;
-                    writer.print("      <val name=\"");
                     String name = pair.getName();
-                    if (name != null) {
-                        writer.print(name);
-                    } else {
-                        writer.print(ATTR_VALUE); // default name
+                    if (name == null) {
+                        name = ATTR_VALUE; // default name
                     }
+
+                    // Platform typedef annotations now declare a prefix attribute for
+                    // documentation generation purposes; this should not be part of the
+                    // extracted metadata.
+                    if ("prefix".equals(name) && INT_DEF_ANNOTATION.equals(this.name)) {
+                        continue;
+                    }
+
+                    writer.print("      <val name=\"");
+                    writer.print(name);
                     writer.print("\" val=\"");
                     writer.print(escapeXml(value));
                     writer.println("\" />");
@@ -1769,8 +1778,7 @@ public class Extractor {
                 PsiElement resolved = referenceExpression.resolve();
                 if (resolved instanceof PsiField) {
                     PsiField field = (PsiField) resolved;
-                    if (!(name.equals(INT_DEF_ANNOTATION)) &&
-                            !(name.equals(STRING_DEF_ANNOTATION))) {
+                    if (!isInlinedConstant()) {
                         // Inline constants
                         Object value = field.computeConstantValue();
                         if (appendLiteralValue(sb, value)) {
@@ -1824,6 +1832,12 @@ public class Extractor {
                     + " and is " + expression);
 
             return false;
+        }
+
+        private boolean isInlinedConstant() {
+            return name.equals(INT_DEF_ANNOTATION) ||
+                    name.equals(STRING_DEF_ANNOTATION) ||
+                    name.equals("android.support.annotation.SystemService");
         }
     }
 

@@ -151,7 +151,7 @@ Log tags are only allowed to be at most 23 tag characters long.""",
                     parameterList.parametersCount == argumentList.size) {
                 val argument = argumentList[tagArgumentIndex]
                 val tag = ConstantEvaluator.evaluateString(context, argument, true)
-                if (tag != null && tag.length > 23) {
+                if (tag != null && tag.length > 23 && context.getMainProject().minSdk <= 23) {
                     val message = "The logging tag can be at most 23 characters, was ${tag.length} ($tag)"
                     context.report(LONG_TAG, node, context.getLocation(argument), message)
                 }

@@ -19,9 +19,12 @@ package com.android.build.gradle.tasks.annotations;
 import static java.io.File.pathSeparator;
 import static java.io.File.pathSeparatorChar;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.LintCoreApplicationEnvironment;
 import com.android.tools.lint.LintCoreProjectEnvironment;
+import com.android.utils.SdkUtils;
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -33,7 +36,10 @@ import com.intellij.psi.PsiJavaFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The extract annotations driver is a command line interface to extracting annotations
@@ -225,8 +231,8 @@ public class ExtractAnnotationsDriver {
         LintCoreProjectEnvironment projectEnvironment = LintCoreProjectEnvironment.create(
                 parentDisposable, appEnv);
 
-
-        List<File> joined = Lists.newArrayList(sources);
+        List<File> sourceRoots = findSourceRoots(sources);
+        List<File> joined = Lists.newArrayList(sourceRoots);
         joined.addAll(classpath);
         projectEnvironment.registerPaths(joined);
 
@@ -260,6 +266,64 @@ public class ExtractAnnotationsDriver {
         Disposer.dispose(LintCoreApplicationEnvironment.get().getParentDisposable());
     }
 
+    private static final String SEP_JAVA_SEP = File.separator + "java" + File.separator;
+    private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(.*)\\s*;");
+
+    @NonNull
+    private static List<File> findSourceRoots(@NonNull List<File> sources) {
+        List<File> roots = Lists.newArrayList();
+        for (File sourceFile: sources) {
+            if (sourceFile.isDirectory()) {
+                if (!roots.contains(sourceFile)) {
+                    roots.add(sourceFile);
+                }
+                continue;
+            }
+
+            String path = sourceFile.getPath();
+            if (!(path.endsWith(SdkConstants.DOT_JAVA) || path.endsWith(SdkConstants.DOT_KT))) {
+                continue;
+            }
+
+            int index = path.indexOf(SEP_JAVA_SEP);
+            if (index != -1) {
+                File root = new File(path.substring(0, index + SEP_JAVA_SEP.length()));
+                if (!roots.contains(root)) {
+                    roots.add(root);
+                }
+                continue;
+            }
+
+            try {
+                String source = Files.toString(sourceFile, StandardCharsets.UTF_8);
+                Matcher matcher = PACKAGE_PATTERN.matcher(source);
+                boolean foundPackage = matcher.find();
+                if (!foundPackage) {
+                    abort("Couldn't find package declaration in " + sourceFile);
+                }
+                String pkg = matcher.group(1).trim();
+                int end = path.lastIndexOf(File.separatorChar);
+                if (end != -1) {
+                    String relative = pkg.replace('.', File.separatorChar);
+                    if (SdkUtils.endsWith(path, end, relative)) {
+                        String rootPath = path.substring(0, end - relative.length());
+                        File root = new File(rootPath);
+                        if (!roots.contains(root)) {
+                            roots.add(root);
+                        }
+                    } else {
+                        abort("File found in a folder that doesn't appear to match the package " +
+                                "declaration: package=" + pkg + " and file path=" + path);
+                    }
+                }
+            } catch (IOException e) {
+                abort("Couldn't access " + sourceFile);
+            }
+        }
+
+        return roots;
+    }
+
     private static void abort(@NonNull String message) {
         System.err.println(message);
         System.exit(-1);
@@ -281,8 +345,17 @@ public class ExtractAnnotationsDriver {
                         if (!line.isEmpty()) {
                             File file = new File(line);
                             if (!file.exists()) {
-                                System.err.println("Warning: Could not find file " + line +
-                                        " listed in " + sourcePath);
+                                // Some files don't have newlines
+                                for (String l : Splitter.on(CharMatcher.whitespace()).split(line)) {
+                                    if (!l.isEmpty()) {
+                                        file = new File(l);
+                                        if (!file.exists()) {
+                                            System.err.println("Warning: Could not find file " + l +
+                                                    " listed in " + sourcePath);
+                                        }
+                                        files.add(file);
+                                    }
+                                }
                             }
                             files.add(file);
                         }

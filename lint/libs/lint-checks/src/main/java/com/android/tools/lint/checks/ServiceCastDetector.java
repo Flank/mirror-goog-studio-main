@@ -56,7 +56,11 @@ import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.util.UastExpressionUtils;
 
 /**
- * Detector looking for casts on th result of context.getSystemService which are suspect
+ * Detector looking for casts on the result of context.getSystemService which are suspect.
+ * <p>
+ * TODO: As of O we can start looking for the @SystemService annotation on the target interface
+ * class, and the value attribute will map back to the expected constant. This should let us
+ * get rid of the hardcoded lookup table below.
  */
 public class ServiceCastDetector extends Detector implements UastScanner {
     public static final Implementation IMPLEMENTATION = new Implementation(
@@ -356,6 +360,7 @@ public class ServiceCastDetector extends Detector implements UastScanner {
             case "CARRIER_CONFIG_SERVICE": return "android.telephony.CarrierConfigManager";
             // also allow @Deprecated android.content.ClipboardManager, see isClipboard
             case "CLIPBOARD_SERVICE": return "android.text.ClipboardManager";
+            case "COMPANION_DEVICE_SERVICE": return "android.companion.CompanionDeviceManager";
             case "CONNECTIVITY_SERVICE": return "android.net.ConnectivityManager";
             case "CONSUMER_IR_SERVICE": return "android.hardware.ConsumerIrManager";
             case "DEVICE_POLICY_SERVICE": return "android.app.admin.DevicePolicyManager";
@@ -366,6 +371,7 @@ public class ServiceCastDetector extends Detector implements UastScanner {
             case "HARDWARE_PROPERTIES_SERVICE": return "android.os.HardwarePropertiesManager";
             case "INPUT_METHOD_SERVICE": return "android.view.inputmethod.InputMethodManager";
             case "INPUT_SERVICE": return "android.hardware.input.InputManager";
+            case "IPSEC_SERVICE": return "android.net.IpSecManager";
             case "JOB_SCHEDULER_SERVICE": return "android.app.job.JobScheduler";
             case "KEYGUARD_SERVICE": return "android.app.KeyguardManager";
             case "LAUNCHER_APPS_SERVICE": return "android.content.pm.LauncherApps";
@@ -384,10 +390,14 @@ public class ServiceCastDetector extends Detector implements UastScanner {
             case "RESTRICTIONS_SERVICE": return "android.content.RestrictionsManager";
             case "SEARCH_SERVICE": return "android.app.SearchManager";
             case "SENSOR_SERVICE": return "android.hardware.SensorManager";
+            case "SHORTCUT_SERVICE": return "android.content.pm.ShortcutManager";
             case "STORAGE_SERVICE": return "android.os.storage.StorageManager";
+            case "STORAGE_STATS_SERVICE": return "android.app.usage.StorageStatsManager";
             case "SYSTEM_HEALTH_SERVICE": return "android.os.health.SystemHealthManager";
+            case "TELECOM_SERVICE": return "android.telecom.TelecomManager";
             case "TELEPHONY_SERVICE": return "android.telephony.TelephonyManager";
             case "TELEPHONY_SUBSCRIPTION_SERVICE": return "android.telephony.SubscriptionManager";
+            case "TEXT_CLASSIFICATION_SERVICE": return "android.view.textclassifier.TextClassificationManager";
             case "TEXT_SERVICES_MANAGER_SERVICE": return "android.view.textservice.TextServicesManager";
             case "TV_INPUT_SERVICE": return "android.media.tv.TvInputManager";
             case "UI_MODE_SERVICE": return "android.app.UiModeManager";
@@ -395,11 +405,11 @@ public class ServiceCastDetector extends Detector implements UastScanner {
             case "USB_SERVICE": return "android.hardware.usb.UsbManager";
             case "USER_SERVICE": return "android.os.UserManager";
             case "VIBRATOR_SERVICE": return "android.os.Vibrator";
-            case "WALLPAPER_SERVICE": return "android.service.wallpaper.WallpaperService";
+            case "WALLPAPER_SERVICE": return "android.app.WallpaperManager";
+            case "WIFI_AWARE_SERVICE": return "android.net.wifi.aware.WifiAwareManager";
             case "WIFI_P2P_SERVICE": return "android.net.wifi.p2p.WifiP2pManager";
             case "WIFI_SERVICE": return "android.net.wifi.WifiManager";
             case "WINDOW_SERVICE": return "android.view.WindowManager";
-            case "SHORTCUT_SERVICE": return "android.content.pm.ShortcutManager";
             default: return null;
         }
     }
