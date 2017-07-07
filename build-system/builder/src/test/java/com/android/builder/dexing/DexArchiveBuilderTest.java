@@ -136,6 +136,7 @@ public class DexArchiveBuilderTest {
 
     @Test
     public void checkDexArchiveIncrementallyUpdated() throws Exception {
+        Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
         Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
@@ -162,6 +163,7 @@ public class DexArchiveBuilderTest {
 
     @Test
     public void checkRemovingDexEntries() throws Exception {
+        Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
         Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
         Path input = writeToInput(classesInInput);
         Path output = createOutput();
@@ -179,6 +181,7 @@ public class DexArchiveBuilderTest {
 
     @Test
     public void checkRemovingAllEntries() throws Exception {
+        Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
         Collection<String> classesInInput = ImmutableList.of("A", "B", "C");
         Path input = writeToInput(classesInInput);
         Path output = createOutput();

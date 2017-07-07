@@ -18,7 +18,6 @@ package com.android.builder.dexing;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.apkzlib.zip.ZFile;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -38,18 +37,13 @@ public final class DexArchives {
     /**
      * Creates a {@link com.android.builder.dexing.DexArchive} from the specified path. It supports
      * .jar files and directories as inputs.
+     *
+     * <p>In case of a .jar file, note there are two mutually exclusive modes, write-only and
+     * read-only. In case of a write-only mode, only allowed operation is adding entries. If
+     * read-only mode is used, entires can only be read.
      */
     @NonNull
     public static DexArchive fromInput(@NonNull Path path) throws IOException {
-        if (ClassFileInputs.jarMatcher.matches(path)) {
-            return new JarDexArchive(new ZFile(path.toFile()));
-        } else {
-            return new DirDexArchive(path);
-        }
-    }
-
-    @NonNull
-    public static DexArchive nonIncrementalArchive(@NonNull Path path) throws IOException {
         if (ClassFileInputs.jarMatcher.matches(path)) {
             return new NonIncrementalJarDexArchive(path);
         } else {

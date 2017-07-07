@@ -21,11 +21,9 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Iterator;
 import java.util.List;
 
@@ -45,14 +43,6 @@ final class DirDexArchive implements DexArchive {
     @Override
     public Path getRootPath() {
         return rootDir;
-    }
-
-    @Override
-    public void addFile(@NonNull Path relativePath, @NonNull InputStream inputStream)
-            throws IOException {
-        Path finalPath = rootDir.resolve(relativePath);
-        Files.createDirectories(finalPath.getParent());
-        Files.copy(inputStream, finalPath, StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override

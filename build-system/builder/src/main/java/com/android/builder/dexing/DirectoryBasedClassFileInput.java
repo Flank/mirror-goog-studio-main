@@ -18,15 +18,12 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.channels.Channels;
-import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public class DirectoryBasedClassFileInput implements ClassFileInput {
+final class DirectoryBasedClassFileInput implements ClassFileInput {
 
     @NonNull private final Path rootPath;
 
@@ -45,49 +42,6 @@ public class DirectoryBasedClassFileInput implements ClassFileInput {
         // nothing to do for folders.
     }
 
-    public static class FileBasedClassFile implements ClassFileEntry {
-
-        final Path relativePath;
-        private final Path path;
-
-        public FileBasedClassFile(@NonNull Path relativePath, @NonNull Path path) {
-            this.relativePath = relativePath;
-            this.path = path;
-        }
-
-        @Override
-        public String name() {
-            return path.getFileName().toString();
-        }
-
-        @Override
-        public long getSize() throws IOException {
-            return Files.size(path);
-        }
-
-        @Override
-        public Path getRelativePath() {
-            return relativePath;
-        }
-
-        @Override
-        public byte[] readAllBytes() throws IOException {
-            return Files.readAllBytes(path);
-        }
-
-        @Override
-        public int readAllBytes(byte[] bytes) throws IOException {
-            try (SeekableByteChannel sbc = Files.newByteChannel(path);
-                    InputStream in = Channels.newInputStream(sbc)) {
-                long size = sbc.size();
-                if (size > bytes.length)
-                    throw new OutOfMemoryError("Required array size too large");
-
-                return in.read(bytes, 0, (int) size);
-            }
-        }
-    }
-
     @Override
     @NonNull
     public Stream<ClassFileEntry> entries(Predicate<Path> filter) throws IOException {
@@ -97,7 +51,7 @@ public class DirectoryBasedClassFileInput implements ClassFileInput {
     }
 
     @NonNull
-    public ClassFileEntry createEntryFromPath(@NonNull Path path) {
-        return new FileBasedClassFile(rootPath.relativize(path), path);
+    private ClassFileEntry createEntryFromPath(@NonNull Path path) {
+        return new FileBasedClassFileEntry(rootPath.relativize(path), path);
     }
 }

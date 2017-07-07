@@ -168,12 +168,11 @@ public class DexArchiveBuilderTransformTest {
     @Test
     public void testEntryRemovedFromTheArchive() throws Exception {
         Path inputDir = tmpDir.getRoot().toPath().resolve("dir_input");
+        Path inputJar = tmpDir.getRoot().toPath().resolve("input.jar");
         TransformInput input =
                 getInput(
                         getDirInput(inputDir, ImmutableList.of(PACKAGE + "/A", PACKAGE + "/B")),
-                        getJarInput(
-                                tmpDir.getRoot().toPath().resolve("input.jar"),
-                                ImmutableList.of(PACKAGE + "/C")));
+                        getJarInput(inputJar, ImmutableList.of(PACKAGE + "/C")));
         getTransform(null).transform(getInvocation(ImmutableList.of(input), outputProvider));
         MoreTruth.assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isFile();
 
@@ -187,12 +186,11 @@ public class DexArchiveBuilderTransformTest {
                         ImmutableSet.of(),
                         ImmutableSet.of(QualifiedContent.Scope.PROJECT));
 
-        TransformInput updatedInputs =
-                getInput(
-                        deletedFile,
-                        getJarInput(
-                                tmpDir.getRoot().toPath().resolve("input.jar"),
-                                ImmutableList.of(PACKAGE + "/C")));
+        JarInput unchangedJarInput =
+                TransformTestHelper.jarBuilder(inputJar.toFile())
+                        .setStatus(Status.NOTCHANGED)
+                        .build();
+        TransformInput updatedInputs = getInput(deletedFile, unchangedJarInput);
         getTransform(null)
                 .transform(getInvocation(ImmutableList.of(updatedInputs), outputProvider));
         MoreTruth.assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isNull();

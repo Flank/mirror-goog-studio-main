@@ -26,7 +26,7 @@ import java.nio.file.Paths;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public class JarClassFileInput implements ClassFileInput {
+final class JarClassFileInput implements ClassFileInput {
 
     /** If we are unable to read .class files from the input. */
     public static final class JarClassFileInputsException extends RuntimeException {
@@ -47,40 +47,6 @@ public class JarClassFileInput implements ClassFileInput {
     public void close() throws IOException {
         if (jarFile != null) {
             jarFile.close();
-        }
-    }
-
-    public static class NoCacheClassJarEntry implements ClassFileEntry {
-
-        final StoredEntry entry;
-
-        public NoCacheClassJarEntry(@NonNull StoredEntry storedEntry) {
-            this.entry = storedEntry;
-        }
-
-        @Override
-        public String name() {
-            return "Zip:" + entry.getCentralDirectoryHeader().getName();
-        }
-
-        @Override
-        public long getSize() {
-            return entry.getCentralDirectoryHeader().getUncompressedSize();
-        }
-
-        @Override
-        public Path getRelativePath() {
-            return Paths.get(entry.getCentralDirectoryHeader().getName());
-        }
-
-        @Override
-        public byte[] readAllBytes() throws IOException {
-            return entry.read();
-        }
-
-        @Override
-        public int readAllBytes(byte[] bytes) throws IOException {
-            return entry.read(bytes);
         }
     }
 
@@ -115,6 +81,6 @@ public class JarClassFileInput implements ClassFileInput {
 
     @NonNull
     public static ClassFileEntry createEntryFromEntry(@NonNull StoredEntry storedEntry) {
-        return new NoCacheClassJarEntry(storedEntry);
+        return new NoCacheJarClassFileEntry(storedEntry);
     }
 }

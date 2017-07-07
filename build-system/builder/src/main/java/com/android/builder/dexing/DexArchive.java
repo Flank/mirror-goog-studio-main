@@ -19,7 +19,6 @@ package com.android.builder.dexing;
 import com.android.annotations.NonNull;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -43,16 +42,6 @@ public interface DexArchive extends Closeable {
      */
     @NonNull
     Path getRootPath();
-
-    /**
-     * Adds a DEX file to this dex archive. Adding is performed relative to the {@link
-     * #getRootPath()}. In case file with the same relative path already exists, implementations of
-     * this method should overwrite it with the new version of the file.
-     *
-     * @param relativePath file to be added to this archive
-     * @param inputStream data to write
-     */
-    void addFile(@NonNull Path relativePath, @NonNull InputStream inputStream) throws IOException;
 
     /**
      * Adds a DEX file to this dex archive from a byte[]. Adding is performed relative to the {@link

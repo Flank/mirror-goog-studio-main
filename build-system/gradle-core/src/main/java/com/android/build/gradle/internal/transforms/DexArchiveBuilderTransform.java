@@ -211,7 +211,6 @@ public class DexArchiveBuilderTransform extends Transform {
                     logger.verbose("Dir input %s", dirInput.getFile().toString());
                     convertToDexArchive(
                             transformInvocation.getContext(),
-                            transformInvocation.isIncremental(),
                             hashes,
                             dirInput,
                             outputProvider);
@@ -291,8 +290,7 @@ public class DexArchiveBuilderTransform extends Transform {
             throws Exception {
         if (!isIncremental) {
             if (jarInput.getFile().exists()) {
-                return convertJarToDexArchive(
-                        context, false, hashes, jarInput, transformOutputProvider);
+                return convertJarToDexArchive(context, hashes, jarInput, transformOutputProvider);
             } else {
                 FileUtils.deleteIfExists(jarInput.getFile());
             }
@@ -304,8 +302,7 @@ public class DexArchiveBuilderTransform extends Transform {
                 }
             } else if (jarInput.getStatus() == Status.ADDED
                     || jarInput.getStatus() == Status.CHANGED) {
-                return convertJarToDexArchive(
-                        context, true, hashes, jarInput, transformOutputProvider);
+                return convertJarToDexArchive(context, hashes, jarInput, transformOutputProvider);
             }
         }
         return ImmutableList.of();
@@ -313,7 +310,6 @@ public class DexArchiveBuilderTransform extends Transform {
 
     private List<File> convertJarToDexArchive(
             @NonNull Context context,
-            boolean isIncremental,
             @NonNull Set<String> hashes,
             @NonNull JarInput toConvert,
             @NonNull TransformOutputProvider transformOutputProvider)
@@ -321,8 +317,7 @@ public class DexArchiveBuilderTransform extends Transform {
 
         File cachedVersion = cacheHandler.getCachedVersionIfPresent(toConvert);
         if (cachedVersion == null) {
-            return convertToDexArchive(
-                    context, isIncremental, hashes, toConvert, transformOutputProvider);
+            return convertToDexArchive(context, hashes, toConvert, transformOutputProvider);
         } else {
             File outputFile = getPreDexJar(transformOutputProvider, toConvert, null);
             Files.copy(
@@ -337,7 +332,6 @@ public class DexArchiveBuilderTransform extends Transform {
     public static class DexConversionParameters implements Serializable {
         private final QualifiedContent input;
         private final String output;
-        private final boolean isIncremental;
         private final int numberOfBuckets;
         private final int buckedId;
         private final int minSdkVersion;
@@ -348,7 +342,6 @@ public class DexArchiveBuilderTransform extends Transform {
         public DexConversionParameters(
                 QualifiedContent input,
                 File output,
-                boolean isIncremental,
                 int numberOfBuckets,
                 int buckedId,
                 int minSdkVersion,
@@ -356,7 +349,6 @@ public class DexArchiveBuilderTransform extends Transform {
                 int inBufferSize,
                 int outBufferSize) {
             this.input = input;
-            this.isIncremental = isIncremental;
             this.numberOfBuckets = numberOfBuckets;
             this.buckedId = buckedId;
             this.output = output.toURI().toString();
@@ -398,14 +390,17 @@ public class DexArchiveBuilderTransform extends Transform {
                 Predicate<Path> bucketFilter = dexConversionParameters::belongsToThisBucket;
 
                 Predicate<Path> toProcess =
-                        dexConversionParameters.isIncremental
-                                        && dexConversionParameters.isDirectoryBased()
+                        dexConversionParameters.isDirectoryBased()
                                 ? path -> {
-                                    File resolved = rootFolder.resolve(path).toFile();
-                                    Status status =
+                                    Map<File, Status> changedFiles =
                                             ((DirectoryInput) dexConversionParameters.input)
-                                                    .getChangedFiles()
-                                                    .get(resolved);
+                                                    .getChangedFiles();
+                                    if (changedFiles.isEmpty()) {
+                                        return true;
+                                    }
+
+                                    File resolved = rootFolder.resolve(path).toFile();
+                                    Status status = changedFiles.get(resolved);
                                     return status == Status.ADDED || status == Status.CHANGED;
                                 }
                                 : path -> true;
@@ -415,10 +410,7 @@ public class DexArchiveBuilderTransform extends Transform {
                 // take bucketId'th entries from the input.
                 File outputFile = new File(new URI(dexConversionParameters.output));
                 try (ClassFileInput input = ClassFileInputs.fromPath(rootFolder);
-                        DexArchive outputArchive =
-                                dexConversionParameters.isIncremental
-                                        ? DexArchives.fromInput(outputFile.toPath())
-                                        : DexArchives.nonIncrementalArchive(outputFile.toPath())) {
+                        DexArchive outputArchive = DexArchives.fromInput(outputFile.toPath())) {
 
                     dexArchiveBuilder.convert(input.entries(bucketFilter), outputArchive);
                 }
@@ -453,7 +445,6 @@ public class DexArchiveBuilderTransform extends Transform {
 
     private List<File> convertToDexArchive(
             @NonNull Context context,
-            boolean isIncremental,
             @NonNull Set<String> hashes,
             @NonNull QualifiedContent input,
             @NonNull TransformOutputProvider outputProvider)
@@ -480,7 +471,6 @@ public class DexArchiveBuilderTransform extends Transform {
                     new DexConversionParameters(
                             input,
                             preDexOutputFile,
-                            isIncremental,
                             NUMBER_OF_BUCKETS,
                             bucketId,
                             minSdkVersion,
