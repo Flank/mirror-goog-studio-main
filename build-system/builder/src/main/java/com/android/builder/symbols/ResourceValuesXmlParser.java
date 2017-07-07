@@ -167,7 +167,7 @@ public final class ResourceValuesXmlParser {
         }
 
         SymbolTable.Builder builder = SymbolTable.builder();
-        List<Symbol> enumSymbols = new ArrayList();
+        List<Symbol> enumSymbols = new ArrayList<>();
 
         Node current = root.getFirstChild();
         while (current != null) {
@@ -298,7 +298,6 @@ public final class ResourceValuesXmlParser {
         List<String> attrNames = new ArrayList<>();
 
         Node attrNode = declareStyleable.getFirstChild();
-        int index = 0;
         while (attrNode != null) {
             if (attrNode.getNodeType() != Node.ELEMENT_NODE) {
                 attrNode = attrNode.getNextSibling();
@@ -327,9 +326,7 @@ public final class ResourceValuesXmlParser {
                 String realAttrName = attrName.substring(ANDROID_NS_NAME_PREFIX_LEN);
 
                 final Symbol attrSymbol =
-                        platformAttrSymbols
-                                .getSymbols()
-                                .get(SymbolTable.key(ResourceType.ATTR, realAttrName));
+                        platformAttrSymbols.getSymbols().get(ResourceType.ATTR, realAttrName);
 
                 if (attrSymbol != null) {
                     attrValues.add(attrSymbol.getValue());

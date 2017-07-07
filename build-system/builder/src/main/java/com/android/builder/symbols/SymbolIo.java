@@ -25,6 +25,7 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
@@ -38,19 +39,14 @@ import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
 
-/**
- * Reads and writes symbol tables to files.
- */
+/** Reads and writes symbol tables to files. */
 public final class SymbolIo {
 
     public static final String ANDROID_ATTR_PREFIX = "android_";
@@ -149,7 +145,7 @@ public final class SymbolIo {
                                     && javaType.equals(SymbolJavaType.INT.getTypeName());
 
             final int count = lines.size();
-            for (; lineIndex <= count ; lineIndex++) {
+            for (; lineIndex <= count; lineIndex++) {
                 line = lines.get(lineIndex - 1);
 
                 SymbolData data = readLine(line, null);
@@ -157,7 +153,7 @@ public final class SymbolIo {
                 // both the resType is Styleable and the javaType is array.
                 // We skip the non arrays that are out of sort
                 // data cannot be null, since the filter is null
-                //noinspection ConstantConditions
+                // noinspection ConstantConditions
                 if (data.resourceType == ResourceType.STYLEABLE) {
                     if (data.javaType == SymbolJavaType.INT_LIST) {
                         final String data_name = data.name + "_";
@@ -170,7 +166,7 @@ public final class SymbolIo {
                             // line is value, inc the index
                             lineIndex++;
 
-                            //noinspection ConstantConditions
+                            // noinspection ConstantConditions
                             indexHandler.handle(subData);
                         }
 
@@ -344,7 +340,6 @@ public final class SymbolIo {
         }
     }
 
-
     /**
      * Writes a symbol table to a symbol file.
      *
@@ -357,41 +352,51 @@ public final class SymbolIo {
     }
 
     public static void write(@NonNull SymbolTable table, @NonNull Path file) {
-        try (PrintWriter w =
-                new PrintWriter(new BufferedOutputStream(Files.newOutputStream(file)))) {
-        for (Symbol s : table.allSymbols()) {
-                w.write(s.getJavaType().getTypeName());
-                w.write(' ');
-                w.write(s.getResourceType().getName());
-                w.write(' ');
-                w.write(s.getName());
-                w.write(' ');
-                w.write(s.getValue());
-                w.write('\n');
 
-            // Declare styleables have the attributes that were defined under their node listed in
-            // the children list.
-            if (s.getJavaType() == SymbolJavaType.INT_LIST) {
-                Preconditions.checkArgument(
-                        s.getResourceType() == ResourceType.STYLEABLE,
-                        "Only resource type 'styleable' is allowed to have java type 'int[]'");
+        try (BufferedOutputStream os = new BufferedOutputStream(Files.newOutputStream(file));
+                PrintWriter pw = new PrintWriter(os)) {
 
-                List<String> children = s.getChildren();
-                for (int i = 0; i < children.size(); ++i) {
-                        w.write(SymbolJavaType.INT.getTypeName());
-                        w.write(' ');
-                        w.write(ResourceType.STYLEABLE.getName());
-                        w.write(' ');
-                        w.write(s.getName());
-                        w.write('_');
-                        w.write(SymbolUtils.canonicalizeValueResourceName(children.get(i)));
-                        w.write(' ');
-                        w.write(Integer.toString(i));
-                        w.write('\n');
+            // loop on the resource types so that the order is always the same
+            for (ResourceType resType : ResourceType.values()) {
+                List<Symbol> symbols = getSymbolByResourceType(table, resType);
+                if (symbols.isEmpty()) {
+                    continue;
+                }
+
+                for (Symbol s : symbols) {
+                    pw.print(s.getJavaType().getTypeName());
+                    pw.print(' ');
+                    pw.print(s.getResourceType().getName());
+                    pw.print(' ');
+                    pw.print(s.getName());
+                    pw.print(' ');
+                    pw.print(s.getValue());
+                    pw.print('\n');
+
+                    // Declare styleables have the attributes that were defined under their node
+                    // listed in
+                    // the children list.
+                    if (s.getJavaType() == SymbolJavaType.INT_LIST) {
+                        Preconditions.checkArgument(
+                                s.getResourceType() == ResourceType.STYLEABLE,
+                                "Only resource type 'styleable' is allowed to have java type 'int[]'");
+
+                        List<String> children = s.getChildren();
+                        for (int i = 0; i < children.size(); ++i) {
+                            pw.print(SymbolJavaType.INT.getTypeName());
+                            pw.print(' ');
+                            pw.print(ResourceType.STYLEABLE.getName());
+                            pw.print(' ');
+                            pw.print(s.getName());
+                            pw.print('_');
+                            pw.print(SymbolUtils.canonicalizeValueResourceName(children.get(i)));
+                            pw.print(' ');
+                            pw.print(Integer.toString(i));
+                            pw.print('\n');
+                        }
+                    }
                 }
             }
-        }
-
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -431,9 +436,9 @@ public final class SymbolIo {
 
     /**
      * Exports a symbol table to a java {@code R} class source. This method will create the source
-     * file and any necessary directories. For example, if the package is {@code a.b} and the
-     * class name is {@code RR}, this method will generate a file called {@code RR.java} in
-     * directory {@code directory/a/b} creating directories {@code a} and {@code b} if necessary.
+     * file and any necessary directories. For example, if the package is {@code a.b} and the class
+     * name is {@code RR}, this method will generate a file called {@code RR.java} in directory
+     * {@code directory/a/b} creating directories {@code a} and {@code b} if necessary.
      *
      * @param table the table to export
      * @param directory the directory where the R source should be generated
@@ -443,9 +448,7 @@ public final class SymbolIo {
      */
     @NonNull
     public static File exportToJava(
-            @NonNull SymbolTable table,
-            @NonNull File directory,
-            boolean finalIds) {
+            @NonNull SymbolTable table, @NonNull File directory, boolean finalIds) {
         Preconditions.checkArgument(directory.isDirectory());
 
         /*
@@ -459,29 +462,9 @@ public final class SymbolIo {
         }
 
         FileUtils.mkdirs(file);
-        file = new File(file, SymbolTable.R_CLASS_NAME + SdkConstants.DOT_JAVA);
+        file = new File(file, SdkConstants.R_CLASS + SdkConstants.DOT_JAVA);
 
-        // Collect all the symbols in to a map from symbol type to a sorted list of symbols
-        // The symbols are sorted by name to make output predicable and, therefore, testing easier.
-        Map<ResourceType, List<Symbol>> symbolsByType = new EnumMap<>(ResourceType.class);
-        for (ResourceType resourceType : ResourceType.values()) {
-            symbolsByType.put(resourceType, new ArrayList<>());
-        }
-        table.allSymbols().forEach(s -> symbolsByType.get(s.getResourceType()).add(s));
-
-        Comparator<Symbol> nameComparator = Comparator.comparing(Symbol::getName);
-        for (ResourceType resourceType : ResourceType.values()) {
-            List<Symbol> symbols = symbolsByType.get(resourceType);
-            if (!symbols.isEmpty()) {
-                symbols.sort(nameComparator);
-            } else {
-                symbolsByType.remove(resourceType);
-                // Remove any empty symbol lists, as we don't bother outputting an empty class for
-                // them.
-            }
-        }
-
-        String idModifiers = finalIds? "public static final" : "public static";
+        String idModifiers = finalIds ? "public static final" : "public static";
 
         try (PrintWriter pw =
                 new PrintWriter(new BufferedOutputStream(Files.newOutputStream(file.toPath())))) {
@@ -496,7 +479,7 @@ public final class SymbolIo {
             if (!table.getTablePackage().isEmpty()) {
                 pw.print("package ");
                 pw.print(table.getTablePackage());
-                pw.print(";");
+                pw.print(';');
                 pw.println();
             }
 
@@ -505,63 +488,82 @@ public final class SymbolIo {
 
             final String typeName = SymbolJavaType.INT.getTypeName();
 
-            symbolsByType.forEach(
-                    (rt, symbols) -> {
-                        pw.print("    public static final class ");
-                        pw.print(rt);
-                        pw.print(" {");
-                        pw.println();
+            // loop on the resource types so that the order is always the same
+            for (ResourceType resType : ResourceType.values()) {
+                List<Symbol> symbols = getSymbolByResourceType(table, resType);
+                if (symbols.isEmpty()) {
+                    continue;
+                }
+                pw.print("    public static final class ");
+                pw.print(resType.getName());
+                pw.print(" {");
+                pw.println();
 
-                        for (Symbol s : symbols) {
-                            final String name = s.getName();
+                for (Symbol s : symbols) {
+                    final String name = s.getName();
+                    pw.print("        ");
+                    pw.print(idModifiers);
+                    pw.print(' ');
+                    pw.print(s.getJavaType().getTypeName());
+                    pw.print(' ');
+                    pw.print(name);
+                    pw.print(" = ");
+                    pw.print(s.getValue());
+                    pw.print(';');
+                    pw.println();
+
+                    // Declare styleables have the attributes that were defined under their
+                    // node
+                    // listed in the children list.
+                    if (s.getJavaType() == SymbolJavaType.INT_LIST) {
+                        Preconditions.checkArgument(
+                                s.getResourceType() == ResourceType.STYLEABLE,
+                                "Only resource type 'styleable'"
+                                        + " is allowed to have java type 'int[]'");
+                        List<String> children = s.getChildren();
+                        for (int i = 0; i < children.size(); ++i) {
                             pw.print("        ");
                             pw.print(idModifiers);
-                            pw.print(" ");
-                            pw.print(s.getJavaType().getTypeName());
-                            pw.print(" ");
+                            pw.print(' ');
+                            pw.print(typeName);
+                            pw.print(' ');
                             pw.print(name);
+                            pw.print('_');
+                            pw.print(SymbolUtils.canonicalizeValueResourceName(children.get(i)));
                             pw.print(" = ");
-                            pw.print(s.getValue());
-                            pw.print(";");
+                            pw.print(i);
+                            pw.print(';');
                             pw.println();
-
-                            // Declare styleables have the attributes that were defined under their node
-                            // listed in the children list.
-                            if (s.getJavaType() == SymbolJavaType.INT_LIST) {
-                                Preconditions.checkArgument(
-                                        s.getResourceType() == ResourceType.STYLEABLE,
-                                        "Only resource type 'styleable'"
-                                                + " is allowed to have java type 'int[]'");
-
-                                List<String> children = s.getChildren();
-                                for (int i = 0; i < children.size(); ++i) {
-                                    pw.print("        ");
-                                    pw.print(idModifiers);
-                                    pw.print(" ");
-                                    pw.print(typeName);
-                                    pw.print(" ");
-                                    pw.print(name);
-                                    pw.print("_");
-                                    pw.print(
-                                            SymbolUtils.canonicalizeValueResourceName(
-                                                    children.get(i)));
-                                    pw.print(" = ");
-                                    pw.print(i);
-                                    pw.print(";");
-                                    pw.println();
-                                }
-                            }
                         }
-                        pw.print("    }");
-                        pw.println();
-                    });
+                    }
+                }
+                pw.print("    }");
+                pw.println();
+            }
 
-            pw.print("}");
+            pw.print('}');
             pw.println();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
 
         return file;
+    }
+
+    /**
+     * Collect all the symbols for a particular symbol type to a sorted list of symbols.
+     *
+     * <p>The symbols are sorted by name to make output predicable and, therefore, testing easier.
+     */
+    @NonNull
+    private static List<Symbol> getSymbolByResourceType(
+            @NonNull SymbolTable table, @NonNull ResourceType type) {
+        final Comparator<Symbol> nameComparator = Comparator.comparing(Symbol::getName);
+
+        final ImmutableCollection<Symbol> symbolCollection = table.getSymbols().row(type).values();
+
+        List<Symbol> symbols = Lists.newArrayList(symbolCollection);
+        symbols.sort(nameComparator);
+        return symbols;
     }
 }

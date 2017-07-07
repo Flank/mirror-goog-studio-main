@@ -471,6 +471,11 @@ public class SymbolIoTest {
         String original =
                 ""
                         + "int drawable foobar 0x7f020000\n"
+                        + "int drawable ic_launcher 0x7f020001\n"
+                        + "int string app_name 0x7f030000\n"
+                        + "int string lib1 0x7f030001\n"
+                        + "int style AppBaseTheme 0x7f040000\n"
+                        + "int style AppTheme 0x7f040001\n"
                         + "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 }\n"
                         + "int styleable LimitedSizeLinearLayout_max_width 0\n"
                         + "int styleable LimitedSizeLinearLayout_max_height 1\n"
@@ -479,12 +484,7 @@ public class SymbolIoTest {
                         + "int styleable TiledView_tilingResource 1\n"
                         + "int styleable TiledView_tileName 2\n"
                         + "int styleable TiledView_tilingMode 3\n"
-                        + "int styleable TiledView_tilingEnum 4\n"
-                        + "int style AppBaseTheme 0x7f040000\n"
-                        + "int string app_name 0x7f030000\n"
-                        + "int drawable ic_launcher 0x7f020001\n"
-                        + "int style AppTheme 0x7f040001\n"
-                        + "int string lib1 0x7f030001";
+                        + "int styleable TiledView_tilingEnum 4";
         checkFileGeneration(
                 original,
                 () -> {
@@ -510,7 +510,7 @@ public class SymbolIoTest {
                         + "int styleable LimitedSizeLinearLayout_max_height 1 \r\n";
         java.nio.file.Files.write(txt.toPath(), content.getBytes(StandardCharsets.UTF_8));
         SymbolTable table = SymbolIo.read(txt, "com.example.app");
-        assertThat(table.allSymbols())
+        assertThat(table.getSymbols().values())
                 .containsExactly(
                         Symbol.createSymbol(
                                 ResourceType.DRAWABLE,
@@ -570,7 +570,7 @@ public class SymbolIoTest {
                         + "int styleable LimitedSizeLinearLayout_android_max_height 1 \r\n";
         java.nio.file.Files.write(txt.toPath(), content.getBytes(StandardCharsets.UTF_8));
         SymbolTable table = SymbolIo.read(txt, "com.example.app");
-        assertThat(table.allSymbols())
+        assertThat(table.getSymbols().values())
                 .containsExactly(
                         Symbol.createSymbol(
                                 ResourceType.STYLEABLE,
@@ -594,7 +594,7 @@ public class SymbolIoTest {
         SymbolTable table = SymbolIo.readTableWithPackage(file);
 
         assertThat(table.getTablePackage()).isEqualTo("com.example.lib");
-        assertThat(table.allSymbols())
+        assertThat(table.getSymbols().values())
                 .containsExactly(
                         Symbol.createSymbol(
                                 ResourceType.DRAWABLE,

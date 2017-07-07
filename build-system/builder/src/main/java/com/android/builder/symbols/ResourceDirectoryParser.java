@@ -171,8 +171,7 @@ public class ResourceDirectoryParser {
                     domTree = documentBuilder.parse(maybeResourceFile);
                     SymbolTable parsedXml =
                             ResourceValuesXmlParser.parse(domTree, idProvider, platformAttrSymbols);
-
-                    parsedXml.allSymbols().forEach(s -> addIfNotExisting(builder, s));
+                    parsedXml.getSymbols().values().forEach(s -> addIfNotExisting(builder, s));
                 } catch (SAXException | IOException | IllegalArgumentException e) {
                     throw new ResourceDirectoryParseException(
                             "Failed to parse XML resource file '"
@@ -221,7 +220,7 @@ public class ResourceDirectoryParser {
                                 e);
                     }
                     SymbolTable extraSymbols = ResourceExtraXmlParser.parse(domTree, idProvider);
-                    extraSymbols.allSymbols().forEach(s -> addIfNotExisting(builder, s));
+                    extraSymbols.getSymbols().values().forEach(s -> addIfNotExisting(builder, s));
                 }
             }
         }

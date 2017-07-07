@@ -166,7 +166,7 @@ public class SymbolTableTest {
     @Test
     public void checkContainsSymbol() {
         SymbolTable t = SymbolTable.builder().add(createSymbol("attr", "b", "int", "d")).build();
-        assertTrue(t.contains(ResourceType.ATTR, "b"));
-        assertFalse(t.contains(ResourceType.STRING, "b"));
+        assertTrue(t.getSymbols().contains(ResourceType.ATTR, "b"));
+        assertFalse(t.getSymbols().contains(ResourceType.STRING, "b"));
     }
 }

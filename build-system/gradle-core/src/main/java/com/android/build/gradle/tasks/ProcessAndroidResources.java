@@ -976,7 +976,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Optional
     @Nullable
     public File getTextSymbolOutputFile() {
-        return new File(textSymbolOutputDir.get(), SymbolTable.R_CLASS_NAME + SdkConstants.DOT_TXT);
+        return new File(textSymbolOutputDir.get(), SdkConstants.R_CLASS + SdkConstants.DOT_TXT);
     }
 
     @org.gradle.api.tasks.OutputFile

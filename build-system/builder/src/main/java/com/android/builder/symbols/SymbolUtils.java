@@ -31,7 +31,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.SetMultimap;
 import java.io.File;
 import java.io.IOException;
@@ -42,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -157,22 +157,22 @@ public final class SymbolUtils {
         SetMultimap<ResourceType, String> newSymbolMap = HashMultimap.create();
         SetMultimap<String, String> arrayToAttrs = HashMultimap.create();
 
-        for (SymbolTable table : tables) {
-            for (Map.Entry<String, Symbol> entry : table.getSymbols().entrySet()) {
-                final Symbol symbol = entry.getValue();
-                final ResourceType resourceType = symbol.getResourceType();
-                final String symbolName = symbol.getName();
+        final Consumer<Symbol> symbolConsumer =
+                symbol -> {
+                    final ResourceType resourceType = symbol.getResourceType();
+                    final String symbolName = symbol.getName();
 
-                if (resourceType != ResourceType.STYLEABLE) {
-                    newSymbolMap.put(resourceType, symbolName);
-                } else {
-                    arrayToAttrs.putAll(symbol.getName(), symbol.getChildren());
-                }
-            }
-        }
+                    if (resourceType != ResourceType.STYLEABLE) {
+                        newSymbolMap.put(resourceType, symbolName);
+                    } else {
+                        arrayToAttrs.putAll(symbol.getName(), symbol.getChildren());
+                    }
+                };
 
-        // put the new symbols into the map for the table, sorted.
-        Map<String, Symbol> newSymbols = Maps.newHashMap();
+        tables.forEach(table -> table.getSymbols().values().forEach(symbolConsumer));
+
+        // the builder for the table
+        SymbolTable.Builder tableBuilder = SymbolTable.builder().tablePackage(mainPackageName);
 
         // let's keep a map of the new ATTR names to symbol so that we can find them easily later
         // when we process the styleable
@@ -192,7 +192,7 @@ public final class SymbolUtils {
                                 SymbolJavaType.INT,
                                 value,
                                 Symbol.NO_CHILDREN);
-                newSymbols.put(SymbolTable.key(resourceType, symbolName), newSymbol);
+                tableBuilder.add(newSymbol);
 
                 if (resourceType == ResourceType.ATTR) {
                     // store the new ATTR value in the map
@@ -212,11 +212,12 @@ public final class SymbolUtils {
             for (String attribute : attributes) {
                 if (attribute.startsWith(SdkConstants.ANDROID_NS_NAME_PREFIX)) {
                     String name = attribute.substring(SdkConstants.ANDROID_NS_NAME_PREFIX_LEN);
-                    attributeValues.add(
-                            platformSymbols
-                                    .getSymbols()
-                                    .get(SymbolTable.key(ResourceType.ATTR, name))
-                                    .getValue());
+
+                    final Symbol platformSymbol =
+                            platformSymbols.getSymbols().get(ResourceType.ATTR, name);
+                    if (platformSymbol != null) {
+                        attributeValues.add(platformSymbol.getValue());
+                    }
                 } else {
                     final Symbol symbol = attrToValue.get(attribute);
                     if (symbol != null) {
@@ -228,8 +229,7 @@ public final class SymbolUtils {
                 }
             }
 
-            newSymbols.put(
-                    SymbolTable.key(ResourceType.STYLEABLE, arrayName),
+            tableBuilder.add(
                     Symbol.createSymbol(
                             ResourceType.STYLEABLE,
                             arrayName,
@@ -238,12 +238,7 @@ public final class SymbolUtils {
                             attributes));
         }
 
-        return SymbolTable.builder()
-                .tablePackage(mainPackageName)
-                .addAll(
-                        newSymbols
-                                .values()) // FIXME this does too much validation, when we know it's already fine.
-                .build();
+        return tableBuilder.build();
     }
 
     /**
@@ -438,7 +433,7 @@ public final class SymbolUtils {
      * @param directory the directory where the table should be written
      */
     public static void generateRTxt(@NonNull SymbolTable table, @NonNull File directory) {
-        File file = new File(directory, SymbolTable.R_CLASS_NAME + SdkConstants.DOT_TXT);
+        File file = new File(directory, SdkConstants.R_CLASS + SdkConstants.DOT_TXT);
         SymbolIo.write(table, file);
     }
 
