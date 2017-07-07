@@ -52,8 +52,8 @@ public abstract class SymbolTable {
      * @param symbols the table symbol mapped by {@link #key(Symbol)}
      */
     private static SymbolTable createSymbolTable(
-            @NonNull String tablePackage, @NonNull Map<String, Symbol> symbols) {
-        return new AutoValue_SymbolTable(tablePackage, ImmutableMap.copyOf(symbols));
+            @NonNull String tablePackage, @NonNull ImmutableMap<String, Symbol> symbols) {
+        return new AutoValue_SymbolTable(tablePackage, symbols);
     }
 
     /**
@@ -120,16 +120,15 @@ public abstract class SymbolTable {
      */
     @NonNull
     public SymbolTable filter(@NonNull SymbolTable table) {
-        SymbolTable.Builder stb = builder();
-        stb.tablePackage(getTablePackage());
+        ImmutableMap.Builder<String, Symbol> symbols = ImmutableMap.builder();
 
         for (Map.Entry<String, Symbol> e : getSymbols().entrySet()) {
             if (table.getSymbols().containsKey(e.getKey())) {
-                stb.symbols.put(e.getKey(), e.getValue());
+                symbols.put(e.getKey(), e.getValue());
             }
         }
 
-        return stb.build();
+        return createSymbolTable(getTablePackage(), symbols.build());
     }
 
     /**
@@ -152,10 +151,7 @@ public abstract class SymbolTable {
      */
     @NonNull
     public SymbolTable rename(@NonNull String tablePackage) {
-        return builder()
-                .tablePackage(tablePackage)
-                .addAll(allSymbols())
-                .build();
+        return createSymbolTable(tablePackage, getSymbols());
     }
 
     /**
@@ -301,7 +297,7 @@ public abstract class SymbolTable {
          */
         @NonNull
         public SymbolTable build() {
-            return createSymbolTable(tablePackage, symbols);
+            return createSymbolTable(tablePackage, ImmutableMap.copyOf(symbols));
         }
     }
 }

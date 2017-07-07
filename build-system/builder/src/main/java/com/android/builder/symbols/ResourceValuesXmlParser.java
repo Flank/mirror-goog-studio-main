@@ -16,7 +16,6 @@
 
 package com.android.builder.symbols;
 
-
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX;
 import static com.android.SdkConstants.ANDROID_NS_NAME_PREFIX_LEN;
 
@@ -250,11 +249,12 @@ public final class ResourceValuesXmlParser {
             case TRANSITION:
             case XML:
                 builder.add(
-                        Symbol.createSymbol(
+                        Symbol.createAndValidateSymbol(
                                 resourceType,
                                 name,
                                 SymbolJavaType.INT,
-                                idProvider.next(resourceType)));
+                                idProvider.next(resourceType),
+                                Symbol.NO_CHILDREN));
                 break;
             case DECLARE_STYLEABLE:
                 // We also need to find all the attributes declared under declare styleable.
@@ -347,7 +347,7 @@ public final class ResourceValuesXmlParser {
             attrNode = attrNode.getNextSibling();
         }
         builder.add(
-                Symbol.createSymbol(
+                Symbol.createAndValidateSymbol(
                         ResourceType.STYLEABLE,
                         name,
                         SymbolJavaType.INT_LIST,
@@ -392,19 +392,22 @@ public final class ResourceValuesXmlParser {
             }
 
             Symbol newEnum =
-                    Symbol.createSymbol(
+                    Symbol.createAndValidateSymbol(
                             ResourceType.ID,
                             SymbolUtils.canonicalizeValueResourceName(
                                     getMandatoryAttr(enumElement, "name")),
                             SymbolJavaType.INT,
-                            idProvider.next(ResourceType.ID));
+                            idProvider.next(ResourceType.ID),
+                            Symbol.NO_CHILDREN);
 
             enumSymbols.add(newEnum);
             enumNode = enumNode.getNextSibling();
         }
 
         final String value = idProvider.next(ResourceType.ATTR);
-        Symbol newAttr = Symbol.createSymbol(ResourceType.ATTR, name, SymbolJavaType.INT, value);
+        Symbol newAttr =
+                Symbol.createAndValidateSymbol(
+                        ResourceType.ATTR, name, SymbolJavaType.INT, value, Symbol.NO_CHILDREN);
 
         if (!builder.contains(newAttr)) {
             builder.add(newAttr);

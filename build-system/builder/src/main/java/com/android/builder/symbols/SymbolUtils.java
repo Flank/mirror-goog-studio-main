@@ -53,6 +53,9 @@ import org.xml.sax.SAXException;
 /** Helper methods related to Symbols and resource processing. */
 public final class SymbolUtils {
 
+    private static final CharMatcher NORMALIZED_VALUE_NAME_CHARS =
+            CharMatcher.anyOf(".:").precomputed();
+
     /**
      * Processes the symbol table and generates necessary files: R.txt, R.java and proguard rules
      * ({@code aapt_rules.txt}). Afterwards generates {@code R.java} for all libraries the main
@@ -183,7 +186,12 @@ public final class SymbolUtils {
             for (String symbolName : symbolNames) {
                 final String value = idProvider.next(resourceType);
                 final Symbol newSymbol =
-                        Symbol.createSymbol(resourceType, symbolName, SymbolJavaType.INT, value);
+                        Symbol.createSymbol(
+                                resourceType,
+                                symbolName,
+                                SymbolJavaType.INT,
+                                value,
+                                Symbol.NO_CHILDREN);
                 newSymbols.put(SymbolTable.key(resourceType, symbolName), newSymbol);
 
                 if (resourceType == ResourceType.ATTR) {
@@ -457,7 +465,7 @@ public final class SymbolUtils {
      */
     @NonNull
     public static String canonicalizeValueResourceName(@NonNull String name) {
-        return CharMatcher.anyOf(".:").replaceFrom(name, "_");
+        return NORMALIZED_VALUE_NAME_CHARS.replaceFrom(name, '_');
     }
 
     public static enum SymbolTableGenerationMode {

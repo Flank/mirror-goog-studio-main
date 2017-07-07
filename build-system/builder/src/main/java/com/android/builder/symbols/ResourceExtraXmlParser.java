@@ -112,11 +112,12 @@ public class ResourceExtraXmlParser {
 
             String name = text.substring(SdkConstants.NEW_ID_PREFIX.length(), text.length());
             Symbol newSymbol =
-                    Symbol.createSymbol(
+                    Symbol.createAndValidateSymbol(
                             ResourceType.ID,
                             SymbolUtils.canonicalizeValueResourceName(name),
                             SymbolJavaType.INT,
-                            idProvider.next(ResourceType.ID));
+                            idProvider.next(ResourceType.ID),
+                            Symbol.NO_CHILDREN);
             if (!builder.contains(newSymbol)) {
                 builder.add(newSymbol);
             }

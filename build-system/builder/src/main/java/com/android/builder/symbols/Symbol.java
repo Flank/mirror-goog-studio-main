@@ -59,7 +59,7 @@ import java.util.List;
 @AutoValue
 public abstract class Symbol {
 
-    public static final List<String> NO_CHILDREN = ImmutableList.of();
+    public static final ImmutableList<String> NO_CHILDREN = ImmutableList.of();
 
     /**
      * Creates a new symbol. The {@code name} of the symbol needs to be a valid sanitized resource
@@ -71,35 +71,33 @@ public abstract class Symbol {
      * @param javaType the java type of the symbol
      * @param value the value of the symbol
      */
-    public static Symbol createSymbol(
-            @NonNull ResourceType resourceType,
-            @NonNull String name,
-            @NonNull SymbolJavaType javaType,
-            @NonNull String value) {
-
-        validateSymbol(name, resourceType);
-        return new AutoValue_Symbol(resourceType, value, name, javaType, NO_CHILDREN);
-    }
-
-    /**
-     * Creates a new symbol. The {@code name} of the symbol needs to be a valid sanitized resource
-     * name. See {@link SymbolUtils#canonicalizeValueResourceName} method and apply it beforehand
-     * when necessary.
-     *
-     * @param resourceType the resource type of the symbol
-     * @param name the sanitized name of the symbol
-     * @param javaType the java type of the symbol
-     * @param value the value of the symbol
-     */
-    public static Symbol createSymbol(
+    public static Symbol createAndValidateSymbol(
             @NonNull ResourceType resourceType,
             @NonNull String name,
             @NonNull SymbolJavaType javaType,
             @NonNull String value,
             @NonNull List<String> children) {
-
         validateSymbol(name, resourceType);
-        return new AutoValue_Symbol(resourceType, value, name, javaType, children);
+        return createSymbol(resourceType, name, javaType, value, children);
+    }
+
+    /**
+     * Creates a new symbol without validation. The {@code name} of the symbol should to be a valid
+     * sanitized resource name.
+     *
+     * @param resourceType the resource type of the symbol
+     * @param name the sanitized name of the symbol
+     * @param javaType the java type of the symbol
+     * @param value the value of the symbol
+     */
+    static Symbol createSymbol(
+            @NonNull ResourceType resourceType,
+            @NonNull String name,
+            @NonNull SymbolJavaType javaType,
+            @NonNull String value,
+            @NonNull List<String> children) {
+        return new AutoValue_Symbol(
+                resourceType, value, name, javaType, ImmutableList.copyOf(children));
     }
 
     /**
@@ -156,5 +154,5 @@ public abstract class Symbol {
      * "attr2"}.
      */
     @NonNull
-    public abstract List<String> getChildren();
+    public abstract ImmutableList<String> getChildren();
 }

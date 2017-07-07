@@ -171,7 +171,7 @@ public class SymbolIoTest {
         File result = generator.get();
         assertTrue(result.isFile());
 
-        String contents = Joiner.on(" ").join(Files.readLines(result, Charsets.US_ASCII));
+        String contents = Joiner.on("\n").join(Files.readLines(result, Charsets.US_ASCII));
 
         String expectedNormalized = expected.replaceAll("\\s+", " ");
         String contentsNormalized = contents.replaceAll("\\s+", " ");
@@ -527,7 +527,11 @@ public class SymbolIoTest {
         assertThat(table.allSymbols())
                 .containsExactly(
                         Symbol.createSymbol(
-                                ResourceType.DRAWABLE, "foobar", SymbolJavaType.INT, "0x7f02000 "),
+                                ResourceType.DRAWABLE,
+                                "foobar",
+                                SymbolJavaType.INT,
+                                "0x7f02000 ",
+                                Symbol.NO_CHILDREN),
                         Symbol.createSymbol(
                                 ResourceType.STYLEABLE,
                                 "LimitedSizeLinearLayout",
@@ -607,7 +611,11 @@ public class SymbolIoTest {
         assertThat(table.allSymbols())
                 .containsExactly(
                         Symbol.createSymbol(
-                                ResourceType.DRAWABLE, "foobar", SymbolJavaType.INT, "0x7f02000 "),
+                                ResourceType.DRAWABLE,
+                                "foobar",
+                                SymbolJavaType.INT,
+                                "0x7f02000 ",
+                                Symbol.NO_CHILDREN),
                         Symbol.createSymbol(
                                 ResourceType.STYLEABLE,
                                 "LimitedSizeLinearLayout",
@@ -628,7 +636,8 @@ public class SymbolIoTest {
                                         ResourceType.DRAWABLE,
                                         "foobar",
                                         SymbolJavaType.INT,
-                                        "0x7f02000 "))
+                                        "0x7f02000 ",
+                                        Symbol.NO_CHILDREN))
                         .add(
                                 Symbol.createSymbol(
                                         ResourceType.STYLEABLE,

@@ -198,11 +198,12 @@ public class ResourceDirectoryParser {
                         FolderTypeRelationship.getNonIdRelatedResourceType(folderResourceType);
                 addIfNotExisting(
                         builder,
-                        Symbol.createSymbol(
+                        Symbol.createAndValidateSymbol(
                                 resourceType,
                                 symbolName,
                                 SymbolJavaType.INT,
-                                idProvider.next(resourceType)));
+                                idProvider.next(resourceType),
+                                Symbol.NO_CHILDREN));
 
                 if (FolderTypeRelationship.isIdGeneratingFolderType(folderResourceType)
                         && SdkUtils.endsWithIgnoreCase(fileName, DOT_XML)) {

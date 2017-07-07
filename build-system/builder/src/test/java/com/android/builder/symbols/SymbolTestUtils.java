@@ -43,7 +43,7 @@ public final class SymbolTestUtils {
             @NonNull String javaType,
             @NonNull String value,
             @NonNull List<String> styleableChildren) {
-        return Symbol.createSymbol(
+        return Symbol.createAndValidateSymbol(
                 Preconditions.checkNotNull(
                         ResourceType.getEnum(resourceType),
                         "Invalid resource type %s",
