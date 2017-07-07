@@ -150,10 +150,9 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     ServerContext* context, const CpuProfilingAppStartRequest* request,
     CpuProfilingAppStartResponse* response) {
   Trace trace("CPU:StartProfilingApp");
-
   ProcessManager process_manager;
-  pid_t pid = process_manager.GetPidForBinary(request->app_pkg_name());
-  if (pid < 0) {
+  string app_pkg_name = process_manager.GetCmdlineForPid(request->process_id());
+  if (app_pkg_name.empty()) {
     response->set_error_message("App is not running.");
     response->set_status(CpuProfilingAppStartResponse::FAILURE);
     return Status::OK;
@@ -164,7 +163,7 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
 
   if (request->profiler_type() == CpuProfilerType::SIMPLE_PERF) {
     success = simplerperf_manager_.StartProfiling(
-        request->app_pkg_name(), request->sampling_interval_us(), &trace_path_,
+        app_pkg_name, request->sampling_interval_us(), &trace_path_,
         &error);
   } else {
     // TODO: Move the activity manager to the daemon.
@@ -174,16 +173,16 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
     if (request->mode() == CpuProfilingAppStartRequest::INSTRUMENTED) {
       mode = ActivityManager::INSTRUMENTED;
     }
-    success = manager->StartProfiling(mode, request->app_pkg_name(),
+    success = manager->StartProfiling(mode, app_pkg_name,
                                       request->sampling_interval_us(),
                                       &trace_path_, &error);
   }
 
   if (success) {
     response->set_status(CpuProfilingAppStartResponse::SUCCESS);
-    last_start_profiling_timestamps_[request->app_pkg_name()] =
+    last_start_profiling_timestamps_[app_pkg_name] =
         clock_.GetCurrentTime();
-    last_start_profiling_requests_[request->app_pkg_name()] = *request;
+    last_start_profiling_requests_[app_pkg_name] = *request;
   } else {
     response->set_status(CpuProfilingAppStartResponse::FAILURE);
     response->set_error_message(error);
@@ -195,13 +194,15 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
     ServerContext* context, const CpuProfilingAppStopRequest* request,
     CpuProfilingAppStopResponse* response) {
   string error;
+  ProcessManager process_manager;
+  string app_pkg_name = process_manager.GetCmdlineForPid(request->process_id());
   bool success = false;
   if (request->profiler_type() == CpuProfilerType::SIMPLE_PERF) {
     success =
-        simplerperf_manager_.StopProfiling(request->app_pkg_name(), &error);
+        simplerperf_manager_.StopProfiling(app_pkg_name, &error);
   } else {  // Profiler is ART
     ActivityManager* manager = ActivityManager::Instance();
-    success = manager->StopProfiling(request->app_pkg_name(), &error);
+    success = manager->StopProfiling(app_pkg_name, &error);
   }
 
   if (success) {
@@ -215,8 +216,8 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
     response->set_trace_id(trace_id);
     remove(trace_path_.c_str());  // No more use of this file. Delete it.
     trace_path_.clear();          // Make it clear no trace file is alive.
-    last_start_profiling_timestamps_.erase(request->app_pkg_name());
-    last_start_profiling_requests_.erase(request->app_pkg_name());
+    last_start_profiling_timestamps_.erase(app_pkg_name);
+    last_start_profiling_requests_.erase(app_pkg_name);
   } else {
     response->set_status(CpuProfilingAppStopResponse::FAILURE);
     response->set_error_message(error);
