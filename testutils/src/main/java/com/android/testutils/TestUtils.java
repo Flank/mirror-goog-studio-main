@@ -48,7 +48,7 @@ public class TestUtils {
      *   <li>tools/adt/idea/android/BUILD
      * </ul>
      */
-    public static final String KOTLIN_VERSION_FOR_TESTS = "1.1.3";
+    public static final String KOTLIN_VERSION_FOR_TESTS = "1.1.3-2";
 
     /**
      * Default timeout for the {@link #eventually(Runnable)} check.
