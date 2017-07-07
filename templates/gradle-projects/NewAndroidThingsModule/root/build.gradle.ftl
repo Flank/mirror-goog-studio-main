@@ -55,9 +55,6 @@ android {
 
 dependencies {
     ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
-    ${getConfigurationName("androidTestCompile")} ('com.android.support.test.espresso:espresso-core:${espressoVersion!"+"}', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
     ${getConfigurationName("provided")} 'com.google.android.things:androidthings:+'
     <@kt.addKotlinDependencies />
 }

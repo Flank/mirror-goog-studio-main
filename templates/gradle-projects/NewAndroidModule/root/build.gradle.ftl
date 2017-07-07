@@ -15,9 +15,6 @@ apply plugin: 'com.android.application'
 
 dependencies {
     ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
-    ${getConfigurationName("androidTestCompile")}('com.android.support.test.espresso:espresso-core:${espressoVersion!"+"}', {
-        exclude group: 'com.android.support', module: 'support-annotations'
-    })
     <@kt.addKotlinDependencies />
 <#if WearprojectName?has_content && NumberOfEnabledFormFactors?has_content && NumberOfEnabledFormFactors gt 1 && Wearincluded>
     wearApp project(':${WearprojectName}')

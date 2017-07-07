@@ -38,6 +38,9 @@
     <dependency mavenUrl="junit:junit:4.12" gradleConfiguration="testCompile" />
 </#if>
 
+<dependency mavenUrl="com.android.support.test:runner:+" gradleConfiguration="androidTestCompile" />
+<dependency mavenUrl="com.android.support.test.espresso:espresso-core:+" gradleConfiguration="androidTestCompile" />
+
 <#if !createActivity>
     <mkdir at="${escapeXmlAttribute(srcOut)}" />
 </#if>
