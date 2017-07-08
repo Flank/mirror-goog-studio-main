@@ -21,9 +21,9 @@
 #include <unistd.h>
 #include <sstream>
 #include <string>
-#include "perfd/connector.h"
 #include "perfd/generic_component.h"
 #include "utils/android_studio_version.h"
+#include "utils/bash_command.h"
 #include "utils/config.h"
 #include "utils/current_process.h"
 #include "utils/device_info.h"
@@ -135,7 +135,7 @@ void RunConnector(int app_pid, const string& app_name,
 
 // Copy over the agent so and jar to the app's directory and invoke
 // attach-agent.
-bool RunAgent(const string& app_name, const std::string& config_path) {
+bool RunAgent(const string& app_name) {
   CopyFileToAppFolder(app_name, kAgentJarFileName);
   CopyFileToAppFolder(app_name, kAgentLibFileName);
 
@@ -145,8 +145,7 @@ bool RunAgent(const string& app_name, const std::string& config_path) {
   bool success = package_manager.GetAppDataPath(app_name, &data_path, &error);
   if (success) {
     std::ostringstream attach_params;
-    attach_params << app_name << " " << data_path << "/" << kAgentLibFileName
-                  << "=" << config_path;
+    attach_params << app_name << " " << data_path << "/" << kAgentLibFileName;
     BashCommandRunner attach(kAttachAgentCmd);
     success |= attach.Run(attach_params.str(), &error);
   }
@@ -241,7 +240,7 @@ Status ProfilerServiceImpl::AttachAgent(
     CopyFileToAppFolder(app_name, kConnectorFileName);
     if (!IsAppAgentAlive(request->process_id(), app_name.c_str())) {
       // Only attach agent if one is not detected.
-      if (RunAgent(app_name, config_.GetConfigFilePath())) {
+      if (RunAgent(app_name)) {
         response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
       } else {
         response->set_status(

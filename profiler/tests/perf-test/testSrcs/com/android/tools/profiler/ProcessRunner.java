@@ -41,18 +41,12 @@ public class ProcessRunner implements Runnable {
     @Override
     public void run() {
         try {
-            InputStream stdin = myProcess.getInputStream();
+            InputStream stdin = myProcess.getErrorStream();
             InputStreamReader isr = new InputStreamReader(stdin);
             BufferedReader br = new BufferedReader(isr);
             String line = null;
-            String procname = myProcessArgs[0].substring(myProcessArgs[0].lastIndexOf("/") + 1);
-
-            while (!br.ready()) {
-                Thread.yield();
-            }
-
             while (br.ready() && (line = br.readLine()) != null) {
-                System.out.printf("[%s]: %s\n", procname, line);
+                myProcessOutput.add(line);
             }
         } catch (IOException ex) {
             Assert.fail("Unexpected process exception: " + ex);
@@ -62,7 +56,6 @@ public class ProcessRunner implements Runnable {
     }
 
     public void stop() {
-        dumpOuput();
         try {
             myProcess.destroy();
             myProcess.waitFor();

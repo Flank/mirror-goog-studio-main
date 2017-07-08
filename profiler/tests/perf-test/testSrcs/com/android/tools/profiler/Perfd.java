@@ -7,16 +7,12 @@ import java.io.IOException;
 public class Perfd {
 
     private static final String PERFD_PATH = ProcessRunner.getProcessPath("perfd.location");
-    private final int myPort;
+    private static final int PORT = 12389;
     private static final String IP_ADDRESS = "127.0.0.1";
 
-    private final ProcessRunner myRunner;
+    private final ProcessRunner myRunner = new ProcessRunner(PERFD_PATH);
 
-    public Perfd(int port, String configFilePath) {
-        myPort = port;
-        String[] perfdArgs = {PERFD_PATH, "ConfigFile=" + configFilePath};
-        myRunner = new ProcessRunner(perfdArgs);
-    }
+    public Perfd() {}
 
     public void start() throws IOException {
         myRunner.start();
@@ -35,7 +31,7 @@ public class Perfd {
         ClassLoader stashedContextClassLoader = Thread.currentThread().getContextClassLoader();
         Thread.currentThread().setContextClassLoader(ManagedChannelBuilder.class.getClassLoader());
         ManagedChannel channel =
-                ManagedChannelBuilder.forAddress(IP_ADDRESS, myPort).usePlaintext(true).build();
+                ManagedChannelBuilder.forAddress(IP_ADDRESS, PORT).usePlaintext(true).build();
         Thread.currentThread().setContextClassLoader(stashedContextClassLoader);
         return channel;
     }

@@ -65,7 +65,7 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
   const int64_t kSystemCpuTime = 25429780;
   const int64_t kElapsedTime = 1175801430;
 
-  Daemon::Utilities utilities("");
+  Daemon::Utilities utilities;
   CpuCache cache{100};
   cache.AllocateAppCache(kMockAppPid);
   CpuUsageSamplerToTest sampler{&utilities, &cache};
@@ -92,7 +92,7 @@ TEST(CpuUsageSamplerTest, SampleTwoApps) {
   const int64_t kAppCpuTime_1 = 13780;
   const int64_t kAppCpuTime_2 = 140;
 
-  Daemon::Utilities utilities("");
+  Daemon::Utilities utilities;
   CpuCache cache{100};
   cache.AllocateAppCache(kMockAppPid_1);
   cache.AllocateAppCache(kMockAppPid_2);

@@ -300,14 +300,9 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
     return JNI_ERR;
   }
 
-  if (options == nullptr) {
-    Log::E("Config file parameter was not specified");
-    return JNI_ERR;
-  }
-  // TODO: Update options to support more than one argument if needed.
-  profiler::Config config(options);
   Log::V("StudioProfilers agent attached.");
-  auto agent_config = config.GetAgentConfig();
+
+  auto agent_config = profiler::Config::Instance().GetAgentConfig();
   Agent::Instance(Agent::SocketType::kAbstractSocket);
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
