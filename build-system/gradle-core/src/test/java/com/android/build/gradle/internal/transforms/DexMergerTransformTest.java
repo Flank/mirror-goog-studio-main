@@ -152,6 +152,27 @@ public class DexMergerTransformTest {
     }
 
     @Test
+    public void test_native_deletedExternalLib() throws Exception {
+        List<TransformInput> inputs =
+                getTransformInputs(
+                        NUM_INPUTS,
+                        QualifiedContent.Scope.EXTERNAL_LIBRARIES,
+                        "Prefix",
+                        Status.REMOVED);
+
+        getTransform(DexingType.NATIVE_MULTIDEX)
+                .transform(
+                        new TransformInvocationBuilder(context)
+                                .addInputs(inputs)
+                                .addOutputProvider(outputProvider)
+                                .setIncrementalMode(true)
+                                .build());
+
+        // make sure we do not create classes.dex
+        assertThat(out.resolve("externalLibs/classes.dex")).doesNotExist();
+    }
+
+    @Test
     public void test_native_nonExternalHaveDexEach() throws Exception {
         List<TransformInput> inputs =
                 getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.PROJECT);
@@ -265,13 +286,23 @@ public class DexMergerTransformTest {
 
     @NonNull
     private List<TransformInput> getTransformInputs(
-            int cnt, @NonNull QualifiedContent.Scope scope, @NonNull String classNamPrefix)
+            int cnt, @NonNull QualifiedContent.Scope scope, @NonNull String classPrefix)
+            throws Exception {
+        return getTransformInputs(cnt, scope, classPrefix, Status.ADDED);
+    }
+
+    @NonNull
+    private List<TransformInput> getTransformInputs(
+            int cnt,
+            @NonNull QualifiedContent.Scope scope,
+            @NonNull String classPrefix,
+            @NonNull Status status)
             throws Exception {
         List<Path> archives = Lists.newArrayList();
         for (int i = 0; i < cnt; i++) {
             archives.add(tmpDir.newFolder().toPath().resolve("archive" + i + ".jar"));
             generateArchive(
-                    ImmutableList.of(PKG + "/" + classNamPrefix + i), Iterables.getLast(archives));
+                    ImmutableList.of(PKG + "/" + classPrefix + i), Iterables.getLast(archives));
         }
 
         List<TransformInput> inputs = Lists.newArrayList();
@@ -280,6 +311,7 @@ public class DexMergerTransformTest {
                     new SimpleJarTransformInput(
                             new SimpleJarInput.Builder(dexArchive.toFile())
                                     .setScopes(ImmutableSet.of(scope))
+                                    .setStatus(status)
                                     .create()));
         }
         return inputs;

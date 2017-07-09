@@ -4,7 +4,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.dx.command.dexer.DxContext;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.concurrent.ForkJoinPool;
 
 /**
@@ -39,7 +38,7 @@ public interface DexArchiveMerger {
      * @param dexingType specifies how to merge dex files
      */
     void mergeDexArchives(
-            @NonNull Collection<Path> inputs,
+            @NonNull Iterable<Path> inputs,
             @NonNull Path outputDir,
             @Nullable Path mainDexClasses,
             @NonNull DexingType dexingType)

@@ -49,6 +49,7 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import java.io.Closeable;
@@ -273,14 +274,19 @@ public class DexMergerTransform extends Transform {
                         outputProvider, "externalLibs", ImmutableSet.of(Scope.EXTERNAL_LIBRARIES));
 
         if (!isIncremental
-                || externalLibs.keySet().contains(Status.CHANGED)
-                || externalLibs.keySet().contains(Status.ADDED)
-                || externalLibs.keys().contains(Status.REMOVED)) {
+                || externalLibs.containsKey(Status.CHANGED)
+                || externalLibs.containsKey(Status.ADDED)
+                || externalLibs.containsKey(Status.REMOVED)) {
             // if non-incremental, or inputs have changed, merge again
             FileUtils.cleanOutputDir(externalLibsOutput);
-            if (!externalLibs.isEmpty()) {
+            Iterable<Path> externalLibsToMerge =
+                    Iterables.concat(
+                            externalLibs.get(Status.CHANGED),
+                            externalLibs.get(Status.NOTCHANGED),
+                            externalLibs.get(Status.ADDED));
+            if (!Iterables.isEmpty(externalLibsToMerge)) {
                 subTasks.add(
-                        submitForMerging(output, externalLibsOutput, externalLibs.values(), null));
+                        submitForMerging(output, externalLibsOutput, externalLibsToMerge, null));
             }
         }
         return subTasks.build();
@@ -379,7 +385,7 @@ public class DexMergerTransform extends Transform {
     private ForkJoinTask<Void> submitForMerging(
             @NonNull ProcessOutput output,
             @NonNull File dexOutputDir,
-            @NonNull Collection<Path> dexArchives,
+            @NonNull Iterable<Path> dexArchives,
             @Nullable Path mainDexList) {
         DexMergerTransformCallable callable =
                 new DexMergerTransformCallable(
