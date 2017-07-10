@@ -160,8 +160,8 @@ class MemoryTrackingEnv {
   int64_t current_capture_time_ns_;
   int64_t last_gc_start_ns_;
   std::mutex tracking_mutex_;
-  std::atomic<int32_t> total_live_count_;
-  std::atomic<int32_t> total_free_count_;
+  int32_t total_live_count_;
+  int32_t total_free_count_;
   std::atomic<int32_t> current_class_tag_;
   std::atomic<int32_t> current_object_tag_;
 

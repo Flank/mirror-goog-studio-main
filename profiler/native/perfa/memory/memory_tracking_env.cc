@@ -339,10 +339,7 @@ void MemoryTrackingEnv::HandleControlSignal(
 jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
                                               jlong* tag_ptr, jint length,
                                               void* user_data) {
-  g_env->total_live_count_++;
-
   BatchAllocationSample* sample = (BatchAllocationSample*)user_data;
-
   assert(sample != nullptr);
   assert(class_tag != 0);  // All classes should be tagged by this point.
   assert(g_env->class_data_.size() >= class_tag);
@@ -372,6 +369,8 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
     profiler::EnqueueAllocationEvents(*sample);
     sample->clear_events();
   }
+
+  g_env->total_live_count_++;
 
   return JVMTI_VISIT_OBJECTS;
 }
@@ -408,10 +407,7 @@ void MemoryTrackingEnv::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
 void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
                                             jthread thread, jobject object,
                                             jclass klass, jlong size) {
-  g_env->total_live_count_++;
-
   jvmtiError error;
-
   ClassInfo klass_info;
   GetClassInfo(g_env, jvmti, jni, klass, &klass_info);
   if (klass_info.class_name.compare(kClassClass) == 0) {
@@ -443,8 +439,6 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
 }
 
 void MemoryTrackingEnv::ObjectFreeCallback(jvmtiEnv* jvmti, jlong tag) {
-  g_env->total_free_count_++;
-
   Stopwatch sw;
   {
     AllocationEvent event;
@@ -472,7 +466,6 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
   assert(env != nullptr);
   while (true) {
     int64_t start_time_ns = stopwatch.GetElapsed();
-
     {
       std::lock_guard<std::mutex> lock(env->tracking_mutex_);
       if (env->is_live_tracking_) {
@@ -489,6 +482,7 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
 
           switch (event->event_case()) {
             case AllocationEvent::kAllocData: {
+              env->total_live_count_++;
               AllocationEvent::Allocation* alloc_data =
                   event->mutable_alloc_data();
               int stack_size = alloc_data->method_ids_size();
@@ -546,8 +540,11 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
                 alloc_data->set_stack_id(result.first);
               }
             } break;
+            case AllocationEvent::kFreeData:
+              env->total_free_count_++;
+              break;
             default:
-              // Do nothing for Klass + Deallocation.
+              // Do nothing for Klass.
               break;
           }
 
