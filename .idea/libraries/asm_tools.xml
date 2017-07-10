@@ -1,19 +1,15 @@
 <component name="libraryTable">
   <library name="asm-tools">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4/asm-5.0.4.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.4/asm-tree-5.0.4.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/5.0.4/asm-analysis-5.0.4.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.0.4/asm-commons-5.0.4.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/5.0.4/asm-util-5.0.4.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.1/asm-5.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/5.1/asm-analysis-5.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.1/asm-tree-5.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.1/asm-commons-5.1.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/5.1/asm-util-5.1.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4/asm-5.0.4-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.4/asm-tree-5.0.4-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/5.0.4/asm-analysis-5.0.4-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.0.4/asm-commons-5.0.4-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/5.0.4/asm-util-5.0.4-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/ow2/asm/asm-debug-all/5.1/asm-debug-all-5.1-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

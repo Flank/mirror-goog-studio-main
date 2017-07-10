@@ -431,6 +431,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "it.unimi.dsi_fastutil",
+    export_artifact = "//prebuilts/tools/common/m2/repository/it/unimi/dsi/fastutil/7.2.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "junit_junit",
     export_artifact = "//prebuilts/tools/common/m2/repository/junit/junit/4.12:jar",
     visibility = ["//visibility:public"],
@@ -519,7 +526,7 @@ maven_java_library(
 
 maven_java_library(
     name = "org.apache.commons_commons-compress",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.8.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/apache/commons/commons-compress/1.12:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -908,35 +915,35 @@ maven_java_library(
 
 maven_java_library(
     name = "org.ow2.asm_asm",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
 
 maven_java_library(
     name = "org.ow2.asm_asm-analysis",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/5.0.4:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-analysis/5.1:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm-tree"],
 )
 
 maven_java_library(
     name = "org.ow2.asm_asm-commons",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.0.4:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-commons/5.1:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm-tree"],
 )
 
 maven_java_library(
     name = "org.ow2.asm_asm-tree",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.0.4:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-tree/5.1:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm"],
 )
 
 maven_java_library(
     name = "org.ow2.asm_asm-util",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/5.0.4:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm-util/5.1:jar",
     visibility = ["//visibility:public"],
     exports = [":org.ow2.asm_asm-tree"],
 )
