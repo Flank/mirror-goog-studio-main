@@ -182,4 +182,5 @@ tasks.compileJava {
         generatedSources.mkdirs()
     }
     options.compilerArgs += ['-s', generatedSources]
+    outputs.dir(generatedSources)
 }
