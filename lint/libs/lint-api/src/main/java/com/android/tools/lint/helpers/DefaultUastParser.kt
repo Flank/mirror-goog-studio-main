@@ -136,17 +136,24 @@ open class DefaultUastParser(
      */
     override // subclasses may want to override/optimize
     fun getLocation(context: JavaContext, element: PsiElement): Location {
-        val range = element.textRange
+        var range: TextRange? = null
 
-        if (element is PsiCompiledElement && (range == null || TextRange.EMPTY_RANGE == range)) {
-            val containingFile = element.getContainingFile()
-            if (containingFile != null) {
-                val virtualFile = containingFile.virtualFile
-                if (virtualFile != null) {
-                    return Location.create(VfsUtilCore.virtualToIoFile(virtualFile))
-                }
+        if (element is PsiCompiledElement) {
+            if (element is LightElement) {
+                range = (element as PsiElement).textRange
             }
-            return Location.create(context.file)
+            if (range == null || TextRange.EMPTY_RANGE == range) {
+                val containingFile = element.getContainingFile()
+                if (containingFile != null) {
+                    val virtualFile = containingFile.virtualFile
+                    if (virtualFile != null) {
+                        return Location.create(VfsUtilCore.virtualToIoFile(virtualFile))
+                    }
+                }
+                return Location.create(context.file)
+            }
+        } else {
+            range = element.textRange
         }
 
         val containingFile = getContainingFile(context, element)
