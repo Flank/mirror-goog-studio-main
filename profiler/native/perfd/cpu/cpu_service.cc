@@ -152,6 +152,8 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
   Trace trace("CPU:StartProfilingApp");
   ProcessManager process_manager;
   string app_pkg_name = process_manager.GetCmdlineForPid(request->process_id());
+  // GetCmdlineForPid will return an empty string
+  // if it can't find an app name corresponding to the given pid.
   if (app_pkg_name.empty()) {
     response->set_error_message("App is not running.");
     response->set_status(CpuProfilingAppStartResponse::FAILURE);
@@ -228,8 +230,10 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
 grpc::Status CpuServiceImpl::CheckAppProfilingState(
     ServerContext* context, const ProfilingStateRequest* request,
     ProfilingStateResponse* response) {
+  ProcessManager process_manager;
+  string app_pkg_name = process_manager.GetCmdlineForPid(request->process_id());
   const auto& last_request =
-      last_start_profiling_requests_.find(request->app_pkg_name());
+      last_start_profiling_requests_.find(app_pkg_name);
 
   // Whether the app is being profiled (there is a stored start profiling
   // request corresponding to the app)
@@ -240,9 +244,9 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
     // App is being profiled. Include the start profiling request and its
     // timestamp in the response.
     response->set_start_timestamp(
-        last_start_profiling_timestamps_[request->app_pkg_name()]);
+        last_start_profiling_timestamps_[app_pkg_name]);
     *(response->mutable_start_request()) =
-        last_start_profiling_requests_[request->app_pkg_name()];
+        last_start_profiling_requests_[app_pkg_name];
   }
 
   return Status::OK;
