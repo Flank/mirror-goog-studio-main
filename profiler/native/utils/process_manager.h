@@ -47,6 +47,13 @@ class ProcessManager {
 
   static std::string GetCmdlineForPid(int pid);
 
+  // Get the package name associate with the application name. If the
+  // application of interest is a service running as its own process, its'
+  // app_name can be of the format PACKAGE_NAME:SERVICE_NAME. We need
+  // to extract the package name for operations like run-as and data folder path
+  // retrieval, which works on the package instead of the app.
+  static std::string GetPackageNameFromAppName(const std::string &app_name);
+
  private:
   std::vector<Process> GetAllProcesses() const;
 };

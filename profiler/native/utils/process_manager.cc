@@ -84,9 +84,13 @@ std::string ProcessManager::GetCmdlineForPid(int pid) {
   return "";
 }
 
+std::string ProcessManager::GetPackageNameFromAppName(
+    const std::string &app_name) {
+  return app_name.substr(0, app_name.find(":"));
+}
+
 Process::Process(pid_t pid, const string &cmdline,
                  const std::string &binary_name)
     : pid(pid), cmdline(cmdline), binary_name(binary_name) {}
 
 }  // namespace profiler
-

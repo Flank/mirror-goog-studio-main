@@ -63,10 +63,11 @@ const char* const kAgentJarFileName = "perfa.jar";
 // 1. the app/package name, 2. the location of the agent so.
 const char* const kAttachAgentCmd = "cmd activity attach-agent";
 
-// Delete file executable from app's data folder.
-void DeleteFileFromAppFolder(const string& app_name, const string& file_name) {
+// Delete file executable from package's data folder.
+void DeleteFileFromPackageFolder(const string& package_name,
+                                 const string& file_name) {
   std::ostringstream os;
-  os << kRunAsExecutable << " " << app_name << " rm -f " << file_name;
+  os << kRunAsExecutable << " " << package_name << " rm -f " << file_name;
   if (system(os.str().c_str()) == -1) {
     perror("system");
     exit(-1);
@@ -74,19 +75,19 @@ void DeleteFileFromAppFolder(const string& app_name, const string& file_name) {
 }
 
 // Copy file executable from this process's folder (perfd's folder) to
-// app's data folder.
-void CopyFileToAppFolder(const string& app_name, const string& file_name) {
+// package's data folder.
+void CopyFileToPackageFolder(const string& package_name,
+                             const string& file_name) {
   // Remove old agent first to avoid attaching mismatched version of agent.
-  //
   // If old agent exists and it fails to copy the new one, the app would attach
   // the old one and some weird bugs may occur.
   // After removing old agent, the app would fail to attach the agent with a
   // 'file not found' error.
-  DeleteFileFromAppFolder(app_name, file_name);
+  DeleteFileFromPackageFolder(package_name, file_name);
 
   std::ostringstream os;
-  os << kRunAsExecutable << " " << app_name << " cp " << CurrentProcess::dir()
-     << file_name << " .";
+  os << kRunAsExecutable << " " << package_name << " cp "
+     << CurrentProcess::dir() << file_name << " .";
   if (system(os.str().c_str()) == -1) {
     perror("system");
     exit(-1);
@@ -100,7 +101,7 @@ void CopyFileToAppFolder(const string& app_name, const string& file_name) {
 // used by connector.
 // By using run-as, connector is under the same user as the agent, and thus it
 // can talk to the agent who is waiting for the client socket.
-void RunConnector(int app_pid, const string& app_name,
+void RunConnector(int app_pid, const string& package_name,
                   const string& daemon_address) {
   // Use connect() to create a client socket that can talk to the server.
   int fd;  // The client socket that's connected to daemon.
@@ -124,25 +125,27 @@ void RunConnector(int app_pid, const string& app_name,
   // Pass the fd as command line argument to connector.
   std::ostringstream fd_arg;
   fd_arg << kPerfdConnectRequest << "=" << fd;
-  int return_value = execl(kRunAsExecutable, kRunAsExecutable, app_name.c_str(),
-                           kConnectorRelativePath, connect_arg.str().c_str(),
-                           fd_arg.str().c_str(), (char*)nullptr);
+  int return_value =
+      execl(kRunAsExecutable, kRunAsExecutable, package_name.c_str(),
+            kConnectorRelativePath, connect_arg.str().c_str(),
+            fd_arg.str().c_str(), (char*)nullptr);
   if (return_value == -1) {
     perror("execl");
     exit(-1);
   }
 }
 
-// Copy over the agent so and jar to the app's directory and invoke
-// attach-agent.
-bool RunAgent(const string& app_name) {
-  CopyFileToAppFolder(app_name, kAgentJarFileName);
-  CopyFileToAppFolder(app_name, kAgentLibFileName);
+// Copy over the agent so and jar to the package's directory as specified by
+// |package_name| and invoke attach-agent on the app as specified by |app_name|
+bool RunAgent(const string& app_name, const string& package_name) {
+  CopyFileToPackageFolder(package_name, kAgentJarFileName);
+  CopyFileToPackageFolder(package_name, kAgentLibFileName);
 
   string data_path;
   string error;
   PackageManager package_manager;
-  bool success = package_manager.GetAppDataPath(app_name, &data_path, &error);
+  bool success =
+      package_manager.GetAppDataPath(package_name, &data_path, &error);
   if (success) {
     std::ostringstream attach_params;
     attach_params << app_name << " " << data_path << "/" << kAgentLibFileName;
@@ -235,12 +238,13 @@ Status ProfilerServiceImpl::AttachAgent(
       return Status::OK;
     }
 
-    // Copies the connector over to the app's data folder so we can run it
+    // Copies the connector over to the package's data folder so we can run it
     // to send messages to perfa's Unix socket server.
-    CopyFileToAppFolder(app_name, kConnectorFileName);
+    string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
+    CopyFileToPackageFolder(package_name, kConnectorFileName);
     if (!IsAppAgentAlive(request->process_id(), app_name.c_str())) {
       // Only attach agent if one is not detected.
-      if (RunAgent(app_name)) {
+      if (RunAgent(app_name, package_name)) {
         response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
       } else {
         response->set_status(
@@ -255,7 +259,7 @@ Status ProfilerServiceImpl::AttachAgent(
                             "Cannot fork a process to run connector");
     } else if (fork_pid == 0) {
       // child process
-      RunConnector(request->process_id(), app_name, kDaemonSocketName);
+      RunConnector(request->process_id(), package_name, kDaemonSocketName);
       // RunConnector calls execl() at the end. It returns only if an error
       // has occured.
       exit(EXIT_FAILURE);
