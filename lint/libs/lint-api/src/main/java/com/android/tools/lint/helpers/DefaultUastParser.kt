@@ -100,6 +100,9 @@ open class DefaultUastParser(
      */
     override fun parse(context: JavaContext): UFile? {
         val ideaProject = uastContext?.project ?: return null
+        if (ideaProject.isDisposed) {
+            return null
+        }
 
         val virtualFile = StandardFileSystems.local()
                 .findFileByPath(context.file.absolutePath) ?: return null
