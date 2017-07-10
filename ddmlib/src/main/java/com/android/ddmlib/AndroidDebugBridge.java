@@ -23,6 +23,7 @@ import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.Log.LogLevel;
 import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
@@ -233,9 +234,8 @@ public final class AndroidDebugBridge {
 
     public static synchronized void init(
             boolean clientSupport, boolean useLibusb, @NonNull Map<String, String> env) {
-        if (sInitialized) {
-            throw new IllegalStateException("AndroidDebugBridge.init() has already been called.");
-        }
+        Preconditions.checkState(
+                !sInitialized, "AndroidDebugBridge.init() has already been called.");
         sInitialized = true;
         sClientSupport = clientSupport;
         sUseLibusb = useLibusb;
@@ -260,8 +260,22 @@ public final class AndroidDebugBridge {
 
     @VisibleForTesting
     public static void enableFakeAdbServerMode(int port) {
+        Preconditions.checkState(
+                !sInitialized,
+                "AndroidDebugBridge.init() has already been called or "
+                        + "terminate() has not been called yet.");
         sUnitTestMode = true;
         sAdbServerPort = port;
+    }
+
+    @VisibleForTesting
+    public static void disableFakeAdbServerMode() {
+        Preconditions.checkState(
+                !sInitialized,
+                "AndroidDebugBridge.init() has already been called or "
+                        + "terminate() has not been called yet.");
+        sUnitTestMode = false;
+        sAdbServerPort = 0;
     }
 
     /**
