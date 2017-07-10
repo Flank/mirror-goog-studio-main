@@ -19,20 +19,58 @@ package com.android.build.gradle.external.cmake.server;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.external.cmake.CmakeUtils;
+import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver;
+import java.io.File;
 import java.io.IOException;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class ServerFactoryTest {
+    File mockCmakeInstallPath;
+    ServerReceiver serverReceiver;
+
+    @Before
+    public void setUp() throws Exception {
+        mockCmakeInstallPath = Mockito.mock(File.class);
+        serverReceiver = new ServerReceiver();
+    }
+
     @Test
     public void testValidServerCreation() throws IOException {
-        assertThat(ServerFactory.create(CmakeUtils.getVersion("3.7.1"))).isNotNull();
-        assertThat(ServerFactory.create(CmakeUtils.getVersion("3.8.0-rc2"))).isNotNull();
+        assertThat(
+                        ServerFactory.create(
+                                CmakeUtils.getVersion("3.7.1"),
+                                mockCmakeInstallPath,
+                                serverReceiver))
+                .isNotNull();
+        assertThat(
+                        ServerFactory.create(
+                                CmakeUtils.getVersion("3.8.0-rc2"),
+                                mockCmakeInstallPath,
+                                serverReceiver))
+                .isNotNull();
     }
 
     @Test
     public void testInvalidServerCreation() throws IOException {
-        assertThat(ServerFactory.create(CmakeUtils.getVersion("3.6.3"))).isNull();
-        assertThat(ServerFactory.create(CmakeUtils.getVersion("2.3.5-rc2"))).isNull();
-        assertThat(ServerFactory.create(CmakeUtils.getVersion("1.2.1"))).isNull();
+        assertThat(
+                        ServerFactory.create(
+                                CmakeUtils.getVersion("3.6.3"),
+                                mockCmakeInstallPath,
+                                serverReceiver))
+                .isNull();
+        assertThat(
+                        ServerFactory.create(
+                                CmakeUtils.getVersion("2.3.5-rc2"),
+                                mockCmakeInstallPath,
+                                serverReceiver))
+                .isNull();
+        assertThat(
+                        ServerFactory.create(
+                                CmakeUtils.getVersion("1.2.1"),
+                                mockCmakeInstallPath,
+                                serverReceiver))
+                .isNull();
     }
 }

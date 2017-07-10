@@ -16,8 +16,11 @@
 
 package com.android.build.gradle.external.cmake.server;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.external.cmake.CmakeUtils;
+import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver;
 import com.android.repository.Revision;
 import java.io.File;
 import java.io.IOException;
@@ -28,25 +31,33 @@ public class ServerFactory {
      * Creates a Cmake server object for the given Cmake in the install path.
      *
      * @param cmakeInstallPath - path to cmake
+     * @param serverReceiver - message receiver from Cmake server
      * @return Cmake Server object
      * @throws IOException I/O failure
      */
     @Nullable
-    public static Server create(File cmakeInstallPath) throws IOException {
-        return (create(CmakeUtils.getVersion(cmakeInstallPath)));
+    public static Server create(
+            @NonNull File cmakeInstallPath, @NonNull ServerReceiver serverReceiver)
+            throws IOException {
+        return (create(CmakeUtils.getVersion(cmakeInstallPath), cmakeInstallPath, serverReceiver));
     }
 
     /**
      * Creates a Cmake server object for the given Cmake version.
      *
      * @param version - Cmake version for which Cmake server object needs to be created
+     * @param cmakeInstallPath - path to cmake
+     * @param serverReceiver - message receiver from Cmake server
      * @return Cmake Server object
-     * @throws IOException I/O failure
      */
     @Nullable
-    public static Server create(Revision version) throws IOException {
+    @VisibleForTesting
+    public static Server create(
+            Revision version,
+            @NonNull File cmakeInstallPath,
+            @NonNull ServerReceiver serverReceiver) {
         if (version.getMajor() >= 3 && version.getMinor() >= 7) {
-            return new ServerV1();
+            return new ServerProtocolV1(cmakeInstallPath, serverReceiver);
         }
         return null;
     }

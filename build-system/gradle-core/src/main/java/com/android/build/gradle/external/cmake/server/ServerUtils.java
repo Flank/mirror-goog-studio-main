@@ -66,4 +66,142 @@ public class ServerUtils {
 
         return Arrays.asList(gson.fromJson(text, CompileCommand[].class));
     }
+
+    /**
+     * Validates the given hello result object.
+     *
+     * @param helloResult - given hello result received from Cmake server
+     * @return true if the given HelloResult object is valid
+     */
+    public static boolean isHelloResultValid(HelloResult helloResult) {
+        return (helloResult != null
+                && helloResult.type != null
+                && helloResult.supportedProtocolVersions != null
+                && helloResult.type.equals("hello")
+                && helloResult.supportedProtocolVersions.length >= 1);
+    }
+
+    /**
+     * Validates the given reponse to configure command from Cmake server
+     *
+     * @return true if the given ConfigureResult is valid
+     */
+    public static boolean isConfigureResultValid(ConfigureResult configureResult) {
+        return (configureResult != null
+                && configureResult.type != null
+                && configureResult.inReplyTo != null
+                && configureResult.type.equals("reply")
+                && configureResult.inReplyTo.equals("configure"));
+    }
+
+    /**
+     * Validates if the result of compute from Cmake server is valid
+     *
+     * @return true if the given ComputeResult is valid
+     */
+    public static boolean isComputedResultValid(ComputeResult computeResult) {
+        return (computeResult != null
+                && computeResult.inReplyTo != null
+                && computeResult.type != null
+                && computeResult.inReplyTo.equals("compute")
+                && computeResult.type.equals("reply"));
+    }
+
+    /**
+     * Validates if the response to code model from Cmake server is valid
+     *
+     * @return true if the given CodeModel has all the fields that are required by gradle to work as
+     *     expected.
+     */
+    public static boolean isCodeModelValid(CodeModel codeModel) {
+        return (codeModel != null
+                && codeModel.type != null
+                && codeModel.inReplyTo != null
+                && codeModel.inReplyTo.equals("codemodel")
+                && codeModel.type.equals("reply"));
+    }
+
+    /**
+     * Validates if the configuration in the code model from Cmake server is valid
+     *
+     * @return true if the given Configuration has all the fields that are required by gradle to
+     *     work as expected.
+     */
+    private static boolean isCodeModelConfigurationsValid(Configuration configurations[]) {
+        if (configurations == null || configurations.length <= 0) {
+            return false;
+        }
+
+        for (Configuration configuration : configurations) {
+            if (configuration.projects == null || configuration.projects.length <= 0) {
+                return false;
+            }
+
+            for (Project project : configuration.projects) {
+                if (!isCodeModelProjectValid(project)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Validates if the project in the code model from Cmake server is valid
+     *
+     * @return true if the given Project has all the fields that are required by gradle to work as
+     *     expected.
+     */
+    private static boolean isCodeModelProjectValid(Project project) {
+        if (project == null
+                || project.buildDirectory == null
+                || project.sourceDirectory == null
+                || project.targets == null
+                || project.targets.length <= 0) {
+            return false;
+        }
+
+        for (Target target : project.targets) {
+            if (!isCodeModelTargetValid(target)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Validates if the target in the code model from Cmake server is valid
+     *
+     * @return true if the given Target has all the fields that are required by gradle to work as
+     *     expected.
+     */
+    private static boolean isCodeModelTargetValid(Target target) {
+        if (target == null
+                || target.name == null
+                || target.artifacts == null
+                || target.artifacts.length <= 0
+                || target.buildDirectory == null
+                || target.fileGroups == null
+                || target.fileGroups.length <= 0) {
+            return false;
+        }
+
+        for (FileGroup fileGroup : target.fileGroups) {
+            if (!isCodeModelFileGroupValid(fileGroup)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Validates if the FileGroup in the code model from Cmake server is valid
+     *
+     * @return true if the given FileGroup has all the fields that are required by gradle to work as
+     *     expected.
+     */
+    private static boolean isCodeModelFileGroupValid(FileGroup fileGroup) {
+        return (fileGroup != null && fileGroup.sources != null && fileGroup.sources.length > 0);
+    }
 }

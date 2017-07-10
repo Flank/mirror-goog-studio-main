@@ -30,7 +30,7 @@ public class ServerReceiver {
     private DeserializationMonitor deserializationMonitor = null;
 
     @Nullable
-    ProgressReceiver getProgressReceiver() {
+    public ProgressReceiver getProgressReceiver() {
         return progressReceiver;
     }
 
@@ -40,7 +40,7 @@ public class ServerReceiver {
     }
 
     @Nullable
-    MessageReceiver getMessageReceiver() {
+    public MessageReceiver getMessageReceiver() {
         return messageReceiver;
     }
 
@@ -50,7 +50,7 @@ public class ServerReceiver {
     }
 
     @Nullable
-    SignalReceiver getSignalReceiver() {
+    public SignalReceiver getSignalReceiver() {
         return signalReceiver;
     }
 
@@ -60,7 +60,7 @@ public class ServerReceiver {
     }
 
     @Nullable
-    DiagnosticReceiver getDiagnosticReceiver() {
+    public DiagnosticReceiver getDiagnosticReceiver() {
         return diagnosticReceiver;
     }
 
@@ -70,7 +70,7 @@ public class ServerReceiver {
     }
 
     @Nullable
-    DeserializationMonitor getDeserializationMonitor() {
+    public DeserializationMonitor getDeserializationMonitor() {
         return deserializationMonitor;
     }
 
