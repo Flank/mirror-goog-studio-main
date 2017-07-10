@@ -46,6 +46,8 @@ public class TestUtils {
      *   <li>tools/base/third_party/BUILD (this is generated from dependencies.properties)
      *   <li>tools/base/build-system/integration-test/BUILD
      *   <li>tools/adt/idea/android/BUILD
+     *   <li>tools/base/.idea/libraries definition for kotlin-stdlib-jre8
+     *   <li>tools/idea/.idea/libraries definition for kotlin-stdlib-jre8
      * </ul>
      */
     public static final String KOTLIN_VERSION_FOR_TESTS = "1.1.3-2";
