@@ -61,6 +61,30 @@ static std::string GetAppDataPath() {
   return so_path.substr(0, so_path.find_last_of('/') + 1);
 }
 
+static bool IsRetransformClassSignature(const char* sig_mutf8) {
+  return (strcmp(sig_mutf8, "Ljava/net/URL;") == 0) ||
+      (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
+      (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0);
+}
+
+// ClassPrepare event callback to invoke transformation of selected
+// classes, saves expensive OnClassFileLoaded calls for other classes.
+void JNICALL OnClassPrepare(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
+                            jthread thread, jclass klass) {
+  char* sig_mutf8;
+  jvmti_env->GetClassSignature(klass, &sig_mutf8, nullptr);
+  if (IsRetransformClassSignature(sig_mutf8)) {
+    jvmti_env->SetEventNotificationMode(
+        JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread);
+    CheckJvmtiError(jvmti_env, jvmti_env->RetransformClasses(1, &klass));
+    jvmti_env->SetEventNotificationMode(
+        JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread);
+  }
+  if (sig_mutf8 != nullptr) {
+    jvmti_env->Deallocate((unsigned char*) sig_mutf8);
+  }
+}
+
 void JNICALL OnClassFileLoaded(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
                                jclass class_being_redefined, jobject loader,
                                const char* name, jobject protection_domain,
@@ -314,34 +338,51 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   LoadDex(jvmti_env, jni_env, agent_config.use_live_alloc());
 
   SetAllCapabilities(jvmti_env);
-  jvmti_env->SetEventNotificationMode(
-      JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, nullptr);
 
   jvmtiEventCallbacks callbacks;
-  memset(&callbacks, 0, sizeof(jvmtiEventCallbacks));
+  memset(&callbacks, 0, sizeof(callbacks));
   callbacks.ClassFileLoadHook = OnClassFileLoaded;
+  callbacks.ClassPrepare = OnClassPrepare;
   CheckJvmtiError(jvmti_env,
                   jvmti_env->SetEventCallbacks(&callbacks, sizeof(callbacks)));
 
   // Sample instrumentation
   std::vector<jclass> classes;
-  classes.push_back(jni_env->FindClass("java/net/URL"));
-
   jint class_count;
   jclass* loaded_classes;
   char* sig_mutf8;
   jvmti_env->GetLoadedClasses(&class_count, &loaded_classes);
   for (int i = 0; i < class_count; ++i) {
     jvmti_env->GetClassSignature(loaded_classes[i], &sig_mutf8, nullptr);
-    if (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) {
+    if (IsRetransformClassSignature(sig_mutf8)) {
       classes.push_back(loaded_classes[i]);
-    } else if (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0) {
-      classes.push_back(loaded_classes[i]);
+    }
+    if (sig_mutf8 != nullptr) {
+      jvmti_env->Deallocate((unsigned char*) sig_mutf8);
     }
   }
 
-  CheckJvmtiError(jvmti_env,
-                  jvmti_env->RetransformClasses(classes.size(), &classes[0]));
+  if (classes.size() > 0) {
+    jthread thread = nullptr;
+    jvmti_env->GetCurrentThread(&thread);
+    jvmti_env->SetEventNotificationMode(
+        JVMTI_ENABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread);
+    CheckJvmtiError(jvmti_env,
+                    jvmti_env->RetransformClasses(classes.size(), &classes[0]));
+    jvmti_env->SetEventNotificationMode(
+        JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread);
+    if (thread != nullptr) {
+      jni_env->DeleteLocalRef(thread);
+    }
+  }
+
+  jvmti_env->SetEventNotificationMode(
+      JVMTI_ENABLE, JVMTI_EVENT_CLASS_PREPARE, nullptr);
+
+  for (int i = 0; i < class_count; ++i) {
+    jni_env->DeleteLocalRef(loaded_classes[i]);
+  }
+  jvmti_env->Deallocate(reinterpret_cast<unsigned char*>(loaded_classes));
 
   MemoryTrackingEnv::Instance(vm, agent_config.use_live_alloc());
 
