@@ -36,6 +36,7 @@ message Sample {
     int32 symbol_id = 3;
   }
 
+  // Sampled call chain ordered from the leaf to the root.
   repeated CallChainEntry callchain = 3;
 
   // Count of the events that have happened since last sample (regardless of
