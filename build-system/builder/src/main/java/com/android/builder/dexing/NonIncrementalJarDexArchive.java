@@ -24,12 +24,15 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.FileTime;
 import java.util.List;
 import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 
 /** Implementation of the {@link DexArchive} that does not support incremental updates. */
 public class NonIncrementalJarDexArchive implements DexArchive {
+
+    public static final FileTime ZERO_TIME = FileTime.fromMillis(0);
 
     private final Path targetPath;
     private final JarOutputStream jarOutputStream;
@@ -54,7 +57,12 @@ public class NonIncrementalJarDexArchive implements DexArchive {
     @Override
     public void addFile(@NonNull Path relativePath, @NonNull InputStream inputStream)
             throws IOException {
-        jarOutputStream.putNextEntry(new ZipEntry(relativePath.toString()));
+        ZipEntry zipEntry = new ZipEntry(relativePath.toString());
+        zipEntry.setMethod(ZipEntry.STORED);
+        zipEntry.setLastModifiedTime(ZERO_TIME);
+        zipEntry.setLastAccessTime(ZERO_TIME);
+        zipEntry.setCreationTime(ZERO_TIME);
+        jarOutputStream.putNextEntry(zipEntry);
         ByteStreams.copy(inputStream, jarOutputStream);
         jarOutputStream.flush();
         jarOutputStream.closeEntry();
