@@ -131,4 +131,8 @@ public interface PackagingScope extends TaskOutputHolder {
 
     @NonNull
     File getInstantRunResourceApkFolder();
+
+    boolean isAbiSplitsEnabled();
+
+    boolean isDensitySplitsEnabled();
 }

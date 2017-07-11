@@ -264,4 +264,14 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     public File getInstantRunResourceApkFolder() {
         return mVariantScope.getInstantRunResourceApkFolder();
     }
+
+    @Override
+    public boolean isAbiSplitsEnabled() {
+        return mGlobalScope.getExtension().getSplits().getAbi().isEnable();
+    }
+
+    @Override
+    public boolean isDensitySplitsEnabled() {
+        return mGlobalScope.getExtension().getSplits().getDensity().isEnable();
+    }
 }

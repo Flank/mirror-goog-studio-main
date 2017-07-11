@@ -288,4 +288,14 @@ public class ExternalBuildPackagingScope implements PackagingScope {
     public File getInstantRunResourceApkFolder() {
         return mVariantScope.getInstantRunResourceApkFolder();
     }
+
+    @Override
+    public boolean isAbiSplitsEnabled() {
+        return false;
+    }
+
+    @Override
+    public boolean isDensitySplitsEnabled() {
+        return false;
+    }
 }

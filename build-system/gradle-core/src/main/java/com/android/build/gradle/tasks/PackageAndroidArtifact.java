@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.transforms.InstantRunSliceSplitApkBuild
 import com.android.build.gradle.internal.transforms.InstantRunSplitApkBuilder;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.internal.variant.TaskContainer;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
@@ -70,16 +71,13 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -90,7 +88,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFiles;
+import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
@@ -196,9 +194,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected String projectBaseName;
 
-    protected File outputDirectory;
+    @Nullable protected String buildTargetAbi;
 
-    @Nullable private Map<ApkData, File> outputFiles;
+    @Nullable protected String buildTargetDensity;
+
+    protected File outputDirectory;
 
     @Nullable protected OutputFileProvider outputFileProvider;
 
@@ -329,53 +329,23 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return taskInputType;
     }
 
-    public File getOutputDirectory() {
-        // This directory contains output APKs. We should not annotate this directory with the
-        // Gradle @OutputDirectory annotation since different output files for different splits can
-        // share this same parent directory. Instead, we should annotate the actual output files
-        // with @OutputFiles as done at method getOutputFiles().
-        return outputDirectory;
-    }
-
-    @SuppressWarnings({"UnusedReturnValue", "NonPrivateFieldAccessedInSynchronizedContext"})
-    @OutputFiles
-    public synchronized Collection<File> getOutputFiles() {
-        if (outputFiles == null) {
-            outputFiles =
-                    computeOutputFiles(
-                            outputScope,
-                            BuildOutputs.load(taskInputType, resourceFiles),
-                            taskInputType,
-                            outputDirectory,
-                            outputFileProvider);
-        }
-
-        // In addition to the APKs, this task also outputs a meta-data file
-        File metadataFile = BuildOutputs.getMetadataFile(outputDirectory);
-        ImmutableList.Builder<File> builder = ImmutableList.builder();
-        return builder.addAll(outputFiles.values()).add(metadataFile).build();
-    }
-
-    /**
-     * Returns the collection of APKs to generate.
-     *
-     * <p>Rationale of this method: This method is used to work around a limitation of Gradle's
-     * UP-TO-DATE check on output files. When the list of output APKs has changed, we want Gradle to
-     * trigger a full task execution. However, Gradle's @OutputFiles annotation considers only
-     * changes to the files' contents but not changes to the list of output files itself. Therefore,
-     * in addition to annotating the getOutputFiles() method with @OutputFiles, we also need to
-     * annotate the list of output APKs with @Input.
-     */
     @Input
-    public Collection<String> getApkList() {
-        // Call getOutputFiles() to initialize outputFiles
-        getOutputFiles();
-        Objects.requireNonNull(outputFiles);
-        return outputFiles
-                .keySet()
-                .stream()
-                .map(ApkData::getFullName)
-                .collect(Collectors.toCollection(ArrayList::new));
+    @Optional
+    @Nullable
+    public String getBuildTargetAbi() {
+        return buildTargetAbi;
+    }
+
+    @Input
+    @Optional
+    @Nullable
+    public String getBuildTargetDensity() {
+        return buildTargetDensity;
+    }
+
+    @OutputDirectory
+    public File getOutputDirectory() {
+        return outputDirectory;
     }
 
     @NonNull
@@ -465,7 +435,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 BuildOutputs.load(getTaskInputType(), resourceFiles);
         outputScope.parallelForEachOutput(
                 mergedResources, getTaskInputType(), getTaskOutputType(), this::splitFullAction);
-        // We also add this meta-data file to the @OutputFiles, see method getOutputFiles()
         outputScope.save(getTaskOutputType(), outputDirectory);
     }
 
@@ -497,9 +466,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
         FileUtils.mkdirs(outputDirectory);
 
-        // Gradle must have called getOutputFiles() earlier, which resolved outputFiles
-        Objects.requireNonNull(outputFiles);
-        File outputFile = outputFiles.get(apkData);
+        // TO DO : move ALL output file name calculations to Split.
+        File outputFile =
+                outputFileProvider != null
+                        ? outputFileProvider.getOutputFile(apkData)
+                        : new File(outputDirectory, apkData.getOutputFileName());
 
         /*
          * Additionally, make sure we have no previous package, if it exists.
@@ -734,7 +705,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 getTaskInputType(),
                 getTaskOutputType(),
                 (split, output) -> splitIncrementalAction(split, output, changedInputs));
-        // We also add this meta-data file to the @OutputFiles, see method getOutputFiles()
         outputScope.save(getTaskOutputType(), outputDirectory);
     }
 
@@ -821,9 +791,11 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         cacheByPath,
                         cacheUpdates);
 
-        // Gradle must have called getOutputFiles() earlier, which resolved outputFiles
-        Objects.requireNonNull(outputFiles);
-        File outputFile = outputFiles.get(apkData);
+        // TO DO : move ALL output file name calculations to Split.
+        File outputFile =
+                outputFileProvider != null
+                        ? outputFileProvider.getOutputFile(apkData)
+                        : new File(outputDirectory, apkData.getOutputFileName());
 
         Collection<BuildOutput> manifestOutputs = BuildOutputs.load(manifestType, manifests);
 
@@ -951,6 +923,19 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.manifestType = manifestType;
             packageAndroidArtifact.aaptGeneration =
                     AaptGeneration.fromProjectOptions(packagingScope.getProjectOptions());
+
+            packageAndroidArtifact.buildTargetAbi =
+                    packagingScope.isAbiSplitsEnabled()
+                            ? packagingScope
+                                    .getProjectOptions()
+                                    .get(StringOption.IDE_BUILD_TARGET_ABI)
+                            : null;
+            packageAndroidArtifact.buildTargetDensity =
+                    packagingScope.isDensitySplitsEnabled()
+                            ? packagingScope
+                                    .getProjectOptions()
+                                    .get(StringOption.IDE_BUILD_TARGET_DENSITY)
+                            : null;
 
             packagingScope.addTask(
                     TaskContainer.TaskKind.PACKAGE_ANDROID_ARTIFACT, packageAndroidArtifact);
