@@ -32,8 +32,8 @@
 #include "dex/slicer/reader.h"
 #include "dex/slicer/writer.h"
 
-using profiler::Log;
 using profiler::Agent;
+using profiler::Log;
 using profiler::MemoryTrackingEnv;
 using profiler::ScopedLocalRef;
 
@@ -63,8 +63,8 @@ static std::string GetAppDataPath() {
 
 static bool IsRetransformClassSignature(const char* sig_mutf8) {
   return (strcmp(sig_mutf8, "Ljava/net/URL;") == 0) ||
-      (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
-      (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0);
+         (strcmp(sig_mutf8, "Lokhttp3/OkHttpClient;") == 0) ||
+         (strcmp(sig_mutf8, "Lcom/squareup/okhttp/OkHttpClient;") == 0);
 }
 
 // ClassPrepare event callback to invoke transformation of selected
@@ -81,7 +81,7 @@ void JNICALL OnClassPrepare(jvmtiEnv* jvmti_env, JNIEnv* jni_env,
         JVMTI_DISABLE, JVMTI_EVENT_CLASS_FILE_LOAD_HOOK, thread);
   }
   if (sig_mutf8 != nullptr) {
-    jvmti_env->Deallocate((unsigned char*) sig_mutf8);
+    jvmti_env->Deallocate((unsigned char*)sig_mutf8);
   }
 }
 
@@ -211,7 +211,8 @@ void BindJNIMethod(JNIEnv* jni, const char* class_name, const char* method_name,
   }
 }
 
-void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, bool log_live_alloc_count) {
+void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, bool log_live_alloc_count,
+             const proto::AgentConfig& config) {
   // Load in perfa.jar which should be in to data/data.
   std::string agent_lib_path(GetAppDataPath());
   agent_lib_path.append("perfa.jar");
@@ -313,7 +314,8 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, bool log_live_alloc_count) {
 
   jclass service =
       jni->FindClass("com/android/tools/profiler/support/ProfilerService");
-  jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "(Z)V");
+  jmethodID initialize =
+      jni->GetStaticMethodID(service, "initialize", "(Z)V");
   jni->CallStaticVoidMethod(service, initialize, !log_live_alloc_count);
 }
 
@@ -332,10 +334,10 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   profiler::Config config(options);
   Log::V("StudioProfilers agent attached.");
   auto agent_config = config.GetAgentConfig();
-  Agent::Instance(Agent::SocketType::kAbstractSocket);
+  Agent::Instance(&config);
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
-  LoadDex(jvmti_env, jni_env, agent_config.use_live_alloc());
+  LoadDex(jvmti_env, jni_env, agent_config.use_live_alloc(), agent_config);
 
   SetAllCapabilities(jvmti_env);
 
@@ -358,7 +360,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
       classes.push_back(loaded_classes[i]);
     }
     if (sig_mutf8 != nullptr) {
-      jvmti_env->Deallocate((unsigned char*) sig_mutf8);
+      jvmti_env->Deallocate((unsigned char*)sig_mutf8);
     }
   }
 
@@ -376,8 +378,8 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
     }
   }
 
-  jvmti_env->SetEventNotificationMode(
-      JVMTI_ENABLE, JVMTI_EVENT_CLASS_PREPARE, nullptr);
+  jvmti_env->SetEventNotificationMode(JVMTI_ENABLE, JVMTI_EVENT_CLASS_PREPARE,
+                                      nullptr);
 
   for (int i = 0; i < class_count; ++i) {
     jni_env->DeleteLocalRef(loaded_classes[i]);

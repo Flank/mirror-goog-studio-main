@@ -16,6 +16,8 @@
 
 package com.android.tools.profiler;
 
+import java.io.File;
+
 /** Main class that launches the ProfilerService to mock perfa functionality. */
 public class Main {
 
@@ -23,6 +25,16 @@ public class Main {
         // TODO: Read AndroidMock.jar/dex from args and load it in the
         // bootloader. Then call new application / oncreate to kick off
         // the initialization of the profiler service.
-        com.android.tools.profiler.support.ProfilerService.initialize();
+        String configPath = System.getProperty("config.path");
+        if (configPath == null || configPath.isEmpty()) {
+            System.err.println("Expected location of config file no was specified");
+            return;
+        }
+        File configFile = new File(configPath);
+        if (!configFile.exists()) {
+            System.err.println("Config path points to a file that does not exist: " + configPath);
+            return;
+        }
+        com.android.tools.profiler.support.ProfilerService.initialize(configPath);
     }
 }

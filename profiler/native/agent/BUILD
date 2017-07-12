@@ -27,6 +27,7 @@ cc_library(
         "support/jni_wrappers.h",
         "support/memory_stats_logger.cc",
         "support/memory_stats_logger.h",
+        "support/profiler_service.cc",
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",

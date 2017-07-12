@@ -23,7 +23,7 @@ import org.junit.rules.TestName;
 public class PerfaTest {
 
     @Rule public final TestName myTestName = new TestName();
-    private final int myPort = 12389;
+    private int myPort;
     private File myConfigFile;
 
     @Before
@@ -38,9 +38,15 @@ public class PerfaTest {
 
     private void buildAndSaveConfig() {
         try {
+            myPort = myTestName.hashCode() % Short.MAX_VALUE + Short.MAX_VALUE;
             myConfigFile = File.createTempFile(myTestName.getMethodName(), ".data");
             FileOutputStream outputStream = new FileOutputStream(myConfigFile);
-            Agent.AgentConfig config = Agent.AgentConfig.newBuilder().setUseJvmti(false).build();
+            Agent.AgentConfig config =
+                    Agent.AgentConfig.newBuilder()
+                            .setUseJvmti(false)
+                            .setServiceAddress("127.0.0.1:" + myPort)
+                            .setSocketType(Agent.SocketType.UNSPECIFIED_SOCKET)
+                            .build();
             config.writeTo(outputStream);
             outputStream.flush();
             outputStream.close();
@@ -51,7 +57,7 @@ public class PerfaTest {
     @Test
     public void testPerfABeforePerfDConnection() throws Exception {
         // TODO: Pass in XML config file to perfd/a service.
-        Perfa perfa = new Perfa();
+        Perfa perfa = new Perfa(myConfigFile.getAbsolutePath());
         Perfd perfd = new Perfd(myPort, myConfigFile.getAbsolutePath());
         perfa.start();
         perfd.start();

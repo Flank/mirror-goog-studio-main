@@ -18,8 +18,13 @@
 
 #include <fstream>
 #include "utils/log.h"
+#include "utils/device_info.h"
 
 namespace profiler {
+
+Config::Config(const proto::AgentConfig& agent_config) : config_file_path_(""),
+  agent_config_(agent_config) {
+}
 
 Config::Config(const std::string& file_path) : config_file_path_(file_path) {
   std::fstream input(file_path, std::ios::in | std::ios::binary);

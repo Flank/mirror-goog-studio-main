@@ -92,11 +92,11 @@ int main(int argc, char** argv) {
     // Since we are building a gRPC server, we need a special prefix to inform
     // gRPC that this is a Unix socket name.
     std::string grpc_target{profiler::kGrpcUnixSocketAddrPrefix};
-    grpc_target.append(profiler::kDaemonSocketName);
+    grpc_target.append(agent_config.service_socket_name());
     daemon.RunServer(grpc_target);
   } else {
     // For legacy devices (Nougat or older), use an internet address.
-    daemon.RunServer(profiler::kServerAddress);
+    daemon.RunServer(agent_config.service_address());
   }
   return 0;
 }

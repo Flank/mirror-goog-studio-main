@@ -31,6 +31,7 @@
 #include "memory_component.h"
 #include "utils/background_queue.h"
 #include "utils/clock.h"
+#include "utils/config.h"
 
 namespace profiler {
 
@@ -56,19 +57,17 @@ using AgentServiceTask = std::function<grpc::Status(
 
 class Agent {
  public:
-  enum class SocketType { kUnspecified, kAbstractSocket };
-
-  // Should be called by everyone except JVMTI.
+  // Should be called to obtain the instance after it is initialized by Instance
+  // with a valid config.
   // Grab the singleton instance of the Agent. This will initialize the class if
   // necessary.
-  static Agent& Instance() { return Instance(SocketType::kUnspecified); }
+  static Agent& Instance() { return Instance(nullptr); }
 
-  // Should be called only by JVMTI.
-  // Temporary workaround to let JVMTI-enabled agent use Unix abstract
-  // socket instead of a port number.
-  // TODO: Remove this constructor after we use only JVMTI to instrument
-  // bytecode on O+ devices.
-  static Agent& Instance(SocketType socket_type);
+  // Returns a singleton instance of the agent.
+  // The first call, assumes |config| is a valid profiler::Config object.
+  // All following calls, simply return the singleton instance regardless of the
+  // value of |config|.
+  static Agent& Instance(const profiler::Config* config);
 
   // In O+, this method will block until the Agent is connected to Perfd for the
   // very first time (e.g. when Perfd sends the client socket fd for the agent
@@ -87,7 +86,8 @@ class Agent {
   static constexpr int64_t kHeartBeatIntervalNs = Clock::ms_to_ns(250);
 
   // Use Agent::Instance() to initialize.
-  explicit Agent(SocketType socket_type);
+  // |config| is a valid profiler::Config object.
+  explicit Agent(const Config& config);
   ~Agent() = delete;  // TODO: Support destroying the agent
 
   // In O+, getting the service stubs below will block until the Agent is

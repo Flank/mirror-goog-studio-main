@@ -260,7 +260,9 @@ Status ProfilerServiceImpl::AttachAgent(
                             "Cannot fork a process to run connector");
     } else if (fork_pid == 0) {
       // child process
-      RunConnector(request->process_id(), package_name, kDaemonSocketName);
+      string socket_name;
+      socket_name.append(config_.GetAgentConfig().service_socket_name());
+      RunConnector(request->process_id(), package_name, socket_name);
       // RunConnector calls execl() at the end. It returns only if an error
       // has occured.
       exit(EXIT_FAILURE);

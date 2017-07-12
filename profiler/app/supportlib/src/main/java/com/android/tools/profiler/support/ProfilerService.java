@@ -42,17 +42,31 @@ public class ProfilerService {
     }
 
     /**
-     * Initialization method called multiple times from many entry points in the application.
-     * Not thread safe so, when instrumented, it needs to be added in the main thread.
+     * @param serviceType weather perfa should use abstract sockets, or ip address when connecting
+     *     to perfd. The values for service type come from the agent service proto. The possible
+     *     values are abstract_socket, or unspecified_value. However for non-jvmti based
+     *     instrumentation we hardcode this value to 0 (unspecified_value).
+     * @param serviceAddress the IP address used to connect to perfd.
      */
-    public static void initialize() {
+    private native void initializeNative(String serviceAddress);
+
+    /**
+     * Initialization method called multiple times from many entry points in the application. Not
+     * thread safe so, when instrumented, it needs to be added in the main thread.
+     *
+     * @param serviceAddress the IP address used to connect to perfd
+     */
+    public static void initialize(String serviceAddress) {
         if (sInstance != null) {
             return;
         }
-        sInstance = new ProfilerService();
+        sInstance = new ProfilerService(serviceAddress);
     }
 
-    public ProfilerService() {
+    public ProfilerService(String serviceAddress) {
+        // Use 0 to indicate that the service address is of type ip address and not
+        // an abstract socket.
+        initializeNative(serviceAddress);
         mComponents = new ArrayList<ProfilerComponent>();
         mComponents.add(new EventProfiler());
         mComponents.add(new MemoryProfiler(true));

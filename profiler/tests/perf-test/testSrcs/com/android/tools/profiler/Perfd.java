@@ -14,7 +14,7 @@ public class Perfd {
 
     public Perfd(int port, String configFilePath) {
         myPort = port;
-        String[] perfdArgs = {PERFD_PATH, "ConfigFile=" + configFilePath};
+        String[] perfdArgs = {PERFD_PATH, "-config_file=" + configFilePath};
         myRunner = new ProcessRunner(perfdArgs);
     }
 

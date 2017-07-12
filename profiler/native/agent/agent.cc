@@ -23,7 +23,6 @@
 #include <string>
 
 #include <grpc++/support/channel_arguments.h>
-#include "utils/config.h"
 #include "utils/device_info.h"
 #include "utils/log.h"
 #include "utils/socket_utils.h"
@@ -48,18 +47,18 @@ using proto::InternalEventService;
 using proto::InternalNetworkService;
 using std::lock_guard;
 
-Agent& Agent::Instance(SocketType socket_type) {
-  static Agent* instance = new Agent(socket_type);
+Agent& Agent::Instance(const Config* config) {
+  static Agent* instance = new Agent(*config);
   return *instance;
 }
 
-Agent::Agent(SocketType socket_type)
+Agent::Agent(const Config& config)
     : memory_component_(nullptr),  // set in ConnectToPerfd()
       background_queue_("Studio:Agent", kMaxBackgroundTasks),
       can_grpc_target_change_(false),
       grpc_target_initialized_(false) {
   if (profiler::DeviceInfo::feature_level() >= 26 &&
-      socket_type == SocketType::kAbstractSocket) {
+      config.GetAgentConfig().socket_type() == proto::ABSTRACT_SOCKET) {
     // For O and post-O devices, we used an existing socket of which the file
     // descriptor will be provided into kAgentSocketName. This is provided via
     // socket_thread_ so we don't setup here.
@@ -68,7 +67,7 @@ Agent::Agent(SocketType socket_type)
   } else {
     // Pre-O, we don't need to start the socket thread, as the agent
     // communicates to perfd via a fixed port.
-    ConnectToPerfd(kServerAddress);
+    ConnectToPerfd(config.GetAgentConfig().service_address());
   }
 
   heartbeat_thread_ = std::thread(&Agent::RunHeartbeatThread, this);
