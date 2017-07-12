@@ -119,8 +119,7 @@ public class ToastDetector extends Detector implements UastScanner {
 
         @Override
         public boolean visitCallExpression(UCallExpression node) {
-
-            if (node == target) {
+            if (node == target || node.getPsi() != null && node.getPsi() == target.getPsi()) {
                 seenTarget = true;
             } else {
                 if ((seenTarget || target.equals(node.getReceiver()))

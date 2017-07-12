@@ -341,6 +341,22 @@ public class CleanupDetector extends Detector implements Detector.UastScanner {
             @Override
             protected boolean isCleanupCall(@NonNull UCallExpression call) {
                 String methodName = call.getMethodName();
+
+                if ("use".equals(methodName) && CLOSE.equals(recycleName)) {
+                    // Kotlin: "use" calls close; see issue 62377185
+                    // Can't call call.resolve() to check it's the runtime because
+                    // resolve returns null on these usages.
+                    // Now make sure we're calling it on the right variable
+                    UExpression operand = call.getReceiver();
+                    if (operand instanceof UReferenceExpression) {
+                        PsiElement resolved = ((UReferenceExpression) operand).resolve();
+                        //noinspection SuspiciousMethodCalls
+                        if (resolved != null && mVariables.contains(resolved)) {
+                            return true;
+                        }
+                    }
+                }
+
                 if (!recycleName.equals(methodName)) {
                     return false;
                 }

@@ -584,12 +584,9 @@ public class UnsafeBroadcastReceiverDetector extends Detector
 
     private Set<String> getReceiversWithProtectedBroadcastIntentFilter(@NonNull Context context) {
         if (mReceiversWithProtectedBroadcastIntentFilter == null) {
-            if (context.getScope().contains(Scope.MANIFEST)) {
-                mReceiversWithProtectedBroadcastIntentFilter = Collections.emptySet();
-            } else {
+            mReceiversWithProtectedBroadcastIntentFilter = Sets.newHashSet();
+            if (!context.getScope().contains(Scope.MANIFEST)) {
                 // Compute from merged manifest
-                mReceiversWithProtectedBroadcastIntentFilter = Sets.newHashSet();
-
                 Project mainProject = context.getMainProject();
                 Document mergedManifest = mainProject.getMergedManifest();
                 if (mergedManifest != null &&
