@@ -35,6 +35,7 @@ import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.reporting.ConfigurableReport;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.testing.Test;
@@ -45,6 +46,8 @@ import org.gradle.api.tasks.testing.TestTaskReports;
  */
 public class AndroidUnitTest extends Test {
 
+    private String sdkPlatformDirPath;
+    private FileCollection mergedManifest;
     private FileCollection resCollection;
     private FileCollection assetsCollection;
 
@@ -58,6 +61,16 @@ public class AndroidUnitTest extends Test {
     @Optional
     public FileCollection getAssetsCollection() {
         return assetsCollection;
+    }
+
+    @Input
+    public String getSdkPlatformDirPath() {
+        return sdkPlatformDirPath;
+    }
+
+    @InputFiles
+    public FileCollection getMergedManifest() {
+        return mergedManifest;
     }
 
     /**
@@ -100,19 +113,26 @@ public class AndroidUnitTest extends Test {
 
             runTestsTask.setTestClassesDirs(scope.getOutput(CLASSES_FOR_UNIT_TESTS));
 
-            runTestsTask.setClasspath(computeClasspath());
+            boolean includeAndroidResources =
+                    scope.getGlobalScope()
+                            .getExtension()
+                            .getTestOptions()
+                            .getUnitTests()
+                            .isIncludeAndroidResources();
+
+            runTestsTask.setClasspath(computeClasspath(includeAndroidResources));
+            runTestsTask.sdkPlatformDirPath =
+                    scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation();
 
             // if android resources are meant to be accessible, then we need to make sure
             // changes to them trigger a new run of the tasks
-            if (scope.getGlobalScope()
-                    .getExtension()
-                    .getTestOptions()
-                    .getUnitTests()
-                    .isIncludeAndroidResources()) {
-                VariantScope testedScope = testedVariantData.getScope();
+            VariantScope testedScope = testedVariantData.getScope();
+            if (includeAndroidResources) {
                 runTestsTask.assetsCollection = testedScope.getOutput(TaskOutputType.MERGED_ASSETS);
-                runTestsTask.resCollection = testedScope.getOutput(TaskOutputType.MERGED_RES);
+                runTestsTask.resCollection =
+                        testedScope.getOutput(TaskOutputType.MERGED_NOT_COMPILED_RES);
             }
+            runTestsTask.mergedManifest = testedScope.getOutput(TaskOutputType.MERGED_MANIFESTS);
 
             // Put the variant name in the report path, so that different testing tasks don't
             // overwrite each other's reports. For component model plugin, the report tasks are not
@@ -139,10 +159,14 @@ public class AndroidUnitTest extends Test {
         }
 
         @NonNull
-        private ConfigurableFileCollection computeClasspath() {
+        private ConfigurableFileCollection computeClasspath(boolean includeAndroidResources) {
             ConfigurableFileCollection collection = scope.getGlobalScope().getProject().files();
 
             // the test classpath is made up of:
+            // - the config file
+            if (includeAndroidResources) {
+                collection.from(scope.getOutput(TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY));
+            }
             // - the test component classes and java_res
             collection.from(scope.getOutput(CLASSES_FOR_UNIT_TESTS));
             // TODO is this the right thing? this doesn't include the res merging via transform AFAIK

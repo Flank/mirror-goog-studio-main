@@ -148,7 +148,7 @@ public class MergeResources extends IncrementalTask {
 
     @Nullable private File dataBindingLayoutOutputFolder;
 
-    @Nullable private File resourceShrinkerOutputFolder;
+    @Nullable private File mergedNotCompiledResourcesOutputDirectory;
 
     private boolean pseudoLocalesEnabled;
 
@@ -238,8 +238,6 @@ public class MergeResources extends IncrementalTask {
                 resourceCompiler = QueueableResourceCompiler.NONE;
             }
 
-
-
             MergedResourceWriter writer =
                     new MergedResourceWriter(
                             workerExecutorFacade,
@@ -251,7 +249,7 @@ public class MergeResources extends IncrementalTask {
                             getIncrementalFolder(),
                             dataBindingExpressionRemover,
                             dataBindingLayoutOutputFolder,
-                            resourceShrinkerOutputFolder,
+                            mergedNotCompiledResourcesOutputDirectory,
                             pseudoLocalesEnabled,
                             getCrunchPng());
 
@@ -349,7 +347,7 @@ public class MergeResources extends IncrementalTask {
                             getIncrementalFolder(),
                             dataBindingExpressionRemover,
                             dataBindingLayoutOutputFolder,
-                            resourceShrinkerOutputFolder,
+                            mergedNotCompiledResourcesOutputDirectory,
                             pseudoLocalesEnabled,
                             getCrunchPng());
 
@@ -640,8 +638,8 @@ public class MergeResources extends IncrementalTask {
     @Nullable
     @OutputDirectory
     @Optional
-    public File getResourceShrinkerOutputFolder() {
-        return resourceShrinkerOutputFolder;
+    public File getMergedNotCompiledResourcesOutputDirectory() {
+        return mergedNotCompiledResourcesOutputDirectory;
     }
 
     @Input
@@ -728,26 +726,25 @@ public class MergeResources extends IncrementalTask {
 
         @NonNull
         private final VariantScope scope;
-
         @NonNull
         private final String taskNamePrefix;
-
         @Nullable
         private final File outputLocation;
-
+        @Nullable private final File mergedNotCompiledOutputDirectory;
         private final boolean includeDependencies;
-
         private final boolean processResources;
 
         public ConfigAction(
                 @NonNull VariantScope scope,
                 @NonNull String taskNamePrefix,
                 @Nullable File outputLocation,
+                @Nullable File mergedNotCompiledOutputDirectory,
                 boolean includeDependencies,
                 boolean processResources) {
             this.scope = scope;
             this.taskNamePrefix = taskNamePrefix;
             this.outputLocation = outputLocation;
+            this.mergedNotCompiledOutputDirectory = mergedNotCompiledOutputDirectory;
             this.includeDependencies = includeDependencies;
             this.processResources = processResources;
         }
@@ -846,8 +843,8 @@ public class MergeResources extends IncrementalTask {
                         scope.getLayoutInputFolderForDataBinding();
             }
 
-            mergeResourcesTask.resourceShrinkerOutputFolder =
-                    scope.getResourceShrinkerInputFolder();
+            mergeResourcesTask.mergedNotCompiledResourcesOutputDirectory =
+                    mergedNotCompiledOutputDirectory;
 
             mergeResourcesTask.pseudoLocalesEnabled =
                     scope.getVariantData()

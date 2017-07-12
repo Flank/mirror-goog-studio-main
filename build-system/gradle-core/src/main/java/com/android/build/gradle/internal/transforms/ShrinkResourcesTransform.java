@@ -45,7 +45,6 @@ import com.android.builder.core.VariantType;
 import com.android.ide.common.build.ApkData;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -90,7 +89,7 @@ public class ShrinkResourcesTransform extends Transform {
     @NonNull private final Logger logger;
 
     @NonNull private final File sourceDir;
-    @NonNull private final File resourceDir;
+    @NonNull private final FileCollection resourceDir;
     @Nullable private final FileCollection mappingFileSrc;
     @NonNull private final FileCollection mergedManifests;
     @NonNull private final FileCollection uncompressedResources;
@@ -119,8 +118,7 @@ public class ShrinkResourcesTransform extends Transform {
         this.logger = logger;
 
         this.sourceDir = variantScope.getRClassSourceOutputDir();
-        this.resourceDir =
-                Preconditions.checkNotNull(variantScope.getResourceShrinkerInputFolder());
+        this.resourceDir = variantScope.getOutput(TaskOutputType.MERGED_NOT_COMPILED_RES);
         this.mappingFileSrc =
                 variantScope.hasOutput(TaskOutputType.APK_MAPPING)
                         ? variantScope.getOutput(TaskOutputType.APK_MAPPING)
@@ -300,7 +298,7 @@ public class ShrinkResourcesTransform extends Transform {
                         classes,
                         mergedManifest.getOutputFile(),
                         mappingFile,
-                        resourceDir,
+                        resourceDir.getSingleFile(),
                         reportFile);
         try {
             analyzer.setVerbose(logger.isEnabled(LogLevel.INFO));

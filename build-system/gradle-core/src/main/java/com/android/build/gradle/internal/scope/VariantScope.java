@@ -99,9 +99,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     boolean isCrunchPngs();
 
-    @Nullable
-    File getResourceShrinkerInputFolder();
-
     @Override
     @NonNull
     InstantRunBuildContext getInstantRunBuildContext();
@@ -256,9 +253,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getJavaResourcesDestinationDir();
 
     @NonNull
-    File getGeneratedJavaResourcesDir();
-
-    @NonNull
     File getRClassSourceOutputDir();
 
     @NonNull
@@ -335,9 +329,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getInstantRunManifestOutputDirectory();
-
-    @NonNull
-    File getShrunkProcessedResourcesOutputDirectory();
 
     @NonNull
     File  getManifestReportFile();

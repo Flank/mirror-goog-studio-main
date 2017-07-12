@@ -58,6 +58,10 @@ public interface TaskOutputHolder {
         PLATFORM_R_TXT,
         // output of the resource merger ready for aapt.
         MERGED_RES,
+        // output of the resource merger for unit tests and the resource shrinker.
+        MERGED_NOT_COMPILED_RES,
+        // Directory containing config file for unit testing with resources
+        UNIT_TEST_CONFIG_DIRECTORY,
         // compiled resources (output of aapt)
         PROCESSED_RES,
         // package resources for aar publishing.

@@ -77,8 +77,6 @@ public class ProcessJavaResConfigAction implements TaskConfigAction<Sync> {
             processResources.from(variantSourceSet.getResources().getSourceFiles());
         }
 
-        processResources.from(scope.getGeneratedJavaResourcesDir());
-
         if (processResources.getInputs().getFiles().getFiles().isEmpty()) {
             try {
                 FileUtils.deletePath(scope.getSourceFoldersJavaResDestinationDir());

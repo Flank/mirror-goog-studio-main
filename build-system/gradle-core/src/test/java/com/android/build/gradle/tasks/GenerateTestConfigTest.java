@@ -18,15 +18,10 @@ package com.android.build.gradle.tasks;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
 
-import com.android.build.gradle.internal.scope.BuildOutput;
-import com.android.build.gradle.internal.scope.OutputScope;
-import com.android.build.gradle.internal.scope.TaskOutputHolder;
-import com.android.ide.common.build.ApkData;
 import com.android.utils.FileUtils;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import com.google.common.truth.Truth;
-import java.io.File;
 import java.io.Reader;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -34,50 +29,24 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import org.gradle.api.Project;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 /** Test for {@link GenerateTestConfig}. */
 public class GenerateTestConfigTest {
 
-    @Mock OutputScope outputScope;
-
-    @Mock ApkData apkData;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
-
     @Test
     public void smokeTest() throws Exception {
-        Project project = ProjectBuilder.builder().build();
         FileSystem fileSystem = Jimfs.newFileSystem(Configuration.unix());
         Path buildDirectory = fileSystem.getPath("/project", "build");
+        Path outputDir = fileSystem.getPath("outputDir");
+        GenerateTestConfig.generateTestConfigForOutput(
+                buildDirectory.resolve("mergedAssets"),
+                buildDirectory.resolve("mergedResources"),
+                fileSystem.getPath("/sdk"),
+                buildDirectory.resolve("mergedManifest.xml"),
+                outputDir);
 
-        GenerateTestConfig generateTestConfig =
-                project.getTasks().create("generateTestConfig", GenerateTestConfig.class);
-        generateTestConfig.resourcesDirectory = buildDirectory.resolve("mergedResources");
-        generateTestConfig.assetsDirectory = buildDirectory.resolve("mergedAssets");
-        generateTestConfig.manifests = project.files();
-        generateTestConfig.sdkHome = fileSystem.getPath("/sdk");
-        generateTestConfig.generatedJavaResourcesDirectory =
-                buildDirectory.resolve("generatedJavaResources");
-        generateTestConfig.outputScope = outputScope;
-
-        generateTestConfig.generateTestConfigForOutput(
-                new BuildOutput(
-                        TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                        apkData,
-                        new File(buildDirectory.resolve("mergedManifest.xml").toString())));
-
-        Path expectedOutputPath =
-                fileSystem.getPath(
-                        "/project/build/generatedJavaResources/com/android/tools/test_config.properties");
+        Path expectedOutputPath = outputDir.resolve("com/android/tools/test_config.properties");
         assertThat(expectedOutputPath).isFile();
         try (Reader reader = Files.newBufferedReader(expectedOutputPath)) {
             Properties result = new Properties();

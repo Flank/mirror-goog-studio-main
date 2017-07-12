@@ -13,7 +13,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Assert;
-import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -96,11 +95,6 @@ public class UnitTestingAndroidResourcesTest {
 
     @Test
     public void runUnitTests() throws Exception {
-
-        if (plugin == Plugin.APPLICATION && aaptGeneration == AaptGeneration.AAPT_V2_JNI) {
-            throw new AssumptionViolatedException(
-                    "Resources in Unit tests currently broken with AAPT2 b/63155231");
-        }
 
         RunGradleTasks runGradleTasks = project.executor().with(aaptGeneration);
 

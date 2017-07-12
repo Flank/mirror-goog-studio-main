@@ -142,7 +142,7 @@ public class FeatureTaskManager extends TaskManager {
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createMergeResourcesTask(tasks, variantScope));
+                () -> createMergeResourcesTask(tasks, variantScope, true));
 
         // Add a task to merge the asset folders
         recorder.record(

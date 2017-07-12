@@ -124,7 +124,7 @@ public class MergedResourceWriter
 
     @Nullable private final File dataBindingLayoutOutputFolder;
 
-    @Nullable private final File resourceShrinkerOutputFolder;
+    @Nullable private final File notCompiledOutputDirectory;
 
     private final boolean pseudoLocalesEnabled;
 
@@ -153,8 +153,8 @@ public class MergedResourceWriter
      * @param temporaryDirectory temporary directory for intermediate merged files
      * @param dataBindingExpressionRemover removes data binding expressions from layout files
      * @param dataBindingLayoutOutputFolder for layout files passed to the data binding task
-     * @param resourceShrinkerOutputFolder for saved uncompiled resources for the resource shrinking
-     *     transform
+     * @param notCompiledOutputDirectory for saved uncompiled resources for the resource shrinking
+     *     transform and for unit testing with resources.
      * @param pseudoLocalesEnabled generate resources for pseudo-locales (en-XA and ar-XB)
      * @param crunchPng should we crunch PNG files
      */
@@ -168,7 +168,7 @@ public class MergedResourceWriter
             @NonNull File temporaryDirectory,
             @Nullable SingleFileProcessor dataBindingExpressionRemover,
             @Nullable File dataBindingLayoutOutputFolder,
-            @Nullable File resourceShrinkerOutputFolder,
+            @Nullable File notCompiledOutputDirectory,
             boolean pseudoLocalesEnabled,
             boolean crunchPng) {
         super(rootFolder, workerExecutor);
@@ -185,7 +185,7 @@ public class MergedResourceWriter
         mTemporaryDirectory = temporaryDirectory;
         this.dataBindingExpressionRemover = dataBindingExpressionRemover;
         this.dataBindingLayoutOutputFolder = dataBindingLayoutOutputFolder;
-        this.resourceShrinkerOutputFolder = resourceShrinkerOutputFolder;
+        this.notCompiledOutputDirectory = notCompiledOutputDirectory;
         this.pseudoLocalesEnabled = pseudoLocalesEnabled;
         this.crunchPng = crunchPng;
 
@@ -310,11 +310,11 @@ public class MergedResourceWriter
                         }
                     }
 
-                    // If we are going to shrink resources, the resource shrinker needs to have the
-                    // final merged uncompiled file.
-                    if (resourceShrinkerOutputFolder != null) {
+                    // Currently the resource shrinker and unit tests that use resources need
+                    // the final merged, but uncompiled file.
+                    if (notCompiledOutputDirectory != null) {
                         File typeDir =
-                                new File(resourceShrinkerOutputFolder, request.getFolderName());
+                                new File(notCompiledOutputDirectory, request.getFolderName());
                         FileUtils.mkdirs(typeDir);
                         FileUtils.copyFileToDirectory(fileToCompile, typeDir);
                     }
@@ -607,8 +607,8 @@ public class MergedResourceWriter
 
                     // If we are going to shrink resources, the resource shrinker needs to have the
                     // final merged uncompiled file.
-                    if (resourceShrinkerOutputFolder != null) {
-                        File typeDir = new File(resourceShrinkerOutputFolder, folderName);
+                    if (notCompiledOutputDirectory != null) {
+                        File typeDir = new File(notCompiledOutputDirectory, folderName);
                         FileUtils.mkdirs(typeDir);
                         FileUtils.copyFileToDirectory(outFile, typeDir);
                     }
@@ -660,10 +660,10 @@ public class MergedResourceWriter
                     ResourceFolderType.VALUES.getName() + RES_QUALIFIER_SEP + key :
                     ResourceFolderType.VALUES.getName();
 
-            if (resourceShrinkerOutputFolder != null) {
+            if (notCompiledOutputDirectory != null) {
                 removeOutFile(
                         FileUtils.join(
-                                resourceShrinkerOutputFolder, folderName, folderName + DOT_XML));
+                                notCompiledOutputDirectory, folderName, folderName + DOT_XML));
             }
 
             // Remove the intermediate (compiled) values file.
@@ -715,10 +715,10 @@ public class MergedResourceWriter
         removeOutFile(toRemove);
     }
 
-    private void removeFileFromResourceShrinkerOutputFolder(@NonNull ResourceItem resourceItem) {
+    private void removeFileFromNotCompiledOutputDir(@NonNull ResourceItem resourceItem) {
         File originalFile = resourceItem.getFile();
         File resTypeDir =
-                new File(resourceShrinkerOutputFolder, originalFile.getParentFile().getName());
+                new File(notCompiledOutputDirectory, originalFile.getParentFile().getName());
         File toRemove = new File(resTypeDir, originalFile.getName());
         removeOutFile(toRemove);
     }
@@ -736,9 +736,9 @@ public class MergedResourceWriter
             // The file could have possibly been a layout file with data binding.
             removeLayoutFileFromDataBindingOutputFolder(resourceItem);
         }
-        if (resourceShrinkerOutputFolder != null) {
+        if (notCompiledOutputDirectory != null) {
             // The file was copied for the resource shrinking and needs to be removed from there.
-            removeFileFromResourceShrinkerOutputFolder(resourceItem);
+            removeFileFromNotCompiledOutputDir(resourceItem);
         }
         return removeOutFile(fileToRemove);
     }

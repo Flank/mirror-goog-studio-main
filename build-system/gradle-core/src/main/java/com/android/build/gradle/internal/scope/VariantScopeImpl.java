@@ -451,18 +451,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Nullable
     @Override
-    public File getResourceShrinkerInputFolder() {
-        if (!useResourceShrinker()) {
-            return null;
-        }
-        return new File(
-                globalScope.getIntermediatesDir()
-                        + "/resource-shrinker-in/"
-                        + getVariantConfiguration().getDirName());
-    }
-
-    @Nullable
-    @Override
     public CodeShrinker getCodeShrinker() {
         boolean isForTesting = getVariantConfiguration().getType().isForTesting();
 
@@ -1248,14 +1236,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 "javaResources/" + getVariantConfiguration().getDirName());
     }
 
-    @NonNull
-    @Override
-    public File getGeneratedJavaResourcesDir() {
-        return new File(
-                globalScope.getGeneratedDir(),
-                "javaResources/" + getVariantConfiguration().getDirName());
-    }
-
     @Override
     @NonNull
     public File getRClassSourceOutputDir() {
@@ -1433,15 +1413,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope.getIntermediatesDir(),
                 "resources",
                 "instant-run",
-                getVariantConfiguration().getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getShrunkProcessedResourcesOutputDirectory() {
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                "res_stripped",
                 getVariantConfiguration().getDirName());
     }
 

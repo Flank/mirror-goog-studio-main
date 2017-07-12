@@ -139,7 +139,7 @@ public class ApplicationTaskManager extends TaskManager {
                 ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                (Recorder.VoidBlock) () -> createMergeResourcesTask(tasks, variantScope));
+                (Recorder.VoidBlock) () -> createMergeResourcesTask(tasks, variantScope, true));
 
         // Add a task to merge the asset folders
         recorder.record(

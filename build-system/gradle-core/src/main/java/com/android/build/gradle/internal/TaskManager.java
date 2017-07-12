@@ -36,6 +36,7 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MOCKABLE_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PLATFORM_R_TXT;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
@@ -781,21 +782,28 @@ public abstract class TaskManager {
 
     public AndroidTask<MergeResources> createMergeResourcesTask(
             @NonNull TaskFactory tasks,
-            @NonNull VariantScope scope) {
-        return createMergeResourcesTask(tasks, scope, true /*processResources*/);
-    }
-
-    public AndroidTask<MergeResources> createMergeResourcesTask(
-            @NonNull TaskFactory tasks,
             @NonNull VariantScope scope,
             boolean processResources) {
-        return basicCreateMergeResourcesTask(
-                tasks,
-                scope,
-                MergeType.MERGE,
-                null /*outputLocation*/,
-                true /*includeDependencies*/,
-                processResources);
+
+        boolean alsoOutputNotCompiledResources =
+                scope.useResourceShrinker()
+                        || globalScope
+                                .getExtension()
+                                .getTestOptions()
+                                .getUnitTests()
+                                .isIncludeAndroidResources();
+
+        AndroidTask<MergeResources> task =
+                basicCreateMergeResourcesTask(
+                        tasks,
+                        scope,
+                        MergeType.MERGE,
+                        null /*outputLocation*/,
+                        true /*includeDependencies*/,
+                        processResources,
+                        alsoOutputNotCompiledResources);
+
+        return task;
     }
 
     /** Defines the merge type for {@link #basicCreateMergeResourcesTask} */
@@ -828,23 +836,40 @@ public abstract class TaskManager {
             @NonNull MergeType mergeType,
             @Nullable File outputLocation,
             final boolean includeDependencies,
-            final boolean processResources) {
+            final boolean processResources,
+            boolean alsoOutputNotCompiledResources) {
 
         File mergedOutputDir = MoreObjects
                 .firstNonNull(outputLocation, scope.getDefaultMergeResourcesOutputDir());
 
         String taskNamePrefix = mergeType.name().toLowerCase(Locale.ENGLISH);
 
-        AndroidTask<MergeResources> mergeResourcesTask = androidTasks.create(tasks,
-                new MergeResources.ConfigAction(
-                        scope,
-                        taskNamePrefix,
-                        mergedOutputDir,
-                        includeDependencies,
-                        processResources));
+        File mergedNotCompiledDir =
+                alsoOutputNotCompiledResources
+                        ? new File(
+                                globalScope.getIntermediatesDir()
+                                        + "/merged-not-compiled-resources/"
+                                        + scope.getVariantConfiguration().getDirName())
+                        : null;
+
+        AndroidTask<MergeResources> mergeResourcesTask =
+                androidTasks.create(
+                        tasks,
+                        new MergeResources.ConfigAction(
+                                scope,
+                                taskNamePrefix,
+                                mergedOutputDir,
+                                mergedNotCompiledDir,
+                                includeDependencies,
+                                processResources));
 
         scope.addTaskOutput(
                 mergeType.getOutputType(), mergedOutputDir, mergeResourcesTask.getName());
+
+        if (alsoOutputNotCompiledResources) {
+            scope.addTaskOutput(
+                    MERGED_NOT_COMPILED_RES, mergedNotCompiledDir, mergeResourcesTask.getName());
+        }
 
         mergeResourcesTask.dependsOn(
                 tasks,
@@ -1621,10 +1646,18 @@ public abstract class TaskManager {
         createCompileAnchorTask(tasks, variantScope);
 
         if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
+            File unitTestConfigDir =
+                    new File(
+                            globalScope.getIntermediatesDir(),
+                            "unitTestConfig/" + variantData.getVariantConfiguration().getDirName());
             AndroidTask<GenerateTestConfig> generateTestConfig =
-                    androidTasks.create(tasks, new GenerateTestConfig.ConfigAction(variantScope));
-
-            variantScope.getProcessJavaResourcesTask().dependsOn(tasks, generateTestConfig);
+                    androidTasks.create(
+                            tasks,
+                            new GenerateTestConfig.ConfigAction(variantScope, unitTestConfigDir));
+            variantScope.addTaskOutput(
+                    TaskOutputHolder.TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY,
+                    unitTestConfigDir,
+                    generateTestConfig.getName());
         }
 
         // :app:compileDebugUnitTestSources should be enough for running tests from AS, so add
@@ -1679,7 +1712,8 @@ public abstract class TaskManager {
         createRenderscriptTask(tasks, variantScope);
 
         // Add a task to merge the resource folders
-        createMergeResourcesTask(tasks, variantScope);
+
+        createMergeResourcesTask(tasks, variantScope, true);
 
         // Add a task to merge the assets folders
         createMergeAssetsTask(tasks, variantScope, null);
@@ -2946,12 +2980,17 @@ public abstract class TaskManager {
 
         // if resources are shrink, insert a no-op transform per variant output
         // to transform the res package into a stripped res package
+        File shrinkerOutput =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "res_stripped",
+                        scope.getVariantConfiguration().getDirName());
 
         ShrinkResourcesTransform shrinkResTransform =
                 new ShrinkResourcesTransform(
                         scope.getVariantData(),
                         scope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
-                        scope.getShrunkProcessedResourcesOutputDirectory(),
+                        shrinkerOutput,
                         AaptGeneration.fromProjectOptions(projectOptions),
                         scope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST),
                         logger);
@@ -2962,7 +3001,7 @@ public abstract class TaskManager {
         if (shrinkTask.isPresent()) {
             scope.addTaskOutput(
                     TaskOutputHolder.TaskOutputType.SHRUNK_PROCESSED_RES,
-                    scope.getShrunkProcessedResourcesOutputDirectory(),
+                    shrinkerOutput,
                     shrinkTask.get().getName());
         } else {
             androidBuilder

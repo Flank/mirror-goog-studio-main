@@ -662,12 +662,7 @@ public class LibraryTaskManager extends TaskManager {
         File resFolder = FileUtils.join(variantBundleDir, FD_RES);
         AndroidTask<MergeResources> mergeResourceTask =
                 basicCreateMergeResourcesTask(
-                        tasks,
-                        variantScope,
-                        MergeType.PACKAGE,
-                        resFolder,
-                        false /*includeDependencies*/,
-                        false /*processResources*/);
+                        tasks, variantScope, MergeType.PACKAGE, resFolder, false, false, false);
 
         // Add a task to merge the resource folders, including the libraries, in order to
         // generate the R.txt file with all the symbols, including the ones from
