@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.model.TestOptions.Execution;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import groovy.lang.Closure;
@@ -27,16 +28,9 @@ import org.gradle.api.internal.DefaultDomainObjectSet;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.util.ConfigureUtil;
-
 /** Options for running tests. */
 @SuppressWarnings("unused") // Exposed in the DSL.
 public class TestOptions {
-
-    public enum Execution {
-        HOST,
-        ON_DEVICE_ORCHESTRATOR,
-    }
-
     @Nullable
     private String resultsDir;
 

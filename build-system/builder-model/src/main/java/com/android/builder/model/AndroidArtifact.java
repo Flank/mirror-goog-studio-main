@@ -140,4 +140,13 @@ public interface AndroidArtifact extends BaseArtifact {
      */
     @NonNull
     Collection<File> getAdditionalRuntimeApks();
+
+
+    /**
+     * Returns the test options only if the variant type is testing.
+     *
+     * @since 3.0
+     */
+    @Nullable
+    TestOptions getTestOptions();
 }

@@ -17,6 +17,7 @@
 package com.android.builder.testing;
 
 import com.android.builder.testing.api.DeviceConnector;
+import com.android.ddmlib.testrunner.OnDeviceOrchestratorRemoteAndroidTestRunner;
 import com.google.common.base.CharMatcher;
 import com.google.common.truth.Truth;
 import org.junit.Test;
@@ -30,9 +31,11 @@ public class OnDeviceOrchestratorTestRunnerTest {
                         "com.example.app", "android.support.test.runner.AndroidJUnitRunner");
         DeviceConnector deviceConnector = Mockito.mock(DeviceConnector.class);
 
-        OnDeviceOrchestratorTestRunner.OnDeviceOrchestratorRemoteAndroidTestRunner odoRunner =
-                new OnDeviceOrchestratorTestRunner.OnDeviceOrchestratorRemoteAndroidTestRunner(
-                        testData, deviceConnector);
+        OnDeviceOrchestratorRemoteAndroidTestRunner odoRunner =
+                new OnDeviceOrchestratorRemoteAndroidTestRunner(
+                        testData.getApplicationId(),
+                        testData.getInstrumentationRunner(),
+                        deviceConnector);
 
         odoRunner.addInstrumentationArg("foo", "bar");
 
@@ -46,6 +49,6 @@ public class OnDeviceOrchestratorTestRunnerTest {
                                 + "am instrument -r -w "
                                 + "-e targetInstrumentation com.example.app/android.support.test.runner.AndroidJUnitRunner "
                                 + "-e foo bar "
-                                + "android.support.test.orchestrator/android.support.test.orchestrator.OnDeviceOrchestrator");
+                                + "android.support.test.orchestrator/android.support.test.orchestrator.AndroidTestOrchestrator");
     }
 }

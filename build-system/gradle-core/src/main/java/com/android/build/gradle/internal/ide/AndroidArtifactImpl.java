@@ -32,6 +32,7 @@ import com.android.builder.model.Dependencies;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.SourceProvider;
+import com.android.builder.model.TestOptions;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Joiner;
@@ -68,6 +69,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @NonNull private final BuildOutputSupplier<Collection<BuildOutput>> manifestSupplier;
     @Nullable private final String signingConfigName;
     @Nullable private final Set<String> abiFilters;
+    @Nullable private final TestOptions testOptions;
 
     AndroidArtifactImpl(
             @NonNull String name,
@@ -94,7 +96,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @NonNull Map<String, ClassField> resValues,
             @NonNull InstantRun instantRun,
             @NonNull BuildOutputSupplier<Collection<BuildOutput>> splitOutputsSupplier,
-            @NonNull BuildOutputSupplier<Collection<BuildOutput>> manifestSupplier) {
+            @NonNull BuildOutputSupplier<Collection<BuildOutput>> manifestSupplier,
+            @Nullable TestOptions testOptions) {
         super(
                 name,
                 assembleTaskName,
@@ -122,6 +125,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         this.instantRun = instantRun;
         this.splitOutputsSupplier = splitOutputsSupplier;
         this.manifestSupplier = manifestSupplier;
+        this.testOptions = testOptions;
     }
 
     @NonNull
@@ -323,7 +327,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 && Objects.equals(splitOutputsSupplier, that.splitOutputsSupplier)
                 && Objects.equals(instantRun, that.instantRun)
                 && Objects.equals(additionalRuntimeApks, that.additionalRuntimeApks)
-                && Objects.equals(baseName, that.baseName);
+                && Objects.equals(baseName, that.baseName)
+                && Objects.equals(testOptions, that.testOptions);
     }
 
     @Override
@@ -343,7 +348,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 resValues,
                 instantRun,
                 additionalRuntimeApks,
-                baseName);
+                baseName,
+                testOptions);
     }
 
     @Override
@@ -361,6 +367,13 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 .add("buildConfigFields", buildConfigFields)
                 .add("resValues", resValues)
                 .add("instantRun", instantRun)
+                .add("testOptions", testOptions)
                 .toString();
+    }
+
+    @Override
+    @Nullable
+    public TestOptions getTestOptions() {
+        return testOptions;
     }
 }

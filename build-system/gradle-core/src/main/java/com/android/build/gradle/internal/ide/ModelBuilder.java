@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreNdkOptions;
+import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.ide.level2.EmptyDependencyGraphs;
 import com.android.build.gradle.internal.ide.level2.GlobalLibraryMapImpl;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
@@ -608,6 +609,8 @@ public class ModelBuilder implements ToolingModelBuilder {
         additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
 
         List<File> additionalRuntimeApks = new ArrayList<>();
+        TestOptionsImpl testOptions = null;
+
         if (variantData.getType().isForTesting()) {
             Configuration testHelpers =
                     scope.getGlobalScope()
@@ -619,6 +622,12 @@ public class ModelBuilder implements ToolingModelBuilder {
             if (testHelpers != null) {
                 additionalRuntimeApks.addAll(testHelpers.getFiles());
             }
+
+            TestOptions testOptionsDsl = scope.getGlobalScope().getExtension().getTestOptions();
+            testOptions =
+                    new TestOptionsImpl(
+                            testOptionsDsl.getAnimationsDisabled(),
+                            testOptionsDsl.getExecutionEnum());
         }
 
         return new AndroidArtifactImpl(
@@ -658,7 +667,8 @@ public class ModelBuilder implements ToolingModelBuilder {
                 variantConfiguration.getMergedResValues(),
                 instantRun,
                 splitOutputsProxy,
-                manifestsProxy);
+                manifestsProxy,
+                testOptions);
     }
 
     private static BuildOutputSupplier<Collection<BuildOutput>> getBuildOutputSupplier(

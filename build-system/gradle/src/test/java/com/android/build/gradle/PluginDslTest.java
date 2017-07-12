@@ -26,7 +26,6 @@ import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
-import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.fixture.BaseTestedVariant;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
@@ -38,6 +37,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.factory.AndroidJavaCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.model.TestOptions.Execution;
 import com.android.builder.model.Version;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
@@ -573,9 +573,9 @@ public class PluginDslTest {
 
     @Test
     public void testTestOptionsExecution() throws Exception {
-        android.getTestOptions().setExecution("on_device_orchestrator");
+        android.getTestOptions().setExecution("android_test_orchestrator");
         assertThat(android.getTestOptions().getExecutionEnum())
-                .isEqualTo(TestOptions.Execution.ON_DEVICE_ORCHESTRATOR);
+                .isEqualTo(Execution.ANDROID_TEST_ORCHESTRATOR);
     }
 
     @SuppressWarnings("deprecation")

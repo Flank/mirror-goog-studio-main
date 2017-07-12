@@ -18,14 +18,11 @@ package com.android.builder.testing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
 import com.android.builder.testing.api.DeviceConnector;
+import com.android.ddmlib.testrunner.OnDeviceOrchestratorRemoteAndroidTestRunner;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.android.ide.common.process.ProcessExecutor;
-import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import java.io.File;
-import java.util.List;
 
 /** Implementation of {@link TestRunner} that invokes tests through Odo. */
 public class OnDeviceOrchestratorTestRunner extends SimpleTestRunner {
@@ -37,41 +34,8 @@ public class OnDeviceOrchestratorTestRunner extends SimpleTestRunner {
     @NonNull
     @Override
     protected RemoteAndroidTestRunner createRemoteAndroidTestRunner(
-            @NonNull TestData testData, DeviceConnector device) {
-        return new OnDeviceOrchestratorRemoteAndroidTestRunner(testData, device);
-    }
-
-    @VisibleForTesting
-    static class OnDeviceOrchestratorRemoteAndroidTestRunner extends RemoteAndroidTestRunner {
-        public OnDeviceOrchestratorRemoteAndroidTestRunner(
-                TestData testData, DeviceConnector device) {
-            super(testData.getApplicationId(), testData.getInstrumentationRunner(), device);
-        }
-
-        @NonNull
-        @Override
-        public String getAmInstrumentCommand() {
-            List<String> adbArgs = Lists.newArrayList();
-
-            adbArgs.add("CLASSPATH=$(pm path android.support.test.services)");
-            adbArgs.add("app_process / android.support.test.services.shellexecutor.ShellMain");
-
-            adbArgs.add("am");
-            adbArgs.add("instrument");
-            adbArgs.add("-r");
-            adbArgs.add("-w");
-
-            adbArgs.add("-e");
-            adbArgs.add("targetInstrumentation");
-            adbArgs.add(getRunnerPath());
-
-            adbArgs.add(getRunOptions());
-            adbArgs.add(getArgsCommand());
-
-            adbArgs.add(
-                    "android.support.test.orchestrator/android.support.test.orchestrator.OnDeviceOrchestrator");
-
-            return Joiner.on(' ').join(adbArgs);
-        }
+            @NonNull TestData testData, @NonNull DeviceConnector device) {
+        return new OnDeviceOrchestratorRemoteAndroidTestRunner(
+                testData.getApplicationId(), testData.getInstrumentationRunner(), device);
     }
 }

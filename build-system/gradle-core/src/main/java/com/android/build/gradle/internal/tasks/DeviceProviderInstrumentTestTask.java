@@ -349,7 +349,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
             boolean shardBetweenDevices = projectOptions.get(BooleanOption.ENABLE_TEST_SHARDING);
 
             switch (scope.getGlobalScope().getExtension().getTestOptions().getExecutionEnum()) {
-                case ON_DEVICE_ORCHESTRATOR:
+                case ANDROID_TEST_ORCHESTRATOR:
                     Preconditions.checkArgument(
                             !shardBetweenDevices, "Sharding is not supported with Odo.");
                     task.testRunnerFactory = OnDeviceOrchestratorTestRunner::new;
