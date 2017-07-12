@@ -57,23 +57,34 @@ struct ClassInfoHash {
   }
 };
 
+// Struct of a line number table associated with a jmethodID.
+// This maps the execution position pointer to Java method line number.
+struct LineNumberInfo {
+  jint entry_count;
+  jvmtiLineNumberEntry* table_ptr;
+};
+
 #ifndef NDEBUG
 using ClassTagMap =
     tracking::unordered_map<ClassInfo, int32_t, kClassTagMap, ClassInfoHash>;
 using ClassGlobalRefs = tracking::vector<jobject, kClassGlobalRefs>;
 using ClassData = tracking::vector<AllocatedClass, kClassData>;
-using MethodIdSet = tracking::unordered_set<int64_t, kMethodIds>;
+using MethodIdMap =
+    tracking::unordered_map<int64_t, LineNumberInfo, kMethodIds>;
 using ThreadIdMap = tracking::unordered_map<std::string, int32_t, kThreadIdMap>;
 #else
 using ClassTagMap = std::unordered_map<ClassInfo, int32_t, ClassInfoHash>;
 using ClassGlobalRefs = std::vector<jobject>;
 using ClassData = std::vector<AllocatedClass>;
-using MethodIdSet = std::unordered_set<int64_t>;
+using MethodIdMap = std::unordered_map<int64_t, LineNumberInfo>;
 using ThreadIdMap = std::unordered_map<std::string, int32_t>;
 #endif
 
 class MemoryTrackingEnv {
  public:
+  static MemoryTrackingEnv* Instance(JavaVM* vm, bool log_live_alloc_count);
+
+ private:
   // POD for encoding the method/instruction location data into trie.
   struct FrameInfo {
     int64_t method_id, location_id;
@@ -82,9 +93,6 @@ class MemoryTrackingEnv {
     }
   };
 
-  static MemoryTrackingEnv* Instance(JavaVM* vm, bool log_live_alloc_count);
-
- private:
   explicit MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count);
 
   // Environment is alive through the app's lifetime, don't bother cleaning up.
@@ -127,15 +135,15 @@ class MemoryTrackingEnv {
   // Thread to send allocation data to perfd.
   static void JNICALL AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* arg);
 
-  // Helper method for retrieving methods names corresponding to the method_ids
-  // and inserting them into the BatchAllocationSample.
-  static void SetSampleMethods(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
-                               JNIEnv* jni, BatchAllocationSample& sample,
-                               const std::vector<int64_t>& method_ids);
+  // Helper method for retrieving methods names and line numbers corresponding
+  // to |method_id| and cache them into |sample| and our MethodIdMap
+  static void CacheMethodInfo(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
+                              JNIEnv* jni, BatchAllocationSample& sample,
+                              int64_t method_id);
 
   // Helper method for retrieivng line number.
-  static int32_t FindLineNumber(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
-                                int64_t method_id, int64_t location_id);
+  static int32_t FindLineNumber(int64_t location_id, int entry_count,
+                                jvmtiLineNumberEntry* table_ptr);
 
   // Helper method for gathering thread-related info (e.g. name, callstack)
   // and populate them into |alloc_data|.
@@ -171,7 +179,7 @@ class MemoryTrackingEnv {
   ClassTagMap class_tag_map_;
   ClassGlobalRefs class_global_refs_;
   ClassData class_data_;
-  MethodIdSet known_method_ids_;
+  MethodIdMap known_methods_;
   ThreadIdMap thread_id_map_;
 };
 

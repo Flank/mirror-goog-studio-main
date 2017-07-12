@@ -53,6 +53,9 @@ constexpr int32_t kDataBatchSize = 2000;
 
 // The max depth of callstacks to query per allocation.
 constexpr int32_t kMaxStackDepth = 100;
+
+// Line numbers are 1-based in Studio.
+constexpr int32_t kInvalidLineNumber = 0;
 }
 
 namespace profiler {
@@ -107,7 +110,14 @@ MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count)
       total_live_count_(0),
       total_free_count_(0),
       current_class_tag_(kClassStartTag),
-      current_object_tag_(kObjectStartTag) {}
+      current_object_tag_(kObjectStartTag) {
+  // Preallocate space for ClassTagMap to avoid rehashing.
+  // Rationale: our logic in VMObjectAlloc depends on the map's iterator not
+  // getting invalidated, which can happen if a ClassPrepare from a different
+  // thread causes the map to rehash. We don't want more synchronization
+  // in allocation callback, so here we just make sure we have enough space.
+  class_tag_map_.reserve((1 << 16) - 1);
+}
 
 void MemoryTrackingEnv::Initialize() {
   jvmtiError error;
@@ -163,6 +173,7 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   if (is_live_tracking_) {
     return;
   }
+  Stopwatch sw;
   is_live_tracking_ = true;
   current_capture_time_ns_ = timestamp;
   total_live_count_ = 0;
@@ -233,6 +244,8 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   // Enable allocation+deallocation callbacks after initial heap walk.
   SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
   SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_OBJECT_FREE);
+
+  Log::V("Tracking initialization took: %lldns", (long long)sw.GetElapsed());
 }
 
 /**
@@ -264,7 +277,8 @@ const AllocatedClass& MemoryTrackingEnv::RegisterNewClass(jvmtiEnv* jvmti,
   // It is possible to see the same class from same class loader. This can
   // happen during the tracking intiailization process, where there can be a
   // race between GetLoadedClasses and the ClassPrepare callback, and the same
-  // class object calls into this method from both places.
+  // class object calls into this method from both places. Or, redefine /
+  // retransform classes.
   bool new_klass = itr == class_tag_map_.end();
   int32_t tag = new_klass ? GetNextClassTag() : itr->second;
   if (new_klass) {
@@ -471,10 +485,8 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
       if (env->is_live_tracking_) {
         BatchAllocationSample sample;
         // Gather all the data currently in the queue and push to perfd.
-        // TODO: investigate whether we need to set time cap for large amount of
-        // data.
+        // TODO: investigate whether we need to set time cap for large queue.
         std::deque<AllocationEvent> queued_data = env->event_queue_.Drain();
-        std::vector<int64_t> method_ids_to_query;
         while (!queued_data.empty()) {
           AllocationEvent* event = sample.add_events();
           event->CopyFrom(queued_data.front());
@@ -488,19 +500,18 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
               int stack_size = alloc_data->method_ids_size();
               assert(stack_size == alloc_data->location_ids_size());
 
-              auto thread_itr =
-                  env->thread_id_map_.find(alloc_data->thread_name());
-              if (thread_itr == env->thread_id_map_.end()) {
-                // New thread. Encode and sends the mapping along the sample.
-                auto result = env->thread_id_map_.insert(std::make_pair(
-                    alloc_data->thread_name(), env->thread_id_map_.size() + 1));
-                thread_itr = result.first;
+              // Encode thread data.
+              auto thread_result = env->thread_id_map_.emplace(std::make_pair(
+                  alloc_data->thread_name(), env->thread_id_map_.size() + 1));
+              if (thread_result.second) {
+                // New thread. Create and send the mapping along the sample.
                 proto::ThreadInfo* ti = sample.add_thread_infos();
                 ti->set_timestamp(event->timestamp());
-                ti->set_thread_id(thread_itr->second);
-                ti->set_thread_name(thread_itr->first);
+                ti->set_thread_id(thread_result.first->second);
+                ti->set_thread_name(thread_result.first->first);
               }
-              alloc_data->set_thread_id(thread_itr->second);
+              // Switch to storing the thread id in the allocation event.
+              alloc_data->set_thread_id(thread_result.first->second);
               alloc_data->clear_thread_name();
 
               // Store and encode the stack into trie.
@@ -511,33 +522,40 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
                   int64_t method = alloc_data->method_ids(i);
                   int64_t location = alloc_data->location_ids(i);
                   reversed_stack[stack_size - i - 1] = {method, location};
-                  if (env->known_method_ids_.emplace(method).second) {
-                    method_ids_to_query.push_back(method);
+                  if (env->known_methods_.find(method) ==
+                      env->known_methods_.end()) {
+                    // New method. Query method name ane line number info.
+                    CacheMethodInfo(env, jvmti, jni, sample, method);
                   }
                 }
 
-                auto result = env->stack_trie_.insert(reversed_stack);
-                if (result.second) {
-                  // Append the stack info into BatchAllocationSample
+                auto stack_result = env->stack_trie_.insert(reversed_stack);
+                if (stack_result.second) {
+                  // New stack. Append the stack info into BatchAllocationSample
                   EncodedAllocationStack* encoded_stack = sample.add_stacks();
                   encoded_stack->set_timestamp(event->timestamp());
-                  encoded_stack->set_stack_id(result.first);
+                  encoded_stack->set_stack_id(stack_result.first);
                   // Yet reverse again so first entry is top of stack.
                   for (int j = stack_size - 1; j >= 0; j--) {
-                    int32_t line_number =
-                        FindLineNumber(env, jvmti, reversed_stack[j].method_id,
-                                       reversed_stack[j].location_id);
+                    int32_t line_number = kInvalidLineNumber;
+                    auto itr =
+                        env->known_methods_.find(reversed_stack[j].method_id);
+                    if (reversed_stack[j].location_id != -1 &&
+                        itr->second.entry_count > 0) {
+                      line_number = FindLineNumber(
+                          reversed_stack[j].location_id,
+                          itr->second.entry_count, itr->second.table_ptr);
+                    }
                     encoded_stack->add_method_ids(reversed_stack[j].method_id);
                     encoded_stack->add_line_numbers(line_number);
                   }
                 }
-
                 // Only store the leaf index into alloc_data.
                 // The full stack will be looked up from EncodedStack on
                 // studio-side.
                 alloc_data->clear_method_ids();
                 alloc_data->clear_location_ids();
-                alloc_data->set_stack_id(result.first);
+                alloc_data->set_stack_id(stack_result.first);
               }
             } break;
             case AllocationEvent::kFreeData:
@@ -549,15 +567,12 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
           }
 
           if (sample.events_size() >= kDataBatchSize) {
-            SetSampleMethods(env, jvmti, jni, sample, method_ids_to_query);
             profiler::EnqueueAllocationEvents(sample);
             sample = BatchAllocationSample();
-            method_ids_to_query.clear();
           }
         }
 
         if (sample.events_size() > 0) {
-          SetSampleMethods(env, jvmti, jni, sample, method_ids_to_query);
           profiler::EnqueueAllocationEvents(sample);
         }
 
@@ -580,68 +595,54 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
   }
 }
 
-void MemoryTrackingEnv::SetSampleMethods(
-    MemoryTrackingEnv* env, jvmtiEnv* jvmti, JNIEnv* jni,
-    BatchAllocationSample& sample, const std::vector<int64_t>& method_ids) {
+void MemoryTrackingEnv::CacheMethodInfo(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
+                                        JNIEnv* jni,
+                                        BatchAllocationSample& sample,
+                                        int64_t method_id) {
   jvmtiError error;
-  for (auto id : method_ids) {
-    Stopwatch sw;
-    {
-      jmethodID method_id = reinterpret_cast<jmethodID>(id);
+  Stopwatch sw;
+  {
+    jmethodID id = reinterpret_cast<jmethodID>(method_id);
 
-      char* method_name;
-      error = jvmti->GetMethodName(method_id, &method_name, nullptr, nullptr);
-      CheckJvmtiError(jvmti, error);
+    char* method_name;
+    error = jvmti->GetMethodName(id, &method_name, nullptr, nullptr);
+    CheckJvmtiError(jvmti, error);
 
-      jclass klass;
-      error = jvmti->GetMethodDeclaringClass(method_id, &klass);
-      CheckJvmtiError(jvmti, error);
-      assert(klass != nullptr);
+    jclass klass;
+    error = jvmti->GetMethodDeclaringClass(id, &klass);
+    CheckJvmtiError(jvmti, error);
+    assert(klass != nullptr);
 
-      ScopedLocalRef<jclass> scoped_klass(jni, klass);
-      char* klass_name;
-      error =
-          jvmti->GetClassSignature(scoped_klass.get(), &klass_name, nullptr);
+    ScopedLocalRef<jclass> scoped_klass(jni, klass);
+    char* klass_name;
+    error = jvmti->GetClassSignature(scoped_klass.get(), &klass_name, nullptr);
 
-      AllocationStack::StackFrame* method = sample.add_methods();
-      method->set_method_id(id);
-      method->set_method_name(method_name);
-      method->set_class_name(klass_name);
+    AllocationStack::StackFrame* method = sample.add_methods();
+    method->set_method_id(method_id);
+    method->set_method_name(method_name);
+    method->set_class_name(klass_name);
 
-      Deallocate(jvmti, method_name);
-      Deallocate(jvmti, klass_name);
-    }
-    env->timing_stats_.Track(TimingStats::kResolveCallstack, sw.GetElapsed());
-  }
-}
+    Deallocate(jvmti, method_name);
+    Deallocate(jvmti, klass_name);
 
-int32_t MemoryTrackingEnv::FindLineNumber(MemoryTrackingEnv* env,
-                                          jvmtiEnv* jvmti, int64_t method_id,
-                                          int64_t location_id) {
-  int32_t line_number = -1;
-  // Ignore native methods
-  if (location_id != -1) {
-    Stopwatch sw;
     jint entry_count = 0;
     jvmtiLineNumberEntry* line_number_entry = nullptr;
-    jmethodID method = reinterpret_cast<jmethodID>(method_id);
-    // TODO: Cache known line number tables?
-    jvmtiError error =
-        jvmti->GetLineNumberTable(method, &entry_count, &line_number_entry);
-    if (CheckJvmtiError(jvmti, error, "Cannot get line number")) {
-      return line_number;
-    }
+    jvmti->GetLineNumberTable(id, &entry_count, &line_number_entry);
+    env->known_methods_.emplace(std::make_pair(
+        method_id, LineNumberInfo{entry_count, line_number_entry}));
+  }
+  env->timing_stats_.Track(TimingStats::kResolveCallstack, sw.GetElapsed());
+}
 
-    for (int i = 0; i < entry_count; i++) {
-      jvmtiLineNumberEntry entry = line_number_entry[i];
-      if (entry.start_location > location_id) {
-        break;
-      }
-      line_number = entry.line_number;
+int32_t MemoryTrackingEnv::FindLineNumber(int64_t location_id, int entry_count,
+                                          jvmtiLineNumberEntry* table_ptr) {
+  int32_t line_number = kInvalidLineNumber;
+  for (int i = 0; i < entry_count; i++) {
+    jvmtiLineNumberEntry entry = table_ptr[i];
+    if (entry.start_location > location_id) {
+      break;
     }
-
-    Deallocate(jvmti, line_number_entry);
-    env->timing_stats_.Track(TimingStats::kResolveLineNumber, sw.GetElapsed());
+    line_number = entry.line_number;
   }
 
   return line_number;
