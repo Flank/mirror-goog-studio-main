@@ -1,27 +1,70 @@
 # Performance tools native
 
-Native (C++) binaries and dependencies used by preformance tools insfrastructure.
+Native (C++) binaries and dependencies used by preformance tools
+insfrastructure.
 
-**All sections below expect you to start in `.../tools/base/profiler/native`**
+## Prerequisites
 
-## To compile all the android and host binaries:
+* All sections below expect you to start in `.../tools/base/profiler/native`
+* You should have `bazel` in your path, and it should point to `.../tools/base/bazel/bazel`
+
+## To compile everything
 ```
-../gradlew compileAndroid(Debug|Release)
+bazel build ...
 ```
-## To compile only the host binaries:
+
+By default, our builds are configured to optimize for build speed, somewhere
+between debug and release builds.
+
+## To compile everything for release
 ```
-../gradlew compileHost(Debug|Release)
+bazel --config release ...
 ```
-## To run the host unit tests:
+
+The `release` config is defined in `.../tools/bazel.rc` and automatically
+supplies various parameters, such as `-c opt`, to ensure all binaries are
+optimized.
+
+## To compile explicitly for debug
 ```
-../gradlew checkHost(Debug|Release)
+bazel build -c dbg ...
 ```
-## To run the lint checks:
+
+You can use the `-c dbg` option with any of the following sections as well, if
+necessary.
+
+## To compile just host binaries
 ```
-../gradlew lintHost(Debug|Release)
+bazel build perfa:libperfa.so perfd:perfd
 ```
-## To compile for a specific ABI (arm64-v8a for example):
+
+## To compile just Android binaries
 ```
-../gradlew compileAndroidArm64V8a(Debug|Release)
+bazel build perfa:android perfd:android
 ```
+
+## To run the host unit tests
+```
+bazel test ...
+```
+
+## To build a specific ABI
+
+By default and for convenience, our bazel configuration is set up to always
+build all Android ABIs. If for some reason you want to restrict the build to a
+particular one, edit `.../tools/bazel.rc` and change the following line:
+
+```
+build --fat_apk_cpu=x86,armeabi-v7a,arm64-v8a
+```
+
+For example, for emulator only:
+
+```
+build --fat_apk_cpu=x86
+```
+
+Of course, this is for development only. Don't check in such changes.
+
+
 
