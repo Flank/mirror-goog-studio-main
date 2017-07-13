@@ -32,10 +32,13 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
     private static final String CMAKE_ERROR = "CMake Error";
     private static final String CMAKE_WARNING = "CMake Warning";
     private static final String ERROR = "Error";
-    private final Pattern fileAndLineNumber = Pattern.compile("^(.*):([0-9]+)? *:([0-9]+)?");
+    private final Pattern cmakeErrorOrWarning =
+            Pattern.compile("^\\s*CMake (Error|Warning)(: (Error|Warning) in cmake code)? at.*");
+    private final Pattern doubleDashLine = Pattern.compile("^\\s*-- .*");
+    private final Pattern fileAndLineNumber = Pattern.compile("^(.*):([0-9]+)? *:([0-9]+)?(.+)?");
     private final Pattern errorFileAndLineNumber =
             Pattern.compile(
-                    "CMake (Error|Warning).*at ([^:]+):([0-9]+)?.*(\\([^:]*\\))?:([0-9]+)?");
+                    "CMake (Error|Warning).*at ([^:]+):([0-9]+)?.*(\\([^:]*\\))?:([0-9]+)?(.+)?");
 
     @Override
     public boolean parse(
@@ -44,19 +47,40 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
             @NonNull List<Message> messages,
             @NonNull ILogger logger)
             throws ParsingFailedException {
-        return matchesErrorFileAndLineNumberError(line, messages)
-                || matchesFileAndLineNumberError(line, messages);
+        if (cmakeErrorOrWarning.matcher(line).matches()) {
+            StringBuilder fullMessage = new StringBuilder(line + " ");
+            String nextLine;
+            // stop when nextLine is blank or matches the CMake prefix
+            while ((nextLine = reader.readLine()) != null) {
+                if (doubleDashLine.matcher(nextLine).matches()) {
+                    messages.add(
+                            new Message(Message.Kind.SIMPLE, nextLine, SourceFilePosition.UNKNOWN));
+                } else if (nextLine.isEmpty() || cmakeErrorOrWarning.matcher(nextLine).matches()) {
+                    reader.pushBack();
+                    break;
+                } else {
+                    fullMessage.append(nextLine).append(" ");
+                }
+            }
+
+            line = fullMessage.toString();
+            return matchesErrorFileAndLineNumberError(line, messages)
+                    || matchesFileAndLineNumberError(line, messages);
+        }
+
+        return false;
     }
 
     /**
      * Matches the following error or warning parsing CMakeLists.txt: <code>
-     * CMake Error: ...
+     * CMake Error: ... at
      * /path/to/file:1234:1234
-     * </code>
+     * [Description of the error.]
+     * </code> Or the same error on a single line. If the line number and/or column number are
+     * missing, it defaults to -1, and won't affect the code link. If the description is missing, it
+     * will use the full line as the description.
      *
-     * <p>This also matches a "CMake Warning:" with the same structure. The ordering of the error
-     * messages isn't consistent (there might be a race condition in the cmake output), so the
-     * "CMake Error" message might not always be directly above the file:line: message.
+     * <p>This also matches a "CMake Warning:" with the same structure.
      */
     private boolean matchesFileAndLineNumberError(
             @NonNull String line, @NonNull List<Message> messages) {
@@ -87,12 +111,14 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
                 columnNumber = Integer.valueOf(matcher.group(3));
             }
 
+            String errorMessage = line;
+            if (matcher.group(4) != null) {
+                errorMessage = matcher.group(4);
+            }
+
             SourceFilePosition position =
                     new SourceFilePosition(file, new SourcePosition(lineNumber, columnNumber, -1));
-            Message message = new Message(kind, line, position);
-            // Add the message as plain text in the cmake output paragraph, as well as a
-            // separate clickable message.
-            messages.add(new Message(Message.Kind.SIMPLE, line, SourceFilePosition.UNKNOWN));
+            Message message = new Message(kind, errorMessage, position);
             messages.add(message);
             return true;
         }
@@ -102,8 +128,14 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
 
     /**
      * Matches the following error or warning parsing CMakeLists.txt: <code>
-     *   CMake Error at /path/to/file:1234 (message):1234
-     * </code> This also matches a warning with the same format.
+     *  CMake Error ... at
+     *  /path/to/file:1234 (message):1234
+     *  [Description of the error.]
+     * </code> Or the same error on a single line. If the line number and/or column number are
+     * missing, it defaults to -1, and won't affect the code link. If the description is missing, it
+     * will use the full line as the description.
+     *
+     * <p>This also matches a warning with the same format.
      */
     private boolean matchesErrorFileAndLineNumberError(
             @NonNull String line, @NonNull List<Message> messages) {
@@ -124,22 +156,19 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
                 lineNumber = Integer.valueOf(matcher.group(3));
             }
 
-            String reason = line;
-            if (matcher.group(4) != null) {
-                reason = matcher.group(4);
-            }
-
             int columnNumber = -1;
             if (matcher.group(5) != null) {
                 columnNumber = Integer.valueOf(matcher.group(5));
             }
 
+            String errorMessage = line;
+            if (matcher.group(6) != null) {
+                errorMessage = matcher.group(6);
+            }
+
             SourceFilePosition position =
                     new SourceFilePosition(file, new SourcePosition(lineNumber, columnNumber, -1));
-            Message message = new Message(kind, reason, position);
-            // Add the message as plain text in the cmake output paragraph, as well as a
-            // separate clickable message.
-            messages.add(new Message(Message.Kind.SIMPLE, line, SourceFilePosition.UNKNOWN));
+            Message message = new Message(kind, errorMessage, position);
             messages.add(message);
             return true;
         }

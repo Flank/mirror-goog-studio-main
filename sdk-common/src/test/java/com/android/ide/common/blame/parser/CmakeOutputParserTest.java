@@ -49,12 +49,9 @@ public class CmakeOutputParserTest {
         String fileAndLineNumber = String.format(Locale.getDefault(), "%s::\n", filePath);
         String err = prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 3, messages.size());
-        assertEquals("[prefix line]", prefix.trim(), messages.get(0).getText().trim());
-        assertEquals(
-                "[error location]", fileAndLineNumber.trim(), messages.get(1).getText().trim());
+        assertEquals("[message count]", 1, messages.size());
 
-        Message formattedWarning = messages.get(2);
+        Message formattedWarning = messages.get(0);
         assertEquals("[source path]", filePath.trim(), formattedWarning.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -75,12 +72,9 @@ public class CmakeOutputParserTest {
                 String.format(Locale.getDefault(), "%s:%d:\n", filePath, lineNumber);
         String err = prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 3, messages.size());
-        assertEquals("[prefix line]", prefix.trim(), messages.get(0).getText().trim());
-        assertEquals(
-                "[error location]", fileAndLineNumber.trim(), messages.get(1).getText().trim());
+        assertEquals("[message count]", 1, messages.size());
 
-        Message formattedWarning = messages.get(2);
+        Message formattedWarning = messages.get(0);
         assertEquals("[source path]", filePath.trim(), formattedWarning.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -99,12 +93,9 @@ public class CmakeOutputParserTest {
                         Locale.getDefault(), "%s:%d:%d\n", filePath, lineNumber, columnNumber);
         String err = prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 3, messages.size());
-        assertEquals("[prefix line]", prefix.trim(), messages.get(0).getText().trim());
-        assertEquals(
-                "[error location]", fileAndLineNumber.trim(), messages.get(1).getText().trim());
+        assertEquals("[message count]", 1, messages.size());
 
-        Message formattedWarning = messages.get(2);
+        Message formattedWarning = messages.get(0);
         assertEquals("[source path]", filePath.trim(), formattedWarning.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -123,12 +114,9 @@ public class CmakeOutputParserTest {
         String fileAndLineNumber = String.format(Locale.getDefault(), "%s::\n", filePath);
         String err = prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 3, messages.size());
-        assertEquals("[prefix line]", prefix.trim(), messages.get(0).getText().trim());
-        assertEquals(
-                "[error location]", fileAndLineNumber.trim(), messages.get(1).getText().trim());
+        assertEquals("[message count]", 1, messages.size());
 
-        Message formattedError = messages.get(2);
+        Message formattedError = messages.get(0);
         assertEquals("[source path]", filePath.trim(), formattedError.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -150,12 +138,9 @@ public class CmakeOutputParserTest {
         String warning = "CMake Warning: this shouldn't get parsed\n";
         String err = warning + prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 4, messages.size());
-        assertEquals("[prefix line]", prefix.trim(), messages.get(1).getText().trim());
-        assertEquals(
-                "[error location]", fileAndLineNumber.trim(), messages.get(2).getText().trim());
+        assertEquals("[message count]", 2, messages.size());
 
-        Message formattedError = messages.get(3);
+        Message formattedError = messages.get(1);
         assertEquals("[source path]", filePath.trim(), formattedError.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -174,12 +159,9 @@ public class CmakeOutputParserTest {
                         Locale.getDefault(), "%s:%d:%d\n", filePath, lineNumber, columnNumber);
         String err = prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 3, messages.size());
-        assertEquals("[prefix line]", prefix.trim(), messages.get(0).getText().trim());
-        assertEquals(
-                "[error location]", fileAndLineNumber.trim(), messages.get(1).getText().trim());
+        assertEquals("[message count]", 1, messages.size());
 
-        Message formattedError = messages.get(2);
+        Message formattedError = messages.get(0);
         assertEquals("[source path]", filePath.trim(), formattedError.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -198,10 +180,9 @@ public class CmakeOutputParserTest {
         String fileAndLineNumber = String.format(Locale.getDefault(), "%s::\n", filePath);
         String err = prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 2, messages.size());
-        assertEquals("[error line]", err.trim(), messages.get(0).getText().trim());
+        assertEquals("[message count]", 1, messages.size());
 
-        Message formattedError = messages.get(1);
+        Message formattedError = messages.get(0);
         assertEquals("[source path]", filePath.trim(), formattedError.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -222,10 +203,9 @@ public class CmakeOutputParserTest {
                 String.format(Locale.getDefault(), "%s:%d:\n", filePath, lineNumber);
         String err = prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 2, messages.size());
-        assertEquals("[error line]", err.trim(), messages.get(0).getText().trim());
+        assertEquals("[message count]", 1, messages.size());
 
-        Message formattedError = messages.get(1);
+        Message formattedError = messages.get(0);
         assertEquals("[source path]", filePath.trim(), formattedError.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -248,10 +228,9 @@ public class CmakeOutputParserTest {
                         Locale.getDefault(), "%s:%d:%d\n", filePath, lineNumber, columnNumber);
         String err = prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 2, messages.size());
-        assertEquals("[error line]", err.trim(), messages.get(0).getText().trim());
+        assertEquals("[message count]", 1, messages.size());
 
-        Message formattedError = messages.get(1);
+        Message formattedError = messages.get(0);
         assertEquals("[source path]", filePath.trim(), formattedError.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -270,10 +249,9 @@ public class CmakeOutputParserTest {
         String fileAndLineNumber = String.format(Locale.getDefault(), "%s::\n", filePath);
         String err = prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 2, messages.size());
-        assertEquals("[error line]", err.trim(), messages.get(0).getText().trim());
+        assertEquals("[message count]", 1, messages.size());
 
-        Message formattedWarning = messages.get(1);
+        Message formattedWarning = messages.get(0);
         assertEquals("[source path]", filePath.trim(), formattedWarning.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -294,10 +272,9 @@ public class CmakeOutputParserTest {
                 String.format(Locale.getDefault(), "%s:%d:\n", filePath, lineNumber);
         String err = prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 2, messages.size());
-        assertEquals("[error line]", err.trim(), messages.get(0).getText().trim());
+        assertEquals("[message count]", 1, messages.size());
 
-        Message formattedWarning = messages.get(1);
+        Message formattedWarning = messages.get(0);
         assertEquals("[source path]", filePath.trim(), formattedWarning.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -320,10 +297,9 @@ public class CmakeOutputParserTest {
                         Locale.getDefault(), "%s:%d:%d\n", filePath, lineNumber, columnNumber);
         String err = prefix + fileAndLineNumber;
         List<Message> messages = mParser.parseToolOutput(err);
-        assertEquals("[message count]", 2, messages.size());
-        assertEquals("[error line]", err.trim(), messages.get(0).getText().trim());
+        assertEquals("[message count]", 1, messages.size());
 
-        Message formattedWarning = messages.get(1);
+        Message formattedWarning = messages.get(0);
         assertEquals("[source path]", filePath.trim(), formattedWarning.getSourcePath().trim());
         assertEquals(
                 "[line number]",
@@ -333,5 +309,31 @@ public class CmakeOutputParserTest {
                 "[column number]",
                 columnNumber,
                 formattedWarning.getSourceFilePositions().get(0).getPosition().getStartColumn());
+    }
+
+    @Test
+    public void testLongErrorMessage() throws IOException {
+        File makefile = mTemporaryFolder.newFile("CMakeLists.txt");
+        String errorMessage = "CMake Error at %s:49 (message): %s";
+        String loremIpsum =
+                "Lorem ipsum dolor\n"
+                        + "amet, consectetur adipiscing elit.  Etiam ac aliquam lacus.  Nullam suscipit nisl\n"
+                        + "vitae sodales varius.  Donec eu enim ante.  Maecenas congue ante a nibh tristique,\n"
+                        + "in sagittis velit suscipit.  Ut hendrerit molestie augue quis sodales.  Praesent ac\n"
+                        + "consectetur est.  Duis at auctor neque.";
+
+        errorMessage =
+                String.format(
+                        Locale.getDefault(), errorMessage, makefile.getAbsolutePath(), loremIpsum);
+
+        List<Message> messages = mParser.parseToolOutput(errorMessage);
+        String expectedErrorText = loremIpsum.replace('\n', ' ');
+        Message formattedError = messages.get(0);
+        assertEquals("[message count]", 1, messages.size());
+        assertEquals(
+                "[source path]",
+                makefile.getAbsolutePath().trim(),
+                formattedError.getSourcePath().trim());
+        assertEquals("[error message]", expectedErrorText.trim(), formattedError.getText().trim());
     }
 }

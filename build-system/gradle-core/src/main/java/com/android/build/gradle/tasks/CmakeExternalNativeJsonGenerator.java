@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkState;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
@@ -37,9 +38,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.gradle.api.GradleException;
 import org.gradle.api.InvalidUserDataException;
 
@@ -48,6 +52,8 @@ import org.gradle.api.InvalidUserDataException;
  * JSON can be generated during configuration.
  */
 class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
+    private static final Pattern cmakeFileFinder =
+            Pattern.compile("^(.*CMake (Error|Warning).* at\\s+)([^:]+)(:.*)$", Pattern.DOTALL);
 
     CmakeExternalNativeJsonGenerator(
             @Nullable File sdkDirectory,
@@ -137,11 +143,11 @@ class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
     @Override
     String executeProcess(ProcessInfoBuilder processBuilder) throws ProcessException, IOException {
-        return ExternalNativeBuildTaskUtils
-                .executeBuildProcessAndLogError(
-                        androidBuilder,
-                        processBuilder,
-                        true /* logStdioToInfo */);
+        String output =
+                ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError(
+                        androidBuilder, processBuilder, true /* logStdioToInfo */);
+
+        return correctMakefilePaths(output, getMakefile().getParentFile());
     }
 
     @NonNull
@@ -181,6 +187,48 @@ class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
             result.put(abi, file);
         }
         return result;
+    }
+
+    @NonNull
+    @VisibleForTesting
+    static String correctMakefilePaths(@NonNull String input, @NonNull File makeFileDirectory) {
+        Matcher cmakeFinderMatcher = cmakeFileFinder.matcher(input);
+        if (cmakeFinderMatcher.matches()) {
+            // The whole multi-line output could contain multiple warnings/errors
+            // so we split it into lines, fix the filenames, then recombine it.
+            List<String> corrected = new ArrayList<>();
+            for (String entry : input.split("\n")) {
+                cmakeFinderMatcher = cmakeFileFinder.matcher(entry);
+                if (cmakeFinderMatcher.matches()) {
+                    String fileName = cmakeFinderMatcher.group(3);
+                    File makeFile = new File(fileName);
+                    // No need to update absolute paths.
+                    if (makeFile.isAbsolute()) {
+                        corrected.add(entry);
+                        continue;
+                    }
+
+                    // Don't point to a file that doesn't exist.
+                    makeFile = new File(makeFileDirectory, fileName);
+                    if (!makeFile.exists()) {
+                        corrected.add(entry);
+                        continue;
+                    }
+
+                    // We were able to update the makefile path.
+                    corrected.add(
+                            cmakeFinderMatcher.group(1)
+                                    + makeFile.getAbsolutePath()
+                                    + cmakeFinderMatcher.group(4));
+                } else {
+                    corrected.add(entry);
+                }
+            }
+
+            return Joiner.on('\n').join(corrected);
+        }
+
+        return input;
     }
 
     @NonNull
