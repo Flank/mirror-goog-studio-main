@@ -32,9 +32,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -122,7 +125,11 @@ public class ManifestMerger2Test {
                 "88_multi_app_elements_strange_order.xml",
                 "89_remove_uses_permission_sdk_23.xml",
                 "90_main_and_library_placeholder_replacement.xml",
+                "91_tools_in_lib_but_not_main.xml",
             };
+
+    private static final Set<String> DATA_FILES_NO_TOOLS_REMOVAL =
+            new HashSet<>(Arrays.asList("91_tools_in_lib_but_not_main.xml"));
 
 
     @Parameterized.Parameters(name = "{0}")
@@ -141,13 +148,25 @@ public class ManifestMerger2Test {
         ManifestMergerTestUtil.TestFiles testFiles =
                 loadTestData(TEST_DATA_DIRECTORY, fileName, getClass().getSimpleName());
 
+        // Make list of optional features
+        List<ManifestMerger2.Invoker.Feature> optionalFeatures = new ArrayList<>();
+        optionalFeatures.add(ManifestMerger2.Invoker.Feature.KEEP_INTERMEDIARY_STAGES);
+        if (!DATA_FILES_NO_TOOLS_REMOVAL.contains(fileName)) {
+            optionalFeatures.add(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);
+        }
+
         StdLogger stdLogger = new StdLogger(StdLogger.Level.VERBOSE);
-        ManifestMerger2.Invoker invoker = ManifestMerger2.newMerger(testFiles.getMain(),
-                stdLogger, ManifestMerger2.MergeType.APPLICATION)
-                .addLibraryManifests(testFiles.getLibs())
-                .addFlavorAndBuildTypeManifests(testFiles.getOverlayFiles())
-                .withFeatures(ManifestMerger2.Invoker.Feature.KEEP_INTERMEDIARY_STAGES,
-                        ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);
+        ManifestMerger2.Invoker invoker =
+                ManifestMerger2.newMerger(
+                                testFiles.getMain(),
+                                stdLogger,
+                                ManifestMerger2.MergeType.APPLICATION)
+                        .addLibraryManifests(testFiles.getLibs())
+                        .addFlavorAndBuildTypeManifests(testFiles.getOverlayFiles())
+                        .withFeatures(
+                                optionalFeatures.toArray(
+                                        new ManifestMerger2.Invoker.Feature
+                                                [optionalFeatures.size()]));
 
         if (!Strings.isNullOrEmpty(testFiles.getPackageOverride())) {
             invoker.setOverride(ManifestSystemProperty.PACKAGE, testFiles.getPackageOverride());

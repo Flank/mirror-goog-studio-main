@@ -20,12 +20,17 @@ import static com.android.manifmerger.Actions.ActionType;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
+import com.android.utils.XmlUtils;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Validator that runs post merging activities and verifies that all "tools:" instructions
@@ -79,6 +84,59 @@ public class PostValidator {
         manifest.getXml().setAttribute(SdkConstants.XMLNS + ":" + "android",
                 SdkConstants.ANDROID_URI);
     }
+
+    /**
+     * Enforces {@link com.android.SdkConstants#TOOLS_URI} declaration in the top level element, if
+     * necessary. It is possible that the original manifest file did not contain any attribute
+     * declaration, therefore not requiring a xmlns: declaration. Yet the implicit elements handling
+     * may have added attributes requiring the namespace declaration.
+     */
+    protected static void enforceToolsNamespaceDeclaration(@NonNull XmlDocument xmlDocument) {
+        XmlElement manifest = xmlDocument.getRootNode();
+        String toolsNamespaceAttributeName =
+                SdkConstants.XMLNS + XmlUtils.NS_SEPARATOR + SdkConstants.TOOLS_NS_NAME;
+        for (XmlAttribute xmlAttribute : manifest.getAttributes()) {
+            if (xmlAttribute.getXml().getName().equals(toolsNamespaceAttributeName)
+                    && SdkConstants.TOOLS_URI.equals(xmlAttribute.getValue())) {
+                return;
+            }
+        }
+        // if we are here, we did not find the namespace declaration, so we add it if
+        // tools namespace is used anywhere in the xml document
+        if (elementUsesNamespace(manifest.getXml(), SdkConstants.TOOLS_NS_NAME)) {
+            manifest.getXml().setAttribute(toolsNamespaceAttributeName, SdkConstants.TOOLS_URI);
+        }
+    }
+
+    /**
+     * Check whether element or any of its descendants have an attribute with the given namespace
+     *
+     * @param element the element under consideration
+     * @param namespaceName the name of the namespace under consideration
+     * @return true if element or any of its descendants have an attribute with the given namespace,
+     *     false otherwise.
+     */
+    @VisibleForTesting
+    static boolean elementUsesNamespace(@NonNull Element element, @NonNull String namespaceName) {
+        NamedNodeMap namedNodeMap = element.getAttributes();
+        for (int i = 0; i < namedNodeMap.getLength(); i++) {
+            Node attribute = namedNodeMap.item(i);
+            if (namespaceName.equals(attribute.getPrefix())) {
+                return true;
+            }
+        }
+        NodeList childNodes = element.getChildNodes();
+        for (int i = 0; i < childNodes.getLength(); i++) {
+            Node childNode = childNodes.item(i);
+            if (childNode instanceof Element) {
+                if (elementUsesNamespace((Element) childNode, namespaceName)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
     /**
      * Reorder child elements :
