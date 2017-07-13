@@ -67,32 +67,33 @@ bool SimplePerfManager::EnableProfiling(std::string *error) const {
   return true;
 }
 
-bool SimplePerfManager::StartProfiling(const std::string &app_pkg_name,
+bool SimplePerfManager::StartProfiling(const std::string &app_name,
                                        int sampling_interval_us,
                                        std::string *trace_path,
                                        std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU: StartProfiling simplerperf");
-  Log::D("Profiler:Received query to profile %s", app_pkg_name.c_str());
+  Log::D("Profiler:Received query to profile %s", app_name.c_str());
 
-  if (IsProfiling(app_pkg_name)) {
-    OnGoingProfiling ongoing_recording = profiled_[app_pkg_name];
+  if (IsProfiling(app_name)) {
+    OnGoingProfiling ongoing_recording = profiled_[app_name];
     *trace_path = ongoing_recording.trace_path;
     return true;
   }
 
   ProcessManager process_manager;
-  int pid = process_manager.GetPidForBinary(app_pkg_name);
+  int pid = process_manager.GetPidForBinary(app_name);
   if (pid < 0) {
     error->append("\n");
     error->append("Unable to get process id to profile.");
     return false;
   }
-  Log::D("%s app has pid:%d", app_pkg_name.c_str(), pid);
+  Log::D("%s app has pid:%d", app_name.c_str(), pid);
 
   if (!EnableProfiling(error)) return false;
 
   // Install simple_perf
+  string app_pkg_name = ProcessManager::GetPackageNameFromAppName(app_name);
   Installer installer(app_pkg_name);
   if (!installer.Install(kSimpleperfExecutable, error)) return false;
 
@@ -109,7 +110,7 @@ bool SimplePerfManager::StartProfiling(const std::string &app_pkg_name,
   PackageManager pm;
   if (!pm.GetAppDataPath(app_pkg_name, &entry.app_dir, error)) return false;
 
-  string trace_filebase = GetFileBaseName(app_pkg_name);
+  string trace_filebase = GetFileBaseName(app_name);
 
   entry.output_prefix = trace_filebase;
   entry.trace_path =
@@ -153,33 +154,33 @@ bool SimplePerfManager::StartProfiling(const std::string &app_pkg_name,
     }
     default: {  // Perfd Process
       entry.simpleperf_pid = forkpid;
-      profiled_[app_pkg_name] = entry;
-      Log::D("Registered app %s profiled by %d", app_pkg_name.c_str(),
+      profiled_[app_name] = entry;
+      Log::D("Registered app %s profiled by %d", app_name.c_str(),
              entry.simpleperf_pid);
     }
   }
   return true;
 }
 
-string SimplePerfManager::GetFileBaseName(const string &app_pkg_name) const {
+string SimplePerfManager::GetFileBaseName(const string &app_name) const {
   std::stringstream trace_filebase;
   trace_filebase << "simpleperf-";
-  trace_filebase << app_pkg_name;
+  trace_filebase << app_name;
   trace_filebase << "-";
   trace_filebase << clock_.GetCurrentTime();
   return trace_filebase.str();
 }
 
-bool SimplePerfManager::IsProfiling(const std::string &app_pkg_name) {
-  return profiled_.find(app_pkg_name) != profiled_.end();
+bool SimplePerfManager::IsProfiling(const std::string &app_name) {
+  return profiled_.find(app_name) != profiled_.end();
 }
 
-bool SimplePerfManager::StopProfiling(const std::string &app_pkg_name,
+bool SimplePerfManager::StopProfiling(const std::string &app_name,
                                       std::string *error) {
   std::lock_guard<std::mutex> lock(start_stop_mutex_);
   Trace trace("CPU:StopProfiling simpleperf");
-  Log::D("Profiler:Stopping profiling for %s", app_pkg_name.c_str());
-  if (!IsProfiling(app_pkg_name)) {
+  Log::D("Profiler:Stopping profiling for %s", app_name.c_str());
+  if (!IsProfiling(app_name)) {
     string msg = "This app was not being profiled.";
     Log::D("%s", msg.c_str());
     error->append("\n");
@@ -188,12 +189,12 @@ bool SimplePerfManager::StopProfiling(const std::string &app_pkg_name,
   }
 
   OnGoingProfiling ongoing_recording;
-  ongoing_recording = profiled_[app_pkg_name];
-  profiled_.erase(app_pkg_name);
+  ongoing_recording = profiled_[app_name];
+  profiled_.erase(app_name);
 
   ProcessManager pm;
-  pid_t current_pid = pm.GetPidForBinary(app_pkg_name);
-  Log::D("%s app has pid:%d", app_pkg_name.c_str(), current_pid);
+  pid_t current_pid = pm.GetPidForBinary(app_name);
+  Log::D("%s app has pid:%d", app_name.c_str(), current_pid);
 
   // Make sure it is still running.
   if (current_pid == -1) {
@@ -227,6 +228,7 @@ bool SimplePerfManager::StopProfiling(const std::string &app_pkg_name,
 
   if (!WaitForSimplerPerf(ongoing_recording, error)) return false;
 
+  string app_pkg_name = ProcessManager::GetPackageNameFromAppName(app_name);
   if (!ConvertRawToProto(app_pkg_name, ongoing_recording, error)) return false;
 
   // Due to LinuxSE restrictions, "adb pull" cannot access file in app data
