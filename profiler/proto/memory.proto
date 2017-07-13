@@ -69,6 +69,11 @@ service MemoryService {
   rpc GetAllocationContexts(AllocationContextsRequest)
       returns (AllocationContextsResponse) {}
 
+  // O+ studio-side only: Fetches the class + method names associated with
+  // a |method_id| within a tracking session.
+  rpc GetStackFrameInfo(StackFrameInfoRequest)
+      returns (StackFrameInfoResponse) {}
+
   rpc ForceGarbageCollection(ForceGarbageCollectionRequest)
       returns (ForceGarbageCollectionResponse) {}
 }
@@ -330,14 +335,22 @@ message AllocationStack {
     // TODO: investigate/feature request.
     string file_name = 4;
 
-    // TODO: currently this is pre-O only. We get the instruction
-    // location in JVMTI but we need to convert it back to line number
-    // and encoding it with the prefix tree before sending it back.
     int32 line_number = 5;
   }
 
   int32 stack_id = 1;
   repeated StackFrame stack_frames = 2;
+}
+
+message StackFrameInfoRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 method_id = 3;
+}
+
+message StackFrameInfoResponse {
+  string class_name = 2;
+  string method_name = 3;
 }
 
 // Proto format for storing and transmitting O+ stack data efficiently.
