@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import java.awt.geom.AffineTransform;
 import java.io.*;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.logging.Level;
@@ -114,8 +113,6 @@ public class Svg2Vector {
         // Uncategorized elements
         "clipPath", "color-profile", "cursor", "filter", "foreignObject", "script", "view");
 
-    private static HashMap<String, SvgNode> defsIdMap = new HashMap<>();
-
     @NonNull
     private static SvgTree parse(File f) throws Exception {
         SvgTree svgTree = new SvgTree();
@@ -145,18 +142,23 @@ public class Svg2Vector {
         SvgGroupNode root = new SvgGroupNode(svgTree, rootNode, "root");
         svgTree.setRoot(root);
 
-        // Parse all the group and path node recursively.
+        // Parse all the group and path nodes recursively.
         traverseSVGAndExtract(svgTree, root, rootNode);
+
+        // Fill in all the use nodes in the svgTree.
+        for (Map.Entry<SvgGroupNode, Node> entry : svgTree.getUseSet()) {
+            extractUseNode(svgTree, entry.getKey(), entry.getValue());
+        }
+
         svgTree.flatten();
         svgTree.dump(root);
 
         return svgTree;
     }
 
-    /**
-     * Traverse the tree in pre-order.
-     */
-    private static void traverseSVGAndExtract(SvgTree svgTree, SvgGroupNode currentGroup, Node item) {
+    /** Traverse the tree in pre-order. */
+    private static void traverseSVGAndExtract(
+            SvgTree svgTree, SvgGroupNode currentGroup, Node item) {
         // Recursively traverse all the group and path nodes
         NodeList allChildren = item.getChildNodes();
 
@@ -178,30 +180,22 @@ public class Svg2Vector {
                 SVG_LINE.equals(nodeName)) {
                 SvgLeafNode child = new SvgLeafNode(svgTree, currentNode, nodeName + i);
 
-                String idName = getIdName(currentNode);
-                if (!idName.isEmpty()) {
-                    defsIdMap.put(idName, child);
-                }
-
+                processIdName(currentNode, svgTree, child);
                 extractAllItemsAs(svgTree, child, currentNode);
-
                 currentGroup.addChild(child);
                 svgTree.setHasLeafNode(true);
             } else if (SVG_GROUP.equals(nodeName)) {
                 SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
                 currentGroup.addChild(childGroup);
-                String idName = getIdName(currentNode);
-                if (!idName.isEmpty()) {
-                    defsIdMap.put(idName, childGroup);
-                }
-                traverseSVGAndExtract(svgTree, childGroup, currentNode);
-            } else if ("defs".equals(nodeName)) {
-                SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
+                processIdName(currentNode, svgTree, childGroup);
                 traverseSVGAndExtract(svgTree, childGroup, currentNode);
             } else if ("use".equals(nodeName)) {
                 SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
                 currentGroup.addChild(childGroup);
-                extractUseNode(childGroup, currentNode);
+                svgTree.addToUseMap(childGroup, currentNode);
+            } else if ("defs".equals(nodeName)) {
+                SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
+                traverseSVGAndExtract(svgTree, childGroup, currentNode);
             } else {
                 // For other fancy tags, like <switch>, they can contain children too.
                 // Report the unsupported nodes.
@@ -219,8 +213,11 @@ public class Svg2Vector {
 
     }
 
-    /** Returns the id of a Node if exists, otherwise returns empty string. */
-    private static String getIdName(Node item) {
+    /**
+     * Checks if the id of a node exists and adds the id and SvgNode to the svgTree's idMap if it
+     * exists.
+     */
+    private static void processIdName(Node item, SvgTree svgTree, SvgNode child) {
         NamedNodeMap a = item.getAttributes();
         int len = a.getLength();
         String idName = "";
@@ -231,14 +228,17 @@ public class Svg2Vector {
                 idName = n.getNodeValue();
             }
         }
-        return idName;
+        if (!idName.isEmpty()) {
+            svgTree.addIdToMap(idName, child);
+        }
     }
 
     /**
      * Reads the contents of the currentNode and fills them into useGroupNode. Propagates any
      * attributes of the useGroupNode to its children.
      */
-    private static void extractUseNode(SvgGroupNode useGroupNode, Node currentNode) {
+    private static void extractUseNode(
+            SvgTree svgTree, SvgGroupNode useGroupNode, Node currentNode) {
         NamedNodeMap a = currentNode.getAttributes();
         int len = a.getLength();
         float x = 0;
@@ -259,15 +259,20 @@ public class Svg2Vector {
             }
         }
         AffineTransform useTransform = new AffineTransform(1, 0, 0, 1, x, y);
-        SvgNode definedNode = defsIdMap.get(id);
-        SvgNode copiedNode = definedNode.deepCopy();
-        useGroupNode.addChild(copiedNode);
-        for (Map.Entry<String, String> entry : useGroupNode.mVdAttributesMap.entrySet()) {
-            String key = entry.getKey();
-            copiedNode.fillPresentationAttributes(key, entry.getValue());
+        SvgNode definedNode = svgTree.getSvgNodeFromId(id);
+        if (definedNode == null) {
+            svgTree.logErrorLine(
+                    "Referenced id is missing", currentNode, SvgTree.SvgLogLevel.ERROR);
+        } else {
+            SvgNode copiedNode = definedNode.deepCopy();
+            useGroupNode.addChild(copiedNode);
+            for (Map.Entry<String, String> entry : useGroupNode.mVdAttributesMap.entrySet()) {
+                String key = entry.getKey();
+                copiedNode.fillPresentationAttributes(key, entry.getValue());
+            }
+            useGroupNode.fillEmptyAttributes(useGroupNode.mVdAttributesMap);
+            useGroupNode.transformIfNeeded(useTransform);
         }
-        useGroupNode.fillEmptyAttributes(useGroupNode.mVdAttributesMap);
-        useGroupNode.transformIfNeeded(useTransform);
     }
 
     // Read the content from currentItem, and fill into "child"
@@ -322,31 +327,29 @@ public class Svg2Vector {
             addStyleToPath(child, styleContent);
         }
 
-        Node currentGroupNode = currentItem;
-
-        if (SVG_PATH.equals(currentGroupNode.getNodeName())) {
-            extractPathItem(avg, child, currentGroupNode);
+        if (SVG_PATH.equals(currentItem.getNodeName())) {
+            extractPathItem(avg, child, currentItem);
         }
 
-        if (SVG_RECT.equals(currentGroupNode.getNodeName())) {
-            extractRectItem(avg, child, currentGroupNode);
+        if (SVG_RECT.equals(currentItem.getNodeName())) {
+            extractRectItem(avg, child, currentItem);
         }
 
-        if (SVG_CIRCLE.equals(currentGroupNode.getNodeName())) {
-            extractCircleItem(avg, child, currentGroupNode);
+        if (SVG_CIRCLE.equals(currentItem.getNodeName())) {
+            extractCircleItem(avg, child, currentItem);
         }
 
-        if (SVG_POLYGON.equals(currentGroupNode.getNodeName()) ||
-            SVG_POLYLINE.equals(currentGroupNode.getNodeName())) {
-            extractPolyItem(avg, child, currentGroupNode);
+        if (SVG_POLYGON.equals(currentItem.getNodeName())
+                || SVG_POLYLINE.equals(currentItem.getNodeName())) {
+            extractPolyItem(avg, child, currentItem);
         }
 
-        if (SVG_LINE.equals(currentGroupNode.getNodeName())) {
-            extractLineItem(avg, child, currentGroupNode);
+        if (SVG_LINE.equals(currentItem.getNodeName())) {
+            extractLineItem(avg, child, currentItem);
         }
 
-        if (SVG_ELLIPSE.equals(currentGroupNode.getNodeName())) {
-            extractEllipseItem(avg, child, currentGroupNode);
+        if (SVG_ELLIPSE.equals(currentItem.getNodeName())) {
+            extractEllipseItem(avg, child, currentItem);
         }
     }
 

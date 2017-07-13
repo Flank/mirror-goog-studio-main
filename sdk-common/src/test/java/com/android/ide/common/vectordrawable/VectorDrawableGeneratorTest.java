@@ -460,6 +460,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_defs_use_transform2");
     }
 
+    public void testSvgDefsUseOrderMatters() throws Exception {
+        checkSvgConversion("test_defs_use_use_first");
+    }
+
     // XML files start here.
     public void testXmlIconSizeOpacity() throws Exception {
         checkXmlConversion("ic_size_opacity");

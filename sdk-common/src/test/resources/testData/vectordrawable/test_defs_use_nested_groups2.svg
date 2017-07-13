@@ -5,6 +5,7 @@
     width="64"
     height="64"
     id="svg2993">
+
   <defs>
     <g id="shape">
       <rect x="12" y="12" width="10" height="10"/>
@@ -21,7 +22,6 @@
   <use xlink:href="#shape" x="15" y="25" fill="red"/>
   <use xlink:href="#shape" x="40" y="25" fill="orange"/>
   <use xlink:href="#shape" x="1" y="2" fill="yellow"/>
-
 
 </svg>
 

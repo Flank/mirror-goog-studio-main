@@ -25,6 +25,9 @@ import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.w3c.dom.Document;
@@ -50,7 +53,7 @@ class SvgTree {
     private SvgGroupNode mRoot;
     private String mFileName;
 
-    private ArrayList<String> mErrorLines = new ArrayList<String>();
+    private final ArrayList<String> mErrorLines = new ArrayList<>();
 
     private boolean mHasLeafNode = false;
 
@@ -64,6 +67,10 @@ class SvgTree {
 
     public float[] getViewBox() { return viewBox; }
 
+    private static final HashMap<String, SvgNode> idMap = new HashMap<>();
+    static final HashMap<SvgGroupNode, Node> useGroupMap = new HashMap<>();
+
+
     /** From the root, top down, pass the transformation (TODO: attributes) down the children. */
     public void flatten() {
         mRoot.flatten(new AffineTransform());
@@ -76,8 +83,7 @@ class SvgTree {
 
     public Document parse(File f) throws Exception {
         mFileName = f.getName();
-        Document doc = PositionXmlParser.parse(new FileInputStream(f), false);
-        return doc;
+        return PositionXmlParser.parse(new FileInputStream(f), false);
     }
 
     public void normalize() {
@@ -125,7 +131,7 @@ class SvgTree {
     public String getErrorLog() {
         StringBuilder errorBuilder = new StringBuilder();
         if (!mErrorLines.isEmpty()) {
-            errorBuilder.append("In " + mFileName + ":\n");
+            errorBuilder.append("In ").append(mFileName).append(":\n");
         }
         for (String log : mErrorLines) {
             errorBuilder.append(log);
@@ -168,9 +174,9 @@ class SvgTree {
             SizeType currentType = SizeType.PIXEL;
             String unit = value.substring(Math.max(value.length() - 2, 0));
             if (unit.matches("em|ex|px|in|cm|mm|pt|pc")) {
-                subStringSize = subStringSize - 2;
+                subStringSize -= 2;
             } else if (value.endsWith("%")) {
-                subStringSize = subStringSize - 1;
+                subStringSize -= 1;
                 currentType = SizeType.PERCENTAGE;
             }
 
@@ -207,4 +213,21 @@ class SvgTree {
             h = viewBox[3] * h / 100;
         }
     }
+
+    public void addIdToMap(String id, SvgNode svgNode) {
+        idMap.put(id, svgNode);
+    }
+
+    public SvgNode getSvgNodeFromId(String id) {
+        return idMap.get(id);
+    }
+
+    public void addToUseMap(SvgGroupNode useGroup, Node node) {
+        useGroupMap.put(useGroup, node);
+    }
+
+    public Set<Map.Entry<SvgGroupNode, Node>> getUseSet() {
+        return useGroupMap.entrySet();
+    }
+
 }
