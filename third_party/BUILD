@@ -70,7 +70,7 @@ maven_java_library(
 
 maven_java_library(
     name = "com.google.auto.value_auto-value",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value/1.3:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value/1.4.1:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
