@@ -137,7 +137,8 @@ void RunConnector(int app_pid, const string& package_name,
 
 // Copy over the agent so and jar to the package's directory as specified by
 // |package_name| and invoke attach-agent on the app as specified by |app_name|
-bool RunAgent(const string& app_name, const string& package_name, const std::string& config_path) {
+bool RunAgent(const string& app_name, const string& package_name,
+              const std::string& config_path) {
   CopyFileToPackageFolder(package_name, kAgentJarFileName);
   CopyFileToPackageFolder(package_name, kAgentLibFileName);
   string data_path;
@@ -242,7 +243,7 @@ Status ProfilerServiceImpl::AttachAgent(
     // to send messages to perfa's Unix socket server.
     string package_name = ProcessManager::GetPackageNameFromAppName(app_name);
     CopyFileToPackageFolder(package_name, kConnectorFileName);
-    if (!IsAppAgentAlive(request->process_id(), app_name.c_str())) {
+    if (!IsAppAgentAlive(request->process_id(), package_name.c_str())) {
       // Only attach agent if one is not detected.
       if (RunAgent(app_name, package_name, config_.GetConfigFilePath())) {
         response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
