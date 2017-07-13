@@ -6,4 +6,5 @@ apply plugin: 'com.android.application'
 dependencies {
     implementation project(':${projectName}')
     implementation project(':${baseFeatureName}')
+    <@shared.watchProjectDependencies/>
 }

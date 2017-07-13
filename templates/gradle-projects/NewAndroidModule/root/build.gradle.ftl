@@ -16,10 +16,6 @@ apply plugin: 'com.android.application'
 dependencies {
     ${getConfigurationName("compile")} fileTree(dir: 'libs', include: ['*.jar'])
     <@kt.addKotlinDependencies />
-<#if WearprojectName?has_content && NumberOfEnabledFormFactors?has_content && NumberOfEnabledFormFactors gt 1 && Wearincluded>
-    wearApp project(':${WearprojectName}')
-    ${getConfigurationName("compile")} 'com.google.android.gms:play-services-wearable:+'
-</#if>
 <#if isInstantApp>
   <#if isBaseFeature>
     <#if monolithicModuleName?has_content>
@@ -31,5 +27,7 @@ dependencies {
   <#else>
     implementation project(':${baseFeatureName}')
   </#if>
+<#else>
+  <@shared.watchProjectDependencies/>
 </#if>
 }
