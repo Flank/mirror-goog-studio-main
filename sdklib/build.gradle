@@ -42,7 +42,7 @@ task sdkManagerStartScripts(type: CreateStartScripts) {
     outputDir new File(project.getBuildDir(), "scripts")
 
     description "Creates OS specific scripts to start the sdk manager CLI"
-    mainClassName = 'com.android.sdklib.tool.SdkManagerCli'
+    mainClassName = 'com.android.sdklib.tool.sdkmanager.SdkManagerCli'
     applicationName = 'sdkmanager'
     defaultJvmOpts = ["-Dcom.android.sdklib.toolsdir=MY_APP_HOME"]
 
@@ -99,7 +99,7 @@ sdk {
 // (both pre- and post-submit) give good feedback and proper attribution in case of failure.
 task removeSdkComponents(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
-    main = "com.android.sdklib.tool.SdkManagerCli"
+    main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
     args = [
       '--sdk_root=' + System.getenv("ANDROID_HOME"),
       '--verbose',
@@ -115,7 +115,7 @@ task removeSdkComponents(type: JavaExec) {
 task initSdkForTests(type: JavaExec, dependsOn: removeSdkComponents) {
     standardInput = System.in
     classpath = sourceSets.main.runtimeClasspath
-    main = "com.android.sdklib.tool.SdkManagerCli"
+    main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
 
     doFirst {
         if (project.hasProperty('downloaderArgs')) {
@@ -175,7 +175,7 @@ task initSdkForTests(type: JavaExec, dependsOn: removeSdkComponents) {
 task initSdkForConnectedTests(type: JavaExec) {
     standardInput = System.in
     classpath = sourceSets.main.runtimeClasspath
-    main = "com.android.sdklib.tool.SdkManagerCli"
+    main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
 
     args = ['--sdk_root=' + System.getenv("ANDROID_HOME"),
             '--channel=0',
@@ -209,7 +209,7 @@ task initSdkForConnectedTests(type: JavaExec) {
 task initSdkForPerformanceTests(type: JavaExec) {
     standardInput = System.in
     classpath = sourceSets.main.runtimeClasspath
-    main = "com.android.sdklib.tool.SdkManagerCli"
+    main = "com.android.sdklib.tool.sdkmanager.SdkManagerCli"
 
     args = ['--sdk_root=' + System.getenv("ANDROID_HOME"),
             '--channel=3',
