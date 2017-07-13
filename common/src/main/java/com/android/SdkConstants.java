@@ -291,6 +291,8 @@ public final class SdkConstants {
             "proguard-android-optimize.txt"; //$NON-NLS-1$
     /** default proguard config file with new file extension (for project specific stuff) */
     public static final String FN_PROJECT_PROGUARD_FILE = "proguard-project.txt"; //$NON-NLS-1$
+    /** File holding a list of advanced features */
+    public static final String FN_ADVANCED_FEATURES = "advancedFeatures.ini";
 
     /* Folder Names for Android Projects . */
 
