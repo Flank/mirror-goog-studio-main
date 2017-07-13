@@ -293,6 +293,11 @@ public class ManifestMerger2 {
         performSystemPropertiesInjection(mergingReportBuilder, xmlDocumentOptional.get());
 
         XmlDocument finalMergedDocument = xmlDocumentOptional.get();
+
+        if (!mOptionalFeatures.contains(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS)) {
+            PostValidator.enforceToolsNamespaceDeclaration(finalMergedDocument);
+        }
+
         PostValidator.validate(finalMergedDocument, mergingReportBuilder);
         if (mergingReportBuilder.hasErrors()) {
             finalMergedDocument.getRootNode().addMessage(mergingReportBuilder,
