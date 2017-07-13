@@ -742,6 +742,8 @@ public final class SdkConstants {
             "android.support.design.widget.TabItem"; //$NON-NLS-1$
     public static final String CLASS_TEXT_INPUT_LAYOUT =
             "android.support.design.widget.TextInputLayout"; //$NON-NLS-1$
+    public static final String CLASS_TEXT_INPUT_EDIT_TEXT =
+            "android.support.design.widget.TextInputEditText"; //$NON-NLS-1$
     public static final String CLASS_NESTED_SCROLL_VIEW =
             "android.support.v4.widget.NestedScrollView"; //$NON-NLS-1$
     public static final String CLASS_VIEW_PAGER = "android.support.v4.view.ViewPager"; //$NON-NLS-1$
@@ -1107,6 +1109,7 @@ public final class SdkConstants {
     public static final String TAB_LAYOUT = CLASS_TAB_LAYOUT;
     public static final String TAB_ITEM = CLASS_TAB_ITEM;
     public static final String TEXT_INPUT_LAYOUT = CLASS_TEXT_INPUT_LAYOUT;
+    public static final String TEXT_INPUT_EDIT_TEXT = CLASS_TEXT_INPUT_EDIT_TEXT;
     public static final String NESTED_SCROLL_VIEW = CLASS_NESTED_SCROLL_VIEW;
     public static final String DRAWER_LAYOUT = CLASS_DRAWER_LAYOUT;
     public static final String VIEW_PAGER = CLASS_VIEW_PAGER;
