@@ -47,8 +47,10 @@ public class AllTasksUpToDateTest {
 
     @Test
     public void allTasksUpToDate() throws Exception {
-        project.execute("assemble");
-        GradleBuildResult result = project.executor().run("assemble");
+        String[] tasksToRun = new String[] {"build", "assembleAndroidTest"};
+
+        project.execute(tasksToRun);
+        GradleBuildResult result = project.executor().run(tasksToRun);
         Set<String> executedTasks =
                 result.getNotUpToDateTasks()
                         .stream()
@@ -60,10 +62,10 @@ public class AllTasksUpToDateTest {
                 .containsExactly(
                         // Validate signing has no outputs, so it's never up-to-date.
                         ":validateSigningDebug",
+                        ":validateSigningDebugAndroidTest",
                         // Lint declares no outputs, so it's never up-to-date. It's probably for the
                         // better, because it's hard to declare all inputs (they include the SDK
                         // and contents of the Google maven repo).
-                        ":lintVitalRelease",
-                        ":lintVitalShrinker");
+                        ":lint");
     }
 }
