@@ -687,6 +687,9 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testStyles() throws Exception {
         String expected = ""
+                + "res/values/styles.xml:4: Warning: The resource R.style.UnusedStyleExtendingFramework appears to be unused [UnusedResources]\n"
+                + "   <style name=\"UnusedStyleExtendingFramework\" parent=\"android:Theme\"/>\n"
+                + "          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "res/values/styles.xml:5: Warning: The resource R.style.UnusedStyle appears to be unused [UnusedResources]\n"
                 + "    <style name=\"UnusedStyle\"/>\n"
                 + "           ~~~~~~~~~~~~~~~~~~\n"
@@ -696,10 +699,13 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 + "res/values/styles.xml:7: Warning: The resource R.style.UnusedStyle_Something_Sub appears to be unused [UnusedResources]\n"
                 + "    <style name=\"UnusedStyle.Something.Sub\" parent=\"UnusedStyle\"/>\n"
                 + "           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
+                + "res/values/styles.xml:8: Warning: The resource R.style.ImplicitUsed appears to be unused [UnusedResources]\n"
+                + "    <style name=\"ImplicitUsed\" parent=\"android:Widget.ActionBar\"/>\n"
+                + "           ~~~~~~~~~~~~~~~~~~~\n"
                 + "res/values/styles.xml:9: Warning: The resource R.style.EmptyParent appears to be unused [UnusedResources]\n"
                 + "    <style name=\"EmptyParent\" parent=\"\"/>\n"
                 + "           ~~~~~~~~~~~~~~~~~~\n"
-                + "0 errors, 4 warnings\n";
+                + "0 errors, 6 warnings\n";
         lint().files(
                 xml("res/values/styles.xml", ""
                         + "<resources>\n\n\n"

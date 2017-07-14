@@ -137,7 +137,7 @@ public class ResourceUsageAnalyzerTest {
                 + "    @string/app_name\n"
                 + "@string/app_name : reachable=true\n"
                 + "@string/hello_world : reachable=true\n"
-                + "@style/AppTheme : reachable=true\n"
+                + "@style/AppTheme : reachable=false\n"
                 + "@style/MyStyle : reachable=true\n"
                 + "@style/MyStyle_Child : reachable=true\n"
                 + "    @style/MyStyle\n"

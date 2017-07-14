@@ -969,13 +969,8 @@ public class ResourceUsageModel {
                 if (TAG_STYLE.equals(tagName)) {
                     if (element.hasAttribute(ATTR_PARENT)) {
                         String parent = element.getAttribute(ATTR_PARENT);
-                        if (parent.startsWith(ANDROID_STYLE_RESOURCE_PREFIX)
-                            || parent.startsWith(PREFIX_ANDROID)) {
-                            // Extending a builtin theme: treat these as used
-                            if (definition != null) {
-                                markReachable(definition);
-                            }
-                        } else if (!parent.isEmpty()) {
+                        if (!parent.isEmpty() && !parent.startsWith(ANDROID_STYLE_RESOURCE_PREFIX)
+                                && !parent.startsWith(PREFIX_ANDROID)) {
                             String parentStyle = parent;
                             if (!parentStyle.startsWith(STYLE_RESOURCE_PREFIX)) {
                                 // Allow parent references to start with 'style/'
