@@ -21,6 +21,8 @@
       <w>aosp</w>
       <w>apkbuilder</w>
       <w>apks</w>
+      <w>apksig</w>
+      <w>apksigner</w>
       <w>apos</w>
       <w>appname</w>
       <w>areturn</w>
@@ -58,6 +60,7 @@
       <w>checkable</w>
       <w>checksums</w>
       <w>chksum</w>
+      <w>chunkio</w>
       <w>classfile</w>
       <w>classname</w>
       <w>classpathentry</w>
@@ -221,6 +224,8 @@
       <w>multiflavor</w>
       <w>multipart</w>
       <w>multitouch</w>
+      <w>namespaced</w>
+      <w>namespacing</w>
       <w>nano</w>
       <w>nativelib</w>
       <w>navexposed</w>
@@ -261,6 +266,8 @@
       <w>proguard</w>
       <w>proguarded</w>
       <w>prolog</w>
+      <w>protobuf</w>
+      <w>protoc</w>
       <w>pseudolocalization</w>
       <w>qemu</w>
       <w>quickfix</w>
@@ -299,6 +306,7 @@
       <w>shrinker</w>
       <w>sparsearray</w>
       <w>sqrt</w>
+      <w>srcs</w>
       <w>stacktrace</w>
       <w>stderr</w>
       <w>stdout</w>
