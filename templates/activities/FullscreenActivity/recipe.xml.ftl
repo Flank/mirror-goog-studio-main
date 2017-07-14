@@ -5,16 +5,11 @@
     <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+" />
 
     <#include "../common/recipe_theme.xml.ftl" />
+    <#include "../common/recipe_full_screen_actionbar.xml.ftl" />
 
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
 
-    <merge from="root/res/values/attrs.xml"
-             to="${escapeXmlAttribute(resOut)}/values/attrs.xml" />
-    <merge from="root/res/values/colors.xml"
-             to="${escapeXmlAttribute(resOut)}/values/colors.xml" />
-    <merge from="root/res/values/styles.xml.ftl"
-              to="${escapeXmlAttribute(resOut)}/values/styles.xml" />
     <instantiate from="root/res/layout/activity_fullscreen.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 
