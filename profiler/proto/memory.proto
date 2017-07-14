@@ -327,7 +327,6 @@ message AllocationStack {
   message StackFrame {
     // O+ only for uniquely idenfitying a method.
     int64 method_id = 1;
-
     string class_name = 2;
     string method_name = 3;
 
@@ -338,8 +337,35 @@ message AllocationStack {
     int32 line_number = 5;
   }
 
+  // studio-side only - a smaller proto format to store lazy-
+  // loaded stack frame objects. This is used specifically
+  // for showing live allocation tracking data (O+ JVMTI),
+  // where an app can run up to 2M+ unique frames. Given
+  // proto objects do not support null values, each string
+  // field in StackFrame holds default values that can add
+  // up to hundreds of MBs for these apps.
+  message SmallFrame {
+    int64 method_id = 1;
+    int32 line_number = 2;
+  }
+
+  // Wrapper proto for StackFrame since oneof does not
+  // support repeated fields.
+  message StackFrameWrapper {
+    repeated StackFrame frames = 1;
+  }
+
+  // Wrapper proto for SmallFrame since oneof does not
+  // support repeated fields.
+  message SmallFrameWrapper {
+    repeated SmallFrame frames = 1;
+  }
+
   int32 stack_id = 1;
-  repeated StackFrame stack_frames = 2;
+  oneof frame {
+    StackFrameWrapper full_stack = 2;
+    SmallFrameWrapper small_stack = 3;
+  }
 }
 
 message StackFrameInfoRequest {
