@@ -1,3 +1,5 @@
+apply from: "../../commonLocalRepo.gradle"
+
 apply plugin: 'com.android.library'
 
 android {
@@ -11,4 +13,10 @@ android {
         targetSdkVersion 16
         consumerProguardFiles 'config.pro'
     }
+}
+
+dependencies {
+    // guava is intentionally defined to be compileOnly so that application using the library will
+    // fail during proguard if it's not using the supplied config.pro.
+    compileOnly "com.google.guava:guava:19.0"
 }

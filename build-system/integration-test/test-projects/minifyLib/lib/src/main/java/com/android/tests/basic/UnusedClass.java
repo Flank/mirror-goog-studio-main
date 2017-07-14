@@ -1,3 +1,9 @@
 package com.android.tests.basic;
 
-public class UnusedClass {}
+import com.google.common.base.Preconditions;
+
+public class UnusedClass {
+    void unused() {
+        Preconditions.checkState(false, "Don't use this!");
+    }
+}

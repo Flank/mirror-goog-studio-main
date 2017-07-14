@@ -2,3 +2,4 @@
     public static java.lang.String getString(int);
 }
 
+-dontwarn com.google.common.base.*

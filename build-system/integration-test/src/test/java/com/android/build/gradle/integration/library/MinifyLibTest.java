@@ -16,9 +16,12 @@
 
 package com.android.build.gradle.integration.library;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.ANDROIDTEST_DEBUG;
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
@@ -56,8 +59,8 @@ public class MinifyLibTest {
             ShrinkerTestUtils.enableShrinker(project.getSubproject(":app"), "debug");
         }
 
-        project.execute(":app:assembleDebug");
-        Apk apk = project.getSubproject(":app").getApk("debug");
+        project.executor().run(":app:assembleDebug");
+        Apk apk = project.getSubproject(":app").getApk(DEBUG);
         TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
         TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/UnusedClass;");
     }
@@ -66,11 +69,46 @@ public class MinifyLibTest {
     public void shrinkingTheLibrary() throws Exception {
         enableLibShrinking();
 
-        project.execute(":app:assembleRelease");
+        GradleBuildResult result = project.executor().run(":app:assembleDebug");
 
-        Apk apk = project.getSubproject(":app").getApk("release");
+        assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
+                .wasExecuted();
+
+        Apk apk = project.getSubproject(":app").getApk(DEBUG);
         assertThat(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
         assertThat(apk).doesNotContainClass("Lcom/android/tests/basic/UnusedClass;");
+    }
+
+    /**
+     * Ensure androidTest compile uses consumer proguard files from library.
+     *
+     * <p>The library contains an unused method that reference a class in guava, and guava is not in
+     * the runtime classpath. Library also contains a consumer proguard file which would ignore
+     * undefined reference during proguard. The test will fail during proguard if androidTest is not
+     * using the proguard file.
+     */
+    @Test
+    public void androidTestWithShrinkedLibrary() throws Exception {
+        enableLibShrinking();
+
+        // Test with only androidTestCompile.  Replacing the compile dependency is fine because the
+        // app in the test project don't actually reference the library class directly during
+        // compile time.
+        TestFileUtils.searchAndReplace(
+                project.getSubproject(":app").getBuildFile(),
+                "compile project\\(':lib'\\)",
+                "androidTestCompile project\\(':lib'\\)");
+        GradleBuildResult result = project.executor().run(":app:assembleAndroidTest");
+
+        assertThat(result.getTask(":app:transformClassesAndResourcesWithProguardForDebug"))
+                .wasExecuted();
+        assertThat(
+                        result.getTask(
+                                ":app:transformClassesAndResourcesWithProguardForDebugAndroidTest"))
+                .wasExecuted();
+
+        Apk apk = project.getSubproject(":app").getApk(ANDROIDTEST_DEBUG);
+        assertThat(apk).exists();
     }
 
     /**
@@ -84,7 +122,7 @@ public class MinifyLibTest {
         File config = project.getSubproject(":lib").file("config.pro");
         config.delete();
         TestFileUtils.appendToFile(config, "");
-        project.execute(":lib:assembleDebug");
+        project.executor().run(":lib:assembleDebug");
     }
 
     @Test
@@ -98,11 +136,19 @@ public class MinifyLibTest {
                 project.getSubproject(":lib").getBuildFile(),
                 ""
                         + "android {\n"
-                        + "    buildTypes.release {\n"
+                        + "    buildTypes.debug {\n"
                         + "        minifyEnabled true\n"
                         + "        proguardFiles getDefaultProguardFile('proguard-android.txt'), 'config.pro'\n"
                         + "    }\n"
                         + "}");
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "android {\n"
+                        + "    buildTypes.debug {\n"
+                        + "        minifyEnabled true\n"
+                        + "        proguardFiles getDefaultProguardFile('proguard-android.txt')\n"
+                        + "    }\n"
+                        + "}\n");
 
         if (!useProguard) {
             ShrinkerTestUtils.enableShrinker(project.getSubproject(":lib"), "release");

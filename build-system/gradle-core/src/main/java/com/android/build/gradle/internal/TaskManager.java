@@ -2916,7 +2916,9 @@ public abstract class TaskManager {
             transform.setConfigurationFiles(
                     project.files(
                             TaskInputHelper.bypassFileCallable(
-                                    testedVariantData.getScope()::getTestProguardFiles)));
+                                    testedVariantData.getScope()::getTestProguardFiles),
+                            variantScope.getArtifactFileCollection(
+                                    RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
 
             // Register the mapping file which may or may not exists (only exist if obfuscation)
             // is enabled.
@@ -2930,8 +2932,9 @@ public abstract class TaskManager {
             // All -dontwarn rules for test dependencies should go in here:
             transform.setConfigurationFiles(
                     project.files(
-                            TaskInputHelper.bypassFileCallable(
-                                    variantScope::getTestProguardFiles)));
+                            TaskInputHelper.bypassFileCallable(variantScope::getTestProguardFiles),
+                            variantScope.getArtifactFileCollection(
+                                    RUNTIME_CLASSPATH, ALL, PROGUARD_RULES)));
 
             transform.applyTestedMapping(mappingFileCollection);
         } else {
