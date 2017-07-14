@@ -20,8 +20,10 @@ import com.android.repository.api.RepoManager;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.google.common.collect.Lists;
 
+import javax.xml.parsers.SAXParser;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.DefaultHandler;
 
 import java.io.InputStream;
@@ -72,7 +74,11 @@ public class RepoXsdUtil {
 
             // Parse the schema and find any imports or includes so we can return them as well.
             // Currently transitive includes are not supported.
-            SAXParserFactory.newInstance().newSAXParser().parse(stream, new DefaultHandler() {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser parser = factory.newSAXParser();
+            XMLReader reader = parser.getXMLReader();
+            reader.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            parser.parse(stream, new DefaultHandler() {
                 @Override
                 public void startElement(String uri, String localName, String name, Attributes attributes) throws SAXException {
                     name = name.substring(name.indexOf(':') + 1);

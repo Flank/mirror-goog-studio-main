@@ -28,21 +28,15 @@ import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
-import com.android.ide.common.blame.parser.util.OutputLineReader;
 import com.android.ide.common.blame.parser.ParsingFailedException;
 import com.android.ide.common.blame.parser.PatternAwareOutputParser;
+import com.android.ide.common.blame.parser.util.OutputLineReader;
 import com.android.resources.ResourceFolderType;
 import com.android.utils.ILogger;
 import com.android.utils.SdkUtils;
+import com.android.utils.XmlUtils;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.Locator;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
@@ -50,9 +44,13 @@ import java.net.MalformedURLException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.Locator;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
 
 @VisibleForTesting
 public abstract class AbstractAaptOutputParser implements PatternAwareOutputParser {
@@ -389,7 +387,8 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
         SAXParserFactory factory = SAXParserFactory.newInstance();
         try {
             // Parse the input
-            SAXParser saxParser = factory.newSAXParser();
+            XmlUtils.configureSaxFactory(factory, false, false);
+            SAXParser saxParser = XmlUtils.createSaxParser(factory);
             saxParser.parse(new InputSource(new StringReader(document.getContents())), handler);
         } catch (Throwable t) {
             // Ignore parser errors; we might have found the error position earlier than the parse error position

@@ -49,6 +49,7 @@ import static com.android.builder.core.DefaultManifestParser.Attribute.VERSION_N
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.manifmerger.PlaceholderHandler;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Map;
@@ -305,9 +306,9 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
                     };
 
             SAXParserFactory factory = SAXParserFactory.newInstance();
-            factory.setNamespaceAware(true);
             try {
-                SAXParser saxParser = factory.newSAXParser();
+                XmlUtils.configureSaxFactory(factory, true, false);
+                SAXParser saxParser = XmlUtils.createSaxParser(factory);
                 saxParser.parse(manifestFile, handler);
                 initialized = true;
             } catch (Exception e) {

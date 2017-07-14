@@ -373,19 +373,7 @@ public class XmlUtilsTest extends TestCase {
 
     @Nullable
     private static Document parse(String xml) throws Exception {
-        if (true) {
-            return XmlUtils.parseDocumentSilently(xml, true);
-        }
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        factory.setNamespaceAware(true);
-        factory.setValidating(false);
-        factory.setExpandEntityReferences(false);
-        factory.setXIncludeAware(false);
-        factory.setIgnoringComments(false);
-        factory.setCoalescing(false);
-        DocumentBuilder builder;
-        builder = factory.newDocumentBuilder();
-        return builder.parse(new InputSource(new StringReader(xml)));
+        return XmlUtils.parseDocumentSilently(xml, true);
     }
 
     public void testFormatFloatValue() throws Exception {
@@ -472,6 +460,32 @@ public class XmlUtilsTest extends TestCase {
         // Add BOM
         xml = '\uFEFF' + xml;
         document = XmlUtils.parseDocument(xml, true);
+        assertNotNull(document);
+        assertNotNull(document.getDocumentElement());
+        assertEquals("LinearLayout", document.getDocumentElement().getTagName());
+    }
+
+    public void testDisallowDocType() throws Exception {
+        String xml = "" +
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<!DOCTYPE module PUBLIC\n" +
+                "    \"-//TEST//DTD Check Configuration 1.3//EN\"\n" +
+                "    \"http://schemas.android.com/apk/res/android\">\n" +
+                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                "    android:layout_width=\"match_parent\"\n" +
+                "    android:layout_height=\"wrap_content\"\n" +
+                "    android:orientation=\"vertical\" >\n" +
+                "\n" +
+                "    <Button\n" +
+                "        android:id=\"@+id/button1\"\n" +
+                "        android:layout_width=\"wrap_content\"\n" +
+                "        android:layout_height=\"wrap_content\"\n" +
+                "        android:text=\"Button\" />\n" +
+                "          some text\n" +
+                "\n" +
+                "</LinearLayout>\n";
+
+        Document document = XmlUtils.parseDocument(xml, true);
         assertNotNull(document);
         assertNotNull(document.getDocumentElement());
         assertEquals("LinearLayout", document.getDocumentElement().getTagName());

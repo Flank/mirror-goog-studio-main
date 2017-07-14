@@ -29,6 +29,7 @@ import com.android.io.StreamException;
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
 import com.android.resources.TouchScreen;
+import com.android.utils.XmlUtils;
 import com.android.xml.AndroidManifest;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -654,7 +655,7 @@ public class AndroidManifestParser {
 
     static {
         sParserFactory = SAXParserFactory.newInstance();
-        sParserFactory.setNamespaceAware(true);
+        XmlUtils.configureSaxFactory(sParserFactory, true, false);
     }
 
     /**
@@ -675,7 +676,7 @@ public class AndroidManifestParser {
         if (manifestFile != null) {
             SAXParser parser;
             try {
-                parser = sParserFactory.newSAXParser();
+                parser = XmlUtils.createSaxParser(sParserFactory);
             } catch (ParserConfigurationException | SAXException e) {
                 throw new RuntimeException(e);
             }
@@ -735,7 +736,7 @@ public class AndroidManifestParser {
     public static ManifestData parse(InputStream manifestFileStream)
             throws ParserConfigurationException, SAXException, IOException {
         if (manifestFileStream != null) {
-            SAXParser parser = sParserFactory.newSAXParser();
+            SAXParser parser = XmlUtils.createSaxParser(sParserFactory);
 
             ManifestData data = new ManifestData();
 
