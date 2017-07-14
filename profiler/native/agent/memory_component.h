@@ -78,7 +78,7 @@ class MemoryComponent {
   std::unique_ptr<proto::InternalMemoryService::Stub> service_stub_;
   std::list<MemoryControlHandler> memory_control_handlers_;
   std::thread memory_control_thread_;
-  grpc::ClientContext memory_control_context_;
+  std::unique_ptr<grpc::ClientContext> memory_control_context_;
   std::unique_ptr<grpc::ClientReader<proto::MemoryControlRequest>>
       memory_control_stream_;
 };

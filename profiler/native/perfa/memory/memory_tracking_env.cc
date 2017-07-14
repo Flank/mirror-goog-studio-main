@@ -263,6 +263,13 @@ void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
   SetEventNotification(jvmti_, JVMTI_DISABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
   SetEventNotification(jvmti_, JVMTI_DISABLE, JVMTI_EVENT_OBJECT_FREE);
   event_queue_.Reset();
+  stack_trie_ = Trie<FrameInfo>();
+
+  for (auto method_itr : known_methods_) {
+    Deallocate(jvmti_, method_itr.second.table_ptr);
+  }
+  known_methods_.clear();
+  thread_id_map_.clear();
 }
 
 const AllocatedClass& MemoryTrackingEnv::RegisterNewClass(jvmtiEnv* jvmti,

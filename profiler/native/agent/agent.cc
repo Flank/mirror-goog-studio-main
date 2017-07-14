@@ -56,7 +56,6 @@ Agent& Agent::Instance(SocketType socket_type) {
 Agent::Agent(SocketType socket_type)
     : memory_component_(nullptr),  // set in ConnectToPerfd()
       background_queue_("Studio:Agent", kMaxBackgroundTasks),
-      current_fd_(-1),
       can_grpc_target_change_(false),
       grpc_target_initialized_(false) {
   if (profiler::DeviceInfo::feature_level() >= 26 &&
@@ -220,15 +219,9 @@ void Agent::RunSocketThread() {
         // Heartbeat - No-op. Perfd will check whether send was successful.
       } else if (strncmp(buf, kPerfdConnectRequest, 1) == 0) {
         // A connect request - reconnect using the incoming fd.
-        // Note: If the same fd is being reused, do not reconnect as the
-        // 'previous' fd will be closed, and the re-instantiated stubs will
-        // point to a closed target.
-        if (current_fd_ != receive_fd) {
-          std::ostringstream os;
-          os << kGrpcUnixSocketAddrPrefix << "&" << receive_fd;
-          ConnectToPerfd(os.str());
-          current_fd_ = receive_fd;
-        }
+        std::ostringstream os;
+        os << kGrpcUnixSocketAddrPrefix << "&" << receive_fd;
+        ConnectToPerfd(os.str());
       }
     }
   }
@@ -245,20 +238,26 @@ void Agent::ConnectToPerfd(const std::string& target) {
         new MemoryComponent(&background_queue_, can_grpc_target_change_);
   }
 
-  // Override default channel arguments in gRPC to limit the reconnect delay
-  // to 1 second when the daemon is unavailable. GRPC's default arguments may
-  // have backoff as long as 120 seconds. In cases when the phone is
-  // disconnected and plugged back in, a 120-second-long delay hurts the user
-  // experience very much.
-  grpc::ChannelArguments channel_args;
-  channel_args.SetInt(GRPC_ARG_MAX_RECONNECT_BACKOFF_MS, 1000);
-  auto channel = grpc::CreateCustomChannel(
-      target, grpc::InsecureChannelCredentials(), channel_args);
+  // Note: If the same target is being reused, do not reconnect as the
+  // 'previous' fd will be closed (if this is a unix socket target), and the
+  // re-instantiated stubs will point to a closed target.
+  if (target.compare(current_connected_target_) != 0) {
+    // Override default channel arguments in gRPC to limit the reconnect delay
+    // to 1 second when the daemon is unavailable. GRPC's default arguments may
+    // have backoff as long as 120 seconds. In cases when the phone is
+    // disconnected and plugged back in, a 120-second-long delay hurts the user
+    // experience very much.
+    grpc::ChannelArguments channel_args;
+    channel_args.SetInt(GRPC_ARG_MAX_RECONNECT_BACKOFF_MS, 1000);
+    channel_ = grpc::CreateCustomChannel(
+        target, grpc::InsecureChannelCredentials(), channel_args);
+    current_connected_target_ = target;
+  }
 
-  agent_stub_ = AgentService::NewStub(channel);
-  event_stub_ = InternalEventService::NewStub(channel);
-  network_stub_ = InternalNetworkService::NewStub(channel);
-  memory_component_->Connect(channel);
+  agent_stub_ = AgentService::NewStub(channel_);
+  event_stub_ = InternalEventService::NewStub(channel_);
+  network_stub_ = InternalNetworkService::NewStub(channel_);
+  memory_component_->Connect(channel_);
 
   if (!grpc_target_initialized_) {
     grpc_target_initialized_ = true;

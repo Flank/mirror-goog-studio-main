@@ -126,6 +126,16 @@ class Agent {
   // |network_stub_| and |memory_component_|
   std::mutex connect_mutex_;
   std::condition_variable connect_cv_;
+  // The current grpc target we are currently connected to. We only
+  // reinstantiate channel if the target has changed. Otherwise in the case of
+  // O+ unix socket, if the file descriptor happens to be the same, re-creating
+  // the channel on the same fd can cause the socket to be closed immediately
+  // (TODO: investigate further).
+  // For pre-O, the target is an ip address. (e.g. |profiler::kServerAddress|)
+  // For O+ the target is of the form "unix:&fd", where fd maps to the client
+  // socket used for communicating with the perfd server.
+  std::string current_connected_target_;
+  std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<proto::AgentService::Stub> agent_stub_;
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
@@ -140,11 +150,6 @@ class Agent {
   // O+ only - Used for |RunSocketThread|
   std::thread socket_thread_;
   BackgroundQueue background_queue_;
-
-  // O+ only. File descriptor (fd) of the client socket we are currently
-  // connected to. We only reinstantiate the service stubs if the fd has
-  // changed, otherwise we can simply reuse the existing stubs.
-  int current_fd_;
 
   // Whether the agent and its children service stub should anticipate
   // the underlying channel to perfd changing.

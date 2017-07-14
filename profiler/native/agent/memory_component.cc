@@ -32,14 +32,20 @@ MemoryComponent::MemoryComponent(BackgroundQueue* background_queue,
       background_queue_(background_queue) {}
 
 void MemoryComponent::Connect(std::shared_ptr<grpc::Channel> channel) {
-  std::lock_guard<std::mutex> guard(connect_mutex_);
-  // TODO: re-establish control stream if it has already started from a previous
-  // connection.
-  service_stub_ = InternalMemoryService::NewStub(channel);
+  {
+    std::lock_guard<std::mutex> guard(connect_mutex_);
+    service_stub_ = InternalMemoryService::NewStub(channel);
+    if (!grpc_target_initialized_) {
+      grpc_target_initialized_ = true;
+      connect_cv_.notify_all();
+    }
+  }
 
-  if (!grpc_target_initialized_) {
-    grpc_target_initialized_ = true;
-    connect_cv_.notify_all();
+  // Re-estalish the control stream if it has already started.
+  // Note: this has to be outside the lock as OpenControlStream
+  // will access service_stub().
+  if (is_control_stream_started_) {
+    OpenControlStream();
   }
 }
 
@@ -53,14 +59,22 @@ proto::InternalMemoryService::Stub& MemoryComponent::service_stub() {
 }
 
 void MemoryComponent::OpenControlStream() {
-  if (is_control_stream_started_) {
-    return;
+  if (memory_control_context_.get() != nullptr) {
+    // Cancel the previous stream reader in case it is still
+    // running. This can happen if we are reconnecting to the
+    // same perfd instance. Otherwise, the stream should have
+    // cancelled itself.
+    memory_control_context_->TryCancel();
   }
-
+  memory_control_context_.reset(new grpc::ClientContext());
   RegisterMemoryAgentRequest memory_agent_request;
   memory_agent_request.set_pid(getpid());
   memory_control_stream_ = service_stub().RegisterMemoryAgent(
-      &memory_control_context_, memory_agent_request);
+      memory_control_context_.get(), memory_agent_request);
+
+  if (memory_control_thread_.joinable()) {
+    memory_control_thread_.join();
+  }
   memory_control_thread_ =
       std::thread(&MemoryComponent::RunMemoryControlThread, this);
 
