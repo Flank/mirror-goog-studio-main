@@ -113,6 +113,17 @@ public class InstantRunBuildInfoTest {
         assertTrue(info.isPatchBuild());
     }
 
+    @Test
+    public void testHasHotSwapResources() throws IOException {
+        // output of a full build does not have hotswap resources
+        InstantRunBuildInfo info = getBuildInfo("instantrun", "build-info-split1.xml");
+        assertFalse(info.hasHotSwapResources());
+
+        // output of a hotswap with a resource change does
+        info = getBuildInfo("instantrun", "build-info-res-hot.xml");
+        assertTrue(info.hasHotSwapResources());
+    }
+
     @NonNull
     private static InstantRunBuildInfo getBuildInfo(@NonNull String... buildInfoPath)
             throws IOException {

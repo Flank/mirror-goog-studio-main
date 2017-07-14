@@ -20,7 +20,6 @@ import com.android.annotations.Nullable;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
-
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -149,9 +148,15 @@ public class SplitApkInstaller {
         try {
             inputStream = new BufferedInputStream(new FileInputStream(fileToUpload));
             InstallWriteReceiver receiver = new InstallWriteReceiver();
-            AdbHelper.executeRemoteCommand(AndroidDebugBridge.getSocketAddress(),
-                    AdbHelper.AdbService.EXEC, command, mDevice,
-                    receiver, timeout, unit, inputStream);
+            AdbHelper.executeRemoteCommand(
+                    AndroidDebugBridge.getSocketAddress(),
+                    AdbHelper.AdbService.EXEC,
+                    command,
+                    mDevice,
+                    receiver,
+                    timeout,
+                    unit,
+                    inputStream);
             if (receiver.getErrorMessage() != null) {
                 Log.e(sessionId, String.format("Error while uploading %1$s : %2$s", fileToUpload.getName(),
                         receiver.getErrorMessage()));

@@ -16,6 +16,10 @@
 
 package com.android.tools.fd.client;
 
+import static com.android.tools.fd.client.InstantRunArtifactType.SPLIT;
+import static com.android.tools.fd.common.ProtocolConstants.*;
+import static com.android.tools.fd.runtime.Paths.getDeviceIdFolder;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.*;
@@ -29,17 +33,12 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.android.tools.fd.client.InstantRunArtifactType.SPLIT;
-import static com.android.tools.fd.common.ProtocolConstants.*;
-import static com.android.tools.fd.runtime.Paths.getDeviceIdFolder;
 
 public class InstantRunClient {
 
@@ -173,10 +172,8 @@ public class InstantRunClient {
                     // resource swap and also got an APK for split. Ignore here.
                     continue;
                 case SPLIT:
-                    // Should never be used with this method: APK splits should
-                    // be pushed by SplitApkDeployTask
-                    assert false : artifact;
-                    break;
+                    // we expect SPLIT APK for resource changes on O and above
+                    continue;
                 case RESOURCES:
                     updateMode = updateMode.combine(UpdateMode.WARM_SWAP);
                     files.add(FileTransfer.createResourceFile(file));

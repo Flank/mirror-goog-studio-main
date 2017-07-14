@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright (C) 2017 The Android Open Source Project
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~      http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<instant-run
+    abi="arm64-v8a,armeabi-v7a,armeabi"
+    api-level="25"
+    build-mode="HOT_WARM"
+    density="420dpi"
+    format="10"
+    plugin-version="3.0.0-alpha5"
+    timestamp="1500413851547"
+    token="-1482054748424160515"
+    verifier="COMPATIBLE" >
+
+  <task
+      name="javac"
+      duration="0" />
+  <task
+      name="instant-run-dex"
+      duration="0" />
+  <task
+      name="instant-run-transform"
+      duration="0" />
+  <task
+      name="verifier"
+      duration="0" />
+
+  <artifact
+      location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/instant-run-resources/resources-debug.ir.ap_"
+      type="RESOURCES" />
+
+  <build
+      build-mode="FULL"
+      timestamp="1500413787803"
+      verifier="FULL_BUILD_REQUESTED" >
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/split-apk/debug/slices/slice_5.apk"
+        type="SPLIT" />
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/split-apk/debug/slices/slice_3.apk"
+        type="SPLIT" />
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/split-apk/debug/slices/slice_4.apk"
+        type="SPLIT" />
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/split-apk/debug/slices/slice_8.apk"
+        type="SPLIT" />
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/split-apk/debug/slices/slice_9.apk"
+        type="SPLIT" />
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/split-apk/debug/slices/slice_1.apk"
+        type="SPLIT" />
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/split-apk/debug/dep/dependencies.apk"
+        type="SPLIT" />
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/split-apk/debug/slices/slice_6.apk"
+        type="SPLIT" />
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/split-apk/debug/slices/slice_7.apk"
+        type="SPLIT" />
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/split-apk/debug/slices/slice_2.apk"
+        type="SPLIT" />
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/split-apk/debug/slices/slice_0.apk"
+        type="SPLIT" />
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/outputs/apk/debug/app-debug.apk"
+        type="SPLIT_MAIN" />
+  </build>
+  <build
+      build-mode="COLD"
+      timestamp="1500413831091"
+      verifier="COLD_SWAP_REQUESTED" >
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/outputs/apk/debug/app-debug.apk"
+        type="SPLIT_MAIN" />
+  </build>
+  <build
+      build-mode="HOT_WARM"
+      timestamp="1500413851547"
+      verifier="COMPATIBLE" >
+    <artifact
+        location="/usr/local/google/home/kelvinhanma/projects/ResourceTest/app/build/intermediates/instant-run-resources/resources-debug.ir.ap_"
+        type="RESOURCES" />
+  </build>
+
+</instant-run>
