@@ -417,6 +417,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return false;
         }
 
+        if (variantData.getType() == VariantType.LIBRARY) {
+            errorReporter.handleSyncError(
+                    null,
+                    SyncIssue.TYPE_GENERIC,
+                    "Resource shrinker cannot be used for libraries.");
+            return false;
+        }
+
         if (getCodeShrinker() == null) {
             errorReporter.handleSyncError(
                     null,

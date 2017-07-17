@@ -19,8 +19,10 @@ package com.android.build.gradle;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import com.android.build.gradle.api.TestVariant;
+import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.fixture.BaseTestedVariant;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
@@ -28,6 +30,7 @@ import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.builder.model.SigningConfig;
 import java.util.Set;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.junit.Before;
 import org.junit.Rule;
@@ -113,5 +116,20 @@ public class LibraryPluginDslTest {
         assertNotNull(signingConfig);
         assertEquals(android.getSigningConfigs().getByName("debug"), signingConfig);
         assertEquals("foo", signingConfig.getStorePassword());
+    }
+
+    @Test
+    public void testResourceShrinker() throws Exception {
+        BuildType debug = android.getBuildTypes().getByName("debug");
+        debug.getPostprocessing().setRemoveUnusedResources(true);
+        try {
+            plugin.createAndroidTasks(false);
+            fail("Expected resource shrinker error");
+        } catch (GradleException e) {
+            assertThat(e).hasMessage("Resource shrinker cannot be used for libraries.");
+        }
+
+        debug.getPostprocessing().setRemoveUnusedResources(false);
+        plugin.createAndroidTasks(false);
     }
 }
