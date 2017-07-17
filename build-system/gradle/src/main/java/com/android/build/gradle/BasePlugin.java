@@ -31,6 +31,7 @@ import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.BuildCacheUtils;
+import com.android.build.gradle.internal.ClasspathVerifier;
 import com.android.build.gradle.internal.ExecutionConfigurationUtil;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -163,6 +164,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     private boolean hasCreatedTasks = false;
 
     BasePlugin(@NonNull Instantiator instantiator, @NonNull ToolingModelBuilderRegistry registry) {
+        ClasspathVerifier.checkClasspathSanity();
         this.instantiator = instantiator;
         this.registry = registry;
         creator = "Android Gradle " + Version.ANDROID_GRADLE_PLUGIN_VERSION;
@@ -234,6 +236,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     }
 
     protected void apply(@NonNull Project project) {
+
         project.getPluginManager().apply(AndroidBasePlugin.class);
         checkPluginVersion();
 
