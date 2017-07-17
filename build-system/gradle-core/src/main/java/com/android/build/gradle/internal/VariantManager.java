@@ -66,6 +66,8 @@ import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
+import com.android.builder.dexing.DexMergerTool;
+import com.android.builder.dexing.DexerTool;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
@@ -1068,7 +1070,9 @@ public class VariantManager implements VariantModel {
                                 .setMinifyEnabled(variantScope.getCodeShrinker() != null)
                                 .setUseMultidex(variantConfig.isMultiDexEnabled())
                                 .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
-                                .setVariantType(variantData.getType().getAnalyticsVariantType());
+                                .setVariantType(variantData.getType().getAnalyticsVariantType())
+                                .setDexBuilder(getDexBuilderTool(variantScope.getDexer()))
+                                .setDexMerger(getDexMergerTool(variantScope.getDexMerger()));
 
                 if (variantConfig.getTargetSdkVersion().getApiLevel() > 0) {
                     profileBuilder.setTargetSdkVersion(
@@ -1182,6 +1186,32 @@ public class VariantManager implements VariantModel {
                 return GradleBuildVariant.Java8LangSupport.INTERNAL;
             default:
                 throw new AssertionError("Unrecognized type");
+        }
+    }
+
+    @NonNull
+    private static GradleBuildVariant.DexBuilderTool getDexBuilderTool(
+            @NonNull DexerTool dexerTool) {
+        switch (dexerTool) {
+            case DX:
+                return GradleBuildVariant.DexBuilderTool.DX_DEXER;
+            case D8:
+                return GradleBuildVariant.DexBuilderTool.D8_DEXER;
+            default:
+                throw new AssertionError("Unrecognized type " + dexerTool);
+        }
+    }
+
+    @NonNull
+    private static GradleBuildVariant.DexMergerTool getDexMergerTool(
+            @NonNull DexMergerTool dexMerger) {
+        switch (dexMerger) {
+            case DX:
+                return GradleBuildVariant.DexMergerTool.DX_MERGER;
+            case D8:
+                return GradleBuildVariant.DexMergerTool.D8_MERGER;
+            default:
+                throw new AssertionError("Unrecognized type " + dexMerger);
         }
     }
 }
