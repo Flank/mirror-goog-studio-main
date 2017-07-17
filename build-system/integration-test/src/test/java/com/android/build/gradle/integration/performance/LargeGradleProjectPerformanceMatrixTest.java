@@ -55,8 +55,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
     @Parameterized.Parameters(name = "{0}")
     public static ProjectScenario[] getParameters() {
         return new ProjectScenario[] {
-            ProjectScenario.DEX_ARCHIVE_NATIVE_MULTIDEX,
-            //ProjectScenario.DEX_ARCHIVE_LEGACY_MULTIDEX,
+            ProjectScenario.DEX_ARCHIVE_NATIVE_MULTIDEX, ProjectScenario.D8_NATIVE_MULTIDEX,
         };
     }
 
@@ -64,8 +63,6 @@ public class LargeGradleProjectPerformanceMatrixTest {
     public void initializeProject() throws Exception {
         PerformanceTestProjects.initializeUberSkeleton(project);
         switch (projectScenario.getFlags().getMultiDex()) {
-            case LEGACY:
-                break;
             case NATIVE:
                 TestFileUtils.searchAndReplace(
                         project.file("dependencies.gradle"), "(minSdkVersion *): \\d+,", "$1: 21,");
@@ -107,6 +104,8 @@ public class LargeGradleProjectPerformanceMatrixTest {
                 .withUseDexArchive(projectScenario.useDexArchive())
                 .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
                 .with(BooleanOption.ENABLE_AAPT2, false)
+                .with(BooleanOption.ENABLE_D8_DEXER, projectScenario.useD8())
+                .with(BooleanOption.ENABLE_D8_MERGER, projectScenario.useD8())
                 .withoutOfflineFlag();
     }
 }

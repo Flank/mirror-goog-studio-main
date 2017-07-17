@@ -115,6 +115,7 @@ message GradleBenchmarkResult {
       JACK = 1;
       DEX_ARCHIVE = 2;
       DESUGAR = 3;
+      D8 = 4;
     }
 
     enum Java8LangSupport {

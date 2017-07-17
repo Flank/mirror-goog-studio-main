@@ -57,6 +57,21 @@ public enum ProjectScenario {
                 flags.setMultiDex(Flags.MultiDexMode.NO_MULTIDEX);
                 flags.setJava8LangSupport(Flags.Java8LangSupport.DESUGAR_TOOL);
             }),
+    D8_MONODEX_J8(
+            flags -> {
+                flags.setCompiler(Flags.Compiler.D8);
+                flags.setJava8LangSupport(Flags.Java8LangSupport.DESUGAR_TOOL);
+            }),
+    D8_NATIVE_MULTIDEX(
+            flags -> {
+                flags.setCompiler(Flags.Compiler.D8);
+                flags.setMultiDex(Flags.MultiDexMode.NATIVE);
+            }),
+    D8_LEGACY_MULTIDEX(
+            flags -> {
+                flags.setCompiler(Flags.Compiler.D8);
+                flags.setMultiDex(Flags.MultiDexMode.LEGACY);
+            }),
     ;
 
     private final Flags flags;
@@ -80,5 +95,9 @@ public enum ProjectScenario {
 
     public boolean useDexArchive() {
         return flags.getCompiler() == Flags.Compiler.DEX_ARCHIVE;
+    }
+
+    public boolean useD8() {
+        return flags.getCompiler() == Flags.Compiler.D8;
     }
 }

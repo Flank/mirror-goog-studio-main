@@ -80,6 +80,7 @@ public class AntennaPodPerformanceMatrixTest {
             ProjectScenario.NORMAL_J8,
             ProjectScenario.DEX_ARCHIVE_MONODEX_J8,
             ProjectScenario.DEX_OUT_OF_PROCESS_J8,
+            ProjectScenario.D8_MONODEX_J8,
         };
     }
 
@@ -93,6 +94,8 @@ public class AntennaPodPerformanceMatrixTest {
             case NORMAL_J8:
                 break;
             case DEX_ARCHIVE_MONODEX_J8:
+                break;
+            case D8_MONODEX_J8:
                 break;
             case DEX_OUT_OF_PROCESS_J8:
                 DexInProcessHelper.disableDexInProcess(appBuildFile);
@@ -234,6 +237,8 @@ public class AntennaPodPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
                 .with(BooleanOption.ENABLE_AAPT2, false)
+                .with(BooleanOption.ENABLE_D8_DEXER, projectScenario.useD8())
+                .with(BooleanOption.ENABLE_D8_MERGER, projectScenario.useD8())
                 .withUseDexArchive(projectScenario.useDexArchive());
     }
 
