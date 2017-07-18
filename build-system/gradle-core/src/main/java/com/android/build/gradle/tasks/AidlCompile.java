@@ -66,20 +66,21 @@ public class AidlCompile extends IncrementalTask {
     private static final String DEPENDENCY_STORE = "dependency.store";
     private static final PatternSet PATTERN_SET = new PatternSet().include("**/*.aidl");
 
-    // ----- PUBLIC TASK API -----
     private File sourceOutputDir;
+
     @Nullable
     private File packagedDir;
+
     @Nullable
     private Collection<String> packageWhitelist;
 
-    // ----- PRIVATE TASK API -----
+    private Supplier<Collection<File>> sourceDirs;
+    private FileCollection importDirs;
+
     @Input
     public String getBuildToolsVersion() {
         return getBuildTools().getRevision().toString();
     }
-    private Supplier<Collection<File>> sourceDirs;
-    private FileCollection importDirs;
 
     @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
@@ -287,10 +288,8 @@ public class AidlCompile extends IncrementalTask {
     private File getSourceFolder(@NonNull File file) {
         File parentDir = file;
         while ((parentDir = parentDir.getParentFile()) != null) {
-            for (File folder : sourceDirs.get()) {
-                if (parentDir.equals(folder)) {
-                    return folder;
-                }
+            if (sourceDirs.get().contains(parentDir)) {
+                return parentDir;
             }
         }
 
