@@ -156,13 +156,6 @@ bool ParseProcPidStatForUsageData(int32_t pid, const string& content,
   return false;
 }
 
-// Parses a thread's stat file (proc/[pid]/task/[tid]/stat) to collect info.
-// Returns true on success.
-// For a thread, the following fields are read (the first field is numbered as
-// 1).
-//    (1) id  %d                      => For sanity checking.
-//    (2) comm  %s (in parentheses)   => Output |name|.
-//    (3) state  %c                   => Output |state|.
 bool CollectProcessUsageData(int32_t pid, const string& usage_file,
                              CpuUsageData* data) {
   string buffer;
