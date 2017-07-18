@@ -53,6 +53,10 @@ class MemoryServiceImpl final
                          const ::profiler::proto::MemoryRequest* request,
                          ::profiler::proto::MemoryData* response) override;
 
+  ::grpc::Status GetJvmtiData(::grpc::ServerContext* context,
+                         const ::profiler::proto::MemoryRequest* request,
+                         ::profiler::proto::MemoryData* response) override;
+
   ::grpc::Status TriggerHeapDump(
       ::grpc::ServerContext* context,
       const ::profiler::proto::TriggerHeapDumpRequest* request,

@@ -159,7 +159,6 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
   std::lock_guard<std::mutex> gc_stats_lock(gc_stats_samples_mutex_);
   std::lock_guard<std::mutex> heap_dump_lock(heap_dump_infos_mutex_);
   std::lock_guard<std::mutex> allocations_info_lock(allocations_info_mutex_);
-  std::lock_guard<std::mutex> allocations_data_lock(allocations_samples_mutex_);
 
   int64_t end_timestamp = -1;
   for (size_t i = 0; i < memory_samples_.size(); ++i) {
@@ -221,6 +220,14 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
     }
   }
 
+  response->set_end_timestamp(end_timestamp);
+}
+
+void MemoryCache::LoadMemoryJvmtiData(int64_t start_time_exl, int64_t end_time_inc,
+                                 MemoryData* response) {
+  std::lock_guard<std::mutex> allocations_data_lock(allocations_samples_mutex_);
+
+  int64_t end_timestamp = -1;
   // O+ data only.
   for (size_t i = 0; i < allocations_samples_.size(); ++i) {
     const BatchAllocationSample& sample = allocations_samples_.Get(i);

@@ -84,6 +84,23 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
   return ::grpc::Status::OK;
 }
 
+::grpc::Status MemoryServiceImpl::GetJvmtiData(::grpc::ServerContext* context,
+                                          const MemoryRequest* request,
+                                          MemoryData* response) {
+  Trace trace("MEM:GetJvmtiData");
+  auto result = collectors_.find(request->process_id());
+  if (result == collectors_.end()) {
+    return ::grpc::Status(
+        ::grpc::StatusCode::NOT_FOUND,
+        "The memory collector for the specified pid has not been started yet.");
+  }
+
+  result->second.memory_cache()->LoadMemoryJvmtiData(request->start_time(),
+                                                request->end_time(), response);
+
+  return ::grpc::Status::OK;
+}
+
 #define PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(              \
     result, collectors, response, status)                                     \
   {                                                                           \

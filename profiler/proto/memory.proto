@@ -27,9 +27,14 @@ service MemoryService {
   rpc StopMonitoringApp(MemoryStopRequest) returns (MemoryStopResponse) {
   }
 
-  // Get all sampled memory data for an app within a specified time request.
+  // Get all memory data not related to live allocation for an app
+  // within a specified time request.
   // These include the various memory levels, allocation count + gc events.
   rpc GetData(MemoryRequest) returns (MemoryData) {
+  }
+  // Get live allocation memory data for an app within a specified time request.
+  // These includes alloc events, dealloc events and callstacks
+  rpc GetJvmtiData(MemoryRequest) returns (MemoryData) {
   }
   rpc TriggerHeapDump(TriggerHeapDumpRequest) returns (TriggerHeapDumpResponse) {
   }
