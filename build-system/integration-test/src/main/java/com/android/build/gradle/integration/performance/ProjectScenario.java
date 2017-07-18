@@ -94,7 +94,7 @@ public enum ProjectScenario {
     }
 
     public boolean useDexArchive() {
-        return flags.getCompiler() == Flags.Compiler.DEX_ARCHIVE;
+        return flags.getCompiler() == Flags.Compiler.DEX_ARCHIVE || useD8();
     }
 
     public boolean useD8() {
