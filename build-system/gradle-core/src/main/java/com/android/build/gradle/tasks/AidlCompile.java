@@ -22,7 +22,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.annotations.concurrency.GuardedBy;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
@@ -44,6 +43,7 @@ import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -90,23 +90,18 @@ public class AidlCompile extends IncrementalTask {
     }
 
     private static class DepFileProcessor implements DependencyFileProcessor {
-
-        @GuardedBy("this")
-        List<DependencyData> dependencyDataList = Lists.newArrayList();
+        List<DependencyData> dependencyDataList =
+                Collections.synchronizedList(Lists.newArrayList());
 
         List<DependencyData> getDependencyDataList() {
-            synchronized (this) {
-                return dependencyDataList;
-            }
+            return dependencyDataList;
         }
 
         @Override
         public DependencyData processFile(@NonNull File dependencyFile) throws IOException {
             DependencyData data = DependencyData.parseDependencyFile(dependencyFile);
             if (data != null) {
-                synchronized (this) {
-                    dependencyDataList.add(data);
-                }
+                dependencyDataList.add(data);
             }
 
             return data;
