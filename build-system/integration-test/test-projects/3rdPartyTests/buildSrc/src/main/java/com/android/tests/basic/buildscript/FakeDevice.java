@@ -12,7 +12,6 @@ import com.android.ddmlib.TimeoutException;
 import com.android.utils.ILogger;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.SettableFuture;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -116,6 +115,18 @@ public class FakeDevice extends DeviceConnector {
     @Override
     public String getName() {
         return name;
+    }
+
+    @Override
+    public void executeShellCommand(
+            String command,
+            IShellOutputReceiver receiver,
+            long maxTimeout,
+            long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException {
+        executeShellCommand(command, receiver, maxTimeToOutputResponse, maxTimeUnits);
     }
 
     @Override

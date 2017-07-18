@@ -18,7 +18,10 @@ package com.android.ddmlib;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.TruthJUnit.assume;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -236,7 +239,8 @@ public class IntegrationTest {
             try {
                 // Use a long enough timeout to ensure we receive at least one message from the
                 // command to verify it executed.
-                iDevice.executeShellCommand("write-no-stop", receiver, 500, TimeUnit.MILLISECONDS);
+                iDevice.executeShellCommand(
+                        "write-no-stop", receiver, 500L, 0L, TimeUnit.MILLISECONDS);
                 fail("Should have thrown an exception.");
             } catch (TimeoutException expected) {
                 assertEquals("executeRemoteCommand timed out after 500ms", expected.getMessage());

@@ -175,6 +175,19 @@ public class ConnectedDevice extends DeviceConnector {
         iDevice.executeShellCommand(command, receiver, maxTimeToOutputResponse, maxTimeUnits);
     }
 
+    @Override
+    public void executeShellCommand(
+            String command,
+            IShellOutputReceiver receiver,
+            long maxTimeout,
+            long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException {
+        iDevice.executeShellCommand(
+                command, receiver, maxTimeout, maxTimeToOutputResponse, maxTimeUnits);
+    }
+
     @NonNull
     @Override
     public Future<String> getSystemProperty(@NonNull String name) {

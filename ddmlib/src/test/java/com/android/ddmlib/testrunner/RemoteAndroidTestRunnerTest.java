@@ -18,14 +18,11 @@ package com.android.ddmlib.testrunner;
 
 import com.android.ddmlib.IShellEnabledDevice;
 import com.android.ddmlib.IShellOutputReceiver;
-
-import junit.framework.TestCase;
-
-import org.easymock.EasyMock;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+import junit.framework.TestCase;
+import org.easymock.EasyMock;
 
 /**
  * Unit tests for {@link RemoteAndroidTestRunner}.
@@ -121,8 +118,12 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
      */
     @SuppressWarnings("unchecked")
     public void testRun_ioException() throws Exception {
-        mMockDevice.executeShellCommand((String)EasyMock.anyObject(), (IShellOutputReceiver)
-                EasyMock.anyObject(), EasyMock.eq(0L), EasyMock.eq(TimeUnit.MILLISECONDS));
+        mMockDevice.executeShellCommand(
+                (String) EasyMock.anyObject(),
+                (IShellOutputReceiver) EasyMock.anyObject(),
+                EasyMock.eq(0L),
+                EasyMock.eq(0L),
+                EasyMock.eq(TimeUnit.MILLISECONDS));
         EasyMock.expectLastCall().andThrow(new IOException());
         // verify that the listeners run started, run failure, and run ended methods are called
         mMockListener.testRunStarted(TEST_PACKAGE, 0);
@@ -144,8 +145,12 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
      * <var>expectedCmd</var> pattern was received by the mock device.
      */
     private void runAndVerify(String expectedCmd) throws Exception {
-        mMockDevice.executeShellCommand(expectedCmd, (IShellOutputReceiver)
-                EasyMock.anyObject(), EasyMock.eq(0L), EasyMock.eq(TimeUnit.MILLISECONDS));
+        mMockDevice.executeShellCommand(
+                expectedCmd,
+                (IShellOutputReceiver) EasyMock.anyObject(),
+                EasyMock.eq(0L),
+                EasyMock.eq(0L),
+                EasyMock.eq(TimeUnit.MILLISECONDS));
         EasyMock.replay(mMockDevice);
         mRunner.run(mMockListener);
         EasyMock.verify(mMockDevice);

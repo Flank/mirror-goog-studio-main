@@ -613,8 +613,33 @@ final class Device implements IDevice {
             long maxTimeToOutputResponse, TimeUnit maxTimeUnits)
             throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
             IOException {
-        AdbHelper.executeRemoteCommand(AndroidDebugBridge.getSocketAddress(), command, this,
-                receiver, maxTimeToOutputResponse, maxTimeUnits);
+        AdbHelper.executeRemoteCommand(
+                AndroidDebugBridge.getSocketAddress(),
+                command,
+                this,
+                receiver,
+                0L,
+                maxTimeToOutputResponse,
+                maxTimeUnits);
+    }
+
+    @Override
+    public void executeShellCommand(
+            String command,
+            IShellOutputReceiver receiver,
+            long maxTimeout,
+            long maxTimeToOutputResponse,
+            TimeUnit maxTimeUnits)
+            throws TimeoutException, AdbCommandRejectedException, ShellCommandUnresponsiveException,
+                    IOException {
+        AdbHelper.executeRemoteCommand(
+                AndroidDebugBridge.getSocketAddress(),
+                command,
+                this,
+                receiver,
+                maxTimeout,
+                maxTimeToOutputResponse,
+                maxTimeUnits);
     }
 
     @Override

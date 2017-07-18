@@ -151,6 +151,7 @@ public class SimpleTestCallableTest {
                                         + "com.example.app/android.support.test.runner.AndroidJUnitRunner"),
                         any(),
                         anyLong(),
+                        anyLong(),
                         any());
         verify(deviceConnector).uninstallPackage("com.example.app", TIMEOUT, logger);
         verify(deviceConnector).disconnect(TIMEOUT, logger);
