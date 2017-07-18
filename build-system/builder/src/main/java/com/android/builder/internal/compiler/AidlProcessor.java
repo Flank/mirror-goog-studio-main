@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 
 /**
  * A Source File processor for AIDL files. This compiles each aidl file found by the SourceSearcher.
@@ -45,8 +44,7 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
     private final String mAidlExecutable;
     @NonNull
     private final String mFrameworkLocation;
-    @NonNull
-    private final List<File> mImportFolders;
+    @NonNull private final Iterable<File> mImportFolders;
     @NonNull
     private final File mSourceOutputDir;
     @Nullable
@@ -62,7 +60,7 @@ public class AidlProcessor implements DirectoryWalker.FileAction {
     public AidlProcessor(
             @NonNull String aidlExecutable,
             @NonNull String frameworkLocation,
-            @NonNull List<File> importFolders,
+            @NonNull Iterable<File> importFolders,
             @NonNull File sourceOutputDir,
             @Nullable File packagedOutputDir,
             @Nullable Collection<String> packageWhiteList,

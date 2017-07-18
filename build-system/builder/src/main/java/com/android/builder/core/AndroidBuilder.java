@@ -991,7 +991,7 @@ public class AndroidBuilder {
             @NonNull File sourceOutputDir,
             @Nullable File packagedOutputDir,
             @Nullable Collection<String> packageWhitelist,
-            @NonNull List<File> importFolders,
+            @NonNull Iterable<File> importFolders,
             @Nullable DependencyFileProcessor dependencyFileProcessor,
             @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, InterruptedException, ProcessException {
