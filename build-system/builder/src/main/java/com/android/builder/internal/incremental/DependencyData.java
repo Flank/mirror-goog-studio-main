@@ -21,10 +21,11 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
-import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Holds dependency information, including the main compiled file, secondary input files
@@ -92,9 +93,9 @@ public class DependencyData {
             return null;
         }
 
-        // Read in our dependency file
-        List<String> content = Files.readLines(dependencyFile, Charsets.UTF_8);
-        return processDependencyData(content);
+        try (Stream<String> lines = Files.lines(dependencyFile.toPath(), Charsets.UTF_8)) {
+            return processDependencyData(lines::iterator);
+        }
     }
 
     private enum ParseMode {
@@ -103,7 +104,7 @@ public class DependencyData {
 
     @VisibleForTesting
     @Nullable
-    static DependencyData processDependencyData(@NonNull List<String> content) {
+    static DependencyData processDependencyData(@NonNull Iterable<String> content) {
         // The format is technically:
         // output1 output2 [...]: dep1 dep2 [...]
         // However, the current tools generating those files guarantee that each file path
