@@ -51,7 +51,8 @@ public class ConsoleProgressIndicatorTest {
                         + "[===                                    ] 10% bar                               \r"
                         + "[=======                                ] 20% bar                               \r"
                         + "                                                                                \r"
-                        + "Info: Info msg\n"
+                        + "Info: Info msg"
+                        + System.lineSeparator()
                         + "[=======                                ] 20% bar                               \r"
                         + "[=======                                ] 20% baz                               \r"
                         + "[===========                            ] 30% baz                               \r"
@@ -65,6 +66,11 @@ public class ConsoleProgressIndicatorTest {
                         + "[===                                    ] 10%                                   \r"
                         + "[=======================================] 100%                                  \r";
         assertEquals(expected, out.toString());
-        assertEquals("Warning: warning\nError: error\n", err.toString());
+        assertEquals(
+                "Warning: warning"
+                        + System.lineSeparator()
+                        + "Error: error"
+                        + System.lineSeparator(),
+                err.toString());
     }
 }
