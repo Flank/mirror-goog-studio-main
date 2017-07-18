@@ -86,12 +86,7 @@ public class AidlCompile extends IncrementalTask {
     public FileTree getSourceFiles() {
         // this is because aidl may be in the same folder as Java and we want to restrict to
         // .aidl files and not java files.
-        FileTree src = null;
-        Collection<File> sources = sourceDirs.get();
-        if (!sources.isEmpty()) {
-            src = getProject().files(sources).getAsFileTree().matching(PATTERN_SET);
-        }
-        return src == null ? getProject().files().getAsFileTree() : src;
+        return getProject().files(sourceDirs.get()).getAsFileTree().matching(PATTERN_SET);
     }
 
     private static class DepFileProcessor implements DependencyFileProcessor {
