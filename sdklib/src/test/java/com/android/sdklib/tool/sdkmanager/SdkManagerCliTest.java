@@ -243,12 +243,14 @@ public class SdkManagerCliTest {
         SdkManagerCli downloader =
                 new SdkManagerCli(settings, new PrintStream(out), null, mDownloader, mSdkHandler);
         downloader.run(new FakeProgressIndicator());
+        String p1RelativePath = new File("test/p1").getPath();
+        String p2RelativePath = new File("test/p2/is-also/installed-in-a/path-with-a-long-name").getPath();
         String expected =
                 "Installed packages:\n"
                         + "  Path                                                                 | Version | Description                                                      | Location                                            \n"
                         + "  -------                                                              | ------- | -------                                                          | -------                                             \n"
-                        + "  test;p1                                                              | 1       | package 1                                                        | test/p1                                             \n"
-                        + "  test;p2;which;has;a;really;long;name;which;should;still;be;displayed | 1       | package 2 has a long display name that should still be displayed | test/p2/is-also/installed-in-a/path-with-a-long-name\n"
+                        + "  test;p1                                                              | 1       | package 1                                                        | " + p1RelativePath + "                                             \n"
+                        + "  test;p2;which;has;a;really;long;name;which;should;still;be;displayed | 1       | package 2 has a long display name that should still be displayed | " + p2RelativePath + "\n"
                         + "  upgrade                                                              | 1       | upgrade v1                                                       | upgrade                                             \n"
                         + "\n"
                         + "Available Packages:\n"
