@@ -125,6 +125,6 @@ android {
                 "buildToolsVersion '24.0.3'");
         AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
         TruthHelper.assertThat(model)
-                .hasIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);
+                .hasIssue(SyncIssue.SEVERITY_WARNING, SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);
     }
 }

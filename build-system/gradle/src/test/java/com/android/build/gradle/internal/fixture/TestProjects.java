@@ -26,6 +26,7 @@ import com.android.build.gradle.FeaturePlugin;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.LibraryPlugin;
 import com.android.build.gradle.internal.SdkHandler;
+import com.android.build.gradle.options.Option;
 import com.android.testutils.OsType;
 import com.android.testutils.TestUtils;
 import com.google.common.collect.ImmutableList;
@@ -125,6 +126,12 @@ public class TestProjects {
         @NonNull
         public Builder withProperty(@NonNull String property, @NonNull String value) {
             this.properties.put(property, value);
+            return this;
+        }
+
+        @NonNull
+        public <T> Builder withProperty(@NonNull Option<T> option, T value) {
+            this.properties.put(option.getPropertyName(), String.valueOf(value));
             return this;
         }
 

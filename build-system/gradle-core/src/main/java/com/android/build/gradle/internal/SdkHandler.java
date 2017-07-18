@@ -30,6 +30,7 @@ import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.LibraryRequest;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.model.Version;
 import com.android.builder.sdk.DefaultSdkLoader;
 import com.android.builder.sdk.PlatformLoader;
 import com.android.builder.sdk.SdkInfo;
@@ -131,6 +132,29 @@ public class SdkHandler {
                 sSdkLoader = getSdkLoader();
             }
             sdkLoader = sSdkLoader;
+        }
+
+        if (buildToolRevision.compareTo(AndroidBuilder.MIN_BUILD_TOOLS_REV) < 0) {
+            androidBuilder
+                    .getErrorReporter()
+                    .handleSyncWarning(
+                            AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION.toString(),
+                            SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW,
+                            String.format(
+                                    "The specified Android SDK Build Tools version (%1$s) is "
+                                            + "ignored, as it is below the minimum supported "
+                                            + "version (%2$s) for Android Gradle Plugin %3$s.\n"
+                                            + "Android SDK Build Tools %4$s will be used.\n"
+                                            + "To suppress this warning, "
+                                            + "remove \"buildToolsVersion '%1$s'\" "
+                                            + "from your build.gradle file, as each "
+                                            + "version of the Android Gradle Plugin now has a "
+                                            + "default version of the build tools.",
+                                    buildToolRevision,
+                                    AndroidBuilder.MIN_BUILD_TOOLS_REV,
+                                    Version.ANDROID_GRADLE_PLUGIN_VERSION,
+                                    AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION));
+            buildToolRevision = AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION;
         }
 
 

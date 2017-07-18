@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.api.TestVariant;
+import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.TestOptions;
@@ -33,12 +34,18 @@ import com.android.build.gradle.internal.fixture.VariantChecker;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.tasks.factory.AndroidJavaCompile;
+import com.android.builder.core.AndroidBuilder;
+import com.android.builder.model.SyncIssue;
+import com.android.builder.model.Version;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import groovy.util.Eval;
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -81,6 +88,7 @@ public class PluginDslTest {
         project =
                 TestProjects.builder(projectDirectory.newFolder("project").toPath())
                         .withPlugin(pluginType)
+                        .withProperty(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED, true)
                         .build();
 
         android = project.getExtensions().getByType(pluginType.getExtensionClass());
@@ -576,6 +584,35 @@ public class PluginDslTest {
         assertNotNull(android.getAdbExe());
         assertNotNull(android.getAdbExecutable());
         assertEquals(android.getAdbExe(), android.getAdbExecutable());
+    }
+
+    @Test
+    public void testSetOlderBuildToolsVersion() {
+        android.setBuildToolsVersion("19.0.0");
+        plugin.createAndroidTasks(false);
+        assertThat(plugin.getAndroidBuilder().getBuildToolInfo().getRevision())
+                .isEqualTo(AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION);
+        Collection<SyncIssue> syncIssues =
+                ((ExtraModelInfo) plugin.getAndroidBuilder().getErrorReporter())
+                        .getSyncIssues()
+                        .values();
+        assertThat(syncIssues).hasSize(1);
+        SyncIssue issue = Iterables.getOnlyElement(syncIssues);
+        assertThat(issue.getType()).isEqualTo(SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);
+        assertThat(issue.getSeverity()).isEqualTo(SyncIssue.SEVERITY_WARNING);
+        assertThat(issue.getMessage())
+                .isEqualTo(
+                        "The specified Android SDK Build Tools version (19.0.0) is "
+                                + "ignored, as it is below the minimum supported version ("
+                                + AndroidBuilder.MIN_BUILD_TOOLS_REV
+                                + ") for Android Gradle Plugin "
+                                + Version.ANDROID_GRADLE_PLUGIN_VERSION
+                                + ".\n"
+                                + "Android SDK Build Tools "
+                                + AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION
+                                + " will be used.\n"
+                                + "To suppress this warning, remove \"buildToolsVersion '19.0.0'\" from your build.gradle file, "
+                                + "as each version of the Android Gradle Plugin now has a default version of the build tools.");
     }
 
     public void checkProguardFiles(Map<String, List<String>> expected) {
