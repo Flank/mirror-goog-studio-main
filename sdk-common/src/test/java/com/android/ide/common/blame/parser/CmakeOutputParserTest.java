@@ -16,6 +16,7 @@
 package com.android.ide.common.blame.parser;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.android.ide.common.blame.Message;
 import com.android.utils.StdLogger;
@@ -23,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Matcher;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,6 +42,82 @@ public class CmakeOutputParserTest {
                 new ToolOutputParser(
                         new CmakeOutputParser(), new StdLogger(StdLogger.Level.VERBOSE));
         mSourceFile = mTemporaryFolder.newFile();
+    }
+
+    @Test
+    public void testPosixFilePatternMatcherForErrorFileAndLineNumberError() {
+        int lineNumber = 123;
+        int columnNumber = 456;
+        String filePath = "/path/to/file.type";
+        String error = "CMake Error at %s:%d:%d";
+        error = String.format(Locale.getDefault(), error, filePath, lineNumber, columnNumber);
+
+        Matcher matcher = CmakeOutputParser.errorFileAndLineNumber.matcher(error);
+        assertTrue("[match file path]", matcher.matches());
+
+        String matchedPath = matcher.group(2);
+        CmakeOutputParser.ErrorFields fields =
+                CmakeOutputParser.matchErrorFileAndLineNumberErrorParts(matcher, error);
+        assertEquals("[source path]", filePath.trim(), matchedPath);
+        assertEquals("[line number]", lineNumber, fields.lineNumber);
+        assertEquals("[column number]", columnNumber, fields.columnNumber);
+    }
+
+    @Test
+    public void testPosixFilePatternMatcherForFileAndLineNumberError() {
+        int lineNumber = 123;
+        int columnNumber = 456;
+        String filePath = "/path/to/file.type";
+        String error = "%s:%d:%d";
+        error = String.format(Locale.getDefault(), error, filePath, lineNumber, columnNumber);
+
+        Matcher matcher = CmakeOutputParser.fileAndLineNumber.matcher(error);
+        assertTrue("[match file path]", matcher.matches());
+
+        String matchedPath = matcher.group(1);
+        CmakeOutputParser.ErrorFields fields =
+                CmakeOutputParser.matchFileAndLineNumberErrorParts(matcher, error);
+        assertEquals("[source path]", filePath.trim(), matchedPath);
+        assertEquals("[line number]", lineNumber, fields.lineNumber);
+        assertEquals("[column number]", columnNumber, fields.columnNumber);
+    }
+
+    @Test
+    public void testWindowsFilePatternMatcherForErrorFileAndLineNumberError() {
+        int lineNumber = 123;
+        int columnNumber = 456;
+        String filePath = "C:\\Path\\to\\file.type";
+        String error = "CMake Error at %s:%d:%d";
+        error = String.format(Locale.getDefault(), error, filePath, lineNumber, columnNumber);
+
+        Matcher matcher = CmakeOutputParser.errorFileAndLineNumber.matcher(error);
+        assertTrue("[match file path]", matcher.matches());
+
+        String matchedPath = matcher.group(2);
+        CmakeOutputParser.ErrorFields fields =
+                CmakeOutputParser.matchErrorFileAndLineNumberErrorParts(matcher, error);
+        assertEquals("[source path]", filePath.trim(), matchedPath);
+        assertEquals("[line number]", lineNumber, fields.lineNumber);
+        assertEquals("[column number]", columnNumber, fields.columnNumber);
+    }
+
+    @Test
+    public void testWindowsFilePatternMatcherForFileAndLineNumberError() {
+        int lineNumber = 123;
+        int columnNumber = 456;
+        String filePath = "C:\\Path\\to\\file.type";
+        String error = "%s:%d:%d";
+        error = String.format(Locale.getDefault(), error, filePath, lineNumber, columnNumber);
+
+        Matcher matcher = CmakeOutputParser.fileAndLineNumber.matcher(error);
+        assertTrue("[match file path]", matcher.matches());
+
+        String matchedPath = matcher.group(1);
+        CmakeOutputParser.ErrorFields fields =
+                CmakeOutputParser.matchFileAndLineNumberErrorParts(matcher, error);
+        assertEquals("[source path]", filePath.trim(), matchedPath);
+        assertEquals("[line number]", lineNumber, fields.lineNumber);
+        assertEquals("[column number]", columnNumber, fields.columnNumber);
     }
 
     @Test

@@ -17,6 +17,7 @@
 package com.android.ide.common.blame.parser;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
@@ -35,10 +36,11 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
     private final Pattern cmakeErrorOrWarning =
             Pattern.compile("^\\s*CMake (Error|Warning)(: (Error|Warning) in cmake code)? at.*");
     private final Pattern doubleDashLine = Pattern.compile("^\\s*-- .*");
-    private final Pattern fileAndLineNumber = Pattern.compile("^(.*):([0-9]+)? *:([0-9]+)?(.+)?");
-    private final Pattern errorFileAndLineNumber =
+    static final Pattern fileAndLineNumber =
+            Pattern.compile("^(([A-Za-z]:)?.*):([0-9]+)? *:([0-9]+)?(.+)?");
+    static final Pattern errorFileAndLineNumber =
             Pattern.compile(
-                    "CMake (Error|Warning).*at ([^:]+):([0-9]+)?.*(\\([^:]*\\))?:([0-9]+)?(.+)?");
+                    "CMake (Error|Warning).*at (([A-Za-z]:)?[^:]+):([0-9]+)?.*(\\([^:]*\\))?:([0-9]+)?(.+)?");
 
     @Override
     public boolean parse(
@@ -82,7 +84,7 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
      *
      * <p>This also matches a "CMake Warning:" with the same structure.
      */
-    private boolean matchesFileAndLineNumberError(
+    private static boolean matchesFileAndLineNumberError(
             @NonNull String line, @NonNull List<Message> messages) {
         Matcher matcher = fileAndLineNumber.matcher(line);
         if (matcher.matches()) {
@@ -101,29 +103,40 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
                 }
             }
 
-            int lineNumber = -1;
-            if (matcher.group(2) != null) {
-                lineNumber = Integer.valueOf(matcher.group(2));
-            }
-
-            int columnNumber = -1;
-            if (matcher.group(3) != null) {
-                columnNumber = Integer.valueOf(matcher.group(3));
-            }
-
-            String errorMessage = line;
-            if (matcher.group(4) != null) {
-                errorMessage = matcher.group(4);
-            }
+            ErrorFields fields = matchFileAndLineNumberErrorParts(matcher, line);
+            fields.kind = kind;
 
             SourceFilePosition position =
-                    new SourceFilePosition(file, new SourcePosition(lineNumber, columnNumber, -1));
-            Message message = new Message(kind, errorMessage, position);
+                    new SourceFilePosition(
+                            file, new SourcePosition(fields.lineNumber, fields.columnNumber, -1));
+            Message message = new Message(fields.kind, fields.errorMessage, position);
             messages.add(message);
             return true;
         }
 
         return false;
+    }
+
+    @VisibleForTesting
+    static ErrorFields matchFileAndLineNumberErrorParts(
+            @NonNull Matcher matcher, @NonNull String line) {
+        ErrorFields fields = new ErrorFields();
+        fields.lineNumber = -1;
+        if (matcher.group(3) != null) {
+            fields.lineNumber = Integer.valueOf(matcher.group(3));
+        }
+
+        fields.columnNumber = -1;
+        if (matcher.group(4) != null) {
+            fields.columnNumber = Integer.valueOf(matcher.group(4));
+        }
+
+        fields.errorMessage = line;
+        if (matcher.group(5) != null) {
+            fields.errorMessage = matcher.group(5);
+        }
+
+        return fields;
     }
 
     /**
@@ -137,7 +150,7 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
      *
      * <p>This also matches a warning with the same format.
      */
-    private boolean matchesErrorFileAndLineNumberError(
+    private static boolean matchesErrorFileAndLineNumberError(
             @NonNull String line, @NonNull List<Message> messages) {
         Matcher matcher = errorFileAndLineNumber.matcher(line);
         if (matcher.matches()) {
@@ -146,33 +159,49 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
                 return false;
             }
 
-            Message.Kind kind = Message.Kind.WARNING;
-            if (matcher.group(1).equals(ERROR)) {
-                kind = Message.Kind.ERROR;
-            }
-
-            int lineNumber = -1;
-            if (matcher.group(3) != null) {
-                lineNumber = Integer.valueOf(matcher.group(3));
-            }
-
-            int columnNumber = -1;
-            if (matcher.group(5) != null) {
-                columnNumber = Integer.valueOf(matcher.group(5));
-            }
-
-            String errorMessage = line;
-            if (matcher.group(6) != null) {
-                errorMessage = matcher.group(6);
-            }
-
+            ErrorFields fields = matchErrorFileAndLineNumberErrorParts(matcher, line);
             SourceFilePosition position =
-                    new SourceFilePosition(file, new SourcePosition(lineNumber, columnNumber, -1));
-            Message message = new Message(kind, errorMessage, position);
+                    new SourceFilePosition(
+                            file, new SourcePosition(fields.lineNumber, fields.columnNumber, -1));
+            Message message = new Message(fields.kind, fields.errorMessage, position);
             messages.add(message);
             return true;
         }
 
         return false;
+    }
+
+    @VisibleForTesting
+    static ErrorFields matchErrorFileAndLineNumberErrorParts(
+            @NonNull Matcher matcher, @NonNull String line) {
+        ErrorFields fields = new ErrorFields();
+        fields.kind = Message.Kind.WARNING;
+        if (matcher.group(1).equals(ERROR)) {
+            fields.kind = Message.Kind.ERROR;
+        }
+
+        fields.lineNumber = -1;
+        if (matcher.group(4) != null) {
+            fields.lineNumber = Integer.valueOf(matcher.group(4));
+        }
+
+        fields.columnNumber = -1;
+        if (matcher.group(6) != null) {
+            fields.columnNumber = Integer.valueOf(matcher.group(6));
+        }
+
+        fields.errorMessage = line;
+        if (matcher.group(7) != null) {
+            fields.errorMessage = matcher.group(7);
+        }
+
+        return fields;
+    }
+
+    static class ErrorFields {
+        Message.Kind kind;
+        int lineNumber;
+        int columnNumber;
+        String errorMessage;
     }
 }
