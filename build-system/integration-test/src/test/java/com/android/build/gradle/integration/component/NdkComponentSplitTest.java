@@ -33,7 +33,6 @@ import com.android.testutils.apk.Apk;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -127,10 +126,9 @@ public class NdkComponentSplitTest {
         SigningHelper.assertApkSignaturesVerify(x86Apk);
     }
 
-    @Ignore("http://b/38419063")
+    @Test
     @Category(DeviceTests.class)
     public void connectedAndroidTest() throws Exception {
-        project.execute("assembleDebug", "assembleDebugAndroidTest");
         IDevice device = adb.getDevice(AndroidVersionMatcher.thatUsesArt());
         project.executor()
                 .with(StringOption.DEVICE_POOL_SERIAL, device.getSerialNumber())

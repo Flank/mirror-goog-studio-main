@@ -59,7 +59,8 @@ class AndroidTestResourcesTest {
 
                 public class HelloWorldResourceTest extends
                         ActivityInstrumentationTestCase2<HelloWorld> {
-                    private TextView mTextView;
+                    private TextView mainAppTextView;
+                    private Object testLayout;
 
                     public HelloWorldResourceTest() {
                         super("com.example.helloworld", HelloWorld.class);
@@ -69,13 +70,16 @@ class AndroidTestResourcesTest {
                     protected void setUp() throws Exception {
                         super.setUp();
                         final HelloWorld a = getActivity();
-                        mTextView = (TextView) a.findViewById(
-                                com.example.helloworld.test.R.id.test_layout_1_textview);
+                        mainAppTextView = (TextView) a.findViewById(
+                                com.example.helloworld.R.id.text);
+                        testLayout = getInstrumentation().getContext().getResources()
+                                .getLayout(com.example.helloworld.test.R.layout.test_layout_1);
                     }
 
                     @MediumTest
                     public void testPreconditions() {
-                        assertNull("Shouldn't find test_layout_1_textview.", mTextView);
+                        assertNotNull("Should find test test_layout_1.", testLayout);
+                        assertNotNull("Should find main app text view.", mainAppTextView);
                     }
                 }
                 """.stripIndent()))
@@ -178,7 +182,7 @@ class AndroidTestResourcesTest {
         assertFalse(checkLayoutInR(project, 2, 3))
     }
 
-    @Ignore("http://b/38419063")
+    @Test
     @Category(DeviceTests.class)
     public void "check test layout can be used in device tests"() {
         appProject.executeConnectedCheck()
