@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
@@ -39,6 +40,10 @@ public class TaskInputHelper {
 
     public static void enableBypass() {
         bypassSupplier.set(true);
+    }
+
+    public static boolean bypassEnabled() {
+        return bypassSupplier.get();
     }
 
     /**
@@ -64,7 +69,7 @@ public class TaskInputHelper {
      */
     public static Supplier<Collection<File>> bypassFileSupplier(
             @NonNull Supplier<Collection<File>> supplier) {
-        return new BypassFileSupplier(supplier);
+        return new Bypasser(supplier);
     }
 
     /**
@@ -92,7 +97,7 @@ public class TaskInputHelper {
      */
     public static Callable<Collection<File>> bypassFileCallable(
             @NonNull Supplier<Collection<File>> supplier) {
-        return new BypassFileCallable(supplier);
+        return new Bypasser(supplier);
     }
 
     /**
@@ -107,53 +112,28 @@ public class TaskInputHelper {
      */
     @NonNull
     public static <T> Supplier<T> memoize(@NonNull Supplier<T> supplier) {
-        return new MemoizedSupplier<>(supplier);
+        return Suppliers.memoize(supplier::get);
     }
 
-    private static class BypassFileSupplier extends MemoizedSupplier<Collection<File>> {
+    private static class Bypasser
+            implements Supplier<Collection<File>>, Callable<Collection<File>> {
+        private final Supplier<Collection<File>> supplier;
+
+        public Bypasser(Supplier<Collection<File>> supplier) {
+            this.supplier = memoize(supplier);
+        }
 
         @Override
         public Collection<File> get() {
-            if (TaskInputHelper.bypassSupplier.get()) {
+            if (bypassEnabled()) {
                 return ImmutableList.of();
             }
 
-            return super.get();
-        }
-
-        private BypassFileSupplier(@NonNull Supplier<Collection<File>> supplier) {
-            super(supplier);
-        }
-    }
-
-    private static class MemoizedSupplier<T> implements Supplier<T> {
-
-        @NonNull
-        private final Supplier<T> supplier;
-        private T lastValue;
-
-        @Override
-        public T get() {
-            if (lastValue == null) {
-                lastValue = supplier.get();
-            }
-            return lastValue;
-        }
-
-        private MemoizedSupplier(@NonNull Supplier<T> supplier) {
-            this.supplier = supplier;
-        }
-    }
-
-    private static class BypassFileCallable extends BypassFileSupplier
-            implements Callable<Collection<File>> {
-
-        private BypassFileCallable(@NonNull Supplier<Collection<File>> supplier) {
-            super(supplier);
+            return supplier.get();
         }
 
         @Override
-        public Collection<File> call() throws Exception {
+        public Collection<File> call() {
             return get();
         }
     }
