@@ -25,6 +25,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.ZFile;
 import com.android.testutils.apk.Dex;
+import com.android.utils.PathUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
@@ -42,7 +43,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -376,7 +376,7 @@ public class DexArchiveBuilderTest {
             classesInArchive =
                     Files.walk(dexArchive.getRootPath())
                             .filter(Files::isRegularFile)
-                            .map(Path::toString)
+                            .map(PathUtils::toSystemIndependentPath)
                             .map(DexArchiveBuilderTest::getClassNameWithoutPackage)
                             .collect(Collectors.toSet());
         }
@@ -393,7 +393,6 @@ public class DexArchiveBuilderTest {
     }
 
     private static String getClassNameWithoutPackage(@NonNull String dexEntryPath) {
-        return dexEntryPath.replaceAll(
-                ".*" + PACKAGE + Pattern.quote(File.separator) + "(.*)\\.dex", "$1");
+        return dexEntryPath.replaceAll(".*" + PACKAGE + "/(.*)\\.dex", "$1");
     }
 }

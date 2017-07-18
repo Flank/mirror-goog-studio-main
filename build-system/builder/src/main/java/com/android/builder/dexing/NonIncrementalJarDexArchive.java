@@ -18,6 +18,7 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.utils.PathUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
@@ -76,7 +77,7 @@ final class NonIncrementalJarDexArchive implements DexArchive {
         CRC32 checksum = new CRC32();
         checksum.update(bytes, offset, end);
 
-        ZipEntry zipEntry = new ZipEntry(relativePath.toString());
+        ZipEntry zipEntry = new ZipEntry(PathUtils.toSystemIndependentPath(relativePath));
         zipEntry.setLastModifiedTime(ZERO_TIME);
         zipEntry.setLastAccessTime(ZERO_TIME);
         zipEntry.setCreationTime(ZERO_TIME);
