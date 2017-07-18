@@ -2236,7 +2236,8 @@ public abstract class TaskManager {
                         variantScope.getDexer(),
                         projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS),
                         projectOptions.get(IntegerOption.DEXING_READ_BUFFER_SIZE),
-                        projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE));
+                        projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE),
+                        variantScope.getVariantConfiguration().getBuildType().isDebuggable());
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
@@ -2263,8 +2264,16 @@ public abstract class TaskManager {
     }
 
     private boolean usingIncrementalDexing(@NonNull VariantScope variantScope) {
-        return projectOptions.get(BooleanOption.ENABLE_DEX_ARCHIVE)
-                && variantScope.getVariantConfiguration().getBuildType().isDebuggable();
+        if (!projectOptions.get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
+            return false;
+        }
+        if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
+            return true;
+        }
+
+        // In release builds only D8 can be used. See b/37140568 for details.
+        return projectOptions.get(BooleanOption.ENABLE_D8_DEXER)
+                && projectOptions.get(BooleanOption.ENABLE_D8_MERGER);
     }
 
     @Nullable

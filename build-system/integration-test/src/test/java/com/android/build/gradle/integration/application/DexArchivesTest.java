@@ -154,8 +154,16 @@ public class DexArchivesTest {
     public void testForReleaseVariants() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(project.getBuildFile(), "android.dexOptions.dexInProcess false");
         GradleBuildResult result = runTask("assembleRelease");
-        assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithPreDexForRelease");
-        assertThat(result.getNotUpToDateTasks()).contains(":transformDexWithDexForRelease");
+        if (dexerTool == DexerTool.D8) {
+            assertThat(result.getNotUpToDateTasks())
+                    .contains(":transformClassesWithDexBuilderForRelease");
+            assertThat(result.getNotUpToDateTasks())
+                    .contains(":transformDexArchiveWithDexMergerForRelease");
+        } else {
+            assertThat(result.getNotUpToDateTasks())
+                    .contains(":transformClassesWithPreDexForRelease");
+            assertThat(result.getNotUpToDateTasks()).contains(":transformDexWithDexForRelease");
+        }
     }
 
     private void checkIntermediaryDexArchives(@NonNull Collection<String> dexEntryNames) {

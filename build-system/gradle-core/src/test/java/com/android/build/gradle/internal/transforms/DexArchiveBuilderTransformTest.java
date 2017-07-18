@@ -242,7 +242,8 @@ public class DexArchiveBuilderTransformTest {
                 DexerTool.DX,
                 true,
                 10,
-                10);
+                10,
+                true);
     }
 
     @NonNull

@@ -79,7 +79,7 @@ class DexMergerTransformCallable implements Callable<Void> {
                 int d8MinSdkVersion = minSdkVersion;
                 if (dexingType == DexingType.NATIVE_MULTIDEX) {
                     // D8 has baked-in logic that does not allow multiple dex files without
-                    // main dex list if min sdk < 21. Becuase we are only merging dex files here,
+                    // main dex list if min sdk < 21. Because we are only merging dex files here,
                     // it is safe to specify 21 as min sdk version.
                     d8MinSdkVersion = 21;
                 }

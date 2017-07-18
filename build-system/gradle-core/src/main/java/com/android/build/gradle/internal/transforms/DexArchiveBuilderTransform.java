@@ -109,6 +109,7 @@ public class DexArchiveBuilderTransform extends Transform {
     private final boolean useGradleWorkers;
     private final int inBufferSize;
     private final int outBufferSize;
+    private final boolean isDebuggable;
 
     public DexArchiveBuilderTransform(
             @NonNull DexOptions dexOptions,
@@ -118,7 +119,8 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull DexerTool dexer,
             boolean useGradleWorkers,
             @Nullable Integer inBufferSize,
-            @Nullable Integer outBufferSize) {
+            @Nullable Integer outBufferSize,
+            boolean isDebuggable) {
         this.dexOptions = dexOptions;
         this.errorReporter = errorReporter;
         this.userLevelCache = userLevelCache;
@@ -131,6 +133,7 @@ public class DexArchiveBuilderTransform extends Transform {
                 (inBufferSize == null ? DEFAULT_BUFFER_SIZE_IN_KB : inBufferSize) * 1024;
         this.outBufferSize =
                 (outBufferSize == null ? DEFAULT_BUFFER_SIZE_IN_KB : outBufferSize) * 1024;
+        this.isDebuggable = isDebuggable;
     }
 
     @NonNull
@@ -498,7 +501,7 @@ public class DexArchiveBuilderTransform extends Transform {
                             inBufferSize,
                             outBufferSize,
                             dexer,
-                            true);
+                            isDebuggable);
 
             if (useGradleWorkers) {
                 context.getWorkerExecutor()
