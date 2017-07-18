@@ -447,7 +447,7 @@ public class PluginDslTest {
     @Test
     public void testMockableJarName() {
         android.setCompileSdkVersion(
-                "Google Inc.:Google APIs:" + TestConstants.COMPILE_SDK_VERSION);
+                "Google Inc.:Google APIs:" + TestConstants.COMPILE_SDK_VERSION_WITH_GOOGLE_APIS);
         plugin.createAndroidTasks(false);
 
         MockableAndroidJarTask mockableAndroidJar =
