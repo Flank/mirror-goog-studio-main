@@ -55,6 +55,7 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionTyp
 import java.io.File;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -90,6 +91,14 @@ public class FeatureTaskManager extends TaskManager {
             @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
         BaseVariantData variantData = variantScope.getVariantData();
         assert variantData instanceof FeatureVariantData;
+
+        // FIXME: This is currently disabled due to b/62301277.
+        if (extension.getDataBinding().isEnabled() && !extension.getBaseFeature()) {
+            throw new GradleException(
+                    "Currently, data binding does not work for non-base feature modules.\n"
+                            + "Please, move data binding code to the base feature module.\n"
+                            + "See https://issuetracker.google.com/63814741 for details");
+        }
 
         createAnchorTasks(tasks, variantScope);
         createCheckManifestTask(tasks, variantScope);
