@@ -95,10 +95,10 @@ public class TestFileUtils {
                 newContent);
 
         // Gradle has a bug, where it may not notice rapid changes to build.gradle if the length of
-        // the file has not changed. Work around this by appending a new line at the end.
+        // the file has not changed. Work around this by appending a space at the end.
         if (file.getFileName().toString().equals(SdkConstants.FN_BUILD_GRADLE)
                 && content.length() == newContent.length()) {
-            newContent += System.lineSeparator();
+            newContent += ' ';
         }
 
         java.nio.file.Files.write(file, newContent.getBytes());
