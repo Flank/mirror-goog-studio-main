@@ -90,9 +90,9 @@ public class FeatureAndAbiPureSplitsTest {
 
         List<String> expectedSplitNames =
                 ImmutableList.of(
-                        "featurea.config.x86",
-                        "featurea.config.armeabi_v7a",
-                        "featurea.config.hdpi");
+                        "feature_a.config.x86",
+                        "feature_a.config.armeabi_v7a",
+                        "feature_a.config.hdpi");
         List<String> foundSplitNames = new ArrayList<>();
         debug.getFeatureOutputs()
                 .forEach(

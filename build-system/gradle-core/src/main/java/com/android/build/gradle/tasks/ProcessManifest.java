@@ -76,6 +76,7 @@ public class ProcessManifest extends ManifestProcessorTask {
                                 getMainManifest(),
                                 getManifestOverlays(),
                                 Collections.emptyList(),
+                                null,
                                 getPackageOverride(),
                                 getVersionCode(),
                                 getVersionName(),

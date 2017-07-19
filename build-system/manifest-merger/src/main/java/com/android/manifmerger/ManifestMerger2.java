@@ -1321,7 +1321,7 @@ public class ManifestMerger2 {
 
         /** Regular expression defining legal feature split name. */
         private static final Pattern FEATURE_NAME_PATTERN =
-                Pattern.compile("[a-zA-Z0-9][a-zA-Z0-9-]*");
+                Pattern.compile("[a-zA-Z0-9][a-zA-Z0-9_]*");
 
         /**
          * Specify the feature name for feature merging.
@@ -1330,14 +1330,16 @@ public class ManifestMerger2 {
          * @return itself.
          */
         @NonNull
-        public Invoker setFeatureName(@NonNull String featureName) {
-            mFeatureName = featureName.replaceAll("[^a-zA-Z0-9-]", "");
-            if (!FEATURE_NAME_PATTERN.matcher(mFeatureName).matches()) {
-                throw new IllegalArgumentException(
-                        "FeatureName must follow "
-                                + FEATURE_NAME_PATTERN.pattern()
-                                + " regex, found "
-                                + featureName);
+        public Invoker setFeatureName(@Nullable String featureName) {
+            if (featureName != null) {
+                mFeatureName = featureName;
+                if (!FEATURE_NAME_PATTERN.matcher(mFeatureName).matches()) {
+                    throw new IllegalArgumentException(
+                            "FeatureName must follow "
+                                    + FEATURE_NAME_PATTERN.pattern()
+                                    + " regex, found "
+                                    + featureName);
+                }
             }
             return thisAsT();
         }

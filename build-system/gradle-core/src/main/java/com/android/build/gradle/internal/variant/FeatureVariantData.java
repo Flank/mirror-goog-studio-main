@@ -26,11 +26,19 @@ import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.Maps;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /** Data about a variant that produce a feature split. */
 public class FeatureVariantData extends ApkVariantData implements TestedVariantData {
 
+    /** Regular expression defining the character to be replaced in the split name. */
+    private static final Pattern FEATURE_REPLACEMENT = Pattern.compile("-");
+
+    /** Regular expression defining the characters to be excluded from the split name. */
+    private static final Pattern FEATURE_EXCLUSION = Pattern.compile("[^a-zA-Z0-9_]");
+
     private final Map<VariantType, TestVariantData> testVariants;
+    private final String featureName;
 
     public FeatureVariantData(
             @NonNull GlobalScope globalScope,
@@ -41,6 +49,13 @@ public class FeatureVariantData extends ApkVariantData implements TestedVariantD
             @NonNull Recorder recorder) {
         super(globalScope, androidConfig, taskManager, config, errorReporter, recorder);
         testVariants = Maps.newEnumMap(VariantType.class);
+
+        // Compute the split value name for the manifest.
+        String splitName =
+                FEATURE_REPLACEMENT
+                        .matcher(getScope().getGlobalScope().getProjectBaseName())
+                        .replaceAll("_");
+        featureName = FEATURE_EXCLUSION.matcher(splitName).replaceAll("");
 
         // create default output
         getOutputFactory().addMainApk();
@@ -68,5 +83,10 @@ public class FeatureVariantData extends ApkVariantData implements TestedVariantD
     public void setTestVariantData(
             @NonNull TestVariantData testVariantData, @NonNull VariantType type) {
         testVariants.put(type, testVariantData);
+    }
+
+    @NonNull
+    public String getFeatureName() {
+        return featureName;
     }
 }

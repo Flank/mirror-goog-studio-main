@@ -109,8 +109,8 @@ import java.util.zip.ZipFile;
  * <p>then build steps can be done with:
  *
  * <ol>
- *   <li>{@link #mergeManifestsForApplication(File, List, List, String, int, String, String, String,
- *       Integer, String, String, String, ManifestMerger2.MergeType, Map, List, File)}
+ *   <li>{@link #mergeManifestsForApplication(File, List, List, String, String, int, String, String,
+ *       String, Integer, String, String, String, ManifestMerger2.MergeType, Map, List, File)}
  *   <li>{@link #mergeManifestsForTestVariant(String, String, String, String, String, Boolean,
  *       Boolean, String, File, List, Map, File, File)}
  *   <li>{@link #processResources(Aapt, AaptPackageConfig.Builder, boolean)}
@@ -427,13 +427,12 @@ public class AndroidBuilder {
         return mProcessExecutor.execute(processInfo, handler);
     }
 
-    /**
-     * Invoke the Manifest Merger version 2.
-     */
+    /** Invoke the Manifest Merger version 2. */
     public MergingReport mergeManifestsForApplication(
             @NonNull File mainManifest,
             @NonNull List<File> manifestOverlays,
             @NonNull List<? extends ManifestProvider> dependencies,
+            @Nullable String featureName,
             String packageOverride,
             int versionCode,
             String versionName,
@@ -460,7 +459,7 @@ public class AndroidBuilder {
                                     optionalFeatures.toArray(
                                             new Invoker.Feature[optionalFeatures.size()]))
                             .setMergeReportFile(reportFile)
-                            .setFeatureName(mProjectId);
+                            .setFeatureName(featureName);
 
             if (mergeType == ManifestMerger2.MergeType.APPLICATION) {
                 manifestMergerInvoker.withFeatures(Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);

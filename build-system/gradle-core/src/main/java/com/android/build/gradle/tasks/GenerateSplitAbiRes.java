@@ -29,6 +29,7 @@ import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
@@ -174,14 +175,9 @@ public class GenerateSplitAbiRes extends BaseTask {
             try (OutputStreamWriter fileWriter =
                          new OutputStreamWriter(new FileOutputStream(tmpFile), "UTF-8")) {
 
-                String sanitizedFeatureName =
-                        featureName != null ? featureName.replaceAll("[^a-zA-Z0-9-]", "") : null;
-
                 String encodedSplitName =
                         charMatcher.replaceFrom(
-                                (sanitizedFeatureName != null ? sanitizedFeatureName + "." : "")
-                                        + "config."
-                                        + split,
+                                (featureName != null ? featureName + "." : "") + "config." + split,
                                 '_');
 
                 fileWriter.append(
@@ -197,8 +193,8 @@ public class GenerateSplitAbiRes extends BaseTask {
                                 + versionNameToUse
                                 + "\"\n");
 
-                if (sanitizedFeatureName != null) {
-                    fileWriter.append("      configForSplit=\"" + sanitizedFeatureName + "\"\n");
+                if (featureName != null) {
+                    fileWriter.append("      configForSplit=\"" + featureName + "\"\n");
                 }
 
                 fileWriter.append(
@@ -286,7 +282,7 @@ public class GenerateSplitAbiRes extends BaseTask {
             generateSplitAbiRes.setVariantName(config.getFullName());
             generateSplitAbiRes.featureName =
                     scope.getVariantConfiguration().getType() == VariantType.FEATURE
-                            ? scope.getGlobalScope().getProjectBaseName()
+                            ? ((FeatureVariantData) scope.getVariantData()).getFeatureName()
                             : null;
 
             // not used directly, but considered as input for the task.
