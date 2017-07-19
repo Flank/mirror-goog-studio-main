@@ -86,11 +86,13 @@ public class FeatureAndAbiPureSplitsTest {
                 getDebugVariant(instantAppModule.getInstantAppVariantsBuildOutput());
         assertThat(debug.getApplicationId()).isEqualTo("com.example.android.multiproject");
         assertThat(debug.getOutput().getOutputFile().getName()).isEqualTo("bundle-debug.zip");
-        assertThat(debug.getFeatureOutputs()).hasSize(5);
+        assertThat(debug.getFeatureOutputs()).hasSize(7);
 
         List<String> expectedFileNames =
                 ImmutableList.of(
                         "baseFeature-debug.apk",
+                        "baseFeature-x86-debug.apk",
+                        "baseFeature-armeabi-v7a-debug.apk",
                         "feature_a-debug.apk",
                         "feature_a-x86-debug.apk",
                         "feature_a-armeabi-v7a-debug.apk",
@@ -102,6 +104,8 @@ public class FeatureAndAbiPureSplitsTest {
 
         List<String> expectedSplitNames =
                 ImmutableList.of(
+                        "config.x86",
+                        "config.armeabi_v7a",
                         "feature_a.config.x86",
                         "feature_a.config.armeabi_v7a",
                         "feature_a.config.hdpi");
@@ -112,10 +116,14 @@ public class FeatureAndAbiPureSplitsTest {
                             List<String> manifestContent =
                                     ApkSubject.getManifestContent(
                                             outputFile.getOutputFile().toPath());
+                            String applicationId = "";
                             String configForSplit = "";
                             String targetABI = "";
                             String split = "";
                             for (String line : manifestContent) {
+                                if (line.contains("package=")) {
+                                    applicationId = getQuotedValue(line);
+                                }
                                 if (line.contains("configForSplit=")) {
                                     configForSplit = getQuotedValue(line);
                                 }
@@ -126,13 +134,16 @@ public class FeatureAndAbiPureSplitsTest {
                                     split = getQuotedValue(line);
                                 }
                             }
-                            if (!Strings.isNullOrEmpty(configForSplit)) {
+                            assertThat(applicationId).isEqualTo("com.example.android.multiproject");
+                            if (!Strings.isNullOrEmpty(split) && split.contains("config")) {
                                 String splitName =
-                                        configForSplit
-                                                + ".config."
-                                                + (Strings.isNullOrEmpty(targetABI)
-                                                        ? "hdpi"
-                                                        : targetABI.replace("-", "_"));
+                                        Strings.isNullOrEmpty(configForSplit)
+                                                ? "config."
+                                                : configForSplit + ".config.";
+                                splitName +=
+                                        Strings.isNullOrEmpty(targetABI)
+                                                ? "hdpi"
+                                                : targetABI.replace("-", "_");
                                 assertThat(splitName).isEqualTo(split);
                                 foundSplitNames.add(splitName);
                             }

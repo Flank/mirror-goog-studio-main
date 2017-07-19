@@ -16,6 +16,12 @@
 
 package com.android.build.gradle.tasks;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.METADATA_APP_ID_DECLARATION;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.METADATA_VALUES;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -30,6 +36,7 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.ApplicationId;
 import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.builder.core.AndroidBuilder;
@@ -48,7 +55,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Set;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -80,6 +89,7 @@ public class GenerateSplitAbiRes extends BaseTask {
     private VariantScope variantScope;
     private FileCache fileCache;
     @Nullable private String featureName;
+    @Nullable private FileCollection applicationIdOverride;
 
     @Input
     public String getApplicationId() {
@@ -132,6 +142,13 @@ public class GenerateSplitAbiRes extends BaseTask {
     @Nullable
     public String getFeatureName() {
         return featureName;
+    }
+
+    @InputFiles
+    @Optional
+    @Nullable
+    public FileCollection getApplicationIdOverride() {
+        return applicationIdOverride;
     }
 
     @TaskAction
@@ -220,6 +237,15 @@ public class GenerateSplitAbiRes extends BaseTask {
             versionNameToUse = String.valueOf(abiApkData.getVersionCode());
         }
 
+        // Override the applicationId for features.
+        String manifestAppId;
+        if (applicationIdOverride != null && !applicationIdOverride.isEmpty()) {
+            manifestAppId =
+                    ApplicationId.load(applicationIdOverride.getSingleFile()).getApplicationId();
+        } else {
+            manifestAppId = applicationId;
+        }
+
         try (OutputStreamWriter fileWriter =
                 new OutputStreamWriter(
                         new BufferedOutputStream(new FileOutputStream(tmpFile)), "UTF-8")) {
@@ -228,7 +254,7 @@ public class GenerateSplitAbiRes extends BaseTask {
                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                             + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
                             + "      package=\""
-                            + applicationId
+                            + manifestAppId
                             + "\"\n"
                             + "      android:versionCode=\""
                             + abiApkData.getVersionCode()
@@ -315,6 +341,18 @@ public class GenerateSplitAbiRes extends BaseTask {
                     scope.getGlobalScope().getExtension().getAaptOptions();
             generateSplitAbiRes.outputScope = scope.getOutputScope();
             generateSplitAbiRes.outputFactory = scope.getVariantData().getOutputFactory();
+
+            if (scope.getVariantData().getType() == VariantType.FEATURE) {
+                if (scope.isBaseFeature()) {
+                    generateSplitAbiRes.applicationIdOverride =
+                            scope.getArtifactFileCollection(
+                                    METADATA_VALUES, MODULE, METADATA_APP_ID_DECLARATION);
+                } else {
+                    generateSplitAbiRes.applicationIdOverride =
+                            scope.getArtifactFileCollection(
+                                    COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);
+                }
+            }
         }
     }
 }
