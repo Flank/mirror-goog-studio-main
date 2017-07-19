@@ -79,7 +79,6 @@ public class AntennaPodPerformanceMatrixTest {
         return new ProjectScenario[] {
             ProjectScenario.NORMAL_J8,
             ProjectScenario.DEX_ARCHIVE_MONODEX_J8,
-            ProjectScenario.DEX_OUT_OF_PROCESS_J8,
             ProjectScenario.D8_MONODEX_J8,
         };
     }
@@ -96,9 +95,6 @@ public class AntennaPodPerformanceMatrixTest {
             case DEX_ARCHIVE_MONODEX_J8:
                 break;
             case D8_MONODEX_J8:
-                break;
-            case DEX_OUT_OF_PROCESS_J8:
-                DexInProcessHelper.disableDexInProcess(appBuildFile);
                 break;
             default:
                 throw new IllegalArgumentException(
