@@ -33,7 +33,6 @@ import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.ILogger;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
@@ -42,41 +41,36 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.file.FileCollection;
 import org.xml.sax.SAXException;
 
-/**
- * Implementation of {@link TestData} for separate test modules.
- */
-public class TestApplicationTestData extends  AbstractTestDataImpl {
+/** Implementation of {@link TestData} for separate test modules. */
+public class TestApplicationTestData extends AbstractTestDataImpl {
 
     private final String testApplicationId;
     private final Map<String, String> testedProperties;
-    private final FileCollection testApk;
-    private final FileCollection testedApks;
     private final GradleVariantConfiguration variantConfiguration;
 
     public TestApplicationTestData(
             GradleVariantConfiguration variantConfiguration,
             String testApplicationId,
-            FileCollection testApk,
-            FileCollection testedApks) {
-        super(variantConfiguration);
+            @NonNull FileCollection testApkDir,
+            @NonNull FileCollection testedApksDir) {
+        super(variantConfiguration, testApkDir, testedApksDir);
         this.variantConfiguration = variantConfiguration;
         this.testedProperties = new HashMap<>();
         this.testApplicationId = testApplicationId;
-        this.testApk = testApk;
-        this.testedApks = testedApks;
     }
 
     @Override
     public void loadFromMetadataFile(File metadataFile)
             throws ParserConfigurationException, SAXException, IOException {
         Collection<BuildOutput> testedManifests =
-                BuildOutputs.load(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS, metadataFile);
+                BuildOutputs.load(
+                        TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                        metadataFile.getParentFile());
         // all published manifests have the same package so first one will do.
         Optional<BuildOutput> splitOutput = testedManifests.stream().findFirst();
 
@@ -116,13 +110,12 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
         // use a Set to remove duplicate entries.
         ImmutableList.Builder<File> selectedApks = ImmutableList.builder();
         // retrieve all the published files.
-        Set<File> testedApkFiles = this.testedApks.getFiles();
+        Collection<BuildOutput> testedApkFiles =
+                BuildOutputs.load(VariantScope.TaskOutputType.APK, testedApksDir);
+
         // if we have more than one, that means pure splits are in the equation.
         if (testedApkFiles.size() > 1 && splitSelectExe != null) {
-
             OutputScope testedOutputScope = new OutputScope(MultiOutputPolicy.MULTI_APK);
-            BuildOutputs.load(VariantScope.TaskOutputType.APK, testedApks);
-
             List<String> testedSplitApksPath = getSplitApks(testedOutputScope);
             selectedApks.addAll(
                     SplitOutputMatcher.computeBestOutput(
@@ -137,24 +130,13 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
             if (testedApkFiles.size() > 1) {
                 logger.warning("split-select tool unavailable, all split APKs will be installed");
             }
-            selectedApks.addAll(testedApkFiles);
+            selectedApks.addAll(
+                    testedApkFiles
+                            .stream()
+                            .map(BuildOutput::getOutputFile)
+                            .collect(Collectors.toList()));
         }
         return selectedApks.build();
-    }
-
-    @NonNull
-    @Override
-    public File getTestApk() {
-        Collection<BuildOutput> testApkOutputs =
-                BuildOutputs.load(VariantScope.TaskOutputType.APK, testApk);
-        if (testApkOutputs.size() != 1) {
-            throw new RuntimeException(
-                    "Unexpected number of main APKs, expected 1, got  "
-                            + testApkOutputs.size()
-                            + ":"
-                            + Joiner.on(",").join(testApkOutputs));
-        }
-        return testApkOutputs.iterator().next().getOutputFile();
     }
 
     @NonNull
@@ -171,7 +153,7 @@ public class TestApplicationTestData extends  AbstractTestDataImpl {
     }
 
     @NonNull
-    public static List<String> getSplitApks(OutputScope outputScope) {
+    private static List<String> getSplitApks(OutputScope outputScope) {
         return outputScope
                 .getOutputs(TaskOutputHolder.TaskOutputType.APK)
                 .stream()

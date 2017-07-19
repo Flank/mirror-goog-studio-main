@@ -28,6 +28,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.report.ReportType;
 import com.android.build.gradle.internal.test.report.TestReport;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -40,7 +41,6 @@ import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.builder.testing.OnDeviceOrchestratorTestRunner;
 import com.android.builder.testing.ShardedTestRunner;
 import com.android.builder.testing.SimpleTestRunner;
-import com.android.builder.testing.TestData;
 import com.android.builder.testing.TestRunner;
 import com.android.builder.testing.api.DeviceException;
 import com.android.builder.testing.api.DeviceProvider;
@@ -63,6 +63,7 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.logging.ConsoleRenderer;
@@ -86,7 +87,7 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
     private ProcessExecutor processExecutor;
     private String flavorName;
     private Supplier<File> splitSelectExec;
-    private TestData testData;
+    private AbstractTestDataImpl testData;
     private TestRunnerFactory testRunnerFactory;
     private boolean ignoreFailures;
     private boolean testFailed;
@@ -233,11 +234,11 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         this.deviceProvider = deviceProvider;
     }
 
-    public TestData getTestData() {
+    public AbstractTestDataImpl getTestData() {
         return testData;
     }
 
-    public void setTestData(TestData testData) {
+    public void setTestData(@NonNull AbstractTestDataImpl testData) {
         this.testData = testData;
     }
 
@@ -285,20 +286,30 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         return buddyApks;
     }
 
+    @InputFiles
+    FileCollection getTestApkDir() {
+        return testData.getTestApkDir();
+    }
+
+    @InputFiles
+    @Optional
+    FileCollection getTestedApksDir() {
+        return testData.getTestedApksDir();
+    }
+
     public static class ConfigAction implements TaskConfigAction<DeviceProviderInstrumentTestTask> {
 
         @NonNull
         private final VariantScope scope;
         @NonNull
         private final DeviceProvider deviceProvider;
-        @NonNull
-        private final TestData testData;
+        @NonNull private final AbstractTestDataImpl testData;
         @NonNull private final FileCollection testTargetManifests;
 
         public ConfigAction(
                 @NonNull VariantScope scope,
                 @NonNull DeviceProvider deviceProvider,
-                @NonNull TestData testData,
+                @NonNull AbstractTestDataImpl testData,
                 @NonNull FileCollection testTargetManifests) {
             this.scope = scope;
             this.deviceProvider = deviceProvider;

@@ -19,13 +19,21 @@ package com.android.build.gradle.internal.test;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.scope.BuildOutput;
+import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.VariantConfiguration;
 import com.android.builder.testing.TestData;
 import com.android.sdklib.AndroidVersion;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import java.io.File;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.Map;
+import org.gradle.api.file.FileCollection;
 
 /**
  * Common implementation of {@link TestData} for embedded test projects (in androidTest folder)
@@ -42,9 +50,18 @@ public abstract class AbstractTestDataImpl implements TestData {
     @NonNull
     private boolean animationsDisabled;
 
-    public AbstractTestDataImpl(@NonNull VariantConfiguration<?, ?, ?> testVariantConfig) {
+    @NonNull protected final FileCollection testApkDir;
+
+    @Nullable protected final FileCollection testedApksDir;
+
+    public AbstractTestDataImpl(
+            @NonNull VariantConfiguration<?, ?, ?> testVariantConfig,
+            @NonNull FileCollection testApkDir,
+            @Nullable FileCollection testedApksDir) {
         this.testVariantConfig = checkNotNull(testVariantConfig);
         this.extraInstrumentationTestRunnerArgs = Maps.newHashMap();
+        this.testApkDir = testApkDir;
+        this.testedApksDir = testedApksDir;
     }
 
     @NonNull
@@ -93,5 +110,42 @@ public abstract class AbstractTestDataImpl implements TestData {
     @Override
     public String getFlavorName() {
         return testVariantConfig.getFlavorName().toUpperCase(Locale.getDefault());
+    }
+
+    /**
+     * Returns the directory containing the test APK as a {@link FileCollection}.
+     *
+     * @return the directory containing the test APK
+     */
+    @NonNull
+    public FileCollection getTestApkDir() {
+        return testApkDir;
+    }
+
+    /**
+     * Returns the directory containing the tested APKs as a {@link FileCollection}, or null if the
+     * test data is for testing a library.
+     *
+     * @return the directory containing the tested APKs, or null if the test data is for testing a
+     *     library
+     */
+    @Nullable
+    public FileCollection getTestedApksDir() {
+        return testedApksDir;
+    }
+
+    @NonNull
+    @Override
+    public File getTestApk() {
+        Collection<BuildOutput> testApkOutputs =
+                BuildOutputs.load(VariantScope.TaskOutputType.APK, testApkDir);
+        if (testApkOutputs.size() != 1) {
+            throw new RuntimeException(
+                    "Unexpected number of main APKs, expected 1, got  "
+                            + testApkOutputs.size()
+                            + ":"
+                            + Joiner.on(",").join(testApkOutputs));
+        }
+        return testApkOutputs.iterator().next().getOutputFile();
     }
 }

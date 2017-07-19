@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.variant;
 
-import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_COMPILE_ONLY;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_IMPLEMENTATION;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
@@ -63,12 +63,9 @@ public class TestVariantFactory extends ApplicationVariantFactory {
                     "targetProjectPath cannot be null in test project " + project.getName());
         }
 
-        // Adding this to provided so that it's part of the compile but not part of the packaging.
         DependencyHandler handler = project.getDependencies();
         Map<String, String> projectNotation = ImmutableMap.of("path", path);
-        // adding it to compileOnly, but it doesn't really matter since we only publish it
-        // to apiElements anyway.
-        handler.add(CONFIG_NAME_COMPILE_ONLY, handler.project(projectNotation));
+        handler.add(CONFIG_NAME_IMPLEMENTATION, handler.project(projectNotation));
     }
 
     @Override

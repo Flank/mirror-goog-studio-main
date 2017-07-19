@@ -1926,7 +1926,19 @@ public abstract class TaskManager {
         final BaseVariantData baseVariantData = variantScope.getTestedVariantData();
         final TestVariantData testVariantData = (TestVariantData) variantScope.getVariantData();
 
-        TestDataImpl testData = new TestDataImpl(testVariantData);
+        boolean isLibrary =
+                baseVariantData.getVariantConfiguration().getType() == VariantType.LIBRARY;
+
+        TestDataImpl testData =
+                new TestDataImpl(
+                        testVariantData,
+                        variantScope.getOutput(VariantScope.TaskOutputType.APK),
+                        isLibrary
+                                ? null
+                                : testVariantData
+                                        .getTestedVariantData()
+                                        .getScope()
+                                        .getOutput(VariantScope.TaskOutputType.APK));
         testData.setExtraInstrumentationTestRunnerArgs(
                 projectOptions.getExtraInstrumentationTestRunnerArgs());
 

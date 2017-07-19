@@ -37,6 +37,13 @@ public class SeparateTestModuleTest {
                         + "  defaultConfig {\n"
                         + "    testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'\n"
                         + "  }\n"
+                        + "  dependencies {\n"
+                        + "    implementation ('com.android.support.test:runner:"
+                        + GradleTestProject.TEST_SUPPORT_LIB_VERSION
+                        + "', {\n"
+                        + "      exclude group: 'com.android.support', module: 'support-annotations'\n"
+                        + "    })\n"
+                        + "  }\n"
                         + "}\n");
     }
 
@@ -80,6 +87,12 @@ public class SeparateTestModuleTest {
     @Category(DeviceTests.class)
     public void checkWillRunWithoutInstrumentationInManifest() throws Exception {
         project.execute(":test:deviceCheck");
+    }
+
+    @Test
+    @Category(DeviceTests.class)
+    public void checkConnectedCheckCompletesNormally() throws Exception {
+        project.execute(":test:connectedCheck");
     }
 
     @Test

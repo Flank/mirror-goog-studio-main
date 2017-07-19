@@ -88,7 +88,7 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         super.createTasksForVariantScope(tasks, variantScope);
 
         final Configuration runtimeClasspath =
-                variantScope.getVariantDependencies().getCompileClasspath();
+                variantScope.getVariantDependencies().getRuntimeClasspath();
         final ResolvableDependencies incomingRuntimeClasspath = runtimeClasspath.getIncoming();
 
         FileCollection testingApk = variantScope.getOutput(VariantScope.TaskOutputType.APK);
