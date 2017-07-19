@@ -59,6 +59,8 @@ service ProfilerService {
 message AgentAttachRequest {
   int32 process_id = 1;
   Session session = 2;
+  // TODO: This is temporary, remove when moving process discovery.
+  string agent_lib_file_name = 3;
 }
 
 message AgentAttachResponse {
@@ -177,4 +179,5 @@ message Process {
   int32 pid = 2;
   State state = 3;
   int64 start_timestamp_ns = 4;
+  string abi_cpu_arch = 5;
 }

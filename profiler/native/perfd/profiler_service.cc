@@ -53,8 +53,6 @@ namespace {
 const char* const kConnectorFileName = "perfd";
 // On-device path of the connector program relative to an app's data folder.
 const char* const kConnectorRelativePath = "./perfd";
-// Name of the jvmti agent library.
-const char* const kAgentLibFileName = "libperfa.so";
 // Name of the jar file containining the java classes (dex'd) which our
 // instrumentation code needs to reference. This jar file will be added to the
 // app via the jvmti agent.
@@ -138,9 +136,10 @@ void RunConnector(int app_pid, const string& package_name,
 // Copy over the agent so and jar to the package's directory as specified by
 // |package_name| and invoke attach-agent on the app as specified by |app_name|
 bool RunAgent(const string& app_name, const string& package_name,
-              const std::string& config_path) {
+              const std::string& config_path,
+              const string& agent_lib_file_name) {
   CopyFileToPackageFolder(package_name, kAgentJarFileName);
-  CopyFileToPackageFolder(package_name, kAgentLibFileName);
+  CopyFileToPackageFolder(package_name, agent_lib_file_name);
   string data_path;
   string error;
   PackageManager package_manager;
@@ -148,7 +147,7 @@ bool RunAgent(const string& app_name, const string& package_name,
       package_manager.GetAppDataPath(package_name, &data_path, &error);
   if (success) {
     std::ostringstream attach_params;
-    attach_params << app_name << " " << data_path << "/" << kAgentLibFileName
+    attach_params << app_name << " " << data_path << "/" << agent_lib_file_name
                   << "=" << config_path;
     BashCommandRunner attach(kAttachAgentCmd);
     success |= attach.Run(attach_params.str(), &error);
@@ -245,7 +244,8 @@ Status ProfilerServiceImpl::AttachAgent(
     CopyFileToPackageFolder(package_name, kConnectorFileName);
     if (!IsAppAgentAlive(request->process_id(), package_name.c_str())) {
       // Only attach agent if one is not detected.
-      if (RunAgent(app_name, package_name, config_.GetConfigFilePath())) {
+      if (RunAgent(app_name, package_name, config_.GetConfigFilePath(),
+          request->agent_lib_file_name())) {
         response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
       } else {
         response->set_status(
