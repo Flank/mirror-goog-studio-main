@@ -479,7 +479,7 @@ public class NdkCompile extends NdkTask {
             final Callable<Collection<File>> callable =
                     TaskInputHelper.bypassFileCallable(
                             () -> {
-                                List<File> sourceList = variantConfig.getJniSourceList();
+                                Collection<File> sourceList = variantConfig.getJniSourceList();
                                 if (Boolean.TRUE.equals(
                                         variantConfig
                                                 .getMergedFlavor()

@@ -1042,14 +1042,15 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns a list of sorted SourceProvider in order of ascending order, meaning, the earlier
-     * items are meant to be overridden by later items.
+     * Returns a list of sorted SourceProvider in ascending order of importance. This means that
+     * items toward the end of the list take precedence over those toward the start of the list.
      *
      * @return a list of source provider
      */
     @NonNull
     public List<SourceProvider> getSortedSourceProviders() {
-        List<SourceProvider> providers = Lists.newArrayList();
+        List<SourceProvider> providers =
+                Lists.newArrayListWithExpectedSize(mFlavorSourceProviders.size() + 4);
 
         // first the default source provider
         providers.add(mDefaultSourceProvider);
@@ -1113,12 +1114,20 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     @NonNull
-    public Set<File> getSourceFiles(@NonNull Function<SourceProvider, Collection<File>> function) {
-        Set<File> files = Sets.newHashSet();
-        getSortedSourceProviders()
-                .forEach(sourceProvider -> files.addAll(function.apply(sourceProvider)));
+    public Set<File> getSourceFiles(@NonNull Function<SourceProvider, Collection<File>> f) {
+        Collection<SourceProvider> providers = getSortedSourceProviders();
+        Collection<Collection<File>> fileLists =
+                Lists.newArrayListWithExpectedSize(providers.size());
+        providers.forEach(p -> fileLists.add(f.apply(p)));
 
-        return files;
+        int numFiles = 0;
+        for (Collection<File> files : fileLists) {
+            numFiles += files.size();
+        }
+
+        Set<File> fileSet = Sets.newHashSetWithExpectedSize(numFiles);
+        fileLists.forEach(files -> fileSet.addAll(files));
+        return fileSet;
     }
 
     /**
@@ -1254,48 +1263,24 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     /**
-     * Returns all the renderscript source folder from the main config, the flavors and the
-     * build type.
+     * Returns all the renderscript source folder from the main config, the flavors and the build
+     * type.
      *
      * @return a list of folders.
      */
     @NonNull
-    public List<File> getRenderscriptSourceList() {
-        List<SourceProvider> providers = getSortedSourceProviders();
-
-        List<File> sourceList = Lists.newArrayListWithExpectedSize(providers.size());
-
-        for (SourceProvider provider : providers) {
-            sourceList.addAll(provider.getRenderscriptDirectories());
-        }
-
-        return sourceList;
+    public Collection<File> getRenderscriptSourceList() {
+        return getSourceFiles(p -> p.getRenderscriptDirectories());
     }
 
     @NonNull
-    public List<File> getAidlSourceList() {
-        List<SourceProvider> providers = getSortedSourceProviders();
-
-        List<File> sourceList = Lists.newArrayListWithExpectedSize(providers.size());
-
-        for (SourceProvider provider : providers) {
-            sourceList.addAll(provider.getAidlDirectories());
-        }
-
-        return sourceList;
+    public Collection<File> getAidlSourceList() {
+        return getSourceFiles(p -> p.getAidlDirectories());
     }
 
     @NonNull
-    public List<File> getJniSourceList() {
-        List<SourceProvider> providers = getSortedSourceProviders();
-
-        List<File> sourceList = Lists.newArrayListWithExpectedSize(providers.size());
-
-        for (SourceProvider provider : providers) {
-            sourceList.addAll(provider.getCDirectories());
-        }
-
-        return sourceList;
+    public Collection<File> getJniSourceList() {
+        return getSourceFiles(p -> p.getCDirectories());
     }
 
     /**
