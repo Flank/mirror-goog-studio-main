@@ -39,7 +39,7 @@ kotlin_library(
     ],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     plugins = [
-        "//tools/base/build-system:auto-value-plugin",
+        "//tools/base:auto-value-plugin",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
@@ -49,8 +49,8 @@ kotlin_library(
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/analytics-library/tracker:tools.analytics-tracker",
+        "//tools/base:com.google.auto.value_auto-value_neverlink",
         "//tools/base/annotations",
-        "//tools/base/build-system:com.google.auto.value_auto-value_neverlink",
         "//tools/base/build-system:tools.apksig",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system:tools.manifest-merger",

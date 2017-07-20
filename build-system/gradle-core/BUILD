@@ -40,7 +40,7 @@ kotlin_library(
     },
     java_srcs = [":proguard-parser"],
     plugins = [
-        "//tools/base/build-system:auto-value-plugin",
+        "//tools/base:auto-value-plugin",
     ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-core",
@@ -49,8 +49,8 @@ kotlin_library(
     deps = [
         "//prebuilts/tools/common/intellij-core:intellij-core-171.4249.32",
         "//tools/analytics-library/protos/src/main/proto",
+        "//tools/base:com.google.auto.value_auto-value_neverlink",
         "//tools/base/annotations",
-        "//tools/base/build-system:com.google.auto.value_auto-value_neverlink",
         "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system:tools.manifest-merger",

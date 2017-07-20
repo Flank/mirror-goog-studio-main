@@ -8,6 +8,8 @@ archivesBaseName = 'sdk-common'
 version = rootProject.ext.baseVersion
 
 dependencies {
+    compileOnly libs.auto_value
+
     compile project(':base:sdklib')
     compile project(':base:builder-test-api')
     compile project(':base:builder-model')
@@ -18,12 +20,22 @@ dependencies {
     testCompile libs.junit
     testCompile project(':base:testutils')
     testCompile 'org.easymock:easymock:3.3'
+    testCompile libs.jimfs
     testCompile libs.mockito_core
     testCompile libs.truth
 }
 
 project.ext.pomName = 'Android Tools sdk-common library'
 project.ext.pomDesc = 'sdk-common library used by other Android tools libraries.'
+
+File generatedSources = new File(project.buildDir, 'generated/generated')
+tasks.compileJava {
+    doFirst {
+        generatedSources.mkdirs()
+    }
+    options.compilerArgs += ['-s', generatedSources]
+    outputs.dir(generatedSources)
+}
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/bintray.gradle"

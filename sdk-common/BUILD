@@ -5,6 +5,9 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.sdk-common",
     srcs = ["src/main/java"],
+    plugins = [
+        "//tools/base:auto-value-plugin",
+    ],
     resources = ["src/main/resources"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],
@@ -35,16 +38,22 @@ iml_module(
         "//tools/idea/.idea/libraries:bouncy-castle",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/idea/.idea/libraries:KotlinJavaRuntime",
+        "//tools/idea/.idea/libraries:auto-value-1.4.1",
+        "//tools/idea/.idea/libraries:jimfs[test]",
     ],
 )
 
 kotlin_library(
     name = "tools.sdk-common",
     srcs = ["src/main/java"],
+    plugins = [
+        "//tools/base:auto-value-plugin",
+    ],
     pom = ":pom",
     resources = glob(["src/main/resources/**"]),
     visibility = ["//visibility:public"],
     deps = [
+        "//tools/base:com.google.auto.value_auto-value_neverlink",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder-model",
@@ -95,6 +104,7 @@ kotlin_test(
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.code.gson_gson",
+        "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:org.easymock_easymock",
         "//tools/base/third_party:org.mockito_mockito-core",
