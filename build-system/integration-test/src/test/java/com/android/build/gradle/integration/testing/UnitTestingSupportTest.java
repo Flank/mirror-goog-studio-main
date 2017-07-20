@@ -14,52 +14,51 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.testing
+package com.android.build.gradle.integration.testing;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import org.junit.Rule
-import org.junit.Test
+import static com.google.common.truth.Truth.assertThat;
 
-import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED
-import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.SKIPPED
-import static com.google.common.truth.Truth.assertThat
-/**
- * Meta-level tests for the app-level unit testing support. Checks the default values mode.
- */
-class UnitTestingSupportTest {
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import java.util.Set;
+import org.junit.Rule;
+import org.junit.Test;
+
+/** Meta-level tests for the app-level unit testing support. Checks the default values mode. */
+public class UnitTestingSupportTest {
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("unitTesting")
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("unitTesting").create();
 
     @Test
     public void appProject() throws Exception {
-        doTestProject(project)
+        doTestProject(project);
     }
 
     @Test
     public void libProject() throws Exception {
         TestFileUtils.searchAndReplace(
-                project.buildFile,
-                "com.android.application",
-                "com.android.library")
-        doTestProject(project)
+                project.getBuildFile(), "com.android.application", "com.android.library");
+        doTestProject(project);
     }
 
-    private static void doTestProject(GradleTestProject project) {
-        project.execute("clean", "test")
+    private static void doTestProject(GradleTestProject project) throws Exception {
+        project.execute("clean", "test");
 
-        for (variant in ["debug", "release"]) {
-            def dirName = "test${variant.capitalize()}UnitTest"
-            def unitTestXml = "build/test-results/${dirName}/TEST-com.android.tests.UnitTest.xml"
-            def unitTextResults = new JUnitResults(project.file(unitTestXml))
+        for (String variant : ImmutableList.of("Debug", "Release")) {
+            String dirName = "test" + variant + "UnitTest";
+            String unitTestXml =
+                    "build/test-results/" + dirName + "/TEST-com.android.tests.UnitTest.xml";
+            JUnitResults unitTextResults = new JUnitResults(project.file(unitTestXml));
 
-            assertThat(unitTextResults.stdErr).contains("INFO: I can use commons-logging")
+            assertThat(unitTextResults.getStdErr()).contains("INFO: I can use commons-logging");
 
             checkResults(
                     unitTestXml,
-                    [
+                    ImmutableSet.of(
                             "aarDependencies",
                             "commonsLogging",
                             "enums",
@@ -73,33 +72,35 @@ class UnitTestingSupportTest {
                             "prodJavaResourcesOnClasspath",
                             "prodRClass",
                             "referenceProductionCode",
-                            "taskConfiguration",
-                    ],
-                    ["thisIsIgnored"],
-                    project)
+                            "taskConfiguration"),
+                    ImmutableSet.of("thisIsIgnored"),
+                    project);
 
             checkResults(
-                    "build/test-results/${dirName}/TEST-com.android.tests.NonStandardName.xml",
-                    ["passingTest"],
-                    [],
-                    project)
+                    "build/test-results/" + dirName + "/TEST-com.android.tests.NonStandardName.xml",
+                    ImmutableSet.of("passingTest"),
+                    ImmutableSet.of(),
+                    project);
 
             checkResults(
-                    "build/test-results/${dirName}/TEST-com.android.tests.TestInKotlin.xml",
-                    ["passesInKotlin"],
-                    [],
-                    project)
+                    "build/test-results/" + dirName + "/TEST-com.android.tests.TestInKotlin.xml",
+                    ImmutableSet.of("passesInKotlin"),
+                    ImmutableSet.of(),
+                    project);
         }
     }
 
     private static void checkResults(
-            String xmlPath,
-            ArrayList<String> passed,
-            ArrayList<String> ignored,
-            GradleTestProject project) {
-        def results = new JUnitResults(project.file(xmlPath))
-        assertThat(results.allTestCases).containsExactlyElementsIn(ignored + passed)
-        passed.each { assert results.outcome(it) == PASSED }
-        ignored.each { assert results.outcome(it) == SKIPPED }
+            String xmlPath, Set<String> passed, Set<String> ignored, GradleTestProject project)
+            throws Exception {
+        JUnitResults results = new JUnitResults(project.file(xmlPath));
+        assertThat(results.getAllTestCases())
+                .containsExactlyElementsIn(Sets.union(ignored, passed));
+        for (String pass : passed) {
+            assertThat(results.outcome(pass)).isEqualTo(JUnitResults.Outcome.PASSED);
+        }
+        for (String ignore : ignored) {
+            assertThat(results.outcome(ignore)).isEqualTo(JUnitResults.Outcome.SKIPPED);
+        }
     }
 }

@@ -14,25 +14,22 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.testing
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import groovy.transform.CompileStatic
-import org.junit.Rule
-import org.junit.Test
-/**
- * Runs tests in a big, complicated project.
- */
-@CompileStatic
-class UnitTestingComplexProjectTest {
+package com.android.build.gradle.integration.testing;
+
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import org.junit.Rule;
+import org.junit.Test;
+
+/** Runs tests in a big, complicated project. */
+public class UnitTestingComplexProjectTest {
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("unitTestingComplexProject")
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("unitTestingComplexProject").create();
 
     @Test
     public void appProject() throws Exception {
-        project.execute("clean", "test")
+        project.execute("clean", "test");
     }
 
     @Test
@@ -40,9 +37,9 @@ class UnitTestingComplexProjectTest {
         // Make the top-level project a library. Libraries depending on libraries are an edge case
         // when it comes to generating and using R classes.
         TestFileUtils.searchAndReplace(
-                project.getSubproject("app").buildFile,
+                project.getSubproject("app").getBuildFile(),
                 "com.android.application",
-                "com.android.library")
-        project.execute("clean", "test")
+                "com.android.library");
+        project.execute("clean", "test");
     }
 }

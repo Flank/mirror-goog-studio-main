@@ -14,59 +14,66 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.testing
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.google.common.base.Throwables
-import org.gradle.tooling.BuildException
-import org.junit.ClassRule
-import org.junit.Test
+package com.android.build.gradle.integration.testing;
 
-import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.FAILED
-import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED
-import static org.junit.Assert.fail
-/**
- * Meta-level tests for the app-level unit testing support.
- */
-class UnitTestingFlavorsSupportTest {
+import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.FAILED;
+import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
+
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.google.common.base.Throwables;
+import org.gradle.tooling.BuildException;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+/** Meta-level tests for the app-level unit testing support. */
+public class UnitTestingFlavorsSupportTest {
     @ClassRule
-    static public GradleTestProject flavorsProject = GradleTestProject.builder()
-            .fromTestProject("unitTestingFlavors")
-            .create()
+    public static GradleTestProject flavorsProject =
+            GradleTestProject.builder().fromTestProject("unitTestingFlavors").create();
 
     @Test
-    public void 'Tests for a given flavor are only compiled against the flavor'() throws Exception {
-        flavorsProject.file("src/doesntBuild/java/com/android/tests/Broken.java") << "this is broken"
+    public void testsForAGivenFlavorAreOnlyCompiledAgainstTheFlavor() throws Exception {
+        TestFileUtils.appendToFile(
+                flavorsProject.file("src/doesntBuild/java/com/android/tests/Broken.java"),
+                "this is broken");
 
-        flavorsProject.execute("clean", "testBuildsPassesDebug")
+        flavorsProject.execute("clean", "testBuildsPassesDebug");
 
-        def results = new JUnitResults(
-                flavorsProject.file("build/test-results/testBuildsPassesDebugUnitTest/TEST-com.android.tests.PassingTest.xml"))
+        JUnitResults results =
+                new JUnitResults(
+                        flavorsProject.file(
+                                "build/test-results/testBuildsPassesDebugUnitTest/TEST-com.android.tests.PassingTest.xml"));
 
-        assert results.outcome("referenceFlavorSpecificCode") == PASSED
+        assertThat(results.outcome("referenceFlavorSpecificCode")).isEqualTo(PASSED);
 
         try {
-            flavorsProject.execute("testDoesntBuildPassesDebug")
-            fail()
+            flavorsProject.execute("testDoesntBuildPassesDebug");
+            fail();
         } catch (BuildException e) {
-            assert Throwables.getRootCause(e)
-                    .exceptionClassName
-                    .endsWith("CompilationFailedException")
+            assertThat(Throwables.getRootCause(e).toString())
+                    .contains("CompilationFailedException: ");
         }
     }
 
     @Test
-    public void 'Task for a given flavor only runs the correct tests'() throws Exception {
-        flavorsProject.execute("clean", "testBuildsPassesDebug")
+    public void taskForAGivenFlavorOnlyRunsTheCorrectTests() throws Exception {
+        flavorsProject.execute("clean", "testBuildsPassesDebug");
 
         try {
-            flavorsProject.execute("testBuildsFailsDebug")
-            fail()
+            flavorsProject.execute("testBuildsFailsDebug");
+            fail();
         } catch (BuildException e) {
-            assert Throwables.getRootCause(e).message.startsWith("There were failing tests.")
+            assertThat(Throwables.getRootCause(e).getMessage())
+                    .startsWith("There were failing tests.");
 
-            def results = new JUnitResults(
-                    flavorsProject.file("build/test-results/testBuildsFailsDebugUnitTest/TEST-com.android.tests.FailingTest.xml"))
-            assert results.outcome("failingTest") == FAILED
+            JUnitResults results =
+                    new JUnitResults(
+                            flavorsProject.file(
+                                    "build/test-results/testBuildsFailsDebugUnitTest/TEST-com.android.tests.FailingTest.xml"));
+            assertThat(results.outcome("failingTest")).isEqualTo(FAILED);
         }
     }
 }

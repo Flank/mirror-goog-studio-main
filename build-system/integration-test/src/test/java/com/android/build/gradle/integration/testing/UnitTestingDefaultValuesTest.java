@@ -14,34 +14,33 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.testing
+package com.android.build.gradle.integration.testing;
 
-import com.android.build.gradle.integration.common.category.SmokeTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import static com.google.common.truth.Truth.assertThat;
 
-import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED
-import static com.google.common.truth.Truth.assertThat
-/**
- * Meta-level tests for the app-level unit testing support. Tests default values mode.
- */
+import com.android.build.gradle.integration.common.category.SmokeTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+/** Meta-level tests for the app-level unit testing support. Tests default values mode. */
 @Category(SmokeTests.class)
-class UnitTestingDefaultValuesTest {
+public class UnitTestingDefaultValuesTest {
     @ClassRule
-    static public GradleTestProject simpleProject = GradleTestProject.builder()
-            .fromTestProject("unitTestingDefaultValues")
-            .create()
+    public static GradleTestProject simpleProject =
+            GradleTestProject.builder().fromTestProject("unitTestingDefaultValues").create();
 
     @Test
-    void testSimpleScenario() {
-        simpleProject.execute("testDebug")
+    public void testSimpleScenario() throws Exception {
+        simpleProject.execute("testDebug");
 
-        def results = new JUnitResults(
-                simpleProject.file("build/test-results/testDebugUnitTest/TEST-com.android.tests.UnitTest.xml"))
+        JUnitResults results =
+                new JUnitResults(
+                        simpleProject.file(
+                                "build/test-results/testDebugUnitTest/TEST-com.android.tests.UnitTest.xml"));
 
-        assertThat(results.allTestCases).containsExactly("defaultValues")
-        assert results.outcome("defaultValues") == PASSED
+        assertThat(results.getAllTestCases()).containsExactly("defaultValues");
+        assertThat(results.outcome("defaultValues")).isEqualTo(JUnitResults.Outcome.PASSED);
     }
 }

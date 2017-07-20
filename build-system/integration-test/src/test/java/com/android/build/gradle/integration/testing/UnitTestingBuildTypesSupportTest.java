@@ -14,49 +14,53 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.testing
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.google.common.base.Throwables
-import org.gradle.tooling.BuildException
-import org.junit.ClassRule
-import org.junit.Test
+package com.android.build.gradle.integration.testing;
 
-import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED
-import static org.junit.Assert.fail
-/**
- * Meta-level tests for the app-level unit testing support.
- */
-class UnitTestingBuildTypesSupportTest {
+import static com.android.build.gradle.integration.testing.JUnitResults.Outcome.PASSED;
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
+
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.google.common.base.Throwables;
+import org.gradle.tooling.BuildException;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+/** Meta-level tests for the app-level unit testing support. */
+public class UnitTestingBuildTypesSupportTest {
     @ClassRule
-    static public GradleTestProject flavorsProject = GradleTestProject.builder()
-            .fromTestProject("unitTestingBuildTypes")
-            .create()
+    public static GradleTestProject flavorsProject =
+            GradleTestProject.builder().fromTestProject("unitTestingBuildTypes").create();
 
     @Test
-    public void 'Tests for a given build type are only compiled against the build type'() throws Exception {
-        flavorsProject.execute("clean", "testDebug")
+    public void testsForAGivenBuildTypeAreOnlyCompiledAgainstTheBuildType() throws Exception {
+        flavorsProject.execute("clean", "testDebug");
 
-        def results = new JUnitResults(
-                flavorsProject.file("build/test-results/testDebugUnitTest/TEST-com.android.tests.UnitTest.xml"))
+        JUnitResults results =
+                new JUnitResults(
+                        flavorsProject.file(
+                                "build/test-results/testDebugUnitTest/TEST-com.android.tests.UnitTest.xml"));
 
-        assert results.outcome("referenceProductionCode") == PASSED
-        assert results.outcome("resourcesOnClasspath") == PASSED
-        assert results.outcome("useDebugOnlyDependency") == PASSED
+        assertThat(results.outcome("referenceProductionCode")).isEqualTo(PASSED);
+        assertThat(results.outcome("resourcesOnClasspath")).isEqualTo(PASSED);
+        assertThat(results.outcome("useDebugOnlyDependency")).isEqualTo(PASSED);
 
-        flavorsProject.execute("clean", "testBuildTypeWithResource")
-        results = new JUnitResults(
-                flavorsProject.file("build/test-results/testBuildTypeWithResourceUnitTest/TEST-com.android.tests.UnitTest.xml"))
-        assert results.outcome("javaResourcesOnClasspath") == PASSED
-        assert results.outcome("prodJavaResourcesOnClasspath") == PASSED
+        flavorsProject.execute("clean", "testBuildTypeWithResource");
+        results =
+                new JUnitResults(
+                        flavorsProject.file(
+                                "build/test-results/testBuildTypeWithResourceUnitTest/TEST-com.android.tests.UnitTest.xml"));
+
+        assertThat(results.outcome("javaResourcesOnClasspath")).isEqualTo(PASSED);
+        assertThat(results.outcome("prodJavaResourcesOnClasspath")).isEqualTo(PASSED);
 
         try {
             // Tests for release try to compile against a debug-only class.
-            flavorsProject.execute("testRelease")
-            fail()
+            flavorsProject.execute("testRelease");
+            fail();
         } catch (BuildException e) {
-            assert Throwables.getRootCause(e)
-                    .exceptionClassName
-                    .endsWith("CompilationFailedException")
+            assertThat(Throwables.getRootCause(e).toString())
+                    .contains("CompilationFailedException");
         }
     }
 }
