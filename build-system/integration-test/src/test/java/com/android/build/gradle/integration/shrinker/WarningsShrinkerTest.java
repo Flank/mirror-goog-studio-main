@@ -1,203 +1,186 @@
-/*
- * Copyright (C) 2015 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.shrinker;
 
-package com.android.build.gradle.integration.shrinker
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.google.common.collect.ImmutableList;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-/**
- * Tests for -dontwarn handling
- */
-@CompileStatic
-class WarningsShrinkerTest {
+/** Tests for -dontwarn handling */
+public class WarningsShrinkerTest {
+
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .create();
 
-    private File rules
-    private File activity
-    private int changeCounter
+    private Path rules;
+    private Path activity;
+    private int changeCounter;
 
     @Before
     public void enableShrinking() throws Exception {
-        rules = project.file('proguard-rules.pro')
+        rules = project.getTestDir().toPath().resolve("proguard-rules.pro");
 
-        project.buildFile << """
-            android {
-                buildTypes.debug {
-                    minifyEnabled true
-                    useProguard false
-                    proguardFiles getDefaultProguardFile('proguard-android.txt'), '${rules.name}'
-                }
-            }
-        """
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "  buildTypes.debug {\n"
+                        + "    minifyEnabled true\n"
+                        + "    useProguard false\n"
+                        + "    proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'\n"
+                        + "  }\n"
+                        + "}\n");
 
-        rules << """
-            # Empty rules for now.
-        """
+        Files.write(rules, ImmutableList.of("# Empty rules for now\n"));
     }
 
     @Before
     public void addGuavaDep() throws Exception {
-        project.buildFile << """
-            dependencies {
-                compile 'com.google.guava:guava:18.0'
-            }
-        """
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n" + "dependencies {\n" + "  compile 'com.google.guava:guava:18.0'\n" + "}\n");
     }
 
     @Before
     public void prepareForChanges() throws Exception {
-        activity = project.file("src/main/java/com/example/helloworld/HelloWorld.java")
+        activity =
+                project.getTestDir()
+                        .toPath()
+                        .resolve("src/main/java/com/example/helloworld/HelloWorld.java");
 
         TestFileUtils.addMethod(
-                activity,
-                """
-                    @Override
-                    protected void onStop() {
-                        android.util.Log.i("MainActivity", "CHANGE0");
-                        super.onStop();
-                    }
-                """)
+                activity.toFile(),
+                "\n"
+                        + "@Override\n"
+                        + "protected void onStop() {\n"
+                        + "  android.util.Log.i(\"MainActivity\", \"CHANGE0\");\n"
+                        + "  super.onStop();\n"
+                        + "}");
     }
 
     @Test
-    public void "Warnings stop build"() throws Exception {
-        project.executeExpectingFailure("assembleDebug")
+    public void warningsStopBuild() throws Exception {
+        project.executeExpectingFailure("assembleDebug");
 
-        String output = project.getBuildResult().getStdout()
-        assertThat(output).contains("references unknown")
-        assertThat(output).contains("Unsafe")
-        assertThat(output).contains("Nullable")
-        assertThat(output).contains("com/google/common/cache")
+        String output = project.getBuildResult().getStdout();
+        assertThat(output).contains("references unknown");
+        assertThat(output).contains("Unsafe");
+        assertThat(output).contains("Nullable");
+        assertThat(output).contains("com/google/common/cache");
 
-        changeCode()
+        changeCode();
 
-        project.executeExpectingFailure("assembleDebug")
+        project.executeExpectingFailure("assembleDebug");
 
-        output = project.getBuildResult().getStdout()
-        assertThat(output).contains("references unknown")
-        assertThat(output).contains("Unsafe")
-        assertThat(output).contains("Nullable")
-        assertThat(output).contains("com/google/common/cache")
+        output = project.getBuildResult().getStdout();
+        assertThat(output).contains("references unknown");
+        assertThat(output).contains("Unsafe");
+        assertThat(output).contains("Nullable");
+        assertThat(output).contains("com/google/common/cache");
     }
 
     @Test
-    public void "-dontwarn applies only to relevant classes"() throws Exception {
-        rules << """
-            -dontwarn sun.misc.Unsafe
-        """
+    public void dontwarnAppliesOnlyToRelevantClasses() throws Exception {
+        TestFileUtils.appendToFile(rules.toFile(), "-dontwarn sun.misc.Unsafe\n");
 
-        project.executeExpectingFailure("assembleDebug")
+        project.executeExpectingFailure("assembleDebug");
 
-        String output = project.getBuildResult().getStdout()
-        assertThat(output).contains("references unknown")
-        assertThat(output).doesNotContain("Unsafe")
-        assertThat(output).contains("Nullable")
-        assertThat(output).contains("com/google/common/cache")
+        String output = project.getBuildResult().getStdout();
+        assertThat(output).contains("references unknown");
+        assertThat(output).doesNotContain("Unsafe");
+        assertThat(output).contains("Nullable");
+        assertThat(output).contains("com/google/common/cache");
     }
 
     @Test
-    public void "-dontwarn without arguments"() throws Exception {
-        rules << "-dontwarn"
-        project.execute("assembleDebug")
+    public void dontwarnWithoutArguments() throws Exception {
+        TestFileUtils.appendToFile(rules.toFile(), "-dontwarn\n");
+        project.execute("assembleDebug");
 
-        String output = project.getBuildResult().getStdout()
-        assertThat(output).doesNotContain("references unknown")
-        assertThat(output).doesNotContain("Unsafe")
-        assertThat(output).doesNotContain("Nullable")
-        assertThat(output).doesNotContain("com/google/common/cache")
+        String output = project.getBuildResult().getStdout();
+        assertThat(output).doesNotContain("references unknown");
+        assertThat(output).doesNotContain("Unsafe");
+        assertThat(output).doesNotContain("Nullable");
+        assertThat(output).doesNotContain("com/google/common/cache");
 
-        changeCode()
+        changeCode();
 
-        project.execute("assembleDebug")
+        project.execute("assembleDebug");
 
-        output = project.getBuildResult().getStdout()
-        assertThat(output).doesNotContain("references unknown")
-        assertThat(output).doesNotContain("Unsafe")
-        assertThat(output).doesNotContain("Nullable")
-        assertThat(output).doesNotContain("com/google/common/cache")
+        output = project.getBuildResult().getStdout();
+        assertThat(output).doesNotContain("references unknown");
+        assertThat(output).doesNotContain("Unsafe");
+        assertThat(output).doesNotContain("Nullable");
+        assertThat(output).doesNotContain("com/google/common/cache");
     }
 
     @Test
-    public void "-dontwarn on caller"() throws Exception {
-        rules << "-dontwarn com.google.common.**"
-        project.execute("assembleDebug")
+    public void dontwarnOnCaller() throws Exception {
+        TestFileUtils.appendToFile(rules.toFile(), "-dontwarn com.google.common.**\n");
+        project.execute("assembleDebug");
 
-        String output = project.getBuildResult().getStdout()
-        assertThat(output).doesNotContain("references unknown")
-        assertThat(output).doesNotContain("Unsafe")
-        assertThat(output).doesNotContain("Nullable")
-        assertThat(output).doesNotContain("com/google/common/cache")
+        String output = project.getBuildResult().getStdout();
+        assertThat(output).doesNotContain("references unknown");
+        assertThat(output).doesNotContain("Unsafe");
+        assertThat(output).doesNotContain("Nullable");
+        assertThat(output).doesNotContain("com/google/common/cache");
 
-        changeCode()
+        changeCode();
 
-        project.execute("assembleDebug")
+        project.execute("assembleDebug");
 
-        output = project.getBuildResult().getStdout()
-        assertThat(output).doesNotContain("references unknown")
-        assertThat(output).doesNotContain("Unsafe")
-        assertThat(output).doesNotContain("Nullable")
-        assertThat(output).doesNotContain("com/google/common/cache")
+        output = project.getBuildResult().getStdout();
+        assertThat(output).doesNotContain("references unknown");
+        assertThat(output).doesNotContain("Unsafe");
+        assertThat(output).doesNotContain("Nullable");
+        assertThat(output).doesNotContain("com/google/common/cache");
     }
 
     @Test
-    public void "-dontwarn on callee"() throws Exception {
-        rules << """
-            -dontwarn sun.misc.Unsafe
-            -dontwarn javax.annotation.**
-        """
+    public void dontwarnOnCallee() throws Exception {
+        TestFileUtils.appendToFile(
+                rules.toFile(), "-dontwarn sun.misc.Unsafe\n -dontwarn javax.annotation.**\n");
 
-        project.execute("assembleDebug")
+        project.execute("assembleDebug");
 
-        String output = project.getBuildResult().getStdout()
-        assertThat(output).doesNotContain("references unknown")
-        assertThat(output).doesNotContain("Unsafe")
-        assertThat(output).doesNotContain("Nullable")
-        assertThat(output).doesNotContain("com/google/common/cache")
+        String output = project.getBuildResult().getStdout();
+        assertThat(output).doesNotContain("references unknown");
+        assertThat(output).doesNotContain("Unsafe");
+        assertThat(output).doesNotContain("Nullable");
+        assertThat(output).doesNotContain("com/google/common/cache");
 
-        changeCode()
+        changeCode();
 
-        project.execute("assembleDebug")
+        project.execute("assembleDebug");
 
-        output = project.getBuildResult().getStdout()
-        assertThat(output).doesNotContain("references unknown")
-        assertThat(output).doesNotContain("Unsafe")
-        assertThat(output).doesNotContain("Nullable")
-        assertThat(output).doesNotContain("com/google/common/cache")
+        output = project.getBuildResult().getStdout();
+        assertThat(output).doesNotContain("references unknown");
+        assertThat(output).doesNotContain("Unsafe");
+        assertThat(output).doesNotContain("Nullable");
+        assertThat(output).doesNotContain("com/google/common/cache");
     }
 
     @Test
-    public void "Parser errors are properly reported"() throws Exception {
-        rules << "-foo"
+    public void parserErrorsAreProperlyReported() throws Exception {
+        TestFileUtils.appendToFile(rules.toFile(), "-foo\n");
 
-        GradleBuildResult result = project.executor().expectFailure().run("assembleDebug")
-        assertThat(result.failureMessage).contains("'-foo' expecting EOF")
+        GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
+        assertThat(result.getFailureMessage()).contains("'-foo' expecting EOF");
     }
 
-    private void changeCode() {
-        TestFileUtils.searchAndReplace(activity, "CHANGE\\d+", "CHANGE${++changeCounter}")
+    private void changeCode() throws IOException {
+        changeCounter++;
+        TestFileUtils.searchAndReplace(activity, "CHANGE\\d+", "CHANGE" + changeCounter);
     }
 }
