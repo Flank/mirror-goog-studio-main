@@ -61,6 +61,7 @@ class AndroidManifestInTestTest {
         System.out.println("Beginning dump");
         boolean foundPermission = false;
         boolean foundMetadata = false;
+        boolean isDebuggable = false;
         for (String line : output) {
             if (line.contains("foo.permission-group.COST_MONEY")) {
                 foundPermission = true
@@ -68,12 +69,18 @@ class AndroidManifestInTestTest {
             if (line.contains("meta-data")) {
                 foundMetadata = true
             }
+            if (line.contains("android:debuggable")) {
+                isDebuggable = true
+            }
         }
         if (!foundPermission) {
             fail("Could not find user-specified permission group.")
         }
         if (!foundMetadata) {
             fail("Could not find meta-data under instrumentation ")
+        }
+        if (!isDebuggable) {
+            fail("Generated apk is not debuggable ")
         }
     }
 }
