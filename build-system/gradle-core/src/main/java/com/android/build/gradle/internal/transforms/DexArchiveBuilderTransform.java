@@ -63,7 +63,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Sets;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -206,15 +205,12 @@ public class DexArchiveBuilderTransform extends Transform {
         ProcessOutput processOutput = null;
         Multimap<QualifiedContent, File> cacheableItems = HashMultimap.create();
         try (Closeable ignored = processOutput = outputHandler.createOutput()) {
-            // hash to detect duplicate inputs (due to issue with library and tests)
-            final Set<String> hashes = Sets.newHashSet();
 
             for (TransformInput input : transformInvocation.getInputs()) {
                 for (DirectoryInput dirInput : input.getDirectoryInputs()) {
                     logger.verbose("Dir input %s", dirInput.getFile().toString());
                     convertToDexArchive(
                             transformInvocation.getContext(),
-                            hashes,
                             dirInput,
                             outputProvider);
                 }
@@ -225,7 +221,6 @@ public class DexArchiveBuilderTransform extends Transform {
                             processJarInput(
                                     transformInvocation.getContext(),
                                     transformInvocation.isIncremental(),
-                                    hashes,
                                     jarInput,
                                     outputProvider);
                     cacheableItems.putAll(jarInput, dexArchives);
@@ -287,13 +282,12 @@ public class DexArchiveBuilderTransform extends Transform {
     private List<File> processJarInput(
             @NonNull Context context,
             boolean isIncremental,
-            @NonNull Set<String> hashes,
             @NonNull JarInput jarInput,
             TransformOutputProvider transformOutputProvider)
             throws Exception {
         if (!isIncremental) {
             if (jarInput.getFile().exists()) {
-                return convertJarToDexArchive(context, hashes, jarInput, transformOutputProvider);
+                return convertJarToDexArchive(context, jarInput, transformOutputProvider);
             } else {
                 FileUtils.deleteIfExists(jarInput.getFile());
             }
@@ -305,7 +299,7 @@ public class DexArchiveBuilderTransform extends Transform {
                 }
             } else if (jarInput.getStatus() == Status.ADDED
                     || jarInput.getStatus() == Status.CHANGED) {
-                return convertJarToDexArchive(context, hashes, jarInput, transformOutputProvider);
+                return convertJarToDexArchive(context, jarInput, transformOutputProvider);
             }
         }
         return ImmutableList.of();
@@ -313,14 +307,13 @@ public class DexArchiveBuilderTransform extends Transform {
 
     private List<File> convertJarToDexArchive(
             @NonNull Context context,
-            @NonNull Set<String> hashes,
             @NonNull JarInput toConvert,
             @NonNull TransformOutputProvider transformOutputProvider)
             throws Exception {
 
         File cachedVersion = cacheHandler.getCachedVersionIfPresent(toConvert);
         if (cachedVersion == null) {
-            return convertToDexArchive(context, hashes, toConvert, transformOutputProvider);
+            return convertToDexArchive(context, toConvert, transformOutputProvider);
         } else {
             File outputFile = getPreDexJar(transformOutputProvider, toConvert, null);
             Files.copy(
@@ -468,22 +461,11 @@ public class DexArchiveBuilderTransform extends Transform {
 
     private List<File> convertToDexArchive(
             @NonNull Context context,
-            @NonNull Set<String> hashes,
             @NonNull QualifiedContent input,
             @NonNull TransformOutputProvider outputProvider)
             throws Exception {
 
         logger.verbose("Dexing {}", input.getFile().getAbsolutePath());
-        String hash = DexArchiveBuilderCacheHandler.getFileHash(input.getFile());
-
-        synchronized (hashes) {
-            if (hashes.contains(hash)) {
-                logger.verbose("Input with the same hash exists. Pre-dexing skipped.");
-                return ImmutableList.of();
-            }
-
-            hashes.add(hash);
-        }
 
         ImmutableList.Builder<File> dexArchives = ImmutableList.builder();
         for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {

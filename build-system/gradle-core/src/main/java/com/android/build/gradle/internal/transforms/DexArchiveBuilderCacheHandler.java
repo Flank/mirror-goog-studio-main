@@ -27,16 +27,11 @@ import com.android.builder.core.DexOptions;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
 import com.android.dx.Version;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
 import com.google.common.collect.Multimap;
-import com.google.common.hash.HashCode;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -251,27 +246,6 @@ class DexArchiveBuilderCacheHandler {
                 .putLong(FileCacheInputParams.CACHE_KEY_VERSION.name(), CACHE_KEY_VERSION);
 
         return buildCacheInputs.build();
-    }
-
-    /**
-     * Returns the hash of a file.
-     *
-     * <p>If the file is a folder, it's a hash of its path. If the file is a file, then it's a hash
-     * of the file itself.
-     *
-     * @param file the file to hash
-     */
-    @NonNull
-    public static String getFileHash(@NonNull File file) throws IOException {
-        HashCode hashCode;
-        HashFunction hashFunction = Hashing.sha1();
-        if (file.isDirectory()) {
-            hashCode = hashFunction.hashString(file.getPath(), Charsets.UTF_16LE);
-        } else {
-            hashCode = Files.hash(file, hashFunction);
-        }
-
-        return hashCode.toString();
     }
 
     /** Jumbo mode is always enabled for dex archives - see http://b.android.com/321744 */
