@@ -565,19 +565,20 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private List<File> gatherProguardFiles(
             @NonNull Function<PostprocessingOptions, List<File>> postprocessingGetter,
             @NonNull Function<BaseConfig, Collection<File>> baseConfigGetter) {
+        GradleVariantConfiguration variantConfiguration = getVariantConfiguration();
+
         List<File> result = new ArrayList<>();
+        result.addAll(baseConfigGetter.apply(variantConfiguration.getDefaultConfig()));
 
         PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
         if (postprocessingOptions == null) {
-            GradleVariantConfiguration variantConfiguration = getVariantConfiguration();
-            result.addAll(baseConfigGetter.apply(variantConfiguration.getDefaultConfig()));
             result.addAll(baseConfigGetter.apply(variantConfiguration.getBuildType()));
-            for (CoreProductFlavor flavor : variantConfiguration.getProductFlavors()) {
-                result.addAll(baseConfigGetter.apply(flavor));
-            }
         } else {
-            // The postprocessing block is only in the build type for now.
             result.addAll(postprocessingGetter.apply(postprocessingOptions));
+        }
+
+        for (CoreProductFlavor flavor : variantConfiguration.getProductFlavors()) {
+            result.addAll(baseConfigGetter.apply(flavor));
         }
 
         return result;
