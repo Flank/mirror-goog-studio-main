@@ -109,7 +109,6 @@ import com.android.build.gradle.internal.tasks.UninstallTask;
 import com.android.build.gradle.internal.tasks.ValidateSigningTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingMergeArtifactsTransform;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.BuiltInShrinkerTransform;
@@ -1132,11 +1131,6 @@ public abstract class TaskManager {
                 taskName);
 
         scope.setProcessResourcesTask(processAndroidResources);
-
-        if (scope.getDataBindingProcessLayoutsTask() != null) {
-            processAndroidResources.dependsOn(
-                    tasks, scope.getDataBindingProcessLayoutsTask().getName());
-        }
         scope.getSourceGenTask().optionalDependsOn(tasks, processAndroidResources);
         return processAndroidResources;
     }
@@ -2538,17 +2532,11 @@ public abstract class TaskManager {
         }
 
         dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
-        AndroidTask<DataBindingProcessLayoutsTask> processLayoutsTask = androidTasks
-                .create(tasks, new DataBindingProcessLayoutsTask.ConfigAction(scope));
-        scope.setDataBindingProcessLayoutsTask(processLayoutsTask);
-
-        scope.getProcessResourcesTask().dependsOn(tasks, processLayoutsTask);
-        processLayoutsTask.dependsOn(tasks, scope.getMergeResourcesTask());
 
         AndroidTask<DataBindingExportBuildInfoTask> exportBuildInfo = androidTasks
                 .create(tasks, new DataBindingExportBuildInfoTask.ConfigAction(scope));
 
-        exportBuildInfo.dependsOn(tasks, processLayoutsTask);
+        exportBuildInfo.dependsOn(tasks, scope.getMergeResourcesTask());
         exportBuildInfo.dependsOn(tasks, scope.getSourceGenTask());
 
         scope.setDataBindingExportBuildInfoTask(exportBuildInfo);

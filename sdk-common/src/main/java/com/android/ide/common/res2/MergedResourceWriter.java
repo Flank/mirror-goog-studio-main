@@ -36,7 +36,6 @@ import com.android.resources.ResourceType;
 import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
@@ -122,8 +121,6 @@ public class MergedResourceWriter
 
     @Nullable private final SingleFileProcessor dataBindingExpressionRemover;
 
-    @Nullable private final File dataBindingLayoutOutputFolder;
-
     @Nullable private final File notCompiledOutputDirectory;
 
     private final boolean pseudoLocalesEnabled;
@@ -152,7 +149,6 @@ public class MergedResourceWriter
      * @param resourceCompiler resource compiler, i.e. AAPT
      * @param temporaryDirectory temporary directory for intermediate merged files
      * @param dataBindingExpressionRemover removes data binding expressions from layout files
-     * @param dataBindingLayoutOutputFolder for layout files passed to the data binding task
      * @param notCompiledOutputDirectory for saved uncompiled resources for the resource shrinking
      *     transform and for unit testing with resources.
      * @param pseudoLocalesEnabled generate resources for pseudo-locales (en-XA and ar-XB)
@@ -167,16 +163,10 @@ public class MergedResourceWriter
             @NonNull QueueableResourceCompiler resourceCompiler,
             @NonNull File temporaryDirectory,
             @Nullable SingleFileProcessor dataBindingExpressionRemover,
-            @Nullable File dataBindingLayoutOutputFolder,
             @Nullable File notCompiledOutputDirectory,
             boolean pseudoLocalesEnabled,
             boolean crunchPng) {
         super(rootFolder, workerExecutor);
-        Preconditions.checkState(
-                (dataBindingExpressionRemover == null) == (dataBindingLayoutOutputFolder == null),
-                "Both dataBindingExpressionRemover and dataBindingLayoutOutputFolder need to be "
-                        + "either null or non null");
-
         mResourceCompiler = resourceCompiler;
         mPublicFile = publicFile;
         mMergingLog = blameLog;
@@ -184,7 +174,6 @@ public class MergedResourceWriter
         mCompiling = new ConcurrentLinkedDeque<>();
         mTemporaryDirectory = temporaryDirectory;
         this.dataBindingExpressionRemover = dataBindingExpressionRemover;
-        this.dataBindingLayoutOutputFolder = dataBindingLayoutOutputFolder;
         this.notCompiledOutputDirectory = notCompiledOutputDirectory;
         this.pseudoLocalesEnabled = pseudoLocalesEnabled;
         this.crunchPng = crunchPng;
@@ -231,7 +220,6 @@ public class MergedResourceWriter
                 temporaryDirectory,
                 null,
                 null,
-                null,
                 false,
                 false);
     }
@@ -275,10 +263,8 @@ public class MergedResourceWriter
                             && request.getInput().getName().endsWith(".xml")) {
 
                         // Try to strip the layout. If stripping modified the file (there was data
-                        // binding in the layout), copy the *original* file to the intermediate
-                        // data-binding-layout-in folder and compile the *stripped* layout into
-                        // merged resources folder. Otherwise, compile into merged resources folder
-                        // normally.
+                        // binding in the layout), compile the stripped layout into merged resources
+                        // folder. Otherwise, compile into merged resources folder normally.
 
                         File strippedLayoutFolder = new File(tmpDir, request.getFolderName());
                         File strippedLayout =
@@ -289,23 +275,10 @@ public class MergedResourceWriter
                                         request.getInput(), strippedLayout);
 
                         if (removedDataBinding) {
-                            File databindingLayoutDir =
-                                    new File(
-                                            dataBindingLayoutOutputFolder, request.getFolderName());
-
-                            FileUtils.mkdirs(databindingLayoutDir);
-                            FileUtils.copyFileToDirectory(request.getInput(), databindingLayoutDir);
-
+                            // Remember in case AAPT compile or link fails.
                             if (mMergingLog != null) {
                                 mMergingLog.logCopy(request.getInput(), strippedLayout);
-
-                                mMergingLog.logCopy(
-                                        request.getInput(),
-                                        new File(
-                                                databindingLayoutDir,
-                                                request.getInput().getName()));
                             }
-
                             fileToCompile = strippedLayout;
                         }
                     }
@@ -709,10 +682,7 @@ public class MergedResourceWriter
                 || !originalFile.getName().endsWith(".xml")) {
             return;
         }
-        File layoutDir =
-                new File(dataBindingLayoutOutputFolder, originalFile.getParentFile().getName());
-        File toRemove = new File(layoutDir, originalFile.getName());
-        removeOutFile(toRemove);
+        dataBindingExpressionRemover.processRemovedFile(originalFile);
     }
 
     private void removeFileFromNotCompiledOutputDir(@NonNull ResourceItem resourceItem) {

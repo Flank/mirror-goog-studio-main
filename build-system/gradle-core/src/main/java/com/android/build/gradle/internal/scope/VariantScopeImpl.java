@@ -70,7 +70,6 @@ import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -182,8 +181,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private AndroidTask<Sync> processJavaResourcesTask;
     private AndroidTask<TransformTask> mergeJavaResourcesTask;
-
-    @Nullable private AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask;
 
     @Nullable private AndroidTask<? extends JavaCompile> javacTask;
 
@@ -731,18 +728,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public void setNdkBuildable(@NonNull Collection<Object> ndkBuildable) {
         this.ndkBuildable = ndkBuildable;
-    }
-
-    @Nullable
-    @Override
-    public AndroidTask<DataBindingProcessLayoutsTask> getDataBindingProcessLayoutsTask() {
-        return dataBindingProcessLayoutsTask;
-    }
-
-    @Override
-    public void setDataBindingProcessLayoutsTask(
-            @Nullable AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask) {
-        this.dataBindingProcessLayoutsTask = dataBindingProcessLayoutsTask;
     }
 
     @Override

@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
 import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.ExternalNativeBuildTask;
@@ -410,12 +409,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     AndroidTask<GenerateBuildConfig> getGenerateBuildConfigTask();
 
     void setGenerateBuildConfigTask(AndroidTask<GenerateBuildConfig> generateBuildConfigTask);
-
-    @Nullable
-    AndroidTask<DataBindingProcessLayoutsTask> getDataBindingProcessLayoutsTask();
-
-    void setDataBindingProcessLayoutsTask(
-            @Nullable AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask);
 
     AndroidTask<Sync> getProcessJavaResourcesTask();
 

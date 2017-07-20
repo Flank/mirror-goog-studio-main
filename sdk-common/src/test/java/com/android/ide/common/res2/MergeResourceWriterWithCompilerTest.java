@@ -164,7 +164,6 @@ public class MergeResourceWriterWithCompilerTest {
                         tmpFolder,
                         null,
                         null,
-                        null,
                         false,
                         false);
 
@@ -194,7 +193,6 @@ public class MergeResourceWriterWithCompilerTest {
                         mEmptyPreprocessor,
                         mSimpleCompiler,
                         tmpFolder,
-                        null,
                         null,
                         null,
                         false,
