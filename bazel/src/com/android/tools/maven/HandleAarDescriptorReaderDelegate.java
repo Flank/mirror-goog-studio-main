@@ -29,27 +29,30 @@ public class HandleAarDescriptorReaderDelegate extends ArtifactDescriptorReaderD
             RepositorySystemSession session, ArtifactDescriptorResult result, Model model) {
         super.populateResult(session, result, model);
 
-        if (model.getPackaging().equals("aar")
-                && result.getArtifact().getExtension().equals("jar")) {
+        if (!model.getPackaging().equals(result.getArtifact().getExtension())) {
             // This is something that Gradle seems to handle automatically, we have to do the same.
-            result.setArtifact(new AarArtifact(result.getArtifact()));
+            result.setArtifact(
+                    new DifferentExtensionArtifact(model.getPackaging(), result.getArtifact()));
         }
     }
 
-    private static class AarArtifact extends DelegatingArtifact {
+    private static class DifferentExtensionArtifact extends DelegatingArtifact {
 
-        public AarArtifact(Artifact delegate) {
+        private final String extension;
+
+        public DifferentExtensionArtifact(String extension, Artifact delegate) {
             super(delegate);
+            this.extension = extension;
         }
 
         @Override
         protected DelegatingArtifact newInstance(Artifact delegate) {
-            return new AarArtifact(delegate);
+            return new DifferentExtensionArtifact(extension, delegate);
         }
 
         @Override
         public String getExtension() {
-            return "aar";
+            return extension;
         }
     }
 }

@@ -26,10 +26,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.eclipse.aether.artifact.DefaultArtifact;
 import org.eclipse.aether.collection.CollectRequest;
 import org.eclipse.aether.graph.Dependency;
+import org.eclipse.aether.repository.RemoteRepository;
 import org.eclipse.aether.resolution.ArtifactResult;
 import org.eclipse.aether.resolution.DependencyRequest;
 import org.eclipse.aether.resolution.DependencyResolutionException;
@@ -48,7 +50,7 @@ public class AddDependency {
         List<String> args = Lists.newArrayList(argsArray);
 
         Path repoDirectory;
-        if (!MavenCoordinates.isMavenCoordinate(args.get(0))) {
+        if (!MavenCoordinates.isMavenCoordinate(args.get(0)) && !args.get(0).startsWith("--")) {
             repoDirectory = Paths.get(args.get(0));
             args.remove(0);
         } else {
@@ -68,8 +70,24 @@ public class AddDependency {
         mRepo = new MavenRepository(localRepo);
     }
 
-    private void run(List<String> coordinates) throws DependencyResolutionException, IOException {
+    private void run(List<String> args) throws DependencyResolutionException, IOException {
         JavaImportGenerator imports = new JavaImportGenerator(mRepo);
+        List<RemoteRepository> repositories = Lists.newArrayList(AetherUtils.REPOSITORIES);
+
+        Map<Boolean, List<String>> argsByFlag =
+                args.stream().collect(Collectors.partitioningBy(s -> s.startsWith("--")));
+
+        List<String> coordinates = argsByFlag.get(false);
+        for (String flag : argsByFlag.get(true)) {
+            if (flag.startsWith("--repo=")) {
+                String repoUrl = flag.substring("--repo=".length());
+                repositories.add(
+                        0, new RemoteRepository.Builder(repoUrl, "default", repoUrl).build());
+            } else {
+                System.err.println("Unknown flag " + flag);
+                System.exit(1);
+            }
+        }
 
         CollectRequest request = new CollectRequest();
         request.setDependencies(
@@ -78,7 +96,7 @@ public class AddDependency {
                         .map(DefaultArtifact::new)
                         .map(artifact -> new Dependency(artifact, JavaScopes.COMPILE))
                         .collect(Collectors.toList()));
-        request.setRepositories(AetherUtils.REPOSITORIES);
+        request.setRepositories(repositories);
 
         DependencyResult result = mRepo.resolveDependencies(new DependencyRequest(request, null));
 
