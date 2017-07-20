@@ -14,49 +14,36 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.ApkHelper
-import com.android.build.gradle.integration.common.utils.SdkHelper
-import com.android.ide.common.process.ProcessInfoBuilder
-import com.android.testutils.apk.Apk
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+package com.android.build.gradle.integration.application;
 
-import static org.junit.Assert.fail
-/**
- * Assemble tests for androidManifestInTest.
- */
-@CompileStatic
-class AndroidManifestInTestTest {
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("androidManifestInTest")
-            .create()
+import static org.junit.Assert.fail;
 
-    @BeforeClass
-    static void setUp() {
-        project.execute("clean", "assembleDebugAndroidTest")
-    }
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.ApkHelper;
+import com.android.build.gradle.integration.common.utils.SdkHelper;
+import com.android.ide.common.process.ProcessInfoBuilder;
+import com.android.testutils.apk.Apk;
+import java.util.List;
+import org.junit.Rule;
+import org.junit.Test;
 
-    @AfterClass
-    static void cleanUp() {
-        project = null
-    }
+/** Assemble tests for androidManifestInTest. */
+public class AndroidManifestInTestTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("androidManifestInTest").create();
 
     @Test
     public void testUserProvidedTestAndroidManifest() throws Exception {
-        Apk testApk = project.getTestApk()
+        project.execute("assembleDebugAndroidTest");
+        Apk testApk = project.getTestApk();
 
-        ProcessInfoBuilder builder = new ProcessInfoBuilder()
-        builder.setExecutable(SdkHelper.getAapt())
+        ProcessInfoBuilder builder = new ProcessInfoBuilder();
+        builder.setExecutable(SdkHelper.getAapt());
 
-        builder.addArgs("l", "-a", testApk.getFile().toString())
+        builder.addArgs("l", "-a", testApk.getFile().toString());
 
-        List<String> output = ApkHelper.runAndGetOutput(builder.createProcess())
+        List<String> output = ApkHelper.runAndGetOutput(builder.createProcess());
 
         System.out.println("Beginning dump");
         boolean foundPermission = false;
@@ -64,23 +51,23 @@ class AndroidManifestInTestTest {
         boolean isDebuggable = false;
         for (String line : output) {
             if (line.contains("foo.permission-group.COST_MONEY")) {
-                foundPermission = true
+                foundPermission = true;
             }
             if (line.contains("meta-data")) {
-                foundMetadata = true
+                foundMetadata = true;
             }
             if (line.contains("android:debuggable")) {
-                isDebuggable = true
+                isDebuggable = true;
             }
         }
         if (!foundPermission) {
-            fail("Could not find user-specified permission group.")
+            fail("Could not find user-specified permission group.");
         }
         if (!foundMetadata) {
-            fail("Could not find meta-data under instrumentation ")
+            fail("Could not find meta-data under instrumentation ");
         }
         if (!isDebuggable) {
-            fail("Generated apk is not debuggable ")
+            fail("Generated apk is not debuggable ");
         }
     }
 }
