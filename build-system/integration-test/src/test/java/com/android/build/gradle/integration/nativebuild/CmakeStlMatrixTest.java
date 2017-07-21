@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,241 +14,260 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.nativebuild
+package com.android.build.gradle.integration.nativebuild;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.build.gradle.integration.common.utils.ZipHelper
-import com.android.build.gradle.options.BooleanOption
-import com.android.build.gradle.options.StringOption
-import com.android.build.gradle.tasks.NativeBuildSystem
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.NativeAndroidProject
-import com.android.builder.model.NativeArtifact
-import com.android.testutils.apk.Apk
-import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.Lists
-import com.google.common.collect.Multimap
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.build.gradle.options.StringOption;
+import com.android.build.gradle.tasks.NativeBuildSystem;
+import com.android.builder.model.NativeAndroidProject;
+import com.android.builder.model.NativeArtifact;
+import com.android.testutils.apk.Apk;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multimap;
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib
-/**
- * Assemble tests for Cmake.
- */
-@CompileStatic
+/** Assemble tests for Cmake. */
 @RunWith(Parameterized.class)
-class CmakeStlMatrixTest {
-    @Parameterized.Parameters(name = "model = {0} stl = {1}")
-    public static Collection<Object[]> data() {
-        return [
-                [false, "system"].toArray(),
-                [false, "c++_shared"].toArray(),
-                [false, "gnustl_shared"].toArray(),
-                [false, "stlport_shared"].toArray(),
-                [false, "c++_static"].toArray(),
-                [false, "gnustl_static"].toArray(),
-                [false, "stlport_static"].toArray(),
-                [true, "system"].toArray(),
-                [true, "c++_shared"].toArray(),
-                [true, "gnustl_shared"].toArray(),
-                [true, "stlport_shared"].toArray(),
-                [true, "c++_static"].toArray(),
-                [true, "gnustl_static"].toArray(),
-                [true, "stlport_static"].toArray()
-        ];
-    }
+public class CmakeStlMatrixTest {
 
     private boolean isModel;
     private String stl;
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldJniApp.builder()
-                .withNativeDir("cxx")
-                .build())
-            .addFile(HelloWorldJniApp.cmakeLists("."))
-            .useExperimentalGradleVersion(isModel)
-            .create();
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").build())
+                    .addFile(HelloWorldJniApp.cmakeLists("."))
+                    .useExperimentalGradleVersion(isModel)
+                    .create();
 
-    CmakeStlMatrixTest(boolean isModel, String stl) {
+    @Parameterized.Parameters(name = "model = {0} stl = {1}")
+    public static Collection<Object[]> data() {
+        return ImmutableList.of(
+                        new Object[]{false, "system"},
+                        new Object[]{false, "c++_shared"},
+                        new Object[]{false, "gnustl_shared"},
+                        new Object[]{false, "stlport_shared"},
+                        new Object[]{false, "c++_static"},
+                        new Object[]{false, "gnustl_static"},
+                        new Object[]{false, "stlport_static"},
+                        new Object[]{true, "system"},
+                        new Object[]{true, "c++_shared"},
+                        new Object[]{true, "gnustl_shared"},
+                        new Object[]{true, "stlport_shared"},
+                        new Object[]{true, "c++_static"},
+                        new Object[]{true, "gnustl_static"},
+                        new Object[]{true, "stlport_static"});
+    }
+
+    public CmakeStlMatrixTest(boolean isModel, String stl) {
         this.isModel = isModel;
         this.stl = stl;
     }
 
     @Before
-    void setUp() {
-        String plugin = isModel ? "apply plugin: 'com.android.model.application'"
-                : "apply plugin: 'com.android.application'";
-        String modelBefore = isModel ? "model { " : ""
-        String modelAfter = isModel ? " }" : ""
-        project.buildFile <<
-                """
-$plugin
-$modelBefore
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-        defaultConfig {
-          externalNativeBuild {
-              cmake {
-                abiFilters.addAll("armeabi-v7a", "armeabi", "x86");
-                cFlags.addAll("-DTEST_C_FLAG", "-DTEST_C_FLAG_2")
-                cppFlags.addAll("-DTEST_CPP_FLAG")
-                targets.addAll("hello-jni")
-                arguments.addAll("-DANDROID_STL=$stl")
-              }
-          }
-        }
-        externalNativeBuild {
-          cmake {
-            path "CMakeLists.txt"
-          }
-        }
-    }
-$modelAfter
-""";
+    public void setUp() throws IOException {
+        String plugin =
+                isModel
+                        ? "apply plugin: 'com.android.model.application'"
+                        : "apply plugin: 'com.android.application'";
+        String modelBefore = isModel ? "model { " : "";
+        String modelAfter = isModel ? " }" : "";
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + plugin
+                        + "\n"
+                        + modelBefore
+                        + "\n"
+                        + "    android {\n"
+                        + "        compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "        buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "        defaultConfig {\n"
+                        + "          externalNativeBuild {\n"
+                        + "              cmake {\n"
+                        + "                abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\");\n"
+                        + "                cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
+                        + "                cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
+                        + "                targets.addAll(\"hello-jni\")\n"
+                        + "                arguments.addAll(\"-DANDROID_STL="
+                        + stl
+                        + "\")\n"
+                        + "              }\n"
+                        + "          }\n"
+                        + "        }\n"
+                        + "        externalNativeBuild {\n"
+                        + "          cmake {\n"
+                        + "            path \"CMakeLists.txt\"\n"
+                        + "          }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + modelAfter
+                        + "\n");
         if (!isModel) {
-            project.buildFile << """
-android {
-    applicationVariants.all { variant ->
-        assert !variant.getExternalNativeBuildTasks().isEmpty()
-        for (def task : variant.getExternalNativeBuildTasks()) {
-            assert task.getName() == "externalNativeBuild" + variant.getName().capitalize()
-        }
-    }
-}
-"""
+            TestFileUtils.appendToFile(
+                    project.getBuildFile(),
+                    "\n"
+                            + "android {\n"
+                            + "    applicationVariants.all { variant ->\n"
+                            + "        assert !variant.getExternalNativeBuildTasks().isEmpty()\n"
+                            + "        for (def task : variant.getExternalNativeBuildTasks()) {\n"
+                            + "            assert task.getName() == \"externalNativeBuild\" + variant.getName().capitalize()\n"
+                            + "        }\n"
+                            + "    }\n"
+                            + "}\n");
         }
     }
 
     @Test
-    void "check apk content"() {
-        project.execute("clean", "assembleDebug")
-        Apk apk = project.getApk("debug");
-        assertThatApk(apk).hasVersionCode(1)
-        assertThatApk(apk).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(apk).contains("lib/armeabi/libhello-jni.so");
-        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
+    public void checkApkContent() throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        TruthHelper.assertThatApk(apk).hasVersionCode(1);
+        TruthHelper.assertThatApk(apk).contains("lib/armeabi-v7a/libhello-jni.so");
+        TruthHelper.assertThatApk(apk).contains("lib/armeabi/libhello-jni.so");
+        TruthHelper.assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libhello-jni.so");
-        assertThatNativeLib(lib).isStripped();
+        TruthHelper.assertThatNativeLib(lib).isStripped();
 
         lib = ZipHelper.extractFile(apk, "lib/armeabi/libhello-jni.so");
-        assertThatNativeLib(lib).isStripped();
+        TruthHelper.assertThatNativeLib(lib).isStripped();
 
         lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
-        assertThatNativeLib(lib).isStripped();
+        TruthHelper.assertThatNativeLib(lib).isStripped();
     }
 
     @Test
-    void "check apk content with injected ABI"() {
+    public void checkApkContentWithInjectedABI() throws IOException, InterruptedException {
         project.executor()
                 .with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
-                .run("clean", "assembleDebug")
+                .run("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
-        assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(apk).doesNotContain("lib/armeabi/libhello-jni.so");
-        assertThatApk(apk).contains("lib/x86/libhello-jni.so");
+        TruthHelper.assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
+        TruthHelper.assertThatApk(apk).doesNotContain("lib/armeabi/libhello-jni.so");
+        TruthHelper.assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
-        assertThatNativeLib(lib).isStripped();
+        TruthHelper.assertThatNativeLib(lib).isStripped();
     }
 
     @Test
-    public void checkModel() {
+    public void checkModel() throws IOException {
         project.model().getSingle(); // Make sure we can successfully get AndroidProject
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
-        assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
-        assertThat(model.buildFiles).hasSize(1);
-        assertThat(model.name).isEqualTo("project");
+        TruthHelper.assertThat(model.getBuildSystems())
+                .containsExactly(NativeBuildSystem.CMAKE.getName());
+        TruthHelper.assertThat(model.getBuildFiles()).hasSize(1);
+        TruthHelper.assertThat(model.getName()).isEqualTo("project");
         int abiCount = 3;
-        assertThat(model.artifacts).hasSize(abiCount * /* variantCount */ 2);
-        assertThat(model.fileExtensions).hasSize(1);
+        TruthHelper.assertThat(model.getArtifacts()).hasSize(abiCount * 2);
+        TruthHelper.assertThat(model.getFileExtensions()).hasSize(1);
 
-        for (File file : model.buildFiles) {
-            assertThat(file).isFile();
+        for (File file : model.getBuildFiles()) {
+            TruthHelper.assertThat(file).isFile();
         }
 
         Multimap<String, NativeArtifact> groupToArtifacts = ArrayListMultimap.create();
 
-        for (NativeArtifact artifact : model.artifacts) {
+        for (NativeArtifact artifact : model.getArtifacts()) {
             List<String> pathElements = TestFileUtils.splitPath(artifact.getOutputFile());
-            assertThat(pathElements).contains("obj");
-            assertThat(pathElements).doesNotContain("lib");
+            TruthHelper.assertThat(pathElements).contains("obj");
+            TruthHelper.assertThat(pathElements).doesNotContain("lib");
             groupToArtifacts.put(artifact.getGroupName(), artifact);
         }
 
-        assertThat(model).hasArtifactGroupsNamed("debug", "release");
-        assertThat(model).hasArtifactGroupsOfSize(abiCount);
+        TruthHelper.assertThat(model).hasArtifactGroupsNamed("debug", "release");
+        TruthHelper.assertThat(model).hasArtifactGroupsOfSize(abiCount);
     }
 
     @Test
-    public void checkClean() {
-        project.execute("clean", "assembleDebug", "assembleRelease")
+    public void checkClean() throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
-        assertThat(model).hasBuildOutputCountEqualTo(6);
-        assertThat(model).allBuildOutputsExist();
+        TruthHelper.assertThat(model).hasBuildOutputCountEqualTo(6);
+        TruthHelper.assertThat(model).allBuildOutputsExist();
         // CMake .o files are kept in -B folder which is under .externalNativeBuild/
-        assertThat(model).hasExactObjectFilesInExternalNativeBuildFolder("hello-jni.c.o");
+        TruthHelper.assertThat(model)
+                .hasExactObjectFilesInExternalNativeBuildFolder("hello-jni.c.o");
         // CMake .so files are kept in -DCMAKE_LIBRARY_OUTPUT_DIRECTORY folder which is under build/
         if (stl.endsWith("_shared")) {
-            assertThat(model).hasExactSharedObjectFilesInBuildFolder("libhello-jni.so",
-                    "lib" + stl + ".so")
+            TruthHelper.assertThat(model)
+                    .hasExactSharedObjectFilesInBuildFolder("libhello-jni.so", "lib" + stl + ".so");
         } else {
-            assertThat(model).hasExactSharedObjectFilesInBuildFolder("libhello-jni.so")
+            TruthHelper.assertThat(model).hasExactSharedObjectFilesInBuildFolder("libhello-jni.so");
         }
+
         project.execute("clean");
-        assertThat(model).noBuildOutputsExist();
-        assertThat(model).hasExactObjectFilesInBuildFolder();
-        assertThat(model).hasExactSharedObjectFilesInBuildFolder();
+        TruthHelper.assertThat(model).noBuildOutputsExist();
+        TruthHelper.assertThat(model).hasExactObjectFilesInBuildFolder();
+        TruthHelper.assertThat(model).hasExactSharedObjectFilesInBuildFolder();
     }
 
     @Test
-    public void checkCleanAfterAbiSubset() {
-        project.execute("clean", "assembleDebug", "assembleRelease")
+    public void checkCleanAfterAbiSubset() throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
-        assertThat(model).hasBuildOutputCountEqualTo(6);
+        TruthHelper.assertThat(model).hasBuildOutputCountEqualTo(6);
 
         List<File> allBuildOutputs = Lists.newArrayList();
-        for (NativeArtifact artifact : model.artifacts) {
-            assertThat(artifact.outputFile).isFile();
-            allBuildOutputs.add(artifact.outputFile);
+        for (NativeArtifact artifact : model.getArtifacts()) {
+            TruthHelper.assertThat(artifact.getOutputFile()).isFile();
+            allBuildOutputs.add(artifact.getOutputFile());
         }
 
         // Change the build file to only have "x86"
-        String plugin = isModel ? "apply plugin: 'com.android.model.application'"
-                : "apply plugin: 'com.android.application'";
-        String modelBefore = isModel ? "model { " : ""
-        String modelAfter = isModel ? " }" : ""
-        project.buildFile <<
-                """
-$plugin
-$modelBefore
-    android {
-        defaultConfig {
-          externalNativeBuild {
-              cmake {
-                abiFilters.clear();
-                abiFilters.addAll("x86");
-              }
-          }
-        }
-    }
-$modelAfter
-""";
+        String plugin =
+                isModel
+                        ? "apply plugin: 'com.android.model.application'"
+                        : "apply plugin: 'com.android.application'";
+        String modelBefore = isModel ? "model { " : "";
+        String modelAfter = isModel ? " }" : "";
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + plugin
+                        + "\n"
+                        + modelBefore
+                        + "\n"
+                        + "    android {\n"
+                        + "        defaultConfig {\n"
+                        + "          externalNativeBuild {\n"
+                        + "              cmake {\n"
+                        + "                abiFilters.clear();\n"
+                        + "                abiFilters.addAll(\"x86\");\n"
+                        + "              }\n"
+                        + "          }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + modelAfter
+                        + "\n");
         project.execute("clean");
 
         // All build outputs should no longer exist, even the non-x86 outputs
         for (File output : allBuildOutputs) {
-            assertThat(output).doesNotExist();
-        };
+            TruthHelper.assertThat(output).doesNotExist();
+        }
     }
 }

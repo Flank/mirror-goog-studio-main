@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,95 +14,102 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.nativebuild
+package com.android.build.gradle.integration.nativebuild;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.builder.model.NativeAndroidProject
-import com.android.builder.model.NativeArtifact
-import com.android.testutils.apk.Apk
-import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.Multimap
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-/**
- * Assemble tests for CMake.
- */
-@CompileStatic
-class CmakeJniLibTest {
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.NativeAndroidProject;
+import com.android.builder.model.NativeArtifact;
+import com.android.testutils.apk.Apk;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+/** Assemble tests for CMake. */
+public class CmakeJniLibTest {
 
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("ndkJniLib")
-            .addFile(HelloWorldJniApp.cmakeLists("lib"))
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("ndkJniLib")
+                    .addFile(HelloWorldJniApp.cmakeLists("lib"))
+                    .create();
 
     @BeforeClass
-    static void setUp() {
+    public static void setUp() throws IOException, InterruptedException {
         new File(project.getTestDir(), "src/main/jni")
-            .renameTo(new File(project.getTestDir(), "src/main/cxx"));
-        GradleTestProject lib = project.getSubproject("lib")
-        lib.buildFile <<
-"""
-apply plugin: 'com.android.library'
-android {
-    compileSdkVersion rootProject.latestCompileSdk
-    buildToolsVersion = rootProject.buildToolsVersion
-}
-"""
-        project.execute("clean", "assembleDebug",
-                "generateJsonModelDebug", "generateJsonModelRelease")
+                .renameTo(new File(project.getTestDir(), "src/main/cxx"));
+        GradleTestProject lib = project.getSubproject("lib");
+        TestFileUtils.appendToFile(
+                lib.getBuildFile(),
+                "\n"
+                        + "apply plugin: 'com.android.library'\n"
+                        + "android {\n"
+                        + "    compileSdkVersion rootProject.latestCompileSdk\n"
+                        + "    buildToolsVersion = rootProject.buildToolsVersion\n"
+                        + "}\n");
+        project.execute(
+                "clean", "assembleDebug", "generateJsonModelDebug", "generateJsonModelRelease");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void "check apk content"() {
+    public void checkApkContent() throws IOException {
         GradleTestProject app = project.getSubproject("app");
-        Apk gingerbreadUniversal = app.getApk("universal",  GradleTestProject.ApkType.DEBUG, "gingerbread");
+        Apk gingerbreadUniversal =
+                app.getApk("universal", GradleTestProject.ApkType.DEBUG, "gingerbread");
         if (!gingerbreadUniversal.exists()) {
             throw new RuntimeException(String.format("Could not find %s", gingerbreadUniversal));
         }
-        assertThatApk(app.getApk("universal",  GradleTestProject.ApkType.DEBUG, "gingerbread"))
+
+        TruthHelper.assertThatApk(
+                        app.getApk("universal", GradleTestProject.ApkType.DEBUG, "gingerbread"))
                 .contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(app.getApk("armeabi-v7a",  GradleTestProject.ApkType.DEBUG, "icecreamSandwich"))
+        TruthHelper.assertThatApk(
+                        app.getApk(
+                                "armeabi-v7a", GradleTestProject.ApkType.DEBUG, "icecreamSandwich"))
                 .contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(app.getApk("x86",  GradleTestProject.ApkType.DEBUG, "icecreamSandwich"))
+        TruthHelper.assertThatApk(
+                        app.getApk("x86", GradleTestProject.ApkType.DEBUG, "icecreamSandwich"))
                 .doesNotContain("lib/armeabi-v7a/libhello-jni.so");
     }
 
     @Test
-    public void checkModel() {
+    public void checkModel() throws IOException {
         // Make sure we can successfully get AndroidProject
         project.model().getMulti().getModelMap().get(":app");
 
-        NativeAndroidProject model = project.model()
-                .getMulti(NativeAndroidProject.class).get(":lib");
+        NativeAndroidProject model =
+                project.model().getMulti(NativeAndroidProject.class).get(":lib");
         assertThat(model).isNotNull();
-        assertThat(model.buildFiles).hasSize(1);
-        assertThat(model.name).isEqualTo("lib");
-        assertThat(model.artifacts).hasSize(14);
-        assertThat(model.fileExtensions).hasSize(1);
+        assertThat(model.getBuildFiles()).hasSize(1);
+        assertThat(model.getName()).isEqualTo("lib");
+        assertThat(model.getArtifacts()).hasSize(14);
+        assertThat(model.getFileExtensions()).hasSize(1);
 
-        for (File file : model.buildFiles) {
+        for (File file : model.getBuildFiles()) {
             assertThat(file).isFile();
         }
 
         Multimap<String, NativeArtifact> groupToArtifacts = ArrayListMultimap.create();
 
-        for (NativeArtifact artifact : model.artifacts) {
+        for (NativeArtifact artifact : model.getArtifacts()) {
             List<String> pathElements = TestFileUtils.splitPath(artifact.getOutputFile());
             assertThat(pathElements).contains("obj");
             groupToArtifacts.put(artifact.getGroupName(), artifact);
@@ -114,7 +121,7 @@ android {
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 }

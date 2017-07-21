@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,105 +14,114 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.nativebuild
+package com.android.build.gradle.integration.nativebuild;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.integration.common.utils.ZipHelper
-import com.android.testutils.apk.Apk
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatNativeLib
-
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.testutils.apk.Apk;
+import java.io.File;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
- * Test that a library Android.mk referenced from a base Android.mk builds correctly.
- * This reproduces the conditions of b.android.com/219225.
+ * Test that a library Android.mk referenced from a base Android.mk builds correctly. This
+ * reproduces the conditions of b.android.com/219225.
  */
-@CompileStatic
-class NdkBuildAndroidMkLibraryTest {
-    private static final TestSourceFile includedAndroidMkFoo = new TestSourceFile(
-            "src/main/jni/foo", "Android.mk",
-            "LOCAL_PATH := \$(call my-dir)\n" +
-                    "\n" +
-                    "include \$(CLEAR_VARS)\n" +
-                    "\n" +
-                    "LOCAL_MODULE := foo\n" +
-                    "LOCAL_SRC_FILES := ../hello-jni.c\n" +
-                    "LOCAL_STATIC_LIBRARIES := bar\n" +
-                    "LOCAL_LDLIBS := -llog\n" +
-                    "include \$(BUILD_SHARED_LIBRARY)");
+public class NdkBuildAndroidMkLibraryTest {
 
-    private static final TestSourceFile includedAndroidMkBar= new TestSourceFile(
-            "src/main/jni/bar", "Android.mk",
-            "LOCAL_PATH := \$(call my-dir)\n" +
-                    "\n" +
-                    "include \$(CLEAR_VARS)\n" +
-                    "\n" +
-                    "LOCAL_MODULE := bar\n" +
-                    "LOCAL_SRC_FILES := ../hello-jni.c\n" +
-                    "\n" +
-                    "include \$(BUILD_STATIC_LIBRARY)");
-
-    private static final TestSourceFile includingAndroidMk = new TestSourceFile(
-            "src/main/jni", "Android.mk",
-            "LOCAL_PATH := \$(call my-dir)\n" +
-                    "\n" +
-                    "include \$(call all-subdir-makefiles)");
-
-    private static final TestSourceFile applicationMk = new TestSourceFile(
-            "src/main/jni", "Application.mk",
-            "APP_MODULES\t:= foo bar\n" +
-                    "APP_SHORT_COMMANDS := true\n" +
-                    "APP_PLATFORM := android-14\n" +
-                    "APP_STL := gnustl_static\n" +
-                    "NDK_TOOLCHAIN_VERSION := clang");
-
+    private static final TestSourceFile includedAndroidMkFoo =
+            new TestSourceFile(
+                    "src/main/jni/foo",
+                    "Android.mk",
+                    "LOCAL_PATH := $(call my-dir)\n"
+                            + "\n"
+                            + "include $(CLEAR_VARS)\n"
+                            + "\n"
+                            + "LOCAL_MODULE := foo\n"
+                            + "LOCAL_SRC_FILES := ../hello-jni.c\n"
+                            + "LOCAL_STATIC_LIBRARIES := bar\n"
+                            + "LOCAL_LDLIBS := -llog\n"
+                            + "include $(BUILD_SHARED_LIBRARY)");
+    private static final TestSourceFile includedAndroidMkBar =
+            new TestSourceFile(
+                    "src/main/jni/bar",
+                    "Android.mk",
+                    "LOCAL_PATH := $(call my-dir)\n"
+                            + "\n"
+                            + "include $(CLEAR_VARS)\n"
+                            + "\n"
+                            + "LOCAL_MODULE := bar\n"
+                            + "LOCAL_SRC_FILES := ../hello-jni.c\n"
+                            + "\n"
+                            + "include $(BUILD_STATIC_LIBRARY)");
+    private static final TestSourceFile includingAndroidMk =
+            new TestSourceFile(
+                    "src/main/jni",
+                    "Android.mk",
+                    "LOCAL_PATH := $(call my-dir)\n"
+                            + "\n"
+                            + "include $(call all-subdir-makefiles)");
+    private static final TestSourceFile applicationMk =
+            new TestSourceFile(
+                    "src/main/jni",
+                    "Application.mk",
+                    "APP_MODULES\t:= foo bar\n"
+                            + "APP_SHORT_COMMANDS := true\n"
+                            + "APP_PLATFORM := android-14\n"
+                            + "APP_STL := gnustl_static\n"
+                            + "NDK_TOOLCHAIN_VERSION := clang");
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldJniApp.builder()
-                    .build())
-            .addFile(includedAndroidMkFoo)
-            .addFile(includedAndroidMkBar)
-            .addFile(includingAndroidMk)
-            .addFile(applicationMk)
-            .create();
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldJniApp.builder().build())
+                    .addFile(includedAndroidMkFoo)
+                    .addFile(includedAndroidMkBar)
+                    .addFile(includingAndroidMk)
+                    .addFile(applicationMk)
+                    .create();
 
     @Before
-    void setUp() {
-        project.buildFile <<
-                """
-        apply plugin: 'com.android.application'
-        android {
-            compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-            buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-            defaultConfig {
-                externalNativeBuild {
-                    ndkBuild {
-                        abiFilters.addAll("armeabi-v7a", "armeabi", "x86")
-                    }
-                }
-            }
-            externalNativeBuild {
-                ndkBuild {
-                    path "src/main/jni/Android.mk"
-                }
-            }
-        }
-        """;
+    public void setUp() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "        apply plugin: 'com.android.application'\n"
+                        + "        android {\n"
+                        + "            compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "            buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "            defaultConfig {\n"
+                        + "                externalNativeBuild {\n"
+                        + "                    ndkBuild {\n"
+                        + "                        abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\")\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "            externalNativeBuild {\n"
+                        + "                ndkBuild {\n"
+                        + "                    path \"src/main/jni/Android.mk\"\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "        }\n");
     }
 
     @Test
-    void "check apk content"() {
-        project.execute("clean", "assembleDebug")
-        Apk apk = project.getApk("debug");
-        assertThatApk(apk).hasVersionCode(1)
+    public void checkApkContent() throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        assertThatApk(apk).hasVersionCode(1);
         assertThatApk(apk).contains("lib/armeabi-v7a/libfoo.so");
         assertThatApk(apk).contains("lib/armeabi/libfoo.so");
         assertThatApk(apk).contains("lib/x86/libfoo.so");

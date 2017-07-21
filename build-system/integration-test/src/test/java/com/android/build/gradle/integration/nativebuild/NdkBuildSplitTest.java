@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,97 +14,99 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.nativebuild
+package com.android.build.gradle.integration.nativebuild;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.builder.model.NativeAndroidProject
-import com.android.builder.model.NativeArtifact
-import com.google.common.collect.ArrayListMultimap
-import com.google.common.collect.Multimap
-import groovy.transform.CompileStatic
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-/**
- * Assemble tests for ndk-build splits.
- */
-@CompileStatic
-class NdkBuildSplitTest {
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.NativeAndroidProject;
+import com.android.builder.model.NativeArtifact;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+/** Assemble tests for ndk-build splits. */
+public class NdkBuildSplitTest {
+
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldJniApp.builder()
-                .withNativeDir("cxx")
-                .build())
-            .addFile(HelloWorldJniApp.androidMkC("src/main/cxx"))
-            .create();
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").build())
+                    .addFile(HelloWorldJniApp.androidMkC("src/main/cxx"))
+                    .create();
 
     @BeforeClass
-    static void setUp() {
-        project.buildFile <<
-"""
-apply plugin: 'com.android.application'
-import com.android.build.OutputFile;
-ext.versionCodes = ["armeabi-v7a":1, "mips":2, "x86":3, "mips64":4, "all":0]
-android {
-    compileSdkVersion rootProject.latestCompileSdk
-    buildToolsVersion = rootProject.buildToolsVersion
-    generatePureSplits true
-
-    // This actual the app version code. Giving ourselves 100,000 values [0, 99999]
-    defaultConfig.versionCode = 123
-
-    externalNativeBuild {
-      ndkBuild {
-        path file("src/main/cxx/Android.mk")
-      }
-    }
-
-    flavorDimensions "androidVersion"
-    productFlavors {
-        gingerbread {
-            minSdkVersion 10
-            versionCode = 1
-        }
-        icecreamSandwich {
-            minSdkVersion 14
-            versionCode = 2
-        }
-        current {
-            minSdkVersion rootProject.latestCompileSdk
-            versionCode = 3
-        }
-    }
-
-    splits {
-        abi {
-            enable = true
-            universalApk = true
-            exclude "x86_64", "arm64-v8a", "armeabi"
-        }
-    }
-
-    // make per-variant version code
-    applicationVariants.all { variant ->
-        // get the version code for the flavor
-        def apiVersion = variant.productFlavors.get(0).versionCode
-
-        // assign a composite version code for each output, based on the flavor above
-        // and the density component.
-        variant.outputs.all { output ->
-            // get the key for the abi component
-            def key = output.getFilter(OutputFile.ABI) == null ? "all" : output.getFilter(OutputFile.ABI)
-            // set the versionCode on the output.
-            output.versionCodeOverride = apiVersion * 1000000 + project.ext.versionCodes.get(key) * 100000 + defaultConfig.versionCode
-        }
-    }
-}
-"""
-        project.execute("clean", "assembleDebug",
+    public static void setUp() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: 'com.android.application'\n"
+                        + "import com.android.build.OutputFile;\n"
+                        + "ext.versionCodes = [\"armeabi-v7a\":1, \"mips\":2, \"x86\":3, \"mips64\":4, \"all\":0]\n"
+                        + "android {\n"
+                        + "    compileSdkVersion rootProject.latestCompileSdk\n"
+                        + "    buildToolsVersion = rootProject.buildToolsVersion\n"
+                        + "    generatePureSplits true\n"
+                        + "\n"
+                        + "    // This actual the app version code. Giving ourselves 100,000 values [0, 99999]\n"
+                        + "    defaultConfig.versionCode = 123\n"
+                        + "\n"
+                        + "    externalNativeBuild {\n"
+                        + "      ndkBuild {\n"
+                        + "        path file(\"src/main/cxx/Android.mk\")\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    flavorDimensions \"androidVersion\"\n"
+                        + "    productFlavors {\n"
+                        + "        gingerbread {\n"
+                        + "            minSdkVersion 10\n"
+                        + "            versionCode = 1\n"
+                        + "        }\n"
+                        + "        icecreamSandwich {\n"
+                        + "            minSdkVersion 14\n"
+                        + "            versionCode = 2\n"
+                        + "        }\n"
+                        + "        current {\n"
+                        + "            minSdkVersion rootProject.latestCompileSdk\n"
+                        + "            versionCode = 3\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    splits {\n"
+                        + "        abi {\n"
+                        + "            enable = true\n"
+                        + "            universalApk = true\n"
+                        + "            exclude \"x86_64\", \"arm64-v8a\", \"armeabi\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    // make per-variant version code\n"
+                        + "    applicationVariants.all { variant ->\n"
+                        + "        // get the version code for the flavor\n"
+                        + "        def apiVersion = variant.productFlavors.get(0).versionCode\n"
+                        + "\n"
+                        + "        // assign a composite version code for each output, based on the flavor above\n"
+                        + "        // and the density component.\n"
+                        + "        variant.outputs.all { output ->\n"
+                        + "            // get the key for the abi component\n"
+                        + "            def key = output.getFilter(OutputFile.ABI) == null ? \"all\" : output.getFilter(OutputFile.ABI)\n"
+                        + "            // set the versionCode on the output.\n"
+                        + "            output.versionCodeOverride = apiVersion * 1000000 + project.ext.versionCodes.get(key) * 100000 + defaultConfig.versionCode\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+        project.execute(
+                "clean",
+                "assembleDebug",
                 "generateJsonModelcurrentDebug",
                 "generateJsonModelicecreamSandwichDebug",
                 "generateJsonModelcurrentRelease",
@@ -114,40 +116,48 @@ android {
     }
 
     @Test
-    void "check apk content"() {
-        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "current")).hasVersionCode(3100123);
-        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "current")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThatApk(project.getApk("mips64", GradleTestProject.ApkType.DEBUG, "current")).hasVersionCode(3400123);
-        assertThatApk(project.getApk("mips64", GradleTestProject.ApkType.DEBUG, "current")).contains("lib/mips64/libhello-jni.so");
+    public void checkApkContent() throws IOException {
+        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "current"))
+                .hasVersionCode(3100123);
+        assertThatApk(project.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "current"))
+                .contains("lib/armeabi-v7a/libhello-jni.so");
+        assertThatApk(project.getApk("mips64", GradleTestProject.ApkType.DEBUG, "current"))
+                .hasVersionCode(3400123);
+        assertThatApk(project.getApk("mips64", GradleTestProject.ApkType.DEBUG, "current"))
+                .contains("lib/mips64/libhello-jni.so");
     }
 
     @Test
-    void checkModel() {
+    public void checkModel() throws IOException {
         project.model().getSingle(); // Make sure we can get the AndroidProject
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
-        assertThat(model.buildFiles).hasSize(1);
+        assertThat(model.getBuildFiles()).hasSize(1);
 
         assertThat(model).isNotNull();
-        assertThat(model.name).isEqualTo("project");
-        assertThat(model.artifacts).hasSize(24);  // # of ABI (4) * # of variants (6)
-        assertThat(model.fileExtensions).hasSize(1);
+        assertThat(model.getName()).isEqualTo("project");
+        assertThat(model.getArtifacts()).hasSize(24); // # of ABI (4) * # of variants (6)
+        assertThat(model.getFileExtensions()).hasSize(1);
 
-
-        for (File file : model.buildFiles) {
+        for (File file : model.getBuildFiles()) {
             assertThat(file).isFile();
         }
 
         Multimap<String, NativeArtifact> groupToArtifacts = ArrayListMultimap.create();
 
-        for (NativeArtifact artifact : model.artifacts) {
+        for (NativeArtifact artifact : model.getArtifacts()) {
             List<String> pathElements = TestFileUtils.splitPath(artifact.getOutputFile());
             assertThat(pathElements).contains("obj");
             groupToArtifacts.put(artifact.getGroupName(), artifact);
         }
 
-        assertThat(groupToArtifacts.keySet()).containsExactly("currentDebug",
-                "icecreamSandwichDebug", "currentRelease", "gingerbreadRelease",
-                "icecreamSandwichRelease", "gingerbreadDebug");
+        assertThat(groupToArtifacts.keySet())
+                .containsExactly(
+                        "currentDebug",
+                        "icecreamSandwichDebug",
+                        "currentRelease",
+                        "gingerbreadRelease",
+                        "icecreamSandwichRelease",
+                        "gingerbreadDebug");
         assertThat(groupToArtifacts.get("currentDebug"))
                 .hasSize(groupToArtifacts.get("currentRelease").size());
     }
