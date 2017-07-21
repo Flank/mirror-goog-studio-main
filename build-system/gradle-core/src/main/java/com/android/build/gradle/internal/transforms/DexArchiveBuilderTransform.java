@@ -100,7 +100,6 @@ public class DexArchiveBuilderTransform extends Transform {
 
     @NonNull private final DexOptions dexOptions;
     @NonNull private final ErrorReporter errorReporter;
-    @Nullable private final FileCache userLevelCache;
     @VisibleForTesting @NonNull final WaitableExecutor executor;
     private final int minSdkVersion;
     @NonNull private final DexerTool dexer;
@@ -122,11 +121,12 @@ public class DexArchiveBuilderTransform extends Transform {
             boolean isDebuggable) {
         this.dexOptions = dexOptions;
         this.errorReporter = errorReporter;
-        this.userLevelCache = userLevelCache;
         this.minSdkVersion = minSdkVersion;
         this.dexer = dexer;
         this.executor = WaitableExecutor.useGlobalSharedThreadPool();
-        this.cacheHandler = new DexArchiveBuilderCacheHandler(userLevelCache, dexOptions);
+        this.cacheHandler =
+                new DexArchiveBuilderCacheHandler(
+                        userLevelCache, dexOptions, minSdkVersion, isDebuggable);
         this.useGradleWorkers = useGradleWorkers;
         this.inBufferSize =
                 (inBufferSize == null ? DEFAULT_BUFFER_SIZE_IN_KB : inBufferSize) * 1024;

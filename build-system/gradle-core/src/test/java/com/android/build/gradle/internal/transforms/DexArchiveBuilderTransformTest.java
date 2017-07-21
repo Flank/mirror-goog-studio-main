@@ -59,11 +59,21 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 /** Testing the {@link DexArchiveBuilderTransform} and {@link DexMergerTransform}. */
+@RunWith(Parameterized.class)
 public class DexArchiveBuilderTransformTest {
+
+    @Parameterized.Parameters
+    public static Collection<Object[]> setups() {
+        return ImmutableList.of(new Object[] {DexerTool.DX}, new Object[] {DexerTool.D8});
+    }
+
+    @Parameterized.Parameter public DexerTool dexerTool;
 
     private static final String PACKAGE = "com/example/tools";
 
@@ -139,10 +149,8 @@ public class DexArchiveBuilderTransformTest {
                                 ImmutableList.of(PACKAGE + "/B")));
         DexArchiveBuilderTransform transform = getTransform(userCache);
         transform.transform(getInvocation(ImmutableList.of(input), outputProvider));
-        transform.executor.waitForAllTasks();
 
-        //noinspection ConstantConditions
-        assertThat(cacheDir.listFiles(File::isDirectory).length).isEqualTo(1);
+        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1);
     }
 
     @Test
@@ -160,7 +168,6 @@ public class DexArchiveBuilderTransformTest {
 
         DexArchiveBuilderTransform transform = getTransform(cache);
         transform.transform(getInvocation(ImmutableList.of(input), outputProvider));
-        transform.executor.waitForAllTasks();
 
         assertThat(cacheDir.listFiles(File::isDirectory)).hasLength(1);
     }
@@ -232,18 +239,70 @@ public class DexArchiveBuilderTransformTest {
         MoreTruth.assertThat(FileUtils.find(out.toFile(), "A.dex").orNull()).isNull();
     }
 
+    @Test
+    public void testCacheKeyInputsChanges() throws Exception {
+        File cacheDir = FileUtils.join(tmpDir.getRoot(), "cache");
+        FileCache userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
+
+        Path inputJar = tmpDir.getRoot().toPath().resolve("input.jar");
+        TestInputsGenerator.jarWithEmptyClasses(inputJar, ImmutableList.of());
+        JarInput jarInput =
+                TransformTestHelper.jarBuilder(inputJar.toFile())
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .setStatus(Status.ADDED)
+                        .build();
+        TransformInput transformInput =
+                TransformTestHelper.inputBuilder().addInput(jarInput).build();
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(transformInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .build();
+
+        DexArchiveBuilderTransform transform = getTransform(userCache, 19, true);
+        transform.transform(invocation);
+        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1);
+
+        DexArchiveBuilderTransform minChanged = getTransform(userCache, 20, true);
+        minChanged.transform(invocation);
+        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(2);
+
+        DexArchiveBuilderTransform debuggableChanged = getTransform(userCache, 19, false);
+        debuggableChanged.transform(invocation);
+        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(3);
+
+        DexArchiveBuilderTransform minAndDebuggableChanged = getTransform(userCache, 20, false);
+        minAndDebuggableChanged.transform(invocation);
+        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(4);
+    }
+
     @NonNull
-    private DexArchiveBuilderTransform getTransform(@Nullable FileCache userCache) {
+    private DexArchiveBuilderTransform getTransform(
+            @Nullable FileCache userCache, int minSdkVersion, boolean isDebuggable) {
         return new DexArchiveBuilderTransform(
                 new DefaultDexOptions(),
                 new NoOpErrorReporter(),
                 userCache,
-                0,
-                DexerTool.DX,
+                minSdkVersion,
+                dexerTool,
                 true,
                 10,
                 10,
-                true);
+                isDebuggable);
+    }
+
+    @NonNull
+    private DexArchiveBuilderTransform getTransform(@Nullable FileCache userCache) {
+        return getTransform(userCache, 1, true);
+    }
+
+    private int cacheEntriesCount(@NonNull File cacheDir) {
+        File[] files = cacheDir.listFiles(File::isDirectory);
+        assertThat(files).isNotNull();
+        return files.length;
+
     }
 
     @NonNull
