@@ -77,10 +77,13 @@ class DexMergerTransformCallable implements Callable<Void> {
                 break;
             case D8:
                 int d8MinSdkVersion = minSdkVersion;
-                if (dexingType == DexingType.NATIVE_MULTIDEX) {
+                if (d8MinSdkVersion < 21 && dexingType == DexingType.NATIVE_MULTIDEX) {
                     // D8 has baked-in logic that does not allow multiple dex files without
-                    // main dex list if min sdk < 21. Because we are only merging dex files here,
-                    // it is safe to specify 21 as min sdk version.
+                    // main dex list if min sdk < 21. When we deploy the app to a device with api
+                    // level 21+, we will promote legacy multidex to native multidex, but the min
+                    // sdk version will be less than 21, which will cause D8 failure as we do not
+                    // supply the main dex list. In order to prevent that, it is safe to set min
+                    // sdk version to 21.
                     d8MinSdkVersion = 21;
                 }
                 merger =
