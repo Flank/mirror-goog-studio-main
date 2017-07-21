@@ -97,7 +97,7 @@ class FlavorSelectionTest {
                 .map { it.compileConfiguration}
                 .findAny()?.get() ?: throw RuntimeException("can't find flavorDebug")
 
-        attributeKeys = variantConfiguration.attributes.keySet()
+        attributeKeys = variantConfiguration.attributes!!.keySet()
 
     }
 
@@ -126,11 +126,11 @@ class FlavorSelectionTest {
     private fun checkAttribute(dimension: String, value: String) {
         // check the key is present.
         val key = Attribute.of(dimension, ProductFlavorAttr::class.java)
-        Truth.assertThat(attributeKeys).contains(key)
+        Truth.assertThat(attributeKeys).contains(key as Attribute<*>)
 
         // check the value is correct
         val attrValue = variantConfiguration.attributes.getAttribute(key)
         Truth.assertThat(attrValue).named("Value of attribute $dimension").isNotNull()
-        Truth.assertThat(attrValue.name).named("Value of attribute $dimension").isEqualTo(value)
+        Truth.assertThat(attrValue!!.name).named("Value of attribute $dimension").isEqualTo(value)
     }
 }

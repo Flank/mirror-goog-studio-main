@@ -43,20 +43,20 @@ iml_module(
 
 filegroup(
     name = "gradle-distrib",
-    srcs = ["//tools/external/gradle:gradle-distrib-4.1-milestone-1"],
+    srcs = ["//tools/external/gradle:gradle-distrib-4.1"],
     visibility = ["//visibility:public"],
 )
 
 java_import(
     name = "gradle-api_neverlink",
-    jars = ["//tools/external/gradle:gradle-api-4.1-milestone-1-jar"],
+    jars = ["//tools/external/gradle:gradle-api-4.1-jar"],
     neverlink = 1,
     visibility = ["//visibility:public"],
 )
 
 java_import(
     name = "gradle-api",
-    jars = ["//tools/external/gradle:gradle-api-4.1-milestone-1-jar"],
+    jars = ["//tools/external/gradle:gradle-api-4.1-jar"],
     visibility = ["//visibility:public"],
 )
 
