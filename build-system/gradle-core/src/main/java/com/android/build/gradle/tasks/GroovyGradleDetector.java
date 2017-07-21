@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
@@ -24,8 +23,8 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.utils.Pair;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.codehaus.groovy.ast.ASTNode;
@@ -46,7 +45,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
 
 /**
  * Implementation of the {@link GradleDetector} using a real Groovy AST,
- * which the Gradle plugin has access to
+ * which the Gradle plugin has access to.
  */
 public class GroovyGradleDetector extends GradleDetector {
     static final Implementation IMPLEMENTATION = new Implementation(
@@ -75,66 +74,76 @@ public class GroovyGradleDetector extends GradleDetector {
         final String source = sequence.toString();
         List<ASTNode> astNodes = new AstBuilder().buildFromString(source);
         GroovyCodeVisitor visitor = new CodeVisitorSupport() {
-            private List<MethodCallExpression> mMethodCallStack = Lists.newArrayList();
+            private final List<MethodCallExpression> mMethodCallStack = new ArrayList<>();
+
             @Override
             public void visitMethodCallExpression(MethodCallExpression expression) {
                 mMethodCallStack.add(expression);
                 super.visitMethodCallExpression(expression);
-                Expression arguments = expression.getArguments();
-                String parent = expression.getMethodAsString();
-                String parentParent = getParentParent();
-                if (arguments instanceof ArgumentListExpression) {
-                    ArgumentListExpression ale = (ArgumentListExpression)arguments;
-                    List<Expression> expressions = ale.getExpressions();
-                    if (expressions.size() == 1 &&
-                            expressions.get(0) instanceof ClosureExpression) {
-                        if (isInterestingBlock(parent, parentParent)) {
-                            ClosureExpression closureExpression =
-                                    (ClosureExpression)expressions.get(0);
-                            Statement block = closureExpression.getCode();
-                            if (block instanceof BlockStatement) {
-                                BlockStatement bs = (BlockStatement)block;
-                                for (Statement statement : bs.getStatements()) {
-                                    if (statement instanceof ExpressionStatement) {
-                                        ExpressionStatement e = (ExpressionStatement)statement;
-                                        if (e.getExpression() instanceof MethodCallExpression) {
-                                            checkDslProperty(parent,
-                                                    (MethodCallExpression)e.getExpression(),
-                                                    parentParent);
-                                        }
-                                    } else if (statement instanceof ReturnStatement) {
-                                        // Single item in block
-                                        ReturnStatement e = (ReturnStatement)statement;
-                                        if (e.getExpression() instanceof MethodCallExpression) {
-                                            checkDslProperty(parent,
-                                                    (MethodCallExpression)e.getExpression(),
-                                                    parentParent);
+                assert !mMethodCallStack.isEmpty();
+                assert mMethodCallStack.get(mMethodCallStack.size() - 1) == expression;
+                mMethodCallStack.remove(mMethodCallStack.size() - 1);
+            }
+
+            @Override
+            public void visitTupleExpression(TupleExpression tupleExpression) {
+                if (!mMethodCallStack.isEmpty()) {
+                    MethodCallExpression call = mMethodCallStack.get(mMethodCallStack.size() - 1);
+                    if (call.getArguments() == tupleExpression) {
+                        String parent = call.getMethodAsString();
+                        String parentParent = getParentParent();
+                        if (tupleExpression instanceof ArgumentListExpression) {
+                            ArgumentListExpression ale = (ArgumentListExpression)tupleExpression;
+                            List<Expression> expressions = ale.getExpressions();
+                            if (expressions.size() == 1 &&
+                                    expressions.get(0) instanceof ClosureExpression) {
+                                if (isInterestingBlock(parent, parentParent)) {
+                                    ClosureExpression closureExpression =
+                                            (ClosureExpression)expressions.get(0);
+                                    Statement block = closureExpression.getCode();
+                                    if (block instanceof BlockStatement) {
+                                        BlockStatement bs = (BlockStatement)block;
+                                        for (Statement statement : bs.getStatements()) {
+                                            if (statement instanceof ExpressionStatement) {
+                                                ExpressionStatement e = (ExpressionStatement)statement;
+                                                if (e.getExpression() instanceof MethodCallExpression) {
+                                                    checkDslProperty(parent,
+                                                            (MethodCallExpression)e.getExpression(),
+                                                            parentParent);
+                                                }
+                                            } else if (statement instanceof ReturnStatement) {
+                                                // Single item in block
+                                                ReturnStatement e = (ReturnStatement)statement;
+                                                if (e.getExpression() instanceof MethodCallExpression) {
+                                                    checkDslProperty(parent,
+                                                            (MethodCallExpression)e.getExpression(),
+                                                            parentParent);
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                    }
-                } else if (arguments instanceof TupleExpression) {
-                    if (isInterestingStatement(parent, parentParent)) {
-                        TupleExpression te = (TupleExpression) arguments;
-                        Map<String, String> namedArguments = Maps.newHashMap();
-                        List<String> unnamedArguments = Lists.newArrayList();
-                        for (Expression subExpr : te.getExpressions()) {
-                            if (subExpr instanceof NamedArgumentListExpression) {
-                                NamedArgumentListExpression nale = (NamedArgumentListExpression) subExpr;
-                                for (MapEntryExpression mae : nale.getMapEntryExpressions()) {
-                                    namedArguments.put(mae.getKeyExpression().getText(),
-                                            mae.getValueExpression().getText());
+                        } else {
+                            if (isInterestingStatement(parent, parentParent)) {
+                                Map<String, String> namedArguments = new HashMap<>();
+                                List<String> unnamedArguments = new ArrayList<>();
+                                for (Expression subExpr : tupleExpression.getExpressions()) {
+                                    if (subExpr instanceof NamedArgumentListExpression) {
+                                        NamedArgumentListExpression nale = (NamedArgumentListExpression) subExpr;
+                                        for (MapEntryExpression mae : nale.getMapEntryExpressions()) {
+                                            namedArguments.put(mae.getKeyExpression().getText(),
+                                                    mae.getValueExpression().getText());
+                                        }
+                                    }
                                 }
+                                checkMethodCall(context, parent, parentParent, namedArguments, unnamedArguments, call);
                             }
                         }
-                        checkMethodCall(context, parent, parentParent, namedArguments, unnamedArguments, expression);
                     }
                 }
-                assert !mMethodCallStack.isEmpty();
-                assert mMethodCallStack.get(mMethodCallStack.size() - 1) == expression;
-                mMethodCallStack.remove(mMethodCallStack.size() - 1);
+
+                super.visitTupleExpression(tupleExpression);
             }
 
             private String getParentParent() {
