@@ -1,64 +1,62 @@
-/*
- * Copyright (C) 2017 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.testing;
 
-package com.android.build.gradle.integration.testing
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.testutils.apk.Apk
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.Apk;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
 /**
- * Test separate test module that tests an application with some complicated dependencies :
- *  - the app imports a library importing a jar file itself.
+ * Test separate test module that tests an application with some complicated dependencies : - the
+ * app imports a library importing a jar file itself.
  */
 public class SeparateTestWithoutMinificationWithDependenciesTest {
     @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("separateTestModuleWithDependencies")
-            .withDependencyChecker(false)  // TODO: Fix for test plugin.
-            .create()
-
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("separateTestModuleWithDependencies")
+                    .withDependencyChecker(false)
+                    .create();
 
     @BeforeClass
-    static void setup() {
-        project.getSubproject("test").getBuildFile() << """
-        apply plugin: 'com.android.test'
-
-        android {
-            compileSdkVersion rootProject.latestCompileSdk
-            buildToolsVersion = rootProject.buildToolsVersion
-
-            targetProjectPath ':app'
-            targetVariant 'debug'
-        }
-        """
-        project.execute("clean", "assemble")
-    }
-    @Test
-    void "check app contains all dependent clases"() {
-        Apk apk = project.getSubproject('app').getApk("debug")
-        assertThatApk(apk).containsClass("Lcom/android/tests/jarDep/JarDependencyUtil;")
+    public static void setup() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getSubproject("test").getBuildFile(),
+                "\n"
+                        + "        apply plugin: 'com.android.test'\n"
+                        + "\n"
+                        + "        android {\n"
+                        + "            compileSdkVersion rootProject.latestCompileSdk\n"
+                        + "            buildToolsVersion = rootProject.buildToolsVersion\n"
+                        + "\n"
+                        + "            targetProjectPath ':app'\n"
+                        + "            targetVariant 'debug'\n"
+                        + "        }\n");
+        project.execute("clean", "assemble");
     }
 
+    @AfterClass
+    public static void cleanUp() {
+        project = null;
+    }
 
     @Test
-    void "check test app does not contain any application's dependent classes"() {
-        Apk apk = project.getSubproject('test').getApk("debug")
-        assertThatApk(apk).doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;")
+    public void checkAppContainsAllDependentClasses() throws IOException, ProcessException {
+        Apk apk = project.getSubproject("app").getApk("debug");
+        TruthHelper.assertThatApk(apk)
+                .containsClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
+    }
+
+    @Test
+    public void checkTestAppDoesNotContainAnyApplicationDependentClasses()
+            throws IOException, ProcessException {
+        Apk apk = project.getSubproject("test").getApk("debug");
+        TruthHelper.assertThatApk(apk)
+                .doesNotContainClass("Lcom/android/tests/jarDep/JarDependencyUtil;");
     }
 }

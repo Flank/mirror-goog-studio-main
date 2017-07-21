@@ -1,110 +1,103 @@
-/*
- * Copyright (C) 2017 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.testing;
 
-package com.android.build.gradle.integration.testing
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import java.io.File;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.builder.model.AndroidProject
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+public class SeparateTestModuleWithAppDependenciesTest {
 
-class SeparateTestModuleWithAppDependenciesTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("separateTestModule")
-            .create()
-
-    static ModelContainer<AndroidProject> models
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("separateTestModule").create();
 
     @BeforeClass
-    static void setup() {
-        project.getSubproject("app").getBuildFile() << """
-apply plugin: 'com.android.application'
-
-android {
-    compileSdkVersion rootProject.latestCompileSdk
-    buildToolsVersion = rootProject.buildToolsVersion
-
-    publishNonDefault true
-
-    defaultConfig {
-        minSdkVersion 9
-    }
-}
-dependencies {
-    compile 'com.google.android.gms:play-services-base:$GradleTestProject.PLAY_SERVICES_VERSION'
-    compile 'com.android.support:appcompat-v7:$GradleTestProject.SUPPORT_LIB_VERSION'
-}
-        """
+    public static void setup() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getSubproject("app").getBuildFile(),
+                "\n"
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion rootProject.latestCompileSdk\n"
+                        + "    buildToolsVersion = rootProject.buildToolsVersion\n"
+                        + "\n"
+                        + "    publishNonDefault true\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 9\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.google.android.gms:play-services-base:"
+                        + GradleTestProject.PLAY_SERVICES_VERSION
+                        + "'\n"
+                        + "    compile 'com.android.support:appcompat-v7:"
+                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "}\n");
 
         File srcDir = project.getSubproject("app").getMainSrcDir();
         srcDir = new File(srcDir, "foo");
         srcDir.mkdirs();
-        new File(srcDir, "FooActivity.java") << """
-package foo;
+        TestFileUtils.appendToFile(
+                new File(srcDir, "FooActivity.java"),
+                "\n"
+                        + "package foo;\n"
+                        + "\n"
+                        + "import android.os.Bundle;\n"
+                        + "import android.support.v7.app.AppCompatActivity;\n"
+                        + "import android.view.View;\n"
+                        + "import android.widget.TextView;\n"
+                        + "\n"
+                        + "public class FooActivity extends AppCompatActivity {\n"
+                        + "\n"
+                        + "    @Override\n"
+                        + "    protected void onCreate(Bundle savedInstanceState) {\n"
+                        + "        super.onCreate(savedInstanceState);\n"
+                        + "    }\n"
+                        + "}\n");
 
-import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.TextView;
-
-public class FooActivity extends AppCompatActivity {
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-}
-"""
-
-
-        project.getSubproject("test").getBuildFile() << """
-dependencies {
-    compile 'com.android.support.test:rules:$GradleTestProject.TEST_SUPPORT_LIB_VERSION'
-    compile 'com.android.support:support-annotations:$GradleTestProject.SUPPORT_LIB_VERSION'
-}
-        """
+        TestFileUtils.appendToFile(
+                project.getSubproject("test").getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.android.support.test:rules:"
+                        + GradleTestProject.TEST_SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "    compile 'com.android.support:support-annotations:"
+                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "}\n");
 
         srcDir = project.getSubproject("test").getMainSrcDir();
         srcDir = new File(srcDir, "foo");
         srcDir.mkdirs();
-        new File(srcDir, "FooActivityTest.java") << """
-package foo;
+        TestFileUtils.appendToFile(
+                new File(srcDir, "FooActivityTest.java"),
+                "\n"
+                        + "package foo;\n"
+                        + "\n"
+                        + "public class FooActivityTest {\n"
+                        + "    @org.junit.Rule \n"
+                        + "    android.support.test.rule.ActivityTestRule<foo.FooActivity> activityTestRule =\n"
+                        + "            new android.support.test.rule.ActivityTestRule<>(foo.FooActivity.class);\n"
+                        + "}\n");
 
-public class FooActivityTest {
-    @org.junit.Rule 
-    android.support.test.rule.ActivityTestRule<foo.FooActivity> activityTestRule =
-            new android.support.test.rule.ActivityTestRule<>(foo.FooActivity.class);
-}
-"""
-
-        models = project.executeAndReturnMultiModel("clean", "test:assembleDebug")
+        project.executeAndReturnMultiModel("clean", "test:assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
-        models = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void "check model"() throws Exception {
+    public void checkModel() throws Exception {
         // check the content of the test model.
     }
 }

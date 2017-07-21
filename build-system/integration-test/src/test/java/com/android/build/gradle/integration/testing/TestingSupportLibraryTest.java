@@ -14,119 +14,135 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.testing
+package com.android.build.gradle.integration.testing;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
 /**
  * Test project to cover the Android Gradle plugin's interaction with the testing support library.
  */
-@CompileStatic
-class TestingSupportLibraryTest {
-
-    public static final AndroidTestApp helloWorldApp = HelloWorldApp.noBuildFile();
-    static {
-        /* Junit 4 now maps tests annotated with @Ignore and tests that throw
-           AssumptionFailureExceptions as skipped. */
-        helloWorldApp.addFile(new  TestSourceFile("src/androidTest/java/com/example/helloworld", "FailureAssumptionTest.java",
-                """
-package com.example.helloworld;
-
-import android.support.test.runner.AndroidJUnit4;
-import android.test.suitebuilder.annotation.SmallTest;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import static org.junit.Assert.fail;
-import static org.junit.Assume.assumeTrue;
-
-@RunWith(AndroidJUnit4.class)
-@SmallTest
-public class FailureAssumptionTest {
-    @Test
-    public void checkAssumptionIsSkipped() {
-        assumeTrue(false);
-        fail("Tests with failing assumptions should be skipped");
-    }
-
-    @Test
-    @Ignore
-    public void checkIgnoreTestsArePossible() {
-        fail("Tests with @Ignore annotation should be skipped");
-    }
-
-    @Test
-    public void checkThisTestPasses() {
-        System.err.println("Test executed");
-    }
-}
-"""))
-        helloWorldApp.addFile(new TestSourceFile("src/main", "AndroidManifest.xml",
-                """<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.example.helloworld"
-      android:versionCode="1"
-      android:versionName="1.0">
-
-    <uses-sdk android:minSdkVersion="18" />
-    <application android:label="@string/app_name">
-        <activity android:name=".HelloWorld"
-                  android:label="@string/app_name">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
-</manifest>
-"""))
-    }
+public class TestingSupportLibraryTest {
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-        .fromTestApp(helloWorldApp)
-        .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestApp(helloWorldApp).create();
+
+    public static final AndroidTestApp helloWorldApp = HelloWorldApp.noBuildFile();
+
+    static {
+        /* Junit 4 now maps tests annotated with @Ignore and tests that throw
+        AssumptionFailureExceptions as skipped. */
+        helloWorldApp.addFile(
+                new TestSourceFile(
+                        "src/androidTest/java/com/example/helloworld",
+                        "FailureAssumptionTest.java",
+                        "\n"
+                                + "package com.example.helloworld;\n"
+                                + "\n"
+                                + "import android.support.test.runner.AndroidJUnit4;\n"
+                                + "import android.test.suitebuilder.annotation.SmallTest;\n"
+                                + "\n"
+                                + "import org.junit.Ignore;\n"
+                                + "import org.junit.Test;\n"
+                                + "import org.junit.runner.RunWith;\n"
+                                + "\n"
+                                + "import static org.junit.Assert.fail;\n"
+                                + "import static org.junit.Assume.assumeTrue;\n"
+                                + "\n"
+                                + "@RunWith(AndroidJUnit4.class)\n"
+                                + "@SmallTest\n"
+                                + "public class FailureAssumptionTest {\n"
+                                + "    @Test\n"
+                                + "    public void checkAssumptionIsSkipped() {\n"
+                                + "        assumeTrue(false);\n"
+                                + "        fail(\"Tests with failing assumptions should be skipped\");\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    @Test\n"
+                                + "    @Ignore\n"
+                                + "    public void checkIgnoreTestsArePossible() {\n"
+                                + "        fail(\"Tests with @Ignore annotation should be skipped\");\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    @Test\n"
+                                + "    public void checkThisTestPasses() {\n"
+                                + "        System.err.println(\"Test executed\");\n"
+                                + "    }\n"
+                                + "}\n"));
+
+        helloWorldApp.addFile(
+                new TestSourceFile(
+                        "src/main",
+                        "AndroidManifest.xml",
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "      package=\"com.example.helloworld\"\n"
+                                + "      android:versionCode=\"1\"\n"
+                                + "      android:versionName=\"1.0\">\n"
+                                + "\n"
+                                + "    <uses-sdk android:minSdkVersion=\"18\" />\n"
+                                + "    <application android:label=\"@string/app_name\">\n"
+                                + "        <activity android:name=\".HelloWorld\"\n"
+                                + "                  android:label=\"@string/app_name\">\n"
+                                + "            <intent-filter>\n"
+                                + "                <action android:name=\"android.intent.action.MAIN\" />\n"
+                                + "                <category android:name=\"android.intent.category.LAUNCHER\" />\n"
+                                + "            </intent-filter>\n"
+                                + "        </activity>\n"
+                                + "    </application>\n"
+                                + "</manifest>\n"));
+    }
 
     @Before
-    public void setUp() {
-        project
-        project.getBuildFile() << """
-
-apply plugin: 'com.android.application'
-
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-    defaultConfig {
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-    }
-    dependencies {
-        androidTestCompile 'com.android.support:support-annotations:$GradleTestProject.SUPPORT_LIB_VERSION'
-        androidTestCompile 'com.android.support.test:runner:$GradleTestProject.TEST_SUPPORT_LIB_VERSION'
-        androidTestCompile 'com.android.support.test:rules:$GradleTestProject.TEST_SUPPORT_LIB_VERSION'
-    }
-}
-"""
+    public void setUp() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "\n"
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion '"
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
+                        + "    defaultConfig {\n"
+                        + "        testInstrumentationRunner \"android.support.test.runner.AndroidJUnitRunner\"\n"
+                        + "    }\n"
+                        + "    dependencies {\n"
+                        + "        androidTestCompile 'com.android.support:support-annotations:"
+                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "        androidTestCompile 'com.android.support.test:runner:"
+                        + GradleTestProject.TEST_SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "        androidTestCompile 'com.android.support.test:rules:"
+                        + GradleTestProject.TEST_SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "    }\n"
+                        + "}\n");
     }
 
     @Test
-    public void "check compile"() {
-        project.execute("assembleDebugAndroidTest")
+    public void checkCompile() throws IOException, InterruptedException {
+        project.execute("assembleDebugAndroidTest");
     }
 
     @Test
     @Category(DeviceTests.class)
-    public void "test ignored tests are not run"() {
-        project.executeConnectedCheck()
+    public void testIgnoredTestsAreNotRun() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 }
