@@ -1,146 +1,144 @@
-/*
- * Copyright (C) 2014 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.component;
 
-package com.android.build.gradle.integration.component
+import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.OutputFile
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.category.SmokeTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.Variant
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import com.android.build.OutputFile;
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.category.SmokeTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Variant;
+import com.android.testutils.truth.MoreTruth;
+import com.google.common.collect.Iterables;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import static com.google.common.truth.Truth.assertThat
-/**
- * Basic integration test for AppComponentModelPlugin.
- */
+/** Basic integration test for AppComponentModelPlugin. */
 @Category(SmokeTests.class)
-@CompileStatic
-class AppComponentPluginTest {
+public class AppComponentPluginTest {
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.noBuildFile())
-            .useExperimentalGradleVersion(true)
-            .withoutNdk()
-            .create();
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldApp.noBuildFile())
+                    .useExperimentalGradleVersion(true)
+                    .withoutNdk()
+                    .create();
 
     @Before
-    public void setUp() {
-        project.buildFile << """
-apply plugin: "com.android.model.application"
-
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-    }
-}
-"""
+    public void setUp() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.model.application\"\n"
+                        + "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "        buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "    }\n"
+                        + "}\n");
     }
 
     @Test
-    public void basicAssemble() {
-        AndroidProject model = project.executeAndReturnModel("assemble").getOnlyModel()
+    public void basicAssemble() throws IOException, InterruptedException {
+        AndroidProject model = project.executeAndReturnModel("assemble").getOnlyModel();
         assertThat(model).isNotNull();
-        assertThat(model.getName()).isEqualTo(project.name)
-        assertThat(model.getBuildTypes()).hasSize(2)
-        assertThat(model.getProductFlavors()).hasSize(0)
-        assertThat(model.getVariants()).hasSize(2)
+        assertThat(model.getName()).isEqualTo(project.getName());
+        assertThat(model.getBuildTypes()).hasSize(2);
+        assertThat(model.getProductFlavors()).hasSize(0);
+        assertThat(model.getVariants()).hasSize(2);
         for (Variant variant : model.getVariants()) {
-            AndroidArtifact artifact = variant.getMainArtifact()
+            AndroidArtifact artifact = variant.getMainArtifact();
             Collection<File> outputFiles =
                     artifact.getOutputs()
-                            .collect{it -> it.getOutputs()}
-                            .flatten()
-                            .collect{it -> ((OutputFile)it).getOutputFile()}
-            List<String> dimensions = [variant.getBuildType()]
-            if (!artifact.isSigned()) {
-                dimensions.add("unsigned")
-            }
-            assertThat(outputFiles)
-                    .containsExactly(project.getApk(dimensions as String[]).getFile().toFile())
-            assertThat(outputFiles.first().isFile()).isTrue()
+                            .stream()
+                            .flatMap(e -> e.getOutputs().stream())
+                            .map(OutputFile::getOutputFile)
+                            .collect(Collectors.toList());
+
+            GradleTestProject.ApkType apkType =
+                    GradleTestProject.ApkType.of(variant.getBuildType(), artifact.isSigned());
+
+            File onlyOutput = Iterables.getOnlyElement(outputFiles);
+            MoreTruth.assertThat(onlyOutput).exists();
+            assertThat(onlyOutput).isEqualTo(project.getApk(apkType).getFile().toFile());
         }
     }
 
     @Test
-    public void flavors() {
-        project.buildFile << """
-model {
-    android {
-        buildTypes {
-            create("b1")
-        }
-        productFlavors {
-            create("f1") {
-                dimension "foo"
-            }
-            create("f2") {
-                dimension "foo"
-            }
-        }
-    }
-}
-"""
+    public void flavors() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        buildTypes {\n"
+                        + "            create(\"b1\")\n"
+                        + "        }\n"
+                        + "        productFlavors {\n"
+                        + "            create(\"f1\") {\n"
+                        + "                dimension \"foo\"\n"
+                        + "            }\n"
+                        + "            create(\"f2\") {\n"
+                        + "                dimension \"foo\"\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
         // Ensure all combinations of assemble* tasks are created.
-        List<String> tasks = project.model().getTaskList()
-        assertThat(tasks).containsAllOf(
-                "assemble",
-                "assembleB1",
-                "assembleDebug",
-                "assembleF1",
-                "assembleF1B1",
-                "assembleF1Debug",
-                "assembleF1Release",
-                "assembleF2",
-                "assembleF2B1",
-                "assembleF2Debug",
-                "assembleF2Release",
-                "assembleRelease",
-                "assembleAndroidTest",
-                "assembleF1DebugAndroidTest",
-                "assembleF2DebugAndroidTest");
+        List<String> tasks = project.model().getTaskList();
+        assertThat(tasks)
+                .containsAllOf(
+                        "assemble",
+                        "assembleB1",
+                        "assembleDebug",
+                        "assembleF1",
+                        "assembleF1B1",
+                        "assembleF1Debug",
+                        "assembleF1Release",
+                        "assembleF2",
+                        "assembleF2B1",
+                        "assembleF2Debug",
+                        "assembleF2Release",
+                        "assembleRelease",
+                        "assembleAndroidTest",
+                        "assembleF1DebugAndroidTest",
+                        "assembleF2DebugAndroidTest");
 
-        AndroidProject model = project.executeAndReturnModel("assemble").getOnlyModel()
+        AndroidProject model = project.executeAndReturnModel("assemble").getOnlyModel();
         assertThat(model).isNotNull();
-        assertThat(model.getName()).isEqualTo(project.name)
-        assertThat(model.getBuildTypes()).hasSize(3)
-        assertThat(model.getProductFlavors()).hasSize(2)
-        assertThat(model.getVariants()).hasSize(6)
+        assertThat(model.getName()).isEqualTo(project.getName());
+        assertThat(model.getBuildTypes()).hasSize(3);
+        assertThat(model.getProductFlavors()).hasSize(2);
+        assertThat(model.getVariants()).hasSize(6);
     }
 
     @Test
-    void generationInModel() {
-        AndroidProject model = project.model().getSingle().getOnlyModel()
+    public void generationInModel() throws IOException {
+        AndroidProject model = project.model().getSingle().getOnlyModel();
         assertThat(model.getPluginGeneration())
                 .named("Plugin Generation")
-                .isEqualTo(AndroidProject.GENERATION_COMPONENT)
+                .isEqualTo(AndroidProject.GENERATION_COMPONENT);
     }
 
     @Test
     @Category(DeviceTests.class)
-    public void connnectedAndroidTest() {
+    public void connnectedAndroidTest() throws IOException, InterruptedException {
         project.executeConnectedCheck();
     }
 }

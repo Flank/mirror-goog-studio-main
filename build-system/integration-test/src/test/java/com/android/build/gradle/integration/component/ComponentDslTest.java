@@ -1,108 +1,99 @@
-/*
- * Copyright (C) 2015 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.component;
 
-package com.android.build.gradle.integration.component
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.builder.model.AndroidProject
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidProject;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-/**
- * Test various options can be set without necessarily using it.
- */
-@CompileStatic
+/** Test various options can be set without necessarily using it. */
 public class ComponentDslTest {
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(new HelloWorldJniApp())
-            .useExperimentalGradleVersion(true)
-            .create();
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(new HelloWorldJniApp())
+                    .useExperimentalGradleVersion(true)
+                    .create();
 
     @Before
-    public void setUp() {
-        project.file("proguard.txt").createNewFile()
-        project.buildFile << """
-apply plugin: "com.android.model.application"
-
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        defaultConfig {
-            minSdkVersion.apiLevel $GradleTestProject.SUPPORT_LIB_MIN_SDK
-        }
-        ndk {
-            moduleName "hello-jni"
-        }
-        buildTypes {
-            release {
-                minifyEnabled false
-                proguardFiles.add(file("proguard-rules.pro"))
-                externalNativeBuild {
-                    ndkBuild {
-                        cFlags.addAll("-DCOLOR=RED")
-                        abiFilters.addAll("x86", "x86_64")
-                    }
-                }
-            }
-        }
-        productFlavors {
-            create("f1") {
-                dimension "foo"
-                proguardFiles.add(file("proguard.txt"))
-                buildConfigFields.create {
-                    type "String"
-                    name "foo"
-                    value "\\"bar\\""
-                }
-            }
-            create("f2") {
-                dimension "foo"
-            }
-        }
-    }
-}
-
-dependencies {
-    compile 'com.android.support:appcompat-v7:$GradleTestProject.SUPPORT_LIB_VERSION'
-}
-"""
+    public void setUp() throws IOException {
+        project.file("proguard.txt").createNewFile();
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.model.application\"\n"
+                        + "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "        defaultConfig {\n"
+                        + "            minSdkVersion.apiLevel "
+                        + GradleTestProject.SUPPORT_LIB_MIN_SDK
+                        + "\n"
+                        + "        }\n"
+                        + "        ndk {\n"
+                        + "            moduleName \"hello-jni\"\n"
+                        + "        }\n"
+                        + "        buildTypes {\n"
+                        + "            release {\n"
+                        + "                minifyEnabled false\n"
+                        + "                proguardFiles.add(file(\"proguard-rules.pro\"))\n"
+                        + "                externalNativeBuild {\n"
+                        + "                    ndkBuild {\n"
+                        + "                        cFlags.addAll(\"-DCOLOR=RED\")\n"
+                        + "                        abiFilters.addAll(\"x86\", \"x86_64\")\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "        productFlavors {\n"
+                        + "            create(\"f1\") {\n"
+                        + "                dimension \"foo\"\n"
+                        + "                proguardFiles.add(file(\"proguard.txt\"))\n"
+                        + "                buildConfigFields.create {\n"
+                        + "                    type \"String\"\n"
+                        + "                    name \"foo\"\n"
+                        + "                    value \"\\\"bar\\\"\"\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "            create(\"f2\") {\n"
+                        + "                dimension \"foo\"\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile \'com.android.support:appcompat-v7:"
+                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + "\'\n"
+                        + "}\n");
     }
 
     @Test
-    public void assemble() {
+    public void assemble() throws IOException, InterruptedException {
         AndroidProject model = project.executeAndReturnModel("assemble").getOnlyModel();
         assertThat(model).isNotNull();
-        assertThat(model.getName()).isEqualTo(project.name)
-        assertThat(model.getBuildTypes()).hasSize(2)
-        assertThat(model.getProductFlavors()).hasSize(2)
-        assertThat(model.getVariants()).hasSize(4)
-        assertThat(project.getApk("f1", "debug")).exists()
+        assertThat(model.getName()).isEqualTo(project.getName());
+        assertThat(model.getBuildTypes()).hasSize(2);
+        assertThat(model.getProductFlavors()).hasSize(2);
+        assertThat(model.getVariants()).hasSize(4);
+        assertThat(project.getApk("f1", "debug")).exists();
     }
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedAndroidTest() {
+    public void connectedAndroidTest() throws IOException, InterruptedException {
         project.executeConnectedCheck();
     }
 }

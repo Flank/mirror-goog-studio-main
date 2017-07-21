@@ -1,133 +1,116 @@
-/*
- * Copyright (C) 2014 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.component;
 
-package com.android.build.gradle.integration.component
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import java.io.IOException;
+import java.util.List;
+import org.junit.Rule;
+import org.junit.Test;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+/** Test AndroidComponentModelPlugin. */
+public class AndroidComponentPluginTest {
 
-/**
- * Test AndroidComponentModelPlugin.
- */
-@CompileStatic
-class AndroidComponentPluginTest {
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .useExperimentalGradleVersion(true)
-            .create();
+    public GradleTestProject project =
+            GradleTestProject.builder().useExperimentalGradleVersion(true).create();
 
     @Test
-    public void assemble() {
+    public void assemble() throws IOException, InterruptedException {
 
-        project.buildFile << """
-import com.android.build.gradle.model.AndroidComponentModelPlugin
-apply plugin: AndroidComponentModelPlugin
-
-model {
-    android {
-        buildTypes {
-            create("custom")
-        }
-        productFlavors {
-            create("flavor1")
-            create("flavor2")
-        }
-    }
-}
-"""
-        project.execute("assemble")
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "import com.android.build.gradle.model.AndroidComponentModelPlugin\n"
+                        + "apply plugin: AndroidComponentModelPlugin\n"
+                        + "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        buildTypes {\n"
+                        + "            create(\"custom\")\n"
+                        + "        }\n"
+                        + "        productFlavors {\n"
+                        + "            create(\"flavor1\")\n"
+                        + "            create(\"flavor2\")\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+        project.execute("assemble");
     }
 
     @Test
-    public void multiFlavor() {
-        project.buildFile << """
-import com.android.build.gradle.model.AndroidComponentModelPlugin
-apply plugin: AndroidComponentModelPlugin
-
-model {
-    android {
-        productFlavors {
-            create("free") {
-                dimension "cost"
-            }
-            create("premium") {
-                dimension "cost"
-            }
-            create("blue") {
-                dimension "color"
-            }
-            create("red") {
-                dimension "color"
-            }
-        }
-    }
-}
-"""
+    public void multiFlavor() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "import com.android.build.gradle.model.AndroidComponentModelPlugin\n"
+                        + "apply plugin: AndroidComponentModelPlugin\n"
+                        + "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        productFlavors {\n"
+                        + "            create(\"free\") {\n"
+                        + "                dimension \"cost\"\n"
+                        + "            }\n"
+                        + "            create(\"premium\") {\n"
+                        + "                dimension \"cost\"\n"
+                        + "            }\n"
+                        + "            create(\"blue\") {\n"
+                        + "                dimension \"color\"\n"
+                        + "            }\n"
+                        + "            create(\"red\") {\n"
+                        + "                dimension \"color\"\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
 
         // Gradle creates a task for each binary in the form <component_name><flavor><buildType>.
         // <component_name> is "android".
         List<String> tasks = project.model().getTaskList();
-        assertThat(tasks).containsAllOf(
-                "androidBlueFreeDebug",
-                "androidBluePremiumDebug",
-                "androidRedFreeDebug",
-                "androidRedPremiumDebug",
-                "androidBlueFreeRelease",
-                "androidBluePremiumRelease",
-                "androidRedFreeRelease",
-                "androidRedPremiumRelease")
+        assertThat(tasks)
+                .containsAllOf(
+                        "androidBlueFreeDebug",
+                        "androidBluePremiumDebug",
+                        "androidRedFreeDebug",
+                        "androidRedPremiumDebug",
+                        "androidBlueFreeRelease",
+                        "androidBluePremiumRelease",
+                        "androidRedFreeRelease",
+                        "androidRedPremiumRelease");
     }
 
     @Test
-    public void checkFlavorOrder() {
-        project.buildFile << """
-import com.android.build.gradle.model.AndroidComponentModelPlugin
-apply plugin: AndroidComponentModelPlugin
-
-model {
-    android {
-        productFlavors {
-            create("e") {
-                dimension "e"
-            }
-            create("a") {
-                dimension "a"
-            }
-            create("d") {
-                dimension "d"
-            }
-            create("b") {
-                dimension "b"
-            }
-            create("c") {
-                dimension "c"
-            }
-        }
-    }
-}
-"""
+    public void checkFlavorOrder() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "import com.android.build.gradle.model.AndroidComponentModelPlugin\n"
+                        + "apply plugin: AndroidComponentModelPlugin\n"
+                        + "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        productFlavors {\n"
+                        + "            create(\"e\") {\n"
+                        + "                dimension \"e\"\n"
+                        + "            }\n"
+                        + "            create(\"a\") {\n"
+                        + "                dimension \"a\"\n"
+                        + "            }\n"
+                        + "            create(\"d\") {\n"
+                        + "                dimension \"d\"\n"
+                        + "            }\n"
+                        + "            create(\"b\") {\n"
+                        + "                dimension \"b\"\n"
+                        + "            }\n"
+                        + "            create(\"c\") {\n"
+                        + "                dimension \"c\"\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
         List<String> tasks = project.model().getTaskList();
-        assertThat(tasks).containsAllOf(
-                "androidABCDEDebug",
-                "androidABCDERelease")
+        assertThat(tasks).containsAllOf("androidABCDEDebug", "androidABCDERelease");
     }
-
 }

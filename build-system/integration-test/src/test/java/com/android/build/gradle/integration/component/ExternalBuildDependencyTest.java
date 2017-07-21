@@ -1,154 +1,146 @@
-/*
- * Copyright (C) 2015 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.component;
 
-package com.android.build.gradle.integration.component
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.SdkConstants
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.testutils.apk.Apk
-import com.android.utils.FileUtils
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.ClassRule
-import org.junit.Test
+import com.android.SdkConstants;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.testutils.apk.Apk;
+import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+/** Tests for native dependencies */
+public class ExternalBuildDependencyTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(
+                            new MultiModuleTestProject(
+                                    ImmutableMap.of(
+                                            "app",
+                                            new HelloWorldJniApp(),
+                                            "lib",
+                                            new EmptyAndroidTestApp())))
+                    .useExperimentalGradleVersion(true)
+                    .create();
 
-/**
- * Tests for native dependencies
- */
-@CompileStatic
-class ExternalBuildDependencyTest {
-    static MultiModuleTestProject base = new MultiModuleTestProject(
-            app: new HelloWorldJniApp(),
-            lib: new EmptyAndroidTestApp())
+    @Before
+    public void setUp() throws IOException {
+        GradleTestProject app = project.getSubproject("app");
+        app.file("hello-jni.c").delete();
+        TestFileUtils.appendToFile(
+                app.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.model.application\"\n"
+                        + "\n"
+                        + "model {\n"
+                        + "  android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + '\n'
+                        + "    buildToolsVersion '"
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
+                        + "    sources {\n"
+                        + "      main {\n"
+                        + "        jniLibs {\n"
+                        + "          dependencies {\n"
+                        + "            project \":lib\"\n"
+                        + "          }\n"
+                        + "        }\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}\n");
 
-    static {
-        AndroidTestApp app = (HelloWorldJniApp) base.getSubproject("app")
-        app.removeFile(app.getFile("hello-jni.c"))
-        app.addFile(new TestSourceFile("", "build.gradle", """
-apply plugin: "com.android.model.application"
+        GradleTestProject lib = project.getSubproject("lib");
+        Path helloJni = lib.getTestDir().toPath().resolve("src/main/jni/hello-jni.c");
+        Files.createDirectories(helloJni.getParent());
+        String helloJniContent =
+                "\n"
+                        + "#include <string.h>\n"
+                        + "#include <jni.h>\n"
+                        + "\n"
+                        + "jstring\n"
+                        + "Java_com_example_hellojni_HelloJni_stringFromJNI(JNIEnv* env, jobject thiz)\n"
+                        + "{\n"
+                        + "    return (*env)->NewStringUTF(env, \"hello world!\");\n"
+                        + "}\n";
+        Files.write(helloJni, helloJniContent.getBytes());
 
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-
-        sources {
-            main {
-                jniLibs {
-                    dependencies {
-                        project ":lib"
-                    }
-                }
-            }
-        }
-    }
-}
-"""))
-
-        AndroidTestApp lib = (AndroidTestApp) base.getSubproject("lib")
-        lib.addFile(new TestSourceFile("src/main/jni", "hello-jni.c",
-                """
-#include <string.h>
-#include <jni.h>
-
-jstring
-Java_com_example_hellojni_HelloJni_stringFromJNI(JNIEnv* env, jobject thiz)
-{
-    return (*env)->NewStringUTF(env, "hello world!");
-}
-"""));
-
-        lib.addFile(new TestSourceFile("", "Android.mk",
-                """
-LOCAL_PATH := \$(call my-dir)
-include \$(CLEAR_VARS)
-
-LOCAL_MODULE := hello-jni
-
-LOCAL_SRC_FILES := src/main/jni/hello-jni.c
-
-include \$(BUILD_SHARED_LIBRARY)
-"""))
-
-    }
-
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(base)
-            .useExperimentalGradleVersion(true)
-            .create()
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
-        base = null
+        Path androidMk = lib.getTestDir().toPath().resolve("Android.mk");
+        String androidMkContent =
+                "\n"
+                        + "LOCAL_PATH := $(call my-dir)\n"
+                        + "include $(CLEAR_VARS)\n"
+                        + "LOCAL_MODULE := hello-jni\n"
+                        + "LOCAL_SRC_FILES := src/main/jni/hello-jni.c\n"
+                        + "include $(BUILD_SHARED_LIBRARY)\n";
+        Files.write(androidMk, androidMkContent.getBytes());
     }
 
     @Test
-    void "check standalone lib properly creates library"() {
+    public void checkStandaloneLibProperlyCreatesLibrary()
+            throws IOException, InterruptedException {
         // File a clang compiler.  Doesn't matter which one.
         boolean isWindows = SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS;
-        File compiler =
+        final File compiler =
                 new File(
-                        GradleTestProject.ANDROID_NDK_HOME, "ndk-build" + (isWindows ? ".cmd" : ""))
-        GradleTestProject lib = project.getSubproject("lib")
-        lib.buildFile << """
-apply plugin: "com.android.model.external"
-
-model {
-    nativeBuildConfig {
-        libraries {
-            create("foo") {
-                buildCommand "\\"${FileUtils.toSystemIndependentPath(compiler.getPath())}\\" " +
-                    "APP_BUILD_SCRIPT=Android.mk " +
-                    "NDK_PROJECT_PATH=null " +
-                    "NDK_OUT=build/intermediate " +
-                    "NDK_LIBS_OUT=build/output " +
-                    "APP_ABI=x86"
-                toolchain "gcc"
-                abi "x86"
-                output file("build/output/x86/libhello-jni.so")
-                files {
-                    create() {
-                        src "src/main/jni/hello-jni.c"
-                    }
-                }
-
-            }
-        }
-        toolchains {
-            create("gcc") {
-                // Needs to be CCompilerExecutable instead of the more correct cCompilerExecutable,
-                // because of a stupid bug with Gradle.
-                CCompilerExecutable = "${FileUtils.toSystemIndependentPath(compiler.getPath())}"
-            }
-        }
-    }
-}
-"""
+                        GradleTestProject.ANDROID_NDK_HOME,
+                        "ndk-build" + (isWindows ? ".cmd" : ""));
+        GradleTestProject lib = project.getSubproject("lib");
+        TestFileUtils.appendToFile(
+                lib.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.model.external\"\n"
+                        + "\n"
+                        + "model {\n"
+                        + "    nativeBuildConfig {\n"
+                        + "        libraries {\n"
+                        + "            create(\"foo\") {\n"
+                        + "                buildCommand \"\\\""
+                        + FileUtils.toSystemIndependentPath(compiler.getPath())
+                        + "\\\" \" +\n"
+                        + "                    \"APP_BUILD_SCRIPT=Android.mk \" +\n"
+                        + "                    \"NDK_PROJECT_PATH=null \" +\n"
+                        + "                    \"NDK_OUT=build/intermediate \" +\n"
+                        + "                    \"NDK_LIBS_OUT=build/output \" +\n"
+                        + "                    \"APP_ABI=x86\"\n"
+                        + "                toolchain \"gcc\"\n"
+                        + "                abi \"x86\"\n"
+                        + "                output file(\"build/output/x86/libhello-jni.so\")\n"
+                        + "                files {\n"
+                        + "                    create() {\n"
+                        + "                        src \"src/main/jni/hello-jni.c\"\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "        toolchains {\n"
+                        + "            create(\"gcc\") {\n"
+                        + "                // Needs to be CCompilerExecutable instead of the more correct cCompilerExecutable,\n"
+                        + "                // because of a stupid bug with Gradle.\n"
+                        + "                CCompilerExecutable = \""
+                        + FileUtils.toSystemIndependentPath(compiler.getPath())
+                        + "\"\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
         project.execute("clean", ":app:assembleDebug");
 
-        Apk apk = project.getSubproject("app").getApk("debug")
+        Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).contains("lib/x86/libhello-jni.so");
     }
 }

@@ -1,103 +1,92 @@
-/*
- * Copyright (C) 2015 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.component;
 
-package com.android.build.gradle.integration.component
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.category.SmokeTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
-
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-
-/**
- * Unit tests for component plugin.
- */
-@Category(SmokeTests.class)
-class UnitTestingComponentTest {
-    static AndroidTestApp app = HelloWorldApp.noBuildFile();
-    static {
-        app.addFile(new TestSourceFile("src/test/java/com/android/tests", "UnitTest.java", """
-package com.android.tests;
-
-import static org.junit.Assert.*;
-
-import android.util.ArrayMap;
-import android.os.Debug;
+import com.android.build.gradle.integration.common.category.SmokeTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-public class UnitTest {
+/** Unit tests for component plugin. */
+@Category(SmokeTests.class)
+public class UnitTestingComponentTest {
+
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldApp.noBuildFile())
+                    .useExperimentalGradleVersion(true)
+                    .withoutNdk()
+                    .create();
+
+    @Before
+    public void setUp() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: \"com.android.model.application\"\n"
+                        + "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "        buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "\n"
+                        + "        testOptions.unitTests.returnDefaultValues = true\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    testCompile 'junit:junit:4.12'\n"
+                        + "}\n");
+
+        Path unitTest =
+                project.getTestDir()
+                        .toPath()
+                        .resolve("src/test/java/com/android/tests/UnitTest.java");
+        Files.createDirectories(unitTest.getParent());
+        String unitTestContent =
+                "\n"
+                        + "package com.android.tests;\n"
+                        + "\n"
+                        + "import static org.junit.Assert.*;\n"
+                        + "\n"
+                        + "import android.util.ArrayMap;\n"
+                        + "import android.os.Debug;\n"
+                        + "import org.junit.Test;\n"
+                        + "\n"
+                        + "public class UnitTest {\n"
+                        + "  @Test\n"
+                        + "  public void defaultValues() {\n"
+                        + "    ArrayMap map = new ArrayMap();\n"
+                        + "    // Check different return types.\n"
+                        + "    map.clear();\n"
+                        + "    assertEquals(0, map.size());\n"
+                        + "    assertEquals(false, map.isEmpty());\n"
+                        + "    assertNull(map.keySet());\n"
+                        + "    // Check a static method as well.\n"
+                        + "    assertEquals(0, Debug.getGlobalAllocCount());\n"
+                        + "  }\n"
+                        + "}\n";
+        Files.write(unitTest, unitTestContent.getBytes());
+    }
+
     @Test
-    public void defaultValues() {
-        ArrayMap map = new ArrayMap();
-
-        // Check different return types.
-        map.clear();
-        assertEquals(0, map.size());
-        assertEquals(false, map.isEmpty());
-        assertNull(map.keySet());
-
-        // Check a static method as well.
-        assertEquals(0, Debug.getGlobalAllocCount());
-    }
-}
-"""))
-    }
-
-    @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(app)
-            .useExperimentalGradleVersion(true)
-            .withoutNdk()
-            .create();
-
-    @BeforeClass
-    public static void setUp() {
-        project.buildFile << """
-apply plugin: "com.android.model.application"
-
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-
-        testOptions.unitTests.returnDefaultValues = true
-    }
-}
-
-dependencies {
-    testCompile 'junit:junit:4.12'
-}
-"""
-    }
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
-    }
-
-    @Test
-    public void testDebug() {
-        project.execute("clean", "testDebug")
-        assertThat(project.file("build/test-results/testDebugUnitTest/TEST-com.android.tests.UnitTest.xml")).exists()
+    public void testDebug() throws IOException, InterruptedException {
+        project.execute("clean", "testDebug");
+        assertThat(
+                        project.file(
+                                "build/test-results/testDebugUnitTest/TEST-com.android.tests.UnitTest.xml"))
+                .exists();
     }
 }

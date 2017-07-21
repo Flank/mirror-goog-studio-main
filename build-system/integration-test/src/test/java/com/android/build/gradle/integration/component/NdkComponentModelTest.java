@@ -1,282 +1,308 @@
-/*
- * Copyright (C) 2015 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.component;
 
-package com.android.build.gradle.integration.component
+import static com.android.SdkConstants.ABI_INTEL_ATOM64;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.SdkConstants
-import com.android.build.gradle.integration.common.category.SmokeTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.build.gradle.integration.common.utils.NativeModelHelper
-import com.android.build.gradle.internal.core.Abi
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.NativeAndroidProject
-import com.android.builder.model.NativeArtifact
-import com.android.builder.model.NativeLibrary
-import com.android.builder.model.Variant
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.category.SmokeTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.NativeModelHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.core.Abi;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.NativeAndroidProject;
+import com.android.builder.model.NativeArtifact;
+import com.android.builder.model.NativeLibrary;
+import com.android.builder.model.NativeToolchain;
+import com.android.builder.model.Variant;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-
-/**
- * Test the return model of the NDK.
- */
-@CompileStatic
+/** Test the return model of the NDK. */
 @Category(SmokeTests.class)
-class NdkComponentModelTest {
+public class NdkComponentModelTest {
+
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(new HelloWorldJniApp())
-            .useExperimentalGradleVersion(true)
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(new HelloWorldJniApp())
+                    .useExperimentalGradleVersion(true)
+                    .create();
 
     @Before
-    void setUp() {
-        project.buildFile <<
-"""
-apply plugin: 'com.android.model.application'
-
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-        ndk {
-            moduleName "hello-jni"
-            CFlags.add("-DTEST_C_FLAG")
-            cppFlags.add("-DTEST_CPP_FLAG")
-            toolchain "clang"
-        }
-    }
-}
-"""
+    public void setUp() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: 'com.android.model.application'\n"
+                        + "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "        buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "        ndk {\n"
+                        + "            moduleName \"hello-jni\"\n"
+                        + "            CFlags.add(\"-DTEST_C_FLAG\")\n"
+                        + "            cppFlags.add(\"-DTEST_CPP_FLAG\")\n"
+                        + "            toolchain \"clang\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
     }
 
     @Test
-    void "check native libraries in model"() {
+    public void checkNativeLibrariesInModel() throws IOException, InterruptedException {
         checkModel(
-                debug : [
-                    SdkConstants.ABI_ARMEABI,
-                    SdkConstants.ABI_ARMEABI_V7A,
-                    SdkConstants.ABI_ARM64_V8A,
-                    SdkConstants.ABI_INTEL_ATOM,
-                    SdkConstants.ABI_INTEL_ATOM64,
-                    SdkConstants.ABI_MIPS,
-                    SdkConstants.ABI_MIPS64
-                ]);
+                ImmutableMap.of(
+                        "debug",
+                        ImmutableList.of(
+                                SdkConstants.ABI_ARMEABI,
+                                SdkConstants.ABI_ARMEABI_V7A,
+                                SdkConstants.ABI_ARM64_V8A,
+                                SdkConstants.ABI_INTEL_ATOM,
+                                ABI_INTEL_ATOM64,
+                                SdkConstants.ABI_MIPS,
+                                SdkConstants.ABI_MIPS64)));
     }
 
     @Test
-    void "check targeted ABI"() {
-project.buildFile <<
-"""
-model {
-    android {
-        ndk {
-            abiFilters.add("x86")
-            abiFilters.add("armeabi-v7a")
-        }
-        abis {
-            create("x86") {
-                CFlags.add("-DX86")
-            }
-            create("armeabi-v7a") {
-                CFlags.add("-DARMEABI_V7A")
-            }
-        }
-    }
-}
-"""
-        AndroidProject model = checkModel(
-                debug : [
-                        SdkConstants.ABI_ARMEABI_V7A,
-                        SdkConstants.ABI_INTEL_ATOM
-                        ]);
+    public void checkTargetedAbi() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        ndk {\n"
+                        + "            abiFilters.add(\"x86\")\n"
+                        + "            abiFilters.add(\"armeabi-v7a\")\n"
+                        + "        }\n"
+                        + "        abis {\n"
+                        + "            create(\"x86\") {\n"
+                        + "                CFlags.add(\"-DX86\")\n"
+                        + "            }\n"
+                        + "            create(\"armeabi-v7a\") {\n"
+                        + "                CFlags.add(\"-DARMEABI_V7A\")\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+
+        AndroidProject model =
+                checkModel(
+                        ImmutableMap.of(
+                                "debug",
+                                ImmutableList.of(
+                                        SdkConstants.ABI_ARMEABI_V7A,
+                                        SdkConstants.ABI_INTEL_ATOM)));
         Collection<NativeLibrary> libs =
-                ModelHelper.getVariant(model.getVariants(), "debug").getMainArtifact().getNativeLibraries()
+                ModelHelper.getVariant(model.getVariants(), "debug")
+                        .getMainArtifact()
+                        .getNativeLibraries();
 
         for (NativeLibrary nativeLibrary : libs) {
-            if (nativeLibrary.getAbi() == "x86") {
-                assertThat(nativeLibrary.getCCompilerFlags()).contains("-DX86")
-                assertThat(nativeLibrary.getCCompilerFlags()).doesNotContain("-DARMEABI_V7A")
+            if (nativeLibrary.getAbi().equals("x86")) {
+                assertThat(nativeLibrary.getCCompilerFlags()).contains("-DX86");
+                assertThat(nativeLibrary.getCCompilerFlags()).doesNotContain("-DARMEABI_V7A");
             } else {
-                assertThat(nativeLibrary.getCCompilerFlags()).doesNotContain("-DX86")
-                assertThat(nativeLibrary.getCCompilerFlags()).contains("-DARMEABI_V7A")
+                assertThat(nativeLibrary.getCCompilerFlags()).doesNotContain("-DX86");
+                assertThat(nativeLibrary.getCCompilerFlags()).contains("-DARMEABI_V7A");
             }
         }
     }
 
     @Test
-    void "check native libraries with splits"() {
-        project.buildFile <<
-"""
-model {
-    android {
-        splits.with {
-            abi {
-                enable true
-                reset()
-                include 'x86', 'armeabi-v7a', 'mips'
-            }
-        }
-    }
-}
-"""
+    public void checkNativeLibrariesWithSplits() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        splits.with {\n"
+                        + "            abi {\n"
+                        + "                enable true\n"
+                        + "                reset()\n"
+                        + "                include 'x86', 'armeabi-v7a', 'mips'\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
         checkModel(
-                debug: [SdkConstants.ABI_ARMEABI_V7A, SdkConstants.ABI_INTEL_ATOM, SdkConstants.ABI_MIPS]);
+                ImmutableMap.of(
+                        "debug",
+                        ImmutableList.of(
+                                SdkConstants.ABI_ARMEABI_V7A,
+                                SdkConstants.ABI_INTEL_ATOM,
+                                SdkConstants.ABI_MIPS)));
     }
 
     @Test
-    void "check native libraries with splits and universalApk"() {
-        project.buildFile <<
-                """
-model {
-    android {
-        splits.with {
-            abi {
-                enable true
-                reset()
-                include 'x86', 'armeabi-v7a', 'mips'
-                universalApk true
-            }
-        }
-    }
-}
-"""
+    public void checkNativeLibrariesWithSplitsAndUniversalApk()
+            throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        splits.with {\n"
+                        + "            abi {\n"
+                        + "                enable true\n"
+                        + "                reset()\n"
+                        + "                include 'x86', 'armeabi-v7a', 'mips'\n"
+                        + "                universalApk true\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
         checkModel(
-                debug : [
-                        SdkConstants.ABI_ARMEABI,
-                        SdkConstants.ABI_ARMEABI_V7A,
-                        SdkConstants.ABI_ARM64_V8A,
-                        SdkConstants.ABI_INTEL_ATOM,
-                        SdkConstants.ABI_INTEL_ATOM64,
-                        SdkConstants.ABI_MIPS,
-                        SdkConstants.ABI_MIPS64
-                ]);
+                ImmutableMap.of(
+                        "debug",
+                        ImmutableList.of(
+                                SdkConstants.ABI_ARMEABI,
+                                SdkConstants.ABI_ARMEABI_V7A,
+                                SdkConstants.ABI_ARM64_V8A,
+                                SdkConstants.ABI_INTEL_ATOM,
+                                ABI_INTEL_ATOM64,
+                                SdkConstants.ABI_MIPS,
+                                SdkConstants.ABI_MIPS64)));
     }
 
     @Test
-    void "check native libraries with abiFilters"() {
-        project.buildFile <<
-                """
-model {
-    android.productFlavors {
-        create("x86") {
-            ndk.abiFilters.add("x86")
-            dimension "abi"
-        }
-        create("arm") {
-            ndk.abiFilters.add("armeabi-v7a")
-            dimension "abi"
-        }
-        create("mips") {
-            ndk.abiFilters.add("mips")
-            dimension "abi"
-        }
-    }
-}
-"""
+    public void checkNativeLibrariesWithAbiFilters() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "model {\n"
+                        + "    android.productFlavors {\n"
+                        + "        create(\"x86\") {\n"
+                        + "            ndk.abiFilters.add(\"x86\")\n"
+                        + "            dimension \"abi\"\n"
+                        + "        }\n"
+                        + "        create(\"arm\") {\n"
+                        + "            ndk.abiFilters.add(\"armeabi-v7a\")\n"
+                        + "            dimension \"abi\"\n"
+                        + "        }\n"
+                        + "        create(\"mips\") {\n"
+                        + "            ndk.abiFilters.add(\"mips\")\n"
+                        + "            dimension \"abi\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+
         checkModel(
-                x86Debug : [SdkConstants.ABI_INTEL_ATOM],
-                armDebug : [SdkConstants.ABI_ARMEABI_V7A],
-                mipsDebug : [SdkConstants.ABI_MIPS]);
+                ImmutableMap.of(
+                        "x86Debug",
+                        ImmutableList.of(SdkConstants.ABI_INTEL_ATOM),
+                        "armDebug",
+                        ImmutableList.of(SdkConstants.ABI_ARMEABI_V7A),
+                        "mipsDebug",
+                        ImmutableList.of(SdkConstants.ABI_MIPS)));
     }
 
     @Test
-    void "check variant specific flags"() {
-        project.buildFile <<
-                """
-model {
-    android.buildTypes {
-        debug {
-            ndk.CFlags.add("-DTEST_FLAG_DEBUG")
-        }
-        release {
-            ndk.CFlags.add("-DTEST_FLAG_RELEASE")
-        }
-    }
-    android.productFlavors {
-        create("f1") {
-            ndk.CFlags.add("-DTEST_FLAG_F1")
-            dimension "foo"
-        }
-        create("f2") {
-            ndk.CFlags.add("-DTEST_FLAG_F2")
-            dimension "foo"
-        }
-    }
-}
-"""
-        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel()
-        NativeLibrary f1Debug = ModelHelper.getVariant(model.getVariants(), "f1Debug").getMainArtifact()
-                .getNativeLibraries().first()
-        assertThat(f1Debug.getCCompilerFlags()).contains("-DTEST_FLAG_DEBUG")
-        assertThat(f1Debug.getCCompilerFlags()).contains("-DTEST_FLAG_F1")
-        NativeLibrary f2Release = ModelHelper.getVariant(model.getVariants(), "f2Release").getMainArtifact()
-                .getNativeLibraries().first()
-        assertThat(f2Release.getCCompilerFlags()).contains("-DTEST_FLAG_RELEASE")
-        assertThat(f2Release.getCCompilerFlags()).contains("-DTEST_FLAG_F2")
+    public void checkVariantSpecificFlags() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "model {\n"
+                        + "    android.buildTypes {\n"
+                        + "        debug {\n"
+                        + "            ndk.CFlags.add(\"-DTEST_FLAG_DEBUG\")\n"
+                        + "        }\n"
+                        + "        release {\n"
+                        + "            ndk.CFlags.add(\"-DTEST_FLAG_RELEASE\")\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    android.productFlavors {\n"
+                        + "        create(\"f1\") {\n"
+                        + "            ndk.CFlags.add(\"-DTEST_FLAG_F1\")\n"
+                        + "            dimension \"foo\"\n"
+                        + "        }\n"
+                        + "        create(\"f2\") {\n"
+                        + "            ndk.CFlags.add(\"-DTEST_FLAG_F2\")\n"
+                        + "            dimension \"foo\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel();
+        // noinspection ConstantConditions
+        NativeLibrary f1Debug = getNativeLibrary(model, "f1Debug");
+        assertThat(f1Debug.getCCompilerFlags()).contains("-DTEST_FLAG_DEBUG");
+        assertThat(f1Debug.getCCompilerFlags()).contains("-DTEST_FLAG_F1");
+        // noinspection ConstantConditions
+        NativeLibrary f2Release = getNativeLibrary(model, "f2Release");
+        assertThat(f2Release.getCCompilerFlags()).contains("-DTEST_FLAG_RELEASE");
+        assertThat(f2Release.getCCompilerFlags()).contains("-DTEST_FLAG_F2");
     }
 
     @Test
-    void "check using add on string for compileSdkVersion"() {
-        project.buildFile <<
-"""
-model {
-    android {
-        compileSdkVersion = "Google Inc.:Google APIs:$GradleTestProject.LATEST_GOOGLE_APIS_VERSION"
-    }
-}
-"""
-        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel()
-        NativeLibrary lib = ModelHelper.getVariant(model.getVariants(), "debug").getMainArtifact()
-                .getNativeLibraries().first()
+    public void checkUsingAddOnStringForCompileSdkVersion()
+            throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        compileSdkVersion = \"Google Inc.:Google APIs:"
+                        + String.valueOf(GradleTestProject.LATEST_GOOGLE_APIS_VERSION)
+                        + "\"\n"
+                        + "    }\n"
+                        + "}\n");
+        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel();
+        NativeLibrary lib = getNativeLibrary(model, "debug");
+        assertThat(lib).isNotNull();
         for (String flag : lib.getCCompilerFlags()) {
             if (flag.contains("sysroot")) {
-                assertThat(flag).contains("android-${GradleTestProject.LATEST_NDK_PLATFORM_VERSION}")
+                assertThat(flag)
+                        .contains(
+                                "android-"
+                                        + String.valueOf(
+                                                GradleTestProject.LATEST_NDK_PLATFORM_VERSION));
             }
         }
     }
 
     @Test
-    void "check that compiler flags are transformed as in options.txt" () {
-        project.buildFile <<
-                """
-model {
-    android {
-        ndk {
-            CFlags.add("-Ipath with spaces")
-            CFlags.add("-Ipath\twith\ttabs")
-            CFlags.add("-Ipath\\\\with\\\\backslashes")
-        }
-    }
-}
-"""
-        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel()
-        NativeLibrary lib = ModelHelper.getVariant(model.getVariants(), "debug").getMainArtifact()
-                .getNativeLibraries().first()
-        assertThat(lib.getCCompilerFlags()).containsAllOf(
-                "\"-Ipath with spaces\"",
-                "\"-Ipath\twith\ttabs\"",
-                "-Ipath\\\\with\\\\backslashes");
+    public void checkCompilerFlagsAreTransformedAsInOptionsTxt()
+            throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "model {\n"
+                        + "    android {\n"
+                        + "        ndk {\n"
+                        + "            CFlags.add(\"-Ipath with spaces\")\n"
+                        + "            CFlags.add(\"-Ipath\twith\ttabs\")\n"
+                        + "            CFlags.add(\"-Ipath\\\\with\\\\backslashes\")\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+        AndroidProject model = project.executeAndReturnModel("assembleDebug").getOnlyModel();
+        NativeLibrary lib = getNativeLibrary(model, "debug");
+        assertThat(lib.getCCompilerFlags())
+                .containsAllOf(
+                        "\"-Ipath with spaces\"",
+                        "\"-Ipath\twith\ttabs\"",
+                        "-Ipath\\\\with\\\\backslashes");
     }
 
     /**
@@ -284,69 +310,115 @@ model {
      *
      * @param variantAbi map of variant name to array of expected abi.
      */
-    private AndroidProject checkModel(Map variantAbi) {
-        project.execute("assembleDebug")
-        checkNativeAndroidProject(variantAbi)
-        return checkAndroidProject(variantAbi)
+    private AndroidProject checkModel(Map<String, List<String>> variantAbi)
+            throws IOException, InterruptedException {
+        project.execute("assembleDebug");
+        checkNativeAndroidProject(variantAbi);
+        return checkAndroidProject(variantAbi);
     }
 
-    private AndroidProject checkAndroidProject(Map variantAbi) {
+    private AndroidProject checkAndroidProject(Map<String, List<String>> variantAbi)
+            throws IOException {
         AndroidProject androidProject = project.model().getSingle().getOnlyModel();
-        Collection<Variant> variants = androidProject.getVariants()
+        Collection<Variant> variants = androidProject.getVariants();
 
-        for (Map.Entry entry : variantAbi) {
-            Variant variant = ModelHelper.getVariant(variants, (String) entry.getKey())
-            AndroidArtifact mainArtifact = variant.getMainArtifact()
+        for (Map.Entry<String, List<String>> entry : variantAbi.entrySet()) {
+            Variant variant = ModelHelper.getVariant(variants, (String) entry.getKey());
+            AndroidArtifact mainArtifact = variant.getMainArtifact();
 
-            assertThat(mainArtifact.getNativeLibraries()).hasSize(((Collection)entry.getValue()).size())
+            assertThat(mainArtifact.getNativeLibraries()).hasSize((entry.getValue()).size());
             for (NativeLibrary nativeLibrary : mainArtifact.getNativeLibraries()) {
-                assertThat(nativeLibrary.getName()).isEqualTo("hello-jni")
+                assertThat(nativeLibrary.getName()).isEqualTo("hello-jni");
                 assertThat(nativeLibrary.getCCompilerFlags()).contains("-DTEST_C_FLAG");
-                assertThat(nativeLibrary.getCCompilerFlags()).contains("-gcc-toolchain");  // check clang specific flags
+                assertThat(nativeLibrary.getCCompilerFlags())
+                        .contains("-gcc-toolchain"); // check clang specific flags
                 assertThat(nativeLibrary.getCppCompilerFlags()).contains("-DTEST_CPP_FLAG");
-                assertThat(nativeLibrary.getCppCompilerFlags()).contains("-gcc-toolchain");  // check clang specific flags
+                assertThat(nativeLibrary.getCppCompilerFlags())
+                        .contains("-gcc-toolchain"); // check clang specific flags
                 assertThat(nativeLibrary.getCSystemIncludeDirs()).isEmpty();
                 assertThat(nativeLibrary.getCppSystemIncludeDirs()).isNotEmpty();
-                File solibSearchPath = nativeLibrary.getDebuggableLibraryFolders().first()
-                assertThat(new File(solibSearchPath, "libhello-jni.so")).exists()
+                File solibSearchPath =
+                        Iterables.getFirst(nativeLibrary.getDebuggableLibraryFolders(), null);
+                assertThat(solibSearchPath).isNotNull();
+                assertThat(new File(solibSearchPath, "libhello-jni.so")).exists();
                 assertThat(nativeLibrary.getCCompilerFlags()).doesNotContain("null");
                 assertThat(nativeLibrary.getCppCompilerFlags()).doesNotContain("null");
             }
 
-            Collection<String> expectedToolchainNames = entry.getValue().collect { "clang-" + it }
-            Collection<String> toolchainNames = androidProject.getNativeToolchains().collect { it.getName() }
-            assertThat(toolchainNames).containsAllIn(expectedToolchainNames)
-            Collection<String> nativeLibToolchains = mainArtifact.getNativeLibraries().
-                    collect { it.getToolchainName() }
-            assertThat(nativeLibToolchains).containsExactlyElementsIn(expectedToolchainNames)
+            Collection<String> expectedToolchainNames =
+                    entry.getValue().stream().map(e -> "clang-" + e).collect(Collectors.toList());
+
+            Collection<String> toolchainNames =
+                    androidProject
+                            .getNativeToolchains()
+                            .stream()
+                            .map(NativeToolchain::getName)
+                            .collect(Collectors.toList());
+            assertThat(toolchainNames).containsAllIn(expectedToolchainNames);
+            Collection<String> nativeLibToolchains =
+                    mainArtifact
+                            .getNativeLibraries()
+                            .stream()
+                            .map(NativeLibrary::getToolchainName)
+                            .collect(Collectors.toList());
+            assertThat(nativeLibToolchains).containsExactlyElementsIn(expectedToolchainNames);
         }
-        return androidProject
+
+        return androidProject;
     }
 
-    private void checkNativeAndroidProject(Map variantAbi) {
+    private void checkNativeAndroidProject(Map<String, List<String>> variantAbi)
+            throws IOException {
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
-        for (Map.Entry entry : variantAbi) {
-            String variantName = (String) entry.getKey();
-            Collection<NativeArtifact> artifacts = model.getArtifacts().findAll{
-                artifact -> artifact.getName().contains(variantName) }
+        for (Map.Entry<String, List<String>> entry : variantAbi.entrySet()) {
+            final String variantName = entry.getKey();
+            Collection<NativeArtifact> artifacts =
+                    model.getArtifacts()
+                            .stream()
+                            .filter(i -> i.getName().contains(variantName))
+                            .collect(Collectors.toList());
 
             for (NativeArtifact artifact : artifacts) {
                 List<String> cFlags =
-                        NativeModelHelper.getCFlags(model, artifact).get(project.file("src/main/jni"));
+                        NativeModelHelper.getCFlags(model, artifact)
+                                .get(project.file("src/main/jni"));
                 assertThat(cFlags).contains("-DTEST_C_FLAG");
                 assertThat(cFlags).contains("-gcc-toolchain");
                 assertThat(cFlags).doesNotContain("null");
                 List<String> cppFlags =
-                        NativeModelHelper.getCppFlags(model, artifact).get(project.file("src/main/jni"));
+                        NativeModelHelper.getCppFlags(model, artifact)
+                                .get(project.file("src/main/jni"));
                 assertThat(cppFlags).contains("-DTEST_CPP_FLAG");
                 assertThat(cppFlags).contains("-gcc-toolchain");
                 assertThat(cppFlags).doesNotContain("null");
                 assertThat(artifact.getOutputFile()).exists();
             }
 
-            Collection<String> toolchainNames = model.getToolChains().collect { it.getName() }
-            assertThat(toolchainNames).containsAllIn(
-                    Abi.values().collect { Abi it -> "ndk-" + it.getName() } )
+            Collection<String> toolchainNames =
+                    model.getToolChains()
+                            .stream()
+                            .map(NativeToolchain::getName)
+                            .collect(Collectors.toList());
+
+            List<String> expectedToolChains =
+                    ImmutableList.copyOf(Abi.values())
+                            .stream()
+                            .map(i -> "ndk-" + i.getName())
+                            .collect(Collectors.toList());
+            assertThat(toolchainNames).containsAllIn(expectedToolChains);
         }
+    }
+
+    @NonNull
+    private static NativeLibrary getNativeLibrary(
+            @NonNull AndroidProject model, @NonNull String variant) {
+        Collection<NativeLibrary> nativeLibs =
+                ModelHelper.getVariant(model.getVariants(), variant)
+                        .getMainArtifact()
+                        .getNativeLibraries();
+        Preconditions.checkNotNull(nativeLibs);
+        NativeLibrary first = Iterables.getFirst(nativeLibs, null);
+        Preconditions.checkNotNull(first);
+        return first;
     }
 }

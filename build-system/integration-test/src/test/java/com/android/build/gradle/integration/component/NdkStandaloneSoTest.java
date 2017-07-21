@@ -1,185 +1,203 @@
-/*
- * Copyright (C) 2014 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.component;
 
-package com.android.build.gradle.integration.component
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.testutils.apk.Apk
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.ClassRule
-import org.junit.Test
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.testutils.apk.Apk;
+import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
 /**
  * Tests for standalone NDK plugin and native dependencies.
  *
- * Test project consists of an app project that depends on an NDK project that depends on another
+ * <p>Test project consists of an app project that depends on an NDK project that depends on another
  * NDK project.
  */
-@CompileStatic
-class NdkStandaloneSoTest {
-    static MultiModuleTestProject base = new MultiModuleTestProject(
-            app: new HelloWorldJniApp(),
-            lib1: new EmptyAndroidTestApp(),
-            lib2: new EmptyAndroidTestApp())
+public class NdkStandaloneSoTest {
+
+    private static MultiModuleTestProject base =
+            new MultiModuleTestProject(
+                    ImmutableMap.of(
+                            "app", new HelloWorldJniApp(),
+                            "lib1", new EmptyAndroidTestApp(),
+                            "lib2", new EmptyAndroidTestApp()));
 
     static {
-        AndroidTestApp app = (HelloWorldJniApp) base.getSubproject("app")
-        app.removeFile(app.getFile("hello-jni.c"))
-        app.addFile(new TestSourceFile("", "build.gradle", """
-apply plugin: "com.android.model.application"
-
-model {
-    repositories {
-        libs(PrebuiltLibraries) {
-            prebuilt {
-                binaries.withType(SharedLibraryBinary) {
-                    sharedLibraryFile = file("prebuilt.so")
-                }
-            }
-        }
-    }
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-        sources {
-            main {
-                jniLibs {
-                    dependencies {
-                        project ":lib1" buildType "debug"
-                        library "prebuilt"
-                    }
-                }
-            }
-        }
-    }
-}
-"""))
-        // An empty .so just to check if it can be packaged
-        app.addFile(new TestSourceFile("", "prebuilt.so", ""));
-
-        AndroidTestApp lib1 = (AndroidTestApp) base.getSubproject("lib1")
-        lib1.addFile(new TestSourceFile("src/main/jni", "hello-jni.c",
-                """
-#include <string.h>
-#include <jni.h>
-
-jstring
-Java_com_example_hellojni_HelloJni_stringFromJNI(JNIEnv* env, jobject thiz)
-{
-    return (*env)->NewStringUTF(env, getString());
-}
-"""));
-
-        lib1.addFile(new TestSourceFile("", "build.gradle", """
-apply plugin: "com.android.model.native"
-
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        ndk {
-            moduleName "hello-jni"
-        }
-        sources {
-            main {
-                jni {
-                    dependencies {
-                        project ":lib2"
-                    }
-                }
-            }
-        }
-    }
-}
-"""));
-
-        AndroidTestApp lib2 = (AndroidTestApp) base.getSubproject("lib2")
-        lib2.addFile(new TestSourceFile("src/main/headers/", "hello.h", """
-#ifndef HELLO_H
-#define HELLO_H
-
-char* getString();
-
-#endif
-"""))
-        lib2.addFile(new TestSourceFile("src/main/jni/", "hello.c", """
-char* getString() {
-    return "hello world!";
-}
-"""))
-        lib2.addFile(new TestSourceFile("", "build.gradle", """
-apply plugin: "com.android.model.native"
-
-model {
-    android {
-        compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-        ndk {
-            moduleName "hello-jni"
-        }
-        sources {
-            main {
-                jni {
-                    exportedHeaders {
-                        srcDir "src/main/headers"
-                    }
-                }
-            }
-        }
-    }
-}
-"""))
+        initialize();
     }
 
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(base)
-            .useExperimentalGradleVersion(true)
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(base)
+                    .useExperimentalGradleVersion(true)
+                    .create();
+
+    private static void initialize() {
+        AndroidTestApp app = (HelloWorldJniApp) base.getSubproject("app");
+        app.removeFile(app.getFile("hello-jni.c"));
+        app.addFile(
+                new TestSourceFile(
+                        "",
+                        "build.gradle",
+                        "\n"
+                                + "apply plugin: \"com.android.model.application\"\n"
+                                + "\n"
+                                + "model {\n"
+                                + "    repositories {\n"
+                                + "        libs(PrebuiltLibraries) {\n"
+                                + "            prebuilt {\n"
+                                + "                binaries.withType(SharedLibraryBinary) {\n"
+                                + "                    sharedLibraryFile = file(\"prebuilt.so\")\n"
+                                + "                }\n"
+                                + "            }\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "    android {\n"
+                                + "        compileSdkVersion "
+                                + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                                + "\n"
+                                + "        buildToolsVersion \""
+                                + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                                + "\"\n"
+                                + "        sources {\n"
+                                + "            main {\n"
+                                + "                jniLibs {\n"
+                                + "                    dependencies {\n"
+                                + "                        project \":lib1\" buildType \"debug\"\n"
+                                + "                        library \"prebuilt\"\n"
+                                + "                    }\n"
+                                + "                }\n"
+                                + "            }\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "}\n"));
+        // An empty .so just to check if it can be packaged
+        app.addFile(new TestSourceFile("", "prebuilt.so", ""));
+
+        AndroidTestApp lib1 = (AndroidTestApp) base.getSubproject("lib1");
+        lib1.addFile(
+                new TestSourceFile(
+                        "src/main/jni",
+                        "hello-jni.c",
+                        "\n"
+                                + "#include <string.h>\n"
+                                + "#include <jni.h>\n"
+                                + "\n"
+                                + "jstring\n"
+                                + "Java_com_example_hellojni_HelloJni_stringFromJNI(JNIEnv* env, jobject thiz)\n"
+                                + "{\n"
+                                + "    return (*env)->NewStringUTF(env, getString());\n"
+                                + "}\n"));
+
+        lib1.addFile(
+                new TestSourceFile(
+                        "",
+                        "build.gradle",
+                        "\n"
+                                + "apply plugin: \"com.android.model.native\"\n"
+                                + "\n"
+                                + "model {\n"
+                                + "    android {\n"
+                                + "        compileSdkVersion "
+                                + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                                + "\n"
+                                + "        ndk {\n"
+                                + "            moduleName \"hello-jni\"\n"
+                                + "        }\n"
+                                + "        sources {\n"
+                                + "            main {\n"
+                                + "                jni {\n"
+                                + "                    dependencies {\n"
+                                + "                        project \":lib2\"\n"
+                                + "                    }\n"
+                                + "                }\n"
+                                + "            }\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "}\n"));
+
+        AndroidTestApp lib2 = (AndroidTestApp) base.getSubproject("lib2");
+        lib2.addFile(
+                new TestSourceFile(
+                        "src/main/headers/",
+                        "hello.h",
+                        "\n"
+                                + "#ifndef HELLO_H\n"
+                                + "#define HELLO_H\n"
+                                + "\n"
+                                + "char* getString();\n"
+                                + "\n"
+                                + "#endif\n"));
+        lib2.addFile(
+                new TestSourceFile(
+                        "src/main/jni/",
+                        "hello.c",
+                        "\n" + "char* getString() {\n" + "    return \"hello world!\";\n" + "}\n"));
+        lib2.addFile(
+                new TestSourceFile(
+                        "",
+                        "build.gradle",
+                        "\n"
+                                + "apply plugin: \"com.android.model.native\"\n"
+                                + "\n"
+                                + "model {\n"
+                                + "    android {\n"
+                                + "        compileSdkVersion "
+                                + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                                + "\n"
+                                + "        ndk {\n"
+                                + "            moduleName \"hello-jni\"\n"
+                                + "        }\n"
+                                + "        sources {\n"
+                                + "            main {\n"
+                                + "                jni {\n"
+                                + "                    exportedHeaders {\n"
+                                + "                        srcDir \"src/main/headers\"\n"
+                                + "                    }\n"
+                                + "                }\n"
+                                + "            }\n"
+                                + "        }\n"
+                                + "    }\n"
+                                + "}\n"));
+    }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
-        base = null
+    public static void cleanUp() {
+        project = null;
+        base = null;
     }
 
     @Test
-    void "check standalone lib properly creates library"() {
+    public void checkStandaloneLibProperlyCreatesLibrary()
+            throws IOException, InterruptedException {
         project.execute("clean", ":lib1:assembleDebug");
 
-        GradleTestProject lib = project.getSubproject("lib1")
+        GradleTestProject lib = project.getSubproject("lib1");
         assertThat(lib.file("build/outputs/native/debug/lib/x86/libhello-jni.so")).exists();
     }
 
     @Test
-    void "check app contains compiled .so"() {
+    public void checkAppContainsCompiledSo() throws IOException, InterruptedException {
         project.execute("clean", ":app:assembleRelease");
 
-        GradleTestProject lib1 = project.getSubproject("lib1")
-        assertThat(lib1.file("build/intermediates/binaries/debug/obj/x86/libhello-jni.so")).exists();
+        GradleTestProject lib1 = project.getSubproject("lib1");
+        assertThat(lib1.file("build/intermediates/binaries/debug/obj/x86/libhello-jni.so"))
+                .exists();
 
         // Check that release lib is not compiled.
-        assertThat(lib1.file("build/intermediates/binaries/release/obj/x86/libhello-jni.so")).doesNotExist();
+        assertThat(lib1.file("build/intermediates/binaries/release/obj/x86/libhello-jni.so"))
+                .doesNotExist();
 
-        Apk apk = project.getSubproject("app").getApk("release", "unsigned")
+        Apk apk = project.getSubproject("app").getApk("release", "unsigned");
         assertThat(apk).contains("lib/x86/libhello-jni.so");
         assertThat(apk).contains("lib/x86/prebuilt.so");
     }
