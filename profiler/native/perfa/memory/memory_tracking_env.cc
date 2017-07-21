@@ -152,8 +152,14 @@ void MemoryTrackingEnv::Initialize() {
   JNIEnv* jni = GetThreadLocalJNI(g_vm);
   error =
       jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni), &AllocDataWorker,
-                             this, JVMTI_THREAD_MAX_PRIORITY);
+                             this, JVMTI_THREAD_NORM_PRIORITY);
   CheckJvmtiError(jvmti_, error);
+  if (log_live_alloc_count_) {
+    error =
+        jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni), &AllocCountWorker,
+                              this, JVMTI_THREAD_NORM_PRIORITY);
+    CheckJvmtiError(jvmti_, error);
+  }
 }
 
 /**
@@ -169,7 +175,8 @@ void MemoryTrackingEnv::Initialize() {
  * without caching an extra set to track what the agent has tagged.
  */
 void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
-  std::lock_guard<std::mutex> lock(tracking_mutex_);
+  std::lock_guard<std::mutex> data_lock(tracking_data_mutex_);
+  std::lock_guard<std::mutex> count_lock(tracking_count_mutex_);
   if (is_live_tracking_) {
     return;
   }
@@ -255,7 +262,8 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
  *   tracking sessions.
  */
 void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
-  std::lock_guard<std::mutex> lock(tracking_mutex_);
+  std::lock_guard<std::mutex> data_lock(tracking_data_mutex_);
+  std::lock_guard<std::mutex> count_lock(tracking_count_mutex_);
   if (!is_live_tracking_) {
     return;
   }
@@ -486,6 +494,32 @@ void MemoryTrackingEnv::GCFinishCallback(jvmtiEnv* jvmti) {
   g_env->LogGcFinish();
 }
 
+void MemoryTrackingEnv::AllocCountWorker(jvmtiEnv* jvmti, JNIEnv* jni,
+                                        void* ptr) {
+  Stopwatch stopwatch;
+  MemoryTrackingEnv* env = static_cast<MemoryTrackingEnv*>(ptr);
+  assert(env != nullptr);
+  while (true) {
+    int64_t start_time_ns = stopwatch.GetElapsed();
+    {
+      std::lock_guard<std::mutex> lock(env->tracking_count_mutex_);
+      if (env->is_live_tracking_) {
+        profiler::EnqueueAllocStats(env->total_live_count_,
+                                    env->total_free_count_);
+      }
+    }
+    // Sleeps a while before reading from the queue again, so that the agent
+    // don't generate too many rpc requests in places with high allocation
+    // frequency.
+    int64_t elapsed_time_ns = stopwatch.GetElapsed() - start_time_ns;
+    if (kDataTransferIntervalNs > elapsed_time_ns) {
+      int64_t sleep_time_us =
+          Clock::ns_to_us(kDataTransferIntervalNs - elapsed_time_ns);
+      usleep(static_cast<uint64_t>(sleep_time_us));
+    }
+  }
+}
+
 void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
                                         void* ptr) {
   Stopwatch stopwatch;
@@ -495,7 +529,7 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
     int64_t start_time_ns = stopwatch.GetElapsed();
 
     {
-      std::lock_guard<std::mutex> lock(env->tracking_mutex_);
+      std::lock_guard<std::mutex> lock(env->tracking_data_mutex_);
       if (env->is_live_tracking_) {
         BatchAllocationSample sample;
         // Gather all the data currently in the queue and push to perfd.
@@ -584,11 +618,6 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
 
         if (sample.events_size() > 0) {
           profiler::EnqueueAllocationEvents(sample);
-        }
-
-        if (env->log_live_alloc_count_) {
-          profiler::EnqueueAllocStats(env->total_live_count_,
-                                      env->total_free_count_);
         }
       }
     }

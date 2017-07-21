@@ -135,6 +135,9 @@ class MemoryTrackingEnv {
   // Thread to send allocation data to perfd.
   static void JNICALL AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* arg);
 
+  // Thread to send allocation count data to perfd.
+  static void JNICALL AllocCountWorker(jvmtiEnv* jvmti, JNIEnv* jni, void* arg);
+
   // Helper method for retrieving methods names and line numbers corresponding
   // to |method_id| and cache them into |sample| and our MethodIdMap
   static void CacheMethodInfo(MemoryTrackingEnv* env, jvmtiEnv* jvmti,
@@ -167,7 +170,8 @@ class MemoryTrackingEnv {
   int32_t class_class_tag_;
   int64_t current_capture_time_ns_;
   int64_t last_gc_start_ns_;
-  std::mutex tracking_mutex_;
+  std::mutex tracking_data_mutex_;
+  std::mutex tracking_count_mutex_;
   std::atomic<int32_t> total_live_count_;
   std::atomic<int32_t> total_free_count_;
   std::atomic<int32_t> current_class_tag_;
