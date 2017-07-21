@@ -105,4 +105,5 @@ bind(
 
 android_ndk_repository(
     name = "androidndk",
+    api_level = 21,
 )
