@@ -14,84 +14,89 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
-import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.Variant
-import com.android.builder.model.level2.Library
-import com.android.builder.model.level2.DependencyGraphs
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+package com.android.build.gradle.integration.library;
 
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA
-import static com.android.builder.core.BuilderConstants.DEBUG
-import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertTrue
-/**
- * Assemble tests for libTestDep.
- */
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static com.android.builder.core.BuilderConstants.DEBUG;
+import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Variant;
+import com.android.builder.model.level2.DependencyGraphs;
+import com.android.builder.model.level2.Library;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+/** Assemble tests for libTestDep. */
 @CompileStatic
-class LibTestDepTest {
+public class LibTestDepTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("libTestDep")
-            .create()
-    static ModelContainer<AndroidProject> model
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("libTestDep").create();
+
+    private static ModelContainer<AndroidProject> model;
 
     @BeforeClass
-    static void setUp() {
-        model = project.executeAndReturnModel("clean", "assembleDebug")
+    public static void setUp() throws IOException, InterruptedException {
+        model = project.executeAndReturnModel("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
-        model = null
+    public static void cleanUp() {
+        project = null;
+        model = null;
     }
 
     @Test
-    void lint() {
-        project.execute("lint")
+    public void lint() throws IOException, InterruptedException {
+        project.execute("lint");
     }
 
     @Test
-    public void "check test variant inherits deps from main variant"() {
+    public void checkTestVariantInheritsDepsFromMainVariant() {
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Collection<Variant> variants = model.getOnlyModel().getVariants()
-        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG)
+        Collection<Variant> variants = model.getOnlyModel().getVariants();
+        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG);
 
-        Collection<AndroidArtifact> extraAndroidArtifact = debugVariant.getExtraAndroidArtifacts()
-        AndroidArtifact testArtifact = ModelHelper.getAndroidArtifact(extraAndroidArtifact,
-                ARTIFACT_ANDROID_TEST)
+        Collection<AndroidArtifact> extraAndroidArtifact = debugVariant.getExtraAndroidArtifacts();
+        AndroidArtifact testArtifact =
+                ModelHelper.getAndroidArtifact(extraAndroidArtifact, ARTIFACT_ANDROID_TEST);
 
         DependencyGraphs testGraph = testArtifact.getDependencyGraphs();
         List<Library> javaLibraries = helper.on(testGraph).withType(JAVA).asLibraries();
-        assertEquals(2, javaLibraries.size())
+        assertEquals(2, javaLibraries.size());
         for (Library lib : javaLibraries) {
-            File f = lib.getArtifact()
-            assertTrue(f.getName().equals("guava-19.0.jar") || f.getName().equals("jsr305-1.3.9.jar"))
+            File f = lib.getArtifact();
+            assertTrue(
+                    f.getName().equals("guava-19.0.jar") || f.getName().equals("jsr305-1.3.9.jar"));
         }
     }
 
     @Test
-    void "check debug and release output have different names"() {
-        ModelHelper.compareDebugAndReleaseOutput(model.getOnlyModel())
+    public void checkDebugAndReleaseOutputHaveDifferentNames() {
+        ModelHelper.compareDebugAndReleaseOutput(model.getOnlyModel());
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 }

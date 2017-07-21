@@ -14,45 +14,47 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
-import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.google.common.collect.ImmutableList;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
-/**
- * Assemble tests for libProguardConsumerFiles.
- */
+/** Assemble tests for libProguardConsumerFiles. */
 @CompileStatic
-class LibProguardConsumerFilesTest {
+public class LibProguardConsumerFilesTest {
 
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("libProguardConsumerFiles")
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("libProguardConsumerFiles").create();
 
     @BeforeClass
-    static void setUp() {
-        project.execute("clean", "build")
+    public static void setUp() throws IOException, InterruptedException {
+        project.execute("clean", "build");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void "check proguard.txt has been correctly merged"() {
-        File debugFileOutput = project.file("build/" + FD_INTERMEDIATES + "/bundles/debug/proguard.txt")
-        File releaseFileOutput = project.file("build/" + FD_INTERMEDIATES + "/bundles/release/proguard.txt")
+    public void checkProguardDotTxtHasBeenCorrectlyMerged() throws IOException {
+        File debugFileOutput =
+                project.file("build/" + FD_INTERMEDIATES + "/bundles/debug/proguard.txt");
+        File releaseFileOutput =
+                project.file("build/" + FD_INTERMEDIATES + "/bundles/release/proguard.txt");
 
-        TestFileUtils.checkContent(debugFileOutput, "A")
-        TestFileUtils.checkContent(releaseFileOutput, ["A", "B", "C"])
+        TestFileUtils.checkContent(debugFileOutput, "A");
+        TestFileUtils.checkContent(releaseFileOutput, ImmutableList.of("A", "B", "C"));
     }
 }

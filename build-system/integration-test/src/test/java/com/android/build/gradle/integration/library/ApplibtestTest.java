@@ -14,46 +14,43 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Ignore
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/**
- * Assemble tests for applibtest.
- */
+/** Assemble tests for applibtest. */
 @CompileStatic
-class ApplibtestTest {
+public class ApplibtestTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("applibtest")
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("applibtest").create();
 
     @BeforeClass
-    static void setUp() {
-        project.execute("clean", "assembleDebug")
+    public static void setUp() throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void lint() {
-        project.execute("lint")
+    public void lint() throws IOException, InterruptedException {
+        project.execute("lint");
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 }

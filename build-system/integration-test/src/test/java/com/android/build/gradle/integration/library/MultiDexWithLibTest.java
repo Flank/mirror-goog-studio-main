@@ -14,48 +14,48 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.AssumeUtil
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/**
- * Assemble tests for multiDexWithLib.
- */
+/** Assemble tests for multiDexWithLib. */
 @CompileStatic
-class MultiDexWithLibTest {
+public class MultiDexWithLibTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("multiDexWithLib")
-            .withHeap("2048M")
-            .create()
+    static public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("multiDexWithLib")
+                    .withHeap("2048M")
+                    .create();
 
     @BeforeClass
-    static void setUp() {
-        AssumeUtil.assumeBuildToolsAtLeast(21)
-        project.execute("clean", "assembleDebug", "assembleDebugAndroidTest")
+    public static void setUp() throws IOException, InterruptedException {
+        AssumeUtil.assumeBuildToolsAtLeast(21);
+        project.execute("clean", "assembleDebug", "assembleDebugAndroidTest");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void lint() {
-        project.execute("lint")
+    public void lint() throws IOException, InterruptedException {
+        project.execute("lint");
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 }

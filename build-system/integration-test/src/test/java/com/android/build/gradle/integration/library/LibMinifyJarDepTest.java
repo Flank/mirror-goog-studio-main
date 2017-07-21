@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  * Assemble tests for libMinifyJarDep.
@@ -31,28 +32,27 @@ import org.junit.experimental.categories.Category
 @CompileStatic
 class LibMinifyJarDepTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("libMinifyJarDep")
-            .create()
+    static public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("libMinifyJarDep").create();
 
     @BeforeClass
-    static void setUp() {
-        project.execute("clean", "assembleDebug")
+    static void setUp() throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug");
     }
 
     @AfterClass
     static void cleanUp() {
-        project = null
+        project = null;
     }
 
     @Test
-    void lint() {
-        project.execute("lint")
+    void lint() throws IOException, InterruptedException {
+        project.execute("lint");
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 }

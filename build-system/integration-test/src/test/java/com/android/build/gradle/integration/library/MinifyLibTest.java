@@ -14,70 +14,65 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.common.truth.TruthHelper
-import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils
-import com.android.testutils.apk.Aar
-import com.android.testutils.apk.Apk
-import com.google.common.io.Files
-import groovy.transform.CompileStatic
-import org.junit.Rule
-import org.junit.Test
-import org.junit.experimental.categories.Category
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import java.nio.charset.Charset
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
+import com.android.testutils.apk.Apk;
+import com.google.common.collect.ImmutableList;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-
-/**
- * Assemble tests for minifyLib.
- */
+/** Assemble tests for minifyLib. */
 @CompileStatic
-@RunWith(FilterableParameterized)
-class MinifyLibTest {
+@RunWith(FilterableParameterized.class)
+public class MinifyLibTest {
     @Parameterized.Parameters(name = "useProguard = {0}")
-    public static Collection<Object[]> data() {
-        return [
-                [true] as Object[],
-                [false] as Object[],
-        ]
+    public static Collection<Boolean> data() {
+        return ImmutableList.of(true, false);
     }
 
     @Parameterized.Parameter(0)
-    public boolean useProguard
+    public Boolean useProguard;
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("minifyLib")
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("minifyLib").create();
 
     @Test
     public void consumerProguardFile() throws Exception {
         if (!useProguard) {
-            ShrinkerTestUtils.enableShrinker(project.getSubproject(":app"), "debug")
+            ShrinkerTestUtils.enableShrinker(project.getSubproject(":app"), "debug");
         }
 
-        project.execute(":app:assembleDebug")
-        Apk apk = project.getSubproject(":app").getApk("debug")
-        TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;")
-        TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/UnusedClass;")
+        project.execute(":app:assembleDebug");
+        Apk apk = project.getSubproject(":app").getApk("debug");
+        TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
+        TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/UnusedClass;");
     }
 
     @Test
     public void shrinkingTheLibrary() throws Exception {
-        enableLibShrinking()
+        enableLibShrinking();
 
-        project.execute(":app:assembleRelease")
+        project.execute(":app:assembleRelease");
 
-        Apk apk = project.getSubproject(":app").getApk("release")
-        assertThat(apk).containsClass("Lcom/android/tests/basic/StringProvider;")
-        assertThat(apk).doesNotContainClass("Lcom/android/tests/basic/UnusedClass;")
+        Apk apk = project.getSubproject(":app").getApk("release");
+        assertThat(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
+        assertThat(apk).doesNotContainClass("Lcom/android/tests/basic/UnusedClass;");
     }
 
     /**
@@ -86,33 +81,33 @@ class MinifyLibTest {
      */
     @Test
     public void shrinkingTheLibrary_noClasses() throws Exception {
-        enableLibShrinking()
-        Files.write(
-                "", // Remove the -keep rules.
-                project.getSubproject(":lib").file("config.pro"),
-                Charset.defaultCharset());
-
-        project.execute(":lib:assembleDebug")
+        enableLibShrinking();
+        // Remove the -keep rules.
+        File config = project.getSubproject(":lib").file("config.pro");
+        config.delete();
+        TestFileUtils.appendToFile(config, "");
+        project.execute(":lib:assembleDebug");
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 
-    private void enableLibShrinking() {
-        project.getSubproject(":lib").buildFile << """android {
-            buildTypes.release {
-                minifyEnabled true
-                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'config.pro'
-            }
-        }
-        """
+    private void enableLibShrinking() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":lib").getBuildFile(),
+                ""
+                        + "android {\n"
+                        + "    buildTypes.release {\n"
+                        + "        minifyEnabled true\n"
+                        + "        proguardFiles getDefaultProguardFile('proguard-android.txt'), 'config.pro'\n"
+                        + "    }\n"
+                        + "}");
 
         if (!useProguard) {
-            ShrinkerTestUtils.enableShrinker(project.getSubproject(":lib"), "release")
+            ShrinkerTestUtils.enableShrinker(project.getSubproject(":lib"), "release");
         }
     }
-
 }

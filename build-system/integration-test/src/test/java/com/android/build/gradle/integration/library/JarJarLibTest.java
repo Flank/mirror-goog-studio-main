@@ -14,41 +14,45 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
-import com.android.annotations.NonNull
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidArtifactOutput
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.SyncIssue
-import com.android.builder.model.Variant
-import com.google.common.collect.Iterables
-import com.google.common.collect.Iterators
-import groovy.transform.CompileDynamic
-import groovy.transform.CompileStatic
-import org.junit.After
-import org.junit.Before
-import org.junit.Ignore
-import org.junit.Rule
-import org.junit.Test
-import org.objectweb.asm.ClassReader
-import org.objectweb.asm.Opcodes
-import org.objectweb.asm.tree.AbstractInsnNode
-import org.objectweb.asm.tree.ClassNode
-import org.objectweb.asm.tree.MethodNode
-import org.objectweb.asm.tree.TypeInsnNode
+package com.android.build.gradle.integration.library;
 
-import java.util.function.Predicate
-import java.util.stream.Collectors
-import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
+import static com.android.builder.core.BuilderConstants.DEBUG;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar
-import static com.android.builder.core.BuilderConstants.DEBUG
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNotNull
+import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidArtifactOutput;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
+import com.android.builder.model.Variant;
+import com.android.ide.common.process.ProcessException;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Iterators;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import org.junit.After;
+import org.junit.Ignore;
+import org.junit.Rule;
+import org.junit.Test;
+import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.tree.TypeInsnNode;
 
 /**
  * Test for the jarjar integration.
@@ -58,131 +62,134 @@ import static org.junit.Assert.assertNotNull
 public class JarJarLibTest {
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("jarjarIntegrationLib")
-            .create()
-
-    @Before
-    void setUp() {
-    }
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("jarjarIntegrationLib").create();
 
     @After
-    void cleanUp() {
-        project = null
+    public void cleanUp() {
+        project = null;
     }
 
     @Test
-    void "check repackaged gson library"() {
-        project.getBuildFile() << """
-android {
-    registerTransform(new com.android.test.jarjar.JarJarTransform(false /*broken transform*/))
-}
-"""
+    public void checkRepackagedGsonLibrary()
+            throws IOException, InterruptedException, ProcessException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                ""
+                        + "android {\n"
+                        + "    registerTransform(new com.android.test.jarjar.JarJarTransform(false /*broken transform*/))\n"
+                        + "}\n");
 
-        AndroidProject model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
+        AndroidProject model =
+                project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
 
-        Collection<Variant> variants = model.getVariants()
-        assertEquals("Variant Count", 2, variants.size())
+        Collection<Variant> variants = model.getVariants();
+        assertEquals("Variant Count", 2, variants.size());
 
         // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG)
-        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact()
-        assertNotNull("Debug main info null-check", debugMainArtifact)
+        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG);
+        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
+        assertNotNull("Debug main info null-check", debugMainArtifact);
 
         // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs()
-        assertNotNull(debugOutputs)
-        assertEquals(1, debugOutputs.size())
+        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
+        assertNotNull(debugOutputs);
+        assertEquals(1, debugOutputs.size());
 
         // make sure the Gson library has been renamed and the original one is not present.
-        File outputFile = Iterators.getOnlyElement(debugOutputs.iterator()).mainOutputFile.
-                getOutputFile()
-        assertThatAar(outputFile).containsClass('Lcom/android/tests/basic/Main;');
+        File outputFile =
+                Iterators.getOnlyElement(debugOutputs.iterator())
+                        .getMainOutputFile()
+                        .getOutputFile();
+        assertThatAar(outputFile).containsClass("Lcom/android/tests/basic/Main;");
 
         // libraries do not include their dependencies unless they are local (which is not
         // the case here), so neither versions of Gson should be present here).
         assertThatAar(outputFile).doesNotContainClass("Lcom/google/repacked/gson/Gson;");
-        assertThatAar(outputFile).doesNotContainClass("Lcom/google/gson/Gson;")
+        assertThatAar(outputFile).doesNotContainClass("Lcom/google/gson/Gson;");
 
         // check we do not have the R class of the library in there.
-        assertThatAar(outputFile).doesNotContainClass('Lcom/android/tests/basic/R;')
-        assertThatAar(outputFile).doesNotContainClass('Lcom/android/tests/basic/R$drawable;')
+        assertThatAar(outputFile).doesNotContainClass("Lcom/android/tests/basic/R;");
+        assertThatAar(outputFile).doesNotContainClass("Lcom/android/tests/basic/R$drawable;");
 
         // check the content of the Main class.
-        File jarFile = project.file(
-                "build/" +
-                        "$AndroidProject.FD_INTERMEDIATES/" +
-                        "bundles/" +
-                        "debug/" +
-                        "classes.jar")
-        checkClassFile(jarFile)
+        File jarFile =
+                project.file(
+                        "build/"
+                                + AndroidProject.FD_INTERMEDIATES
+                                + "/"
+                                + "bundles/"
+                                + "debug/"
+                                + "classes.jar");
+        checkClassFile(jarFile);
     }
 
     @Test
-    void "check broken transform"() {
-        project.getBuildFile() << """
-android {
-    registerTransform(new com.android.test.jarjar.JarJarTransform(true /*broken transform*/))
-}
-"""
+    public void checkBrokenTransform() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                ""
+                        + "android {\n"
+                        + "    registerTransform(new com.android.test.jarjar.JarJarTransform(true /*broken transform*/))\n"
+                        + "}\n");
 
         AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
 
         Collection<SyncIssue> issues = model.getSyncIssues();
         assertThat(issues).hasSize(2);
 
-        Collection<SyncIssue> errors = issues.stream().filter(new Predicate<SyncIssue>() {
-            @Override
-            boolean test(SyncIssue syncIssue) {
-                return syncIssue.severity == SyncIssue.SEVERITY_ERROR;
-            }
-        }).collect(Collectors.toList())
-        assertThat(errors).hasSize(1);
-        SyncIssue error = Iterables.getOnlyElement(errors)
-        assertThat(error.type).isEqualTo(SyncIssue.TYPE_GENERIC);
-        assertThat(error.message).isEqualTo("Transforms with scopes '[SUB_PROJECTS, EXTERNAL_LIBRARIES, PROJECT_LOCAL_DEPS, SUB_PROJECTS_LOCAL_DEPS]' cannot be applied to library projects.");
+        Collection<SyncIssue> errors =
+                issues.stream()
+                        .filter(syncIssue -> syncIssue.getSeverity() == SyncIssue.SEVERITY_ERROR)
+                        .collect(Collectors.toList());
 
-        Collection<SyncIssue> warnings = issues.stream().filter(new Predicate<SyncIssue>() {
-            @Override
-            boolean test(SyncIssue syncIssue) {
-                return syncIssue.severity == SyncIssue.SEVERITY_WARNING;
-            }
-        }).collect(Collectors.toList())
+        assertThat(errors).hasSize(1);
+        SyncIssue error = Iterables.getOnlyElement(errors);
+        assertThat(error.getType()).isEqualTo(SyncIssue.TYPE_GENERIC);
+        assertThat(error.getMessage())
+                .isEqualTo(
+                        "Transforms with scopes '[SUB_PROJECTS, EXTERNAL_LIBRARIES, PROJECT_LOCAL_DEPS, SUB_PROJECTS_LOCAL_DEPS]' cannot be applied to library projects.");
+
+        Collection<SyncIssue> warnings =
+                issues.stream()
+                        .filter(syncIssue -> syncIssue.getSeverity() == SyncIssue.SEVERITY_WARNING)
+                        .collect(Collectors.toList());
         assertThat(warnings).hasSize(1);
-        SyncIssue warning = Iterables.getOnlyElement(warnings)
-        assertThat(warning.type).isEqualTo(SyncIssue.TYPE_GENERIC);
-        assertThat(warning.message).isEqualTo("Transform 'jarjar' uses scope SUB_PROJECTS_LOCAL_DEPS which is deprecated and replaced with EXTERNAL");
+        SyncIssue warning = Iterables.getOnlyElement(warnings);
+        assertThat(warning.getType()).isEqualTo(SyncIssue.TYPE_GENERIC);
+        assertThat(warning.getMessage())
+                .isEqualTo(
+                        "Transform 'jarjar' uses scope SUB_PROJECTS_LOCAL_DEPS which is deprecated and replaced with EXTERNAL");
 
     }
 
-    @CompileDynamic
-    static def checkClassFile(@NonNull File jarFile) {
+    private static void checkClassFile(@NonNull File jarFile) throws IOException {
         ZipFile zipFile = new ZipFile(jarFile);
         try {
-            ZipEntry entry = zipFile.getEntry("com/android/tests/basic/Main.class")
-            assertThat(entry).named("Main.class entry").isNotNull()
-            ClassReader classReader = new ClassReader(zipFile.getInputStream(entry))
-            ClassNode mainTestClassNode = new ClassNode(Opcodes.ASM5)
-            classReader.accept(mainTestClassNode, 0)
+            ZipEntry entry = zipFile.getEntry("com/android/tests/basic/Main.class");
+            assertThat(entry).named("Main.class entry").isNotNull();
+            ClassReader classReader = new ClassReader(zipFile.getInputStream(entry));
+            ClassNode mainTestClassNode = new ClassNode(Opcodes.ASM5);
+            classReader.accept(mainTestClassNode, 0);
 
             // Make sure bytecode got rewritten to point to renamed classes.
 
             // search for the onCrate method.
-            //noinspection GroovyUncheckedAssignmentOfMemberOfRawType
-            MethodNode onCreateMethod = mainTestClassNode.methods.find { it.name == "onCreate" };
-            assertThat(onCreateMethod).named("onCreate method").isNotNull();
+            List<MethodNode> methods = mainTestClassNode.methods;
+            Optional<MethodNode> onCreateMethod =
+                    methods.stream().filter(p -> p.name.equals("onCreate")).findFirst();
+            assertThat(onCreateMethod).named("onCreate method").isPresent();
 
             // find the new instruction, and verify it's using the repackaged Gson.
             TypeInsnNode newInstruction = null;
-            int count = onCreateMethod.instructions.size()
+            int count = onCreateMethod.get().instructions.size();
             for (int i = 0; i < count ; i++) {
-                AbstractInsnNode instruction = onCreateMethod.instructions.get(i);
-                if (instruction.opcode == Opcodes.NEW) {
+                AbstractInsnNode instruction = onCreateMethod.get().instructions.get(i);
+                if (instruction.getOpcode() == Opcodes.NEW) {
                     newInstruction = (TypeInsnNode) instruction;
                     break;
                 }
             }
-
             assertThat(newInstruction).named("new instruction").isNotNull();
             assertThat(newInstruction.desc).isEqualTo("com/google/repacked/gson/Gson");
 
@@ -190,5 +197,4 @@ android {
             zipFile.close();
         }
     }
-
 }

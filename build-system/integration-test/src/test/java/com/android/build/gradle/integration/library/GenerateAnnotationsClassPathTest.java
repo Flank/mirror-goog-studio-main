@@ -14,124 +14,139 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static org.junit.Assert.assertFalse;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static org.junit.Assert.assertFalse
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 @CompileStatic
-class GenerateAnnotationsClassPathTest {
+public class GenerateAnnotationsClassPathTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("extractAnnotations")
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("extractAnnotations").create();
 
     @BeforeClass
-    static public void setUpProject() {
-        File use = project.file(
-                "src/main/java/com/android/tests/extractannotations/HelloWorld.java")
+    public static void setUpProject() throws IOException {
+        File use =
+                project.file("src/main/java/com/android/tests/extractannotations/HelloWorld.java");
 
-        use.parentFile.mkdirs()
-        use << """
-import com.example.helloworld.GeneratedClass;
+        use.getParentFile().mkdirs();
 
-public class HelloWorld {
+        TestFileUtils.appendToFile(
+                use,
+                "\n"
+                        + "import com.example.helloworld.GeneratedClass;\n"
+                        + "\n"
+                        + "public class HelloWorld {\n"
+                        + "\n"
+                        + "    public void go() {\n"
+                        + "        GeneratedClass genC = new GeneratedClass();\n"
+                        + "        genC.method();\n"
+                        + "    }\n"
+                        + "}");
 
-    public void go() {
-        GeneratedClass genC = new GeneratedClass();
-        genC.method();
-    }
-}"""
-
-        project.getBuildFile().append('''
-import com.google.common.base.Joiner
-
-android.libraryVariants.all { variant ->
-    def outDir = project.file("$project.buildDir/generated/source/testplugin/$variant.name");
-        def task = project.task(
-                "generateJavaFromPlugin${variant.name.capitalize()}",
-                dependsOn: [variant.mergeResources],
-                type: JavaGeneratingTask) {
-            outputDirectory = outDir
-        }
-        variant.registerJavaGeneratingTask(task, outDir)
-}
-
-android.testVariants.all { variant ->
-    def outDir = project.file("$project.buildDir/generated/source/testplugin/$variant.name");
-        def task = project.task(
-                "generateJavaFromPlugin${variant.name.capitalize()}",
-                type: JavaGeneratingTask) {
-            suffix = "AndroidTest"
-            outputDirectory = outDir
-        }
-        variant.registerJavaGeneratingTask(task, outDir)
-}
-
-public class JavaGeneratingTask extends DefaultTask {
-    @Input
-    String suffix = "";
-
-    @OutputDirectory
-    File outputDirectory
-
-    @TaskAction
-    void execute(IncrementalTaskInputs inputs) {
-        System.err.println('Plugin executed on ' + inputs)
-        File outputFile = new File(outputDirectory, Joiner.on(File.separatorChar).join(
-                "com", "example", "helloworld", "GeneratedClass${suffix}.java"))
-        System.err.println("creating file " + outputFile)
-        if (outputFile.exists()) {
-            outputFile.delete()
-        }
-        outputFile.getParentFile().mkdirs()
-
-        outputFile << """
-package com.example.helloworld;
-
-public class GeneratedClass${suffix} {
-    public void method() {
-        System.out.println("Executed generated method");
-    }
-}
-    """
-    }
-}
-
-
-''')
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "import com.google.common.base.Joiner\n"
+                        + "\n"
+                        + "android.libraryVariants.all { variant ->\n"
+                        + "    def outDir = project.file(\"$project.buildDir/generated/source/testplugin/$variant.name\");\n"
+                        + "        def task = project.task(\n"
+                        + "                \"generateJavaFromPlugin${variant.name.capitalize()}\",\n"
+                        + "                dependsOn: [variant.mergeResources],\n"
+                        + "                type: JavaGeneratingTask) {\n"
+                        + "            outputDirectory = outDir\n"
+                        + "        }\n"
+                        + "        variant.registerJavaGeneratingTask(task, outDir)\n"
+                        + "}\n"
+                        + "\n"
+                        + "android.testVariants.all { variant ->\n"
+                        + "    def outDir = project.file(\"$project.buildDir/generated/source/testplugin/$variant.name\");\n"
+                        + "        def task = project.task(\n"
+                        + "                \"generateJavaFromPlugin${variant.name.capitalize()}\",\n"
+                        + "                type: JavaGeneratingTask) {\n"
+                        + "            suffix = \"AndroidTest\"\n"
+                        + "            outputDirectory = outDir\n"
+                        + "        }\n"
+                        + "        variant.registerJavaGeneratingTask(task, outDir)\n"
+                        + "}\n"
+                        + "\n"
+                        + "public class JavaGeneratingTask extends DefaultTask {\n"
+                        + "    @Input\n"
+                        + "    String suffix = \"\";\n"
+                        + "\n"
+                        + "    @OutputDirectory\n"
+                        + "    File outputDirectory\n"
+                        + "\n"
+                        + "    @TaskAction\n"
+                        + "    void execute(IncrementalTaskInputs inputs) {\n"
+                        + "        System.err.println(\"Plugin executed on \" + inputs)\n"
+                        + "        File outputFile = new File(outputDirectory, Joiner.on(File.separatorChar).join(\n"
+                        + "                \"com\", \"example\", \"helloworld\", \"GeneratedClass${suffix}.java\"))\n"
+                        + "        System.err.println(\"creating file \" + outputFile)\n"
+                        + "        if (outputFile.exists()) {\n"
+                        + "            outputFile.delete()\n"
+                        + "        }\n"
+                        + "        outputFile.getParentFile().mkdirs()\n"
+                        + "\n"
+                        + "        outputFile << \"\"\"\n"
+                        + "package com.example.helloworld;\n"
+                        + "\n"
+                        + "public class GeneratedClass${suffix} {\n"
+                        + "    public void method() {\n"
+                        + "        System.out.println(\"Executed generated method\");\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "    \"\"\"\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "\n"
+                        + "");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     /**
-     * Check variant.registerJavaGeneratingTask() adds output directory to the class path of
-     * the generate annotations task
+     * Check variant.registerJavaGeneratingTask() adds output directory to the class path of the
+     * generate annotations task
      */
     @Test
-    public void "check javaGeneratingTask adds output dir to generate annotations classpath"() {
-        project.execute("clean", "assembleDebug")
+    public void checkJavaGeneratingTaskAddsOutputDirToGenerateAnnotationsClasspath()
+            throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug");
         assertFalse(
                 "Extract annotation should get generated class on path.",
-                project.getBuildResult().getStdout().contains("Not extracting annotations (compilation problems encountered)"))
-        assertThat(project.file("build/generated/source/testplugin/debug/com/example/helloworld/GeneratedClass.java")).exists()
+                project.getBuildResult()
+                        .getStdout()
+                        .contains("Not extracting annotations (compilation problems encountered)"));
+        assertThat(
+                        project.file(
+                                "build/generated/source/testplugin/debug/com/example/helloworld/GeneratedClass.java"))
+                .exists();
     }
 
     @Test
-    public void "check generating java class works for test variant"() {
-        project.execute("compileDebugAndroidTestSource")
-        assertThat(project.file("build/generated/source/testplugin/debugAndroidTest/com/example/helloworld/GeneratedClassAndroidTest.java")).exists()
-
-
+    public void checkGeneratingJavaClassWorksForTestVariant()
+            throws IOException, InterruptedException {
+        project.execute("compileDebugAndroidTestSource");
+        assertThat(
+                        project.file(
+                                "build/generated/source/testplugin/debugAndroidTest/com/example/helloworld/GeneratedClassAndroidTest.java"))
+                .exists();
     }
 }

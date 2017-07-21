@@ -14,56 +14,56 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/**
- * Assemble tests for libMinifyLibDep.
- */
+/** Assemble tests for libMinifyLibDep. */
 @CompileStatic
-class LibMinifyLibDepTest {
+public class LibMinifyLibDepTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("libMinifyLibDep")
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("libMinifyLibDep").create();
 
     @BeforeClass
-    static void setUp() {
-        project.execute("clean", "assembleDebug")
+    public static void setUp() throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void lint() {
-        project.execute("lint")
+    public void lint() throws IOException, InterruptedException {
+        project.execute("lint");
     }
 
     @Test
-    void "check proguard"() {
+    public void checkProguard() {
         File mapping = project.getSubproject("lib").file("build/outputs/mapping/debug/mapping.txt");
         // Check classes are obfuscated unless it is kept by the proguard configuration.
-        assertThat(mapping).containsAllOf(
-                "com.android.tests.basic.StringGetter -> com.android.tests.basic.StringGetter",
-                "com.android.tests.internal.StringGetterInternal -> com.android.tests.a.a")
+        assertThat(mapping)
+                .containsAllOf(
+                        "com.android.tests.basic.StringGetter -> com.android.tests.basic.StringGetter",
+                        "com.android.tests.internal.StringGetterInternal -> com.android.tests.a.a");
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 }

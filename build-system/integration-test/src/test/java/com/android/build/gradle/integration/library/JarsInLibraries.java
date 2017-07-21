@@ -14,89 +14,101 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.testutils.apk.Apk
-import com.google.common.io.Files
-import com.google.common.io.Resources
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+import static com.android.builder.core.BuilderConstants.DEBUG;
 
-import java.nio.charset.Charset
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.Apk;
+import com.google.common.io.Files;
+import com.google.common.io.Resources;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk
-import static com.android.builder.core.BuilderConstants.DEBUG
-
-/**
- * Assemble tests for jars inside libraries as assets, res, java res and actual dependencies.
- */
+/** Assemble tests for jars inside libraries as assets, res, java res and actual dependencies. */
 @CompileStatic
-class JarsInLibraries {
-    byte[] simpleJarDataA
-    byte[] simpleJarDataB
-    byte[] simpleJarDataC
-    byte[] simpleJarDataD
+public class JarsInLibraries {
+    byte[] simpleJarDataA;
+    byte[] simpleJarDataB;
+    byte[] simpleJarDataC;
+    byte[] simpleJarDataD;
     File assetsDir;
     File resRawDir;
     File resourcesDir;
     File libsDir;
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("assets")
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("assets").create();
 
-    private void execute(String... tasks) {
-        project.executor().run(tasks)
+    private void execute(String... tasks) throws IOException, InterruptedException {
+        project.executor().run(tasks);
     }
 
     @Before
-    public void setUp() {
-        simpleJarDataA = Resources.toByteArray(Resources.getResource(JarsInLibraries.class,
-                "/jars/simple-jar-with-A_DoIExist-class.jar"))
-        simpleJarDataB = Resources.toByteArray(Resources.getResource(JarsInLibraries.class,
-                "/jars/simple-jar-with-B_DoIExist-class.jar"))
-        simpleJarDataC = Resources.toByteArray(Resources.getResource(JarsInLibraries.class,
-                "/jars/simple-jar-with-C_DoIExist-class.jar"))
-        simpleJarDataD = Resources.toByteArray(Resources.getResource(JarsInLibraries.class,
-                "/jars/simple-jar-with-D_DoIExist-class.jar"))
+    public void setUp() throws IOException, InterruptedException {
+        simpleJarDataA =
+                Resources.toByteArray(
+                        Resources.getResource(
+                                JarsInLibraries.class,
+                                "/jars/simple-jar-with-A_DoIExist-class.jar"));
+        simpleJarDataB =
+                Resources.toByteArray(
+                        Resources.getResource(
+                                JarsInLibraries.class,
+                                "/jars/simple-jar-with-B_DoIExist-class.jar"));
+        simpleJarDataC =
+                Resources.toByteArray(
+                        Resources.getResource(
+                                JarsInLibraries.class,
+                                "/jars/simple-jar-with-C_DoIExist-class.jar"));
+        simpleJarDataD =
+                Resources.toByteArray(
+                        Resources.getResource(
+                                JarsInLibraries.class,
+                                "/jars/simple-jar-with-D_DoIExist-class.jar"));
 
         // Make directories where we will place jars.
-        assetsDir = project.file("lib/src/main/assets")
-        assetsDir.mkdirs()
-        resRawDir = project.file("lib/src/main/res/raw")
-        resRawDir.mkdirs()
-        resourcesDir = project.file("lib/src/main/resources")
-        resourcesDir.mkdirs()
-        libsDir = project.file("lib/libs")
-        libsDir.mkdirs()
+        assetsDir = project.file("lib/src/main/assets");
+        assetsDir.mkdirs();
+        resRawDir = project.file("lib/src/main/res/raw");
+        resRawDir.mkdirs();
+        resourcesDir = project.file("lib/src/main/resources");
+        resourcesDir.mkdirs();
+        libsDir = project.file("lib/libs");
+        libsDir.mkdirs();
 
         // Add the libs dependency in the library build file.
-        Files.append("\ndependencies {\ncompile fileTree(dir: 'libs', include: '*.jar')\n}\n"
-                .replaceAll("\n", System.getProperty("line.separator")),
-                project.file("lib/build.gradle"), Charset.defaultCharset());
+        TestFileUtils.appendToFile(
+                project.file("lib/build.gradle"),
+                "\ndependencies {\ncompile fileTree(dir: 'libs', include: '*.jar')\n}\n"
+                        .replaceAll("\n", System.getProperty("line.separator")));
 
         // Create some jars.
-        Files.write(simpleJarDataA, new File(libsDir, "a1.jar"))
-        Files.write(simpleJarDataB, new File(assetsDir, "b1.jar"))
-        Files.write(simpleJarDataC, new File(resourcesDir, "c1.jar"))
-        Files.write(simpleJarDataD, new File(resRawDir, "d1.jar"))
+        Files.write(simpleJarDataA, new File(libsDir, "a1.jar"));
+        Files.write(simpleJarDataB, new File(assetsDir, "b1.jar"));
+        Files.write(simpleJarDataC, new File(resourcesDir, "c1.jar"));
+        Files.write(simpleJarDataD, new File(resRawDir, "d1.jar"));
 
         // Run the project.
-        execute("clean", "assembleDebug")
+        execute("clean", "assembleDebug");
     }
 
     @Test
-    void checkJarLocations() {
+    public void checkJarLocations() throws IOException, ProcessException {
         // Obtain the apk file.
         Apk apk = project.getSubproject("app").getApk(DEBUG);
-        assertThat(apk).exists()
+        assertThat(apk).exists();
 
         // a1.jar was placed in libs so it should have been merged into the dex.
         assertThatApk(apk).doesNotContain("jars/a1.jar");
@@ -117,7 +129,7 @@ class JarsInLibraries {
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executor().executeConnectedCheck()
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executor().executeConnectedCheck();
     }
 }

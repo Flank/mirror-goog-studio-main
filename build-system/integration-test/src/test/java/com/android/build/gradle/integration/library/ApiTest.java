@@ -14,48 +14,47 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-/**
- * Assemble tests for api.
- */
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+
+/** Assemble tests for api. */
 @CompileStatic
-class ApiTest {
+public class ApiTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("api")
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("api").create();
 
     @BeforeClass
-    static void setUp() {
-        project.execute("clean", "assembleDebug")
+    public static void setUp() throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void lint() {
-        project.execute("lint")
+    public void lint() throws IOException, InterruptedException {
+        project.execute("lint");
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 
     @Test
@@ -63,8 +62,8 @@ class ApiTest {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
         assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("app/build.gradle")))
-                .isEqualTo("73f4266bf1cf99d3257112d4f46da19060079163")
+                .isEqualTo("73f4266bf1cf99d3257112d4f46da19060079163");
         assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("lib/build.gradle")))
-                .isEqualTo("446a4840e3d4542e039a25267cd9a6ed726e3529")
+                .isEqualTo("446a4840e3d4542e039a25267cd9a6ed726e3529");
     }
 }

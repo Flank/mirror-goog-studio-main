@@ -14,53 +14,56 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library
+package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar
-/**
- * Assemble tests for minifyLib with provided dependency
- */
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.ide.common.process.ProcessException;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+
+/** Assemble tests for minifyLib with provided dependency */
 @CompileStatic
-class MinifyLibProvidedDepTest {
+public class MinifyLibProvidedDepTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("libMinify")
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("libMinify").create();
 
     @BeforeClass
-    static void setUp() {
-        project.buildFile << """
-dependencies {
-    provided 'com.android.support:appcompat-v7:$GradleTestProject.SUPPORT_LIB_VERSION'
-}
-"""
+    public static void setUp() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                ""
+                        + "dependencies {\n"
+                        + "    provided 'com.android.support:appcompat-v7:"
+                        + GradleTestProject.SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "}\n");
 
-        project.execute("clean", "build")
+        project.execute("clean", "build");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void "check library has its fields obfuscated"() {
+    public void checkLibraryHasItsFieldsObfuscated() throws IOException {
         // test whether a library project has its fields obfuscated
         TestFileUtils.checkContent(
                 project.getOutputFile("mapping", "release", "mapping.txt"),
-                "int obfuscatedInt -> a")
+                "int obfuscatedInt -> a");
     }
 
     @Test
-    void "check R class is not packaged"() {
-        assertThatAar(project.getAar("debug")).doesNotContainClass("Lcom/android/tests/basic.R;")
+    public void checkRClassIsNotPackaged() throws IOException, ProcessException {
+        assertThatAar(project.getAar("debug")).doesNotContainClass("Lcom/android/tests/basic.R;");
     }
 }
