@@ -21,6 +21,7 @@ import static com.android.SdkConstants.GRADLE_PLUGIN_RECOMMENDED_VERSION;
 import static com.android.SdkConstants.SUPPORT_LIB_GROUP_ID;
 import static com.android.ide.common.repository.GoogleMavenRepository.MAVEN_GOOGLE_CACHE_DIR_KEY;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
+import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
 import static com.android.tools.lint.checks.ManifestDetector.TARGET_NEWER;
 import static com.android.tools.lint.detector.api.LintUtils.guessGradleLocation;
 import static com.google.common.base.Charsets.UTF_8;
@@ -244,6 +245,17 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             Severity.WARNING,
             IMPLEMENTATION).setEnabledByDefault(false);
 
+    /** The API version is set too low. */
+    public static final Issue MIN_SDK_TOO_LOW = Issue.create(
+            "MinSdkTooLow",
+            "API Version Too Low",
+            "The value of the `minSdkVersion` property is too low and can be incremented" +
+                    "without noticeably reducing the number of supported devices.",
+            Category.CORRECTNESS,
+            4,
+            Severity.WARNING,
+            IMPLEMENTATION).setEnabledByDefault(false);
+
     /** Accidentally using octal numbers */
     public static final Issue ACCIDENTAL_OCTAL = Issue.create(
             "AccidentalOctal",
@@ -446,7 +458,8 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
                     int highest = context.getClient().getHighestKnownApiLevel();
                     String label = "Update targetSdkVersion to " + highest;
-                    LintFix fix = fix().replace().all().with(Integer.toString(highest)).build();
+                    LintFix fix = fix().name(label)
+                            .replace().all().with(Integer.toString(highest)).build();
                     report(context, valueCookie, TARGET_NEWER, message, fix);
                 }
                 if (version > 0) {
@@ -459,6 +472,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                 int version = getSdkVersion(value);
                 if (version > 0) {
                     minSdkVersion = version;
+                    checkMinSdkVersion(context, version, valueCookie);
                 } else {
                     checkIntegerAsString(context, value, valueCookie);
                 }
@@ -622,6 +636,20 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             report(context, statementCookie, DEV_MODE_OBSOLETE,
                     "You no longer need a `dev` mode to enable multi-dexing during "
                             + "development, and this can break API version checks");
+        }
+    }
+
+    private void checkMinSdkVersion(Context context, int version, Object valueCookie) {
+        if (version > 0 && version < LOWEST_ACTIVE_API) {
+            String message = ""
+                             + "The value of minSdkVersion is too low. It can be incremented\n"
+                             + "without noticeably reducing the number of supported devices.";
+
+            String label = "Update minSdkVersion to " + LOWEST_ACTIVE_API;
+            LintFix fix = fix().name(label).replace()
+                    .text(Integer.toString(version))
+                    .with(Integer.toString(LOWEST_ACTIVE_API)).build();
+            report(context, valueCookie, MIN_SDK_TOO_LOW, message, fix);
         }
     }
 

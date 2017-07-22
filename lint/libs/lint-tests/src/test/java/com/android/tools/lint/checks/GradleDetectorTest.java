@@ -17,6 +17,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.GRADLE_PLUGIN_MINIMUM_VERSION;
 import static com.android.ide.common.repository.GoogleMavenRepository.MAVEN_GOOGLE_CACHE_DIR_KEY;
+import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
 import static com.android.tools.lint.checks.GradleDetector.ACCIDENTAL_OCTAL;
 import static com.android.tools.lint.checks.GradleDetector.BUNDLED_GMS;
 import static com.android.tools.lint.checks.GradleDetector.COMPATIBILITY;
@@ -26,6 +27,7 @@ import static com.android.tools.lint.checks.GradleDetector.DEV_MODE_OBSOLETE;
 import static com.android.tools.lint.checks.GradleDetector.GRADLE_GETTER;
 import static com.android.tools.lint.checks.GradleDetector.GRADLE_PLUGIN_COMPATIBILITY;
 import static com.android.tools.lint.checks.GradleDetector.HIGH_APP_VERSION_CODE;
+import static com.android.tools.lint.checks.GradleDetector.MIN_SDK_TOO_LOW;
 import static com.android.tools.lint.checks.GradleDetector.NOT_INTERPOLATED;
 import static com.android.tools.lint.checks.GradleDetector.PATH;
 import static com.android.tools.lint.checks.GradleDetector.PLUS;
@@ -450,6 +452,41 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "@@ -4 +4\n"
                         + "-     compileSdkVersion 18\n"
                         + "+     compileSdkVersion 19\n");
+    }
+
+    public void testMinSdkVersion() throws Exception {
+        String expectedNewVersion = String.valueOf(LOWEST_ACTIVE_API);
+        String expected = ""
+                + "build.gradle:8: Warning: The value of minSdkVersion is too low. It can be incremented\n"
+                + "without noticeably reducing the number of supported devices. [MinSdkTooLow]\n"
+                + "        minSdkVersion 7\n"
+                + "        ~~~~~~~~~~~~~~~\n"
+                + "0 errors, 1 warnings\n";
+
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion 19\n"
+                        + "    buildToolsVersion \"19.0.0\"\n"
+                        + "\n"
+                        + "    defaultConfig {\n"
+                        + "        minSdkVersion 7\n"
+                        + "        targetSdkVersion 19\n"
+                        + "        versionCode 1\n"
+                        + "        versionName \"1.0\"\n"
+                        + "    }\n"
+                        + "}\n"))
+                .issues(MIN_SDK_TOO_LOW)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expect(expected)
+                .expectFixDiffs(""
+                        + "Fix for build.gradle line 7: Update minSdkVersion to 14:\n"
+                        + "@@ -8 +8\n"
+                        + "-         minSdkVersion 7\n"
+                        + "+         minSdkVersion " + expectedNewVersion + "\n");
     }
 
     public void testIncompatiblePlugin() throws Exception {
