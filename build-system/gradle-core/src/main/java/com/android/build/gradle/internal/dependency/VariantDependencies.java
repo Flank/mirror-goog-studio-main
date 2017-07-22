@@ -253,7 +253,8 @@ public class VariantDependencies {
             filterOutBadArtifacts(compileClasspath);
             final AttributeContainer compileAttributes = compileClasspath.getAttributes();
             applyVariantAttributes(compileAttributes, buildType, consumptionFlavorMap);
-            compileAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
+            compileAttributes.attribute(
+                    Usage.USAGE_ATTRIBUTE, factory.named(Usage.class, Usage.JAVA_API));
             compileAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
 
             Configuration annotationProcessor =
@@ -265,7 +266,8 @@ public class VariantDependencies {
             // the annotation processor is using its dependencies for running the processor, so we need
             // all the runtime graph.
             final AttributeContainer annotationAttributes = annotationProcessor.getAttributes();
-            annotationAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
+            annotationAttributes.attribute(
+                    Usage.USAGE_ATTRIBUTE, factory.named(Usage.class, Usage.JAVA_RUNTIME));
             applyVariantAttributes(annotationAttributes, buildType, consumptionFlavorMap);
 
             final String runtimeClasspathName = variantName + "RuntimeClasspath";
@@ -278,7 +280,8 @@ public class VariantDependencies {
             filterOutBadArtifacts(runtimeClasspath);
             final AttributeContainer runtimeAttributes = runtimeClasspath.getAttributes();
             applyVariantAttributes(runtimeAttributes, buildType, consumptionFlavorMap);
-            runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
+            runtimeAttributes.attribute(
+                    Usage.USAGE_ATTRIBUTE, factory.named(Usage.class, Usage.JAVA_RUNTIME));
             runtimeAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
 
             Configuration wearApp = null;
@@ -293,7 +296,8 @@ public class VariantDependencies {
                 final AttributeContainer wearAttributes = wearApp.getAttributes();
                 applyVariantAttributes(wearAttributes, buildType, consumptionFlavorMap);
                 // because the APK is published to Runtime, then we need to make sure this one consumes RUNTIME as well.
-                wearAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
+                wearAttributes.attribute(
+                        Usage.USAGE_ATTRIBUTE, factory.named(Usage.class, Usage.JAVA_RUNTIME));
                 wearAttributes.attribute(
                         AndroidTypeAttr.ATTRIBUTE,
                         factory.named(AndroidTypeAttr.class, AndroidTypeAttr.APK));
@@ -326,7 +330,8 @@ public class VariantDependencies {
                             runtimeElementsAttributes, buildType, publicationFlavorMap);
                     VariantAttr variantNameAttr = factory.named(VariantAttr.class, variantName);
                     runtimeElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
-                    runtimeElementsAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_RUNTIME);
+                    runtimeElementsAttributes.attribute(
+                            Usage.USAGE_ATTRIBUTE, factory.named(Usage.class, Usage.JAVA_RUNTIME));
                     runtimeElementsAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, publishType);
 
                     // if the variant is not a library, then the publishing configuration should
@@ -343,7 +348,8 @@ public class VariantDependencies {
                     final AttributeContainer apiElementsAttributes = apiElements.getAttributes();
                     applyVariantAttributes(apiElementsAttributes, buildType, publicationFlavorMap);
                     apiElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
-                    apiElementsAttributes.attribute(Usage.USAGE_ATTRIBUTE, Usage.FOR_COMPILE);
+                    apiElementsAttributes.attribute(
+                            Usage.USAGE_ATTRIBUTE, factory.named(Usage.class, Usage.JAVA_API));
                     apiElementsAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, publishType);
                     // apiElements only extends the api classpaths.
                     apiElements.setExtendsFrom(apiClasspaths);
