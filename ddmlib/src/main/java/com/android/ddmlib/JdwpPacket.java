@@ -17,6 +17,7 @@
 
 package com.android.ddmlib;
 
+import com.android.ddmlib.jdwp.JdwpCommands;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -287,6 +288,29 @@ public final class JdwpPacket {
 
     public boolean is(int cmdSet, int cmd) {
         return cmdSet == mCmdSet && cmd == mCmd;
+    }
+
+    public void log(String action) {
+        if (Log.is(Log.LogLevel.DEBUG)) {
+            if (isReply()) {
+                Log.d(
+                        "jdwp",
+                        String.format(
+                                "%s: jdwp reply: id=%d, length=%d, flags=%d, error=%d",
+                                action, mId, mLength, mFlags, mErrCode));
+            } else {
+                Log.d(
+                        "jdwp",
+                        String.format(
+                                "%s: jdwp request: id=%d, length=%d, flags=%d, cmdSet=%s, cmd=%s",
+                                action,
+                                mId,
+                                mLength,
+                                mFlags,
+                                JdwpCommands.commandSetToString(mCmdSet),
+                                JdwpCommands.commandToString(mCmdSet, mCmd)));
+            }
+        }
     }
 }
 

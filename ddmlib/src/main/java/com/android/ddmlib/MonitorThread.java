@@ -20,7 +20,6 @@ package com.android.ddmlib;
 import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.jdwp.JdwpExtension;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -309,6 +308,7 @@ final class MonitorThread extends Thread {
              */
             JdwpPacket packet = client.getJdwpPacket();
             while (packet != null) {
+                packet.log("Client: received jdwp packet");
                 client.incoming(packet, client.getDebugger());
 
                 packet.consume();
@@ -459,7 +459,7 @@ final class MonitorThread extends Thread {
                 Log.v("ddms", "Forwarding dbg req 0x"
                         + Integer.toHexString(packet.getId()) + " to "
                         + dbg.getClient());
-
+                packet.log("Debugger: forwarding jdwp packet from Java Debugger to Client");
                 dbg.incoming(packet, dbg.getClient());
 
                 packet.consume();

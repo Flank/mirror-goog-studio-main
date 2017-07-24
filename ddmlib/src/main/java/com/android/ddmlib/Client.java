@@ -17,11 +17,10 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
-import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener;
+import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpProtocol;
-
 import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
@@ -645,6 +644,7 @@ public class Client extends JdwpAgent {
             return;
         }
 
+        packet.log("Client: sending jdwp packet to Android Device");
         // Synchronizing on this variable is still useful as we do not want to threads
         // reading at the same time from the same channel, and the only change that
         // can happen to this channel is to be closed and mChan become null.

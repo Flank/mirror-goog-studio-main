@@ -19,7 +19,6 @@ package com.android.ddmlib;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.collect.Sets;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.text.SimpleDateFormat;
@@ -251,6 +250,10 @@ public final class Log {
         sLevel = logLevel;
     }
 
+    static boolean is(@NonNull LogLevel logLevel) {
+        return logLevel.getPriority() >= sLevel.getPriority();
+    }
+
     /**
      * @deprecated Use {@link #addLogger(ILogOutput)} instead. <p>
      * Sets the {@link ILogOutput} to use to print the logs. If not set, {@link System#out}
@@ -348,7 +351,7 @@ public final class Log {
     }
 
     private static void println(LogLevel logLevel, String tag, String message) {
-        if (logLevel.getPriority() < sLevel.getPriority()) {
+        if (!is(logLevel)) {
             return;
         }
 

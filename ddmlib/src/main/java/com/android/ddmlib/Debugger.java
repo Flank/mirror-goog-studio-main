@@ -19,7 +19,6 @@ package com.android.ddmlib;
 import com.android.annotations.NonNull;
 import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ddmlib.jdwp.JdwpAgent;
-
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -322,6 +321,7 @@ public class Debugger extends JdwpAgent {
      */
     @Override
     protected void send(@NonNull JdwpPacket packet) throws IOException {
+        packet.log("Debugger: forwarding jdwp packet from Client to Java Debugger");
         synchronized (this) {
             if (mChannel == null) {
                 /*
