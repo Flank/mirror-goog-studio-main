@@ -15,6 +15,8 @@
  */
 package com.android.ddmlib.jdwp;
 
+import com.android.annotations.NonNull;
+
 /**
  * JDWP command constants as specified <a
  * href="http://docs.oracle.com/javase/7/docs/platform/jpda/jdwp/jdwp-protocol.html">here</a>
@@ -137,6 +139,7 @@ public class JdwpCommands {
     public static final int SET_EVENT = 64;
     public static final int CMD_EVENT_COMPOSITE = 100;
 
+    @NonNull
     public static String commandSetToString(int cmdSet) {
         switch (cmdSet) {
             case SET_VM:
@@ -178,6 +181,7 @@ public class JdwpCommands {
         }
     }
 
+    @NonNull
     public static String commandToString(int cmdSet, int cmd) {
         switch (cmdSet) {
             case SET_VM:
@@ -487,6 +491,7 @@ public class JdwpCommands {
         }
     }
 
+    @NonNull
     private static String unknownCommandToString(int cmdSet, int command) {
         return String.format("CMD_%s_%02X", commandSetToString(cmdSet).substring(4), command);
     }

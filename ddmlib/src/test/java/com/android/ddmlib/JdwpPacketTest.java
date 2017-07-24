@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 
 public class JdwpPacketTest extends TestCase {
 
-    private LogCapture logCapture = new LogCapture();
+    private final LogCapture logCapture = new LogCapture();
 
     @Override
     protected void setUp() throws Exception {
@@ -37,8 +37,12 @@ public class JdwpPacketTest extends TestCase {
 
     @Override
     protected void tearDown() throws Exception {
-        Log.setLevel(DdmPreferences.getLogLevel());
-        super.tearDown();
+        try {
+            Log.removeLogger(logCapture);
+            Log.setLevel(DdmPreferences.getLogLevel());
+        } finally {
+            super.tearDown();
+        }
     }
 
     public void testLoggingDisabled() throws Exception {

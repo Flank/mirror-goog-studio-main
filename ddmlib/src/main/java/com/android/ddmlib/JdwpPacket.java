@@ -17,6 +17,7 @@
 
 package com.android.ddmlib;
 
+import com.android.annotations.NonNull;
 import com.android.ddmlib.jdwp.JdwpCommands;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -40,7 +41,7 @@ public final class JdwpPacket {
 
     private static final int REPLY_PACKET = 0x80;
 
-    private ByteBuffer mBuffer;
+    @NonNull private final ByteBuffer mBuffer;
     private int mLength;
     private int mId;
     private int mFlags;
@@ -51,10 +52,8 @@ public final class JdwpPacket {
     private static int sSerialId = 0x40000000;
 
 
-    /**
-     * Create a new, empty packet, in "buf".
-     */
-    JdwpPacket(ByteBuffer buf) {
+    /** Create a new, empty packet, in "buf". */
+    JdwpPacket(@NonNull ByteBuffer buf) {
         mBuffer = buf;
     }
 
@@ -290,8 +289,8 @@ public final class JdwpPacket {
         return cmdSet == mCmdSet && cmd == mCmd;
     }
 
-    public void log(String action) {
-        if (Log.is(Log.LogLevel.DEBUG)) {
+    public void log(@NonNull String action) {
+        if (Log.isAtLeast(Log.LogLevel.DEBUG)) {
             if (isReply()) {
                 Log.d(
                         "jdwp",

@@ -250,7 +250,7 @@ public final class Log {
         sLevel = logLevel;
     }
 
-    static boolean is(@NonNull LogLevel logLevel) {
+    static boolean isAtLeast(@NonNull LogLevel logLevel) {
         return logLevel.getPriority() >= sLevel.getPriority();
     }
 
@@ -351,7 +351,7 @@ public final class Log {
     }
 
     private static void println(LogLevel logLevel, String tag, String message) {
-        if (!is(logLevel)) {
+        if (!isAtLeast(logLevel)) {
             return;
         }
 
