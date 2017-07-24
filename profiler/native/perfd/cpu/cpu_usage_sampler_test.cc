@@ -62,7 +62,7 @@ TEST(CpuUsageSamplerTest, SampleOneApp) {
 
   // The following values are calculated manually from test files.
   const int64_t kAppCpuTime = 13780;
-  const int64_t kSystemCpuTime = 25429780;
+  const int64_t kSystemCpuTime = 25299780;
   const int64_t kElapsedTime = 1175801430;
 
   Daemon::Utilities utilities("");
