@@ -16,14 +16,15 @@
 
 package com.android.build.gradle.integration.testing;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
-import static com.google.common.truth.Truth.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
+import com.android.testutils.truth.MoreTruth;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.Collection;
@@ -47,7 +48,9 @@ public class AndroidTestUtilTest {
         //noinspection SpellCheckingInspection
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "dependencies { androidTestUtil 'com.linkedin.testbutler:test-butler-app:1.3.1@apk' }\n");
+                "dependencies { \n"
+                        + "androidTestUtil 'com.android.support.test:orchestrator:1.0.0'\n"
+                        + "}\n");
 
         AndroidProject model = project.model().getSingle().getOnlyModel();
         Collection<File> additionalRuntimeApks =
@@ -55,8 +58,24 @@ public class AndroidTestUtilTest {
                                 ModelHelper.getDebugVariant(model).getExtraAndroidArtifacts())
                         .getAdditionalRuntimeApks();
 
-        File testButler = Iterables.getOnlyElement(additionalRuntimeApks);
-        assertThat(testButler).isFile();
-        assertThat(testButler.getName()).isEqualTo("test-butler-app-1.3.1.apk");
+        additionalRuntimeApks.forEach(apk -> MoreTruth.assertThat(apk).isFile());
+        assertThat(Iterables.transform(additionalRuntimeApks, File::getName))
+                .containsExactly("orchestrator-1.0.0.apk", "test-services-1.0.0.apk");
+    }
+
+    @Test
+    public void nonApkDependency() throws Exception {
+        //noinspection SpellCheckingInspection
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "dependencies { \n"
+                        + "androidTestUtil 'com.android.support.test:orchestrator:1.0.0'\n"
+                        + "androidTestUtil 'com.google.guava:guava:19.0'\n"
+                        + "}\n");
+
+        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+        assertThat(model).hasSingleIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
+        SyncIssue issue = model.getSyncIssues().iterator().next();
+        assertThat(issue.getMessage()).contains("guava");
     }
 }

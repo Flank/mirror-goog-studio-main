@@ -45,6 +45,7 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.DeviceProviderInstrumentTestTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -616,12 +617,22 @@ public class ModelBuilder implements ToolingModelBuilder {
                     scope.getGlobalScope()
                             .getProject()
                             .getConfigurations()
-                            .findByName(SdkConstants.TEST_HELPERS_CONFIGURATION);
+                            .findByName(SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION);
 
             // This may be the case with the experimental plugin.
             if (testHelpers != null) {
                 additionalRuntimeApks.addAll(testHelpers.getFiles());
             }
+
+            DeviceProviderInstrumentTestTask.checkForNonApks(
+                    additionalRuntimeApks,
+                    message ->
+                            syncIssues.add(
+                                    new SyncIssueImpl(
+                                            SyncIssue.TYPE_GENERIC,
+                                            SyncIssue.SEVERITY_ERROR,
+                                            null,
+                                            message)));
 
             TestOptions testOptionsDsl = scope.getGlobalScope().getExtension().getTestOptions();
             testOptions =

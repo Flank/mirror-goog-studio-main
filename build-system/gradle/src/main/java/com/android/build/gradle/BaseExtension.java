@@ -343,7 +343,7 @@ public abstract class BaseExtension implements AndroidConfig {
         // running task, so that we can install all the found APKs before running tests.
         createConfiguration(
                 project.getConfigurations(),
-                SdkConstants.TEST_HELPERS_CONFIGURATION,
+                SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION,
                 "Additional APKs used during instrumentation testing.",
                 true);
 

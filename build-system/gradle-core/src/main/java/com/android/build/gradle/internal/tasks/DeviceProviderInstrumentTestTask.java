@@ -48,15 +48,23 @@ import com.android.builder.testing.api.TestException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
+import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.GradleException;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.Nullable;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
@@ -73,6 +81,9 @@ import org.xml.sax.SAXException;
  * Run instrumentation tests for a given variant
  */
 public class DeviceProviderInstrumentTestTask extends BaseTask implements AndroidTestTask {
+
+    private static final Predicate<File> IS_APK =
+            file -> SdkConstants.EXT_ANDROID_PACKAGE.equals(Files.getFileExtension(file.getName()));
 
     private interface TestRunnerFactory {
         TestRunner build(@Nullable File splitSelectExec, @NonNull ProcessExecutor processExecutor);
@@ -98,6 +109,11 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
     protected void runTests() throws DeviceException, IOException, InterruptedException,
             TestRunner.NoAuthorizedDeviceFoundException, TestException,
             ParserConfigurationException, SAXException {
+        checkForNonApks(
+                buddyApks.getFiles(),
+                message -> {
+                    throw new InvalidUserDataException(message);
+                });
 
         File resultsOutDir = getResultsDir();
         FileUtils.cleanOutputDir(resultsOutDir);
@@ -170,6 +186,21 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
         }
 
         testFailed = false;
+    }
+
+    public static void checkForNonApks(
+            @NonNull Collection<File> buddyApksFiles, @NonNull Consumer<String> errorHandler) {
+        List<File> nonApks =
+                buddyApksFiles.stream().filter(IS_APK.negate()).collect(Collectors.toList());
+        if (!nonApks.isEmpty()) {
+            Collections.sort(nonApks);
+            String message =
+                    String.format(
+                            "Not all files in %s configuration are APKs: %s",
+                            SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION,
+                            Joiner.on(' ').join(nonApks));
+            errorHandler.accept(message);
+        }
     }
 
     /**
@@ -440,7 +471,8 @@ public class DeviceProviderInstrumentTestTask extends BaseTask implements Androi
             task.buddyApks =
                     MoreObjects.firstNonNull(
                             project.getConfigurations()
-                                    .findByName(SdkConstants.TEST_HELPERS_CONFIGURATION),
+                                    .findByName(
+                                            SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION),
                             project.files());
 
             task.setEnabled(deviceProvider.isConfigured());
