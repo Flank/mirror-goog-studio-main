@@ -428,6 +428,13 @@ public class FolderConfigurationTest extends TestCase {
         assertEquals("car", config.getLocaleQualifier().getLanguage());
     }
 
+    public void testVr() {
+        FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-vrheadset");
+        assertNotNull(config);
+        assertNotNull(config.getUiModeQualifier());
+        assertEquals(UiMode.VR_HEADSET, config.getUiModeQualifier().getValue());
+    }
+
     public void testIsMatchForBcp47() {
         FolderConfiguration blankFolder = FolderConfiguration.getConfigForFolder("values");
         FolderConfiguration enFolder = FolderConfiguration.getConfigForFolder("values-en");

@@ -26,7 +26,8 @@ public enum UiMode implements ResourceEnum {
     DESK("desk", "Desk Dock", 8),
     TELEVISION("television", "Television", 13),
     APPLIANCE("appliance", "Appliance", 16),
-    WATCH("watch", "Watch", 20);
+    WATCH("watch", "Watch", 20),
+    VR_HEADSET("vrheadset", "VR Headset", 26);
 
     private final String mValue;
     private final String mDisplayValue;
