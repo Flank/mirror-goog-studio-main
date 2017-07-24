@@ -282,6 +282,8 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/amazonaws/aws-java-sdk-workspaces/1.11.18:jar",
         "//prebuilts/tools/common/m2/repository/com/amazonaws/aws-java-sdk/1.11.18:jar",
         "//prebuilts/tools/common/m2/repository/com/andkulikov/transitionseverywhere/1.6.9:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/multidex-instrumentation/1.0.2:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/multidex/1.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/tools/build/transform-api/1.5.0:jar",
         "//prebuilts/tools/common/m2/repository/com/artemzin/rxjava/proguard-rules/1.1.0.0:aar",
         "//prebuilts/tools/common/m2/repository/com/automattic/rest/1.0.7:aar",

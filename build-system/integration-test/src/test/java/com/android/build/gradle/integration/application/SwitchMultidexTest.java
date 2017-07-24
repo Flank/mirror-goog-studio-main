@@ -106,6 +106,7 @@ public class SwitchMultidexTest {
                                 "Landroid/support/multidex/MultiDex;",
                                 "Landroid/support/multidex/MultiDexApplication;",
                                 "Landroid/support/multidex/MultiDexExtractor$1;",
+                                "Landroid/support/multidex/MultiDexExtractor$ExtractedDex;",
                                 "Landroid/support/multidex/MultiDexExtractor;",
                                 "Landroid/support/multidex/ZipUtil$CentralDirectory;",
                                 "Landroid/support/multidex/ZipUtil;",
