@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,50 +14,41 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification
-import com.android.build.gradle.options.BooleanOption
-import com.android.utils.FileUtils
-import com.android.utils.SdkUtils
-import groovy.transform.CompileStatic
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-/**
- * Tests the error message rewriting logic.
- */
-@CompileStatic
-class MessageRewriteTest {
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.utils.FileUtils;
+import org.junit.Rule;
+import org.junit.Test;
 
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("flavored")
-            .withoutNdk()
-            .create()
+/** Tests the error message rewriting logic. */
+public class MessageRewriteTest {
 
-    @BeforeClass
-    public static void assemble() {
-        project.execute('assembleDebug')
-    }
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("flavored").withoutNdk().create();
 
     @Test
-    public void "invalid layout file"() {
-        TemporaryProjectModification.doTest(project) {
-            it.replaceInFile("src/main/res/layout/main.xml", "</LinearLayout>", "");
-            GradleBuildResult result =
-                    project.executor()
-                            .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
-                            .expectFailure()
-                            .run("assembleF1Debug")
-            assertThat(result.getStderr()).contains(
-                    FileUtils.join("src", "main", "res", "layout", "main.xml"))
-        }
+    public void invalidLayoutFile() throws Exception {
+        project.execute("assembleDebug");
+        TemporaryProjectModification.doTest(
+                project,
+                it -> {
+                    it.replaceInFile("src/main/res/layout/main.xml", "</LinearLayout>", "");
+                    GradleBuildResult result =
+                            project.executor()
+                                    .with(BooleanOption.IDE_INVOKED_FROM_IDE, true)
+                                    .expectFailure()
+                                    .run("assembleF1Debug");
+                    assertThat(result.getStderr())
+                            .contains(FileUtils.join("src", "main", "res", "layout", "main.xml"));
+                });
 
-        project.execute('assembleDebug')
+        project.execute("assembleDebug");
     }
 }

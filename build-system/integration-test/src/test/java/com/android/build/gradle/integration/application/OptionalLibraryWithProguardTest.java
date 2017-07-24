@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,50 +14,45 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 /**
  * Test for the new optional library mechanism when a library dependency uses some now optional
  * classes and runs proguard, in which case proguard needs to see the optional classes.
  */
-@RunWith(FilterableParameterized)
-@CompileStatic
-class OptionalLibraryWithProguardTest {
+@RunWith(FilterableParameterized.class)
+public class OptionalLibraryWithProguardTest {
 
     @Parameterized.Parameters(name = "useProguard = {0}")
-    public static Collection<Object[]> data() {
-        return [
-                [true] as Object[],
-                [false] as Object[],
-        ]
+    public static Object[][] data() {
+        return new Boolean[][] {{true}, {false}};
     }
 
     @Parameterized.Parameter(0)
-    public boolean useProguard
+    public boolean useProguard;
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("optionalLibInLibWithProguard")
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("optionalLibInLibWithProguard").create();
 
     @Before
     public void chooseShrinker() throws Exception {
         if (!useProguard) {
-            ShrinkerTestUtils.enableShrinker(project.getSubproject("app"), "debug")
+            ShrinkerTestUtils.enableShrinker(project.getSubproject("app"), "debug");
         }
     }
 
     @Test
-    void "test that proguard compiles with optional classes"() {
-        project.execute("clean", "app:assembleDebug")
+    public void testThatProguardCompilesWithOptionalClasses() throws Exception {
+        project.execute("clean", "app:assembleDebug");
     }
 }

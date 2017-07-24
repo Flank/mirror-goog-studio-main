@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,50 +14,30 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.Variant
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static org.junit.Assert.assertEquals;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static org.junit.Assert.assertEquals
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Variant;
+import org.junit.Rule;
+import org.junit.Test;
 
-/**
- * Assemble tests for filteredOutBuildType.
- */
-@CompileStatic
-class FilteredOutBuildTypeTest {
-    @ClassRule
-    static public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestProject("filteredOutBuildType")
-                    .create()
-
-    static AndroidProject model
-
-    @BeforeClass
-    static void setUp() {
-        model = project.executeAndReturnModel("clean", "assemble").getOnlyModel()
-    }
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
-        model = null
-    }
+/** Assemble tests for filteredOutBuildType. */
+public class FilteredOutBuildTypeTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("filteredOutBuildType").create();
 
     @Test
-    void "check filtered out variant isn't in model"() {
-        assertThat(project.model().getTaskList()).doesNotContain("assembleDebug")
+    public void checkFilteredOutVariantIsNotInModel() throws Exception {
+        AndroidProject model = project.executeAndReturnModel("clean", "assemble").getOnlyModel();
+        assertThat(project.model().getTaskList()).doesNotContain("assembleDebug");
         // Load the custom model for the project
-        assertEquals("Variant Count", 1, model.getVariants().size())
-        Variant variant = model.getVariants().iterator().next()
-        assertEquals("Variant name", "release", variant.getBuildType())
+        assertEquals("Variant Count", 1, model.getVariants().size());
+        Variant variant = model.getVariants().iterator().next();
+        assertEquals("Variant name", "release", variant.getBuildType());
     }
 }

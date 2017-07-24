@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,37 +14,31 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.utils.FileUtils
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.testutils.truth.MoreTruth.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.utils.FileUtils;
+import java.io.File;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
- * Check Jacoco doesn't get broken with annotation processor that dumps .java files in the
- * compiler out folder.
+ * Check Jacoco doesn't get broken with annotation processor that dumps .java files in the compiler
+ * out folder.
  */
-@CompileStatic
-class JacocoWithButterKnifeTest {
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("jacocoWithButterKnife")
-            .withoutNdk()
-            .create()
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
-    }
+public class JacocoWithButterKnifeTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("jacocoWithButterKnife")
+                    .withoutNdk()
+                    .create();
 
     @Test
-    void build() {
-        project.execute("transformClassesWithJacocoForDebug")
+    public void build() throws Exception {
+        project.execute("transformClassesWithJacocoForDebug");
 
         File javaFile =
                 FileUtils.join(
@@ -58,7 +52,7 @@ class JacocoWithButterKnifeTest {
                         "test",
                         "jacoco",
                         "annotation",
-                        "BindActivity\$\$ViewBinder.java")
+                        "BindActivity$$ViewBinder.java");
         assertThat(javaFile).exists();
     }
 }

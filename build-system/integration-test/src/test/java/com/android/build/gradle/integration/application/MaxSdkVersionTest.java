@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,39 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-/**
- * Assemble tests for maxSdkVersion.
- */
-@CompileStatic
-class MaxSdkVersionTest {
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("maxSdkVersion")
-            .create()
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import org.junit.Rule;
+import org.junit.Test;
 
-    @BeforeClass
-    static void setUp() {
-        project.execute("clean", "assembleDebug")
-    }
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
-    }
+/** Assemble tests for maxSdkVersion. */
+public class MaxSdkVersionTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("maxSdkVersion").create();
 
     @Test
-    void maxSdkVersion() {
-        assertThat(project.getApk("f1", "debug")).hasMaxSdkVersion(21)
-        assertThat(project.getApk("f2", "debug")).hasMaxSdkVersion(19)
+    public void maxSdkVersion() throws Exception {
+        project.execute("clean", "assembleDebug");
+        assertThat(project.getApk("f1", "debug")).hasMaxSdkVersion(21);
+        assertThat(project.getApk("f2", "debug")).hasMaxSdkVersion(19);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,62 +14,44 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.build.gradle.integration.common.utils.SourceProviderHelper
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.ProductFlavorContainer
-import com.android.builder.model.SourceProviderContainer
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import static com.android.builder.core.VariantType.ANDROID_TEST;
+import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
-import static com.android.builder.core.VariantType.ANDROID_TEST
-import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertFalse
-import static org.junit.Assert.assertNotNull
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ProductFlavorContainer;
+import com.android.builder.model.SourceProviderContainer;
+import java.io.File;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/**
- * Assemble tests for migrated.
- */
-@CompileStatic
-class MigratedTest {
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("migrated")
-            .create()
-
-    static AndroidProject model
-
-    @BeforeClass
-    static void setUp() {
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
-    }
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
-        model = null
-    }
+/** Assemble tests for migrated. */
+public class MigratedTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("migrated").create();
 
     @Test
-    void "check model reflect migrated source providers"() throws Exception {
-        File projectDir = project.getTestDir()
+    public void checkModelReflectsMigratedSourceProviders() throws Exception {
+        AndroidProject model =
+                project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
+        File projectDir = project.getTestDir();
 
-        assertFalse("Library Project", model.isLibrary())
-        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, model.getProjectType())
+        assertFalse("Library Project", model.isLibrary());
+        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, model.getProjectType());
 
-        ProductFlavorContainer defaultConfig = model.getDefaultConfig()
+        ProductFlavorContainer defaultConfig = model.getDefaultConfig();
 
-        new SourceProviderHelper(model.getName(), projectDir,
-                "main", defaultConfig.getSourceProvider())
+        new SourceProviderHelper(
+                        model.getName(), projectDir, "main", defaultConfig.getSourceProvider())
                 .setJavaDir("src")
                 .setResourcesDir("src")
                 .setAidlDir("src")
@@ -77,13 +59,17 @@ class MigratedTest {
                 .setResDir("res")
                 .setAssetsDir("assets")
                 .setManifestFile("AndroidManifest.xml")
-                .test()
+                .test();
 
-        SourceProviderContainer testSourceProviderContainer = ModelHelper.getSourceProviderContainer(
-                defaultConfig.getExtraSourceProviders(), ARTIFACT_ANDROID_TEST)
+        SourceProviderContainer testSourceProviderContainer =
+                ModelHelper.getSourceProviderContainer(
+                        defaultConfig.getExtraSourceProviders(), ARTIFACT_ANDROID_TEST);
 
-        new SourceProviderHelper(model.getName(), projectDir,
-                ANDROID_TEST.prefix, testSourceProviderContainer.getSourceProvider())
+        new SourceProviderHelper(
+                        model.getName(),
+                        projectDir,
+                        ANDROID_TEST.getPrefix(),
+                        testSourceProviderContainer.getSourceProvider())
                 .setJavaDir("tests/java")
                 .setResourcesDir("tests/resources")
                 .setAidlDir("tests/aidl")
@@ -92,12 +78,12 @@ class MigratedTest {
                 .setResDir("tests/res")
                 .setAssetsDir("tests/assets")
                 .setManifestFile("tests/AndroidManifest.xml")
-                .test()
+                .test();
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() throws Exception, InterruptedException {
+        project.executeConnectedCheck();
     }
 }

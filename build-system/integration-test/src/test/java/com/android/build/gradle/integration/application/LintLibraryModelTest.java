@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,50 +14,39 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import java.io.File;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Assemble tests for lintLibraryModel.
- * <p>
- * To run just this test: ./gradlew :base:integration-test:test -D:base:integration-test:test.single=LintLibraryModelTest
+ *
+ * <p>To run just this test: ./gradlew :base:integration-test:test
+ * -D:base:integration-test:test.single=LintLibraryModelTest
  */
-@CompileStatic
-class LintLibraryModelTest {
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("lintLibraryModel")
-            .create()
-
-    @BeforeClass
-    static void setup() {
-        project.execute("clean", ":app:lintDebug")
-    }
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
-    }
+public class LintLibraryModelTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("lintLibraryModel").create();
 
     @Test
-    void "check lint library model"() {
-        String expected = """src/main/java/com/android/test/lint/lintmodel/mylibrary/MyLibrary.java:5: Warning: Assertions are unreliable in Dalvik and unimplemented in ART. Use BuildConfig.DEBUG conditional checks instead. [Assert]
-       assert arg > 5;
-       ~~~~~~
-src/main/java/com/android/test/lint/javalib/JavaLib.java:4: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
-    public static final String SD_CARD = "/sdcard/something";
-                                         ~~~~~~~~~~~~~~~~~~~
-0 errors, 2 warnings"""
-        def file = new File(project.getSubproject('app').getTestDir(), "lint-results.txt")
-        assertThat(file).exists()
-        assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected)
+    public void checkLintLibraryModel() throws Exception {
+        project.execute("clean", ":app:lintDebug");
+        String expected =
+                "src/main/java/com/android/test/lint/lintmodel/mylibrary/MyLibrary.java:5: Warning: Assertions are unreliable in Dalvik and unimplemented in ART. Use BuildConfig.DEBUG conditional checks instead. [Assert]\n"
+                        + "       assert arg > 5;\n"
+                        + "       ~~~~~~\n"
+                        + "src/main/java/com/android/test/lint/javalib/JavaLib.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
+                        + "    public static final String SD_CARD = \"/sdcard/something\";\n"
+                        + "                                         ~~~~~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 2 warnings";
+        File file = new File(project.getSubproject("app").getTestDir(), "lint-results.txt");
+        assertThat(file).exists();
+        assertThat(file).contentWithUnixLineSeparatorsIsExactly(expected);
     }
 }

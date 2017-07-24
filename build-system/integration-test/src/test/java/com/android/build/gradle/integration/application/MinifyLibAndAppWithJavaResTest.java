@@ -14,82 +14,77 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.runner.FilterableParameterized
-import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils
-import com.android.testutils.apk.Apk
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static org.junit.Assert.assertNotNull;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static org.junit.Assert.assertNotNull
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
+import com.android.testutils.apk.Apk;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
 /**
  * Tests that ensure that java resources files accessed with a relative or absolute path are
  * packaged correctly.
  */
-@CompileStatic
-@RunWith(FilterableParameterized)
+@RunWith(FilterableParameterized.class)
 public class MinifyLibAndAppWithJavaResTest {
 
     @Parameterized.Parameters(name = "useProguard = {0}")
-    public static Collection<Object[]> data() {
-        return [
-                [true] as Object[],
-                [false] as Object[],
-        ]
+    public static Boolean[] data() {
+        return new Boolean[] {true, false};
     }
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("minifyLibWithJavaRes")
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("minifyLibWithJavaRes").create();
 
-    @Parameterized.Parameter(0)
-    public boolean useProguard
+    @Parameterized.Parameter() public boolean useProguard;
 
     @Before
-    void setUp() {
+    public void setUp() throws Exception {
         if (!useProguard) {
-            ShrinkerTestUtils.enableShrinker(project.getSubproject("app"), "release")
+            ShrinkerTestUtils.enableShrinker(project.getSubproject("app"), "release");
         }
     }
 
     @Test
-    void testDebugPackaging() {
-        project.execute(":app:assembleDebug")
-        Apk debugApk = project.getSubproject("app").getApk("debug")
-        assertNotNull(debugApk)
+    public void testDebugPackaging() throws Exception {
+        project.execute(":app:assembleDebug");
+        Apk debugApk = project.getSubproject("app").getApk("debug");
+        assertNotNull(debugApk);
         // check that resources with relative path lookup code have a matching obfuscated package
         // name.
-        assertThat(debugApk).contains("com/android/tests/util/resources.properties")
-        assertThat(debugApk).contains("com/android/tests/other/resources.properties")
+        assertThat(debugApk).contains("com/android/tests/util/resources.properties");
+        assertThat(debugApk).contains("com/android/tests/other/resources.properties");
         // check that resources with absolute path lookup remain in the original package name.
-        assertThat(debugApk).contains("com/android/tests/util/another.properties")
-        assertThat(debugApk).contains("com/android/tests/other/some.xml")
-        assertThat(debugApk).contains("com/android/tests/other/another.properties")
+        assertThat(debugApk).contains("com/android/tests/util/another.properties");
+        assertThat(debugApk).contains("com/android/tests/other/some.xml");
+        assertThat(debugApk).contains("com/android/tests/other/another.properties");
     }
 
     @Test
-    void testReleasePackaging() {
-        project.execute(":app:assembleRelease")
-        Apk releaseApk = project.getSubproject("app").getApk("release")
-        assertNotNull(releaseApk)
+    public void testReleasePackaging() throws Exception {
+        project.execute(":app:assembleRelease");
+        Apk releaseApk = project.getSubproject("app").getApk("release");
+        assertNotNull(releaseApk);
         // check that resources with absolute path lookup remain in the original package name.
-        assertThat(releaseApk).contains("com/android/tests/util/another.properties")
-        assertThat(releaseApk).contains("com/android/tests/other/some.xml")
-        assertThat(releaseApk).contains("com/android/tests/other/another.properties")
+        assertThat(releaseApk).contains("com/android/tests/util/another.properties");
+        assertThat(releaseApk).contains("com/android/tests/other/some.xml");
+        assertThat(releaseApk).contains("com/android/tests/other/another.properties");
 
         if (useProguard) {
-            // check that resources with relative path lookup code have a matching obfuscated package
+            // check that resources with relative path lookup code have a matching obfuscated
+            // package
             // name.
-            assertThat(releaseApk).contains("com/android/tests/b/resources.properties")
-            assertThat(releaseApk).contains("com/android/tests/a/resources.properties")
+            assertThat(releaseApk).contains("com/android/tests/b/resources.properties");
+            assertThat(releaseApk).contains("com/android/tests/a/resources.properties");
         }
     }
 }

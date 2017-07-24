@@ -128,14 +128,6 @@ java_library(
     deps = TEST_DEPS,
 )
 
-groovy_jar(
-    name = "groovy_tests",
-    srcs = glob(
-        ["src/test/groovy/**/*.groovy"],
-    ),
-    deps = TEST_DEPS,
-)
-
 java_test(
     name = "tests",
     timeout = "eternal",
@@ -160,7 +152,6 @@ java_test(
         # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
         "//tools/base/third_party:junit_junit",
         ":java_tests",
-        ":libgroovy_tests.jar",
     ],
 )
 

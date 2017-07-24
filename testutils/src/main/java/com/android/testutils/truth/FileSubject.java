@@ -20,6 +20,7 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.FailureStrategy;
+import com.google.common.truth.StringSubject;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
 import java.io.File;
@@ -144,8 +145,7 @@ public class FileSubject extends Subject<FileSubject, File> {
     }
 
     public void contentWithUnixLineSeparatorsIsExactly(String expected) throws IOException {
-        if (!FileUtils.loadFileWithUnixLineSeparators(getSubject()).equals(expected)) {
-            fail("content is exactly", expected);
-        }
+        String actual = FileUtils.loadFileWithUnixLineSeparators(getSubject());
+        new StringSubject(failureStrategy, actual).isEqualTo(expected);
     }
 }

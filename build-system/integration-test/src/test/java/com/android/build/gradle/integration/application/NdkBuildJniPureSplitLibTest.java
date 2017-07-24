@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,72 +14,72 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.VariantOutput
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.utils.AssumeUtil
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static org.junit.Assert.assertTrue;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-/**
- * Assemble tests for pure splits under ndk-build.
- */
-@CompileStatic
-class NdkBuildJniPureSplitLibTest {
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("ndkJniPureSplitLib")
-            .addFile(HelloWorldJniApp.androidMkC("lib/src/main/jni"))
-            .create()
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import java.io.File;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
-    @BeforeClass
-    static void setUp() {
-        new File(project.getTestDir(), "lib/src/main/jni")
-            .renameTo(new File(project.getTestDir(), "lib/src/main/cxx"));
-        AssumeUtil.assumeBuildToolsAtLeast(21)
-        GradleTestProject lib = project.getSubproject("lib")
-        lib.buildFile <<
-"""apply plugin: 'com.android.library'
-android {
-    compileSdkVersion rootProject.latestCompileSdk
-    buildToolsVersion = rootProject.buildToolsVersion
+/** Assemble tests for pure splits under ndk-build. */
+public class NdkBuildJniPureSplitLibTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("ndkJniPureSplitLib")
+                    .addFile(HelloWorldJniApp.androidMkC("lib/src/main/jni"))
+                    .create();
 
-    externalNativeBuild {
-        ndkBuild {
-            path file("src/main/cxx/Android.mk")
-        }
-    }
-}
-"""
-        project.execute("clean", ":app:assembleDebug")
-    }
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
+    @Before
+    public void setup() throws Exception {
+        assertTrue(
+                new File(project.getTestDir(), "lib/src/main/jni")
+                        .renameTo(new File(project.getTestDir(), "lib/src/main/cxx")));
+        GradleTestProject lib = project.getSubproject("lib");
+        TestFileUtils.appendToFile(
+                lib.getBuildFile(),
+                "apply plugin: 'com.android.library'\n"
+                        + "android {\n"
+                        + "    compileSdkVersion rootProject.latestCompileSdk\n"
+                        + "    buildToolsVersion = rootProject.buildToolsVersion\n"
+                        + "\n"
+                        + "    externalNativeBuild {\n"
+                        + "        ndkBuild {\n"
+                        + "            path file(\"src/main/cxx/Android.mk\")\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}");
+        project.execute("clean", ":app:assembleDebug");
     }
 
     @Test
-    void "check version code"() {
-        GradleTestProject app = project.getSubproject("app")
-        assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123)
-        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123)
-
-        assertThat(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123)
-        assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123)
-        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123)
-        assertThat(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123)
+    public void checkVersionCodeAndSo() throws Exception {
+        checkVersionCode();
+        checkSo();
     }
 
-    @Test
-    void "check so"() {
-        GradleTestProject app = project.getSubproject("app")
+    private void checkVersionCode() throws IOException {
+        GradleTestProject app = project.getSubproject("app");
+        assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "free"))
+                .hasVersionCode(123);
+        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123);
+
+        assertThat(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "free")).hasVersionCode(123);
+        assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "paid"))
+                .hasVersionCode(123);
+        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123);
+        assertThat(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "paid")).hasVersionCode(123);
+    }
+
+    private void checkSo() throws IOException {
+        GradleTestProject app = project.getSubproject("app");
         assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "free")).contains("lib/armeabi-v7a/libhello-jni.so");
         assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "paid")).contains("lib/mips/libhello-jni.so");
     }

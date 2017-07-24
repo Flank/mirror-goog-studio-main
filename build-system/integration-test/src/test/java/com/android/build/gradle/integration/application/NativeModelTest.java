@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,311 +14,394 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.external.gson.NativeBuildConfigValue
-import com.android.build.gradle.external.gson.NativeLibraryValue
-import com.android.build.gradle.external.gson.NativeSourceFileValue
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils
-import com.android.build.gradle.tasks.NativeBuildSystem
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.NativeAndroidProject
-import com.android.builder.model.NativeArtifact
-import com.android.builder.model.NativeSettings
-import com.android.utils.FileUtils
-import com.android.utils.StringHelper
-import com.google.common.collect.Lists
-import com.google.common.collect.Sets
-import com.google.gson.Gson
-import com.google.gson.GsonBuilder
-import com.google.gson.TypeAdapter
-import com.google.gson.stream.JsonReader
-import com.google.gson.stream.JsonWriter
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
-import org.junit.runner.RunWith
-import org.junit.runners.Parameterized
+import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkC;
+import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkCpp;
+import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkGoogleTest;
+import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.applicationMk;
+import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.cmakeLists;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import java.nio.file.Files
+import com.android.build.gradle.external.gson.NativeBuildConfigValue;
+import com.android.build.gradle.external.gson.NativeLibraryValue;
+import com.android.build.gradle.external.gson.NativeSourceFileValue;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
+import com.android.build.gradle.tasks.NativeBuildSystem;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.NativeAndroidProject;
+import com.android.builder.model.NativeArtifact;
+import com.android.builder.model.NativeSettings;
+import com.android.utils.FileUtils;
+import com.android.utils.StringHelper;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Set;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkC
-import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkCpp
-import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.androidMkGoogleTest
-import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.applicationMk
-import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.cmakeLists
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-
-/**
- * General Model tests
- */
-@CompileStatic
+/** General Model tests */
 @RunWith(Parameterized.class)
-class NativeModelTest {
-    private static enum Compiler {
+public class NativeModelTest {
+    private enum Compiler {
         GCC,
         CLANG,
         IRRELEVANT  // indicates if the compiler being used is irrelevant to the test
     }
 
-    private static enum Config {
-        ANDROID_MK_FILE_C_CLANG("""
-            apply plugin: 'com.android.application'
-
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                externalNativeBuild {
-                    ndkBuild {
-                        path "src/main/cpp/Android.mk"
-                        buildStagingDirectory "relative/path"
-                    }
-                }
-                defaultConfig {
-                    externalNativeBuild {
-                        ndkBuild {
-                            arguments "NDK_TOOLCHAIN_VERSION:=clang"
-                            cFlags "-DTEST_C_FLAG"
-                            cppFlags "-DTEST_CPP_FLAG"
-                        }
-                    }
-                }
-            }
-            """, [androidMkC("src/main/cpp")], false, 1, 2, 7, Compiler.CLANG,
-                NativeBuildSystem.NDK_BUILD, 14, "relative/path"),
-        NDK_BUILD_JOBS_FLAG("""
-            apply plugin: 'com.android.application'
-
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                externalNativeBuild {
-                    ndkBuild {
-                        path "src/main/cpp/Android.mk"
-                        buildStagingDirectory "ABSOLUTE_PATH"
-                    }
-                }
-                defaultConfig {
-                    externalNativeBuild {
-                        ndkBuild {
-                            arguments "NDK_TOOLCHAIN_VERSION:=clang",
-                                "-j8",
-                                "--jobs=8",
-                                "-j", "8",
-                                "--jobs", "8"
-                            cFlags "-DTEST_C_FLAG"
-                            cppFlags "-DTEST_CPP_FLAG"
-                        }
-                    }
-                }
-            }
-            """, [androidMkC("src/main/cpp")], false, 1, 2, 7, Compiler.CLANG,
-                NativeBuildSystem.NDK_BUILD, 14, "ABSOLUTE_PATH"),
-        ANDROID_MK_FILE_CPP_CLANG("""
-            apply plugin: 'com.android.application'
-
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                externalNativeBuild {
-                    ndkBuild {
-                        path file("src/main/cpp/Android.mk")
-                    }
-                }
-                defaultConfig {
-                    externalNativeBuild {
-                        ndkBuild {
-                            arguments "NDK_TOOLCHAIN_VERSION:=clang"
-                            cFlags "-DTEST_C_FLAG"
-                            cppFlags "-DTEST_CPP_FLAG"
-                        }
-                    }
-                }
-            }
-            """,
-                [androidMkCpp("src/main/cpp")],
-                true, 1, 2, 7, Compiler.CLANG, NativeBuildSystem.NDK_BUILD, 14, ".externalNativeBuild"),
-        ANDROID_MK_GOOGLE_TEST("""
-            apply plugin: 'com.android.application'
-
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                externalNativeBuild {
-                    ndkBuild {
-                        path file("src/main/cpp/Android.mk")
-                    }
-                }
-                defaultConfig {
-                    externalNativeBuild {
-                        ndkBuild {
-                            cFlags "-DTEST_C_FLAG"
-                            cppFlags "-DTEST_CPP_FLAG"
-                        }
-                    }
-                }
-            }
-            """, [androidMkGoogleTest("src/main/cpp"),
-                  new TestSourceFile(
-                          "src/main/cpp", "hello-jni-unittest.cc",
-                          """#include <limits.h>
-                            #include "sample1.h"
-                            #include "gtest/gtest.h"
-                            TEST(EqualsTest, One) {
-                              EXPECT_EQ(1, 1);
-                            }
-                            """)],
-                true, 4, 2, 7, Compiler.IRRELEVANT, NativeBuildSystem.NDK_BUILD, 0, ".externalNativeBuild"),
-        ANDROID_MK_FILE_CPP_GCC("""
-            apply plugin: 'com.android.application'
-
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                externalNativeBuild {
-                    ndkBuild {
-                        path file("src/main/cpp/Android.mk")
-                    }
-                }
-                defaultConfig {
-                    externalNativeBuild {
-                        ndkBuild {
-                            arguments "NDK_TOOLCHAIN_VERSION:=4.9"
-                            cFlags "-DTEST_C_FLAG"
-                            cppFlags "-DTEST_CPP_FLAG"
-                        }
-                    }
-                }
-            }
-            """, [androidMkCpp("src/main/cpp")], true, 1, 2, 7, Compiler.GCC,
-                NativeBuildSystem.NDK_BUILD, 14, ".externalNativeBuild"),
-        ANDROID_MK_FILE_CPP_GCC_VIA_APPLICATION_MK("""
-            apply plugin: 'com.android.application'
-
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                externalNativeBuild {
-                    ndkBuild {
-                        path file("src/main/cpp/Android.mk")
-                    }
-                }
-                defaultConfig {
-                    externalNativeBuild {
-                        ndkBuild {
-                            cFlags "-DTEST_C_FLAG"
-                            cppFlags "-DTEST_CPP_FLAG"
-                        }
-                    }
-                }
-            }
-            """, [androidMkCpp("src/main/cpp"), applicationMk("src/main/cpp")],
-                true, 1, 2, 7, Compiler.GCC, NativeBuildSystem.NDK_BUILD, 14, ".externalNativeBuild"),
-        ANDROID_MK_CUSTOM_BUILD_TYPE("""
-            apply plugin: 'com.android.application'
-
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                externalNativeBuild {
-                    ndkBuild {
-                        path "src/main/cpp/Android.mk"
-                    }
-                }
-                defaultConfig {
-                    externalNativeBuild {
-                        ndkBuild {
-                            cFlags "-DTEST_C_FLAG"
-                            cppFlags "-DTEST_CPP_FLAG"
-                        }
-                    }
-                }
-                buildTypes {
-                    myCustomBuildType {
-                         externalNativeBuild {
-                          ndkBuild {
-                            cppFlags "-DCUSTOM_BUILD_TYPE"
-                          }
-                      }
-                    }
-                }
-            }
-            """, [androidMkCpp("src/main/cpp")], true, 1, 3, 7, Compiler.IRRELEVANT,
-                NativeBuildSystem.NDK_BUILD, 21, ".externalNativeBuild"),
-        CMAKELISTS_FILE_CPP("""
-            apply plugin: 'com.android.application'
-
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                externalNativeBuild {
-                    cmake {
-                        path "CMakeLists.txt"
-                        buildStagingDirectory "ABSOLUTE_PATH"
-                    }
-                }
-                defaultConfig {
-                    externalNativeBuild {
-                        cmake {
-                            cFlags "-DTEST_C_FLAG"
-                            cppFlags "-DTEST_CPP_FLAG"
-                        }
-                    }
-                }
-            }
-            """, [cmakeLists(".")], true, 1, 2, 7, Compiler.IRRELEVANT,
-                NativeBuildSystem.CMAKE, 14, "ABSOLUTE_PATH"),
-        CMAKELISTS_ARGUMENTS("""
-            apply plugin: 'com.android.application'
-
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                externalNativeBuild {
-                    cmake {
-                        path "CMakeLists.txt"
-                        buildStagingDirectory "relative/path"
-                    }
-                }
-                defaultConfig {
-                    externalNativeBuild {
-                      cmake {
-                        arguments "-DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG"
-                        cFlags "-DTEST_C_FLAG"
-                        abiFilters "armeabi-v7a", "armeabi"
-                      }
-                    }
-                }
-            }
-            """, [cmakeLists(".")], true, 1, 2, 2, Compiler.IRRELEVANT, NativeBuildSystem.CMAKE,
-            4, "relative/path"),
-        CMAKELISTS_FILE_C("""
-            apply plugin: 'com.android.application'
-
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                externalNativeBuild {
-                    cmake {
-                        path "CMakeLists.txt"
-                    }
-                }
-                defaultConfig {
-                    externalNativeBuild {
-                      cmake {
-                        cFlags "-DTEST_C_FLAG"
-                        cppFlags "-DTEST_CPP_FLAG"
-                      }
-                    }
-                }
-            }
-            """, [cmakeLists(".")], false, 1, 2, 7, Compiler.IRRELEVANT,
-                NativeBuildSystem.CMAKE, 14, ".externalNativeBuild");
+    private enum Config {
+        ANDROID_MK_FILE_C_CLANG(
+                "  apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "            android {\n"
+                        + "                compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "                externalNativeBuild {\n"
+                        + "                    ndkBuild {\n"
+                        + "                        path \"src/main/cpp/Android.mk\"\n"
+                        + "                        buildStagingDirectory \"relative/path\"\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "                defaultConfig {\n"
+                        + "                    externalNativeBuild {\n"
+                        + "                        ndkBuild {\n"
+                        + "                            arguments \"NDK_TOOLCHAIN_VERSION:=clang\"\n"
+                        + "                            cFlags \"-DTEST_C_FLAG\"\n"
+                        + "                            cppFlags \"-DTEST_CPP_FLAG\"\n"
+                        + "                        }\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "            }",
+                ImmutableList.of(androidMkC("src/main/cpp")),
+                false,
+                1,
+                2,
+                7,
+                Compiler.CLANG,
+                NativeBuildSystem.NDK_BUILD,
+                14,
+                "relative/path"),
+        NDK_BUILD_JOBS_FLAG(
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "            android {\n"
+                        + "                compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "                externalNativeBuild {\n"
+                        + "                    ndkBuild {\n"
+                        + "                        path \"src/main/cpp/Android.mk\"\n"
+                        + "                        buildStagingDirectory \"ABSOLUTE_PATH\"\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "                defaultConfig {\n"
+                        + "                    externalNativeBuild {\n"
+                        + "                        ndkBuild {\n"
+                        + "                            arguments \"NDK_TOOLCHAIN_VERSION:=clang\",\n"
+                        + "                                \"-j8\",\n"
+                        + "                                \"--jobs=8\",\n"
+                        + "                                \"-j\", \"8\",\n"
+                        + "                                \"--jobs\", \"8\"\n"
+                        + "                            cFlags \"-DTEST_C_FLAG\"\n"
+                        + "                            cppFlags \"-DTEST_CPP_FLAG\"\n"
+                        + "                        }\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "            }",
+                ImmutableList.of(androidMkC("src/main/cpp")),
+                false,
+                1,
+                2,
+                7,
+                Compiler.CLANG,
+                NativeBuildSystem.NDK_BUILD,
+                14,
+                "ABSOLUTE_PATH"),
+        ANDROID_MK_FILE_CPP_CLANG(
+                " apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "            android {\n"
+                        + "                compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "                externalNativeBuild {\n"
+                        + "                    ndkBuild {\n"
+                        + "                        path file(\"src/main/cpp/Android.mk\")\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "                defaultConfig {\n"
+                        + "                    externalNativeBuild {\n"
+                        + "                        ndkBuild {\n"
+                        + "                            arguments \"NDK_TOOLCHAIN_VERSION:=clang\"\n"
+                        + "                            cFlags \"-DTEST_C_FLAG\"\n"
+                        + "                            cppFlags \"-DTEST_CPP_FLAG\"\n"
+                        + "                        }\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "            }",
+                ImmutableList.of(androidMkCpp("src/main/cpp")),
+                true,
+                1,
+                2,
+                7,
+                Compiler.CLANG,
+                NativeBuildSystem.NDK_BUILD,
+                14,
+                ".externalNativeBuild"),
+        ANDROID_MK_GOOGLE_TEST(
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    externalNativeBuild {\n"
+                        + "        ndkBuild {\n"
+                        + "            path file(\"src/main/cpp/Android.mk\")\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    defaultConfig {\n"
+                        + "        externalNativeBuild {\n"
+                        + "            ndkBuild {\n"
+                        + "                cFlags \"-DTEST_C_FLAG\"\n"
+                        + "                cppFlags \"-DTEST_CPP_FLAG\"\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}",
+                ImmutableList.of(
+                        androidMkGoogleTest("src/main/cpp"),
+                        new TestSourceFile(
+                                "src/main/cpp",
+                                "hello-jni-unittest.cc",
+                                "#include <limits.h>\n"
+                                        + "#include \"sample1.h\"\n"
+                                        + "#include \"gtest/gtest.h\"\n"
+                                        + "TEST(EqualsTest, One) {\n"
+                                        + "  EXPECT_EQ(1, 1);\n"
+                                        + "}")),
+                true,
+                4,
+                2,
+                7,
+                Compiler.IRRELEVANT,
+                NativeBuildSystem.NDK_BUILD,
+                0,
+                ".externalNativeBuild"),
+        ANDROID_MK_FILE_CPP_GCC(
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    externalNativeBuild {\n"
+                        + "        ndkBuild {\n"
+                        + "            path file(\"src/main/cpp/Android.mk\")\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    defaultConfig {\n"
+                        + "        externalNativeBuild {\n"
+                        + "            ndkBuild {\n"
+                        + "                arguments \"NDK_TOOLCHAIN_VERSION:=4.9\"\n"
+                        + "                cFlags \"-DTEST_C_FLAG\"\n"
+                        + "                cppFlags \"-DTEST_CPP_FLAG\"\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}",
+                ImmutableList.of(androidMkCpp("src/main/cpp")),
+                true,
+                1,
+                2,
+                7,
+                Compiler.GCC,
+                NativeBuildSystem.NDK_BUILD,
+                14,
+                ".externalNativeBuild"),
+        ANDROID_MK_FILE_CPP_GCC_VIA_APPLICATION_MK(
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    externalNativeBuild {\n"
+                        + "        ndkBuild {\n"
+                        + "            path file(\"src/main/cpp/Android.mk\")\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    defaultConfig {\n"
+                        + "        externalNativeBuild {\n"
+                        + "            ndkBuild {\n"
+                        + "                cFlags \"-DTEST_C_FLAG\"\n"
+                        + "                cppFlags \"-DTEST_CPP_FLAG\"\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}",
+                ImmutableList.of(androidMkCpp("src/main/cpp"), applicationMk("src/main/cpp")),
+                true,
+                1,
+                2,
+                7,
+                Compiler.GCC,
+                NativeBuildSystem.NDK_BUILD,
+                14,
+                ".externalNativeBuild"),
+        ANDROID_MK_CUSTOM_BUILD_TYPE(
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    externalNativeBuild {\n"
+                        + "        ndkBuild {\n"
+                        + "            path \"src/main/cpp/Android.mk\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    defaultConfig {\n"
+                        + "        externalNativeBuild {\n"
+                        + "            ndkBuild {\n"
+                        + "                cFlags \"-DTEST_C_FLAG\"\n"
+                        + "                cppFlags \"-DTEST_CPP_FLAG\"\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    buildTypes {\n"
+                        + "        myCustomBuildType {\n"
+                        + "             externalNativeBuild {\n"
+                        + "              ndkBuild {\n"
+                        + "                cppFlags \"-DCUSTOM_BUILD_TYPE\"\n"
+                        + "              }\n"
+                        + "          }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}",
+                ImmutableList.of(androidMkCpp("src/main/cpp")),
+                true,
+                1,
+                3,
+                7,
+                Compiler.IRRELEVANT,
+                NativeBuildSystem.NDK_BUILD,
+                21,
+                ".externalNativeBuild"),
+        CMAKELISTS_FILE_CPP(
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    externalNativeBuild {\n"
+                        + "        cmake {\n"
+                        + "            path \"CMakeLists.txt\"\n"
+                        + "            buildStagingDirectory \"ABSOLUTE_PATH\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    defaultConfig {\n"
+                        + "        externalNativeBuild {\n"
+                        + "            cmake {\n"
+                        + "                cFlags \"-DTEST_C_FLAG\"\n"
+                        + "                cppFlags \"-DTEST_CPP_FLAG\"\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}",
+                ImmutableList.of(cmakeLists(".")),
+                true,
+                1,
+                2,
+                7,
+                Compiler.IRRELEVANT,
+                NativeBuildSystem.CMAKE,
+                14,
+                "ABSOLUTE_PATH"),
+        CMAKELISTS_ARGUMENTS(
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    externalNativeBuild {\n"
+                        + "        cmake {\n"
+                        + "            path \"CMakeLists.txt\"\n"
+                        + "            buildStagingDirectory \"relative/path\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    defaultConfig {\n"
+                        + "        externalNativeBuild {\n"
+                        + "          cmake {\n"
+                        + "            arguments \"-DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG\"\n"
+                        + "            cFlags \"-DTEST_C_FLAG\"\n"
+                        + "            abiFilters \"armeabi-v7a\", \"armeabi\"\n"
+                        + "          }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}",
+                ImmutableList.of(cmakeLists(".")),
+                true,
+                1,
+                2,
+                2,
+                Compiler.IRRELEVANT,
+                NativeBuildSystem.CMAKE,
+                4,
+                "relative/path"),
+        CMAKELISTS_FILE_C(
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    externalNativeBuild {\n"
+                        + "        cmake {\n"
+                        + "            path \"CMakeLists.txt\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    defaultConfig {\n"
+                        + "        externalNativeBuild {\n"
+                        + "          cmake {\n"
+                        + "            cFlags \"-DTEST_C_FLAG\"\n"
+                        + "            cppFlags \"-DTEST_CPP_FLAG\"\n"
+                        + "          }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}",
+                ImmutableList.of(cmakeLists(".")),
+                false,
+                1,
+                2,
+                7,
+                Compiler.IRRELEVANT,
+                NativeBuildSystem.CMAKE,
+                14,
+                ".externalNativeBuild");
 
         public String buildGradle;
         private final List<TestSourceFile> extraFiles;
@@ -359,69 +442,68 @@ class NativeModelTest {
         }
     }
 
-    @Rule
-    public GradleTestProject project = config.create();
+    @Rule public final GradleTestProject project;
 
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    @Rule public final TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Parameterized.Parameters(name = "model = {0}")
-    public static Collection<Object[]> data() {
-        return [
-                [Config.NDK_BUILD_JOBS_FLAG].toArray(),
-                [Config.ANDROID_MK_FILE_C_CLANG].toArray(),
-                [Config.ANDROID_MK_FILE_CPP_CLANG].toArray(),
-                [Config.ANDROID_MK_GOOGLE_TEST].toArray(),
-                [Config.ANDROID_MK_FILE_CPP_GCC].toArray(),
-                // disabled due to http://b.android.com/230228
-                //[Config.ANDROID_MK_FILE_CPP_GCC_VIA_APPLICATION_MK].toArray(),
-                [Config.ANDROID_MK_CUSTOM_BUILD_TYPE].toArray(),
-                [Config.CMAKELISTS_FILE_C].toArray(),
-                [Config.CMAKELISTS_FILE_CPP].toArray(),
-                [Config.CMAKELISTS_ARGUMENTS].toArray(),
-        ];
+    public static Object[][] data() {
+        return new Object[][] {
+            {Config.NDK_BUILD_JOBS_FLAG},
+            {Config.ANDROID_MK_FILE_C_CLANG},
+            {Config.ANDROID_MK_FILE_CPP_CLANG},
+            {Config.ANDROID_MK_GOOGLE_TEST},
+            {Config.ANDROID_MK_FILE_CPP_GCC},
+            // disabled due to http://b.android.com/230228
+            // {Config.ANDROID_MK_FILE_CPP_GCC_VIA_APPLICATION_MK},
+            {Config.ANDROID_MK_CUSTOM_BUILD_TYPE},
+            {Config.CMAKELISTS_FILE_C},
+            {Config.CMAKELISTS_FILE_CPP},
+            {Config.CMAKELISTS_ARGUMENTS},
+        };
     }
 
-    private Config config;
+    private final Config config;
 
-    private File tempOutputDirectory;
-
-    NativeModelTest(Config config) {
+    public NativeModelTest(Config config) {
         this.config = config;
+        this.project = config.create();
     }
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         if (config.nativeBuildOutputPath.equals("ABSOLUTE_PATH")) {
-            tempOutputDirectory = temporaryFolder.newFolder("absolute_path");
-            config.buildGradle = config.buildGradle.replace("ABSOLUTE_PATH", tempOutputDirectory.absolutePath);
+            File tempOutputDirectory = temporaryFolder.newFolder("absolute_path");
+            config.buildGradle =
+                    config.buildGradle.replace(
+                            "ABSOLUTE_PATH", tempOutputDirectory.getAbsolutePath());
             config.nativeBuildOutputPath = tempOutputDirectory.getAbsolutePath();
         }
 
-        project.buildFile << config.buildGradle;
+        TestFileUtils.appendToFile(project.getBuildFile(), config.buildGradle);
     }
 
     @Test
-    public void checkModel() {
+    public void checkModel() throws Exception {
         AndroidProject androidProject = project.model().getSingle().getOnlyModel();
-        assertThat(androidProject.syncIssues).hasSize(0);
+        assertThat(androidProject.getSyncIssues()).hasSize(0);
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
         assertThat(model).isNotNull();
-        assertThat(model.name).isEqualTo("project");
-        assertThat(model.artifacts).hasSize(config.targetCount * config.variantCount
-                * config.abiCount);
+        assertThat(model.getName()).isEqualTo("project");
+        assertThat(model.getArtifacts())
+                .hasSize(config.targetCount * config.variantCount * config.abiCount);
 
         // Settings should be non-empty but the count depends on flags and build system because
         // settings are the distinct set of flags.
-        assertThat(model.settings).isNotEmpty();
-        assertThat(model.toolChains).hasSize(config.variantCount * config.abiCount);
+        assertThat(model.getSettings()).isNotEmpty();
+        assertThat(model.getToolChains()).hasSize(config.variantCount * config.abiCount);
         assertThat(model).hasArtifactGroupsOfSize(config.targetCount * config.abiCount);
 
-        for (File file : model.buildFiles) {
+        for (File file : model.getBuildFiles()) {
             assertThat(file).isFile();
         }
 
-        for (NativeArtifact artifact : model.artifacts) {
+        for (NativeArtifact artifact : model.getArtifacts()) {
             File parent = artifact.getOutputFile().getParentFile();
             List<String> parents = Lists.newArrayList();
             while(parent != null) {
@@ -454,15 +536,15 @@ class NativeModelTest {
     }
 
     @Test
-    public void checkUpToDate() {
+    public void checkUpToDate() throws Exception {
         File jsonFile = getJsonFile("debug", "armeabi");
 
         // Initially, JSON file doesn't exist
-        assertThat(jsonFile).doesNotExist()
+        assertThat(jsonFile).doesNotExist();
 
         // Syncing once, causes the JSON to exist
         project.model().getSingle(NativeAndroidProject.class);
-        assertThat(jsonFile).exists()
+        assertThat(jsonFile).exists();
         long originalTimeStamp = getHighestResolutionTimeStamp(jsonFile);
 
         // Syncing again, leaves the JSON unchanged
@@ -471,8 +553,8 @@ class NativeModelTest {
                 getHighestResolutionTimeStamp(jsonFile));
 
         // Touch each buildFile and check that JSON is regenerated in response
-        assertThat(nativeProject.buildFiles).isNotEmpty();
-        for (File buildFile : nativeProject.buildFiles) {
+        assertThat(nativeProject.getBuildFiles()).isNotEmpty();
+        for (File buildFile : nativeProject.getBuildFiles()) {
             assertThat(buildFile).exists();
             spinTouch(buildFile, originalTimeStamp);
             project.model().getSingle(NativeAndroidProject.class);
@@ -484,7 +566,7 @@ class NativeModelTest {
         String originalFileHash = FileUtils.sha1(jsonFile);
 
         // Replace flags in the build file and check that JSON is regenerated
-        project.buildFile.text = project.buildFile.text.replace("-DTEST_", "-DTEST_CHANGED_");
+        TestFileUtils.searchAndReplace(project.getBuildFile(), "-DTEST_", "-DTEST_CHANGED_");
         nativeProject = project.model().getSingle(NativeAndroidProject.class);
         assertThat(FileUtils.sha1(jsonFile)).isNotEqualTo(originalFileHash);
 
@@ -496,7 +578,7 @@ class NativeModelTest {
         }
 
         // Do a clean and check that the JSON is not regenerated
-        originalTimeStamp = getHighestResolutionTimeStamp(jsonFile)
+        originalTimeStamp = getHighestResolutionTimeStamp(jsonFile);
         project.execute("clean");
         nativeProject = project.model().getSingle(NativeAndroidProject.class);
         assertThat(originalTimeStamp).isEqualTo(getHighestResolutionTimeStamp(jsonFile));
@@ -517,34 +599,38 @@ class NativeModelTest {
         }
     }
 
-    static NativeBuildConfigValue getNativeBuildConfigValue(File json) {
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(File.class, new TypeAdapter() {
+    static NativeBuildConfigValue getNativeBuildConfigValue(File json)
+            throws FileNotFoundException {
+        Gson gson =
+                new GsonBuilder()
+                        .registerTypeAdapter(
+                                File.class,
+                                new TypeAdapter() {
 
-            @Override
-            void write(JsonWriter jsonWriter, Object o) throws IOException {
+                                    @Override
+                                    public void write(JsonWriter jsonWriter, Object o)
+                                            throws IOException {}
 
-            }
-
-            @Override
-            Object read(JsonReader jsonReader) throws IOException {
-                return new File(jsonReader.nextString());
-            }
-        }).create();
+                                    @Override
+                                    public Object read(JsonReader jsonReader) throws IOException {
+                                        return new File(jsonReader.nextString());
+                                    }
+                                })
+                        .create();
         return gson.fromJson(new FileReader(json),
                 NativeBuildConfigValue.class);
     }
 
-    /** Related to b.android.com/214558
-     * Clean commands should never have -j (or --jobs) parameter because gnu make doesn't handle
-     * this well.
+    /**
+     * Related to b.android.com/214558 Clean commands should never have -j (or --jobs) parameter
+     * because gnu make doesn't handle this well.
      */
     @Test
-    public void checkNdkBuildCleanHasNoJobsFlags() {
+    public void checkNdkBuildCleanHasNoJobsFlags() throws Exception {
         if (config.buildSystem == NativeBuildSystem.NDK_BUILD) {
             project.model().getSingle(NativeAndroidProject.class);
-            NativeBuildConfigValue buildConfig = getNativeBuildConfigValue(
-                    getJsonFile("debug", "armeabi"))
+            NativeBuildConfigValue buildConfig =
+                    getNativeBuildConfigValue(getJsonFile("debug", "armeabi"));
             for (String cleanCommand : buildConfig.cleanCommands) {
                 assertThat(cleanCommand).doesNotContain("-j");
             }
@@ -552,7 +638,7 @@ class NativeModelTest {
     }
 
     @Test
-    public void checkDebugVsRelease() {
+    public void checkDebugVsRelease() throws Exception {
         // Sync
         project.model().getSingle(NativeAndroidProject.class);
 
@@ -597,36 +683,35 @@ class NativeModelTest {
     operating system and Java versions. This implementation of touch makes sure that the new
     timestamp isn't the same as the old timestamp by spinning until the clock increases.
      */
-    private static void spinTouch(File file, long lastTimestamp) {
+    private static void spinTouch(File file, long lastTimestamp) throws IOException {
         file.setLastModified(System.currentTimeMillis());
         while (getHighestResolutionTimeStamp(file) == lastTimestamp) {
             file.setLastModified(System.currentTimeMillis());
         }
     }
 
-    private static long getHighestResolutionTimeStamp(File file) {
+    private static long getHighestResolutionTimeStamp(File file) throws IOException {
         return Files.getLastModifiedTime(
                 file.toPath()).toMillis();
     }
 
     private File getExternalNativeBuildRootOutputFolder() {
-        return new File(FileUtils.join(
-                project.buildFile.getParent(),
-                ".externalNativeBuild"));
+        return new File(FileUtils.join(project.getBuildFile().getParent(), ".externalNativeBuild"));
     }
 
     private File getJsonFile(String variantName, String abi) {
-        return ExternalNativeBuildTaskUtils.getOutputJson(FileUtils.join(
-                buildNativeBuildOutputPath(config, project),
-                config.buildSystem.name,
-                variantName),
+        return ExternalNativeBuildTaskUtils.getOutputJson(
+                FileUtils.join(
+                        buildNativeBuildOutputPath(config, project),
+                        config.buildSystem.getName(),
+                        variantName),
                 abi);
     }
 
     private static void checkDefaultVariants(NativeAndroidProject model) {
         assertThat(model).hasArtifactGroupsNamed("debug", "release");
 
-        for (NativeSettings settings : model.settings) {
+        for (NativeSettings settings : model.getSettings()) {
             assertThat(settings).doesNotContainCompilerFlag("-DCUSTOM_BUILD_TYPE");
         }
     }
@@ -635,8 +720,8 @@ class NativeModelTest {
         assertThat(model).hasArtifactGroupsNamed("debug", "release", "myCustomBuildType");
 
         boolean sawCustomVariantFLag = false;
-        for (NativeSettings settings : model.settings) {
-            List<String> flags = settings.compilerFlags;
+        for (NativeSettings settings : model.getSettings()) {
+            List<String> flags = settings.getCompilerFlags();
             if (flags.contains("-DCUSTOM_BUILD_TYPE")) {
                 assertThat(settings).containsCompilerFlag("-DCUSTOM_BUILD_TYPE");
                 sawCustomVariantFLag = true;
@@ -646,19 +731,19 @@ class NativeModelTest {
     }
 
     private static void checkGcc(NativeAndroidProject model) {
-        for (NativeSettings settings : model.settings) {
+        for (NativeSettings settings : model.getSettings()) {
             assertThat(settings).doesNotContainCompilerFlagStartingWith("-gcc-toolchain");
         }
     }
 
     private static void checkClang(NativeAndroidProject model) {
-        for (NativeSettings settings : model.settings) {
+        for (NativeSettings settings : model.getSettings()) {
             assertThat(settings).containsCompilerFlagStartingWith("-gcc-toolchain");
         }
     }
 
     private static void checkProblematicCompilerFlags(NativeAndroidProject model) {
-        for (NativeSettings settings : model.settings) {
+        for (NativeSettings settings : model.getSettings()) {
             // These flags are known to cause problems, see b.android.com/215555 and
             // b.android.com/213429. They should be stripped (or not present) by JSON producer.
             assertThat(settings).doesNotContainCompilerFlag("-MMD");
@@ -672,25 +757,25 @@ class NativeModelTest {
     }
 
     private static void checkIsC(NativeAndroidProject model) {
-        assertThat(model.fileExtensions).containsEntry("c", "c");
-        assertThat(model.fileExtensions).doesNotContainEntry("cpp", "c++");
-        for (NativeSettings settings : model.settings) {
+        assertThat(model.getFileExtensions()).containsEntry("c", "c");
+        assertThat(model.getFileExtensions()).doesNotContainEntry("cpp", "c++");
+        for (NativeSettings settings : model.getSettings()) {
             assertThat(settings).containsCompilerFlag("-DTEST_C_FLAG");
             assertThat(settings).doesNotContainCompilerFlag("-DTEST_CPP_FLAG");
         }
     }
 
     private static void checkIsCpp(NativeAndroidProject model) {
-        assertThat(model.fileExtensions).containsEntry("cpp", "c++");
-        assertThat(model.fileExtensions).doesNotContainEntry("c", "c");
-        for (NativeSettings settings : model.settings) {
+        assertThat(model.getFileExtensions()).containsEntry("cpp", "c++");
+        assertThat(model.getFileExtensions()).doesNotContainEntry("c", "c");
+        for (NativeSettings settings : model.getSettings()) {
             assertThat(settings).containsCompilerFlag("-DTEST_CPP_FLAG");
         }
     }
 
     private static void checkIsChangedC(NativeAndroidProject model) {
-        assertThat(model.fileExtensions).containsEntry("c", "c");
-        for (NativeSettings settings : model.settings) {
+        assertThat(model.getFileExtensions()).containsEntry("c", "c");
+        for (NativeSettings settings : model.getSettings()) {
             assertThat(settings).doesNotContainCompilerFlag("-DTEST_C_FLAG");
             assertThat(settings).doesNotContainCompilerFlag("-DTEST_CPP_FLAG");
             assertThat(settings).containsCompilerFlag("-DTEST_CHANGED_C_FLAG");
@@ -699,8 +784,8 @@ class NativeModelTest {
     }
 
     private static void checkIsChangedCpp(NativeAndroidProject model) {
-        assertThat(model.fileExtensions).containsEntry("cpp", "c++");
-        for (NativeSettings settings : model.settings) {
+        assertThat(model.getFileExtensions()).containsEntry("cpp", "c++");
+        for (NativeSettings settings : model.getSettings()) {
             assertThat(settings).doesNotContainCompilerFlag("-DTEST_CPP_FLAG");
             assertThat(settings).containsCompilerFlag("-DTEST_CHANGED_CPP_FLAG");
         }
@@ -711,10 +796,10 @@ class NativeModelTest {
         File outputDir = buildNativeBuildOutputPath(config, project);
 
         switch (buildSystem) {
-            case NativeBuildSystem.CMAKE:
+            case CMAKE:
                 outputDir = FileUtils.join(outputDir, "cmake");
                 break;
-            case NativeBuildSystem.NDK_BUILD:
+            case NDK_BUILD:
                 outputDir = FileUtils.join(outputDir, "ndkBuild");
                 break;
             default:
@@ -727,7 +812,7 @@ class NativeModelTest {
 
     private static File buildNativeBuildOutputPath(Config config, GradleTestProject project) {
         String nativeBuildOutputPath = config.nativeBuildOutputPath;
-        File projectDir = project.testDir;
+        File projectDir = project.getTestDir();
 
         File outputDir = new File(nativeBuildOutputPath);
         if (!outputDir.isAbsolute()) {

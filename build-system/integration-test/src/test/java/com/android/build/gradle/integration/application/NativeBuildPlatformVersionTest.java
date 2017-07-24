@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,37 +14,41 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp
-import com.android.build.gradle.integration.common.utils.NativeModelHelper
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.NativeAndroidProject
-import com.android.builder.model.NativeArtifact
-import com.google.common.collect.Sets
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-/**
- * Tests that platform version selected is correct
- */
-@CompileStatic
-class NativeBuildPlatformVersionTest {
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.NativeModelHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.NativeAndroidProject;
+import com.android.builder.model.NativeArtifact;
+import com.google.common.collect.Sets;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Set;
+import org.junit.Before;
+import org.junit.Rule;
 
-    private static String cmakeLists = """cmake_minimum_required(VERSION 3.4.1)
-            file(GLOB SRC src/main/cpp/hello-jni.cpp)
-            set(CMAKE_VERBOSE_MAKEFILE ON)
-            add_library(hello-jni SHARED \${SRC})
-            target_link_libraries(hello-jni log)""";
+/** Tests that platform version selected is correct */
+public class NativeBuildPlatformVersionTest {
 
-    private static String androidMk = """LOCAL_PATH := \$(call my-dir)
-           include \$(CLEAR_VARS)
-           LOCAL_MODULE    := hello-jni
-           LOCAL_SRC_FILES := hello-jni.cpp
-           include \$(BUILD_SHARED_LIBRARY)""";
+    private static String cmakeLists =
+            "cmake_minimum_required(VERSION 3.4.1)\n"
+                    + "file(GLOB SRC src/main/cpp/hello-jni.cpp)\n"
+                    + "set(CMAKE_VERBOSE_MAKEFILE ON)\n"
+                    + "add_library(hello-jni SHARED \\${SRC})\n"
+                    + "target_link_libraries(hello-jni log)\"";
+
+    private static String androidMk =
+            "LOCAL_PATH := \\$(call my-dir)\n"
+                    + "include \\$(CLEAR_VARS)\n"
+                    + "LOCAL_MODULE    := hello-jni\n"
+                    + "LOCAL_SRC_FILES := hello-jni.cpp\n"
+                    + "include \\$(BUILD_SHARED_LIBRARY)";
 
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
@@ -55,14 +59,9 @@ class NativeBuildPlatformVersionTest {
                         .create();
 
     @Before
-    public void setup() {
-        project.buildFile << """
-            apply plugin: 'com.android.application'
-
-            android {
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-            }
-            """;
+    public void setup() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(), "apply plugin: 'com.android.application'\n");
     }
     
 
@@ -102,10 +101,10 @@ class NativeBuildPlatformVersionTest {
                 String includePath = flag.substring(prefix.length());
 
                 File folder = new File(includePath);
-                if (folder.getName()=="include") {
+                if (folder.getName().equals("include")) {
                     folder = folder.getParentFile();
                 }
-                if (folder.getName()=="usr") {
+                if (folder.getName().equals("usr")) {
                     folder = folder.getParentFile();
                 }
                 String architecture = folder.getName();
@@ -131,17 +130,18 @@ class NativeBuildPlatformVersionTest {
         }
         assertThat(platformArchitectures).isNotEmpty();
         System.err.printf("MAP %s\n", platformArchitectures);
-        return platformArchitectures
+        return platformArchitectures;
     }
 
-    private void checkBuildSucceeds(String... expectedPlatformAbiCombinations) {
+    private void checkBuildSucceeds(String... expectedPlatformAbiCombinations) throws Exception {
         project.model().getSingle(AndroidProject.class);
         NativeAndroidProject model =
                 project.model().getSingle(NativeAndroidProject.class);
 
         assertThat(model).hasArtifactGroupsOfSize(4);
         Set<String> platformArchitectures = getDistinctPlatformArchitectureCombinations(model);
-        assertThat(platformArchitectures).containsExactly(expectedPlatformAbiCombinations);
+        assertThat(platformArchitectures)
+                .containsExactly((Object[]) expectedPlatformAbiCombinations);
         project.executor().run("assembleDebug");
     }
 }

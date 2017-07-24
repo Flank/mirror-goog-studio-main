@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,68 +14,71 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.google.common.base.Throwables
-import groovy.transform.CompileStatic
-import org.gradle.tooling.BuildException
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.google.common.truth.Truth.assertThat;
 
-@CompileStatic
-class InvalidResourceDirectoryTest {
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.google.common.base.Throwables;
+import java.io.File;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
-    public static AndroidTestApp app = HelloWorldApp.noBuildFile()
+public class InvalidResourceDirectoryTest {
+
+    public static final String INVALID_LAYOUT_FOLDER = "src/main/res/layout-hdpi-land";
+
+    public static AndroidTestApp app = HelloWorldApp.noBuildFile();
 
     static {
-        app.addFile(new TestSourceFile(INVALID_LAYOUT_FOLDER, "main.xml",
-                """<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    >
-<TextView
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:text="hello invalid layout world!"
-    android:id="@+id/text"
-    />
-</LinearLayout>
-"""));
+        app.addFile(
+                new TestSourceFile(
+                        INVALID_LAYOUT_FOLDER,
+                        "main.xml",
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    android:orientation=\"vertical\"\n"
+                                + "    android:layout_width=\"fill_parent\"\n"
+                                + "    android:layout_height=\"fill_parent\"\n"
+                                + "    >\n"
+                                + "<TextView\n"
+                                + "    android:layout_width=\"fill_parent\"\n"
+                                + "    android:layout_height=\"wrap_content\"\n"
+                                + "    android:text=\"hello invalid layout world!\"\n"
+                                + "    android:id=\"@+id/text\"\n"
+                                + "    />\n"
+                                + "</LinearLayout>"));
     }
 
-    @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder().fromTestApp(app).create()
+    @Rule public GradleTestProject project = GradleTestProject.builder().fromTestApp(app).create();
 
-    public static final String INVALID_LAYOUT_FOLDER = "src/main/res/layout-hdpi-land"
-
-
-    @BeforeClass
-    public static void setUp() {
-        project.getBuildFile() << """
-apply plugin: 'com.android.application'
-
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-}
-"""
+    @Before
+    public void setUp() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion  "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "}\n");
     }
 
     @Test
-    public void "check build failure on invalid resource directory"() {
-        try {
-            project.execute("assembleRelease");
-        } catch (BuildException e) {
-            Throwable rootCause = Throwables.getRootCause(e);
-            assert rootCause.message.contains(
-                    new File(project.testDir, INVALID_LAYOUT_FOLDER).absolutePath)
-        }
+    public void checkBuildFailureOnInvalidResourceDirectory() throws Exception {
+        GradleBuildResult result = project.executor().expectFailure().run("assembleRelease");
+
+        assertThat(result.getException()).isNotNull();
+        Throwable rootCause = Throwables.getRootCause(result.getException());
+        assertThat(rootCause.getMessage())
+                .contains(new File(project.getTestDir(), INVALID_LAYOUT_FOLDER).getAbsolutePath());
     }
 }

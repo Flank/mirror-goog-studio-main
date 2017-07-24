@@ -14,43 +14,32 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import java.io.File;
+import java.io.IOException;
+import org.junit.Rule;
+import org.junit.Test;
 
 /**
  * Assemble tests for lintLibraryModel.
- * <p>
- * To run just this test: ./gradlew :base:integration-test:test -D:base:integration-test:test.single=LintSkipDependenciesTest
+ *
+ * <p>To run just this test: ./gradlew :base:integration-test:test
+ * -D:base:integration-test:test.single=LintSkipDependenciesTest
  */
-@CompileStatic
-class LintSkipDependenciesTest {
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("lintLibrarySkipDeps")
-            .create()
-
-    @BeforeClass
-    static void setup() {
-        project.execute("clean", ":app:lintDebug")
-    }
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
-    }
+public class LintSkipDependenciesTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("lintLibrarySkipDeps").create();
 
     @Test
-    void "check lint dependencies skipped"() {
-        def file = new File(project.getSubproject('app').getTestDir(), "lint-results.txt")
-        assertThat(file).exists()
-        assertThat(file).contentWithUnixLineSeparatorsIsExactly("No issues found.")
+    void checkLintDependenciesSkipped() throws IOException, InterruptedException {
+        project.execute("clean", ":app:lintDebug");
+        File file = new File(project.getSubproject("app").getTestDir(), "lint-results.txt");
+        assertThat(file).exists();
+        assertThat(file).contentWithUnixLineSeparatorsIsExactly("No issues found.");
     }
 }

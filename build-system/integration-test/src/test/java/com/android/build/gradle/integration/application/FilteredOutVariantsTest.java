@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,56 +14,43 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.Variant
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertFalse
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Variant;
+import java.util.Collection;
+import java.util.List;
+import org.junit.Rule;
+import org.junit.Test;
 
-/**
- * Assemble tests for filteredOutVariants.
- */
-@CompileStatic
-class FilteredOutVariantsTest {
-    @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("filteredOutVariants")
-            .create()
-    static AndroidProject model
-
-    @BeforeClass
-    static void setUp() {
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
-    }
-
-    @AfterClass
-    static void cleanUp() {
-        project = null
-        model = null
-    }
+/** Assemble tests for filteredOutVariants. */
+public class FilteredOutVariantsTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("filteredOutVariants").create();
 
     @Test
-    void "check filtered out variant isn't in model"() {
-        Collection<Variant> variants = model.getVariants()
+    void checkFilteredOutVariantIsNotInTheModel() throws Exception {
+        AndroidProject model =
+                project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
+        Collection<Variant> variants = model.getVariants();
         // check we have the right number of variants:
         // arm/cupcake, arm/gingerbread, x86/gingerbread, mips/gingerbread
         // all 4 in release and debug
-        assertEquals("Variant Count", 8, variants.size())
+        assertEquals("Variant Count", 8, variants.size());
 
         for (Variant variant : variants) {
-            List<String> flavors = variant.getProductFlavors()
-            assertFalse("check ignored x86/cupcake",
-                    flavors.contains("x68") && flavors.contains("cupcake"))
-            assertFalse("check ignored mips/cupcake",
-                    flavors.contains("mips") && flavors.contains("cupcake"))
+            List<String> flavors = variant.getProductFlavors();
+            assertFalse(
+                    "check ignored x86/cupcake",
+                    flavors.contains("x68") && flavors.contains("cupcake"));
+            assertFalse(
+                    "check ignored mips/cupcake",
+                    flavors.contains("mips") && flavors.contains("cupcake"));
         }
     }
 }

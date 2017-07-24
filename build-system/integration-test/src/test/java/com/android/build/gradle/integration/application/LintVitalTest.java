@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,51 +14,46 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.truth.TruthHelper
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import static com.google.common.truth.Truth.assertThat;
 
-import static com.google.common.truth.Truth.assertThat
-/**
- * Checks if fatal lint errors stop the release build.
- */
-@CompileStatic
-class LintVitalTest {
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import java.io.File;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
-    public static final AndroidTestApp helloWorldApp = HelloWorldApp.noBuildFile()
+/** Checks if fatal lint errors stop the release build. */
+public class LintVitalTest {
+
+    public static final AndroidTestApp helloWorldApp = HelloWorldApp.noBuildFile();
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-        .fromTestApp(helloWorldApp)
-        .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestApp(helloWorldApp).create();
 
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "}");
 
-        project.getBuildFile() << """
-apply plugin: 'com.android.application'
-
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-}
-"""
-
-        def manifest = project.file("src/main/AndroidManifest.xml")
-        def manifestLines = manifest.readLines()
-
-        int packageLineNumber = manifestLines.findIndexOf { it =~ /package="/ }
-        manifestLines.add(packageLineNumber + 1, 'android:debuggable="true"')
-        manifest.write(manifestLines.join(System.getProperty("line.separator")))
+        File manifest = project.file("src/main/AndroidManifest.xml");
+        TestFileUtils.searchAndReplace(
+                manifest, "package=", "android:debuggable=\"true\"\npackage=");
     }
 
     /**
@@ -67,19 +62,19 @@ android {
      * :lint does, there's no point in doing both).
      */
     @Test
-    public void runningLintSkipsLintVital() {
+    public void runningLintSkipsLintVital() throws Exception {
         GradleBuildResult result =
-                project.executor().expectFailure().run("lintVitalRelease", "lint")
-        TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasSkipped()
+                project.executor().expectFailure().run("lintVitalRelease", "lint");
+        TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasSkipped();
 
         // We make this assertion to ensure that :lint is actually run and runs as expected. Without
         // this, it's possible that we break the execution in some other way and the test still
         // passes.
-        TruthHelper.assertThat(result.getTask(":lint")).failed()
+        TruthHelper.assertThat(result.getTask(":lint")).failed();
     }
 
     @Test
-    public void fatalLintCheckFailsBuild() {
+    public void fatalLintCheckFailsBuild() throws IOException, InterruptedException {
         GradleBuildResult result =
                 project.executor().expectFailure().run("assembleRelease");
         assertThat(result.getFailureMessage()).contains("fatal errors");
@@ -87,7 +82,7 @@ android {
     }
 
     @Test
-    public void lintVitalIsNotRunForLibraries() {
+    public void lintVitalIsNotRunForLibraries() throws IOException, InterruptedException {
         TestFileUtils.searchAndReplace(
                 project.getBuildFile(),
                 "com\\.android\\.application",
@@ -96,9 +91,8 @@ android {
         TruthHelper.assertThat(result.getTask(":lintVitalRelease")).wasNotExecuted();
     }
 
-
     @Test
-    public void lintVitalDisabled() {
+    public void lintVitalDisabled() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "android.lintOptions.checkReleaseBuilds = false\n");

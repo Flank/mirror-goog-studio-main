@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,44 +14,42 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent
-import com.android.build.gradle.integration.common.utils.ZipHelper
-import com.android.builder.Version
-import com.android.builder.model.AndroidProject
-import com.android.testutils.truth.ZipFileSubject
-import com.android.utils.FileUtils
-import groovy.transform.CompileStatic
-import org.junit.Rule
-import org.junit.Test
-import org.junit.experimental.categories.Category
-import org.objectweb.asm.Type
-import org.objectweb.asm.tree.FieldNode
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.testutils.truth.MoreTruth.assertThatZip
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
+import com.android.build.gradle.integration.common.utils.ZipHelper;
+import com.android.builder.Version;
+import com.android.builder.model.AndroidProject;
+import com.android.utils.FileUtils;
+import java.io.File;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
+import org.objectweb.asm.Type;
+import org.objectweb.asm.tree.FieldNode;
 
-/**
- * Assemble tests for minify.
- */
-@CompileStatic
-class MinifyTest {
+/** Assemble tests for minify. */
+public class MinifyTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("minify").create()
+            GradleTestProject.builder().fromTestProject("minify").create();
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck()
+    public void connectedCheck() throws Exception {
+        project.executeConnectedCheck();
     }
 
     @Test
-    void 'App APK is minified'() throws Exception {
-        project.execute("assembleMinified")
+    public void appApkIsMinified() throws Exception {
+        project.execute("assembleMinified");
 
         File outputDir= FileUtils.join(project.getIntermediatesDir(), "transforms", "proguard", "minified");
         TransformOutputContent content = new TransformOutputContent(outputDir);
@@ -60,56 +58,64 @@ class MinifyTest {
         Set<String> minifiedList = ZipHelper.getZipEntries(jarFile);
 
         // Ignore JaCoCo stuff.
-        minifiedList.removeAll { it =~ /org.jacoco/ }
-        minifiedList.removeAll(["about.html", "com/vladium/emma/rt/RT.class"])
+        minifiedList.removeIf(it -> it.startsWith("org/jacoco"));
+        minifiedList.remove("about.html");
+        minifiedList.remove("com/vladium/emma/rt/RT.class");
 
-        assertThat(minifiedList).containsExactly(
-                "com/android/tests/basic/a.class", // Renamed StringProvider.
-                "com/android/tests/basic/Main.class",
-                "com/android/tests/basic/IndirectlyReferencedClass.class", // Kept by ProGuard rules.
-                // No entry for UnusedClass, it gets removed.
-        )
+        assertThat(minifiedList)
+                .containsExactly(
+                        "com/android/tests/basic/a.class", // Renamed StringProvider.
+                        "com/android/tests/basic/Main.class",
+                        "com/android/tests/basic/IndirectlyReferencedClass.class" // Kept by
+                        // ProGuard rules.
+                        // No entry for UnusedClass, it gets removed.
+                        );
 
-        File defaultProguardFile = project.file(
-                "build/" +
-                        AndroidProject.FD_INTERMEDIATES +
-                        "/proguard-files" +
-                        "/proguard-android.txt" +
-                        "-" +
-                        Version.ANDROID_GRADLE_PLUGIN_VERSION)
-        assertThat(defaultProguardFile).exists()
+        File defaultProguardFile =
+                project.file(
+                        "build/"
+                                + AndroidProject.FD_INTERMEDIATES
+                                + "/proguard-files"
+                                + "/proguard-android.txt"
+                                + "-"
+                                + Version.ANDROID_GRADLE_PLUGIN_VERSION);
+        assertThat(defaultProguardFile).exists();
 
         assertThat(project.getApk("minified"))
                 .hasMainClass("Lcom/android/tests/basic/Main;")
                 .that()
                 // Make sure default ProGuard rules were applied.
-                .hasMethod("handleOnClick")
-
+                .hasMethod("handleOnClick");
     }
 
     @Test
-    void 'Test APK is not minified, but mappings are applied'() throws Exception {
+    public void testApkIsNotMinified_butMappingsAreApplied() throws Exception {
         // Run just a single task, to make sure task dependencies are correct.
-        project.execute("assembleMinifiedAndroidTest")
+        project.execute("assembleMinifiedAndroidTest");
 
         File outputDir= FileUtils.join(project.getIntermediatesDir(), "transforms", "proguard", "androidTest", "minified");
         TransformOutputContent content = new TransformOutputContent(outputDir);
         File jarFile = content.getLocation(content.getSingleStream());
 
-        Set<String> minifiedList = ZipHelper.getZipEntries(jarFile)
+        Set<String> minifiedList = ZipHelper.getZipEntries(jarFile);
 
-        def testClassFiles = minifiedList.findAll { !it.startsWith("org/hamcrest") }
+        List<String> testClassFiles =
+                minifiedList
+                        .stream()
+                        .filter(it -> !it.startsWith("org/hamcrest"))
+                        .collect(Collectors.toList());
 
-        assertThat(testClassFiles).containsExactly(
-                "com/android/tests/basic/MainTest.class",
-                "com/android/tests/basic/UnusedTestClass.class",
-                "com/android/tests/basic/UsedTestClass.class",
-                "com/android/tests/basic/test/BuildConfig.class",
-                "com/android/tests/basic/test/R.class"
-        )
+        assertThat(testClassFiles)
+                .containsExactly(
+                        "com/android/tests/basic/MainTest.class",
+                        "com/android/tests/basic/UnusedTestClass.class",
+                        "com/android/tests/basic/UsedTestClass.class",
+                        "com/android/tests/basic/test/BuildConfig.class",
+                        "com/android/tests/basic/test/R.class");
 
         FieldNode stringProviderField = ZipHelper.checkClassFile(
                 jarFile, "com/android/tests/basic/MainTest.class", "stringProvider");
-        assert Type.getType(stringProviderField.desc).className == "com.android.tests.basic.a"
+        assertThat(Type.getType(stringProviderField.desc).getClassName())
+                .isEqualTo("com.android.tests.basic.a");
     }
 }
