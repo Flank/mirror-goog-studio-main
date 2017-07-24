@@ -14,65 +14,63 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
-/**
- * Integration test for uploadAchives with multiple projects.
- */
+/** Integration test for uploadAchives with multiple projects. */
 @CompileStatic
-class RepoTest {
+public class RepoTest {
 
     @ClassRule
-    static public GradleTestProject app = GradleTestProject.builder()
-            .withName("app")
-            .fromTestProject("repo/app")
-            .create()
+    public static GradleTestProject app =
+            GradleTestProject.builder().withName("app").fromTestProject("repo/app").create();
 
     @ClassRule
-    static public GradleTestProject baseLibrary = GradleTestProject.builder()
-            .withName("baseLibrary")
-            .fromTestProject("repo/baseLibrary")
-            .create()
+    public static GradleTestProject baseLibrary =
+            GradleTestProject.builder()
+                    .withName("baseLibrary")
+                    .fromTestProject("repo/baseLibrary")
+                    .create();
 
     @ClassRule
-    static public GradleTestProject library = GradleTestProject.builder()
-            .withName("library")
-            .fromTestProject("repo/library")
-            .create()
+    public static GradleTestProject library =
+            GradleTestProject.builder()
+                    .withName("library")
+                    .fromTestProject("repo/library")
+                    .create();
 
     @ClassRule
-    static public GradleTestProject util = GradleTestProject.builder()
-            .withName("util")
-            .fromTestProject("repo/util")
-            .create()
+    public static GradleTestProject util =
+            GradleTestProject.builder().withName("util").fromTestProject("repo/util").create();
 
     @BeforeClass
-    static void setUp() {
+    public static void setUp() {
         // Clean testRepo
-        File testRepo = new File(app.testDir, "../testrepo");
-        testRepo.delete()
+        File testRepo = new File(app.getTestDir(), "../testrepo");
+        testRepo.delete();
     }
 
     @AfterClass
-    static void cleanUp() {
-        app = null
-        baseLibrary = null
-        library = null
-        util = null
+    public static void cleanUp() {
+        app = null;
+        baseLibrary = null;
+        library = null;
+        util = null;
     }
 
     @Test
-    void repo() {
-        util.execute("clean", "uploadArchives")
-        baseLibrary.execute("clean", "uploadArchives")
-        library.execute("clean", "uploadArchives")
-        app.execute("clean", "assembleDebug")
+    public void repo() throws IOException, InterruptedException {
+        util.execute("clean", "uploadArchives");
+        baseLibrary.execute("clean", "uploadArchives");
+        library.execute("clean", "uploadArchives");
+        app.execute("clean", "assembleDebug");
     }
 }

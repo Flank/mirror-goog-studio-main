@@ -14,83 +14,86 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidArtifactOutput
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.Variant
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.builder.core.BuilderConstants.DEBUG;
+import static com.android.builder.core.BuilderConstants.RELEASE;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import static com.android.builder.core.BuilderConstants.DEBUG
-import static com.android.builder.core.BuilderConstants.RELEASE
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNotNull
-import static org.junit.Assert.assertTrue
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidArtifactOutput;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Variant;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
-/**
- * Assemble tests for class densitySplitInL
- */
-class OutputRenamingTest {
+/** Assemble tests for class densitySplitInL */
+public class OutputRenamingTest {
 
-    static AndroidProject model
+    private static AndroidProject model;
 
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("densitySplitInL")
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("densitySplitInL").create();
 
     @BeforeClass
-    static void setup() {
-        project.getBuildFile() << """android {
-applicationVariants.all { variant ->
-    // Custom APK names (do not do this for 'dev' build type)
-    println variant.buildType.name
-    def baseFileName = "project-\${variant.flavorName}-\${variant.versionCode}-\${variant.buildType.name}"
-    variant.outputs.all { output ->
-      output.outputFileName = "\${baseFileName}-signed.apk"
-    }
-  }
-        }"""
-        model = project.executeAndReturnModel("clean", "assemble").getOnlyModel()
+    public static void setup() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android {\n"
+                        + "applicationVariants.all { variant ->\n"
+                        + "    // Custom APK names (do not do this for 'dev' build type)\n"
+                        + "    println variant.buildType.name\n"
+                        + "    def baseFileName = \"project-${variant.flavorName}-${variant.versionCode}-${variant.buildType.name}\"\n"
+                        + "    variant.outputs.all { output ->\n"
+                        + "      output.outputFileName = \"${baseFileName}-signed.apk\"\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}");
+        model = project.executeAndReturnModel("clean", "assemble").getOnlyModel();
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
-        model = null
+    public static void cleanUp() {
+        project = null;
+        model = null;
     }
 
     @Test
-    void "check split outputs"() throws Exception {
-        Collection<Variant> variants = model.getVariants()
-        assertEquals("Variant Count", 2 , variants.size())
+    public void checkSplitOutputs() throws Exception {
+        Collection<Variant> variants = model.getVariants();
+        assertEquals("Variant Count", 2, variants.size());
 
-        assertFileRenaming(DEBUG)
-        assertFileRenaming(RELEASE)
+        assertFileRenaming(DEBUG);
+        assertFileRenaming(RELEASE);
     }
 
     private static void assertFileRenaming(String buildType) {
-        Variant variant = ModelHelper.getVariant(model.getVariants(), buildType)
-        AndroidArtifact mainArtifact = variant.getMainArtifact()
-        assertNotNull("main info null-check", mainArtifact)
+        Variant variant = ModelHelper.getVariant(model.getVariants(), buildType);
+        AndroidArtifact mainArtifact = variant.getMainArtifact();
+        assertNotNull("main info null-check", mainArtifact);
 
         // get the outputs.
-        Collection<AndroidArtifactOutput> outputs = mainArtifact.getOutputs()
-        assertNotNull(outputs)
+        Collection<AndroidArtifactOutput> outputs = mainArtifact.getOutputs();
+        assertNotNull(outputs);
 
-        assertEquals(1, outputs.size())
-        AndroidArtifactOutput output = outputs.iterator().next()
-        assertEquals(5, output.getOutputs().size())
+        assertEquals(1, outputs.size());
+        AndroidArtifactOutput output = outputs.iterator().next();
+        assertEquals(5, output.getOutputs().size());
 
-        String expectedFileName = "project--12-"+ buildType.toLowerCase() + "-signed.apk"
+        String expectedFileName = "project--12-" + buildType.toLowerCase() + "-signed.apk";
         File mainOutputFile = output.getMainOutputFile().getOutputFile();
-        assertEquals(expectedFileName, mainOutputFile.name)
+        assertEquals(expectedFileName, mainOutputFile.getName());
         assertTrue(mainOutputFile.exists());
     }
 }

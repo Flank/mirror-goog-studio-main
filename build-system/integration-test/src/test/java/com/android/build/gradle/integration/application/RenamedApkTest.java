@@ -14,74 +14,75 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidArtifactOutput
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.Variant
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNotNull
-import static org.junit.Assert.assertTrue
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidArtifactOutput;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Variant;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
-/**
- * Assemble tests for renamedApk.
- */
+/** Assemble tests for renamedApk. */
 @CompileStatic
-class RenamedApkTest {
+public class RenamedApkTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("renamedApk")
-            .create()
-    static AndroidProject model
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("renamedApk").create();
+
+    private static AndroidProject model;
 
     @BeforeClass
-    static void setUp() {
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel()
+    public static void setUp() throws IOException, InterruptedException {
+        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
-        model = null
+    public static void cleanUp() {
+        project = null;
+        model = null;
     }
 
     @Test
-    void "check model reflects renamed apk"() throws Exception {
-        File projectDir = project.getTestDir()
+    public void checkModelReflectsRenamedApk() throws Exception {
+        File projectDir = project.getTestDir();
 
-        Collection<Variant> variants = model.getVariants()
-        assertEquals("Variant Count", 2 , variants.size())
+        Collection<Variant> variants = model.getVariants();
+        assertEquals("Variant Count", 2, variants.size());
 
-        File buildDir = new File(projectDir, "build/outputs/apk/debug")
+        File buildDir = new File(projectDir, "build/outputs/apk/debug");
 
         for (Variant variant : variants) {
             if (!variant.getName().equals("debug")) {
                 continue;
             }
-            AndroidArtifact mainInfo = variant.getMainArtifact()
+            AndroidArtifact mainInfo = variant.getMainArtifact();
             assertNotNull(
-                    "Null-check on mainArtifactInfo for " + variant.getDisplayName(),
-                    mainInfo)
+                    "Null-check on mainArtifactInfo for " + variant.getDisplayName(), mainInfo);
 
-            AndroidArtifactOutput output = mainInfo.getOutputs().iterator().next()
+            AndroidArtifactOutput output = mainInfo.getOutputs().iterator().next();
 
-            assertEquals("Output file for " + variant.getName(),
+            assertEquals(
+                    "Output file for " + variant.getName(),
                     new File(buildDir, variant.getName() + ".apk"),
-                    output.getMainOutputFile().getOutputFile())
+                    output.getMainOutputFile().getOutputFile());
         }
     }
 
     @Test
-    void "check renamed apk"() {
-        File debugApk = project.file("build/outputs/apk/debug/debug.apk")
-        assertTrue("Check output file: " + debugApk, debugApk.isFile())
+    public void checkRenamedApk() {
+        File debugApk = project.file("build/outputs/apk/debug/debug.apk");
+        assertTrue("Check output file: " + debugApk, debugApk.isFile());
     }
 }

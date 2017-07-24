@@ -14,43 +14,45 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.internal.ndk.NdkHandler
-import com.android.repository.Revision
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.google.common.truth.TruthJUnit.assume;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.google.common.truth.TruthJUnit.assume
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.repository.Revision;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 
-/**
- * Assemble tests for renderscript with NDK mode enabled.
- */
+/** Assemble tests for renderscript with NDK mode enabled. */
 @CompileStatic
-class RenderscriptNdkTest {
+public class RenderscriptNdkTest {
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("renderscriptNdk")
-            .addGradleProperties("android.useDeprecatedNdk=true")
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("renderscriptNdk")
+                    .addGradleProperties("android.useDeprecatedNdk=true")
+                    .create();
 
     @Before
-    public void setUp() {
-        Revision ndkRevision = NdkHandler.findRevision(GradleTestProject.ANDROID_NDK_HOME)
+    public void setUp() throws IOException, InterruptedException {
+        Revision ndkRevision = NdkHandler.findRevision(GradleTestProject.ANDROID_NDK_HOME);
         // ndk r11, r12 are missing renderscript, ndk r10 does support it and has null revision
-        assume().that(ndkRevision).isNull()
+        assume().that(ndkRevision).isNull();
 
-        project.execute("clean", "assembleDebug")
+        project.execute("clean", "assembleDebug");
     }
 
     @Test
-    void "check packaged .so files"() {
-        assertThat(project.getApk("debug")).contains("lib/armeabi-v7a/librs.mono.so")
-        assertThat(project.getApk("debug")).contains("lib/armeabi-v7a/librenderscript.so")
+    public void checkPackagedDotSoFiles() throws IOException {
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .contains("lib/armeabi-v7a/librs.mono.so");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .contains("lib/armeabi-v7a/librenderscript.so");
     }
 }

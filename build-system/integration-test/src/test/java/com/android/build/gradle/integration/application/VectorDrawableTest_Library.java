@@ -14,261 +14,285 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
-import com.android.build.gradle.integration.common.utils.AssumeUtil
-import com.android.build.gradle.integration.common.utils.TestFileUtils
-import com.android.testutils.apk.Apk
-import com.android.utils.FileUtils
-import com.google.common.io.Files
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-/**
- * Tests for PNG generation in case of libraries.
- */
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.testutils.apk.Apk;
+import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+/** Tests for PNG generation in case of libraries. */
 @CompileStatic
-class VectorDrawableTest_Library {
+public class VectorDrawableTest_Library {
 
-    public static final String VECTOR_XML_CONTENT = """
-        <vector xmlns:android="http://schemas.android.com/apk/res/android"
-            android:height="256dp"
-            android:width="256dp"
-            android:viewportWidth="32"
-            android:viewportHeight="32">
+    public static final String VECTOR_XML_CONTENT =
+            "\n"
+                    + "        <vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                    + "            android:height=\"256dp\"\n"
+                    + "            android:width=\"256dp\"\n"
+                    + "            android:viewportWidth=\"32\"\n"
+                    + "            android:viewportHeight=\"32\">\n"
+                    + "\n"
+                    + "            <path\n"
+                    + "                android:fillColor=\"#ff0000\"\n"
+                    + "                android:pathData=\"M20.5,9.5\n"
+                    + "                                c-1.965,0,-3.83,1.268,-4.5,3\n"
+                    + "                                c-0.17,-1.732,-2.547,-3,-4.5,-3\n"
+                    + "                                C8.957,9.5,7,11.432,7,14\n"
+                    + "                                c0,3.53,3.793,6.257,9,11.5\n"
+                    + "                                c5.207,-5.242,9,-7.97,9,-11.5\n"
+                    + "                                C25,11.432,23.043,9.5,20.5,9.5z\" />\n"
+                    + "        </vector>\n"
+                    + "        ";
 
-            <path
-                android:fillColor="#ff0000"
-                android:pathData="M20.5,9.5
-                                c-1.965,0,-3.83,1.268,-4.5,3
-                                c-0.17,-1.732,-2.547,-3,-4.5,-3
-                                C8.957,9.5,7,11.432,7,14
-                                c0,3.53,3.793,6.257,9,11.5
-                                c5.207,-5.242,9,-7.97,9,-11.5
-                                C25,11.432,23.043,9.5,20.5,9.5z" />
-        </vector>
-        """
-
-    public static final String VECTOR_XML_PATH = "src/main/res/drawable/lib_vector.xml"
-
+    public static final String VECTOR_XML_PATH = "src/main/res/drawable/lib_vector.xml";
 
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(new MultiModuleTestProject([
-                    ":app": HelloWorldApp.forPlugin("com.android.application"),
-                    ":lib": new EmptyAndroidTestApp("com.example.lib")
-            ]))
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestApp(
+                            new MultiModuleTestProject(
+                                    ImmutableMap.of(
+                                            ":app",
+                                            HelloWorldApp.forPlugin("com.android.application"),
+                                            ":lib",
+                                            new EmptyAndroidTestApp("com.example.lib"))))
+                    .create();
 
     @Before
     public void checkBuildTools() {
-        AssumeUtil.assumeBuildToolsAtLeast(21)
+        AssumeUtil.assumeBuildToolsAtLeast(21);
     }
 
     @Before
-    public void setUpApp() {
-        def app = project.getSubproject(":app")
-        app.buildFile << "dependencies { compile project(':lib') }"
-        Files.createParentDirs(app.file("src/main/res/drawable/app_vector.xml"))
-        app.file("src/main/res/drawable/app_vector.xml") << VECTOR_XML_CONTENT
+    public void setUpApp() throws IOException {
+        GradleTestProject app = project.getSubproject(":app");
+        TestFileUtils.appendToFile(app.getBuildFile(), "dependencies { compile project(':lib') }");
+
+        Files.createParentDirs(app.file("src/main/res/drawable/app_vector.xml"));
+        TestFileUtils.appendToFile(
+                app.file("src/main/res/drawable/app_vector.xml"), VECTOR_XML_CONTENT);
     }
 
     @Before
-    public void setUpLib() {
-        def lib = project.getSubproject(":lib")
-        lib.buildFile << """
-        apply plugin: "com.android.library"
+    public void setUpLib() throws IOException {
+        GradleTestProject lib = project.getSubproject(":lib");
+        TestFileUtils.appendToFile(
+                lib.getBuildFile(),
+                "\n"
+                        + "        apply plugin: \"com.android.library\"\n"
+                        + "\n"
+                        + "        android {\n"
+                        + "            compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "            buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "        }\n"
+                        + "        ");
 
-        android {
-            compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-            buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-        }
-        """
-
-        Files.createParentDirs(lib.file(VECTOR_XML_PATH))
-        lib.file(VECTOR_XML_PATH) << VECTOR_XML_CONTENT
+        Files.createParentDirs(lib.file(VECTOR_XML_PATH));
+        TestFileUtils.appendToFile(lib.file(VECTOR_XML_PATH), VECTOR_XML_CONTENT);
     }
 
     @Test
-    public void "Lib uses support library, app does not"() throws Exception {
-        project.getSubproject(":lib").buildFile << """
-                android.defaultConfig.vectorDrawables {
-                    useSupportLibrary = true
-                }
-        """
+    public void libUsesSupportLibraryWhileAppDoesNot() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":lib").getBuildFile(),
+                "\n"
+                        + "                android.defaultConfig.vectorDrawables {\n"
+                        + "                    useSupportLibrary = true\n"
+                        + "                }\n"
+                        + "        ");
 
-        project.execute(":app:assembleDebug")
-        Apk apk = project.getSubproject(":app").getApk("debug")
+        project.execute(":app:assembleDebug");
+        Apk apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG);
 
-        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
-        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png")
-        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
-        assertThat(apk).doesNotContainResource("drawable/app_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png");
+        assertThat(apk).doesNotContainResource("drawable/app_vector.xml");
 
-        assertThat(apk).containsResource("drawable/lib_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
-        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable/lib_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png");
 
-        modifyVector()
+        modifyVector();
 
         // Verify incremental build.
-        project.execute(":app:assembleDebug")
+        project.execute(":app:assembleDebug");
 
-        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
-        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png")
-        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
-        assertThat(apk).doesNotContainResource("drawable/app_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png");
+        assertThat(apk).doesNotContainResource("drawable/app_vector.xml");
 
-        assertThat(apk).containsResource("drawable/lib_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
-        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable/lib_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png");
     }
 
-    private void modifyVector() {
+    private void modifyVector() throws IOException {
         TestFileUtils.searchAndReplace(
-                project.getSubproject(":lib").file(VECTOR_XML_PATH),
-                "ff0000",
-                "00ff00")
+                project.getSubproject(":lib").file(VECTOR_XML_PATH), "ff0000", "00ff00");
     }
 
     @Test
-    public void "App uses support library, lib does not"() throws Exception {
-        project.getSubproject(":app").buildFile << """
-                android.defaultConfig.vectorDrawables {
-                    // Try the DSL method without "=".
-                    useSupportLibrary true
-                }
-        """
+    public void appUsesSupportLibraryWhileLibDoesNot() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "\n"
+                        + "                android.defaultConfig.vectorDrawables {\n"
+                        + "                    // Try the DSL method without \"=\".\n"
+                        + "                    useSupportLibrary true\n"
+                        + "                }\n"
+                        + "        ");
 
-        project.execute(":app:assembleDebug")
-        Apk apk = project.getSubproject(":app").getApk("debug")
+        project.execute(":app:assembleDebug");
+        Apk apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG);
 
-        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
-        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
-        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png");
+        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml");
 
-        assertThat(apk).containsResource("drawable/app_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
-        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
+        assertThat(apk).containsResource("drawable/app_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png");
 
-        modifyVector()
+        modifyVector();
 
-        project.execute(":app:assembleDebug")
+        project.execute(":app:assembleDebug");
 
-        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
-        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
-        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png");
+        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml");
 
-        assertThat(apk).containsResource("drawable/app_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
-        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
+        assertThat(apk).containsResource("drawable/app_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png");
     }
 
     @Test
-    public void "Both use support library"() throws Exception {
-        project.getSubproject(":app").buildFile << """
-                android.defaultConfig.vectorDrawables {
-                    useSupportLibrary = true
-                }
-        """
+    public void bothUseSupportLibrary() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":app").getBuildFile(),
+                "\n"
+                        + "                android.defaultConfig.vectorDrawables {\n"
+                        + "                    useSupportLibrary = true\n"
+                        + "                }\n"
+                        + "        ");
 
-        project.getSubproject(":lib").buildFile << """
-                android.defaultConfig.vectorDrawables {
-                    useSupportLibrary = true
-                }
-        """
+        TestFileUtils.appendToFile(
+                project.getSubproject(":lib").getBuildFile(),
+                "\n"
+                        + "                android.defaultConfig.vectorDrawables {\n"
+                        + "                    useSupportLibrary = true\n"
+                        + "                }\n"
+                        + "        ");
 
-        project.execute(":app:assembleDebug")
-        Apk apk = project.getSubproject(":app").getApk("debug")
+        project.execute(":app:assembleDebug");
+        Apk apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG);
 
-        assertThat(apk).containsResource("drawable/app_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
-        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
+        assertThat(apk).containsResource("drawable/app_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png");
 
-        assertThat(apk).containsResource("drawable/lib_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
-        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable/lib_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png");
 
-        modifyVector()
+        modifyVector();
 
-        project.execute(":app:assembleDebug")
-        assertThat(apk).containsResource("drawable/app_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png")
-        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png")
+        project.execute(":app:assembleDebug");
+        assertThat(apk).containsResource("drawable/app_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/app_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/app_vector.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/app_vector.png");
 
-        assertThat(apk).containsResource("drawable/lib_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png")
-        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png")
+        assertThat(apk).containsResource("drawable/lib_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-anydpi-v21/lib_vector.xml");
+        assertThat(apk).doesNotContainResource("drawable-hdpi-v4/lib_vector.png");
+        assertThat(apk).doesNotContainResource("drawable-xhdpi-v4/lib_vector.png");
     }
 
     @Test
-    public void "None use support library"() throws Exception {
-        project.execute(":app:assembleDebug")
-        Apk apk = project.getSubproject(":app").getApk("debug")
+    public void noneUseSupportLibrary() throws Exception {
+        project.execute(":app:assembleDebug");
+        Apk apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG);
 
-        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
-        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png")
-        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
-        assertThat(apk).doesNotContainResource("drawable/app_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png");
+        assertThat(apk).doesNotContainResource("drawable/app_vector.xml");
 
-        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
-        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
-        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png");
+        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml");
 
-        modifyVector()
-        
-        project.execute(":app:assembleDebug")
+        modifyVector();
 
-        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml")
-        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png")
-        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png")
-        assertThat(apk).doesNotContainResource("drawable/app_vector.xml")
+        project.execute(":app:assembleDebug");
 
-        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml")
-        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png")
-        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png")
-        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml")
+        assertThat(apk).containsResource("drawable-anydpi-v21/app_vector.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/app_vector.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/app_vector.png");
+        assertThat(apk).doesNotContainResource("drawable/app_vector.xml");
+
+        assertThat(apk).containsResource("drawable-anydpi-v21/lib_vector.xml");
+        assertThat(apk).containsResource("drawable-hdpi-v4/lib_vector.png");
+        assertThat(apk).containsResource("drawable-xhdpi-v4/lib_vector.png");
+        assertThat(apk).doesNotContainResource("drawable/lib_vector.xml");
     }
 
     @Test
-    public void "App generated resource overrides library generated resource"() throws Exception {
-        def app = project.getSubproject(":app")
-        def lib = project.getSubproject(":lib")
-        String blue = "#00ffff"
-        String red = "#ff0000"
+    public void appGeneratedResourceOverridesLibraryGeneratedResource() throws Exception {
+        GradleTestProject app = project.getSubproject(":app");
+        GradleTestProject lib = project.getSubproject(":lib");
+        String blue = "#00ffff";
+        String red = "#ff0000";
 
-        app.file("src/main/res/drawable/my_vector.xml") << VECTOR_XML_CONTENT.replace(red, blue)
-        lib.file("src/main/res/drawable/my_vector.xml") << VECTOR_XML_CONTENT
+        TestFileUtils.appendToFile(
+                app.file("src/main/res/drawable/my_vector.xml"),
+                VECTOR_XML_CONTENT.replace(red, blue));
+        TestFileUtils.appendToFile(
+                lib.file("src/main/res/drawable/my_vector.xml"), VECTOR_XML_CONTENT);
 
-        project.execute(":app:assembleDebug")
+        project.execute(":app:assembleDebug");
 
         File generatedXmlApp =
                 FileUtils.join(
                         app.getTestDir(),
                         "build",
                         "generated",
-                        "res", "pngs",
+                        "res",
+                        "pngs",
                         "debug",
                         "drawable-anydpi-v21",
-                        "my_vector.xml")
+                        "my_vector.xml");
 
         File generatedXmlLib =
                 FileUtils.join(
@@ -279,25 +303,26 @@ class VectorDrawableTest_Library {
                         "pngs",
                         "debug",
                         "drawable-anydpi-v21",
-                        "my_vector.xml")
+                        "my_vector.xml");
 
-        assertThat(generatedXmlApp).isNotSameAs(generatedXmlLib)
+        assertThat(generatedXmlApp).isNotSameAs(generatedXmlLib);
 
         // Library color should be red and should be overridden in the app by the color blue.
-        assertThat(generatedXmlApp).contains(blue)
-        assertThat(generatedXmlApp).doesNotContain(red)
-        assertThat(generatedXmlLib).contains(red)
-        assertThat(generatedXmlLib).doesNotContain(blue)
+        assertThat(generatedXmlApp).contains(blue);
+        assertThat(generatedXmlApp).doesNotContain(red);
+        assertThat(generatedXmlLib).contains(red);
+        assertThat(generatedXmlLib).doesNotContain(blue);
 
         File generatedPngApp =
                 FileUtils.join(
                         app.getTestDir(),
                         "build",
                         "generated",
-                        "res", "pngs",
+                        "res",
+                        "pngs",
                         "debug",
                         "drawable-hdpi",
-                        "my_vector.png")
+                        "my_vector.png");
 
         File generatedPngLib =
                 FileUtils.join(
@@ -308,9 +333,9 @@ class VectorDrawableTest_Library {
                         "pngs",
                         "debug",
                         "drawable-hdpi",
-                        "my_vector.png")
+                        "my_vector.png");
 
         // Check the generated PNGs too, just to be safe.
-        assertThat(generatedPngApp).isNotSameAs(generatedPngLib)
+        assertThat(generatedPngApp).isNotSameAs(generatedPngLib);
     }
 }

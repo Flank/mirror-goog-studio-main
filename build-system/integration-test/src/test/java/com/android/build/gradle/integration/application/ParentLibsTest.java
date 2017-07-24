@@ -14,43 +14,43 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.SdkConstants
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.google.common.collect.ImmutableList
-import com.google.common.io.Files
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import com.android.SdkConstants;
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.google.common.collect.ImmutableList;
+import com.google.common.io.Files;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 /**
  * Assemble tests for parentLibTest
  */
 @CompileStatic
 public class ParentLibsTest {
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("parentLibsTest")
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("parentLibsTest").create();
 
     @Before
-    public void moveLocalProperties() {
+    public void moveLocalProperties() throws IOException {
         Files.move(
                 project.file(SdkConstants.FN_LOCAL_PROPERTIES),
-                project.getSubproject("app").file(SdkConstants.FN_LOCAL_PROPERTIES))
+                project.getSubproject("app").file(SdkConstants.FN_LOCAL_PROPERTIES));
     }
 
     @Test
-    void assembleAndLint() {
-        project.execute(ImmutableList.of("-p", "app"), "clean", "assembleDebug", "lint")
+    public void assembleAndLint() throws IOException, InterruptedException {
+        project.execute(ImmutableList.of("-p", "app"), "clean", "assembleDebug", "lint");
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() {
-        project.executeConnectedCheck(ImmutableList.of("-p", "app"))
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck(ImmutableList.of("-p", "app"));
     }
 }

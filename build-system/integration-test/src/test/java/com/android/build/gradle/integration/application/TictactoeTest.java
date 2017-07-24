@@ -14,66 +14,66 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
-import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.Variant
-import com.android.builder.model.level2.DependencyGraphs
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH;
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
+import static com.android.builder.core.BuilderConstants.DEBUG;
+import static com.android.builder.model.AndroidProject.PROJECT_TYPE_LIBRARY;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.GRADLE_PATH
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE
-import static com.android.builder.core.BuilderConstants.DEBUG
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNotNull
-import static org.junit.Assert.assertTrue
-/**
- * Assemble tests for tictactoe.
- */
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Variant;
+import com.android.builder.model.level2.DependencyGraphs;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import java.util.Collection;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+/** Assemble tests for tictactoe. */
 @CompileStatic
-class  TictactoeTest {
+public class TictactoeTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("tictactoe")
-            .create()
-    static ModelContainer<AndroidProject> models
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("tictactoe").create();
+
+    private static ModelContainer<AndroidProject> models;
 
     @BeforeClass
-    static void setUp() {
-        models = project.executeAndReturnMultiModel("clean", "assembleDebug")
+    public static void setUp() throws IOException, InterruptedException {
+        models = project.executeAndReturnMultiModel("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
-        models = null
+    public static void cleanUp() {
+        project = null;
+        models = null;
     }
 
     @Test
     public void testModel() throws Exception {
-        LibraryGraphHelper helper = new LibraryGraphHelper(models)
+        LibraryGraphHelper helper = new LibraryGraphHelper(models);
 
-        AndroidProject libModel = models.getModelMap().get(":lib")
-        assertNotNull("lib module model null-check", libModel)
-        assertTrue("lib module library flag", libModel.isLibrary())
-        assertEquals("Project Type", AndroidProject.PROJECT_TYPE_LIBRARY, libModel.getProjectType())
+        AndroidProject libModel = models.getModelMap().get(":lib");
+        assertNotNull("lib module model null-check", libModel);
+        assertEquals("lib module library flag", libModel.getProjectType(), PROJECT_TYPE_LIBRARY);
+        assertEquals("Project Type", PROJECT_TYPE_LIBRARY, libModel.getProjectType());
 
-        AndroidProject appModel = models.getModelMap().get(":app")
-        assertNotNull("app module model null-check", appModel)
+        AndroidProject appModel = models.getModelMap().get(":app");
+        assertNotNull("app module model null-check", appModel);
 
-        Collection<Variant> variants = appModel.getVariants()
-        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG)
+        Collection<Variant> variants = appModel.getVariants();
+        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG);
 
         DependencyGraphs graph = debugVariant.getMainArtifact().getDependencyGraphs();
-        assertThat(helper.on(graph).withType(MODULE).mapTo(GRADLE_PATH)).containsExactly(":lib")
+        assertThat(helper.on(graph).withType(MODULE).mapTo(GRADLE_PATH)).containsExactly(":lib");
     }
 }

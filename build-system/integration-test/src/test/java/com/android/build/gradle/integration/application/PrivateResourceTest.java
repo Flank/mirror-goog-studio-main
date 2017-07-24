@@ -14,56 +14,62 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.testutils.truth.MoreTruth.assertThat;
 
-import static com.android.testutils.truth.MoreTruth.assertThat
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 /**
  * Assemble tests for privateResources.
- * <p>
- * Tip: To execute just this test after modifying the annotations extraction code:
+ *
+ * <p>Tip: To execute just this test after modifying the annotations extraction code:
+ *
  * <pre>
  *     $ cd tools
  *     $ ./gradlew :base:integration-test:test -D:base:integration-test:test.single=PrivateResourceTest
  * </pre>
  */
 @CompileStatic
-class PrivateResourceTest {
+public class PrivateResourceTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("privateResources")
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("privateResources").create();
 
     @BeforeClass
-    static void setup() {
+    public static void setup() throws IOException, InterruptedException {
         project.execute("clean", "assemble");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void "check private resources"() {
-        String expected = """\
-style Mylib_My_Theme
-string mylib_app_name
-string mylib_public_string
-string mylib_shared_name
-id mylib_shared_name
-"""
-        assertThat(project.getSubproject('mylibrary').getAar("release")).containsFileWithContent('public.txt', expected);
-        assertThat(project.getSubproject('mylibrary').getAar("debug")).containsFileWithContent('public.txt', expected);
+    public void checkPrivateResources() throws IOException {
+        String expected =
+                ""
+                        + "style Mylib_My_Theme\n"
+                        + "string mylib_app_name\n"
+                        + "string mylib_public_string\n"
+                        + "string mylib_shared_name\n"
+                        + "id mylib_shared_name";
+
+        assertThat(project.getSubproject("mylibrary").getAar("release"))
+                .containsFileWithContent("public.txt", expected);
+        assertThat(project.getSubproject("mylibrary").getAar("debug"))
+                .containsFileWithContent("public.txt", expected);
 
         // No public resources: file should exist but be empty
-        assertThat(project.getSubproject('mylibrary2').getAar("debug")).containsFileWithContent('public.txt', "");
-        assertThat(project.getSubproject('mylibrary2').getAar("release")).containsFileWithContent('public.txt', "");
+        assertThat(project.getSubproject("mylibrary2").getAar("debug"))
+                .containsFileWithContent("public.txt", "");
+        assertThat(project.getSubproject("mylibrary2").getAar("release"))
+                .containsFileWithContent("public.txt", "");
     }
 }

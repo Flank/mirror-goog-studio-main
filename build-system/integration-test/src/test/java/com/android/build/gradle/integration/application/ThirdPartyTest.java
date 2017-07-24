@@ -14,34 +14,32 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.ClassRule
-import org.junit.Test
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
-/**
- * Assemble tests for 3rdPartyTests.
- */
+/** Assemble tests for 3rdPartyTests. */
 @CompileStatic
-class ThirdPartyTest {
+public class ThirdPartyTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("3rdPartyTests")
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("3rdPartyTests").create();
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
-    void deviceCheck() {
+    public void deviceCheck() throws IOException, InterruptedException {
         // Run deviceCheck even without devices, since we use a fake DeviceProvider that doesn't
         // use a device, but only record the calls made to the DeviceProvider and the
         // DeviceConnector.
-        project.execute("clean", "deviceCheck")
+        project.execute("clean", "deviceCheck");
     }
 }

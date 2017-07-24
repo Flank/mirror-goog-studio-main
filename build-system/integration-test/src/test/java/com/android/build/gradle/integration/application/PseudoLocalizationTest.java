@@ -14,40 +14,38 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.AssumeUtil
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-/**
- * Test for pseudolocalized.
- */
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.AssumeUtil;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+/** Test for pseudo-localized. */
 @CompileStatic
-class PseudoLocalizationTest {
+public class PseudoLocalizationTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("pseudolocalized")
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("pseudolocalized").create();
 
     @BeforeClass
-    static void setUp() {
-        AssumeUtil.assumeBuildToolsAtLeast(21)
-        project.execute("clean", "assembleDebug")
+    public static void setUp() throws IOException, InterruptedException {
+        AssumeUtil.assumeBuildToolsAtLeast(21);
+        project.execute("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
     @Test
     public void testPseudolocalization() throws Exception {
-        assertThat(project.getApk("debug")).locales().containsAllOf("en-XA", "ar-XB")
+        assertThat(project.getApk("debug")).locales().containsAllOf("en-XA", "ar-XB");
     }
 }

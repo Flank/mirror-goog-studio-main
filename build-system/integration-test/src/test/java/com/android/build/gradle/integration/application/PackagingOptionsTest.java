@@ -14,230 +14,247 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.google.common.io.Files
-import groovy.transform.CompileStatic
-import org.junit.Before
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Rule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.google.common.io.Files;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 /**
  * Assemble tests for packagingOptions.
  *
- * Creates two jar files and test various packaging options.
+ * <p>Creates two jar files and test various packaging options.
  */
 @CompileStatic
-class PackagingOptionsTest {
+public class PackagingOptionsTest {
 
     // Projects to create jar files.
-    private static AndroidTestApp jarProject1 = new EmptyAndroidTestApp()
+    private static AndroidTestApp jarProject1 = new EmptyAndroidTestApp();
 
     static {
-        jarProject1.addFile(new TestSourceFile("", "build.gradle", "apply plugin: 'java'"))
-        jarProject1.addFile(new TestSourceFile("src/main/resources", "conflict.txt", "foo"))
+        jarProject1.addFile(new TestSourceFile("", "build.gradle", "apply plugin: 'java'"));
+        jarProject1.addFile(new TestSourceFile("src/main/resources", "conflict.txt", "foo"));
     }
 
-    private static AndroidTestApp jarProject2 = new EmptyAndroidTestApp()
+    private static AndroidTestApp jarProject2 = new EmptyAndroidTestApp();
 
     static {
-        jarProject2.addFile(new TestSourceFile("", "build.gradle", "apply plugin: 'java'"))
-        jarProject2.addFile(new TestSourceFile("src/main/resources", "conflict.txt", "foo"))
+        jarProject2.addFile(new TestSourceFile("", "build.gradle", "apply plugin: 'java'"));
+        jarProject2.addFile(new TestSourceFile("src/main/resources", "conflict.txt", "foo"));
         // add an extra file so that jar1 is different from jar2.
-        jarProject2.addFile(new TestSourceFile("src/main/resources", "dummy2.txt", "bar"))
+        jarProject2.addFile(new TestSourceFile("src/main/resources", "dummy2.txt", "bar"));
     }
 
     @ClassRule
-    public static GradleTestProject jar1 = GradleTestProject.builder()
-            .fromTestApp(jarProject1)
-            .withName("jar1")
-            .create()
+    public static GradleTestProject jar1 =
+            GradleTestProject.builder().fromTestApp(jarProject1).withName("jar1").create();
 
     @ClassRule
-    public static GradleTestProject jar2 = GradleTestProject.builder()
-            .fromTestApp(jarProject2)
-            .withName("jar2")
-            .create()
+    public static GradleTestProject jar2 =
+            GradleTestProject.builder().fromTestApp(jarProject2).withName("jar2").create();
 
     @BeforeClass
-    static void createJars() {
-        jar1.execute("assemble")
-        jar2.execute("assemble")
+    public static void createJars() throws IOException, InterruptedException {
+        jar1.execute("assemble");
+        jar2.execute("assemble");
     }
 
 
     // Main test project.
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.noBuildFile())
-            .create()
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestApp(HelloWorldApp.noBuildFile()).create();
 
     @Before
-    void setUp() {
-        Files.copy(jar1.file("build/libs/jar1.jar"), project.file("jar1.jar"))
-        Files.copy(jar2.file("build/libs/jar2.jar"), project.file("jar2.jar"))
+    public void setUp() throws IOException {
+        Files.copy(jar1.file("build/libs/jar1.jar"), project.file("jar1.jar"));
+        Files.copy(jar2.file("build/libs/jar2.jar"), project.file("jar2.jar"));
 
-        project.getBuildFile() << """
-apply plugin: 'com.android.application'
-
-android {
-    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-}
-"""
-
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "}\n");
     }
 
     @Test
-    void "check pickFirst"() {
-        project.getBuildFile() << """
-android {
-    packagingOptions {
-        pickFirst 'conflict.txt'
-    }
-}
+    public void checkPickFirst() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    packagingOptions {\n"
+                        + "        pickFirst 'conflict.txt'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile files('jar1.jar')\n"
+                        + "    compile files('jar2.jar')\n"
+                        + "}\n");
 
-dependencies {
-    compile files('jar1.jar')
-    compile files('jar2.jar')
-}
-"""
-        project.execute("clean", "assembleDebug")
-        assertThat(project.getApk("debug")).contains("conflict.txt")
-    }
-
-    @Test
-    void "check exclude on jars"() {
-        project.getBuildFile() << """
-android {
-    packagingOptions {
-        exclude 'conflict.txt'
-    }
-}
-
-dependencies {
-    compile files('jar1.jar')
-    compile files('jar2.jar')
-}
-"""
-        project.execute("clean", "assembleDebug")
-        assertThat(project.getApk("debug")).doesNotContain("conflict.txt")
+        project.execute("clean", "assembleDebug");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).contains("conflict.txt");
     }
 
     @Test
-    void "check exclude on direct files"() {
-        project.getBuildFile() << """
-android {
-    packagingOptions {
-        exclude 'conflict.txt'
-    }
-}
-"""
-        createFile('src/main/resources/conflict.txt')
-        project.execute("clean", "assembleDebug")
-        assertThat(project.getApk("debug")).doesNotContain('conflict.txt')
+    public void checkExcludeOnJars() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    packagingOptions {\n"
+                        + "        exclude 'conflict.txt'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile files('jar1.jar')\n"
+                        + "    compile files('jar2.jar')\n"
+                        + "}\n");
+
+        project.execute("clean", "assembleDebug");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotContain("conflict.txt");
     }
 
     @Test
-    void "check merge on jar entries"() {
-        project.getBuildFile() << """
-android {
-    packagingOptions {
-        merge 'conflict.txt'
-    }
-}
+    public void checkExcludeOnDirectFiles() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    packagingOptions {\n"
+                        + "        exclude 'conflict.txt'\n"
+                        + "    }\n"
+                        + "}\n");
 
-dependencies {
-    compile files('jar1.jar')
-    compile files('jar2.jar')
-}
-"""
-        project.execute("clean", "assembleDebug")
-
-        assertThat(project.getApk("debug"))
-                .containsFileWithContent("conflict.txt", "foo\nfoo")
+        createFile("src/main/resources/conflict.txt");
+        project.execute("clean", "assembleDebug");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG)).doesNotContain("conflict.txt");
     }
 
     @Test
-    void "check merge on local res file"() {
-        project.getBuildFile() << """
-android {
-    packagingOptions {
-        // this will not be used since debug will override the main one.
-        merge 'file.txt'
-    }
-}
-"""
-        createFile('src/main/resources/file.txt') << "main"
-        createFile('src/debug/resources/file.txt') << "debug"
-        project.execute("clean", "assembleDebug")
-        assertThat(project.getApk("debug")).containsFileWithContent("file.txt", "debug")
+    public void checkMergeOnJarEntries() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    packagingOptions {\n"
+                        + "        merge 'conflict.txt'\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile files('jar1.jar')\n"
+                        + "    compile files('jar2.jar')\n"
+                        + "}\n");
+
+        project.execute("clean", "assembleDebug");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .containsFileWithContent("conflict.txt", "foo\nfoo");
     }
 
     @Test
-    void "check merge on a direct file and a jar entry"() {
-        project.getBuildFile() << """
-dependencies {
-    compile files('jar1.jar')
-}
-"""
-        createFile('src/main/resources/conflict.txt') << "project-foo"
-        project.execute("clean", "assembleDebug")
+    public void checkMergeOnLocalResFile() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    packagingOptions {\n"
+                        + "        // this will not be used since debug will override the main one.\n"
+                        + "        merge 'file.txt'\n"
+                        + "    }\n"
+                        + "}\n");
+
+        TestFileUtils.appendToFile(createFile("src/main/resources/file.txt"), "main");
+        TestFileUtils.appendToFile(createFile("src/debug/resources/file.txt"), "debug");
+        project.execute("clean", "assembleDebug");
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .containsFileWithContent("file.txt", "debug");
+    }
+
+    @Test
+    public void checkMergeOnADirectFileAndAJarEntry() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n" + "dependencies {\n" + "    compile files('jar1.jar')\n" + "}\n");
+
+        TestFileUtils.appendToFile(createFile("src/main/resources/conflict.txt"), "project-foo");
+
+        project.execute("clean", "assembleDebug");
         // we expect to only see the one in src/main because it overrides the dependency one.
-        assertThat(project.getApk("debug")).
-                containsFileWithContent("conflict.txt", "project-foo")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .containsFileWithContent("conflict.txt", "project-foo");
     }
 
     @Test
-    void "check merge action specified on a direct file and a jar entry"() {
-        project.getBuildFile() << """
-dependencies {
-    compile files('jar1.jar')
-}
+    public void checkMergeActionSpecifiedOnADirectFileAndAJarEntry()
+            throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    compile files('jar1.jar')\n"
+                        + "}\n"
+                        + "\n"
+                        + "android{\n"
+                        + "    packagingOptions {\n"
+                        + "        merge 'conflict.txt'\n"
+                        + "    }\n"
+                        + "}\n");
 
-android{
-    packagingOptions {
-        merge 'conflict.txt'
-    }
-}
-"""
-        createFile('src/main/resources/conflict.txt') << "project-foo"
-        project.execute("clean", "assembleDebug")
+        TestFileUtils.appendToFile(createFile("src/main/resources/conflict.txt"), "project-foo");
+
+        project.execute("clean", "assembleDebug");
         // files should be merged
-        assertThat(project.getApk("debug")).
-                containsFileWithContent("conflict.txt", "project-foo\nfoo")
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                .containsFileWithContent("conflict.txt", "project-foo\nfoo");
     }
 
     @Test
-    void "throws exception without merge action for conflict"() {
-        project.getBuildFile() << """
-dependencies {
-    compile files('jar1.jar')
-    compile files('jar2.jar')
-}
-"""
-        GradleBuildResult result = project.executor().expectFailure().run("clean", "assembleDebug")
-        assertThat(result.failureMessage).contains("conflict.txt")
+    public void throwsExceptionWithoutMergeActionForConflict()
+            throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    compile files('jar1.jar')\n"
+                        + "    compile files('jar2.jar')\n"
+                        + "}\n");
+
+        GradleBuildResult result = project.executor().expectFailure().run("clean", "assembleDebug");
+        assertThat(result.getFailureMessage()).contains("conflict.txt");
     }
 
 
-    /**
-     * Create a new empty file including its directories.
-     */
-    private File createFile(String filename) {
-        File newFile = project.file(filename)
-        newFile.getParentFile().mkdirs()
-        newFile.createNewFile()
-        assertThat(newFile).exists()
-        return newFile
+    /** Create a new empty file including its directories. */
+    private File createFile(String filename) throws IOException {
+        File newFile = project.file(filename);
+        newFile.getParentFile().mkdirs();
+        newFile.createNewFile();
+        assertThat(newFile).exists();
+        return newFile;
     }
 }

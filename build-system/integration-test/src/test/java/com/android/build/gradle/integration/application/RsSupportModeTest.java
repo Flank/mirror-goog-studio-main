@@ -14,76 +14,77 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.SdkConstants
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.utils.LibraryGraphHelper
-import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.Variant
-import com.android.builder.model.level2.Library
-import com.android.builder.model.level2.DependencyGraphs
-import com.google.common.truth.Truth
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
+import static org.junit.Assert.assertTrue;
 
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA
-import static org.junit.Assert.assertFalse
-import static org.junit.Assert.assertThat
-import static org.junit.Assert.assertTrue
+import com.android.SdkConstants;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Variant;
+import com.android.builder.model.level2.DependencyGraphs;
+import com.android.builder.model.level2.Library;
+import com.google.common.truth.Truth;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
-/**
- * Assemble tests for rsSupportMode.
- */
+/** Assemble tests for rsSupportMode. */
 @CompileStatic
-class RsSupportModeTest {
+public class RsSupportModeTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("rsSupportMode")
-            .addGradleProperties("android.useDeprecatedNdk=true")
-            .create()
-    static ModelContainer<AndroidProject> model
+    public static GradleTestProject project =
+            GradleTestProject.builder()
+                    .fromTestProject("rsSupportMode")
+                    .addGradleProperties("android.useDeprecatedNdk=true")
+                    .create();
+
+    private static ModelContainer<AndroidProject> model;
 
     @BeforeClass
-    static void setUp() {
-        model =project.executeAndReturnModel("clean", "assembleDebug")
+    public static void setUp() throws IOException, InterruptedException {
+        model = project.executeAndReturnModel("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
-        model = null
+    public static void cleanUp() {
+        project = null;
+        model = null;
     }
 
     @Test
-    void testRsSupportMode() throws Exception {
+    public void testRsSupportMode() throws Exception {
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
-        Variant debugVariant = ModelHelper.getVariant(
-                model.getOnlyModel().getVariants(), "x86Debug")
+        Variant debugVariant =
+                ModelHelper.getVariant(model.getOnlyModel().getVariants(), "x86Debug");
 
-        AndroidArtifact mainArtifact = debugVariant.getMainArtifact()
+        AndroidArtifact mainArtifact = debugVariant.getMainArtifact();
 
-        DependencyGraphs graph = mainArtifact.getDependencyGraphs()
+        DependencyGraphs graph = mainArtifact.getDependencyGraphs();
 
         List<Library> libraries = helper.on(graph).withType(JAVA).asLibraries();
         Truth.assertThat(libraries).isNotEmpty();
 
-        boolean foundSupportJar = false
+        boolean foundSupportJar = false;
         for (Library lib : libraries) {
-            File file = lib.getArtifact()
+            File file = lib.getArtifact();
             if (SdkConstants.FN_RENDERSCRIPT_V8_JAR.equals(file.getName())) {
-                foundSupportJar = true
-                break
+                foundSupportJar = true;
+                break;
             }
         }
 
-        assertTrue("Found suppport jar check", foundSupportJar)
+        assertTrue("Found suppport jar check", foundSupportJar);
     }
 }

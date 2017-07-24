@@ -14,40 +14,38 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.testutils.truth.MoreTruth.assertThat;
 
-import static com.android.testutils.truth.MoreTruth.assertThat
-/**
- * Integration test for extracting RS enabled annotations.
- */
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import groovy.transform.CompileStatic;
+import java.io.IOException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+/** Integration test for extracting RS enabled annotations. */
 @CompileStatic
-class RsEnabledAnnotationTest {
+public class RsEnabledAnnotationTest {
     @ClassRule
-    static public GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("extractRsEnabledAnnotations")
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("extractRsEnabledAnnotations").create();
 
     @BeforeClass
-    static void setUp() {
-        project.execute("clean", "assembleDebug")
+    public static void setUp() throws IOException, InterruptedException {
+        project.execute("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
+    public static void cleanUp() {
+        project = null;
     }
 
 
     @Test
-    void "check extract annotation"() {
+    public void checkExtractAnnotation() throws IOException {
         // check the resulting .aar file to ensure annotations.zip inclusion.
-        assertThat(project.getAar("debug")).contains("annotations.zip")
+        assertThat(project.getAar("debug")).contains("annotations.zip");
     }
 }

@@ -14,225 +14,241 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application
+package com.android.build.gradle.integration.application;
 
-import com.android.annotations.NonNull
-import com.android.annotations.Nullable
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.utils.ModelHelper
-import com.android.builder.model.AndroidArtifact
-import com.android.builder.model.AndroidProject
-import com.android.builder.model.ClassField
-import com.android.builder.model.Variant
-import com.android.utils.FileUtils
-import com.google.common.collect.Maps
-import groovy.transform.CompileStatic
-import org.junit.Assert
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Test
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
-import static org.junit.Assert.assertEquals
-import static org.junit.Assert.assertNotNull
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ClassField;
+import com.android.builder.model.Variant;
+import com.google.common.collect.Maps;
+import groovy.transform.CompileStatic;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Map;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
 
 /**
- * Test for Res Values declared in build type, flavors, and variant and how they
- * override each other
+ * Test for Res Values declared in build type, flavors, and variant and how they override each other
  */
 @CompileStatic
-class ResValueTest {
+public class ResValueTest {
     @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.noBuildFile())
-            .create()
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestApp(HelloWorldApp.noBuildFile()).create();
 
-    private static AndroidProject model
+    private static AndroidProject model;
 
     @BeforeClass
-    static void setUp() {
-        project.getBuildFile() << """
-            apply plugin: 'com.android.application'
+    public static void setUp() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "            apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "            android {\n"
+                        + "                compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "                buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "\n"
+                        + "                defaultConfig {\n"
+                        + "                    resValue \"string\", \"VALUE_DEFAULT\", \"1\"\n"
+                        + "                    resValue \"string\", \"VALUE_DEBUG\",   \"1\"\n"
+                        + "                    resValue \"string\", \"VALUE_FLAVOR\",  \"1\"\n"
+                        + "                    resValue \"string\", \"VALUE_VARIANT\", \"1\"\n"
+                        + "                }\n"
+                        + "\n"
+                        + "                buildTypes {\n"
+                        + "                    debug {\n"
+                        + "                        resValue \"string\", \"VALUE_DEBUG\",   \"100\"\n"
+                        + "                        resValue \"string\", \"VALUE_VARIANT\", \"100\"\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "\n"
+                        + "                flavorDimensions 'foo'\n"
+                        + "                productFlavors {\n"
+                        + "                    flavor1 {\n"
+                        + "                        resValue \"string\", \"VALUE_DEBUG\",   \"10\"\n"
+                        + "                        resValue \"string\", \"VALUE_FLAVOR\",  \"10\"\n"
+                        + "                        resValue \"string\", \"VALUE_VARIANT\", \"10\"\n"
+                        + "                    }\n"
+                        + "                    flavor2 {\n"
+                        + "                        resValue \"string\", \"VALUE_DEBUG\",   \"20\"\n"
+                        + "                        resValue \"string\", \"VALUE_FLAVOR\",  \"20\"\n"
+                        + "                        resValue \"string\", \"VALUE_VARIANT\", \"20\"\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "\n"
+                        + "                applicationVariants.all { variant ->\n"
+                        + "                    if (variant.buildType.name == \"debug\") {\n"
+                        + "                        variant.resValue \"string\", \"VALUE_VARIANT\", \"1000\"\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "            ");
 
-            android {
-                compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-
-                defaultConfig {
-                    resValue "string", "VALUE_DEFAULT", "1"
-                    resValue "string", "VALUE_DEBUG",   "1"
-                    resValue "string", "VALUE_FLAVOR",  "1"
-                    resValue "string", "VALUE_VARIANT", "1"
-                }
-
-                buildTypes {
-                    debug {
-                        resValue "string", "VALUE_DEBUG",   "100"
-                        resValue "string", "VALUE_VARIANT", "100"
-                    }
-                }
-
-                flavorDimensions 'foo'
-                productFlavors {
-                    flavor1 {
-                        resValue "string", "VALUE_DEBUG",   "10"
-                        resValue "string", "VALUE_FLAVOR",  "10"
-                        resValue "string", "VALUE_VARIANT", "10"
-                    }
-                    flavor2 {
-                        resValue "string", "VALUE_DEBUG",   "20"
-                        resValue "string", "VALUE_FLAVOR",  "20"
-                        resValue "string", "VALUE_VARIANT", "20"
-                    }
-                }
-
-                applicationVariants.all { variant ->
-                    if (variant.buildType.name == "debug") {
-                        variant.resValue "string", "VALUE_VARIANT", "1000"
-                    }
-                }
-            }
-            """.stripIndent()
-
-        model = project.executeAndReturnModel(
-                'clean',
-                'generateFlavor1DebugResValue',
-                'generateFlavor1ReleaseResValue',
-                'generateFlavor2DebugResValue',
-                'generateFlavor2ReleaseResValue').getOnlyModel()
+        model =
+                project.executeAndReturnModel(
+                                "clean",
+                                "generateFlavor1DebugResValue",
+                                "generateFlavor1ReleaseResValue",
+                                "generateFlavor2DebugResValue",
+                                "generateFlavor2ReleaseResValue")
+                        .getOnlyModel();
     }
 
     @AfterClass
-    static void cleanUp() {
-        project = null
-        model = null
+    public static void cleanUp() {
+        project = null;
+        model = null;
     }
 
     @Test
-    void builFlavor1Debug() {
+    public void builFlavor1Debug() throws IOException {
         String expected =
-"""<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <!-- Automatically generated file. DO NOT MODIFY -->
-
-    <!-- Values from the variant -->
-    <string name="VALUE_VARIANT" translatable="false">1000</string>
-    <!-- Values from build type: debug -->
-    <string name="VALUE_DEBUG" translatable="false">100</string>
-    <!-- Values from product flavor: flavor1 -->
-    <string name="VALUE_FLAVOR" translatable="false">10</string>
-    <!-- Values from default config. -->
-    <string name="VALUE_DEFAULT" translatable="false">1</string>
-
-</resources>"""
-        checkBuildConfig(expected, 'flavor1/debug')
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "\n"
+                        + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
+                        + "\n"
+                        + "    <!-- Values from the variant -->\n"
+                        + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">1000</string>\n"
+                        + "    <!-- Values from build type: debug -->\n"
+                        + "    <string name=\"VALUE_DEBUG\" translatable=\"false\">100</string>\n"
+                        + "    <!-- Values from product flavor: flavor1 -->\n"
+                        + "    <string name=\"VALUE_FLAVOR\" translatable=\"false\">10</string>\n"
+                        + "    <!-- Values from default config. -->\n"
+                        + "    <string name=\"VALUE_DEFAULT\" translatable=\"false\">1</string>\n"
+                        + "\n"
+                        + "</resources>";
+        checkBuildConfig(expected, "flavor1/debug");
     }
 
     @Test
-    void modelFlavor1Debug() {
-        Map<String, String> map = Maps.newHashMap()
-        map.put('VALUE_DEFAULT', '1')
-        map.put('VALUE_FLAVOR', '10')
-        map.put('VALUE_DEBUG', '100')
-        map.put('VALUE_VARIANT', '1000')
-        checkVariant(model.getVariants(), 'flavor1Debug', map)
+    public void modelFlavor1Debug() {
+        Map<String, String> map = Maps.newHashMap();
+        map.put("VALUE_DEFAULT", "1");
+        map.put("VALUE_FLAVOR", "10");
+        map.put("VALUE_DEBUG", "100");
+        map.put("VALUE_VARIANT", "1000");
+        checkVariant(model.getVariants(), "flavor1Debug", map);
     }
 
     @Test
-    void buildFlavor2Debug() {
+    public void buildFlavor2Debug() throws IOException {
         String expected =
-"""<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <!-- Automatically generated file. DO NOT MODIFY -->
-
-    <!-- Values from the variant -->
-    <string name="VALUE_VARIANT" translatable="false">1000</string>
-    <!-- Values from build type: debug -->
-    <string name="VALUE_DEBUG" translatable="false">100</string>
-    <!-- Values from product flavor: flavor2 -->
-    <string name="VALUE_FLAVOR" translatable="false">20</string>
-    <!-- Values from default config. -->
-    <string name="VALUE_DEFAULT" translatable="false">1</string>
-
-</resources>"""
-        checkBuildConfig(expected, 'flavor2/debug')
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "\n"
+                        + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
+                        + "\n"
+                        + "    <!-- Values from the variant -->\n"
+                        + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">1000</string>\n"
+                        + "    <!-- Values from build type: debug -->\n"
+                        + "    <string name=\"VALUE_DEBUG\" translatable=\"false\">100</string>\n"
+                        + "    <!-- Values from product flavor: flavor2 -->\n"
+                        + "    <string name=\"VALUE_FLAVOR\" translatable=\"false\">20</string>\n"
+                        + "    <!-- Values from default config. -->\n"
+                        + "    <string name=\"VALUE_DEFAULT\" translatable=\"false\">1</string>\n"
+                        + "\n"
+                        + "</resources>";
+        checkBuildConfig(expected, "flavor2/debug");
     }
 
     @Test
-    void modelFlavor2Debug() {
-        Map<String, String> map = Maps.newHashMap()
-        map.put('VALUE_DEFAULT', '1')
-        map.put('VALUE_FLAVOR', '20')
-        map.put('VALUE_DEBUG', '100')
-        map.put('VALUE_VARIANT', '1000')
-        checkVariant(model.getVariants(), 'flavor2Debug', map)
+    public void modelFlavor2Debug() {
+        Map<String, String> map = Maps.newHashMap();
+        map.put("VALUE_DEFAULT", "1");
+        map.put("VALUE_FLAVOR", "20");
+        map.put("VALUE_DEBUG", "100");
+        map.put("VALUE_VARIANT", "1000");
+        checkVariant(model.getVariants(), "flavor2Debug", map);
     }
 
     @Test
-    void buildFlavor1Release() {
+    public void buildFlavor1Release() throws IOException {
         String expected =
-"""<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <!-- Automatically generated file. DO NOT MODIFY -->
-
-    <!-- Values from product flavor: flavor1 -->
-    <string name="VALUE_DEBUG" translatable="false">10</string>
-    <string name="VALUE_FLAVOR" translatable="false">10</string>
-    <string name="VALUE_VARIANT" translatable="false">10</string>
-    <!-- Values from default config. -->
-    <string name="VALUE_DEFAULT" translatable="false">1</string>
-
-</resources>"""
-        checkBuildConfig(expected, 'flavor1/release')
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "\n"
+                        + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
+                        + "\n"
+                        + "    <!-- Values from product flavor: flavor1 -->\n"
+                        + "    <string name=\"VALUE_DEBUG\" translatable=\"false\">10</string>\n"
+                        + "    <string name=\"VALUE_FLAVOR\" translatable=\"false\">10</string>\n"
+                        + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">10</string>\n"
+                        + "    <!-- Values from default config. -->\n"
+                        + "    <string name=\"VALUE_DEFAULT\" translatable=\"false\">1</string>\n"
+                        + "\n"
+                        + "</resources>";
+        checkBuildConfig(expected, "flavor1/release");
     }
 
     @Test
-    void modelFlavor1Release() {
-        Map<String, String> map = Maps.newHashMap()
-        map.put('VALUE_DEFAULT', '1')
-        map.put('VALUE_FLAVOR', '10')
-        map.put('VALUE_DEBUG', '10')
-        map.put('VALUE_VARIANT', '10')
-        checkVariant(model.getVariants(), 'flavor1Release', map)
+    public void modelFlavor1Release() {
+        Map<String, String> map = Maps.newHashMap();
+        map.put("VALUE_DEFAULT", "1");
+        map.put("VALUE_FLAVOR", "10");
+        map.put("VALUE_DEBUG", "10");
+        map.put("VALUE_VARIANT", "10");
+        checkVariant(model.getVariants(), "flavor1Release", map);
     }
 
     @Test
-    void buildFlavor2Release() {
+    public void buildFlavor2Release() throws IOException {
         String expected =
-"""<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    <!-- Automatically generated file. DO NOT MODIFY -->
-
-    <!-- Values from product flavor: flavor2 -->
-    <string name="VALUE_DEBUG" translatable="false">20</string>
-    <string name="VALUE_FLAVOR" translatable="false">20</string>
-    <string name="VALUE_VARIANT" translatable="false">20</string>
-    <!-- Values from default config. -->
-    <string name="VALUE_DEFAULT" translatable="false">1</string>
-
-</resources>"""
-        checkBuildConfig(expected, 'flavor2/release')
+                ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources>\n"
+                        + "\n"
+                        + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
+                        + "\n"
+                        + "    <!-- Values from product flavor: flavor2 -->\n"
+                        + "    <string name=\"VALUE_DEBUG\" translatable=\"false\">20</string>\n"
+                        + "    <string name=\"VALUE_FLAVOR\" translatable=\"false\">20</string>\n"
+                        + "    <string name=\"VALUE_VARIANT\" translatable=\"false\">20</string>\n"
+                        + "    <!-- Values from default config. -->\n"
+                        + "    <string name=\"VALUE_DEFAULT\" translatable=\"false\">1</string>\n"
+                        + "\n"
+                        + "</resources>";
+        checkBuildConfig(expected, "flavor2/release");
     }
 
     @Test
-    void modelFlavor2Release() {
-        Map<String, String> map = Maps.newHashMap()
-        map.put('VALUE_DEFAULT', '1')
-        map.put('VALUE_FLAVOR', '20')
-        map.put('VALUE_DEBUG', '20')
-        map.put('VALUE_VARIANT', '20')
-        checkVariant(model.getVariants(), 'flavor2Release', map)
+    public void modelFlavor2Release() {
+        Map<String, String> map = Maps.newHashMap();
+        map.put("VALUE_DEFAULT", "1");
+        map.put("VALUE_FLAVOR", "20");
+        map.put("VALUE_DEBUG", "20");
+        map.put("VALUE_VARIANT", "20");
+        checkVariant(model.getVariants(), "flavor2Release", map);
     }
 
-    private static void checkBuildConfig(@NonNull String expected, @NonNull String variantDir) {
-        File outputFile = new File(project.getTestDir(),
-                "build/generated/res/resValues/$variantDir/values/generated.xml")
+    private static void checkBuildConfig(@NonNull String expected, @NonNull String variantDir)
+            throws IOException {
+        File outputFile =
+                new File(
+                        project.getTestDir(),
+                        "build/generated/res/resValues/" + variantDir + "/values/generated.xml");
         assertThat(outputFile).isFile();
         assertThat(outputFile).contentWithUnixLineSeparatorsIsExactly(expected);
     }
@@ -241,24 +257,22 @@ class ResValueTest {
             @NonNull Collection<Variant> variants,
             @NonNull String variantName,
             @Nullable Map<String, String> valueMap) {
-        Variant variant = ModelHelper.findVariantByName(variants, variantName)
-        assertNotNull("${variantName} variant null-check", variant)
+        Variant variant = ModelHelper.findVariantByName(variants, variantName);
+        assertNotNull("${variantName} variant null-check", variant);
 
-        AndroidArtifact artifact = variant.getMainArtifact()
-        assertNotNull("${variantName} main artifact null-check", artifact)
+        AndroidArtifact artifact = variant.getMainArtifact();
+        assertNotNull("${variantName} main artifact null-check", artifact);
 
-        Map<String, ClassField> value = artifact.getResValues()
-        assertNotNull(value)
+        Map<String, ClassField> value = artifact.getResValues();
+        assertNotNull(value);
 
         // check the map against the expected one.
-        assertEquals(valueMap.keySet(), value.keySet())
+        assertEquals(valueMap.keySet(), value.keySet());
         for (String key : valueMap.keySet()) {
-            ClassField field = value.get(key)
-            assertNotNull("${variantName}: expected field ${key}", field)
+            ClassField field = value.get(key);
+            assertNotNull(variantName + ": expected field " + key, field);
             assertEquals(
-                    "${variantName}: check Value of ${key}",
-                    valueMap.get(key),
-                    field.getValue())
+                    variantName + ": check Value of " + key, valueMap.get(key), field.getValue());
         }
     }
 }
