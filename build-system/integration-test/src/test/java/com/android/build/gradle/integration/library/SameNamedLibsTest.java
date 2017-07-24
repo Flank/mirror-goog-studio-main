@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.library;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -27,10 +26,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /** Assemble tests for sameNamedLibs. */
-@CompileStatic
 public class SameNamedLibsTest {
     @ClassRule
-    static public GradleTestProject project =
+    public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("sameNamedLibs").create();
 
     @BeforeClass

@@ -19,12 +19,12 @@ package com.android.build.gradle.integration.application;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
 /**
  * Assemble tests for privateResources.
  *
@@ -35,7 +35,6 @@ import org.junit.Test;
  *     $ ./gradlew :base:integration-test:test -D:base:integration-test:test.single=PrivateResourceTest
  * </pre>
  */
-@CompileStatic
 public class PrivateResourceTest {
     @ClassRule
     public static GradleTestProject project =

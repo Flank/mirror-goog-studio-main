@@ -31,7 +31,6 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import java.util.Collection;
 import org.junit.AfterClass;
@@ -39,7 +38,6 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 /** Assemble tests for tictactoe. */
-@CompileStatic
 public class TictactoeTest {
     @ClassRule
     public static GradleTestProject project =

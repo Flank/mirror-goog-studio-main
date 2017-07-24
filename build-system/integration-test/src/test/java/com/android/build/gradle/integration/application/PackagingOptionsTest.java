@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.io.Files;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
@@ -34,12 +33,12 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+
 /**
  * Assemble tests for packagingOptions.
  *
  * <p>Creates two jar files and test various packaging options.
  */
-@CompileStatic
 public class PackagingOptionsTest {
 
     // Projects to create jar files.

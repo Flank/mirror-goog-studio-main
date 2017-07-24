@@ -21,16 +21,15 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+
 /**
  * Assemble tests for parentLibTest
  */
-@CompileStatic
 public class ParentLibsTest {
     @Rule
     public GradleTestProject project =

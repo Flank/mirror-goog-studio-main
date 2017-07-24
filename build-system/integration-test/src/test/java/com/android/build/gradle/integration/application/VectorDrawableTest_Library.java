@@ -28,7 +28,6 @@ import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
@@ -36,7 +35,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Tests for PNG generation in case of libraries. */
-@CompileStatic
 public class VectorDrawableTest_Library {
 
     public static final String VECTOR_XML_CONTENT =

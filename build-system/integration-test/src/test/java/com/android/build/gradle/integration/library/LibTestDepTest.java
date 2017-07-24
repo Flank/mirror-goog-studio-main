@@ -32,7 +32,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -44,7 +43,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /** Assemble tests for libTestDep. */
-@CompileStatic
 public class LibTestDepTest {
     @ClassRule
     public static GradleTestProject project =

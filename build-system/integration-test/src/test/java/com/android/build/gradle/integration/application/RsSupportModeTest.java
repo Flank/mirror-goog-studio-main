@@ -30,7 +30,6 @@ import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
 import com.google.common.truth.Truth;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -40,7 +39,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 /** Assemble tests for rsSupportMode. */
-@CompileStatic
 public class RsSupportModeTest {
     @ClassRule
     public static GradleTestProject project =

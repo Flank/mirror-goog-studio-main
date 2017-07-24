@@ -25,7 +25,6 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -35,7 +34,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 /** Assemble tests for renamedApk. */
-@CompileStatic
 public class RenamedApkTest {
     @ClassRule
     public static GradleTestProject project =

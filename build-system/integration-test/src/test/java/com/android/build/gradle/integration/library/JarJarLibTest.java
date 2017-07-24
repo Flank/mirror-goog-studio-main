@@ -34,7 +34,6 @@ import com.android.builder.model.Variant;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -57,7 +56,6 @@ import org.objectweb.asm.tree.TypeInsnNode;
 /**
  * Test for the jarjar integration.
  */
-@CompileStatic
 @Ignore("http://b/37529666")
 public class JarJarLibTest {
 

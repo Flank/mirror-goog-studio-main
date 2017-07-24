@@ -12,7 +12,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Aar;
 import com.google.common.base.Joiner;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import org.apache.commons.io.FileUtils;
@@ -25,7 +24,6 @@ import org.junit.Test;
  * Integration test to check that libraries included directly as jar files are correctly handled
  * when using proguard.
  */
-@CompileStatic
 public class ProguardAarPackagingTest {
 
     public static AndroidTestApp testApp = HelloWorldApp.noBuildFile();

@@ -34,7 +34,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -54,7 +53,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /** Assemble tests for shrink. */
-@CompileStatic
 @RunWith(Parameterized.class)
 public class ShrinkResourcesTest {
 

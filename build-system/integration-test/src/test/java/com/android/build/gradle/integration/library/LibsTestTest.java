@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.utils.XmlUtils;
 import com.android.xml.AndroidXPathFactory;
 import com.google.common.io.Files;
-import groovy.transform.CompileStatic;
 import java.nio.charset.StandardCharsets;
 import javax.xml.xpath.XPath;
 import org.junit.Rule;
@@ -31,7 +30,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.w3c.dom.Document;
 
-@CompileStatic
 public class LibsTestTest {
 
     @Rule

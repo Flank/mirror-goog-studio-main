@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -36,7 +35,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /** Test resValue for string type is treated as String. */
-@CompileStatic
 public class ResValueTypeTest {
     public static AndroidTestApp app = HelloWorldApp.noBuildFile();
     static {

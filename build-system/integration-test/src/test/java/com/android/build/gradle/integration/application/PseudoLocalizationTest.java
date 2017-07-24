@@ -20,14 +20,13 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
 /** Test for pseudo-localized. */
-@CompileStatic
 public class PseudoLocalizationTest {
     @ClassRule
     public static GradleTestProject project =

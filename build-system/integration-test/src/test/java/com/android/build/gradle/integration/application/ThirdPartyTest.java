@@ -17,14 +17,12 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
 /** Assemble tests for 3rdPartyTests. */
-@CompileStatic
 public class ThirdPartyTest {
     @ClassRule
     public static GradleTestProject project =

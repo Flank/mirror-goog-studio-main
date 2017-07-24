@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -26,7 +25,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 /** Integration test for uploadAchives with multiple projects. */
-@CompileStatic
 public class RepoTest {
 
     @ClassRule

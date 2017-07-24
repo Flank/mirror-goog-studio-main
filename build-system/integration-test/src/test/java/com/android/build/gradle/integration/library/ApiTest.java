@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -30,7 +29,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /** Assemble tests for api. */
-@CompileStatic
 public class ApiTest {
     @ClassRule
     public static GradleTestProject project =

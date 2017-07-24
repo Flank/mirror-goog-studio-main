@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -29,7 +28,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 /** Assemble tests for libMinify. */
-@CompileStatic
 public class LibMinifyTest {
     @ClassRule
     public static GradleTestProject project =

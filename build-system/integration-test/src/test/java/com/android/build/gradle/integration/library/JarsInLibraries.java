@@ -27,7 +27,6 @@ import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
@@ -36,7 +35,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /** Assemble tests for jars inside libraries as assets, res, java res and actual dependencies. */
-@CompileStatic
 public class JarsInLibraries {
     byte[] simpleJarDataA;
     byte[] simpleJarDataB;

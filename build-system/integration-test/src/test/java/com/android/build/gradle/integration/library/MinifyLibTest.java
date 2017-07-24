@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -37,7 +36,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /** Assemble tests for minifyLib. */
-@CompileStatic
 @RunWith(FilterableParameterized.class)
 public class MinifyLibTest {
     @Parameterized.Parameters(name = "useProguard = {0}")

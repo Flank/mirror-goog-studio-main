@@ -27,7 +27,6 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -38,7 +37,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 /** Test for unresolved placeholders in libraries. */
-@CompileStatic
 public class PlaceholderInLibsTest {
     private static ModelContainer<AndroidProject> models;
 

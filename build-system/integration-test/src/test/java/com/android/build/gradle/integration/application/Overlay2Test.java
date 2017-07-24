@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.utils.ImageHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -36,7 +35,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /** Assemble tests for overlay2. */
-@CompileStatic
 @RunWith(Parameterized.class)
 public class Overlay2Test {
 

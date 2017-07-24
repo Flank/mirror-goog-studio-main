@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.library;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -28,10 +27,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /** Assemble tests for multiDexWithLib. */
-@CompileStatic
 public class MultiDexWithLibTest {
     @ClassRule
-    static public GradleTestProject project =
+    public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("multiDexWithLib")
                     .withHeap("2048M")

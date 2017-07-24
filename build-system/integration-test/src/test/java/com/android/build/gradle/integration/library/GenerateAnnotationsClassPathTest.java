@@ -21,7 +21,6 @@ import static org.junit.Assert.assertFalse;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -29,7 +28,6 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-@CompileStatic
 public class GenerateAnnotationsClassPathTest {
     @ClassRule
     public static GradleTestProject project =

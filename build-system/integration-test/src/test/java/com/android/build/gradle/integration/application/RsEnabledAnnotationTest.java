@@ -19,14 +19,13 @@ package com.android.build.gradle.integration.application;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+
 /** Integration test for extracting RS enabled annotations. */
-@CompileStatic
 public class RsEnabledAnnotationTest {
     @ClassRule
     public static GradleTestProject project =

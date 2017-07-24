@@ -31,7 +31,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.Variant;
 import com.google.common.collect.Maps;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -44,7 +43,6 @@ import org.junit.Test;
 /**
  * Test for Res Values declared in build type, flavors, and variant and how they override each other
  */
-@CompileStatic
 public class ResValueTest {
     @ClassRule
     public static GradleTestProject project =

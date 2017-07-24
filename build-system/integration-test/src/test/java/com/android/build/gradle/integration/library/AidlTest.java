@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
@@ -36,7 +35,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /** Assemble tests for aidl. */
-@CompileStatic
 @RunWith(FilterableParameterized.class)
 public class AidlTest {
 

@@ -22,14 +22,12 @@ import static com.google.common.truth.TruthJUnit.assume;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.repository.Revision;
-import groovy.transform.CompileStatic;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
 /** Assemble tests for renderscript with NDK mode enabled. */
-@CompileStatic
 public class RenderscriptNdkTest {
 
     @Rule

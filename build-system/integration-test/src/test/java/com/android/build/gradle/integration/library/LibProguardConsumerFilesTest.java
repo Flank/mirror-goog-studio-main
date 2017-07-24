@@ -21,7 +21,6 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.collect.ImmutableList;
-import groovy.transform.CompileStatic;
 import java.io.File;
 import java.io.IOException;
 import org.junit.AfterClass;
@@ -30,7 +29,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 /** Assemble tests for libProguardConsumerFiles. */
-@CompileStatic
 public class LibProguardConsumerFilesTest {
 
     @ClassRule
