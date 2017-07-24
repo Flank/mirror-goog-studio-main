@@ -148,4 +148,18 @@ public class FileSubject extends Subject<FileSubject, File> {
         String actual = FileUtils.loadFileWithUnixLineSeparators(getSubject());
         new StringSubject(failureStrategy, actual).isEqualTo(expected);
     }
+
+    public void containsFile(String fileName) {
+        isDirectory();
+        if (!FileUtils.find(getSubject(), fileName).isPresent()) {
+            fail("Directory ", getSubject(), " does not contain ", fileName);
+        }
+    }
+
+    public void doesNotContainFile(String fileName) {
+        isDirectory();
+        if (FileUtils.find(getSubject(), fileName).isPresent()) {
+            fail("Directory ", getSubject(), " contains ", fileName);
+        }
+    }
 }

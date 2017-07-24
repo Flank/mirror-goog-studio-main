@@ -174,6 +174,10 @@ public class HelloWorldJniApp extends AbstractAndroidTestApp implements AndroidT
                 + "}\n");
     }
 
+    public static TestSourceFile executableCpp(String folder, String file) {
+        return new TestSourceFile(folder, file, "int main(int argc, char* argv[]) { return 0; }\n");
+    }
+
     public static TestSourceFile androidMkC(String folder) {
         return new TestSourceFile(
                 folder, "Android.mk",
@@ -269,6 +273,24 @@ public class HelloWorldJniApp extends AbstractAndroidTestApp implements AndroidT
                         "\n" +
                         "# Include a nice standard set of libraries to link against by default\n" +
                         "target_link_libraries(hello-jni log)");
+    }
+
+    public static TestSourceFile cmakeListsWithExecutables(String folder) {
+        return new TestSourceFile(
+                folder,
+                "CMakeLists.txt",
+                "cmake_minimum_required(VERSION 3.4.1)\n"
+                        + "\n"
+                        + "# Compile all source files under this tree into a single shared library\n"
+                        + "file(GLOB_RECURSE SRC src/*.c src/*.cpp src/*.cc src/*.cxx src/*.c++ src/*.C)\n"
+                        + "message(\"${SRC}\")\n"
+                        + "file(GLOB_RECURSE EXEC src/main/cxx/executable/*.cpp)\n"
+                        + "set(CMAKE_VERBOSE_MAKEFILE ON)\n"
+                        + "add_library(hello-jni SHARED ${SRC})\n"
+                        + "add_executable(hello-executable ${EXEC})\n"
+                        + "\n"
+                        + "# Include a nice standard set of libraries to link against by default\n"
+                        + "target_link_libraries(hello-jni log)");
     }
 
     public static TestSourceFile cmakeListsMultiModule(String folder) {

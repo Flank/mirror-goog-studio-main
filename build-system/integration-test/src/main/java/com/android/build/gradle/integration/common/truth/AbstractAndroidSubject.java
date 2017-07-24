@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /** Base Truth support for android archives (aar and apk) */
@@ -79,6 +80,18 @@ public abstract class AbstractAndroidSubject<
         checkArgument(!isClassName(path), "Use doesNotContainClass to check for classes.");
         if (getSubject().getEntry(path) != null) {
             failWithRawMessage("'%s' unexpectedly contains '%s'", getSubject(), path);
+        }
+    }
+
+    public final void containsFile(@NonNull String fileName) throws IOException {
+        if (getSubject().getEntries(Pattern.compile("(.*/)?" + fileName)).isEmpty()) {
+            failWithRawMessage("'%s' does not contain file '%s'", getSubject(), fileName);
+        }
+    }
+
+    public final void doesNotContainFile(@NonNull String fileName) throws IOException {
+        if (!getSubject().getEntries(Pattern.compile("(.*/)?" + fileName)).isEmpty()) {
+            failWithRawMessage("'%s' unexpectedly contains file '%s'", getSubject(), fileName);
         }
     }
 
