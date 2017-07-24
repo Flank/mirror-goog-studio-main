@@ -28,26 +28,40 @@ import java.nio.file.attribute.BasicFileAttributes;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
 
-public class FileTreePrinter extends TestWatcher {
+public class LocalRepoDebugger extends TestWatcher {
+
+    private final GradleTestProject project;
+
+    public LocalRepoDebugger(GradleTestProject project) {
+        this.project = project;
+    }
 
     @Override
     protected void failed(Throwable failure, Description description) {
         for (Path repo : GradleTestProject.getLocalRepositories()) {
             System.out.println("--- Local Repo " + repo.toString());
             try {
-                Files.walkFileTree(repo, new PrintFileTree(System.out));
+                Files.walkFileTree(repo, new PrintOfflineRepo(repo, System.out));
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }
             System.out.println("---");
         }
+
+        try {
+            Files.walkFileTree(project.getTestDir().toPath(), new PrintBuildFiles(System.out));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
-    private static final class PrintFileTree extends SimpleFileVisitor<Path> {
+    private static final class PrintOfflineRepo extends SimpleFileVisitor<Path> {
+        private final Path root;
         private final PrintStream out;
         private int depth = 0;
 
-        public PrintFileTree(PrintStream out) {
+        public PrintOfflineRepo(Path root, PrintStream out) {
+            this.root = root;
             this.out = out;
         }
 
@@ -75,7 +89,33 @@ public class FileTreePrinter extends TestWatcher {
             for (int i = 0; i < depth; i++) {
                 System.out.print(' ');
             }
-            out.println(path.getFileName().toString());
+            out.print(root.relativize(path).toString());
+
+            if (Files.isRegularFile(path)) {
+                out.print(" : ");
+                out.print(path.toAbsolutePath().toString());
+            }
+
+            out.println();
+        }
+    }
+
+    private static class PrintBuildFiles extends SimpleFileVisitor<Path> {
+        private final PrintStream out;
+
+        public PrintBuildFiles(PrintStream out) {
+            this.out = out;
+        }
+
+        @Override
+        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+            if (file.getFileName().toString().equals("build.gradle")) {
+                out.println();
+                out.println("--- " + file.toAbsolutePath());
+                Files.readAllLines(file).forEach(out::println);
+            }
+
+            return FileVisitResult.CONTINUE;
         }
     }
 }
