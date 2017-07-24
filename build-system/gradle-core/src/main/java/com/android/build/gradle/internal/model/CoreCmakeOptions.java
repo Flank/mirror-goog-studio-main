@@ -32,6 +32,16 @@ public interface CoreCmakeOptions {
 
     @Nullable
     File getBuildStagingDirectory();
-
     void setBuildStagingDirectory(@NonNull File buildStagingDirectory);
+
+    /** @return the version of Cmake to use */
+    @Nullable
+    String getVersion();
+
+    /**
+     * Sets the configured Cmake version as string.
+     *
+     * @param version version string
+     */
+    void setVersion(@NonNull String version);
 }
