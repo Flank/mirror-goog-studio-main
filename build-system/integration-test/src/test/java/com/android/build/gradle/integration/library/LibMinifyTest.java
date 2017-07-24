@@ -28,27 +28,25 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
-/**
- * Assemble tests for libMinify.
- */
+/** Assemble tests for libMinify. */
 @CompileStatic
-class LibMinifyTest {
+public class LibMinifyTest {
     @ClassRule
-    static public GradleTestProject project =
+    public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("libMinify").create();
 
     @BeforeClass
-    static void setUp() throws IOException, InterruptedException {
+    public static void setUp() throws IOException, InterruptedException {
         project.execute("clean", "build");
     }
 
     @AfterClass
-    static void cleanUp() {
+    public static void cleanUp() {
         project = null;
     }
 
     @Test
-    void checkLibraryHasItsFieldsObfuscated() throws IOException {
+    public void checkLibraryHasItsFieldsObfuscated() throws IOException {
         // test whether a library project has its fields obfuscated
         TestFileUtils.checkContent(
                 project.getOutputFile("mapping", "release", "mapping.txt"),
@@ -56,7 +54,7 @@ class LibMinifyTest {
     }
 
     @Test
-    void checkRClassIsNotPackaged() throws IOException, ProcessException {
+    public void checkRClassIsNotPackaged() throws IOException, ProcessException {
         assertThatAar(project.getAar("debug")).doesNotContainClass("Lcom/android/tests/basic.R;");
     }
 }

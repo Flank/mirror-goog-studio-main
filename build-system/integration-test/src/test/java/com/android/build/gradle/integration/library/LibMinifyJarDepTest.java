@@ -26,33 +26,31 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/**
- * Assemble tests for libMinifyJarDep.
- */
+/** Assemble tests for libMinifyJarDep. */
 @CompileStatic
-class LibMinifyJarDepTest {
+public class LibMinifyJarDepTest {
     @ClassRule
-    static public GradleTestProject project =
+    public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("libMinifyJarDep").create();
 
     @BeforeClass
-    static void setUp() throws IOException, InterruptedException {
+    public static void setUp() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
+    public static void cleanUp() {
         project = null;
     }
 
     @Test
-    void lint() throws IOException, InterruptedException {
+    public void lint() throws IOException, InterruptedException {
         project.execute("lint");
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheck() throws IOException, InterruptedException {
+    public void connectedCheck() throws IOException, InterruptedException {
         project.executeConnectedCheck();
     }
 }

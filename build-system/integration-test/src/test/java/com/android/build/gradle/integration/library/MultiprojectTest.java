@@ -28,36 +28,34 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/**
- * Assemble tests for multiproject.
- */
+/** Assemble tests for multiproject. */
 @CompileStatic
-class MultiprojectTest {
+public class MultiprojectTest {
     @ClassRule
-    static public GradleTestProject project =
+    public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("multiproject").create();
 
     @Rule
     public Adb adb = new Adb();
 
     @BeforeClass
-    static void setUp() throws IOException, InterruptedException {
+    public static void setUp() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug");
     }
 
     @AfterClass
-    static void cleanUp() {
+    public static void cleanUp() {
         project = null;
     }
 
     @Test
-    void lint() throws IOException, InterruptedException {
+    public void lint() throws IOException, InterruptedException {
         project.execute("lint");
     }
 
     @Test
     @Category(DeviceTests.class)
-    void connectedCheckAndReport() throws IOException, InterruptedException {
+    public void connectedCheckAndReport() throws IOException, InterruptedException {
         adb.exclusiveAccess();
         project.execute("connectedCheck");
         // android-reporting plugin currently executes connected tasks.
