@@ -1,202 +1,214 @@
-/*
- * Copyright (C) 2014 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package com.android.build.gradle.integration.application;
 
-package com.android.build.gradle.integration.application
-import com.android.build.gradle.integration.common.category.DeviceTests
-import com.android.build.gradle.integration.common.fixture.GradleTestProject
-import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
-import com.android.build.gradle.integration.common.fixture.app.TestSourceFile
-import com.android.builder.model.AndroidProject
-import com.google.common.base.Joiner
-import groovy.transform.CompileStatic
-import org.junit.AfterClass
-import org.junit.BeforeClass
-import org.junit.ClassRule
-import org.junit.Ignore
-import org.junit.Test
-import org.junit.experimental.categories.Category
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidProject;
+import com.android.utils.FileUtils;
+import com.google.common.base.Charsets;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-import static com.android.utils.FileUtils.createFile
-import static com.android.build.gradle.integration.common.utils.TestFileUtils.searchAndReplace
-import static com.android.utils.FileUtils.delete
-import static org.junit.Assert.assertFalse
-import static org.junit.Assert.assertTrue
-/**
- * Check resources in androidTest are available in the generated R.java.
- */
-@CompileStatic
-class AndroidTestResourcesTest {
-    private static AndroidTestApp testApp = HelloWorldApp.noBuildFile()
-    static {
-
-        testApp.addFile(new TestSourceFile(
-                "src/androidTest/res/layout",
-                "test_layout_1.xml",
-                testLayout(1)))
-
-        // This class exists to prevent the resource from being automatically removed,
-        // if we start filtering test resources by default.
-        testApp.addFile(new TestSourceFile("src/androidTest/java/com/example/helloworld",
-                "HelloWorldResourceTest.java", """\
-                package com.example.helloworld;
-                import android.test.ActivityInstrumentationTestCase2;
-                import android.test.suitebuilder.annotation.MediumTest;
-                import android.widget.TextView;
-
-                public class HelloWorldResourceTest extends
-                        ActivityInstrumentationTestCase2<HelloWorld> {
-                    private TextView mainAppTextView;
-                    private Object testLayout;
-
-                    public HelloWorldResourceTest() {
-                        super("com.example.helloworld", HelloWorld.class);
-                    }
-
-                    @Override
-                    protected void setUp() throws Exception {
-                        super.setUp();
-                        final HelloWorld a = getActivity();
-                        mainAppTextView = (TextView) a.findViewById(
-                                com.example.helloworld.R.id.text);
-                        testLayout = getInstrumentation().getContext().getResources()
-                                .getLayout(com.example.helloworld.test.R.layout.test_layout_1);
-                    }
-
-                    @MediumTest
-                    public void testPreconditions() {
-                        assertNotNull("Should find test test_layout_1.", testLayout);
-                        assertNotNull("Should find main app text view.", mainAppTextView);
-                    }
-                }
-                """.stripIndent()))
-    }
-
-    private static String testLayout(int i) {
-        """\
-                <?xml version="1.0" encoding="utf-8"?>
-                <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                              android:layout_width="match_parent"
-                              android:layout_height="match_parent"
-                              android:orientation="vertical" >
-                    <TextView android:id="@+id/test_layout_${i}_textview"
-                              android:layout_width="wrap_content"
-                              android:layout_height="wrap_content"
-                              android:text="Hello, I am a TextView" />
-                </LinearLayout>
-                """.stripIndent()
-    }
+/** Check resources in androidTest are available in the generated R.java. */
+public class AndroidTestResourcesTest {
 
     @ClassRule
-    public static GradleTestProject appProject = GradleTestProject.builder()
-            .withName("application")
-            .fromTestApp(testApp)
-            .create()
+    public static GradleTestProject appProject =
+            GradleTestProject.builder()
+                    .withName("application")
+                    .fromTestApp(HelloWorldApp.noBuildFile())
+                    .create();
 
     @ClassRule
-    public static GradleTestProject libProject = GradleTestProject.builder()
-            .withName("library")
-            .fromTestApp(testApp)
-            .create()
+    public static GradleTestProject libProject =
+            GradleTestProject.builder()
+                    .withName("library")
+                    .fromTestApp(HelloWorldApp.noBuildFile())
+                    .create();
 
-    /**
-     * Use the test app to create an application and a library project.
-     */
+    /** Use the test app to create an application and a library project. */
     @BeforeClass
-    static void setUp() {
-        appProject.getBuildFile() << """
-                apply plugin: 'com.android.application'
-                android {
-                    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                }
-                """.stripIndent()
+    public static void setUp() throws IOException {
+        setUpProject(appProject);
+        TestFileUtils.appendToFile(
+                appProject.getBuildFile(),
+                "\n"
+                        + "                apply plugin: 'com.android.application'\n"
+                        + "                android {\n"
+                        + "                    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "                    buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "                }\n");
 
-        libProject.getBuildFile() << """
-                apply plugin: 'com.android.library'
-                android {
-                    compileSdkVersion $GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                    buildToolsVersion "$GradleTestProject.DEFAULT_BUILD_TOOL_VERSION"
-                }
-                """.stripIndent()
+        setUpProject(libProject);
+        TestFileUtils.appendToFile(
+                libProject.getBuildFile(),
+                "\n"
+                        + "                apply plugin: 'com.android.library'\n"
+                        + "                android {\n"
+                        + "                    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "                    buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "                }\n");
     }
 
     @AfterClass
-    static void cleanUp() {
-        appProject = null
-        libProject = null
-        testApp = null
+    public static void cleanUp() {
+        appProject = null;
+        libProject = null;
     }
 
     @Test
-    public void "check test layout file listed in test R.java when compiled as an application"() {
-        doTest(appProject)
+    public void checkTestLayoutFileListedInTestR() throws IOException, InterruptedException {
+        doTest(appProject);
     }
 
     @Test
-    public void "check test layout file listed in test R.java when compiled as a library"() {
-        doTest(libProject)
+    public void checkTestLayoutFileListedWhenCompiledAsLibrary()
+            throws IOException, InterruptedException {
+        doTest(libProject);
     }
 
-    private static void doTest(GradleTestProject project) {
-        project.execute("assembleDebugAndroidTest")
-        assertTrue(checkLayoutInR(project, 1, 1))
-        assertFalse(checkLayoutInR(project, 2, 2))
+    private static void doTest(GradleTestProject project) throws IOException, InterruptedException {
+        project.execute("assembleDebugAndroidTest");
+        Assert.assertTrue(checkLayoutInR(project, 1, 1));
+        Assert.assertFalse(checkLayoutInR(project, 2, 2));
 
-        createFile(
-                project.file("src/androidTest/res/layout/test_layout_2.xml"),
-                testLayout(2))
+        FileUtils.createFile(
+                project.file("src/androidTest/res/layout/test_layout_2.xml"), testLayout(2));
 
-        project.execute("assembleDebugAndroidTest")
-        assertTrue(checkLayoutInR(project, 1, 1))
-        assertTrue(checkLayoutInR(project, 2, 2))
+        project.execute("assembleDebugAndroidTest");
+        Assert.assertTrue(checkLayoutInR(project, 1, 1));
+        Assert.assertTrue(checkLayoutInR(project, 2, 2));
 
-        searchAndReplace(
+        TestFileUtils.searchAndReplace(
                 project.file("src/androidTest/res/layout/test_layout_2.xml"),
                 "test_layout_2_textview",
-                "test_layout_3_textview")
+                "test_layout_3_textview");
 
-        project.execute("assembleDebugAndroidTest")
-        assertTrue(checkLayoutInR(project, 1, 1))
-        assertFalse(checkLayoutInR(project, 2, 2))
-        assertTrue(checkLayoutInR(project, 2, 3))
+        project.execute("assembleDebugAndroidTest");
+        Assert.assertTrue(checkLayoutInR(project, 1, 1));
+        Assert.assertFalse(checkLayoutInR(project, 2, 2));
+        Assert.assertTrue(checkLayoutInR(project, 2, 3));
 
-        delete(project.file("src/androidTest/res/layout/test_layout_2.xml"))
+        FileUtils.delete(project.file("src/androidTest/res/layout/test_layout_2.xml"));
 
-        project.execute("assembleDebugAndroidTest")
-        assertTrue(checkLayoutInR(project, 1, 1))
-        assertFalse(checkLayoutInR(project, 2, 2))
-        assertFalse(checkLayoutInR(project, 2, 3))
+        project.execute("assembleDebugAndroidTest");
+        Assert.assertTrue(checkLayoutInR(project, 1, 1));
+        Assert.assertFalse(checkLayoutInR(project, 2, 2));
+        Assert.assertFalse(checkLayoutInR(project, 2, 3));
     }
 
     @Test
     @Category(DeviceTests.class)
-    public void "check test layout can be used in device tests"() {
-        appProject.executeConnectedCheck()
+    public void checkTestLayoutCanBeUsedInDeviceTests() throws IOException, InterruptedException {
+        appProject.executeConnectedCheck();
     }
 
+    private static boolean checkLayoutInR(
+            GradleTestProject fixture, final int layout, final int textView) throws IOException {
+        File rFile =
+                FileUtils.join(
+                        fixture.getTestDir(),
+                        "build",
+                        AndroidProject.FD_GENERATED,
+                        "source",
+                        "r",
+                        "androidTest",
+                        "debug",
+                        "com",
+                        "example",
+                        "helloworld",
+                        "test",
+                        "R.java");
+        Assert.assertTrue("Should have generated R file", rFile.exists());
+        List<String> lines = Files.readAllLines(rFile.toPath(), Charsets.UTF_8);
+        String rFileContents = lines.stream().collect(Collectors.joining(System.lineSeparator()));
 
-    private static boolean checkLayoutInR(GradleTestProject fixture, int layout, int textView) {
-        def rFile = fixture.file(Joiner.on(File.separatorChar).join(
-                "build", AndroidProject.FD_GENERATED, "source", "r",
-                "androidTest", "debug", "com", "example", "helloworld", "test",  "R.java"))
-        assertTrue("Should have generated R file", rFile.exists())
-        def rFileContents = rFile.getText("UTF-8")
+        return (rFileContents.contains("test_layout_" + String.valueOf(layout))
+                && rFileContents.contains("test_layout_" + String.valueOf(textView) + "_textview"));
+    }
 
-        return (rFileContents.contains("test_layout_${layout}")
-                && rFileContents.contains("test_layout_${textView}_textview"))
+    private static void setUpProject(GradleTestProject project) throws IOException {
+        Path layout =
+                project.getTestDir()
+                        .toPath()
+                        .resolve("src/androidTest/res/layout/test_layout_1.xml");
+        Files.createDirectories(layout.getParent());
+        Files.write(layout, testLayout(1).getBytes());
+
+        // This class exists to prevent the resource from being automatically removed,
+        // if we start filtering test resources by default.
+        Path resourcesTest =
+                project.getTestDir()
+                        .toPath()
+                        .resolve(
+                                "src/androidTest/java/com/example/helloworld/HelloWorldResourceTest.java");
+        Files.createDirectories(resourcesTest.getParent());
+        String sourcesTestContent =
+                "package com.example.helloworld;\n"
+                        + "                import android.test.ActivityInstrumentationTestCase2;\n"
+                        + "                import android.test.suitebuilder.annotation.MediumTest;\n"
+                        + "                import android.widget.TextView;\n"
+                        + "\n"
+                        + "                public class HelloWorldResourceTest extends\n"
+                        + "                        ActivityInstrumentationTestCase2<HelloWorld> {\n"
+                        + "                    private TextView mainAppTextView;\n"
+                        + "                    private Object testLayout;\n"
+                        + "\n"
+                        + "                    public HelloWorldResourceTest() {\n"
+                        + "                        super(\"com.example.helloworld\", HelloWorld.class);\n"
+                        + "                    }\n"
+                        + "\n"
+                        + "                    @Override\n"
+                        + "                    protected void setUp() throws Exception {\n"
+                        + "                        super.setUp();\n"
+                        + "                        final HelloWorld a = getActivity();\n"
+                        + "                        mainAppTextView = (TextView) a.findViewById(\n"
+                        + "                                com.example.helloworld.R.id.text);\n"
+                        + "                        testLayout = getInstrumentation().getContext().getResources()\n"
+                        + "                                .getLayout(com.example.helloworld.test.R.layout.test_layout_1);\n"
+                        + "                    }\n"
+                        + "\n"
+                        + "                    @MediumTest\n"
+                        + "                    public void testPreconditions() {\n"
+                        + "                        assertNotNull(\"Should find test test_layout_1.\", testLayout);\n"
+                        + "                        assertNotNull(\"Should find main app text view.\", mainAppTextView);\n"
+                        + "                    }\n"
+                        + "                }\n"
+                        + "                ";
+        Files.write(resourcesTest, sourcesTestContent.getBytes());
+    }
+
+    private static String testLayout(int i) {
+        return "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                + "        android:layout_width=\"match_parent\"\n"
+                + "        android:layout_height=\"match_parent\"\n"
+                + "        android:orientation=\"vertical\" >\n"
+                + "    <TextView android:id=\"@+id/test_layout_"
+                + String.valueOf(i)
+                + "_textview\"\n"
+                + "            android:layout_width=\"wrap_content\"\n"
+                + "            android:layout_height=\"wrap_content\"\n"
+                + "            android:text=\"Hello, I am a TextView\" />\n"
+                + "</LinearLayout>\n";
     }
 }
