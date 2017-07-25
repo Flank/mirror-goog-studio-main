@@ -15,5 +15,6 @@ iml_module(
         "//tools/base/testutils:studio.testutils[module, test]",
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:truth[test]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime[test]",
     ],
 )

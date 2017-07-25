@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.tools.perflib.captures.DataBuffer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.UnsignedBytes;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -43,6 +42,9 @@ public abstract class Instance {
 
     //  The size of this object
     int mSize;
+
+    //  O+ format only. The registered native size associated with this object.
+    long mNativeSize;
 
     //  Another identifier for this Instance, that we computed during the analysis phase.
     int mTopologicalOrder;
@@ -126,6 +128,14 @@ public abstract class Instance {
         mSize = size;
     }
 
+    public long getNativeSize() {
+        return mNativeSize;
+    }
+
+    public void setNativeSize(long nativeSize) {
+        mNativeSize = nativeSize;
+    }
+
     public void setHeap(Heap heap) {
         mHeap = heap;
     }
@@ -183,7 +193,7 @@ public abstract class Instance {
         } else {
             Arrays.fill(mRetainedSizes, 0);
         }
-        mRetainedSizes[allHeaps.indexOf(mHeap)] = getSize();
+        mRetainedSizes[allHeaps.indexOf(mHeap)] = getSize() + getNativeSize();
     }
 
     public void addRetainedSize(int heapIndex, long size) {
@@ -341,7 +351,7 @@ public abstract class Instance {
 
         @Override
         protected void defaultAction(Instance node) {
-            mSize += node.getSize();
+            mSize += node.getSize() + node.getNativeSize();
         }
 
         public int getCompositeSize() {
