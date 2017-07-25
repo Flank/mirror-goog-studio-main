@@ -5,6 +5,7 @@ java_library(
     srcs = glob(["src/main/java/**/*.java"]),
     resource_jars = [":dependencies"],
     resources = glob(["src/main/resources/**"]),
+    visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/m2/repository/org/ow2/asm/asm/5.0.4:jar",
     ],

@@ -55,6 +55,14 @@ class ProfilerServiceImpl final
       const profiler::proto::AgentStatusRequest* request,
       profiler::proto::AgentStatusResponse* response) override;
 
+  // The current implementation only returns 'connected processes' and is for
+  // testing only. When we move process discover to perfd, we will fix this.
+  // TODO: If needed, add a flag to indicate a process is 'connected'.
+  grpc::Status GetProcesses(
+      grpc::ServerContext* context,
+      const profiler::proto::GetProcessesRequest* request,
+      profiler::proto::GetProcessesResponse* response) override;
+
   grpc::Status GetDevices(
       grpc::ServerContext* context,
       const profiler::proto::GetDevicesRequest* request,

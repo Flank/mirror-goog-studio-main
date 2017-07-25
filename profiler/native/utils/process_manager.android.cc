@@ -12,12 +12,16 @@
 #include "utils/log.h"
 #include "utils/trace.h"
 
-using std::string;
 using std::shared_ptr;
+using std::string;
 using std::vector;
 
+// Command to attach an jvmti agent. It should be followed with two parameters:
+// 1. the app/package name, 2. the location of the agent so.
+const char* const kAttachAgentCmd = "cmd activity attach-agent";
+
 namespace profiler {
-int ProcessManager::GetPidForBinary(const std::string &binary_name) const {
+int ProcessManager::GetPidForBinary(const std::string& binary_name) const {
   // Retrieve the list of all processes on the system.
   vector<Process> processes = this->GetAllProcesses();
 
@@ -42,7 +46,7 @@ vector<Process> ProcessManager::GetAllProcesses() const {
   DiskFileSystem fs;
 
   fs.WalkDir("/proc",
-             [&](const PathStat &path_stat) {
+             [&](const PathStat& path_stat) {
                if (path_stat.type() != PathStat::Type::DIR) return;
 
                int pid = atoi(path_stat.rel_path().c_str());
@@ -84,13 +88,24 @@ std::string ProcessManager::GetCmdlineForPid(int pid) {
   return "";
 }
 
+std::string ProcessManager::GetAttachAgentCommand() { return kAttachAgentCmd; }
+
+std::string ProcessManager::GetAttachAgentParams(
+    const std::string& app_name, const std::string& data_path,
+    const std::string& config_path, const std::string& lib_file_name) {
+  std::ostringstream attach_params;
+  attach_params << app_name << " " << data_path << "/" << lib_file_name << "="
+                << config_path;
+  return attach_params.str();
+}
+
 std::string ProcessManager::GetPackageNameFromAppName(
-    const std::string &app_name) {
+    const std::string& app_name) {
   return app_name.substr(0, app_name.find(":"));
 }
 
-Process::Process(pid_t pid, const string &cmdline,
-                 const std::string &binary_name)
+Process::Process(pid_t pid, const string& cmdline,
+                 const std::string& binary_name)
     : pid(pid), cmdline(cmdline), binary_name(binary_name) {}
 
 }  // namespace profiler

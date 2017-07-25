@@ -54,6 +54,13 @@ class ProcessManager {
   // retrieval, which works on the package instead of the app.
   static std::string GetPackageNameFromAppName(const std::string &app_name);
 
+  static std::string GetAttachAgentCommand();
+
+  static std::string GetAttachAgentParams(const std::string& app_name,
+                                          const std::string& data_path,
+                                          const std::string& config_path,
+                                          const std::string& lib_file_name);
+
  private:
   std::vector<Process> GetAllProcesses() const;
 };

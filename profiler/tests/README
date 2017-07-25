@@ -1,0 +1,90 @@
+Perf profiling Test Framework
+
+HOW DO I RUN THE TEST
+  To run the test it is simple you can run
+  ALL:
+  "bazel test //tools/base/profiler/tests/perf-test/..."
+  INDIVIDUAL:
+  "bazel test //tools/base/profiler/tests/perf-test:AllTest-Instrumented"
+  "bazel test //tools/base/profiler/tests/perf-test:AllTest-Jvmti"
+  OPTIONAL ARGS:
+  "bazel test --test_output=all --nocache_test_results \
+  //tools/base/profiler/tests/..."
+
+WHAT ARE THE COMPONENTS
+  APP-LAUNCHER
+  The app launcher is a simple program that acts as the android OS. The
+  launchers job is to act as the middle man between the test, and the
+  application we want to test. The app-launcher is loaded by art then
+  immediatly sets up a web server as its communication channel. The test
+  framework can then issue commands to the app-launcher via http using
+  query parameters to do a number of things.
+    - attach-agent: This options is called by perfd when attaching an
+      agent via JVMTI.
+    - set-property: This option is called by the test framework to set
+      a system property in the framework. The current usecase for this
+      is to set the communication port for perfa to connect to perfd.
+      The format of this argument is set-property=property.name,property.value.
+    - load-dex: This expects a path accessable to the art runtime
+      (full file path to a dex file in the bazel sandbox) to load. The
+      dex will be loaded using any previous dex's loaded as the parent
+      class loader.
+    - launch-activity: This tells the app-launcher to find an activity
+      with the specified name and initialize the activity adding it to
+      the ActivityThread emulating what happens during activity launch
+      with an actual device.
+  PERF-TEST
+  The perf test module is the module that contains all source for
+  the test and test helper classes. A basic test launches art with
+  the app-launcher dex and a perfd instance. The test can then communicate
+  with these processes as Studio does by using grpc calls.
+  TEST-APP
+  The test app is our mock android application. This app can and should
+  use android apis that we are known to capture from our instrumentation.
+  We should be modifying the app, or adding additional test apps or
+  activities to emulate the behavior we want to simulate from our test.
+  ANDROID-MOCK
+  The android-mock module is a very striped down set of libraries that
+  mock out the android framework classes. Some test will require us to
+  mock out behaviors of the android frame work this is the library that
+  we would do that in.
+
+HOW DO I ADD NEW TEST
+  NEW TEST CASE
+  To add a new test case it can be added to any test class (class ending
+  in Test) it will be executed when the rest of the junit test are.
+  NEW TEST APP
+  To add a new test app, first consider if what you are doing needs to
+  be a new app, or just a new activity in the app that is already being
+  loaded. In the case of a new activity the test just needs to call
+  launch-activity with your new activity name inplace of the default.
+  In the case of a new app, we need to generate a few new dex's of app.
+  One of these dex's will be used for JVMTI, to generate this dex it is
+  a simple build of the module. The other dex is to test the instrumented
+  APIs, with this we need to call a genrule that will run the instrumented
+  APIs over the jar then output a dex file.
+  NEW TEST SERIES
+  To add a new test series, a new test file should be created ending with
+  Test.java. New test series that dont extend PerfTestBase will be
+  responsible for setting up the PerfA process, PerfD process, and
+  setting all the proper config variables to ensure the processes are
+  pointing to the proper dex files, and AgentConfig.
+
+CAN I MANUALLY LAUNCH THE TEST ENVRIONMENT
+  Yes, To do this you first should build "//tools/base/profiler/...".
+  In the output you can launch "perfd -config_file=[path to config]".
+  Followed by launching art with the following options
+  "art --64 --verbose -Dservice.address=[IP]:[port] \
+   -Dapp.communication.port=[port] \
+   -Djava.library.path=[path to agent folder]:[path to perfa dir] \
+   -cp [path to app-launcher.dex] \
+   -Xbootclasspath:[path to android-mock dex]:[path to framework jars]:\
+   -Xcompiler-option --debuggable \
+   -Ximage: [path to core-core-libart-hostdex.art] \
+   com.android.tools.profiler.AppMain"
+  You will need to create 2 files, 1 is an agentconfig proto, the other
+  is a device_properties.info file used to determine the device version.
+  After all is configured you will be able to interact with art via
+  http://127.0.0.1:[port]?...
+  You will be able to communicate with perfd via GRPC. Launching the
+  processes manually can be useful when trying to debug changes.

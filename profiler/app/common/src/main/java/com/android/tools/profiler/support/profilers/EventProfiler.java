@@ -29,6 +29,7 @@ import com.android.tools.profiler.support.util.StudioLog;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.concurrent.CountDownLatch;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -43,7 +44,6 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     private static final int MAX_SLEEP_BACKOFF_MS = 500;
     private Set<Activity> myActivities = new HashSet<Activity>();
     private int myCurrentRotation = UNINITIALIZED_ROTATION;
-    private volatile boolean myInitialized = false;
 
     public EventProfiler() {
         initialize();
@@ -110,57 +110,21 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
         // Setting up the initializer as a thread, we need to do this because some applications
         // may have a delay in starting the application object. If this is the case then,
         // we need to poll for the object.
-        Thread initThread =
-                new Thread(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                long sleepBackoffMs = 10;
-                                boolean logErrorOnce = false;
-                                while (!myInitialized) {
-                                    try {
-                                        Class activityThreadClass =
-                                                Class.forName("android.app.ActivityThread");
-                                        Application app =
-                                                (Application)
-                                                        activityThreadClass
-                                                                .getMethod("currentApplication")
-                                                                .invoke(null);
-                                        if (app != null) {
-                                            StudioLog.v("Acquiring Application for Events");
-                                            myInitialized = true;
-                                            app.registerActivityLifecycleCallbacks(profiler);
-                                            break;
-                                        } else if (!logErrorOnce) {
-                                            StudioLog.e("Failed to capture application");
-                                            logErrorOnce = true;
-                                        }
-                                    } catch (ClassNotFoundException ex) {
-                                        StudioLog.e("Failed to get ActivityThread class");
-                                    } catch (NoSuchMethodException ex) {
-                                        StudioLog.e("Failed to find currentApplication method");
-                                    } catch (IllegalAccessException ex) {
-                                        StudioLog.e(
-                                                "Insufficient privileges to get application handle");
-                                    } catch (InvocationTargetException ex) {
-                                        StudioLog.e(
-                                                "Failed to call static function currentApplication");
-                                    }
-
-                                    try {
-                                        Thread.sleep(sleepBackoffMs);
-                                        if (sleepBackoffMs < MAX_SLEEP_BACKOFF_MS) {
-                                            sleepBackoffMs *= 2;
-                                        } else {
-                                            sleepBackoffMs = MAX_SLEEP_BACKOFF_MS;
-                                        }
-                                    } catch (InterruptedException ex) {
-                                        // Do nothing.
-                                    }
-                                }
-                            }
-                        });
+        CountDownLatch latch = new CountDownLatch(1);
+        ActivityInitialization initializer = new ActivityInitialization(profiler, latch);
+        Thread initThread = new Thread(initializer);
         initThread.start();
+
+        // Due to a potential race condition we should wait for atleast one thread
+        // tick of our ActivityInitialization before we check the current state.
+        // this will ensure that if we have an Application we are listening for state changes
+        // before we check the current state.
+        try {
+            // wait untill latch counted down to 0
+            latch.await();
+        } catch (InterruptedException e) {
+            StudioLog.e("Failed to block for ActivityInitialization");
+        }
         captureCurrentActivityState();
     }
 
@@ -321,6 +285,74 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                 StudioLog.e("No Access", ex);
             } catch (InvocationTargetException ex) {
                 StudioLog.e("Invalid object", ex);
+            }
+        }
+    }
+    private class ActivityInitialization implements Runnable {
+        private boolean myInitialized = false;
+        private CountDownLatch myLatch;
+        private final EventProfiler myProfiler;
+
+        public ActivityInitialization(EventProfiler profiler, CountDownLatch latch) {
+            myProfiler = profiler;
+            myLatch = latch;
+        }
+
+        @Override
+        public void run() {
+            long sleepBackoffMs = 10;
+            boolean logErrorOnce = false;
+            while (!myInitialized) {
+                try {
+                    Class activityThreadClass =
+                            Class.forName("android.app.ActivityThread");
+                    Application app =
+                            (Application)
+                                    activityThreadClass
+                                            .getMethod("currentApplication")
+                                            .invoke(null);
+                    if (app != null) {
+                        StudioLog.v("Acquiring Application for Events");
+                        myInitialized = true;
+                        app.registerActivityLifecycleCallbacks(myProfiler);
+                    } else if (!logErrorOnce) {
+                        StudioLog.e("Failed to capture application");
+                        logErrorOnce = true;
+                    }
+                    // Only tick our latch once then null it out, as we only
+                    // care if we attempted to get the current application
+                    // the first time. 
+                    if (myLatch != null) {
+                        myLatch.countDown();
+                        myLatch = null;
+                    }
+
+                    // If we are initialized then break the wait loop.
+                    if (myInitialized) {
+                        break;
+                    }
+                } catch (ClassNotFoundException ex) {
+                    StudioLog.e("Failed to get ActivityThread class");
+                } catch (NoSuchMethodException ex) {
+                    StudioLog.e("Failed to find currentApplication method");
+                } catch (IllegalAccessException ex) {
+                    StudioLog.e(
+                            "Insufficient privileges to get application handle");
+                } catch (InvocationTargetException ex) {
+                    StudioLog.e(
+                            "Failed to call static function currentApplication");
+                }
+
+                try {
+                    Thread.sleep(sleepBackoffMs);
+                    if (sleepBackoffMs < MAX_SLEEP_BACKOFF_MS) {
+                        sleepBackoffMs *= 2;
+                    } else {
+                        sleepBackoffMs = MAX_SLEEP_BACKOFF_MS;
+                    }
+                } catch (InterruptedException ex) {
+                    // Do nothing.
+                }
             }
         }
     }

@@ -27,6 +27,7 @@ public class ProfilerService {
 
     private static ProfilerService sInstance;
     private final List<ProfilerComponent> mComponents;
+    private static final String DEFAULT_SERVICE_ADDRESS = "127.0.0.1:12389";
 
     static {
         /**
@@ -54,13 +55,17 @@ public class ProfilerService {
      * Initialization method called multiple times from many entry points in the application. Not
      * thread safe so, when instrumented, it needs to be added in the main thread.
      *
-     * @param serviceAddress the IP address used to connect to perfd
+     * @param property to pull the the IP address from and used to connect to perfd.
+     * This adds an additional property to the property namespace because the service address
+     * is required to be configurable for test to run in parallel.
      */
-    public static void initialize(String serviceAddress) {
+    public static void initialize(String serviceAddressProperty) {
         if (sInstance != null) {
             return;
         }
-        sInstance = new ProfilerService(serviceAddress);
+        sInstance =
+                new ProfilerService(
+                        System.getProperty(serviceAddressProperty, DEFAULT_SERVICE_ADDRESS));
     }
 
     public ProfilerService(String serviceAddress) {

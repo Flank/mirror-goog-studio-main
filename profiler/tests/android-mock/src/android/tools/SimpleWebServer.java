@@ -113,6 +113,7 @@ public class SimpleWebServer implements Runnable {
             }
         } catch (SocketException e) {
             // The server was stopped; ignore.
+            System.err.println("Socket Exception." + e);
         } catch (IOException e) {
             System.err.println("Web server error." + e);
         }

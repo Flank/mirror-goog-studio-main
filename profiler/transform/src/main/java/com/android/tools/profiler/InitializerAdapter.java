@@ -34,7 +34,7 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
     public static final String ANDROID_ACTIVITY = "android/app/Activity";
     public static final String PROFILER_APPLICATION_CLASSNAME
             = "com/android/tools/profiler/support/ProfilerService";
-    private static final String DEFAULT_SERVICE_ADDRESS = "127.0.0.1:12389";
+    private static final String SERVICE_ADDRESS_PROPERTY = "profiler.service.address";
     private String superName;
 
     public InitializerAdapter(ClassVisitor classVisitor) {
@@ -77,7 +77,7 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
                 case DRETURN:
                 case ARETURN:
                 case RETURN:
-                    super.visitLdcInsn(DEFAULT_SERVICE_ADDRESS);
+                    super.visitLdcInsn(SERVICE_ADDRESS_PROPERTY);
                     super.visitMethodInsn(
                             INVOKESTATIC,
                             PROFILER_APPLICATION_CLASSNAME,

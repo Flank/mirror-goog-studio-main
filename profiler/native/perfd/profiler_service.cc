@@ -57,9 +57,6 @@ const char* const kConnectorRelativePath = "./perfd";
 // instrumentation code needs to reference. This jar file will be added to the
 // app via the jvmti agent.
 const char* const kAgentJarFileName = "perfa.jar";
-// Command to attach an jvmti agent. It should be followed with two parameters:
-// 1. the app/package name, 2. the location of the agent so.
-const char* const kAttachAgentCmd = "cmd activity attach-agent";
 
 // Delete file executable from package's data folder.
 void DeleteFileFromPackageFolder(const string& package_name,
@@ -146,11 +143,10 @@ bool RunAgent(const string& app_name, const string& package_name,
   bool success =
       package_manager.GetAppDataPath(package_name, &data_path, &error);
   if (success) {
-    std::ostringstream attach_params;
-    attach_params << app_name << " " << data_path << "/" << agent_lib_file_name
-                  << "=" << config_path;
-    BashCommandRunner attach(kAttachAgentCmd);
-    success |= attach.Run(attach_params.str(), &error);
+    const std::string& attach_params =
+        ProcessManager::GetAttachAgentParams(app_name, data_path, config_path, agent_lib_file_name);
+    BashCommandRunner attach(ProcessManager::GetAttachAgentCommand());
+    success |= attach.Run(attach_params, &error);
   }
 
   return success;
@@ -206,6 +202,21 @@ Status ProfilerServiceImpl::GetAgentStatus(
     response->set_last_timestamp(INT64_MIN);
   }
 
+  return Status::OK;
+}
+
+// This function is currently only used in test. It works by grabbing the
+// process id of all heatbeat processes.
+// TODO: update this function to get all processes on host, or move
+// to a test specific RPC.
+Status ProfilerServiceImpl::GetProcesses(
+    ServerContext* context, const profiler::proto::GetProcessesRequest* request,
+    profiler::proto::GetProcessesResponse* response) {
+  Trace trace("PRO:GetProcesses");
+  for (const auto& mapping : heartbeat_timestamp_map_) {
+    profiler::proto::Process* process = response->add_process();
+    process->set_pid(mapping.first);
+  }
   return Status::OK;
 }
 
