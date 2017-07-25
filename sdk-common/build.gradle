@@ -2,6 +2,7 @@ apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
+apply plugin: 'com.google.protobuf'
 
 group = 'com.android.tools'
 archivesBaseName = 'sdk-common'
@@ -13,9 +14,11 @@ dependencies {
     compile project(':base:sdklib')
     compile project(':base:builder-test-api')
     compile project(':base:builder-model')
+    compile project(':base:ddmlib')
     compile libs.bouncycastle_pkix
     compile libs.bouncycastle_prov
     compile libs.kotlin_stdlib
+    compile libs.protobuf
 
     testCompile libs.junit
     testCompile project(':base:testutils')
@@ -23,6 +26,16 @@ dependencies {
     testCompile libs.jimfs
     testCompile libs.mockito_core
     testCompile libs.truth
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.0.0"
+    }
+}
+
+sourceSets {
+    main.proto.srcDir 'aia-manifest-jar-generator/src'
 }
 
 project.ext.pomName = 'Android Tools sdk-common library'
