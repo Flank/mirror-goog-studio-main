@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import com.android.ddmlib.jdwp.JdwpInterceptor;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -199,7 +198,7 @@ abstract class ChunkHandler extends JdwpInterceptor {
                 if (bridge != null) {
                     DeviceMonitor deviceMonitor = bridge.getDeviceMonitor();
                     if (deviceMonitor != null) {
-                        deviceMonitor.addClientToDropAndReopen(client, newPort);
+                        deviceMonitor.trackClientToDropAndReopen(client, newPort);
                         client = null;
                     }
                 }

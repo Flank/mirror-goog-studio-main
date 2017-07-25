@@ -17,7 +17,6 @@
 package com.android.ddmlib;
 
 
-import com.android.ddmlib.DebugPortManager.IDebugPortProvider;
 import com.android.ddmlib.Log.LogLevel;
 import com.android.ddmlib.jdwp.JdwpExtension;
 import java.io.IOException;
@@ -444,57 +443,7 @@ final class MonitorThread extends Thread {
     private void processDebuggerData(SelectionKey key) {
         Debugger dbg = (Debugger)key.attachment();
 
-        try {
-            /*
-             * Read pending data.
-             */
-            dbg.read();
-
-            /*
-             * See if we have a full packet in the buffer. It's possible we have
-             * more than one packet, so we have to loop.
-             */
-            JdwpPacket packet = dbg.getJdwpPacket();
-            while (packet != null) {
-                Log.v("ddms", "Forwarding dbg req 0x"
-                        + Integer.toHexString(packet.getId()) + " to "
-                        + dbg.getClient());
-                packet.log("Debugger: forwarding jdwp packet from Java Debugger to Client");
-                dbg.incoming(packet, dbg.getClient());
-
-                packet.consume();
-                packet = dbg.getJdwpPacket();
-            }
-        } catch (IOException ioe) {
-            /*
-             * Close data connection; automatically un-registers dbg from
-             * selector. The failure could be caused by the debugger going away,
-             * or by the client going away and failing to accept our data.
-             * Either way, the debugger connection does not need to exist any
-             * longer. We also need to recycle the connection to the client, so
-             * that the VM sees the debugger disconnect. For a DDM-aware client
-             * this won't be necessary, and we can just send a "debugger
-             * disconnected" message.
-             */
-            Log.d("ddms", "Closing connection to debugger " + dbg);
-            dbg.closeData();
-            Client client = dbg.getClient();
-            if (client.isDdmAware()) {
-                // TODO: soft-disconnect DDM-aware clients
-                Log.d("ddms", " (recycling client connection as well)");
-
-                // we should drop the client, but also attempt to reopen it.
-                // This is done by the DeviceMonitor.
-                client.getDeviceImpl().getMonitor().addClientToDropAndReopen(client,
-                        IDebugPortProvider.NO_STATIC_PORT);
-            } else {
-                Log.d("ddms", " (recycling client connection as well)");
-                // we should drop the client, but also attempt to reopen it.
-                // This is done by the DeviceMonitor.
-                client.getDeviceImpl().getMonitor().addClientToDropAndReopen(client,
-                        IDebugPortProvider.NO_STATIC_PORT);
-            }
-        }
+        dbg.processChannelData();
     }
 
     /*

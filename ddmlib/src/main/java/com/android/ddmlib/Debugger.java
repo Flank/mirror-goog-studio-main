@@ -16,7 +16,12 @@
 
 package com.android.ddmlib;
 
+import static com.android.ddmlib.Debugger.ConnectionState.ST_AWAIT_SHAKE;
+import static com.android.ddmlib.Debugger.ConnectionState.ST_NOT_CONNECTED;
+import static com.android.ddmlib.Debugger.ConnectionState.ST_READY;
+
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.ddmlib.ClientData.DebuggerStatus;
 import com.android.ddmlib.jdwp.JdwpAgent;
 import java.io.IOException;
@@ -34,25 +39,32 @@ import java.nio.channels.SocketChannel;
  */
 public class Debugger extends JdwpAgent {
 
-    /*
-     * Messages from the debugger should be pretty small; may not even
-     * need an expanding-buffer implementation for this.
+    enum ConnectionState {
+        ST_NOT_CONNECTED,
+        ST_AWAIT_SHAKE,
+        ST_READY;
+    }
+
+    /**
+     * Initial read buffer capacity (must be a power of 2).
+     *
+     * <p>Messages from the debugger are usually pretty small, except for corner cases, such as <a
+     * href="https://issuetracker.google.com/issues/37077879#comment16">creating large strings</a>
+     * for example.
      */
-    private static final int INITIAL_BUF_SIZE = 1 * 1024;
-    private static final int MAX_BUF_SIZE = 32 * 1024;
+    private static final int INITIAL_BUF_SIZE = 1024;
+    /** Maximum read buffer capacity/jdwp packet size (must be a power of 2) */
+    private static final int MAX_BUF_SIZE = INITIAL_BUF_SIZE << 14; // 16MB
     private ByteBuffer mReadBuffer;
 
     private static final int PRE_DATA_BUF_SIZE = 256;
     private ByteBuffer mPreDataBuffer;
 
     /* connection state */
-    private int mConnState;
-    private static final int ST_NOT_CONNECTED = 1;
-    private static final int ST_AWAIT_SHAKE   = 2;
-    private static final int ST_READY         = 3;
+    private ConnectionState mConnState;
 
     /* peer */
-    private Client mClient;         // client we're forwarding to/from
+    private final Client mClient; // client we're forwarding to/from
     private int mListenPort;        // listen to me
     private ServerSocketChannel mListenChannel;
 
@@ -76,12 +88,38 @@ public class Debugger extends JdwpAgent {
                 listenPort);
         mListenChannel.socket().setReuseAddress(true);  // enable SO_REUSEADDR
         mListenChannel.socket().bind(addr);
+        mListenPort = mListenChannel.socket().getLocalPort();
 
         mReadBuffer = ByteBuffer.allocate(INITIAL_BUF_SIZE);
         mPreDataBuffer = ByteBuffer.allocate(PRE_DATA_BUF_SIZE);
         mConnState = ST_NOT_CONNECTED;
 
         Log.d("ddms", "Created: " + this.toString());
+    }
+
+    @VisibleForTesting
+    int getListenPort() {
+        return mListenPort;
+    }
+
+    @VisibleForTesting
+    int getReadBufferCapacity() {
+        return mReadBuffer.capacity();
+    }
+
+    @VisibleForTesting
+    int getReadBufferInitialCapacity() {
+        return INITIAL_BUF_SIZE;
+    }
+
+    @VisibleForTesting
+    int getReadBufferMaximumCapacity() {
+        return MAX_BUF_SIZE;
+    }
+
+    @VisibleForTesting
+    ConnectionState getConnectionState() {
+        return mConnState;
     }
 
     /**
@@ -194,6 +232,56 @@ public class Debugger extends JdwpAgent {
 
     // TODO: ?? add a finalizer that verifies the channel was closed
 
+    void processChannelData() {
+        try {
+            /*
+             * Read pending data.
+             */
+            read();
+
+            /*
+             * See if we have a full packet in the buffer. It's possible we have
+             * more than one packet, so we have to loop.
+             */
+            JdwpPacket packet = getJdwpPacket();
+            while (packet != null) {
+                Log.v(
+                        "ddms",
+                        "Forwarding dbg req 0x"
+                                + Integer.toHexString(packet.getId())
+                                + " to "
+                                + getClient());
+                packet.log("Debugger: forwarding jdwp packet from Java Debugger to Client");
+                incoming(packet, getClient());
+
+                packet.consume();
+                packet = getJdwpPacket();
+            }
+        } catch (IOException | BufferOverflowException e) {
+            /*
+             * Close data connection; automatically un-registers dbg from
+             * selector. The failure could be caused by the debugger going away,
+             * or by the client going away and failing to accept our data.
+             * Either way, the debugger connection does not need to exist any
+             * longer. We also need to recycle the connection to the client, so
+             * that the VM sees the debugger disconnect.
+             */
+            Log.d(
+                    "ddms",
+                    "Closing connection to debugger "
+                            + this
+                            + " (recycling client connection as well)");
+            closeData();
+            Client client = getClient();
+            // we should drop the client, but also attempt to reopen it.
+            // This is done by the DeviceMonitor.
+            client.getDeviceImpl()
+                    .getClientTracker()
+                    .trackClientToDropAndReopen(
+                            client, DebugPortManager.IDebugPortProvider.NO_STATIC_PORT);
+        }
+    }
+
     /**
      * Read data from our channel.
      *
@@ -204,15 +292,26 @@ public class Debugger extends JdwpAgent {
     void read() throws IOException {
         int count;
 
+        // Shrink buffer back to initial capacity if last request required a large buffer
+        if (mReadBuffer.position() == 0 && mReadBuffer.capacity() > INITIAL_BUF_SIZE) {
+            Log.i(
+                    "ddms",
+                    String.format(
+                            "Shrinking buffer from %d bytes to %d bytes",
+                            mReadBuffer.capacity(), INITIAL_BUF_SIZE));
+            mReadBuffer = ByteBuffer.allocate(INITIAL_BUF_SIZE);
+        }
+
+        // Expand buffer if we reached maximum capacity
         if (mReadBuffer.position() == mReadBuffer.capacity()) {
-            if (mReadBuffer.capacity() * 2 > MAX_BUF_SIZE) {
+            int newCapacity = mReadBuffer.capacity() * 2;
+            if (newCapacity > MAX_BUF_SIZE) {
+                Log.w("ddms", String.format("Buffer has reached maximum size of %d", MAX_BUF_SIZE));
                 throw new BufferOverflowException();
             }
-            Log.d("ddms", "Expanding read buffer to "
-                + mReadBuffer.capacity() * 2);
+            Log.d("ddms", "Expanding read buffer to " + newCapacity);
 
-            ByteBuffer newBuffer =
-                    ByteBuffer.allocate(mReadBuffer.capacity() * 2);
+            ByteBuffer newBuffer = ByteBuffer.allocate(newCapacity);
             mReadBuffer.position(0);
             newBuffer.put(mReadBuffer);     // leaves "position" at end
 
@@ -220,7 +319,9 @@ public class Debugger extends JdwpAgent {
         }
 
         count = mChannel.read(mReadBuffer);
-        Log.v("ddms", "Read " + count + " bytes from " + this);
+        if (Log.isAtLeast(Log.LogLevel.VERBOSE)) {
+            Log.v("ddms", String.format("Read %d bytes from %s", count, this));
+        }
         if (count < 0) throw new IOException("read failed");
     }
 

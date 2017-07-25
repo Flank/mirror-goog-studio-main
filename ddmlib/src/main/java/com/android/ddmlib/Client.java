@@ -738,8 +738,9 @@ public class Client extends JdwpAgent {
                     if (MonitorThread.getInstance().getRetryOnBadHandshake()) {
                         // we should drop the client, but also attempt to reopen it.
                         // This is done by the DeviceMonitor.
-                        mDevice.getMonitor().addClientToDropAndReopen(this,
-                                IDebugPortProvider.NO_STATIC_PORT);
+                        mDevice.getClientTracker()
+                                .trackClientToDropAndReopen(
+                                        this, IDebugPortProvider.NO_STATIC_PORT);
                     } else {
                         // mark it as bad, close the socket, and don't retry
                         mConnState = ST_NOT_JDWP;
