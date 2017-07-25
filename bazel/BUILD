@@ -312,6 +312,13 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
+# Use cpu for armeabi since android_cpu default value is armeabi
+config_setting(
+    name = "android_cpu_armeabi",
+    values = {"cpu": "armeabi"},
+    visibility = ["//visibility:public"],
+)
+
 # TODO: Temporary test rule for repo generation
 maven_repo(
     name = "offline_repo",
