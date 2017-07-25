@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.OutputFile;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
@@ -41,6 +42,7 @@ import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -150,64 +152,7 @@ public class GenerateSplitAbiRes extends BaseTask {
                 variantScope.getVariantData().variantOutputFactory.create(abiApkData);
             }
 
-            // Split name can only contains 0-9, a-z, A-Z, '.' and '_'.  Replace all other
-            // characters with underscore.
-            CharMatcher charMatcher =
-                    CharMatcher.inRange('0', '9')
-                            .or(CharMatcher.inRange('A', 'Z'))
-                            .or(CharMatcher.inRange('a', 'z'))
-                            .or(CharMatcher.is('_'))
-                            .or(CharMatcher.is('.'))
-                            .negate();
-
-            String abiName = charMatcher.replaceFrom(split, '_');
-
-            File tmpDirectory = new File(outputDirectory, abiName);
-            FileUtils.mkdirs(tmpDirectory);
-
-            File tmpFile = new File(tmpDirectory, "AndroidManifest.xml");
-
-            String versionNameToUse = abiApkData.getVersionName();
-            if (versionNameToUse == null) {
-                versionNameToUse = String.valueOf(abiApkData.getVersionCode());
-            }
-
-            try (OutputStreamWriter fileWriter =
-                         new OutputStreamWriter(new FileOutputStream(tmpFile), "UTF-8")) {
-
-                String encodedSplitName =
-                        charMatcher.replaceFrom(
-                                (featureName != null ? featureName + "." : "") + "config." + split,
-                                '_');
-
-                fileWriter.append(
-                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                                + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                                + "      package=\""
-                                + applicationId
-                                + "\"\n"
-                                + "      android:versionCode=\""
-                                + abiApkData.getVersionCode()
-                                + "\"\n"
-                                + "      android:versionName=\""
-                                + versionNameToUse
-                                + "\"\n");
-
-                if (featureName != null) {
-                    fileWriter.append("      configForSplit=\"" + featureName + "\"\n");
-                }
-
-                fileWriter.append(
-                        "      split=\""
-                                + encodedSplitName
-                                + "\"\n"
-                                + "      targetABI=\""
-                                + abiName
-                                + "\">\n"
-                                + "       <uses-sdk android:minSdkVersion=\"21\"/>\n"
-                                + "</manifest> ");
-                fileWriter.flush();
-            }
+            File manifestFile = generateSplitManifest(split, abiApkData);
 
             AndroidBuilder builder = getBuilder();
             Aapt aapt =
@@ -229,7 +174,7 @@ public class GenerateSplitAbiRes extends BaseTask {
                                     .getCruncherProcesses());
             AaptPackageConfig.Builder aaptConfig = new AaptPackageConfig.Builder();
             aaptConfig
-                    .setManifestFile(tmpFile)
+                    .setManifestFile(manifestFile)
                     .setOptions(DslAdaptersKt.convert(aaptOptions))
                     .setDebuggable(debuggable)
                     .setResourceOutputApk(resPackageFile)
@@ -243,6 +188,70 @@ public class GenerateSplitAbiRes extends BaseTask {
         }
 
         outputScope.save(VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES, outputDirectory);
+    }
+
+    @VisibleForTesting
+    File generateSplitManifest(String split, ApkData abiApkData) throws IOException {
+        // Split name can only contains 0-9, a-z, A-Z, '.' and '_'.  Replace all other
+        // characters with underscore.
+        CharMatcher charMatcher =
+                CharMatcher.inRange('0', '9')
+                        .or(CharMatcher.inRange('A', 'Z'))
+                        .or(CharMatcher.inRange('a', 'z'))
+                        .or(CharMatcher.is('_'))
+                        .or(CharMatcher.is('.'))
+                        .negate();
+
+        String abiName = charMatcher.replaceFrom(split, '_');
+
+        File tmpDirectory = new File(outputDirectory, abiName);
+        FileUtils.mkdirs(tmpDirectory);
+
+        File tmpFile = new File(tmpDirectory, "AndroidManifest.xml");
+
+        String versionNameToUse = abiApkData.getVersionName();
+        if (versionNameToUse == null) {
+            versionNameToUse = String.valueOf(abiApkData.getVersionCode());
+        }
+
+        try (OutputStreamWriter fileWriter =
+                new OutputStreamWriter(
+                        new BufferedOutputStream(new FileOutputStream(tmpFile)), "UTF-8")) {
+
+            String encodedSplitName =
+                    charMatcher.replaceFrom(
+                            (featureName != null ? featureName + "." : "") + "config." + split,
+                            '_');
+
+            fileWriter.append(
+                    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                            + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "      package=\""
+                            + applicationId
+                            + "\"\n"
+                            + "      android:versionCode=\""
+                            + abiApkData.getVersionCode()
+                            + "\"\n"
+                            + "      android:versionName=\""
+                            + versionNameToUse
+                            + "\"\n");
+
+            if (featureName != null) {
+                fileWriter.append("      configForSplit=\"" + featureName + "\"\n");
+            }
+
+            fileWriter.append(
+                    "      split=\""
+                            + encodedSplitName
+                            + "\"\n"
+                            + "      targetABI=\""
+                            + abiName
+                            + "\">\n"
+                            + "       <uses-sdk android:minSdkVersion=\"21\"/>\n"
+                            + "</manifest> ");
+            fileWriter.flush();
+        }
+        return tmpFile;
     }
 
     // FIX ME : this calculation should move to SplitScope.Split interface
@@ -281,7 +290,7 @@ public class GenerateSplitAbiRes extends BaseTask {
             generateSplitAbiRes.setAndroidBuilder(scope.getGlobalScope().getAndroidBuilder());
             generateSplitAbiRes.setVariantName(config.getFullName());
             generateSplitAbiRes.featureName =
-                    scope.getVariantConfiguration().getType() == VariantType.FEATURE
+                    config.getType() == VariantType.FEATURE && !scope.isBaseFeature()
                             ? ((FeatureVariantData) scope.getVariantData()).getFeatureName()
                             : null;
 
