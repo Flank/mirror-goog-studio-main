@@ -2,8 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/tests/android-mock/android-mock.iml" filepath="$PROJECT_DIR$/tests/android-mock/android-mock.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tests/perf-test/perf-test.iml" filepath="$PROJECT_DIR$/tests/perf-test/perf-test.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/perfa/perfa.iml" filepath="$PROJECT_DIR$/app/perfa/perfa.iml" />
+      <module fileurl="file://$PROJECT_DIR$/tests/perfa-app/perfa-app.iml" filepath="$PROJECT_DIR$/tests/perfa-app/perfa-app.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/supportlib/profiler-supportlib.iml" filepath="$PROJECT_DIR$/app/supportlib/profiler-supportlib.iml" />
       <module fileurl="file://$PROJECT_DIR$/transform/transform.iml" filepath="$PROJECT_DIR$/transform/transform.iml" />
     </modules>

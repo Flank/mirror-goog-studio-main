@@ -36,4 +36,8 @@ public class Debug {
     public static int getGlobalAllocCount() {
         return 0;
     }
+
+    public static String getRuntimeStat(String stat) {
+        return stat;
+    }
 }

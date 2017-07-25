@@ -17,9 +17,13 @@
 package android.app;
 
 import android.os.Bundle;
+import java.util.HashSet;
+import java.util.Set;
 
 /** Empty class to act as a test mock */
 public class Application {
+
+    Set<ActivityLifecycleCallbacks> myCallbacks = new HashSet<>();
 
     public interface ActivityLifecycleCallbacks {
         void onActivityCreated(Activity activity, Bundle savedInstanceState);
@@ -37,7 +41,19 @@ public class Application {
         void onActivityDestroyed(Activity activity);
     }
 
-    public void registerActivityLifecycleCallbacks(ActivityLifecycleCallbacks callback) {}
+    public void registerActivityLifecycleCallbacks(ActivityLifecycleCallbacks callback) {
+        myCallbacks.add(callback);
+    }
 
-    public void unregisterActivityLifecycleCallbacks(ActivityLifecycleCallbacks callback) {}
+    public void unregisterActivityLifecycleCallbacks(ActivityLifecycleCallbacks callback) {
+        myCallbacks.remove(callback);
+    }
+
+    public void registerActivity(Activity activity) {
+        for (ActivityLifecycleCallbacks callback : myCallbacks) {
+            callback.onActivityCreated(activity, null);
+            callback.onActivityStarted(activity);
+            callback.onActivityResumed(activity);
+        }
+    }
 }

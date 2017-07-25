@@ -16,5 +16,17 @@
 
 package android.view.inputmethod;
 
+import android.mock.MockInputConnectionWrapper;
+
 /** Empty class to act as a test mock */
-public class InputMethodManager {}
+public class InputMethodManager {
+    private InputConnectionWrapper mServedInputConnectionWrapper = new MockInputConnectionWrapper();
+
+    public boolean isAcceptingText() {
+        return true;
+    }
+
+    public static InputMethodManager getInstance() {
+        return new InputMethodManager();
+    }
+}

@@ -15,5 +15,28 @@
  */
 package android.app;
 
+import android.mock.MockWindowManager;
+import android.view.Window;
+import android.view.WindowManager;
+
 /** Activity mock for tests */
-public class Activity {}
+public class Activity {
+
+    private String myName;
+
+    public Activity(String name) {
+        myName = name;
+    }
+
+    public String getLocalClassName() {
+        return myName;
+    }
+
+    public Window getWindow() {
+        return new Window();
+    }
+
+    public WindowManager getWindowManager() {
+        return new MockWindowManager();
+    }
+}
