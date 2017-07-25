@@ -49,7 +49,6 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
@@ -213,16 +212,18 @@ public class ProcessManifest extends ManifestProcessorTask {
         return serializeMap(variantConfiguration.getManifestPlaceholders());
     }
 
-    @OutputFile
-    public void setManifestOutputFile(File manifestOutputFile) {
-        this.manifestOutputFile = manifestOutputFile;
-    }
-
     public static class ConfigAction implements TaskConfigAction<ProcessManifest> {
 
         private final VariantScope scope;
         private final File libraryProcessedManifest;
 
+        /**
+         * {@code TaskConfigAction} for the library process manifest task.
+         *
+         * @param scope The library variant scope.
+         * @param libraryProcessedManifest The library manifest output file. This must be a file
+         *     inside {@link VariantScope#getManifestOutputDirectory()}.
+         */
         public ConfigAction(VariantScope scope, File libraryProcessedManifest) {
             this.scope = scope;
             this.libraryProcessedManifest = libraryProcessedManifest;
@@ -248,7 +249,7 @@ public class ProcessManifest extends ManifestProcessorTask {
 
             processManifest.setAndroidBuilder(androidBuilder);
             processManifest.setVariantName(config.getFullName());
-            processManifest.setManifestOutputFile(libraryProcessedManifest);
+            processManifest.manifestOutputFile = libraryProcessedManifest;
 
             processManifest.variantConfiguration = config;
 
