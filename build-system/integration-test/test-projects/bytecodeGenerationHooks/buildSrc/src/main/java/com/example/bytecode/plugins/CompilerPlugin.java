@@ -51,6 +51,13 @@ public class CompilerPlugin implements Plugin<Project> {
             processVariants(extension.getApplicationVariants(), appJar, postJavacAppJar);
 
             testedExtension = extension;
+        } else if (pluginClass.equals(FeaturePlugin.class)) {
+            FeatureExtension extension =
+                    (FeatureExtension) project.getExtensions().getByName("android");
+            processVariants(extension.getFeatureVariants(), appJar, postJavacAppJar);
+            processVariants(extension.getLibraryVariants(), appJar, postJavacAppJar);
+
+            testedExtension = extension;
         } else if (pluginClass.equals(LibraryPlugin.class)) {
             LibraryExtension extension =
                     (LibraryExtension) project.getExtensions().getByName("android");

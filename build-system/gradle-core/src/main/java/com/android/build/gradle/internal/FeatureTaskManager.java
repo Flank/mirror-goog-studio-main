@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -28,6 +29,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ApplicationId;
@@ -57,7 +59,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
-import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -468,12 +470,46 @@ public class FeatureTaskManager extends TaskManager {
     @Override
     protected void postJavacCreation(
             @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
-        // create an anchor collection for usage inside the same module (unit tests basically)
-        ConfigurableFileCollection fileCollection =
-                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS);
-        fileCollection.from(scope.getOutput(JAVAC));
-        fileCollection.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
-        fileCollection.from(scope.getVariantData().getAllPostJavacGeneratedBytecode());
+        // Create the classes artifact for use by dependent features.
+        File dest =
+                new File(
+                        globalScope.getBuildDir(),
+                        FileUtils.join(
+                                FD_INTERMEDIATES,
+                                "classes-jar",
+                                scope.getVariantConfiguration().getDirName()));
+
+        AndroidTask<Jar> task =
+                androidTasks.create(
+                        tasks,
+                        new TaskConfigAction<Jar>() {
+                            @NonNull
+                            @Override
+                            public String getName() {
+                                return scope.getTaskName("bundle", "Classes");
+                            }
+
+                            @NonNull
+                            @Override
+                            public Class<Jar> getType() {
+                                return Jar.class;
+                            }
+
+                            @Override
+                            public void execute(@NonNull Jar task) {
+                                task.from(scope.getOutput(JAVAC));
+                                task.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
+                                task.from(
+                                        scope.getVariantData().getAllPostJavacGeneratedBytecode());
+                                task.setDestinationDir(dest);
+                                task.setArchiveName("classes.jar");
+                            }
+                        });
+
+        scope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.FEATURE_CLASSES,
+                new File(dest, "classes.jar"),
+                task.getName());
     }
 
     @NonNull
