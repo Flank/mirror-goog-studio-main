@@ -1,4 +1,5 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
+<#import "root://gradle-projects/common/proguard_macros.ftl" as proguard>
 <#if isLibraryProject?? && isLibraryProject>
 apply plugin: 'com.android.library'
 <#else>
@@ -24,14 +25,9 @@ android {
         targetCompatibility JavaVersion.VERSION_${javaVersion?replace('.','_','i')}
     }
 </#if>
-<#if enableProGuard>
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-</#if>
+
+<@proguard.proguardConfig />
+
 }
 
 dependencies {
