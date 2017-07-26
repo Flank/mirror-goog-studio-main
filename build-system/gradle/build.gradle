@@ -1,7 +1,6 @@
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-apply plugin: 'groovy'
 apply plugin: 'kotlin'
 apply plugin: 'clone-artifacts'
 apply plugin: 'idea'
