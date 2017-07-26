@@ -22,8 +22,8 @@ import com.android.builder.tasks.JobContext;
 import com.android.builder.tasks.QueueThreadContext;
 import com.android.builder.tasks.Task;
 import com.android.builder.tasks.WorkQueue;
-import com.android.ide.common.internal.PngCruncher;
-import com.android.ide.common.internal.PngException;
+import com.android.ide.common.internal.ResourceCompilationException;
+import com.android.ide.common.internal.ResourceProcessor;
 import com.android.utils.ILogger;
 import com.google.common.base.MoreObjects;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -37,10 +37,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Implementation of {@link com.android.ide.common.internal.PngCruncher} that queues request and use
- * a pool of aapt server processes to serve those.
+ * Implementation of {@link ResourceProcessor} that queues request and uses a pool of aapt server
+ * processes to serve those. Should only be used to process 9 patch images and, if PNG crunching is
+ * enabled, to crunch PNG files.
  */
-public class QueuedCruncher implements PngCruncher {
+public class QueuedCruncher implements ResourceProcessor {
 
     private static final boolean VERBOSE_LOGGING = false;
     /**
@@ -221,8 +222,10 @@ public class QueuedCruncher implements PngCruncher {
     }
 
     @Override
-    public ListenableFuture<File> crunchPng(int key, @NonNull final File from, @NonNull final File to)
-            throws PngException {
+    public ListenableFuture<File> compile(
+            int key, @NonNull final File from, @NonNull final File to, boolean crunchPngs)
+            throws ResourceCompilationException {
+
         SettableFuture<File> result = SettableFuture.create();
         try {
             final Job<AaptProcess> aaptProcessJob =
@@ -278,8 +281,9 @@ public class QueuedCruncher implements PngCruncher {
                                 }
                             },
                             result);
-            ConcurrentLinkedQueue<Job<AaptProcess>> jobs = mOutstandingJobs.get(key);
+
             synchronized (mOutstandingJobs) {
+                ConcurrentLinkedQueue<Job<AaptProcess>> jobs = mOutstandingJobs.get(key);
                 if (jobs == null) {
                     jobs = new ConcurrentLinkedQueue<>();
                     mOutstandingJobs.put(key, jobs);
@@ -289,7 +293,7 @@ public class QueuedCruncher implements PngCruncher {
         } catch (InterruptedException e) {
             // Restore the interrupted status
             Thread.currentThread().interrupt();
-            throw new PngException(e);
+            throw new ResourceCompilationException(e);
         }
         return result;
     }

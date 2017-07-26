@@ -27,7 +27,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptUtils;
 import com.android.builder.internal.aapt.AbstractProcessExecutionAapt;
 import com.android.builder.png.QueuedCruncher;
-import com.android.ide.common.internal.PngException;
+import com.android.ide.common.internal.ResourceCompilationException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
@@ -395,8 +395,11 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
 
         ListenableFuture<File> futureResult;
         try {
-            futureResult = mCruncher.crunchPng(key, request.getInput(), outputFile);
-        } catch (PngException e) {
+            futureResult =
+                    mCruncher.compile(
+                            key, request.getInput(), outputFile, request.isPngCrunching());
+
+        } catch (ResourceCompilationException e) {
             throw new AaptException(
                     e,
                     String.format(

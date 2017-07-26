@@ -16,23 +16,20 @@
 
 package com.android.ide.common.internal;
 
-/**
- * Exception in the png cruncher
- */
-public class PngException extends Exception {
+/** Exception in the resource processor. */
+public class ResourceCompilationException extends Exception {
 
-    public PngException() {
-    }
+    public ResourceCompilationException() {}
 
-    public PngException(String s) {
+    public ResourceCompilationException(String s) {
         super(s);
     }
 
-    public PngException(String s, Throwable throwable) {
+    public ResourceCompilationException(String s, Throwable throwable) {
         super(s, throwable);
     }
 
-    public PngException(Throwable throwable) {
+    public ResourceCompilationException(Throwable throwable) {
         super(throwable);
     }
 }

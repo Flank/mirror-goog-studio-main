@@ -17,8 +17,8 @@
 package com.android.builder.png;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.internal.PngCruncher;
-import com.android.ide.common.internal.PngException;
+import com.android.ide.common.internal.ResourceCompilationException;
+import com.android.ide.common.internal.ResourceProcessor;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.collect.Maps;
@@ -51,7 +51,7 @@ public class NinePatchAsyncAaptProcessTest {
 
     private static final AtomicLong sClassStartTime = new AtomicLong();
     private static final AtomicInteger sCruncherKey = new AtomicInteger();
-    private static final PngCruncher sCruncher = getCruncher();
+    private static final ResourceProcessor sCruncher = getCruncher();
 
     private final File mFile;
 
@@ -65,7 +65,7 @@ public class NinePatchAsyncAaptProcessTest {
     }
 
     @Test
-    public void run() throws PngException, IOException {
+    public void run() throws ResourceCompilationException, IOException {
         File outFile = NinePatchAaptProcessorTestUtils.crunchFile(
                 sCruncherKey.get(), mFile, sCruncher);
         sSourceAndCrunchedFiles.put(mFile, outFile);
@@ -81,7 +81,7 @@ public class NinePatchAsyncAaptProcessTest {
     }
 
     @NonNull
-    private static PngCruncher getCruncher() {
+    private static ResourceProcessor getCruncher() {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
         File aapt = NinePatchAaptProcessorTestUtils.getAapt();
         return QueuedCruncher.Builder.INSTANCE.newCruncher(aapt.getAbsolutePath(), logger, 0);

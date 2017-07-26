@@ -17,21 +17,18 @@
 package com.android.ide.common.internal;
 
 import com.android.annotations.NonNull;
-
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 
-/**
- * An object able to crunch a png.
- */
-public interface PngCruncher {
+/** An object able to send requests to an AAPT or AAPT2 daemon. */
+public interface ResourceProcessor {
 
     /**
-     * Initiates a series of crunching requests. The call to this method must be followed
-     * by a call to {@link #end(int)} that will allow to wait for all crunching requests made
-     * with the {@link #crunchPng(int, File, File)} method.
+     * Initiates a series of compile requests. The call to this method must be followed by a call to
+     * {@link #end(int)} that will allow to wait for all requests made with the {@link #compile(int,
+     * File, File, boolean)} method.
      *
-     * @return the key for this set of crunching requests.
+     * @return the key for this set of requests.
      */
     int start();
 
@@ -39,24 +36,24 @@ public interface PngCruncher {
      * Crunch a given file into another given file. This may be implemented synchronously or
      * asynchronously. Therefore the output file may not be present until {@link #end(int)} is
      * called and returned. When implemented asynchronously, this act like queueing a crunching
-     * request. So this can be called multiple times and when
-     * {@link #end(int)} is called and returned, all output files will be present.
+     * request. So this can be called multiple times and when {@link #end(int)} is called and
+     * returned, all output files will be present.
      *
      * @param key obtained from the {@link #start()}
-     * @param from the file to crunch
+     * @param from the file to compile
      * @param to the output file
+     * @param crunchPngs whether PNG files should be crunched
      * @return a {@link ListenableFuture} instance calling code can listen to for completion.
-     *
-     * @throws PngException
      */
-    ListenableFuture<File> crunchPng(int key, @NonNull File from, @NonNull File to) throws PngException;
+    ListenableFuture<File> compile(
+            int key, @NonNull File from, @NonNull File to, boolean crunchPngs)
+            throws ResourceCompilationException;
 
     /**
-     * Wait until all Png crunching requests have been executed. If there are no other users of
-     * this PNG cruncher service, it can shutdown all associated thread pools or native resources.
+     * Wait until all compile requests have been executed. If there are no other users of this
+     * service, it can shutdown all associated thread pools or native resources.
      *
      * @param key obtained in the {@link #start()}
-     * @throws InterruptedException
      */
     void end(int key) throws InterruptedException;
 }

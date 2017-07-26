@@ -29,7 +29,7 @@ import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.SourceFile;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
-import com.android.ide.common.internal.PngException;
+import com.android.ide.common.internal.ResourceCompilationException;
 import com.android.ide.common.workers.WorkerExecutorFacade;
 import com.android.resources.ResourceFolderType;
 import com.android.resources.ResourceType;
@@ -307,7 +307,7 @@ public class MergedResourceWriter
                     // take care of waiting for all requests to be processed.
                     mCompiling.add(result);
 
-                } catch(PngException | IOException e) {
+                } catch (ResourceCompilationException | IOException e) {
                     throw MergingException.wrapException(e).withFile(request.getInput()).build();
                 }
             }
