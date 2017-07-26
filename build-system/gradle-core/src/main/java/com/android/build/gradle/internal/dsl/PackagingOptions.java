@@ -74,12 +74,12 @@ import org.gradle.api.tasks.Input;
  *   <li>Merge: <code>/META-INF/services/&#042;&#042;</code>
  *   <li>Exclude:
  *       <ul>
- *         <li>{@code /META-INF/LICENCE}
- *         <li>{@code /META-INF/LICENCE.txt}
+ *         <li>{@code /META-INF/LICENSE}
+ *         <li>{@code /META-INF/LICENSE.txt}
  *         <li>{@code /META-INF/NOTICE}
  *         <li>{@code /META-INF/NOTICE.txt}
- *         <li>{@code /LICENCE}
- *         <li>{@code /LICENCE.txt}
+ *         <li>{@code /LICENSE}
+ *         <li>{@code /LICENSE.txt}
  *         <li>{@code /NOTICE}
  *         <li>{@code /NOTICE.txt}
  *         <li><code>/META-INF/&#042;.DSA</code> (all DSA signature files)
@@ -103,7 +103,6 @@ import org.gradle.api.tasks.Input;
  *         <li><code>&#042;&#042;/_&#042;</code>
  *         <li><code>&#042;&#042;/_&#042;/&#042;&#042;</code>
  *       </ul>
- *
  * </ul>
  *
  * <p>Example that adds the first {@code anyFileWillDo} file found and ignores all the others and
@@ -126,12 +125,12 @@ import org.gradle.api.tasks.Input;
  * }
  * </pre>
  *
- * <p>Example that merges all {@code LICENCE.txt} files in the root.
+ * <p>Example that merges all {@code LICENSE.txt} files in the root.
  *
  * <pre>
  * packagingOptions {
- *     merge "/LICENCE.txt" // Same as: merges += ["/LICENSE.txt"]
- *     excludes -= ["/LICENCE.txt"] // Not really needed because merges take precedence over excludes.
+ *     merge "/LICENSE.txt" // Same as: merges += ["/LICENSE.txt"]
+ *     excludes -= ["/LICENSE.txt"] // Not really needed because merges take precedence over excludes.
  * }
  * </pre>
  */
@@ -139,7 +138,7 @@ public class PackagingOptions implements com.android.builder.model.PackagingOpti
 
     public PackagingOptions() {
         // ATTENTION - keep this in sync with JavaDoc above.
-        exclude("/META-INF/LICENCE");
+        exclude("/META-INF/LICENSE");
         exclude("/META-INF/LICENSE.txt");
         exclude("/META-INF/MANIFEST.MF");
         exclude("/META-INF/NOTICE");
