@@ -39,6 +39,8 @@ import com.android.build.gradle.model.internal.AndroidComponentSpecInternal;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.level2.GlobalLibraryMap;
 import com.google.common.collect.Multimap;
 import org.gradle.api.Project;
 import org.gradle.model.ModelMap;
@@ -68,7 +70,9 @@ public class ComponentModelBuilder implements ToolingModelBuilder {
 
     @Override
     public boolean canBuild(String modelName) {
-        return modelName.equals(AndroidProject.class.getName());
+        return modelName.equals(AndroidProject.class.getName())
+                || modelName.equals(GlobalLibraryMap.class.getName())
+                || modelName.equals(ProjectBuildOutput.class.getName());
     }
 
     @Override
