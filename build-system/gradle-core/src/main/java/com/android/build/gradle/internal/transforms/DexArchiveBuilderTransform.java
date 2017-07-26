@@ -231,7 +231,7 @@ public class DexArchiveBuilderTransform extends Transform {
             if (useGradleWorkers) {
                 transformInvocation.getContext().getWorkerExecutor().await();
             } else {
-                executor.waitForAllTasks();
+                executor.waitForTasksWithQuickFail(true);
             }
 
             // if we are in incremental mode, delete all removed files.
@@ -291,14 +291,17 @@ public class DexArchiveBuilderTransform extends Transform {
             } else {
                 FileUtils.deleteIfExists(jarInput.getFile());
             }
-        } else {
-            if (jarInput.getStatus() == Status.REMOVED) {
-                for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
-                    FileUtils.deleteIfExists(
-                            getPreDexJar(transformOutputProvider, jarInput, bucketId));
+        } else if (jarInput.getStatus() != Status.NOTCHANGED) {
+            // delete all preDex jars if they exists.
+            for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
+                File contentLocation = getPreDexJar(transformOutputProvider, jarInput, bucketId);
+                FileUtils.deleteIfExists(contentLocation);
+                if (jarInput.getStatus() != Status.REMOVED) {
+                    FileUtils.mkdirs(contentLocation.getParentFile());
                 }
-            } else if (jarInput.getStatus() == Status.ADDED
-                    || jarInput.getStatus() == Status.CHANGED) {
+            }
+            // and perform dexing if necessary.
+            if (jarInput.getStatus() == Status.ADDED || jarInput.getStatus() == Status.CHANGED) {
                 return convertJarToDexArchive(context, jarInput, transformOutputProvider);
             }
         }
@@ -521,15 +524,11 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull JarInput qualifiedContent,
             @Nullable Integer bucketId) {
 
-        File contentLocation =
-                output.getContentLocation(
-                        qualifiedContent.getName() + (bucketId == null ? "" : ("-" + bucketId)),
-                        ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
-                        qualifiedContent.getScopes(),
-                        Format.JAR);
-
-        FileUtils.mkdirs(contentLocation.getParentFile());
-        return contentLocation;
+        return output.getContentLocation(
+                qualifiedContent.getName() + (bucketId == null ? "" : ("-" + bucketId)),
+                ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
+                qualifiedContent.getScopes(),
+                Format.JAR);
     }
 
     @NonNull

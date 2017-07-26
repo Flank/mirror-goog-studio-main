@@ -241,10 +241,16 @@ public class DexMergerTransform extends Transform {
                 .stream()
                 .map(File::toPath)
                 .forEach(dexArchiveBuilder::add);
-        TransformInputUtil.getJarFiles(inputs)
-                .stream()
-                .map(File::toPath)
+        inputs.stream()
+                .flatMap(transformInput -> transformInput.getJarInputs().stream())
+                .filter(jarInput -> jarInput.getStatus() != Status.REMOVED)
+                .map(jarInput -> jarInput.getFile().toPath())
                 .forEach(dexArchiveBuilder::add);
+
+        ImmutableList<Path> dexesToMerge = dexArchiveBuilder.build();
+        if (dexesToMerge.isEmpty()) {
+            return ImmutableList.of();
+        }
 
         File outputDir =
                 getDexOutputLocation(outputProvider, "main", TransformManager.SCOPE_FULL_PROJECT);
@@ -258,8 +264,7 @@ public class DexMergerTransform extends Transform {
             mainDexClasses = mainDexListFile.getSingleFile().toPath();
         }
 
-        return ImmutableList.of(
-                submitForMerging(output, outputDir, dexArchiveBuilder.build(), mainDexClasses));
+        return ImmutableList.of(submitForMerging(output, outputDir, dexesToMerge, mainDexClasses));
     }
 
     /**

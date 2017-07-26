@@ -71,7 +71,7 @@ public final class FileUtils {
     }
 
     /**
-     * Recursively deletes a directory or file.
+     * Recursively deletes a directory content (including the sub directories) but not itself.
      *
      * @param directory the directory, that must exist and be a valid directory
      * @throws IOException failed to delete the file / directory

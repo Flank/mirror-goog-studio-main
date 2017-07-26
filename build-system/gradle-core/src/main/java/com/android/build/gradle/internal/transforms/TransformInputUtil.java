@@ -32,10 +32,6 @@ public class TransformInputUtil {
         return getAllFiles(transformInputs, true, true);
     }
 
-    public static Collection<File> getJarFiles(Collection<TransformInput> transformInputs) {
-        return getAllFiles(transformInputs, false, true);
-    }
-
     public static Collection<File> getDirectories(Collection<TransformInput> transformInputs) {
         return getAllFiles(transformInputs, true, false);
     }
