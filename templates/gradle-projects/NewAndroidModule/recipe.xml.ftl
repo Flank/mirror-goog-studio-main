@@ -50,14 +50,11 @@
 </#if>
 
 <#if makeIgnore>
-    <copy from="root/module_ignore"
+    <copy from="root://gradle-projects/common/gitignore"
             to="${escapeXmlAttribute(projectOut)}/.gitignore" />
 </#if>
 
-<#if enableProGuard>
-    <instantiate from="root/proguard-rules.txt.ftl"
-                   to="${escapeXmlAttribute(projectOut)}/proguard-rules.pro" />
-</#if>
+    <#include "root://gradle-projects/common/proguard_recipe.xml.ftl"/>
 
 <#if hasMonolithicAppWrapper>
     <mkdir at="${monolithicAppOut}" />
@@ -66,7 +63,7 @@
     <instantiate from="root/monolithic-build.gradle.ftl"
                    to="${monolithicAppOut}/build.gradle" />
     <#if makeIgnore>
-        <copy from="root/module_ignore"
+        <copy from="root://gradle-projects/common/gitignore"
                 to="${monolithicAppOut}/.gitignore" />
     </#if>
 </#if>
@@ -76,7 +73,7 @@
     <instantiate from="root/instantApp-build.gradle.ftl"
                    to="${instantAppOut}/build.gradle" />
     <#if makeIgnore>
-        <copy from="root/module_ignore"
+        <copy from="root://gradle-projects/common/gitignore"
                 to="${instantAppOut}/.gitignore" />
     </#if>
 
@@ -89,7 +86,7 @@
     <instantiate from="root/baseFeature-build.gradle.ftl"
                    to="${baseFeatureOut}/build.gradle" />
     <#if makeIgnore>
-        <copy from="root/module_ignore"
+        <copy from="root://gradle-projects/common/gitignore"
                 to="${baseFeatureOut}/.gitignore" />
     </#if>
 <#elseif isInstantApp && !isBaseFeature>
