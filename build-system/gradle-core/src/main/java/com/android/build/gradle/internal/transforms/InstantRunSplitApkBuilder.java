@@ -187,7 +187,8 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
             @NonNull String splitName,
             @NonNull String packageId,
             @Nullable String versionName,
-            int versionCode)
+            int versionCode,
+            @Nullable String minSdkVersion)
             throws IOException {
 
         String versionNameToUse = versionName;
@@ -212,12 +213,14 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                         .append("      android:versionName=\"").append(versionNameToUse)
                         .append("\"\n");
             }
-            fileWriter
-                    .append("      split=\"lib_")
-                    .append(splitName)
-                    .append("_apk\">\n")
-                    .append("</manifest>\n");
-            fileWriter.flush();
+            fileWriter.append("      split=\"lib_").append(splitName).append("_apk\">\n");
+            if (minSdkVersion != null) {
+                fileWriter
+                        .append("\t<uses-sdk android:minSdkVersion=\"")
+                        .append(minSdkVersion)
+                        .append("\"/>\n");
+            }
+            fileWriter.append("</manifest>\n").flush();
         }
         return androidManifest;
     }
@@ -248,7 +251,8 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
                         uniqueName,
                         packagingScope.getApplicationId(),
                         packagingScope.getVersionName(),
-                        packagingScope.getVersionCode());
+                        packagingScope.getVersionCode(),
+                        null);
 
         return generateSplitApkResourcesAp(
                 logger,

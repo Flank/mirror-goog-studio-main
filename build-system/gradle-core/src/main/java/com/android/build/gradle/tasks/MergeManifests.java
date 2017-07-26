@@ -172,8 +172,12 @@ public class MergeManifests extends ManifestProcessorTask {
             ImmutableMap<String, String> properties =
                     mergedXmlDocument != null
                             ? ImmutableMap.of(
-                                    "packageId", mergedXmlDocument.getPackageName(),
-                                    "split", mergedXmlDocument.getSplitName())
+                                    "packageId",
+                                    mergedXmlDocument.getPackageName(),
+                                    "split",
+                                    mergedXmlDocument.getSplitName(),
+                                    SdkConstants.ATTR_MIN_SDK_VERSION,
+                                    mergedXmlDocument.getMinSdkVersion())
                             : ImmutableMap.of();
 
             outputScope.addOutputForSplit(

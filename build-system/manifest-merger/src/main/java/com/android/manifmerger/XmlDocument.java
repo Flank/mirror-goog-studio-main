@@ -327,7 +327,7 @@ public class XmlDocument {
      * build.gradle or can be expressed in the uses_sdk element.
      */
     @NonNull
-    private String getMinSdkVersion() {
+    public String getMinSdkVersion() {
         // check for system properties.
         String injectedMinSdk = mSystemPropertyResolver.getValue(ManifestSystemProperty.MIN_SDK_VERSION);
         if (injectedMinSdk != null) {

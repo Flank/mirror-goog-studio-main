@@ -489,7 +489,10 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 IR_APK_FILE_NAME,
                                 applicationId,
                                 versionName,
-                                versionCode);
+                                versionCode,
+                                manifestOutput
+                                        .getProperties()
+                                        .get(SdkConstants.ATTR_MIN_SDK_VERSION));
             }
 
             // If the new resources flag is enabled and if we are dealing with a library process

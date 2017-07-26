@@ -111,6 +111,7 @@ public class ResourcesPackagingTest {
 
         assertThat(containsResources).exists();
         assertThat(containsResources).containsResource("layout/main.xml");
+        assertThat(containsResources).doesNotContainResource("layout-v1/main.xml");
 
         // now modify a resource.
         TemporaryProjectModification.doTest(
