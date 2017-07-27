@@ -390,7 +390,7 @@ public class DexArchiveBuilderTransform extends Transform {
                                 dexConversionParameters.dexer,
                                 dexConversionParameters.isDebuggable);
 
-                Path rootFolder = dexConversionParameters.input.getFile().toPath();
+                Path inputPath = dexConversionParameters.input.getFile().toPath();
                 Predicate<Path> bucketFilter = dexConversionParameters::belongsToThisBucket;
 
                 Predicate<Path> toProcess =
@@ -403,7 +403,7 @@ public class DexArchiveBuilderTransform extends Transform {
                                         return true;
                                     }
 
-                                    File resolved = rootFolder.resolve(path).toFile();
+                                    File resolved = inputPath.resolve(path).toFile();
                                     Status status = changedFiles.get(resolved);
                                     return status == Status.ADDED || status == Status.CHANGED;
                                 }
@@ -411,7 +411,7 @@ public class DexArchiveBuilderTransform extends Transform {
 
                 bucketFilter = bucketFilter.and(toProcess);
 
-                try (ClassFileInput input = ClassFileInputs.fromPath(rootFolder)) {
+                try (ClassFileInput input = ClassFileInputs.fromPath(inputPath)) {
                     dexArchiveBuilder.convert(
                             input.entries(bucketFilter),
                             Paths.get(new URI(dexConversionParameters.output)),
