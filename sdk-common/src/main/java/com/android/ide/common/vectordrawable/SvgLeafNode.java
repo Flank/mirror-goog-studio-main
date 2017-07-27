@@ -26,6 +26,7 @@ import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.DecimalFormat;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.w3c.dom.Node;
@@ -195,22 +196,22 @@ class SvgLeafNode extends SvgNode {
     }
 
     @Override
-    SvgLeafNode deepCopy() {
+    public SvgNode deepCopy() {
         SvgLeafNode newInstance = new SvgLeafNode(getTree(), getDocumentNode(), getName());
         newInstance.setPathData(getPathData());
+        newInstance.mLocalTransform = (AffineTransform) mLocalTransform.clone();
         newInstance.fillEmptyAttributes(mVdAttributesMap);
-        newInstance.mLocalTransform = mLocalTransform;
         return newInstance;
     }
 
-    private String getAttributeValues(ImmutableMap<String, String> presentationMap) {
+    private String getAttributeValues() {
         // There could be some redundant opacity information in the attributes' map,
         // like opacity Vs fill-opacity / stroke-opacity.
         parsePathOpacity();
 
         StringBuilder sb = new StringBuilder("/>\n");
         for (String key : mVdAttributesMap.keySet()) {
-            String vectorDrawableAttr = presentationMap.get(key);
+            String vectorDrawableAttr = Svg2Vector.presentationMap.get(key);
             String svgValue = mVdAttributesMap.get(key);
             String vdValue = svgValue.trim();
             // There are several cases we need to convert from SVG format to
@@ -231,8 +232,8 @@ class SvgLeafNode extends SvgNode {
                                     getDocumentNode(),
                                     SvgTree.SvgLogLevel.ERROR);
                 }
-            } else if (colorMap.containsKey(vdValue.toLowerCase())) {
-                vdValue = colorMap.get(vdValue.toLowerCase());
+            } else if (colorMap.containsKey(vdValue.toLowerCase(Locale.ENGLISH))) {
+                vdValue = colorMap.get(vdValue.toLowerCase(Locale.ENGLISH));
             }
             String attr = "\n        " + vectorDrawableAttr + "=\"" +
                           vdValue + "\"";
@@ -290,7 +291,7 @@ class SvgLeafNode extends SvgNode {
      * @return #RRGGBB in hex format, or null, if an error is found.
      */
     @Nullable
-    private String convertRGBToHex(String svgValue) {
+    private static String convertRGBToHex(String svgValue) {
         // We don't support color keyword yet.
         // http://www.w3.org/TR/SVG11/types.html#ColorKeywords
         String result;
@@ -359,26 +360,6 @@ class SvgLeafNode extends SvgNode {
         mPathData = VdPath.Node.NodeListToString(n, decimalFormatString);
     }
 
-    private String getDecimalFormatString() {
-        float viewportWidth = getTree().getViewportWidth();
-        float viewportHeight = getTree().getViewportHeight();
-        float minSize = Math.min(viewportHeight, viewportWidth);
-        float exponent = Math.round(Math.log10(minSize));
-        int decimalPlace = (int) Math.floor(exponent - 4);
-        StringBuilder decimalFormatStringBuilder = new StringBuilder("#");
-        if (decimalPlace < 0) {
-            // Build a string with decimal places for "#.##...", and cap on 6 digits.
-            if (decimalPlace < -6) {
-                decimalPlace = -6;
-            }
-            decimalFormatStringBuilder.append('.');
-            for (int i = 0 ; i < -decimalPlace; i++) {
-                decimalFormatStringBuilder.append('#');
-            }
-        }
-        return decimalFormatStringBuilder.toString();
-    }
-
     @Override
     public void flatten(AffineTransform transform) {
         mStackedTransform.setTransform(transform);
@@ -391,34 +372,48 @@ class SvgLeafNode extends SvgNode {
         }
     }
 
+    /**
+     * Writes XML for each leaf node. inClipPath is a boolean flag to determine whether path data is
+     * written within clip-path or not.
+     */
     @Override
-    public void writeXML(OutputStreamWriter writer) throws IOException {
+    public void writeXML(OutputStreamWriter writer, boolean inClipPath) throws IOException {
         // First decide whether or not we can skip this path, since it draw nothing out.
-        String fillColor = mVdAttributesMap.get(Svg2Vector.SVG_FILL_COLOR);
-        String strokeColor = mVdAttributesMap.get(Svg2Vector.SVG_STROKE_COLOR);
-        logger.log(Level.FINE, "fill color " + fillColor);
-        boolean emptyFill = fillColor != null && ("none".equals(fillColor) || "#0000000".equals(fillColor));
-        boolean emptyStroke = strokeColor == null || "none".equals(strokeColor);
-        boolean emptyPath = mPathData == null;
-        boolean nothingToDraw = emptyPath || emptyFill && emptyStroke;
-        if (nothingToDraw) {
-            return;
-        }
+        if (!inClipPath) {
+            String fillColor = mVdAttributesMap.get(Svg2Vector.SVG_FILL_COLOR);
+            String strokeColor = mVdAttributesMap.get(Svg2Vector.SVG_STROKE_COLOR);
+            logger.log(Level.FINE, "fill color " + fillColor);
+            boolean emptyFill =
+                    fillColor != null && ("none".equals(fillColor) || "#0000000".equals(fillColor));
+            boolean emptyStroke = strokeColor == null || "none".equals(strokeColor);
+            boolean emptyPath = mPathData == null;
+            boolean nothingToDraw = emptyPath || emptyFill && emptyStroke;
+            if (nothingToDraw) {
+                return;
+            }
 
-        // Second, write the color info handling the default values.
-        writer.write("    <path\n");
-        if (!mVdAttributesMap.containsKey(Svg2Vector.SVG_FILL_COLOR)) {
-            logger.log(Level.FINE, "ADDING FILL SVG_FILL_COLOR");
-            writer.write("        android:fillColor=\"#FF000000\"\n");
-        }
-        if (!emptyStroke && !mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)) {
-            logger.log(Level.FINE, "Adding default stroke width");
-            writer.write("        android:strokeWidth=\"1\"\n");
-        }
+            // Second, write the color info handling the default values.
+            writer.write("    <path\n");
+            if (!mVdAttributesMap.containsKey(Svg2Vector.SVG_FILL_COLOR)) {
+                logger.log(Level.FINE, "ADDING FILL SVG_FILL_COLOR");
+                writer.write("        android:fillColor=\"#FF000000\"\n");
+            }
+            if (!emptyStroke && !mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)) {
+                logger.log(Level.FINE, "Adding default stroke width");
+                writer.write("        android:strokeWidth=\"1\"\n");
+            }
 
-        // Last, write the path data and all associated attributes.
-        writer.write("        android:pathData=\"" + mPathData + "\"");
-        writer.write(getAttributeValues(Svg2Vector.presentationMap));
+            // Last, write the path data and all associated attributes.
+            writer.write("        android:pathData=\"" + mPathData + "\"");
+            writer.write(getAttributeValues());
+        } else {
+            // Writes data that is part of the clip-path data.
+            writer.write(mPathData);
+
+            // Need to write M 0,0 after each path. Resets pen to the origin since subsequent
+            // paths might be relative.
+            writer.write(" M 0,0");
+        }
     }
 
 }

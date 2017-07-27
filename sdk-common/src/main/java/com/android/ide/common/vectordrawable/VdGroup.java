@@ -16,19 +16,18 @@
 
 package com.android.ide.common.vectordrawable;
 
-import org.w3c.dom.NamedNodeMap;
-
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.w3c.dom.NamedNodeMap;
 
 /**
  * Used to represent one VectorDrawble's group element.
  */
 class VdGroup extends VdElement{
-    private static Logger logger = Logger.getLogger(VdGroup.class.getSimpleName());
+    private static final Logger logger = Logger.getLogger(VdGroup.class.getSimpleName());
 
     private static final String GROUP_ROTATION = "android:rotation";
     private static final String GROUP_PIVOTX = "android:pivotX";
@@ -48,13 +47,13 @@ class VdGroup extends VdElement{
     private float mTranslateY = 0;
 
     // Used at draw time, basically accumulative matrix from root to current group.
-    private AffineTransform mTempStackedMatrix = new AffineTransform();
+    private final AffineTransform mTempStackedMatrix = new AffineTransform();
 
     // The current group's transformation.
-    private AffineTransform mLocalMatrix = new AffineTransform();
+    private final AffineTransform mLocalMatrix = new AffineTransform();
 
     // Children can be either a {@link VdPath} or {@link VdGroup}
-    private ArrayList<VdElement> mChildren = new ArrayList<VdElement>();
+    private final ArrayList<VdElement> mChildren = new ArrayList<>();
 
     public void add(VdElement pathOrGroup) {
         mChildren.add(pathOrGroup);
@@ -69,7 +68,7 @@ class VdGroup extends VdElement{
     }
 
     // Src = trans * src, this is called preConcatenate() in Swing, but postConcatenate() in Android
-    private void androidPostTransform(AffineTransform src, AffineTransform trans) {
+    private static void androidPostTransform(AffineTransform src, AffineTransform trans) {
         src.preConcatenate(trans);
     }
 
@@ -104,9 +103,13 @@ class VdGroup extends VdElement{
         mTempStackedMatrix.setTransform(currentMatrix);
         mTempStackedMatrix.concatenate(mLocalMatrix);
 
-        for (int i = 0; i < mChildren.size(); i++) {
-            mChildren.get(i).draw(g, mTempStackedMatrix, scaleX, scaleY);
+        for (VdElement m : mChildren) {
+            m.draw(g, mTempStackedMatrix, scaleX, scaleY);
         }
+
+        // This only applies to the flattened SVG tree structure.
+        // One clip-path applies to a single group.
+        g.setClip(null);
     }
 
     private void setNameValue(String name, String value) {
@@ -151,16 +154,23 @@ class VdGroup extends VdElement{
     @Override
     public String toString() {
         StringBuilder pathInfo = new StringBuilder();
-        pathInfo.append("Group:");
-        pathInfo.append(" Name: " + mName);
-        pathInfo.append(" mTranslateX: " + mTranslateX);
-        pathInfo.append(" mTranslateY:" + mTranslateY);
-        pathInfo.append(" mScaleX:" + mScaleX);
-        pathInfo.append(" mScaleY:" + mScaleY);
-        pathInfo.append(" mPivotX:" + mPivotX);
-        pathInfo.append(" mPivotY:" + mPivotY);
-        pathInfo.append(" mRotate:" + mRotate);
-
+        pathInfo.append("Group:")
+                .append(" Name: ")
+                .append(mName)
+                .append(" mTranslateX: ")
+                .append(mTranslateX)
+                .append(" mTranslateY:")
+                .append(mTranslateY)
+                .append(" mScaleX:")
+                .append(mScaleX)
+                .append(" mScaleY:")
+                .append(mScaleY)
+                .append(" mPivotX:")
+                .append(mPivotX)
+                .append(" mPivotY:")
+                .append(mPivotY)
+                .append(" mRotate:")
+                .append(mRotate);
         return pathInfo.toString();
     }
 }

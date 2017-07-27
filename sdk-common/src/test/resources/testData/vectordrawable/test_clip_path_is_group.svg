@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:cc="http://creativecommons.org/ns#"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:svg="http://www.w3.org/2000/svg"
+    xmlns="http://www.w3.org/2000/svg"
+    version="1.1"
+    width="64"
+    height="64"
+    id="svg3043">
+  <defs
+      id="defs3045">
+    <clipPath
+        id="clipPath3074">
+      <g
+          id="g3076">
+        <path
+            d="m 27.770012,23.952044 a 7.713892,8.2924337 0 1 1 -15.427784,0 7.713892,8.2924337 0 1 1 15.427784,0 z"
+            id="path3078"
+            style="fill:#ff5555;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
+        <path
+            d="m 54.768635,31.280241 a 7.0710678,7.7781744 0 1 1 -14.142136,0 7.0710678,7.7781744 0 1 1 14.142136,0 z"
+            id="path3080"
+            style="fill:#ff5555;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
+        <path
+            d="m 48.083261,47.543697 a 16.006327,4.8854651 0 1 1 -32.012653,0 16.006327,4.8854651 0 1 1 32.012653,0 z"
+            id="path3082"
+            style="fill:#ff5555;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
+      </g>
+    </clipPath>
+  </defs>
+  <metadata
+      id="metadata3048">
+    <rdf:RDF>
+      <cc:Work
+          rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+            rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+      id="layer1">
+    <rect
+        width="55.411457"
+        height="49.626041"
+        x="4.6283355"
+        y="7.1743279"
+        clip-path="url(#clipPath3074)"
+        id="rect3053"
+        style="fill:#ffb380;fill-opacity:1;stroke:#000000;stroke-width:0;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"/>
+  </g>
+</svg>

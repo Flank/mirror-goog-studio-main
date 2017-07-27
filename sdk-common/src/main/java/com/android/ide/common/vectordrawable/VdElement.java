@@ -16,16 +16,15 @@
 
 package com.android.ide.common.vectordrawable;
 
-import org.w3c.dom.NamedNodeMap;
-
 import java.awt.*;
 import java.awt.geom.AffineTransform;
+import org.w3c.dom.NamedNodeMap;
 
-/**
- * Used to represent one VectorDrawble's element, can be a group or path.
- */
+/** Used to represent one VectorDrawable's element, can be a group or path. */
 abstract class VdElement {
     String mName;
+
+    boolean isClipPath = false;
 
     public String getName() {
         return mName;
@@ -36,4 +35,8 @@ abstract class VdElement {
     public abstract void parseAttributes(NamedNodeMap attributes);
 
     public abstract boolean isGroup();
+
+    public void setClipPath(boolean isClip) {
+        isClipPath = isClip;
+    }
 }

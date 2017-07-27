@@ -25,10 +25,7 @@ import java.awt.geom.AffineTransform;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.w3c.dom.Document;
@@ -70,6 +67,8 @@ class SvgTree {
 
     private static final HashMap<String, SvgNode> idMap = new HashMap<>();
     static final HashMap<SvgGroupNode, Node> useGroupMap = new HashMap<>();
+    static final HashMap<String, SvgClipPathNode> clipPaths = new HashMap<>();
+    static final HashMap<SvgNode, SvgGroupNode> clipPathAffectedNodes = new HashMap<>();
 
 
     /** From the root, top down, pass the transformation (TODO: attributes) down the children. */
@@ -229,6 +228,18 @@ class SvgTree {
 
     public Set<Map.Entry<SvgGroupNode, Node>> getUseSet() {
         return useGroupMap.entrySet();
+    }
+
+    public void addClipPath(String id, SvgClipPathNode clipPath) {
+        clipPaths.put(id, clipPath);
+    }
+
+    public void addClipPathAffectedNode(SvgNode child, SvgGroupNode currentGroup) {
+        clipPathAffectedNodes.put(child, currentGroup);
+    }
+
+    public Set<Map.Entry<SvgNode, SvgGroupNode>> getClipPathAffectedNodesSet() {
+        return clipPathAffectedNodes.entrySet();
     }
 
 }

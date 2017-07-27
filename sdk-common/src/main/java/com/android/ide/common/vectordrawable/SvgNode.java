@@ -16,6 +16,9 @@
 
 package com.android.ide.common.vectordrawable;
 
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_COLOR;
+import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_WIDTH;
+
 import com.android.annotations.NonNull;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
@@ -42,11 +45,11 @@ abstract class SvgNode {
     private static final String SKEWX_ATTRIBUTE = "skewX";
     private static final String SKEWY_ATTRIBUTE = "skewY";
 
-    protected String mName;
+    protected final String mName;
     // Keep a reference to the tree in order to dump the error log.
-    private SvgTree mSvgTree;
+    private final SvgTree mSvgTree;
     // Use document node to get the line number for error reporting.
-    private Node mDocumentNode;
+    private final Node mDocumentNode;
 
     // Key is the attributes for vector drawable, and the value is the converted from SVG.
     protected final Map<String, String> mVdAttributesMap = new HashMap<>();
@@ -99,7 +102,7 @@ abstract class SvgNode {
     }
 
     @NonNull
-    private AffineTransform parseOneTransform(String type, String data) {
+    private static AffineTransform parseOneTransform(String type, String data) {
         float[] numbers = getNumbers(data);
         int numLength = numbers.length;
         AffineTransform parsedTransform = new AffineTransform();
@@ -177,10 +180,8 @@ abstract class SvgNode {
      */
     public abstract void dumpNode(String indent);
 
-    /**
-     * Write the Node content into the VectorDrawable's XML file.
-     */
-    public abstract void writeXML(OutputStreamWriter writer) throws IOException;
+    /** Write the Node content into the VectorDrawable's XML file. */
+    public abstract void writeXML(OutputStreamWriter writer, boolean inClipPath) throws IOException;
 
     /**
      * @return true the node is a group node.
@@ -206,6 +207,9 @@ abstract class SvgNode {
                     SvgTree.SvgLogLevel.ERROR);
             return;
         }
+        if (name.equals(SVG_STROKE_WIDTH) && value.equals("0")) {
+            mVdAttributesMap.remove(SVG_STROKE_COLOR);
+        }
         mVdAttributesMap.put(name, value);
     }
 
@@ -225,5 +229,44 @@ abstract class SvgNode {
 
     public abstract void flatten(AffineTransform transform);
 
-    abstract SvgNode deepCopy();
+    protected String getDecimalFormatString() {
+        float viewportWidth = getTree().getViewportWidth();
+        float viewportHeight = getTree().getViewportHeight();
+        float minSize = Math.min(viewportHeight, viewportWidth);
+        float exponent = Math.round(Math.log10(minSize));
+        int decimalPlace = (int) Math.floor(exponent - 4);
+        StringBuilder decimalFormatStringBuilder = new StringBuilder("#");
+        if (decimalPlace < 0) {
+            // Build a string with decimal places for "#.##...", and cap on 6 digits.
+            if (decimalPlace < -6) {
+                decimalPlace = -6;
+            }
+            decimalFormatStringBuilder.append('.');
+            for (int i = 0; i < -decimalPlace; i++) {
+                decimalFormatStringBuilder.append('#');
+            }
+        }
+        return decimalFormatStringBuilder.toString();
+    }
+
+    /**
+     * Returns a String containing the value of the given attribute. Returns an empty string if the
+     * attribute does not exist.
+     */
+    public String getAttributeValue(String attribute) {
+        NamedNodeMap a = mDocumentNode.getAttributes();
+        String value = "";
+        int len = a.getLength();
+        for (int j = 0; j < len; j++) {
+            Node n = a.item(j);
+            String name = n.getNodeName();
+            if (name.equals(attribute)) {
+                value = n.getNodeValue();
+            }
+        }
+        return value;
+    }
+
+    public abstract SvgNode deepCopy();
+
 }

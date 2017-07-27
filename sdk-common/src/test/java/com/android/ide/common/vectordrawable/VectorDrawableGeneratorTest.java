@@ -38,8 +38,8 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     private enum FileType {
         SVG,
-        XML;
-    };
+        XML
+    }
 
     private void checkVectorConversion(String testFileName, FileType type,
                                        boolean dumpXml, String expectedError) throws IOException {
@@ -463,6 +463,44 @@ public class VectorDrawableGeneratorTest extends TestCase {
     public void testSvgDefsUseOrderMatters() throws Exception {
         checkSvgConversion("test_defs_use_use_first");
     }
+
+    // Clip Path Tests
+    public void testSvgClipPathGroup() throws Exception {
+        checkSvgConversion("test_clip_path_group");
+    }
+
+    public void testSvgClipPathTranslateAffected() throws Exception {
+        checkSvgConversion("test_clip_path_group_translate");
+    }
+
+    public void testSvgClipPathGroup2() throws Exception {
+        checkSvgConversion("test_clip_path_is_group");
+    }
+
+    public void testSvgClipPathMultiShapeClip() throws Exception {
+        checkSvgConversion("test_clip_path_mult_clip");
+    }
+
+    public void testSvgClipPathOverGroup() throws Exception {
+        checkSvgConversion("test_clip_path_over_group");
+    }
+
+    public void testSvgClipPathRect() throws Exception {
+        checkSvgConversion("test_clip_path_rect");
+    }
+
+    public void testSvgClipPathRectOverClipPath() throws Exception {
+        checkSvgConversion("test_clip_path_rect_over_circle");
+    }
+
+    public void testSvgClipPathTwoRect() throws Exception {
+        checkSvgConversion("test_clip_path_two_rect");
+    }
+
+    public void testSvgClipPathSinglePath() throws Exception {
+        checkSvgConversion("test_clip_path_path_over_rect");
+    }
+
 
     // XML files start here.
     public void testXmlIconSizeOpacity() throws Exception {
