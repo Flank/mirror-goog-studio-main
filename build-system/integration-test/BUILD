@@ -1,14 +1,21 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:groovy.bzl", "groovy_jar")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 java_library(
-    name = "integration-test",
-    srcs = glob([
-        "src/main/java/**/*.java",
-    ]) + [
-        "//tools/base/build-system/integration-test/src/main/proto:proto_srcs",
-    ],
+    name = "protos",
+    srcs = ["//tools/base/build-system/integration-test/src/main/proto:proto_srcs"],
     deps = [
+        "//tools/analytics-library/protos/src/main/proto",
+        "//tools/base/third_party:com.google.protobuf_protobuf-java",
+    ],
+)
+
+kotlin_library(
+    name = "integration-test",
+    srcs = ["src/main/java"],
+    deps = [
+        ":protos",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/apksig",
         "//tools/base/annotations",

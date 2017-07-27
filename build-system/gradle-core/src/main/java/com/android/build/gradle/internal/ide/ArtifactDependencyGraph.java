@@ -48,6 +48,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
@@ -56,13 +57,13 @@ import com.android.utils.FileUtils;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -70,13 +71,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.ResolveException;
 import org.gradle.api.artifacts.component.ComponentArtifactIdentifier;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
@@ -104,7 +105,12 @@ public class ArtifactDependencyGraph {
             new CreatingCache<>(ArtifactDependencyGraph::instantiateLibrary);
     private static final Map<String, Library> sGlobalLibrary = Maps.newHashMap();
 
-    private final List<Throwable> failures = Lists.newArrayList();
+    // map from configuration name to errors
+    private final Map<String, Throwable> failures = Maps.newHashMap();
+
+    private BiConsumer<String, Collection<Throwable>> failureToMap =
+            (name, throwables) ->
+                    throwables.forEach(t -> ArtifactDependencyGraph.this.failures.put(name, t));
 
     public static void clearCaches() {
         sMavenCoordinatesCache.clear();
@@ -246,7 +252,7 @@ public class ArtifactDependencyGraph {
     public static Set<HashableResolvedArtifactResult> getAllArtifacts(
             @NonNull VariantScope variantScope,
             @NonNull AndroidArtifacts.ConsumedConfigType consumedConfigType,
-            @Nullable Consumer<Collection<Throwable>> failureConsumer) {
+            @Nullable BiConsumer<String, Collection<Throwable>> failureConsumer) {
         // we need to figure out the following:
         // - Is it an external dependency or a sub-project?
         // - Is it an android or a java dependency
@@ -294,7 +300,14 @@ public class ArtifactDependencyGraph {
 
         // collect dependency resolution failures
         if (failureConsumer != null) {
-            failureConsumer.accept(allArtifactList.getFailures());
+            // compute the name of the configuration
+            failureConsumer.accept(
+                    variantScope.getGlobalScope().getProject().getPath()
+                            + "@"
+                            + variantScope.getFullVariantName()
+                            + "/"
+                            + consumedConfigType.getName(),
+                    allArtifactList.getFailures());
         }
 
         // build a list of wrapped AAR, and a map of all the exploded-aar artifacts
@@ -388,10 +401,7 @@ public class ArtifactDependencyGraph {
         List<GraphItem> compileItems = Lists.newArrayList();
 
         Set<HashableResolvedArtifactResult> compileArtifacts =
-                getAllArtifacts(
-                        variantScope,
-                        COMPILE_CLASSPATH,
-                        ArtifactDependencyGraph.this.failures::addAll);
+                getAllArtifacts(variantScope, COMPILE_CLASSPATH, failureToMap);
 
         for (HashableResolvedArtifactResult artifact : compileArtifacts) {
             compileItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
@@ -401,10 +411,7 @@ public class ArtifactDependencyGraph {
         // get the runtime artifacts.
         List<GraphItem> runtimeItems = Lists.newArrayList();
         Set<HashableResolvedArtifactResult> runtimeArtifacts =
-                getAllArtifacts(
-                        variantScope,
-                        RUNTIME_CLASSPATH,
-                        ArtifactDependencyGraph.this.failures::addAll);
+                getAllArtifacts(variantScope, RUNTIME_CLASSPATH, failureToMap);
 
         for (HashableResolvedArtifactResult artifact : runtimeArtifacts) {
             runtimeItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
@@ -472,10 +479,7 @@ public class ArtifactDependencyGraph {
         }
 
         Set<HashableResolvedArtifactResult> artifacts =
-                getAllArtifacts(
-                        variantScope,
-                        COMPILE_CLASSPATH,
-                        ArtifactDependencyGraph.this.failures::addAll);
+                getAllArtifacts(variantScope, COMPILE_CLASSPATH, failureToMap);
 
         for (HashableResolvedArtifactResult artifact : artifacts) {
             ComponentIdentifier id = artifact.getId().getComponentIdentifier();
@@ -543,49 +547,85 @@ public class ArtifactDependencyGraph {
                 androidLibraries.build(), javaLibrary.build(), projects.build());
     }
 
-    @NonNull
-    public List<String> collectFailures() {
+    private static final Pattern pattern =
+            Pattern.compile(".*any matches for ([a-zA-Z0-9:\\-.+]+) .*", Pattern.DOTALL);
+    private static final Pattern pattern2 =
+            Pattern.compile(".*Could not find ([a-zA-Z0-9:\\-.]+)\\..*", Pattern.DOTALL);
+
+    public void collectFailures(@NonNull Consumer<SyncIssue> failureConsumer) {
         if (failures.isEmpty()) {
-            return ImmutableList.of();
+            return;
         }
 
-        Pattern pattern =
-                Pattern.compile(".*any matches for ([a-zA-Z0-9:\\-.+]+) .*", Pattern.DOTALL);
-        Pattern pattern2 =
-                Pattern.compile(".*Could not find ([a-zA-Z0-9:\\-.]+)\\..*", Pattern.DOTALL);
+        final Splitter splitter = Splitter.on(System.lineSeparator());
 
-        return failures.stream()
-                .flatMap(
-                        throwable -> {
-                            List<? extends Throwable> causes;
-                            if (throwable instanceof ResolveException) {
-                                causes = ((ResolveException) throwable).getCauses();
-                            } else {
-                                causes = Collections.singletonList(throwable);
-                            }
+        for (Map.Entry<String, Throwable> entry : failures.entrySet()) {
+            Throwable cause = entry.getValue();
 
-                            List<String> messages = new ArrayList<>();
-                            for (Throwable cause : causes) {
-                                String message = cause.getMessage();
+            // gather all the messages.
+            List<String> messages = Lists.newArrayList();
+            String firstIndent = " > ";
+            String allIndent = "";
 
-                                Matcher m = pattern.matcher(message);
-                                if (m.matches()) {
-                                    messages.add(m.group(1));
-                                    continue;
-                                }
+            String data = null;
 
-                                m = pattern2.matcher(message);
-                                if (m.matches()) {
-                                    messages.add(m.group(1));
-                                    continue;
-                                }
+            while (cause != null) {
+                final String message = cause.getMessage();
+                if (message != null) {
+                    List<String> lines = ImmutableList.copyOf(splitter.split(message));
 
-                                messages.add(cause.getMessage());
-                            }
+                    // check if the first line contains a data we care about
+                    if (data == null) {
+                        data = checkForData(lines.get(0));
+                    }
 
-                            return messages.stream();
-                        })
-                .collect(Collectors.toList());
+                    // add them to the main list
+                    for (int i = 0, count = lines.size(); i < count; i++) {
+                        String line = lines.get(i);
+
+                        if (allIndent.isEmpty()) {
+                            messages.add(line);
+                        } else if (i == 0) {
+                            messages.add(firstIndent + line);
+                        } else {
+                            messages.add(allIndent + line);
+                        }
+                    }
+
+                    //noinspection StringConcatenationInLoop
+                    firstIndent = allIndent + firstIndent;
+                    //noinspection StringConcatenationInLoop
+                    allIndent = allIndent + "   ";
+                }
+
+                cause = cause.getCause();
+            }
+
+            failureConsumer.accept(
+                    new SyncIssueImpl(
+                            SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                            SyncIssue.SEVERITY_ERROR,
+                            data,
+                            String.format(
+                                    "Unable to resolve dependency for '%s': %s",
+                                    entry.getKey(), messages.get(0)),
+                            messages));
+        }
+    }
+
+    @Nullable
+    private static String checkForData(@NonNull String message) {
+        Matcher m = pattern.matcher(message);
+        if (m.matches()) {
+            return m.group(1);
+        }
+
+        m = pattern2.matcher(message);
+        if (m.matches()) {
+            return m.group(1);
+        }
+
+        return null;
     }
 
     @NonNull

@@ -21,7 +21,9 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -34,15 +36,26 @@ public final class SyncIssueImpl implements SyncIssue, Serializable {
 
     private final int type;
     private final int severity;
-    @Nullable
-    private final String data;
-    private final String message;
+    @Nullable private final String data;
+    @NonNull private final String message;
+    @Nullable private final List<String> multiLineMessage;
 
     public SyncIssueImpl(int type, int severity, @Nullable String data, @NonNull String message) {
+        this(type, severity, data, message, null);
+    }
+
+    public SyncIssueImpl(
+            int type,
+            int severity,
+            @Nullable String data,
+            @NonNull String message,
+            @Nullable List<String> multiLineMessage) {
         this.type = type;
         this.severity = severity;
         this.data = data;
         this.message = message;
+        this.multiLineMessage =
+                multiLineMessage == null ? null : ImmutableList.copyOf(multiLineMessage);
     }
 
     @Override
@@ -67,6 +80,12 @@ public final class SyncIssueImpl implements SyncIssue, Serializable {
         return message;
     }
 
+    @Nullable
+    @Override
+    public List<String> getMultiLineMessage() {
+        return multiLineMessage;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -76,15 +95,16 @@ public final class SyncIssueImpl implements SyncIssue, Serializable {
             return false;
         }
         SyncIssueImpl syncIssue = (SyncIssueImpl) o;
-        return type == syncIssue.type &&
-                severity == syncIssue.severity &&
-                Objects.equals(data, syncIssue.data) &&
-                Objects.equals(message, syncIssue.message);
+        return type == syncIssue.type
+                && severity == syncIssue.severity
+                && Objects.equals(data, syncIssue.data)
+                && Objects.equals(message, syncIssue.message)
+                && Objects.equals(multiLineMessage, syncIssue.multiLineMessage);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, severity, data, message);
+        return Objects.hash(type, severity, data, message, multiLineMessage);
     }
 
     @Override

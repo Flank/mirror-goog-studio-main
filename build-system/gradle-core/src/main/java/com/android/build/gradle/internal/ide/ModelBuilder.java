@@ -525,14 +525,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                                 EMPTY_DEPENDENCY_GRAPH);
             }
 
-            for (String failure : graph.collectFailures()) {
-                syncIssues.add(
-                        new SyncIssueImpl(
-                                SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                                SyncIssue.SEVERITY_ERROR,
-                                failure,
-                                String.format("Unable to resolve dependency '%s'", failure)));
-            }
+            graph.collectFailures(syncIssues::add);
         }
 
         return result;

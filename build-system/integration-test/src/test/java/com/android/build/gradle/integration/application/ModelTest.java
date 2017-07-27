@@ -17,6 +17,9 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.utils.SyncIssueHelperKt.checkIssuesForSameData;
+import static com.android.build.gradle.integration.common.utils.SyncIssueHelperKt.checkIssuesForSameSeverity;
+import static com.android.build.gradle.integration.common.utils.SyncIssueHelperKt.checkIssuesForSameType;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -24,6 +27,9 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,46 +60,64 @@ public class ModelTest {
                 project.getBuildFile(), "\ndependencies {\n    compile 'foo:bar:1.2.3'\n}\n");
 
         AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
-        assertThat(model)
-                .hasSingleIssue(
-                        SyncIssue.SEVERITY_ERROR,
-                        SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                        "foo:bar:1.2.3");
+
+        Collection<SyncIssue> issues = model.getSyncIssues();
+        assertThat(issues).hasSize(10);
+
+        // all the issues should have the same type/severity/data
+        checkIssuesForSameSeverity(issues, SyncIssue.SEVERITY_ERROR);
+        checkIssuesForSameType(issues, SyncIssue.TYPE_UNRESOLVED_DEPENDENCY);
+        checkIssuesForSameData(issues, "foo:bar:1.2.3");
+
+        // now gather and test all the messages
+        List<String> messages =
+                issues.stream().map(SyncIssue::getMessage).collect(Collectors.toList());
+        assertThat(messages)
+                .containsExactly(
+                        "Unable to resolve dependency for ':@debug/runtimeClasspath': Could not find foo:bar:1.2.3.",
+                        "Unable to resolve dependency for ':@debug/compileClasspath': Could not find foo:bar:1.2.3.",
+                        "Unable to resolve dependency for ':@debugAndroidTest/compileClasspath': Could not find foo:bar:1.2.3.",
+                        "Unable to resolve dependency for ':@debugAndroidTest/runtimeClasspath': Could not find foo:bar:1.2.3.",
+                        "Unable to resolve dependency for ':@debugUnitTest/runtimeClasspath': Could not find foo:bar:1.2.3.",
+                        "Unable to resolve dependency for ':@debugUnitTest/compileClasspath': Could not find foo:bar:1.2.3.",
+                        "Unable to resolve dependency for ':@release/compileClasspath': Could not find foo:bar:1.2.3.",
+                        "Unable to resolve dependency for ':@release/runtimeClasspath': Could not find foo:bar:1.2.3.",
+                        "Unable to resolve dependency for ':@releaseUnitTest/runtimeClasspath': Could not find foo:bar:1.2.3.",
+                        "Unable to resolve dependency for ':@releaseUnitTest/compileClasspath': Could not find foo:bar:1.2.3.");
     }
 
     @Test
     public void unresolvedDynamicDependencies() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "\n" + "dependencies {\n" + "    compile 'foo:bar:+'\n" + "}");
-        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
-        assertThat(model)
-                .hasSingleIssue(
-                        SyncIssue.SEVERITY_ERROR,
-                        SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                        "foo:bar:+");
-    }
-
-    @Test
-    public void unresolvedMultipleDependencies() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
                 "\n"
                         + "dependencies {\n"
                         + "    compile 'foo:bar:+'\n"
-                        + "    compile 'bar:foo:1.2.3'\n"
                         + "}");
         AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
-        assertThat(model).hasIssueSize(2);
-        assertThat(model)
-                .hasIssue(
-                        SyncIssue.SEVERITY_ERROR,
-                        SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                        "foo:bar:+");
-        assertThat(model)
-                .hasIssue(
-                        SyncIssue.SEVERITY_ERROR,
-                        SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                        "bar:foo:1.2.3");
+
+        Collection<SyncIssue> issues = model.getSyncIssues();
+        assertThat(issues).hasSize(10);
+
+        // all the issues should have the same type/severity/data
+        checkIssuesForSameSeverity(issues, SyncIssue.SEVERITY_ERROR);
+        checkIssuesForSameType(issues, SyncIssue.TYPE_UNRESOLVED_DEPENDENCY);
+        checkIssuesForSameData(issues, "foo:bar:+");
+
+        // now gather and test all the messages
+        List<String> messages =
+                issues.stream().map(SyncIssue::getMessage).collect(Collectors.toList());
+        assertThat(messages)
+                .containsExactly(
+                        "Unable to resolve dependency for ':@debug/runtimeClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
+                        "Unable to resolve dependency for ':@debug/compileClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
+                        "Unable to resolve dependency for ':@debugAndroidTest/compileClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
+                        "Unable to resolve dependency for ':@debugAndroidTest/runtimeClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
+                        "Unable to resolve dependency for ':@debugUnitTest/runtimeClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
+                        "Unable to resolve dependency for ':@debugUnitTest/compileClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
+                        "Unable to resolve dependency for ':@release/compileClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
+                        "Unable to resolve dependency for ':@release/runtimeClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
+                        "Unable to resolve dependency for ':@releaseUnitTest/runtimeClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
+                        "Unable to resolve dependency for ':@releaseUnitTest/compileClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.");
     }
 }

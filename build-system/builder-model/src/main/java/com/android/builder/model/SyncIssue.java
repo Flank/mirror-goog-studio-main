@@ -18,6 +18,7 @@ package com.android.builder.model;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import java.util.List;
 
 /**
  * Class representing a sync issue. The goal is to make these issues not fail the sync but instead
@@ -156,4 +157,12 @@ public interface SyncIssue {
      */
     @NonNull
     String getMessage();
+
+    /**
+     * Returns the a user-readable nulti-line message for the issue.
+     *
+     * <p>This is an optional extension of {@link #getMessage()}
+     */
+    @Nullable
+    List<String> getMultiLineMessage();
 }
