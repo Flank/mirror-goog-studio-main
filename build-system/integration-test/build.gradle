@@ -123,7 +123,6 @@ configure([test, testPrebuilts]) {
     // Always run the task, when requested.
     outputs.upToDateWhen { false }
 
-    forkEvery = 1
     maxParallelForks = Runtime.runtime.availableProcessors() / 4
 
     // FIXME: Temporarily disable multi-threading on Windows to address http://b/38119382.
@@ -197,7 +196,6 @@ configure(allConnectedTestTasks) {
     // Always run the task, when requested.
     outputs.upToDateWhen { false }
 
-    forkEvery= 1
     def count = Math.ceil(Runtime.runtime.availableProcessors() / 4)
     if (count > 8) {
         count = 8
@@ -251,7 +249,7 @@ task performanceTest(type: Test) {
 configure([test, testPrebuilts, onlineTest, connectedIntegrationTest,
            connectedIntegrationTestPrebuilts, performanceTest]) {
     testLogging {
-        events = ['FAILED', 'PASSED', 'SKIPPED', 'STANDARD_ERROR', 'STARTED']
+        events = ['FAILED', 'SKIPPED', 'STANDARD_ERROR']
         displayGranularity = 2 // Show test class and method.
         exceptionFormat = 'full'
         showCauses = true
