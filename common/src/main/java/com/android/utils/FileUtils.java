@@ -32,8 +32,12 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.URI;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -520,5 +524,17 @@ public final class FileUtils {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    /**
+     * Creates a new {@link FileSystem} for a given ZIP file.
+     *
+     * <p>Note that NIO filesystems are unique per URI, so the returned {@link FileSystem} should be
+     * closed as soon as possible.
+     */
+    @NonNull
+    public static FileSystem createZipFilesystem(@NonNull Path archive) throws IOException {
+        URI uri = URI.create("jar:" + archive.toUri().toString());
+        return FileSystems.newFileSystem(uri, Collections.emptyMap());
     }
 }

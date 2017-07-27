@@ -18,6 +18,7 @@ package com.android.tools.apk.analyzer.internal;
 
 import com.android.annotations.NonNull;
 import com.android.tools.apk.analyzer.Archive;
+import com.android.utils.FileUtils;
 import java.io.IOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -26,12 +27,21 @@ public class ZipArtifact implements Archive {
     private final Path artifact;
     private final Path contents;
 
-    public ZipArtifact(@NonNull Path artifact, FileSystem fileSystem) throws IOException {
+    private ZipArtifact(@NonNull Path artifact, @NonNull FileSystem zipFileSystem)
+            throws IOException {
         this.artifact = artifact;
         this.contents = Files.createTempDirectory(artifact.getFileName().toString());
         //for zip archives (which are AIA bundles), we unzip the outer zip contents to a temp folder
         //so that we show accurate file sizes for the top-level APKs in the ZIP file
-        Files.walkFileTree(fileSystem.getPath("/"), new CopyPathFileVisitor(contents, fileSystem));
+        Files.walkFileTree(
+                zipFileSystem.getPath("/"), new CopyPathFileVisitor(contents, zipFileSystem));
+    }
+
+    @NonNull
+    public static ZipArtifact fromZippedBundle(@NonNull Path artifact) throws IOException {
+        try (FileSystem fileSystem = FileUtils.createZipFilesystem(artifact)) {
+            return new ZipArtifact(artifact, fileSystem);
+        }
     }
 
     @NonNull
@@ -48,7 +58,7 @@ public class ZipArtifact implements Archive {
 
     @Override
     public void close() throws IOException {
-        Files.walkFileTree(contents, new DeletePathFileVisitor());
+        FileUtils.deletePath(contents.toFile());
     }
 
     @Override
@@ -85,31 +95,6 @@ public class ZipArtifact implements Archive {
 
         @Override
         public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-            return FileVisitResult.CONTINUE;
-        }
-    }
-
-    private static class DeletePathFileVisitor implements FileVisitor<Path> {
-        @Override
-        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
-                throws IOException {
-            return FileVisitResult.CONTINUE;
-        }
-
-        @Override
-        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            Files.deleteIfExists(file);
-            return FileVisitResult.CONTINUE;
-        }
-
-        @Override
-        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-            return FileVisitResult.CONTINUE;
-        }
-
-        @Override
-        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-            Files.deleteIfExists(dir);
             return FileVisitResult.CONTINUE;
         }
     }
