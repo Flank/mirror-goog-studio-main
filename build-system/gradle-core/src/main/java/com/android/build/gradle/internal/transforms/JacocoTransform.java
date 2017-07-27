@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.transforms;
 
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
@@ -68,6 +67,11 @@ public class JacocoTransform extends Transform {
 
     @Override
     public boolean isIncremental() {
+        return true;
+    }
+
+    @Override
+    public boolean isCacheable() {
         return true;
     }
 

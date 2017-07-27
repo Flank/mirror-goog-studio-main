@@ -154,6 +154,11 @@ public class ProGuardTransform extends BaseProguardAction {
     }
 
     @Override
+    public boolean isCacheable() {
+        return true;
+    }
+
+    @Override
     public void transform(@NonNull final TransformInvocation invocation) throws TransformException {
         // only run one minification at a time (across projects)
         SettableFuture<TransformOutputProvider> resultFuture = SettableFuture.create();

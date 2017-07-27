@@ -162,6 +162,11 @@ public class MainDexListTransform extends BaseProguardAction {
     }
 
     @Override
+    public boolean isCacheable() {
+        return true;
+    }
+
+    @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
         // Re-direct the output to appropriate log levels, just like the official ProGuard task.

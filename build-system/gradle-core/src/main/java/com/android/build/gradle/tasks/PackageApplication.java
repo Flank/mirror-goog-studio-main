@@ -35,7 +35,6 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Internal;
 
 /** Task to package an Android application (APK). */
-@CacheableTask
 public class PackageApplication extends PackageAndroidArtifact {
 
     TaskOutputHolder.TaskOutputType expectedOutputType;

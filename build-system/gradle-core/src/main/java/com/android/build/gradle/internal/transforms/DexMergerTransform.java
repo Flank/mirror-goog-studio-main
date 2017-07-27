@@ -179,6 +179,11 @@ public class DexMergerTransform extends Transform {
     }
 
     @Override
+    public boolean isCacheable() {
+        return true;
+    }
+
+    @Override
     public void transform(@NonNull TransformInvocation transformInvocation)
             throws TransformException, IOException, InterruptedException {
         TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();

@@ -74,7 +74,7 @@ public class StableApiTest {
         // ATTENTION REVIEWER: if this needs to be changed, please make sure changes to api-list.txt
         // are backwards compatible.
         assertEquals(
-                "35d3d7ab0c05df4aa0bbecacd9c117e09248369b",
+                "9d7c90762f0533041869a78c7942a1f8e3afbe99",
                 Hashing.sha1()
                         .hashString(
                                 Resources.toString(API_LIST_URL, Charsets.UTF_8)

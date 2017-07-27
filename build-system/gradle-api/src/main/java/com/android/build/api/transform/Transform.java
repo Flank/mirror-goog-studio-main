@@ -290,4 +290,13 @@ public abstract class Transform {
                 transformInvocation.getOutputProvider(),
                 transformInvocation.isIncremental());
     }
+
+    /**
+     * Returns if this transform's outputs should be cached. Please read {@link
+     * org.gradle.api.tasks.CacheableTask} Javadoc if you would like to make your transform
+     * cacheable.
+     */
+    public boolean isCacheable() {
+        return false;
+    }
 }

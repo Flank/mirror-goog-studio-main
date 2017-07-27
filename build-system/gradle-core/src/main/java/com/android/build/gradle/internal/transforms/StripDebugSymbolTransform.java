@@ -117,6 +117,11 @@ public class StripDebugSymbolTransform extends Transform {
         return true;
     }
 
+    @Override
+    public boolean isCacheable() {
+        return true;
+    }
+
     @NonNull
     @Override
     public Collection<SecondaryFile> getSecondaryFiles() {

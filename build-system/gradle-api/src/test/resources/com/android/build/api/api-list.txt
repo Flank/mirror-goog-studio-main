@@ -62,6 +62,7 @@ com.android.build.api.transform.Transform.getSecondaryFiles: java.util.Collectio
 com.android.build.api.transform.Transform.isIncremental: boolean ()
 com.android.build.api.transform.Transform.transform: void (com.android.build.api.transform.Context, java.util.Collection<com.android.build.api.transform.TransformInput>, java.util.Collection<com.android.build.api.transform.TransformInput>, com.android.build.api.transform.TransformOutputProvider, boolean) throws java.io.IOException, com.android.build.api.transform.TransformException, java.lang.InterruptedException
 com.android.build.api.transform.Transform.transform: void (com.android.build.api.transform.TransformInvocation) throws com.android.build.api.transform.TransformException, java.lang.InterruptedException, java.io.IOException
+com.android.build.api.transform.Transform.isCacheable: boolean ()
 com.android.build.api.transform.TransformException
 com.android.build.api.transform.TransformException.<init>: com.android.build.api.transform.TransformException (java.lang.String)
 com.android.build.api.transform.TransformException.<init>: com.android.build.api.transform.TransformException (java.lang.Throwable)
