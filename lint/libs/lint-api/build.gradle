@@ -18,6 +18,7 @@ dependencies {
     compile libs.asm
     compile libs.asm_tree
 
+    compile libs.kotlin_reflect
     compile libs.kotlin_stdlib
 }
 

@@ -345,6 +345,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(WrongIdDetector.UNKNOWN_ID_LAYOUT);
         issues.add(WrongImportDetector.ISSUE);
         issues.add(WrongLocationDetector.ISSUE);
+        issues.add(WrongThreadInterproceduralDetector.Companion.getISSUE());
 
         sIssues = Collections.unmodifiableList(issues);
     }
