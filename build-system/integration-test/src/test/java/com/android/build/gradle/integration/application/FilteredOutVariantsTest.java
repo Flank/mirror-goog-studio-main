@@ -34,7 +34,7 @@ public class FilteredOutVariantsTest {
             GradleTestProject.builder().fromTestProject("filteredOutVariants").create();
 
     @Test
-    void checkFilteredOutVariantIsNotInTheModel() throws Exception {
+    public void checkFilteredOutVariantIsNotInTheModel() throws Exception {
         AndroidProject model =
                 project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
         Collection<Variant> variants = model.getVariants();

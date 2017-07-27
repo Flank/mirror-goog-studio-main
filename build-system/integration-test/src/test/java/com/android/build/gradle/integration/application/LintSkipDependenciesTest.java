@@ -36,7 +36,7 @@ public class LintSkipDependenciesTest {
             GradleTestProject.builder().fromTestProject("lintLibrarySkipDeps").create();
 
     @Test
-    void checkLintDependenciesSkipped() throws IOException, InterruptedException {
+    public void checkLintDependenciesSkipped() throws IOException, InterruptedException {
         project.execute("clean", ":app:lintDebug");
         File file = new File(project.getSubproject("app").getTestDir(), "lint-results.txt");
         assertThat(file).exists();
