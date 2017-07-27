@@ -463,6 +463,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     enum Java8LangSupport {
         INVALID,
         UNUSED,
+        D8,
         DESUGAR,
         RETROLAMBDA,
         DEXGUARD,

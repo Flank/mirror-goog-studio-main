@@ -28,16 +28,16 @@ import java.util.Collection;
  */
 public class TransformInputUtil {
 
-    public static Collection<File> getAllFiles(Collection<TransformInput> transformInputs) {
+    public static Collection<File> getAllFiles(Iterable<TransformInput> transformInputs) {
         return getAllFiles(transformInputs, true, true);
     }
 
-    public static Collection<File> getDirectories(Collection<TransformInput> transformInputs) {
+    public static Collection<File> getDirectories(Iterable<TransformInput> transformInputs) {
         return getAllFiles(transformInputs, true, false);
     }
 
     private static Collection<File> getAllFiles(
-            Collection<TransformInput> transformInputs,
+            Iterable<TransformInput> transformInputs,
             boolean includeDirectoryInput,
             boolean includeJarInput) {
         ImmutableList.Builder<File> inputFiles = ImmutableList.builder();

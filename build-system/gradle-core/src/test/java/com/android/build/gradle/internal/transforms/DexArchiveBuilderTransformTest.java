@@ -30,6 +30,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
@@ -44,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -302,6 +304,7 @@ public class DexArchiveBuilderTransformTest {
 
         DexArchiveBuilderTransform useDifferentDexerTransform =
                 new DexArchiveBuilderTransform(
+                        () -> Collections.emptyList(),
                         new DefaultDexOptions(),
                         new NoOpMessageReceiver(),
                         userCache,
@@ -310,7 +313,8 @@ public class DexArchiveBuilderTransformTest {
                         true,
                         10,
                         10,
-                        false);
+                        false,
+                        VariantScope.Java8LangSupport.UNUSED);
         useDifferentDexerTransform.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(5);
     }
@@ -428,7 +432,9 @@ public class DexArchiveBuilderTransformTest {
     @NonNull
     private DexArchiveBuilderTransform getTransform(
             @Nullable FileCache userCache, int minSdkVersion, boolean isDebuggable) {
+
         return new DexArchiveBuilderTransform(
+                () -> Collections.emptyList(),
                 new DefaultDexOptions(),
                 new NoOpMessageReceiver(),
                 userCache,
@@ -437,7 +443,8 @@ public class DexArchiveBuilderTransformTest {
                 true,
                 10,
                 10,
-                isDebuggable);
+                isDebuggable,
+                VariantScope.Java8LangSupport.UNUSED);
     }
 
     @NonNull

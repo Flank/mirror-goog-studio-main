@@ -17,6 +17,7 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
+import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.ide.common.blame.parser.DexParser;
 import com.android.tools.r8.ApiLevelException;
 import com.android.tools.r8.CompilationMode;
@@ -27,26 +28,44 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
+import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 final class D8DexArchiveBuilder extends DexArchiveBuilder {
+
+    private static final Logger LOGGER = Logger.getLogger(D8DexArchiveBuilder.class.getName());
 
     private static final String INVOKE_CUSTOM =
             "Invoke-customs are only supported starting with Android O";
 
     private final int minSdkVersion;
     @NonNull private final CompilationMode compilationMode;
+    @NonNull private final List<Path> bootClasspath;
+    @NonNull private final List<Path> classpath;
+    @NonNull private final ClassFileProviderFactory classFileProviderFactory;
+    private final boolean desugaring;
 
-    public D8DexArchiveBuilder(int minSdkVersion, boolean isDebuggable) {
+    public D8DexArchiveBuilder(
+            int minSdkVersion,
+            boolean isDebuggable,
+            @NonNull List<Path> bootClasspath,
+            @NonNull List<Path> classpath,
+            @NonNull ClassFileProviderFactory classFileProviderFactory,
+            boolean desugaring) {
         this.minSdkVersion = minSdkVersion;
         this.compilationMode = isDebuggable ? CompilationMode.DEBUG : CompilationMode.RELEASE;
+        this.bootClasspath = bootClasspath;
+        this.classpath = classpath;
+        this.classFileProviderFactory = classFileProviderFactory;
+        this.desugaring = desugaring;
     }
 
     @Override
     public void convert(
             @NonNull Stream<ClassFileEntry> input, @NonNull Path output, boolean isIncremental)
             throws DexArchiveBuilderException {
-        try {
+        try (ClassFileProviderFactory.Handler factory = classFileProviderFactory.open()) {
             Iterator<byte[]> data = input.map(D8DexArchiveBuilder::readAllBytes).iterator();
             if (!data.hasNext()) {
                 // nothing to do here, just return
@@ -58,8 +77,20 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                     D8Command.builder()
                             .setMode(compilationMode)
                             .setMinApiLevel(minSdkVersion)
-                            .setEnableDesugaring(false)
+                            .setIntermediate(true)
                             .setOutputMode(outputMode);
+
+            if (desugaring) {
+                for (Path entry : bootClasspath) {
+                    builder.addLibraryResourceProvider(factory.getProvider(entry));
+                }
+                for (Path entry : classpath) {
+                    builder.addClasspathResourceProvider(factory.getProvider(entry));
+                }
+                builder.setEnableDesugaring(true);
+            } else {
+                builder.setEnableDesugaring(false);
+            }
 
             while (data.hasNext()) {
                 builder.addClassProgramData(data.next());

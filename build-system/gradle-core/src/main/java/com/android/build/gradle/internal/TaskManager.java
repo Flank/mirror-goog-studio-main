@@ -2421,6 +2421,11 @@ public abstract class TaskManager {
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransform(
+                        () ->
+                                variantScope
+                                        .getGlobalScope()
+                                        .getAndroidBuilder()
+                                        .getBootClasspath(false),
                         dexOptions,
                         variantScope.getGlobalScope().getMessageReceiver(),
                         userLevelCache,
@@ -2429,7 +2434,8 @@ public abstract class TaskManager {
                         projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS),
                         projectOptions.get(IntegerOption.DEXING_READ_BUFFER_SIZE),
                         projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE),
-                        variantScope.getVariantConfiguration().getBuildType().isDebuggable());
+                        variantScope.getVariantConfiguration().getBuildType().isDebuggable(),
+                        variantScope.getJava8LangSupportType());
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);

@@ -26,16 +26,22 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
+import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * A cache for already-created files/directories.
@@ -835,6 +841,64 @@ public class FileCache {
                         throw new RuntimeException("switch statement misses cases");
                 }
                 return this;
+            }
+
+            /**
+             * Adds one or multiple input parameters containing one or multiple properties of a list
+             * of files (file or directory). If a parameter with the same name exists, the
+             * parameter's value is overwritten.
+             */
+            @NonNull
+            public Builder putFiles(@NonNull String name, @NonNull List<File> files) {
+                for (File file : files) {
+                    Preconditions.checkArgument(file.exists(), file + " does not exist.");
+                    putString(name + ".path", file.toString());
+                    putString(name + ".hash", getHash(file));
+                }
+                return this;
+            }
+
+            /**
+             * Returns the hash of the file's contents or the accumulated hash of all files in the
+             * directory tree.
+             */
+            @NonNull
+            private static String getHash(@NonNull File file) {
+                if (file.isFile()) {
+                    return getFileHash(file);
+                } else {
+                    Hasher hasher = Hashing.sha256().newHasher();
+                    byte[] buffer = new byte[10 * 1024]; // should be enough for most class files
+                    try {
+                        hash(hasher, file, buffer);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
+                    return hasher.hash().toString();
+                }
+            }
+
+            private static void hash(
+                    @NonNull Hasher hasher, @NonNull File directory, @NonNull byte[] buffer)
+                    throws IOException {
+                for (File file :
+                        Arrays.stream(directory.listFiles())
+                                .sorted()
+                                .collect(Collectors.toList())) {
+                    if (file.isDirectory()) {
+                        hash(hasher, file, buffer);
+                    } else {
+                        try (InputStream in = new FileInputStream(file)) {
+                            while (true) {
+                                int read = in.read(buffer);
+                                if (read == -1) {
+                                    break;
+                                }
+                                hasher.putBytes(buffer, 0, read);
+                            }
+                        }
+                    }
+                }
             }
 
             /** Returns the hash of the file's contents. */

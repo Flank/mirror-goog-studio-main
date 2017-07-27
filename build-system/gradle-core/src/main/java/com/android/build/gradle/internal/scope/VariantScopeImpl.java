@@ -907,7 +907,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         // only if target and source is explicitly specified to 1.8 (and above), we keep the
         // default bootclasspath with Desugar. Otherwise, we use android.jar.
-        return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR;
+        return java8LangSupport == VariantScope.Java8LangSupport.DESUGAR
+                || java8LangSupport == VariantScope.Java8LangSupport.D8;
     }
 
     @Override
@@ -2137,12 +2138,50 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return Java8LangSupport.UNUSED;
         }
 
+        boolean isD8Desugaring =
+                globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8_DESUGARING);
+        if (isD8Desugaring && !globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8)) {
+            globalScope
+                    .getErrorHandler()
+                    .reportError(
+                            Type.GENERIC,
+                            "Java 8 language support with D8 (as requested by '"
+                                    + BooleanOption.ENABLE_D8_DESUGARING.getPropertyName()
+                                    + " = true' in your gradle.properties file) is only supported when"
+                                    + " D8 dex compilation is enabled ('"
+                                    + BooleanOption.ENABLE_D8.getPropertyName()
+                                    + " = true').",
+                            getVariantConfiguration().getFullName());
+            return Java8LangSupport.INVALID;
+        }
+
+        if (isD8Desugaring
+                && !globalScope.getProjectOptions().get(BooleanOption.ENABLE_DEX_ARCHIVE)) {
+            globalScope
+                    .getErrorHandler()
+                    .reportError(
+                            Type.GENERIC,
+                            "Java 8 language support with D8 (as requested by '"
+                                    + BooleanOption.ENABLE_D8_DESUGARING.getPropertyName()
+                                    + " = true' in your gradle.properties file) is not supported when"
+                                    + " dex archive is disabled ('"
+                                    + BooleanOption.ENABLE_DEX_ARCHIVE.getPropertyName()
+                                    + " = false').",
+                            getVariantConfiguration().getFullName());
+            return Java8LangSupport.INVALID;
+        }
+
+
         if (globalScope.getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")) {
             return Java8LangSupport.RETROLAMBDA;
         }
 
         if (globalScope.getProject().getPlugins().hasPlugin("dexguard")) {
             return Java8LangSupport.DEXGUARD;
+        }
+
+        if (isD8Desugaring) {
+            return Java8LangSupport.D8;
         }
 
         if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_DESUGAR)) {
