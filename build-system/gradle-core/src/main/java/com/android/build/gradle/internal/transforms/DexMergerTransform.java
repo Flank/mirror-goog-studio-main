@@ -57,6 +57,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -64,6 +65,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
+import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
 
 /**
@@ -94,6 +96,12 @@ import org.gradle.api.file.FileCollection;
 public class DexMergerTransform extends Transform {
 
     private static final LoggerWrapper logger = LoggerWrapper.getLogger(DexMergerTransform.class);
+    private static final int ANDROID_L_MAX_DEX_FILES = 100;
+    // We assume the maximum number of dexes that will be produced from the external dependencies is
+    // JAR_DEX_FILES, so the remaining ANDROID_L_MAX_DEX_FILES - JAR_DEX_FILES can be used for
+    // program classes. This is a generous assumption that 50 completely full dex files will be
+    // needed for external dependencies.
+    private static final int JAR_DEX_FILES = 50;
 
     @NonNull private final DexingType dexingType;
     @Nullable private final FileCollection mainDexListFile;
@@ -269,11 +277,18 @@ public class DexMergerTransform extends Transform {
 
         ImmutableList.Builder<ForkJoinTask<Void>> subTasks = ImmutableList.builder();
         Multimap<Status, Path> externalLibs = ArrayListMultimap.create();
-        for (TransformInput input : inputs) {
-            subTasks.addAll(processDirectories(output, outputProvider, isIncremental, input));
-            subTasks.addAll(
-                    processJars(output, outputProvider, isIncremental, input, externalLibs));
-        }
+        List<DirectoryInput> directoryInputs =
+                inputs.stream()
+                        .flatMap(i -> i.getDirectoryInputs().stream())
+                        .collect(Collectors.toList());
+        subTasks.addAll(processDirectories(output, outputProvider, isIncremental, directoryInputs));
+
+        List<JarInput> jarInputs =
+                inputs.stream()
+                        .flatMap(i -> i.getJarInputs().stream())
+                        .collect(Collectors.toList());
+        subTasks.addAll(
+                processJars(output, outputProvider, isIncremental, jarInputs, externalLibs));
 
         File externalLibsOutput =
                 getDexOutputLocation(
@@ -298,15 +313,29 @@ public class DexMergerTransform extends Transform {
         return subTasks.build();
     }
 
+    /**
+     * If directory inputs should be merge individually, or we should merge all of them together.
+     * Reason for this check is that on L (API levels 21 and 22) there is a 100 dex files limit that
+     * we might hit if each of the directory inputs is merged individually.
+     */
+    private boolean shouldMergeAllDirInputs(@NonNull Collection<DirectoryInput> directories) {
+        if (minSdkVersion > 22) {
+            return false;
+        }
+
+        long dirInputsCount = directories.stream().filter(d -> d.getFile().exists()).count();
+        return dirInputsCount > ANDROID_L_MAX_DEX_FILES - JAR_DEX_FILES;
+    }
+
     private List<ForkJoinTask<Void>> processJars(
             @NonNull ProcessOutput output,
             @NonNull TransformOutputProvider outputProvider,
             boolean isIncremental,
-            @NonNull TransformInput input,
+            @NonNull Collection<JarInput> inputs,
             @NonNull Multimap<Status, Path> externalLibs)
             throws IOException {
         ImmutableList.Builder<ForkJoinTask<Void>> subTasks = ImmutableList.builder();
-        for (JarInput jarInput : input.getJarInputs()) {
+        for (JarInput jarInput : inputs) {
             if (jarInput.getScopes().equals(Collections.singleton(Scope.EXTERNAL_LIBRARIES))) {
                 externalLibs.put(jarInput.getStatus(), jarInput.getFile().toPath());
                 continue;
@@ -337,20 +366,17 @@ public class DexMergerTransform extends Transform {
             @NonNull ProcessOutput output,
             @NonNull TransformOutputProvider outputProvider,
             boolean isIncremental,
-            TransformInput input)
+            @NonNull Collection<DirectoryInput> inputs)
             throws IOException {
         ImmutableList.Builder<ForkJoinTask<Void>> subTasks = ImmutableList.builder();
-        for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
+        List<DirectoryInput> deleted = new ArrayList<>();
+        List<DirectoryInput> changed = new ArrayList<>();
+        List<DirectoryInput> notChanged = new ArrayList<>();
+
+        for (DirectoryInput directoryInput : inputs) {
             Path rootFolder = directoryInput.getFile().toPath();
-            File dexOutput =
-                    getDexOutputLocation(
-                            outputProvider, directoryInput.getName(), directoryInput.getScopes());
-            // The incremental mode only detect file level changes.
-            // It does not handle removed root folders. However the transform
-            // task will add the TransformInput right after it's removed so that it
-            // can be detected by the transform.
             if (!Files.isDirectory(rootFolder)) {
-                FileUtils.deleteDirectoryContents(dexOutput);
+                deleted.add(directoryInput);
             } else {
                 boolean runAgain = !isIncremental;
 
@@ -364,14 +390,50 @@ public class DexMergerTransform extends Transform {
                 }
 
                 if (runAgain) {
-                    FileUtils.cleanOutputDir(dexOutput);
-                    subTasks.add(
-                            submitForMerging(
-                                    output,
-                                    dexOutput,
-                                    ImmutableList.of(directoryInput.getFile().toPath()),
-                                    null));
+                    changed.add(directoryInput);
+                } else {
+                    notChanged.add(directoryInput);
                 }
+            }
+        }
+
+        if (shouldMergeAllDirInputs(inputs)) {
+            File dexOutput =
+                    getDexOutputLocation(
+                            outputProvider, "directories", ImmutableSet.of(Scope.PROJECT));
+            if (!deleted.isEmpty() || !changed.isEmpty()) {
+                FileUtils.cleanOutputDir(dexOutput);
+            }
+
+            if (!changed.isEmpty() || !notChanged.isEmpty()) {
+                List<Path> toMerge = new ArrayList<>(changed.size() + notChanged.size());
+                for (DirectoryInput input : Iterables.concat(changed, notChanged)) {
+                    toMerge.add(input.getFile().toPath());
+                }
+                subTasks.add(submitForMerging(output, dexOutput, toMerge, null));
+            }
+        } else {
+            for (DirectoryInput directoryInput : deleted) {
+                File dexOutput =
+                        getDexOutputLocation(
+                                outputProvider,
+                                directoryInput.getName(),
+                                directoryInput.getScopes());
+                FileUtils.cleanOutputDir(dexOutput);
+            }
+            for (DirectoryInput directoryInput : changed) {
+                File dexOutput =
+                        getDexOutputLocation(
+                                outputProvider,
+                                directoryInput.getName(),
+                                directoryInput.getScopes());
+                FileUtils.cleanOutputDir(dexOutput);
+                subTasks.add(
+                        submitForMerging(
+                                output,
+                                dexOutput,
+                                ImmutableList.of(directoryInput.getFile().toPath()),
+                                null));
             }
         }
         return subTasks.build();
