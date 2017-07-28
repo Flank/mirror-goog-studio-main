@@ -88,6 +88,18 @@ public class FeatureAndAbiPureSplitsTest {
         assertThat(debug.getOutput().getOutputFile().getName()).isEqualTo("bundle-debug.zip");
         assertThat(debug.getFeatureOutputs()).hasSize(5);
 
+        List<String> expectedFileNames =
+                ImmutableList.of(
+                        "baseFeature-debug.apk",
+                        "feature_a-debug.apk",
+                        "feature_a-x86-debug.apk",
+                        "feature_a-armeabi-v7a-debug.apk",
+                        "feature_a-hdpi-debug-unsigned.apk");
+        List<String> foundFileNames = new ArrayList<>();
+        debug.getFeatureOutputs()
+                .forEach(outputFile -> foundFileNames.add(outputFile.getOutputFile().getName()));
+        assertThat(foundFileNames).containsExactlyElementsIn(expectedFileNames);
+
         List<String> expectedSplitNames =
                 ImmutableList.of(
                         "feature_a.config.x86",

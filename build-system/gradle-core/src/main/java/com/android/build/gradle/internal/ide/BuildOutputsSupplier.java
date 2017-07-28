@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
-import com.android.build.gradle.internal.scope.InstantAppOutputScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.ide.common.build.ApkInfo;
@@ -56,18 +55,13 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Buil
                     if (previous.isEmpty()) {
                         outputTypes.forEach(
                                 taskOutputType -> {
-                                    if (taskOutputType
-                                            == TaskOutputHolder.TaskOutputType.INSTANTAPP_BUNDLE) {
-                                        processInstantAppFolder(outputFolder, outputs);
-                                    } else {
-                                        // take the FileCollection content as face value.
-                                        // FIX ME : we should do better than this, maybe make sure output.gson
-                                        // is always produced for those items.
-                                        File[] files = outputFolder.listFiles();
-                                        if (files != null && files.length > 0) {
-                                            for (File file : files) {
-                                                processFile(taskOutputType, file, outputs);
-                                            }
+                                    // take the FileCollection content as face value.
+                                    // FIX ME : we should do better than this, maybe make sure output.gson
+                                    // is always produced for those items.
+                                    File[] files = outputFolder.listFiles();
+                                    if (files != null && files.length > 0) {
+                                        for (File file : files) {
+                                            processFile(taskOutputType, file, outputs);
                                         }
                                     }
                                 });
@@ -108,19 +102,6 @@ public class BuildOutputsSupplier implements BuildOutputSupplier<Collection<Buil
                             taskOutputType,
                             ApkInfo.of(fileOutputType, ImmutableList.of(), 0),
                             file));
-        }
-    }
-
-    // FIXME: Remove this when instantApps no longer output an AndroidProject model.
-    private static void processInstantAppFolder(
-            File outputFolder, ImmutableList.Builder<BuildOutput> outputs) {
-        InstantAppOutputScope instantAppOutputScope = InstantAppOutputScope.load(outputFolder);
-        if (instantAppOutputScope != null) {
-            outputs.add(
-                    new BuildOutput(
-                            TaskOutputHolder.TaskOutputType.INSTANTAPP_BUNDLE,
-                            ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0),
-                            instantAppOutputScope.getInstantAppBundle()));
         }
     }
 
