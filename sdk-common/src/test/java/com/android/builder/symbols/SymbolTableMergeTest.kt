@@ -16,38 +16,12 @@
 
 package com.android.builder.symbols
 
+
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth
 import org.junit.Test
+import com.android.builder.symbols.SymbolTestUtils.createSymbol as symbol
 
-/**
- * Utility function to make the test below more readable since there's no static import of methods.
- */
-fun symbol(
-        resourceType: String,
-        name: String,
-        javaType: String,
-        numericValue: Int) = SymbolTestUtils.createSymbol(resourceType, name, javaType, numericValue)
-
-/**
- * Utility function to make the test below more readable since there's no static import of methods.
- */
-fun symbol(
-        resourceType: String,
-        name: String,
-        javaType: String,
-        value: String) = SymbolTestUtils.createSymbol(resourceType, name, javaType, value)
-
-/**
- * Utility function to make the test below more readable since there's no static import of methods.
- */
-fun symbol(
-        resourceType: String,
-        name: String,
-        javaType: String,
-        value: String,
-        children: List<String>) =
-                SymbolTestUtils.createSymbol(resourceType, name, javaType, value, children)
 
 /**
  * these are tests for [SymbolUtils.mergeAndRenumberSymbols]
@@ -227,8 +201,8 @@ class SymbolTableMergeTest {
                 .add(symbol("attr", "a2", "int", 0x7f_04_0002))
                 .add(symbol("attr", "b1", "int", 0x7f_04_0003))
                 .add(symbol("attr", "b2", "int", 0x7f_04_0004))
-                .add(symbol("styleable", "style1", "int[]", 
-                        "{ 0x7f040001, 0x7f040002, 0x7f040003, 0x7f040004 }", 
+                .add(symbol("styleable", "style1", "int[]",
+                        "{ 0x7f040001, 0x7f040002, 0x7f040003, 0x7f040004 }",
                         listOf("a1", "a2", "b1", "b2")))
                 .build()
 
