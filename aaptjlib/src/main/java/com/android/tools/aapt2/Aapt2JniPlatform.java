@@ -39,22 +39,22 @@ import java.util.stream.Collectors;
 enum Aapt2JniPlatform {
     WIN_64(
             "win64",
-            HashCode.fromString("247a7e1d8a2d41bbc78d70e955aba2e0e0f28510667b008e4767e2dbc09d129d"),
+            HashCode.fromString("95fe97abd53b535e53bb81288ecdb893ee625c9b7786c18c01e3208b186a84e3"),
             "libwinpthread-1.dll",
             "libaapt2_jni.dll"),
     WIN_32(
             "win32",
-            HashCode.fromString("89edc789ff014204e00c6c227d85343d1fa758d3ac85c432462b8498a1b4f1ca"),
+            HashCode.fromString("76fdaef7f46467fd93917385ac7d878b03e45133376152ef755a8c7054e12843"),
             "libwinpthread-1.dll",
             "libaapt2_jni.dll"),
     MAC_64(
             "mac64",
-            HashCode.fromString("76acbf9b3587ba8339b3a07c7b4cdba8a3b8364611e7ee63fcade9699e3bb8d4"),
+            HashCode.fromString("b3d2dcd7a8e96e7aa19b6c62ffcd59e8a8d9910f0734d0188e0e9534e723beac"),
             "libc++.dylib",
             "libaapt2_jni.dylib"),
     LINUX_64(
             "linux64",
-            HashCode.fromString("be6ce5d680fbd21271d2de31bf53589c4003cff3fcb17cbdbf7261af7c868b1e"),
+            HashCode.fromString("5550dfcd7f481ed3e0a6ac87a45d8ee046c9ce2a2c9446bb39dbab7576737201"),
             "libc++.so",
             "libaapt2_jni.so"),
     ;
