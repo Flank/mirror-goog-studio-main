@@ -103,8 +103,12 @@ class MemoryTrackingEnv {
   void Initialize();
   void StartLiveTracking(int64_t timestamp);
   void StopLiveTracking(int64_t timestamp);
+  void SuspendLiveTracking();
+  void ResumeLiveTracking();
   const AllocatedClass& RegisterNewClass(jvmtiEnv* jvmti, JNIEnv* jni,
                                          jclass klass);
+  void SendBackClassData();
+  void SetAllocationCallbacksStatus(bool enabled);
   void LogGcStart();
   void LogGcFinish();
 
@@ -166,6 +170,7 @@ class MemoryTrackingEnv {
   bool log_live_alloc_count_;
   bool is_first_tracking_;
   bool is_live_tracking_;
+  bool is_suspended_;
   int32_t app_id_;
   int32_t class_class_tag_;
   int64_t current_capture_time_ns_;

@@ -77,6 +77,16 @@ class MemoryServiceImpl final
       const ::profiler::proto::TrackAllocationsRequest* request,
       ::profiler::proto::TrackAllocationsResponse* response) override;
 
+  ::grpc::Status SuspendTrackAllocations(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::SuspendTrackAllocationsRequest* request,
+      ::profiler::proto::SuspendTrackAllocationsResponse* response) override;
+
+  ::grpc::Status ResumeTrackAllocations(
+      ::grpc::ServerContext* context,
+      const ::profiler::proto::ResumeTrackAllocationsRequest* request,
+      ::profiler::proto::ResumeTrackAllocationsResponse* response) override;
+
   ::grpc::Status GetLegacyAllocationEvents(
       ::grpc::ServerContext* context,
       const ::profiler::proto::LegacyAllocationEventsRequest* request,
