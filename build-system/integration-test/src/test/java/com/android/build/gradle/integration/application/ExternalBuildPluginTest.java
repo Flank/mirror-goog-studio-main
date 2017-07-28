@@ -30,9 +30,9 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.apk.Dex;
-import com.android.tools.fd.client.InstantRunArtifact;
-import com.android.tools.fd.client.InstantRunArtifactType;
-import com.android.tools.fd.client.InstantRunBuildInfo;
+import com.android.tools.ir.client.InstantRunArtifact;
+import com.android.tools.ir.client.InstantRunArtifactType;
+import com.android.tools.ir.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -191,7 +191,7 @@ public class ExternalBuildPluginTest {
         assertThat(hotSwap.type).isEqualTo(InstantRunArtifactType.RELOAD_DEX);
 
         Dex dex = new Dex(hotSwap.file);
-        assertThat(dex).containsClass("Lcom/android/tools/fd/runtime/AppPatchesLoaderImpl;");
+        assertThat(dex).containsClass("Lcom/android/tools/ir/runtime/AppPatchesLoaderImpl;");
         assertThat(dex).containsClass("Lcom/example/jedo/blazeapp/MainActivity$override;");
     }
 

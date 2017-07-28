@@ -2876,7 +2876,7 @@ public abstract class TaskManager {
             //      requires manually parsing the manifest, see
             //      aapt -D (getMainDexListProguardOutputFile)
             transform.keep("class ** extends android.app.Application {*;}");
-            transform.keep("class com.android.tools.fd.** {*;}");
+            transform.keep("class com.android.tools.ir.** {*;}");
         }
 
         return scope.getTransformManager().addTransform(taskFactory, scope, transform);

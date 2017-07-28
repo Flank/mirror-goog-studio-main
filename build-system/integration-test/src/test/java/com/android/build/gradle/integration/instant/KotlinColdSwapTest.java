@@ -100,7 +100,7 @@ public class KotlinColdSwapTest {
                 .hasMainClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
                 .hasMethod("onCreate");
-        assertThat(apk).hasMainClass("Lcom/android/tools/fd/runtime/AppInfo;");
+        assertThat(apk).hasMainClass("Lcom/android/tools/ir/server/AppInfo;");
     }
 
     @Test

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.incremental.IncrementalChangeVisitor;
-import com.android.tools.fd.runtime.AndroidInstantRuntime;
+import com.android.tools.ir.runtime.AndroidInstantRuntime;
 import com.google.common.base.Objects;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

@@ -29,7 +29,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.SplitApks;
-import com.android.tools.fd.client.InstantRunBuildInfo;
+import com.android.tools.ir.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;

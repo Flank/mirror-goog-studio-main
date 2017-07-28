@@ -37,7 +37,7 @@ import com.android.ddmlib.IDevice;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
-import com.android.tools.fd.client.InstantRunArtifact;
+import com.android.tools.ir.client.InstantRunArtifact;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.Arrays;

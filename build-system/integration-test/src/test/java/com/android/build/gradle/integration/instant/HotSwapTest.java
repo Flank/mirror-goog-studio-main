@@ -34,8 +34,8 @@ import com.android.ddmlib.IDevice;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
-import com.android.tools.fd.client.InstantRunArtifact;
-import com.android.tools.fd.client.InstantRunBuildInfo;
+import com.android.tools.ir.client.InstantRunArtifact;
+import com.android.tools.ir.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.google.common.truth.Expect;
@@ -91,7 +91,7 @@ public class HotSwapTest {
                 .hasMainClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
                 .hasMethod("onCreate");
-        assertThat(apk).hasMainClass("Lcom/android/tools/fd/runtime/InstantRunContentProvider;");
+        assertThat(apk).hasMainClass("Lcom/android/tools/ir/server/InstantRunContentProvider;");
 
         createActivityClass("CHANGE");
 

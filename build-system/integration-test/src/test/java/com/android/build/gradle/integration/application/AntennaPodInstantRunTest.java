@@ -30,7 +30,7 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
-import com.android.tools.fd.client.InstantRunArtifact;
+import com.android.tools.ir.client.InstantRunArtifact;
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Expect;
 import java.io.File;

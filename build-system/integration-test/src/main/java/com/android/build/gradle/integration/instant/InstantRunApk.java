@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.instant;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.apk.Apk;
-import com.android.tools.fd.client.InstantRunArtifactType;
+import com.android.tools.ir.client.InstantRunArtifactType;
 import java.io.IOException;
 import java.nio.file.Path;
 
