@@ -753,14 +753,6 @@ public abstract class BaseExtension implements AndroidConfig {
         logger.warn("publishNonDefault is deprecated and has no effect anymore. All variants are now published.");
     }
 
-    // FIXME bug #62356943
-    public void flavorSelection(String name, String value) {
-        extraModelInfo.handleSyncError(
-                "",
-                SyncIssue.TYPE_GENERIC,
-                "flavorSelection is now replaced with defaultConfig.flavorSelection. It's also available on product flavors, build types and variant.");
-    }
-
     public void buildTypeMatching(@NonNull String consumer, @NonNull String... alternates) {
         if (buildTypeAttrMap.containsKey(consumer)) {
             throw new RuntimeException(
