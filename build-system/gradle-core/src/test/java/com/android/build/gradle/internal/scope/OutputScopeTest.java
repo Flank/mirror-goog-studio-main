@@ -41,7 +41,6 @@ import org.mockito.MockitoAnnotations;
 public class OutputScopeTest {
 
     @Mock private GradleVariantConfiguration variantConfiguration;
-    @Mock private GlobalScope globalScope;
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Before
@@ -69,12 +68,14 @@ public class OutputScopeTest {
 
         String persistedState =
                 outputScope.persist(
+                        temporaryFolder.getRoot().toPath(),
                         ImmutableList.of(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST));
 
         // load the persisted state.
         StringReader reader = new StringReader(persistedState);
         Collection<BuildOutput> buildOutputs =
                 BuildOutputs.load(
+                        temporaryFolder.getRoot().toPath(),
                         ImmutableList.of(VariantScope.TaskOutputType.COMPATIBLE_SCREEN_MANIFEST),
                         reader);
 

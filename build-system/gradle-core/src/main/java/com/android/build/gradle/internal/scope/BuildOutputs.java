@@ -36,6 +36,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.Type;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,11 +48,13 @@ public class BuildOutputs {
     /**
      * Persists the passed output types and split output to a {@link String} using gson.
      *
+     * @param projectPath path to relativize output file paths against.
      * @param outputTypes the output types to persist.
      * @param splitOutputs the outputs organized per output type
      * @return a json String.
      */
     public static String persist(
+            Path projectPath,
             ImmutableList<VariantScope.OutputType> outputTypes,
             SetMultimap<VariantScope.OutputType, BuildOutput> splitOutputs) {
         GsonBuilder gsonBuilder = new GsonBuilder();
@@ -61,11 +64,19 @@ public class BuildOutputs {
         gsonBuilder.registerTypeAdapter(
                 VariantScope.AnchorOutputType.class, new BuildOutputs.OutputTypeTypeAdapter());
         Gson gson = gsonBuilder.create();
+        // flatten and relativize the file paths to be persisted.
         List<BuildOutput> buildOutputs =
                 outputTypes
                         .stream()
                         .map(splitOutputs::get)
                         .flatMap(Collection::stream)
+                        .map(
+                                buildOutput ->
+                                        new BuildOutput(
+                                                buildOutput.getType(),
+                                                buildOutput.getApkInfo(),
+                                                projectPath.relativize(buildOutput.getOutputPath()),
+                                                buildOutput.getProperties()))
                         .collect(Collectors.toList());
         return gson.toJson(buildOutputs);
     }
@@ -83,7 +94,7 @@ public class BuildOutputs {
             return ImmutableList.of();
         }
         try (FileReader reader = new FileReader(metadataFile)) {
-            return load(reader);
+            return load(metadataFile.getParentFile().toPath(), reader);
         } catch (IOException e) {
             return ImmutableList.of();
         }
@@ -102,7 +113,7 @@ public class BuildOutputs {
             return ImmutableList.of();
         }
         try (FileReader reader = new FileReader(metadataFile)) {
-            return load(reader);
+            return load(metadataFile.getParentFile().toPath(), reader);
         } catch (IOException e) {
             return ImmutableList.of();
         }
@@ -126,7 +137,7 @@ public class BuildOutputs {
             return ImmutableList.of();
         }
         try (FileReader reader = new FileReader(metadataFile)) {
-            return load(types, reader);
+            return load(folder.toPath(), types, reader);
         } catch (IOException e) {
             return ImmutableList.of();
         }
@@ -167,8 +178,10 @@ public class BuildOutputs {
     @NonNull
     @VisibleForTesting
     static Collection<BuildOutput> load(
-            @NonNull Collection<VariantScope.OutputType> outputTypes, @NonNull Reader reader) {
-        return load(reader)
+            @NonNull Path projectPath,
+            @NonNull Collection<VariantScope.OutputType> outputTypes,
+            @NonNull Reader reader) {
+        return load(projectPath, reader)
                 .stream()
                 .filter(splitOutput -> outputTypes.contains(splitOutput.getType()))
                 .collect(Collectors.toList());
@@ -198,7 +211,7 @@ public class BuildOutputs {
             return ImmutableList.of();
         }
         try (FileReader reader = new FileReader(metadataFile)) {
-            return load(outputTypes, reader);
+            return load(metadataFile.getParentFile().toPath(), outputTypes, reader);
         } catch (IOException e) {
             return ImmutableList.of();
         }
@@ -211,14 +224,25 @@ public class BuildOutputs {
     }
 
     @NonNull
-    private static Collection<BuildOutput> load(@NonNull Reader reader) {
+    private static Collection<BuildOutput> load(@NonNull Path projectPath, @NonNull Reader reader) {
         GsonBuilder gsonBuilder = new GsonBuilder();
 
         gsonBuilder.registerTypeAdapter(ApkInfo.class, new ApkInfoAdapter());
         gsonBuilder.registerTypeAdapter(VariantScope.OutputType.class, new OutputTypeTypeAdapter());
         Gson gson = gsonBuilder.create();
         Type recordType = new TypeToken<List<BuildOutput>>() {}.getType();
-        return gson.fromJson(reader, recordType);
+        Collection<BuildOutput> buildOutputs = gson.fromJson(reader, recordType);
+        // resolve the file path to the current project location.
+        return buildOutputs
+                .stream()
+                .map(
+                        buildOutput ->
+                                new BuildOutput(
+                                        buildOutput.getType(),
+                                        buildOutput.getApkInfo(),
+                                        projectPath.resolve(buildOutput.getOutputPath()),
+                                        buildOutput.getProperties()))
+                .collect(Collectors.toList());
     }
 
     static class ApkInfoAdapter extends TypeAdapter<ApkInfo> {

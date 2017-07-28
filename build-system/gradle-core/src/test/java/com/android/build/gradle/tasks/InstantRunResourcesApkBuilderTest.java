@@ -72,6 +72,7 @@ public class InstantRunResourcesApkBuilderTest {
     InstantRunResourcesApkBuilder task;
     Project project;
     File outputFolder;
+    File testDir;
 
     @Mock FileCollection fileCollection;
     @Mock PackagingScope packagingScope;
@@ -83,7 +84,7 @@ public class InstantRunResourcesApkBuilderTest {
     @Before
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
-        File testDir = temporaryFolder.newFolder();
+        testDir = temporaryFolder.newFolder();
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
 
         task = project.getTasks().create("test", InstantRunResourcesApkBuilder.class);
@@ -216,6 +217,7 @@ public class InstantRunResourcesApkBuilderTest {
 
         Files.write(
                 BuildOutputs.persist(
+                        testDir.toPath(),
                         ImmutableList.of(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
                         resources.build()),
                 BuildOutputs.getMetadataFile(temporaryFolder.getRoot()),

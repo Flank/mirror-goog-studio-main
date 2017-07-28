@@ -63,11 +63,12 @@ public class GenerateInstantRunAppInfoTaskTest {
 
     Project project;
     GenerateInstantRunAppInfoTask task;
+    File testDir;
 
     @Before
     public void setUp() throws IOException {
         MockitoAnnotations.initMocks(this);
-        File testDir = temporaryFolder.newFolder();
+        testDir = temporaryFolder.newFolder();
         project = ProjectBuilder.builder().withProjectDir(testDir).build();
         task = project.getTasks().create("test", GenerateInstantRunAppInfoTask.class);
         task.setMergedManifests(fileCollection);
@@ -103,6 +104,7 @@ public class GenerateInstantRunAppInfoTaskTest {
         File buildOutputs = temporaryFolder.newFolder("buildOutputs");
         String json =
                 BuildOutputs.persist(
+                        testDir.toPath(),
                         ImmutableList.of(
                                 TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS),
                         ImmutableSetMultimap.of(
@@ -135,6 +137,7 @@ public class GenerateInstantRunAppInfoTaskTest {
         File buildOutputs = temporaryFolder.newFolder("buildOutputs");
         String json =
                 BuildOutputs.persist(
+                        temporaryFolder.getRoot().toPath(),
                         ImmutableList.of(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS),
                         ImmutableSetMultimap.of());
         Files.write(json, BuildOutputs.getMetadataFile(buildOutputs), Charsets.UTF_8);

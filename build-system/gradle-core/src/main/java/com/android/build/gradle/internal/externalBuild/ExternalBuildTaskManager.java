@@ -329,6 +329,7 @@ class ExternalBuildTaskManager {
         BuildOutput buildOutput = new BuildOutput(outputType, apkData, file);
         String buildOutputs =
                 BuildOutputs.persist(
+                        output.toPath(),
                         ImmutableList.of(outputType),
                         ImmutableSetMultimap.of(outputType, buildOutput));
         Files.write(buildOutputs, BuildOutputs.getMetadataFile(output), Charsets.UTF_8);

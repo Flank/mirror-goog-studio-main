@@ -34,6 +34,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -274,7 +275,7 @@ public class OutputScope implements Serializable {
 
     public void save(ImmutableList<VariantScope.OutputType> outputTypes, File folder)
             throws IOException {
-        String persistedString = BuildOutputs.persist(outputTypes, splitOutputs);
+        String persistedString = BuildOutputs.persist(folder.toPath(), outputTypes, splitOutputs);
         if (persistedString.isEmpty()) {
             return;
         }
@@ -366,7 +367,7 @@ public class OutputScope implements Serializable {
         }
     }
 
-    public String persist(ImmutableList<VariantScope.OutputType> outputTypes) {
-        return BuildOutputs.persist(outputTypes, splitOutputs);
+    public String persist(Path outputPath, ImmutableList<VariantScope.OutputType> outputTypes) {
+        return BuildOutputs.persist(outputPath, outputTypes, splitOutputs);
     }
 }
