@@ -88,6 +88,12 @@
         type="boolean"
         default="true" />
 
+    <parameter
+        id="enableProGuard"
+        name="Enable ProGuard"
+        type="boolean"
+        default="true" />
+
     <globals file="globals.xml.ftl" />
     <execute file="recipe.xml.ftl" />
 

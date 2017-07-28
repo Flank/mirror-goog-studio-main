@@ -1,5 +1,3 @@
-<#import "root://gradle-projects/common/proguard_macros.ftl" as proguard>
-
 <#-- Some common elements used in multiple files -->
 <#macro watchProjectDependencies>
 <#if WearprojectName?has_content && NumberOfEnabledFormFactors?has_content && NumberOfEnabledFormFactors gt 1 && Wearincluded>
@@ -58,9 +56,14 @@ android {
         targetCompatibility JavaVersion.VERSION_${javaVersion?replace('.','_','i')}
     }
 </#if>
-
-<@proguard.proguardConfig />
-
+<#if enableProGuard>
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+</#if>
 <#if canHaveCpp && includeCppSupport!false>
     externalNativeBuild {
         cmake {

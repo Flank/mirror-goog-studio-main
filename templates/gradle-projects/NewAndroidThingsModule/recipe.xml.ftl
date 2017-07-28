@@ -40,11 +40,14 @@
 </#if>
 
 <#if makeIgnore>
-    <copy from="root://gradle-projects/common/gitignore"
+    <copy from="root/module_ignore"
             to="${escapeXmlAttribute(projectOut)}/.gitignore" />
 </#if>
 
-    <#include "root://gradle-projects/common/proguard_recipe.xml.ftl"/>
+<#if enableProGuard>
+    <instantiate from="root/proguard-rules.txt.ftl"
+                   to="${escapeXmlAttribute(projectOut)}/proguard-rules.pro" />
+</#if>
 
 <#if !isLibraryProject && generateLayout!false>
     <instantiate from="root/res/values/styles.xml.ftl"

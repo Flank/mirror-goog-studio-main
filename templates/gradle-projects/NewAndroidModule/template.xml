@@ -92,6 +92,12 @@
         default="true" />
 
     <parameter
+        id="enableProGuard"
+        name="Enable ProGuard"
+        type="boolean"
+        default="true" />
+
+    <parameter
         id="includeCppSupport"
         name="Enable C++ Support"
         type="boolean"
