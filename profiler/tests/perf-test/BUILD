@@ -25,7 +25,7 @@ java_test(
     srcs = select({
         "//tools/base/bazel:darwin": ["testSrcs/com/android/tools/profiler/NoOpTest.java"],
         "//tools/base/bazel:windows": ["testSrcs/com/android/tools/profiler/NoOpTest.java"],
-        "//conditions:default": glob(["testSrcs/**/*Test.java"]),
+        "//conditions:default": ["testSrcs/com/android/tools/profiler/NoOpTest.java"],
     }),
     jvm_flags = [
         "-Dtest.suite.jar=AllTest.jar",
