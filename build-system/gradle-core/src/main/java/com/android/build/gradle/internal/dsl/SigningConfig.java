@@ -146,26 +146,6 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        SigningConfig that = (SigningConfig) o;
-
-        if (!mName.equals(that.mName)) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + mName.hashCode();
-        return result;
-    }
-
-    @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("name", mName)

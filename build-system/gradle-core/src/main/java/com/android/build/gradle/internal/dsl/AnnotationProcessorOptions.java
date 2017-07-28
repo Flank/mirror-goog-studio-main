@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Collection;
@@ -100,25 +99,6 @@ public class AnnotationProcessorOptions
         setClassNames(aptOptions.getClassNames());
         setArguments(aptOptions.getArguments());
         setIncludeCompileClasspath(aptOptions.getIncludeCompileClasspath());
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        AnnotationProcessorOptions that = (AnnotationProcessorOptions) o;
-        return Objects.equal(classNames, that.classNames) &&
-                Objects.equal(arguments, that.arguments) &&
-                Objects.equal(includeCompileClasspath, that.includeCompileClasspath);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(classNames, arguments);
     }
 
     @Override
