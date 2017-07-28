@@ -16,8 +16,11 @@
 
 package com.android.build.gradle.internal.ide;
 
+import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.EXT_AAR;
 import static com.android.SdkConstants.EXT_JAR;
+import static com.android.SdkConstants.FD_AAR_LIBS;
+import static com.android.SdkConstants.FD_JARS;
 import static com.android.build.gradle.internal.ide.ArtifactDependencyGraph.DependencyType.ANDROID;
 import static com.android.build.gradle.internal.ide.ArtifactDependencyGraph.DependencyType.JAVA;
 import static com.android.build.gradle.internal.ide.ModelBuilder.EMPTY_DEPENDENCIES_IMPL;
@@ -49,6 +52,7 @@ import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.GraphItem;
 import com.android.builder.model.level2.Library;
 import com.android.ide.common.caching.CreatingCache;
+import com.android.utils.FileUtils;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -115,15 +119,15 @@ public class ArtifactDependencyGraph {
 
         if (!(id instanceof ProjectComponentIdentifier) || artifact.isWrappedModule()) {
             if (artifact.getDependencyType() == ANDROID) {
-                File folder = artifact.getFile();
+                File explodedFolder = artifact.getFile();
                 library =
                         new AndroidLibraryImpl(
                                 address,
                                 artifact.bundleResult != null
                                         ? artifact.bundleResult.getFile()
-                                        : folder, // fallback so that the value is non-null
-                                folder,
-                                ImmutableList.of()); // FIXME: get local jar override
+                                        : explodedFolder, // fallback so that the value is non-null
+                                explodedFolder,
+                                findLocalJarsAsStrings(explodedFolder));
             } else {
                 library = new JavaLibraryImpl(address, artifact.getFile());
             }
@@ -502,6 +506,9 @@ public class ArtifactDependencyGraph {
                     // force external dependency mode.
                     projectPath = null;
                 }
+
+                final File explodedFolder = artifact.getFile();
+
                 //noinspection VariableNotUsedInsideIf
                 androidLibraries.add(
                         new com.android.build.gradle.internal.ide.AndroidLibraryImpl(
@@ -510,15 +517,14 @@ public class ArtifactDependencyGraph {
                                 projectPath,
                                 artifact.bundleResult != null
                                         ? artifact.bundleResult.getFile()
-                                        : artifact
-                                                .getFile(), // fallback so that the value is non-null
-                                artifact.getFile(), /*exploded folder*/
+                                        : explodedFolder, // fallback so that the value is non-null
+                                explodedFolder, /*exploded folder*/
                                 getVariant(artifact),
                                 isProvided,
                                 false, /* dependencyItem.isSkipped() */
                                 ImmutableList.of(), /* androidLibraries */
                                 ImmutableList.of(), /* javaLibraries */
-                                ImmutableList.of())); /*localJarOverride */
+                                findLocalJarsAsFiles(explodedFolder)));
             }
         }
 
@@ -660,6 +666,48 @@ public class ArtifactDependencyGraph {
         }
     }
 
+    @NonNull
+    private static List<String> findLocalJarsAsStrings(@NonNull File folder) {
+        File localJarRoot = FileUtils.join(folder, FD_JARS, FD_AAR_LIBS);
+
+        if (!localJarRoot.isDirectory()) {
+            return ImmutableList.of();
+        }
+
+        String[] jarFiles = localJarRoot.list((dir, name) -> name.endsWith(DOT_JAR));
+        if (jarFiles != null && jarFiles.length > 0) {
+            String prefix = FD_JARS + File.separatorChar + FD_AAR_LIBS + File.separatorChar;
+            StringBuilder sb = new StringBuilder(prefix);
+            int reset = prefix.length();
+
+            List<String> list = Lists.newArrayListWithCapacity(jarFiles.length);
+            for (String jarFile : jarFiles) {
+                sb.setLength(reset);
+                sb.append(jarFile);
+                list.add(sb.toString());
+            }
+
+            return list;
+        }
+
+        return ImmutableList.of();
+    }
+
+    @NonNull
+    private static List<File> findLocalJarsAsFiles(@NonNull File folder) {
+        File localJarRoot = FileUtils.join(folder, FD_JARS, FD_AAR_LIBS);
+
+        if (!localJarRoot.isDirectory()) {
+            return ImmutableList.of();
+        }
+
+        File[] jarFiles = localJarRoot.listFiles((dir, name) -> name.endsWith(DOT_JAR));
+        if (jarFiles != null && jarFiles.length > 0) {
+            return ImmutableList.copyOf(jarFiles);
+        }
+
+        return ImmutableList.of();
+    }
 
 
     public static class HashableResolvedArtifactResult implements ResolvedArtifactResult {

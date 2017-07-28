@@ -275,6 +275,8 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/andkulikov/transitionseverywhere/1.6.9:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/multidex-instrumentation/1.0.2:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/multidex/1.0.2:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/24.0.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-v4/24.0.0:aar",
         "//prebuilts/tools/common/m2/repository/com/android/support/test/orchestrator/1.0.0:apk",
         "//prebuilts/tools/common/m2/repository/com/android/support/test/services/test-services/1.0.0:apk",
         "//prebuilts/tools/common/m2/repository/com/android/tools/build/transform-api/1.5.0:jar",

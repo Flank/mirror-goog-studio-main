@@ -29,13 +29,12 @@ import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_PROGUARD_TXT;
 import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
-import static com.android.utils.FileUtils.relativePossiblyNonExistingPath;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.level2.Library;
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
@@ -48,26 +47,20 @@ import java.util.Objects;
 public final class AndroidLibraryImpl implements Library, Serializable {
     private static final long serialVersionUID = 1L;
 
-    @NonNull
-    private final String address;
+    @NonNull private final String address;
     @NonNull private final File artifact;
     @NonNull private final File folder;
-    @NonNull
-    private final List<String> localJarPath;
+    @NonNull private final List<String> localJarPaths;
 
     public AndroidLibraryImpl(
             @NonNull String address,
             @NonNull File artifact,
             @NonNull File folder,
-            @NonNull Collection<File> localJarOverride) {
+            @NonNull List<String> localJarPaths) {
         this.address = address;
         this.artifact = artifact;
         this.folder = folder;
-        // TODO Fix me once we are always extracting AARs during sync.
-        localJarPath = Lists.newArrayListWithCapacity(localJarOverride.size());
-        for (File localJar : localJarOverride) {
-            localJarPath.add(relativePossiblyNonExistingPath(localJar, folder).intern());
-        }
+        this.localJarPaths = ImmutableList.copyOf(localJarPaths);
     }
 
     @Override
@@ -120,7 +113,7 @@ public final class AndroidLibraryImpl implements Library, Serializable {
     @NonNull
     @Override
     public Collection<String> getLocalJars() {
-        return localJarPath;
+        return localJarPaths;
     }
 
     @NonNull
@@ -197,12 +190,12 @@ public final class AndroidLibraryImpl implements Library, Serializable {
         return Objects.equals(address, that.address)
                 && Objects.equals(artifact, that.artifact)
                 && Objects.equals(folder, that.folder)
-                && Objects.equals(localJarPath, that.localJarPath);
+                && Objects.equals(localJarPaths, that.localJarPaths);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, artifact, folder, localJarPath);
+        return Objects.hash(address, artifact, folder, localJarPaths);
     }
 
     @Override
@@ -211,7 +204,7 @@ public final class AndroidLibraryImpl implements Library, Serializable {
                 .add("address", address)
                 .add("artifact", artifact)
                 .add("folder", folder)
-                .add("localJarPath", localJarPath)
+                .add("localJarPath", localJarPaths)
                 .toString();
     }
 }
