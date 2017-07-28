@@ -123,7 +123,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
     /** The process mode to run {@code aapt} on. */
     @NonNull private final PngProcessMode processMode;
 
-    Integer cruncherKey;
+    @Nullable private final Integer cruncherKey;
 
     /**
      * Creates a new entry point to the original {@code aapt}.
@@ -156,11 +156,16 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         this.processMode = processMode;
 
         this.cruncher =
-                QueuedCruncher.Builder.INSTANCE.newCruncher(
-                        getAaptExecutablePath(), logger, cruncherProcesses);
+                QueuedCruncher.builder()
+                        .executablePath(getAaptExecutablePath())
+                        .logger(logger)
+                        .numberOfProcesses(cruncherProcesses)
+                        .build();
 
         if (cruncher != null) {
             cruncherKey = cruncher.start();
+        } else {
+            cruncherKey = null;
         }
     }
 
@@ -359,44 +364,39 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
             return copyFile(request);
         }
 
-        if (cruncher == null) {
+        if (cruncher == null || cruncherKey == null) {
             /*
              * Revert to old-style crunching.
              */
             return super.compile(request);
         }
-        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
-        Preconditions.checkArgument(request.getOutput().isDirectory(), "!output.isDirectory()");
+
+        // TODO (imorlowska): move verification to CompileResourceRequest.
+        Preconditions.checkArgument(
+                request.getInput().isFile(),
+                "Input file needs to be a normal file.\nInput file: %s",
+                request.getInput().getAbsolutePath());
+        Preconditions.checkArgument(
+                request.getOutput().isDirectory(),
+                "Output for resource compilation needs to be a directory.\nOutput: %s",
+                request.getOutput().getAbsolutePath());
 
         SettableFuture<File> actualResult = SettableFuture.create();
 
         if (!processMode.shouldProcess(request.getInput())) {
             return copyFile(request);
         }
-        File outputFile = compileOutputFor(request);
-
-        try {
-            Files.createParentDirs(outputFile);
-        } catch (IOException e) {
-            throw new AaptException(
-                    e,
-                    String.format(
-                            "Failed to create parent directories for file '%s'",
-                            request.getOutput().getAbsolutePath()));
-        }
 
         ListenableFuture<File> futureResult;
         try {
-            futureResult =
-                    cruncher.compile(
-                            cruncherKey, request.getInput(), outputFile, request.isPngCrunching());
-
+            futureResult = cruncher.compile(cruncherKey, request);
         } catch (ResourceCompilationException e) {
             throw new AaptException(
                     e,
                     String.format(
                             "Failed to crunch file '%s' into '%s'",
-                            request.getInput().getAbsolutePath(), outputFile.getAbsolutePath()));
+                            request.getInput().getAbsolutePath(),
+                            compileOutputFor(request).getAbsolutePath()));
         }
         futureResult.addListener(
                 () -> {

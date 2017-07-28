@@ -22,6 +22,7 @@ import com.android.builder.model.AndroidProject;
 public enum BooleanOption implements Option<Boolean> {
     ENABLE_AAPT2("android.enableAapt2", true),
     ENABLE_IN_PROCESS_AAPT2("android.enableAapt2jni", true),
+    ENABLE_DAEMON_MODE_AAPT2("android.enableAapt2DaemonMode", false),
     ENABLE_BUILD_CACHE("android.enableBuildCache", true),
     ENABLE_PROFILE_JSON("android.enableProfileJson", true),
     ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true),

@@ -18,12 +18,17 @@ package com.android.builder.png;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.internal.aapt.AaptException;
+import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.internal.aapt.v2.AaptV2CommandBuilder;
 import com.android.builder.tasks.BooleanLatch;
 import com.android.builder.tasks.Job;
 import com.android.ide.common.process.ProcessException;
+import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.utils.FileUtils;
 import com.android.utils.GrabProcessOutput;
 import com.android.utils.ILogger;
+import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
 import java.io.File;
@@ -43,6 +48,7 @@ public class AaptProcess {
             System.getenv("SLAVE_AAPT_TIMEOUT") == null
                     ? DEFAULT_SLAVE_AAPT_TIMEOUT_IN_SECONDS
                     : Integer.parseInt(System.getenv("SLAVE_AAPT_TIMEOUT"));
+    private static final Joiner joiner = Joiner.on(' ');
 
     private final String mAaptLocation;
     private final Process mProcess;
@@ -66,11 +72,9 @@ public class AaptProcess {
     }
 
     /**
-     * Notifies the slave process of a new crunching request, do not block on completion, the
-     * notification will be issued through the job parameter's
-     * {@link com.android.builder.tasks.Job#finished()} or
-     * {@link Job#error(Throwable)} ()}
-     * functions.
+     * Notifies the slave process of a new crunching request, does not block on completion, the
+     * notification will be issued through the job parameter's {@link
+     * com.android.builder.tasks.Job#finished()} or {@link Job#error(Throwable)} ()} functions.
      *
      * @param in the source file to crunch
      * @param out where to place the crunched file
@@ -80,7 +84,7 @@ public class AaptProcess {
             throws IOException {
         if (VERBOSE_LOGGING) {
             mLogger.verbose(
-                    "Process(%1$d) %2$s job:%3$s", +hashCode(), in.getName(), job.toString());
+                    "Process(%1$d) %2$s job:%3$s", hashCode(), in.getName(), job.toString());
         }
         if (!mReady.get()) {
             throw new RuntimeException("AAPT process not ready to receive commands");
@@ -104,6 +108,89 @@ public class AaptProcess {
         if (VERBOSE_LOGGING) {
             mLogger.verbose(
                     "Processed(%1$d) %2$s job:%3$s", hashCode(), in.getName(), job.toString());
+        }
+    }
+
+    /**
+     * Notifies the slave process of a new AAPT2 compile request, does not block on completion, the
+     * notification will be issued through the job parameter's {@link
+     * com.android.builder.tasks.Job#finished()} or {@link Job#error(Throwable)} ()} functions.
+     *
+     * @param request the compile request containing the the input, output and compilation flags
+     * @param job the job to notify when the compiling is finished successfully or not.
+     */
+    public void compile(@NonNull CompileResourceRequest request, @NonNull Job<AaptProcess> job)
+            throws IOException {
+
+        if (VERBOSE_LOGGING) {
+            mLogger.verbose(
+                    "Process(%1$d) %2$s job:%3$s",
+                    hashCode(), request.getInput().getName(), job.toString());
+        }
+        if (!mReady.get()) {
+            throw new RuntimeException("AAPT process not ready to receive commands");
+        }
+        NotifierProcessOutput notifier =
+                new NotifierProcessOutput(job, mProcessOutputFacade, mLogger);
+
+        if (VERBOSE_LOGGING) {
+            mLogger.verbose(
+                    "Process(%1$d) length = %2$d:%3$d",
+                    hashCode(),
+                    request.getInput().getAbsolutePath().length(),
+                    request.getOutput().getAbsolutePath().length());
+        }
+        mProcessOutputFacade.setNotifier(notifier);
+        mWriter.write("c ");
+        mWriter.write(joiner.join(AaptV2CommandBuilder.makeCompile(request)));
+        // Finish the request
+        mWriter.write('\n');
+        mWriter.flush();
+        processCount++;
+        if (VERBOSE_LOGGING) {
+            mLogger.verbose(
+                    "Processed(%1$d) %2$s job:%3$s",
+                    hashCode(), request.getInput().getName(), job.toString());
+        }
+    }
+
+    /**
+     * Notifies the slave process of a new AAPT2 link request, does not block on completion, the
+     * notification will be issued through the job parameter's {@link
+     * com.android.builder.tasks.Job#finished()} or {@link Job#error(Throwable)} ()} functions.
+     *
+     * @param config the configuration of the link request
+     * @param intermediateDir the directory for intermediate files
+     * @param job the job to notify when the linking is finished successfully or not.
+     */
+    public void link(
+            @NonNull AaptPackageConfig config,
+            @NonNull File intermediateDir,
+            @NonNull Job<AaptProcess> job)
+            throws IOException {
+
+        if (VERBOSE_LOGGING) {
+            mLogger.verbose("Process(%1$d) linking job:%2$s", hashCode(), job.toString());
+        }
+        if (!mReady.get()) {
+            throw new RuntimeException("AAPT process not ready to receive commands");
+        }
+        NotifierProcessOutput notifier =
+                new NotifierProcessOutput(job, mProcessOutputFacade, mLogger);
+
+        mProcessOutputFacade.setNotifier(notifier);
+        try {
+            mWriter.write("l ");
+            mWriter.write(joiner.join(AaptV2CommandBuilder.makeLink(config, intermediateDir)));
+            // Finish the request
+            mWriter.write('\n');
+            mWriter.flush();
+        } catch (AaptException e) {
+            throw new IOException(e);
+        }
+        processCount++;
+        if (VERBOSE_LOGGING) {
+            mLogger.verbose("Processed(%1$d) linking job:%2$s", hashCode(), job.toString());
         }
     }
 
@@ -160,6 +247,7 @@ public class AaptProcess {
             mLogger = iLogger;
         }
 
+        @NonNull
         public AaptProcess start() throws IOException, InterruptedException {
             String[] command = new String[] {
                     mAaptLocation,
@@ -213,6 +301,10 @@ public class AaptProcess {
             if (line.equals("Ready")) {
                 AaptProcess.this.mReady.set(true);
                 AaptProcess.this.mReadyLatch.signal();
+                return;
+            }
+            if (line.equals("Exiting daemon")) {
+                // shutdown() finished closing the daemon
                 return;
             }
             NotifierProcessOutput delegate = getNotifier();

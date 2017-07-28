@@ -81,7 +81,10 @@ public class NinePatchAaptProcessorTest {
     private static ResourceProcessor getCruncher() {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
         File aapt = NinePatchAaptProcessorTestUtils.getAapt();
-        return QueuedCruncher.Builder.INSTANCE.newCruncher(aapt.getAbsolutePath(), logger, 0);
+        return QueuedCruncher.builder()
+                .executablePath(aapt.getAbsolutePath())
+                .logger(logger)
+                .build();
     }
 
     @Parameterized.Parameters(name = "{1}")

@@ -19,30 +19,24 @@ package com.android.builder.tasks;
 import com.android.annotations.NonNull;
 import java.io.IOException;
 
-/**
- * Notification of queue events, creation, task running and destruction
- */
+/** Notification of queue events, creation, task running and destruction. */
 public interface QueueThreadContext<T> {
 
     /**
      * Notification of a new worker thread association with the queue
      * @param t the thread being associated.
-     * @throws IOException
      */
     void creation(@NonNull Thread t) throws IOException;
 
     /**
      * Notification of a scheduled task execution.
      * @param job the job that should be executed on the current thread.
-     * @throws Exception
      */
     void runTask(@NonNull Job<T> job) throws Exception;
 
     /**
      * Notification of the removal of the passed thread as a queue worker thread.
      * @param t the removed thread.
-     * @throws IOException
-     * @throws InterruptedException
      */
     void destruction(@NonNull Thread t) throws IOException, InterruptedException;
 

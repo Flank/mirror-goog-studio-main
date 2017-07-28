@@ -17,6 +17,7 @@
 package com.android.ide.common.internal;
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.res2.CompileResourceRequest;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
 
@@ -26,7 +27,7 @@ public interface ResourceProcessor {
     /**
      * Initiates a series of compile requests. The call to this method must be followed by a call to
      * {@link #end(int)} that will allow to wait for all requests made with the {@link #compile(int,
-     * File, File, boolean)} method.
+     * CompileResourceRequest)} method.
      *
      * @return the key for this set of requests.
      */
@@ -40,13 +41,10 @@ public interface ResourceProcessor {
      * returned, all output files will be present.
      *
      * @param key obtained from the {@link #start()}
-     * @param from the file to compile
-     * @param to the output file
-     * @param crunchPngs whether PNG files should be crunched
+     * @param request the compilation request containing the input, output and compilation flags
      * @return a {@link ListenableFuture} instance calling code can listen to for completion.
      */
-    ListenableFuture<File> compile(
-            int key, @NonNull File from, @NonNull File to, boolean crunchPngs)
+    ListenableFuture<File> compile(int key, @NonNull CompileResourceRequest request)
             throws ResourceCompilationException;
 
     /**

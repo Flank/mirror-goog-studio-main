@@ -53,7 +53,8 @@ public class AaptV2Test {
 
     private enum AaptGeneration {
         AAPT_V2,
-        AAPT_V2_JNI
+        AAPT_V2_JNI,
+        AAPT_V2_DAEMON
     }
 
     @Parameterized.Parameters(name = "{0}")
@@ -79,6 +80,10 @@ public class AaptV2Test {
     @NonNull
     private Aapt makeAapt() throws Exception {
         ILogger logger = new StdLogger(StdLogger.Level.VERBOSE);
+        if (generation == AaptGeneration.AAPT_V2_DAEMON) {
+            throw new AssumptionViolatedException("Deamon mode not in SDK version of AAPT2 yet");
+        }
+
         switch (generation) {
             case AAPT_V2:
                 Revision revision = Revision.parseRevision("24.0.0 rc2");
@@ -93,6 +98,7 @@ public class AaptV2Test {
                                     + revision.toShortString());
                 }
 
+                //noinspection deprecation
                 return new OutOfProcessAaptV2(
                         new DefaultProcessExecutor(logger),
                         new LoggedProcessOutputHandler(logger),
@@ -106,6 +112,26 @@ public class AaptV2Test {
                         new LoggedProcessOutputHandler(logger),
                         FileCache.getInstanceWithSingleProcessLocking(
                                 mTemporaryFolder.newFolder()));
+            case AAPT_V2_DAEMON:
+                Revision daemonRevision = BuildToolInfo.PathId.DAEMON_AAPT2.getMinRevision();
+
+                FakeProgressIndicator daemonProgress = new FakeProgressIndicator();
+                BuildToolInfo daemonBuildToolInfo =
+                        AndroidSdkHandler.getInstance(TestUtils.getSdk())
+                                .getLatestBuildTool(daemonProgress, true);
+                if (daemonBuildToolInfo == null
+                        || daemonBuildToolInfo.getRevision().compareTo(daemonRevision) < 0) {
+                    throw new RuntimeException(
+                            "Test requires at least build-tools revision "
+                                    + daemonRevision.toShortString());
+                }
+                return new QueueableAapt2(
+                        new DefaultProcessExecutor(logger),
+                        new LoggedProcessOutputHandler(logger),
+                        daemonBuildToolInfo,
+                        mTemporaryFolder.newFolder(),
+                        logger,
+                        5);
             default:
                 throw new IllegalArgumentException();
         }

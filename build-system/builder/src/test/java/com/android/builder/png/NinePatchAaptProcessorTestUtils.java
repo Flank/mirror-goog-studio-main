@@ -23,6 +23,7 @@ import com.android.annotations.NonNull;
 import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.ide.common.internal.ResourceCompilationException;
 import com.android.ide.common.internal.ResourceProcessor;
+import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.repository.Revision;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.sdklib.BuildToolInfo;
@@ -137,7 +138,9 @@ public class NinePatchAaptProcessorTestUtils {
         File outFile = File.createTempFile("pngWriterTest", ".png");
         outFile.deleteOnExit();
         try {
-            aaptCruncher.compile(crunchKey, file, outFile, true);
+            CompileResourceRequest request =
+                    new CompileResourceRequest(file, outFile, "test", false, true);
+            aaptCruncher.compile(crunchKey, request);
         } catch (ResourceCompilationException e) {
             e.printStackTrace();
             throw e;
