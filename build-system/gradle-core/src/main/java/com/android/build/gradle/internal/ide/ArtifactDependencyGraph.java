@@ -676,15 +676,9 @@ public class ArtifactDependencyGraph {
 
         String[] jarFiles = localJarRoot.list((dir, name) -> name.endsWith(DOT_JAR));
         if (jarFiles != null && jarFiles.length > 0) {
-            String prefix = FD_JARS + File.separatorChar + FD_AAR_LIBS + File.separatorChar;
-            StringBuilder sb = new StringBuilder(prefix);
-            int reset = prefix.length();
-
             List<String> list = Lists.newArrayListWithCapacity(jarFiles.length);
             for (String jarFile : jarFiles) {
-                sb.setLength(reset);
-                sb.append(jarFile);
-                list.add(sb.toString());
+                list.add(FD_JARS + File.separatorChar + FD_AAR_LIBS + File.separatorChar + jarFile);
             }
 
             return list;
