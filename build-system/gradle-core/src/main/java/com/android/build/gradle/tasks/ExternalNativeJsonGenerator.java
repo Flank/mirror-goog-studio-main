@@ -649,38 +649,42 @@ public abstract class ExternalNativeJsonGenerator {
                         options.getCppFlags(),
                         expectedJsons);
             }
-            case CMAKE: {
-                CoreExternalNativeCmakeOptions options =
-                        variantConfig.getExternalNativeBuildOptions()
-                                .getExternalNativeCmakeOptions();
-                checkNotNull(options, "CMake options not found");
-                // Install Cmake if it's not there.
-                ProgressIndicator progress = new ConsoleProgressIndicator();
-                AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkHandler.getSdkFolder());
-                LocalPackage cmakePackage =
-                        sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, true, progress);
-                if (cmakePackage == null) {
-                    sdkHandler.installCMake();
+            case CMAKE:
+                {
+                    CoreExternalNativeCmakeOptions options =
+                            variantConfig
+                                    .getExternalNativeBuildOptions()
+                                    .getExternalNativeCmakeOptions();
+                    checkNotNull(options, "CMake options not found");
+                    // Install Cmake if it's not there.
+                    ProgressIndicator progress = new ConsoleProgressIndicator();
+                    AndroidSdkHandler sdk =
+                            AndroidSdkHandler.getInstance(sdkHandler.getSdkFolder());
+                    LocalPackage cmakePackage =
+                            sdk.getLatestLocalPackageForPrefix(
+                                    SdkConstants.FD_CMAKE, null, true, progress);
+                    if (cmakePackage == null) {
+                        sdkHandler.installCMake();
+                    }
+                    return new CmakeExternalNativeJsonGenerator(
+                            sdkHandler.getSdkFolder(),
+                            ndkHandler,
+                            minSdkVersionApiLevel,
+                            variantData.getName(),
+                            validAbis,
+                            androidBuilder,
+                            sdkHandler.getSdkFolder(),
+                            sdkHandler.getNdkFolder(),
+                            soFolder,
+                            objFolder,
+                            externalNativeBuildFolder,
+                            makefile,
+                            variantConfig.getBuildType().isDebuggable(),
+                            options.getArguments(),
+                            options.getcFlags(),
+                            options.getCppFlags(),
+                            expectedJsons);
                 }
-                return new CmakeExternalNativeJsonGenerator(
-                        sdkHandler.getSdkFolder(),
-                        ndkHandler,
-                        minSdkVersionApiLevel,
-                        variantData.getName(),
-                        validAbis,
-                        androidBuilder,
-                        sdkHandler.getSdkFolder(),
-                        sdkHandler.getNdkFolder(),
-                        soFolder,
-                        objFolder,
-                        externalNativeBuildFolder,
-                        makefile,
-                        variantConfig.getBuildType().isDebuggable(),
-                        options.getArguments(),
-                        options.getcFlags(),
-                        options.getCppFlags(),
-                        expectedJsons);
-            }
             default:
                 throw new IllegalArgumentException("Unknown ExternalNativeJsonGenerator type");
         }

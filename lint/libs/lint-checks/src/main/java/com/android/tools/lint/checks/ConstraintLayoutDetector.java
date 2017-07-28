@@ -211,7 +211,7 @@ public class ConstraintLayoutDetector extends LayoutDetector {
         if (sdkHandler != null) {
             ProgressIndicator progress = context.getClient().getRepositoryLogger();
             RepoPackage latestPackage = SdkMavenRepository
-                    .findLatestVersion(LATEST_KNOWN_VERSION, sdkHandler, progress);
+                    .findLatestVersion(LATEST_KNOWN_VERSION, sdkHandler, null, progress);
             if (latestPackage != null) {
                 GradleCoordinate fromPackage = SdkMavenRepository
                         .getCoordinateFromSdkPath(latestPackage.getPath());

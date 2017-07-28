@@ -249,8 +249,8 @@ class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
     private File getCmakeFolder() {
         ProgressIndicator progress = new ConsoleProgressIndicator();
         AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(getSdkFolder());
-        LocalPackage cmakePackage = sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, true,
-                progress);
+        LocalPackage cmakePackage =
+                sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, null, true, progress);
         if (cmakePackage != null) {
             return cmakePackage.getLocation();
         }

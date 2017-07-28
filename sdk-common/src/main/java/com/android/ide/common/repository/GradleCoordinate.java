@@ -18,13 +18,13 @@ package com.android.ide.common.repository;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.google.common.base.Joiner;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -607,7 +607,7 @@ public class GradleCoordinate {
     }
 
     @Override
-    public boolean equals(@NonNull Object o) {
+    public boolean equals(@Nullable Object o) {
         if (this == o) {
             return true;
         }
@@ -626,14 +626,7 @@ public class GradleCoordinate {
         if (!mGroupId.equals(that.mGroupId)) {
             return false;
         }
-        if ((mArtifactType == null) != (that.mArtifactType == null)) {
-            return false;
-        }
-        if (mArtifactType != null && !mArtifactType.equals(that.mArtifactType)) {
-            return false;
-        }
-
-        return true;
+        return Objects.equals(mArtifactType, that.mArtifactType);
     }
 
     @Override

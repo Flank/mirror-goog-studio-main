@@ -59,7 +59,7 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
     @Test
     fun testBuiltinFiltered() {
         val repo = TestGoogleMavenRepository() // no cache dir set: will only read built-in index
-        val version = repo.findVersion("com.android.support", "appcompat-v7", filter = "12.")
+        val version = repo.findVersion("com.android.support", "appcompat-v7", filter = { it.major == 12 })
         assertNull(version)
     }
 
@@ -89,6 +89,6 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
         val gc2 = GradleCoordinate.parseCoordinateString("foo.bar:another-artifact:2.6.0-alpha1")
         assertEquals("2.6.0-rc1", repo.findVersion(gc2!!).toString())
         val gc3 = GradleCoordinate.parseCoordinateString("foo.bar:another-artifact:2.6.+")
-        assertEquals("2.6.0-rc1", repo.findVersion(gc3!!, allowPreview = true).toString())
+        assertEquals("2.6.0-rc1", repo.findVersion(gc3!!, null, allowPreview = true).toString())
     }
 }

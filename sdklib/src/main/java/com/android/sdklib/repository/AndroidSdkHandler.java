@@ -66,7 +66,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-
+import java.util.function.Predicate;
 
 /**
  * Android SDK interface to {@link RepoManager}. Ensures that the proper android sdk-specific
@@ -359,6 +359,7 @@ public final class AndroidSdkHandler {
      * @param packages a {@link Collection} of packages which share a common {@code prefix}, from
      *     which we wish to extract the "Latest" package, as sorted with {@code mapper} and {@code
      *     comparator} on the suffixes.
+     * @param filter the revision predicate that has to be satisfied by the returned package
      * @param allowPreview whether we allow returning a preview package.
      * @param mapper maps from path suffix to a {@link Comparable}, so that we can sort the packages
      *     by suffix.
@@ -371,13 +372,15 @@ public final class AndroidSdkHandler {
     @Nullable
     public static <P extends RepoPackage, T> P getLatestPackageFromPrefixCollection(
             @NonNull Collection<P> packages,
+            @Nullable Predicate<Revision> filter,
             boolean allowPreview,
             @NonNull Function<String, T> mapper,
             @NonNull Comparator<T> comparator) {
         Function<P, T> keyGen = p -> mapper.apply(p.getPath().substring(
                 p.getPath().lastIndexOf(RepoPackage.PATH_SEPARATOR) + 1));
         return packages.stream()
-                .filter(p -> allowPreview || !p.getVersion().isPreview())
+                .filter(p -> (filter == null || filter.test(p.getVersion()))
+                              && (allowPreview || !p.getVersion().isPreview()))
                 .max((p1, p2) -> comparator.compare(keyGen.apply(p1), keyGen.apply(p2)))
                 .orElse(null);
     }
@@ -389,47 +392,46 @@ public final class AndroidSdkHandler {
      * in the path. We also have no guarantee that the format of the path even matches, so we ignore
      * the packages that don't fit the format.
      *
-     * @see #getLatestLocalPackageForPrefix(String, boolean, Function, ProgressIndicator) , where
-     *     {@link Function} is just converting path suffix to {@link Revision}. Suffixes that are
-     *     not valid {@link Revision}s are assumed to be {@link Revision#NOT_SPECIFIED}, and would
-     *     be the lowest.
+     * @see #getLatestLocalPackageForPrefix(String, Predicate, boolean, Function, ProgressIndicator)
+     *     where {@link Function} is just converting path suffix to {@link Revision}. Suffixes that
+     *     are not valid {@link Revision}s are assumed to be {@link Revision#NOT_SPECIFIED}, and
+     *     would be the lowest.
      * @see Revision#safeParseRevision(String) for how the conversion is done.
      */
     @Nullable
     public LocalPackage getLatestLocalPackageForPrefix(
-            @NonNull String prefix, boolean allowPreview, @NonNull ProgressIndicator progress) {
-        return getLatestLocalPackageForPrefix(prefix, allowPreview, Revision::safeParseRevision,
-                progress);
+            @NonNull String prefix, @Nullable Predicate<Revision> filter, boolean allowPreview,
+            @NonNull ProgressIndicator progress) {
+        return getLatestLocalPackageForPrefix(prefix, filter, allowPreview,
+                Revision::safeParseRevision, progress);
     }
 
     /**
-     * @see #getLatestLocalPackageForPrefix(String, boolean, Function, Comparator,
+     * @see #getLatestLocalPackageForPrefix(String, Predicate, boolean, Function, Comparator,
      * ProgressIndicator) , where {@link Comparator} is just the default order. Highest is latest.
      */
     @Nullable
     public LocalPackage getLatestLocalPackageForPrefix(
-            @NonNull String prefix, boolean allowPreview,
+            @NonNull String prefix, @Nullable Predicate<Revision> filter, boolean allowPreview,
             @NonNull Function<String, ? extends Comparable> mapper,
             @NonNull ProgressIndicator progress) {
-        return getLatestLocalPackageForPrefix(prefix, allowPreview, mapper,
+        return getLatestLocalPackageForPrefix(prefix, filter, allowPreview, mapper,
                 Comparator.naturalOrder(), progress);
     }
 
     /**
      * This grabs the {@link Collection} of {@link LocalPackage}s from {@link RepoManager} with the
-     * same prefix using
-     * {@link RepositoryPackages#getLocalPackagesForPrefix(String)}
-     * and forwards it to
-     * {@link #getLatestPackageFromPrefixCollection(Collection, boolean, Function, Comparator)}
+     * same prefix using {@link RepositoryPackages#getLocalPackagesForPrefix(String)}
+     * and forwards it to {@link #getLatestPackageFromPrefixCollection}
      */
     @Nullable
     public <T> LocalPackage getLatestLocalPackageForPrefix(@NonNull String prefix,
-            boolean allowPreview,
+            @Nullable Predicate<Revision> filter, boolean allowPreview,
             @NonNull Function<String, T> mapper, @NonNull Comparator<T> comparator,
             @NonNull ProgressIndicator progress) {
         return getLatestPackageFromPrefixCollection(
                 getSdkManager(progress).getPackages().getLocalPackagesForPrefix(prefix),
-                allowPreview, mapper, comparator);
+                filter, allowPreview, mapper, comparator);
     }
 
     /**
@@ -467,7 +469,7 @@ public final class AndroidSdkHandler {
             @NonNull Comparator<T> comparator, @NonNull ProgressIndicator progress) {
         return getLatestPackageFromPrefixCollection(
                 getSdkManager(progress).getPackages().getRemotePackagesForPrefix(prefix),
-                allowPreview, mapper, comparator);
+                null, allowPreview, mapper, comparator);
     }
 
     /**
@@ -753,7 +755,7 @@ public final class AndroidSdkHandler {
     }
 
     /**
-     * Gets a {@link BuildToolInfo} corresponding to the newest installed build tool {@link
+     * Returns a {@link BuildToolInfo} corresponding to the newest installed build tool {@link
      * RepoPackage}, or {@code null} if none are installed (or if the {@code allowPreview} parameter
      * is false and there was non-preview version available)
      *
@@ -761,14 +763,31 @@ public final class AndroidSdkHandler {
      * @param allowPreview ignore preview build tools version unless this parameter is true
      */
     @Nullable
+    public BuildToolInfo getLatestBuildTool(@NonNull ProgressIndicator progress,
+            boolean allowPreview) {
+        return getLatestBuildTool(progress, null, allowPreview);
+    }
+
+    /**
+     * Returns a {@link BuildToolInfo} corresponding to the newest installed build tool {@link
+     * RepoPackage}, or {@code null} if none are installed (or if the {@code allowPreview} parameter
+     * is false and there was non-preview version available)
+     *
+     * @param progress a progress indicator
+     * @param filter the revision predicate to satisfy
+     * @param allowPreview ignore preview build tools version unless this parameter is true
+     */
+    @Nullable
     public BuildToolInfo getLatestBuildTool(
-            @NonNull ProgressIndicator progress, boolean allowPreview) {
+            @NonNull ProgressIndicator progress,
+            @Nullable Predicate<Revision> filter,
+            boolean allowPreview) {
         if (!allowPreview && mLatestBuildTool != null) {
             return mLatestBuildTool;
         }
 
         LocalPackage latestBuildToolPackage = getLatestLocalPackageForPrefix(
-                SdkConstants.FD_BUILD_TOOLS, allowPreview, progress);
+                SdkConstants.FD_BUILD_TOOLS, filter, allowPreview, progress);
 
         if (latestBuildToolPackage == null) {
             return null;

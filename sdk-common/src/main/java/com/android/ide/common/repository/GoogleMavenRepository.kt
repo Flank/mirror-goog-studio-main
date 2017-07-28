@@ -29,6 +29,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.HashMap
 import java.util.concurrent.TimeUnit
+import java.util.function.Predicate
 
 /**
  * Provides information about the artifacts and versions available on maven.google.com
@@ -59,21 +60,44 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
 
     private var packageMap: MutableMap<String, PackageInfo>? = null
 
-    fun findVersion(dependency: GradleCoordinate): GradleVersion? {
-        return findVersion(dependency, dependency.isPreview)
+    fun findVersion(dependency: GradleCoordinate, filter: Predicate<GradleVersion>? = null):
+            GradleVersion? {
+        return findVersion(dependency, filter, dependency.isPreview)
     }
 
-    fun findVersion(dependency: GradleCoordinate, allowPreview: Boolean = false): GradleVersion? {
+    fun findVersion(dependency: GradleCoordinate, predicate: Predicate<GradleVersion>?,
+                    allowPreview: Boolean = false): GradleVersion? {
         val groupId = dependency.groupId ?: return null
         val artifactId = dependency.artifactId ?: return null
-        val filter = if (dependency.acceptsGreaterRevisions())
-            dependency.revision.trimEnd('+') else null
+        val filter = when {
+            dependency.acceptsGreaterRevisions() -> {
+                val prefix = dependency.revision.trimEnd('+')
+                if (predicate != null) {
+                    { v: GradleVersion -> predicate.test(v) && v.toString().startsWith(prefix) }
+                } else {
+                    { v: GradleVersion -> v.toString().startsWith(prefix) }
+                }
+            }
+            predicate != null -> {
+                { v: GradleVersion -> predicate.test(v) }
+            }
+            else -> {
+                null
+            }
+        }
         return findVersion(groupId, artifactId, filter, allowPreview)
     }
 
     fun findVersion(groupId: String,
                     artifactId: String,
-                    filter: String? = null,
+                    filter: Predicate<GradleVersion>?,
+                    allowPreview: Boolean = false): GradleVersion? {
+        return findVersion(groupId, artifactId, { filter?.test(it) ?: true }, allowPreview)
+    }
+
+    fun findVersion(groupId: String,
+                    artifactId: String,
+                    filter: ((GradleVersion) -> Boolean)? = null,
                     allowPreview: Boolean = false): GradleVersion? {
         val artifactInfo = findArtifact(groupId, artifactId) ?: return null
         return artifactInfo.findVersion(filter, allowPreview)
@@ -97,11 +121,12 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
     }
 
     private data class ArtifactInfo(val id: String, val versions: String) {
-        fun findVersion(filter: String? = null, allowPreview: Boolean = false): GradleVersion? {
+        fun findVersion(filter: ((GradleVersion) -> Boolean)?, allowPreview: Boolean = false):
+                GradleVersion? {
             return versions.splitToSequence(",")
-                    .filter { filter == null || it.startsWith(filter) }
                     .map { GradleVersion.tryParse(it) }
                     .filterNotNull()
+                    .filter { filter == null || filter(it) }
                     .filter { allowPreview || !it.isPreview }
                     .max()
         }
