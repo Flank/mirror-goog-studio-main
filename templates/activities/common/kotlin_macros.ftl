@@ -18,12 +18,13 @@ apply plugin: 'kotlin-android-extensions'
 // TODO: The two macros above, addKotlinPlugins and addKotlinDependencies, are duplicating the work of addAllKotlinDependencies, when
 //       creating a new project (isNewProject == true). The only reason is the above bug on <apply plugin />
 <#macro addAllKotlinDependencies>
-  <#if !isNewProject && (language!'Java')?string == 'Kotlin' && !hasDependency('org.jetbrains.kotlin:kotlin-stdlib')>
+  <#if !isNewProject && (language!'Java')?string == 'Kotlin'>
     <apply plugin="kotlin-android" />
     <apply plugin="kotlin-android-extensions" />
-    <dependency mavenUrl="org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"/>
-
-    <merge from="root://activities/common/kotlin.gradle.ftl"
-             to="${escapeXmlAttribute(projectLocation)}/build.gradle" />
+    <#if !hasDependency('org.jetbrains.kotlin:kotlin-stdlib')>
+        <dependency mavenUrl="org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"/>
+        <merge from="root://activities/common/kotlin.gradle.ftl"
+                 to="${escapeXmlAttribute(projectLocation)}/build.gradle" />
+    </#if>
   </#if>
 </#macro>
