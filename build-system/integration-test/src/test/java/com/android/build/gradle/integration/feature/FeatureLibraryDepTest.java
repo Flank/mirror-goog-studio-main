@@ -30,7 +30,6 @@ import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore("This is broken pending b/36798998 resolution")
 public class FeatureLibraryDepTest {
     @ClassRule
     public static GradleTestProject sProject =

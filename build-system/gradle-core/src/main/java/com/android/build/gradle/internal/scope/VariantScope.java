@@ -176,12 +176,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
             @NonNull ArtifactType artifactType);
 
     @NonNull
-    ArtifactView getArtifactView(
-            @NonNull AndroidArtifacts.ConsumedConfigType configType,
-            @NonNull AndroidArtifacts.ArtifactScope scope,
-            @NonNull ArtifactType artifactType);
-
-    @NonNull
     Supplier<Collection<File>> getLocalPackagedJars();
 
     @NonNull

@@ -63,6 +63,7 @@ public class AndroidArtifacts {
     private static final String TYPE_FEATURE_IDS_DECLARATION = "android-feature-split-ids";
     private static final String TYPE_FEATURE_APPLICATION_ID = "android-feature-application-id";
     private static final String TYPE_FEATURE_RESOURCE_PKG = "android-feature-res-ap_";
+    private static final String TYPE_FEATURE_TRANSITIVE_DEPS = "android-feature-transitive-deps";
 
     // types for metadata content.
     private static final String TYPE_METADATA_FEATURE_DECLARATION = "android-metadata-feature-decl";
@@ -155,6 +156,7 @@ public class AndroidArtifacts {
         FEATURE_IDS_DECLARATION(TYPE_FEATURE_IDS_DECLARATION),
         FEATURE_APPLICATION_ID_DECLARATION(TYPE_FEATURE_APPLICATION_ID),
         FEATURE_RESOURCE_PKG(TYPE_FEATURE_RESOURCE_PKG),
+        FEATURE_TRANSITIVE_DEPS(TYPE_FEATURE_TRANSITIVE_DEPS),
 
         // Metadata artifacts
         METADATA_FEATURE_DECLARATION(TYPE_METADATA_FEATURE_DECLARATION),

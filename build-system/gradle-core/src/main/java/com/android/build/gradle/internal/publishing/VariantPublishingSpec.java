@@ -29,6 +29,7 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_CLASSES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_IDS_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_RESOURCE_PKG;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_TRANSITIVE_DEPS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FULL_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVA_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_CLASSES;
@@ -197,6 +198,10 @@ public class VariantPublishingSpec {
                         API_ELEMENTS_ONLY),
                 outputSpec(
                         FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG, API_ELEMENTS_ONLY),
+                outputSpec(
+                        FEATURE_TRANSITIVE_DEPS,
+                        ArtifactType.FEATURE_TRANSITIVE_DEPS,
+                        RUNTIME_ELEMENTS_ONLY),
                 outputSpec(FEATURE_CLASSES, ArtifactType.CLASSES, API_ELEMENTS_ONLY),
                 outputSpec(APK, ArtifactType.APK, RUNTIME_ELEMENTS_ONLY));
 

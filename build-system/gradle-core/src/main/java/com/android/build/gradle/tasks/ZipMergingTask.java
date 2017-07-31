@@ -21,12 +21,14 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.google.common.collect.Sets;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -37,9 +39,9 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
-/** Task to merge multiple zip file into one. */
+/** Task to merge the res/classes intermediate jars from a library into a single one */
 @CacheableTask
-public class ZipMergingTask extends BaseTask {
+public class ZipMergingTask extends DefaultAndroidTask {
 
     private final byte[] buffer = new byte[8192];
 
@@ -65,6 +67,8 @@ public class ZipMergingTask extends BaseTask {
                 BufferedOutputStream bos = new BufferedOutputStream(fos);
                 ZipOutputStream zos = new ZipOutputStream(bos)) {
 
+            Set<String> entries = Sets.newHashSet();
+
             for (File inputFile : inputFiles) {
                 try (FileInputStream fis = new FileInputStream(inputFile);
                         ZipInputStream zis = new ZipInputStream(fis)) {
@@ -73,6 +77,16 @@ public class ZipMergingTask extends BaseTask {
                     while ((entry = zis.getNextEntry()) != null) {
                         if (entry.isDirectory()) {
                             continue;
+                        }
+
+                        String entryName = entry.getName();
+                        if (entries.contains(entryName)) {
+                            // non class files can be duplicated between res and classes jar
+                            // due to annotation processor or other compiler (kotlin) generating
+                            // resources
+                            continue;
+                        } else {
+                            entries.add(entryName);
                         }
 
                         zos.putNextEntry(entry);

@@ -48,7 +48,8 @@ public class AnalyticsUtilTest {
                 AnalyticsUtil::getTaskExecutionType,
                 AnalyticsUtil::getPotentialTaskExecutionTypeName,
                 "com.android.build.gradle.tasks.ZipMergingTask",
-                "com.android.build.gradle.tasks.AndroidZip");
+                "com.android.build.gradle.tasks.AndroidZip",
+                "com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask");
     }
 
     @Test

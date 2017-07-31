@@ -49,6 +49,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
+import com.android.build.gradle.internal.dependency.FilteredArtifactCollection;
 import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.BuildType;
@@ -129,7 +130,6 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.ArtifactView;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationVariant;
 import org.gradle.api.artifacts.Dependency;
@@ -211,7 +211,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
     private AndroidTask<DataBindingExportBuildInfoTask> dataBindingExportBuildInfoTask;
-
 
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
@@ -912,20 +911,40 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
-        ArtifactView artifactView = getArtifactView(configType, scope, artifactType);
+        ArtifactCollection artifacts = computeArtifactCollection(configType, scope, artifactType);
+
+        FileCollection fileCollection;
+
+        if (configType == RUNTIME_CLASSPATH
+                && getVariantConfiguration().getType() == VariantType.FEATURE
+                && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
+            fileCollection =
+                    new FilteredArtifactCollection(
+                                    globalScope.getProject(),
+                                    artifacts,
+                                    computeArtifactCollection(
+                                                    RUNTIME_CLASSPATH,
+                                                    scope,
+                                                    ArtifactType.FEATURE_TRANSITIVE_DEPS)
+                                            .getArtifactFiles())
+                            .getArtifactFiles();
+        } else {
+            fileCollection = artifacts.getArtifactFiles();
+        }
 
         if (configType.needsTestedComponents()) {
             return handleTestedComponent(
-                    artifactView.getFiles(),
+                    fileCollection,
                     configType,
                     scope,
                     artifactType,
                     (mainCollection, testedCollection, unused) ->
                             mainCollection.plus(testedCollection),
-                    (collection, artifactView1) -> collection.minus(artifactView1.getFiles()));
+                    (collection, artifactCollection) ->
+                            collection.minus(artifactCollection.getArtifactFiles()));
         }
 
-        return artifactView.getFiles();
+        return fileCollection;
     }
 
     @Override
@@ -934,11 +953,25 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
-        ArtifactView artifactView = getArtifactView(configType, scope, artifactType);
+        ArtifactCollection artifacts = computeArtifactCollection(configType, scope, artifactType);
+
+        if (configType == RUNTIME_CLASSPATH
+                && getVariantConfiguration().getType() == VariantType.FEATURE
+                && artifactType != ArtifactType.FEATURE_TRANSITIVE_DEPS) {
+            artifacts =
+                    new FilteredArtifactCollection(
+                            globalScope.getProject(),
+                            artifacts,
+                            computeArtifactCollection(
+                                            RUNTIME_CLASSPATH,
+                                            scope,
+                                            ArtifactType.FEATURE_TRANSITIVE_DEPS)
+                                    .getArtifactFiles());
+        }
 
         if (configType.needsTestedComponents()) {
             return handleTestedComponent(
-                    artifactView.getArtifacts(),
+                    artifacts,
                     configType,
                     scope,
                     artifactType,
@@ -948,17 +981,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                     collection,
                                     getProject().getPath(),
                                     variantName),
-                    (artifactResults, artifactView1) ->
-                            new SubtractingArtifactCollection(
-                                    artifactResults, artifactView1.getArtifacts()));
+                    SubtractingArtifactCollection::new);
         }
 
-        return artifactView.getArtifacts();
+        return artifacts;
     }
 
-    @Override
     @NonNull
-    public ArtifactView getArtifactView(
+    private ArtifactCollection computeArtifactCollection(
             @NonNull ConsumedConfigType configType,
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
@@ -1003,7 +1033,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                             }
                             // TODO somehow read the unresolved dependencies?
                             config.lenient(lenientMode);
-                        });
+                        })
+                .getArtifacts();
     }
 
     @Nullable
@@ -1901,7 +1932,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull final ArtifactScope artifactScope,
             @NonNull final ArtifactType artifactType,
             @NonNull final TriFunction<T, FileCollection, String, T> plusFunction,
-            @NonNull final BiFunction<T, ArtifactView, T> minusFunction) {
+            @NonNull final BiFunction<T, ArtifactCollection, T> minusFunction) {
         // this only handles Android Test, not unit tests.
         VariantType variantType = getVariantConfiguration().getType();
         if (!variantType.isForTesting()) {
@@ -1954,7 +1985,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 result =
                         minusFunction.apply(
                                 result,
-                                testedScope.getArtifactView(
+                                testedScope.getArtifactCollection(
                                         configType, artifactScope, artifactType));
             }
         }

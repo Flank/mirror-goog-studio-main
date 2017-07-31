@@ -139,6 +139,7 @@ public interface TaskOutputHolder {
         FEATURE_IDS_DECLARATION,
         FEATURE_APPLICATION_ID_DECLARATION,
         FEATURE_RESOURCE_PKG,
+        FEATURE_TRANSITIVE_DEPS,
 
         // Project metadata
         METADATA_FEATURE_DECLARATION,
