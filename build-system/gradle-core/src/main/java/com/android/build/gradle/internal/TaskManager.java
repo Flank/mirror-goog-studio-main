@@ -2278,8 +2278,7 @@ public abstract class TaskManager {
         }
 
         // In release builds only D8 can be used. See b/37140568 for details.
-        return projectOptions.get(BooleanOption.ENABLE_D8_DEXER)
-                && projectOptions.get(BooleanOption.ENABLE_D8_MERGER);
+        return projectOptions.get(BooleanOption.ENABLE_D8);
     }
 
     @Nullable

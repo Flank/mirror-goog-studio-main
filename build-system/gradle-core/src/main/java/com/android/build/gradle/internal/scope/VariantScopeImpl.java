@@ -2077,7 +2077,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public DexerTool getDexer() {
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8_DEXER)) {
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8)) {
             return DexerTool.D8;
         } else {
             return DexerTool.DX;
@@ -2087,7 +2087,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public DexMergerTool getDexMerger() {
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8_MERGER)) {
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8)) {
             return DexMergerTool.D8;
         } else {
             return DexMergerTool.DX;

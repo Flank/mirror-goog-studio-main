@@ -209,10 +209,7 @@ public class MultiDexTest {
                 "\nandroid.dexOptions.additionalParameters = ['--minimal-main-dex']\n");
 
         // D8 does not support minimal main dex
-        RunGradleTasks executor =
-                project.executor()
-                        .with(BooleanOption.ENABLE_D8_DEXER, false)
-                        .with(BooleanOption.ENABLE_D8_MERGER, false);
+        RunGradleTasks executor = project.executor().with(BooleanOption.ENABLE_D8, false);
 
         executor.run("assembleIcsDebug", "assembleIcsDebugAndroidTest");
 
