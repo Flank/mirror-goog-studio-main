@@ -17,20 +17,39 @@
 package com.android.tools.bazel.parser.ast;
 
 import java.io.PrintWriter;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A dictionary of key:value pairs.
  */
 public class DictExpression extends Expression {
-    final List<Expression> keys;
-    final List<Expression> expressions;
+    private final List<Expression> keys;
+    private final List<Expression> expressions;
     private boolean singleLine;
 
     public DictExpression(Token start, Token end, List<Expression> keys, List<Expression> expressions) {
         super(start, end);
         this.keys = keys;
         this.expressions = expressions;
+    }
+
+    private DictExpression() {
+        this(Token.NONE, Token.NONE, new LinkedList<>(), new LinkedList<>());
+    }
+
+    public static DictExpression build(Map<String, String> values) {
+        DictExpression dict = new DictExpression();
+        for (Map.Entry<String, String> e : values.entrySet()) {
+            dict.add(LiteralExpression.string(e.getKey()), LiteralExpression.string(e.getValue()));
+        }
+        return dict;
+    }
+
+    private void add(Expression key, Expression value) {
+        keys.add(key);
+        expressions.add(value);
     }
 
     @Override

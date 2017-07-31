@@ -6,7 +6,11 @@ iml_module(
     name = "studio.builder-model",
     srcs = ["src/main/java"],
     visibility = ["//visibility:public"],
-    deps = ["//tools/base/annotations:studio.android-annotations[module]"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/idea/.idea/libraries:JUnit4[test]",
+    ],
 )
 
 fileset(

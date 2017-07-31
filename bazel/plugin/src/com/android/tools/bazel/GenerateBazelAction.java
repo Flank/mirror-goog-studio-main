@@ -138,6 +138,9 @@ public class GenerateBazelAction extends AnAction {
                             } else {
                                 iml.addSource(relativePath);
                             }
+                            if (!folder.getPackagePrefix().isEmpty()) {
+                                iml.addPackagePrefix(relativePath, folder.getPackagePrefix());
+                            }
                         } else {
                             if (folder.isTestSource()) {
                                 iml.addTestResource(relativePath);
