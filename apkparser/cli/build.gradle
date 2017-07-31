@@ -5,6 +5,10 @@ apply plugin: 'sdk-java-lib'
 dependencies {
     compile(libs.jopt)
     compile project(':base:apkparser:apkanalyzer')
+
+    testCompile(libs.junit)
+    testCompile(libs.mockito_core)
+    testCompile project(":base:testutils")
 }
 
 sourceSets {

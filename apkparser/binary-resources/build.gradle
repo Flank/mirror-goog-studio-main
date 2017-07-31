@@ -5,6 +5,10 @@ dependencies {
     compile(libs.guava)
     compile(libs.findbugs_jsr)
     compile project(':base:annotations')
+
+    testCompile(libs.junit)
+    testCompile(libs.truth)
+    testCompile project(":base:testutils")
 }
 
 sourceSets {

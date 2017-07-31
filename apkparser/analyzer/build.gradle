@@ -31,7 +31,11 @@ dependencies {
     compile project(':base:annotations')
     compile project(':base:apkparser:binary-resources')
     compile files(jardeps)
+
+    testCompile(libs.junit)
+    testCompile project(":base:testutils")
 }
+
 jardeps.each { file ->
     sdk {
         common {
