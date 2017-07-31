@@ -180,6 +180,7 @@ task initSdkForConnectedTests(type: JavaExec) {
     args = ['--sdk_root=' + System.getenv("ANDROID_HOME"),
             '--channel=0',
             '--verbose',
+            'system-images;android-26;default;x86',
             'system-images;android-24;default;x86',
             'system-images;android-23;default;x86',
             'system-images;android-19;default;x86',
