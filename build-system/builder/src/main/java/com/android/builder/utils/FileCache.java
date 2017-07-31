@@ -925,6 +925,9 @@ public class FileCache {
 
         /** Extract the AAPT2 JNI libraries so they can be loaded. */
         EXTRACT_AAPT2_JNI,
+
+        /** Extract the Desugar jar so it can be used for processing. */
+        EXTRACT_DESUGAR_JAR,
     }
 
     /**

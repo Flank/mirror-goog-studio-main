@@ -32,7 +32,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.utils.FileCache;
-import com.android.utils.FileUtils;
 import com.google.common.base.CharMatcher;
 import java.io.File;
 import java.util.Set;
@@ -224,20 +223,5 @@ public class GlobalScope extends TaskOutputHolderImpl
     @Override
     public FileCache getBuildCache() {
         return buildCache;
-    }
-
-    @NonNull
-    public ConfigurableFileCollection getJava8LangSupportJar() {
-        if (java8LangSupportJar == null) {
-            java8LangSupportJar =
-                    getProject()
-                            .files(
-                                    FileUtils.join(
-                                            getIntermediatesDir(),
-                                            "processing-tools",
-                                            "java8-lang-support",
-                                            "desugar.jar"));
-        }
-        return java8LangSupportJar;
     }
 }

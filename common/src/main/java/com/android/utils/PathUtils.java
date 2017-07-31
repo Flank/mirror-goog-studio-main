@@ -19,9 +19,12 @@ package com.android.utils;
 import com.android.annotations.NonNull;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** Utility methods for {@link java.nio.file.Path}. */
 public final class PathUtils {
@@ -60,5 +63,24 @@ public final class PathUtils {
             return filePath.replace(path.getFileSystem().getSeparator(), "/");
         }
         return filePath;
+    }
+
+    @NonNull
+    public static Path createTmpToRemoveOnShutdown(@NonNull String prefix) throws IOException {
+        Path tmp = Files.createTempFile(prefix, "");
+        Runtime.getRuntime()
+                .addShutdownHook(
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                try {
+                                    Files.deleteIfExists(tmp);
+                                } catch (IOException e) {
+                                    Logger.getLogger(PathUtils.class.getName())
+                                            .log(Level.WARNING, "Unable to delete " + tmp, e);
+                                }
+                            }
+                        });
+        return tmp;
     }
 }

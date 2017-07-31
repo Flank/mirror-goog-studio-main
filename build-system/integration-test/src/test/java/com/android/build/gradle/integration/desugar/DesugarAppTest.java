@@ -94,8 +94,6 @@ public class DesugarAppTest {
         GradleBuildResult result = getProjectExecutor().run("assembleDebug");
         assertThat(result.getNotUpToDateTasks())
                 .doesNotContain(":transformClassesWithDesugarForDebug");
-
-        assertThat(result.getNotUpToDateTasks()).doesNotContain(":extractJava8LangSupportJar");
     }
 
     @Test
@@ -103,7 +101,6 @@ public class DesugarAppTest {
         enableDesugar();
         GradleBuildResult result = getProjectExecutor().run("assembleDebug");
         assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithDesugarForDebug");
-        assertThat(result.getNotUpToDateTasks()).contains(":extractJava8LangSupportJar");
     }
 
     @Test
@@ -254,13 +251,6 @@ public class DesugarAppTest {
                 .containsClass("Lcom/example/helloworld/Data;");
     }
 
-    private void enableDesugar() throws IOException {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "android.compileOptions.sourceCompatibility 1.8\n"
-                        + "android.compileOptions.targetCompatibility 1.8");
-    }
-
     @Test
     public void testDatabinding() throws IOException, ProcessException, InterruptedException {
         // regression test for - http://b.android.com/321693
@@ -382,10 +372,7 @@ public class DesugarAppTest {
         GradleBuildResult result = project.executor().run("assembleDebug");
 
         assertThat(result.getUpToDateTasks())
-                .containsAllIn(
-                        ImmutableList.of(
-                                ":extractJava8LangSupportJar",
-                                ":extractTryWithResourcesSupportJarDebug"));
+                .containsAllIn(ImmutableList.of(":extractTryWithResourcesSupportJarDebug"));
     }
 
     @Test
@@ -413,6 +400,23 @@ public class DesugarAppTest {
                 .hasClass("Ltest/MyService;")
                 .that()
                 .doesNotHaveMethod("onBindingDied");
+    }
+
+    @Test
+    public void testWithBuildCacheDisabled() throws IOException, InterruptedException {
+        enableDesugar();
+        GradleBuildResult result =
+                getProjectExecutor()
+                        .with(BooleanOption.ENABLE_BUILD_CACHE, false)
+                        .run("assembleDebug");
+        assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithDesugarForDebug");
+    }
+
+    private void enableDesugar() throws IOException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android.compileOptions.sourceCompatibility 1.8\n"
+                        + "android.compileOptions.targetCompatibility 1.8");
     }
 
     @NonNull
