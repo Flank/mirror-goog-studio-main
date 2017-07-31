@@ -41,6 +41,7 @@ import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -276,6 +277,26 @@ public class DexArchiveBuilderTransformTest {
         DexArchiveBuilderTransform minAndDebuggableChanged = getTransform(userCache, 20, false);
         minAndDebuggableChanged.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(4);
+    }
+
+    @Test
+    public void testIncrementalUnchangedDirInput() throws Exception {
+        Path input = tmpDir.newFolder("classes").toPath();
+        TestInputsGenerator.dirWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"));
+
+        TransformInput dirInput =
+                TransformTestHelper.directoryBuilder(input.toFile())
+                        .putChangedFiles(ImmutableMap.of())
+                        .build();
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setInputs(ImmutableSet.of(dirInput))
+                        .setIncremental(true)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .build();
+        getTransform(null, 21, true).transform(invocation);
+        Truth.assertThat(FileUtils.getAllFiles(out.toFile())).isEmpty();
     }
 
     @NonNull

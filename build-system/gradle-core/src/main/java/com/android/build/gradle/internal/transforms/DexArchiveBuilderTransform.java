@@ -212,7 +212,8 @@ public class DexArchiveBuilderTransform extends Transform {
                     convertToDexArchive(
                             transformInvocation.getContext(),
                             dirInput,
-                            outputProvider);
+                            outputProvider,
+                            transformInvocation.isIncremental());
                 }
 
                 for (JarInput jarInput : input.getJarInputs()) {
@@ -316,7 +317,7 @@ public class DexArchiveBuilderTransform extends Transform {
 
         File cachedVersion = cacheHandler.getCachedVersionIfPresent(toConvert);
         if (cachedVersion == null) {
-            return convertToDexArchive(context, toConvert, transformOutputProvider);
+            return convertToDexArchive(context, toConvert, transformOutputProvider, false);
         } else {
             File outputFile = getPreDexJar(transformOutputProvider, toConvert, null);
             Files.copy(
@@ -339,6 +340,7 @@ public class DexArchiveBuilderTransform extends Transform {
         private final int outBufferSize;
         private final DexerTool dexer;
         private final boolean isDebuggable;
+        private final boolean isIncremental;
 
         public DexConversionParameters(
                 QualifiedContent input,
@@ -350,7 +352,8 @@ public class DexArchiveBuilderTransform extends Transform {
                 int inBufferSize,
                 int outBufferSize,
                 DexerTool dexer,
-                boolean isDebuggable) {
+                boolean isDebuggable,
+                boolean isIncremental) {
             this.input = input;
             this.numberOfBuckets = numberOfBuckets;
             this.buckedId = buckedId;
@@ -361,6 +364,7 @@ public class DexArchiveBuilderTransform extends Transform {
             this.outBufferSize = outBufferSize;
             this.dexer = dexer;
             this.isDebuggable = isDebuggable;
+            this.isIncremental = isIncremental;
         }
 
         public boolean belongsToThisBucket(Path path) {
@@ -396,15 +400,15 @@ public class DexArchiveBuilderTransform extends Transform {
                 Path inputPath = dexConversionParameters.input.getFile().toPath();
                 Predicate<Path> bucketFilter = dexConversionParameters::belongsToThisBucket;
 
-                Predicate<Path> toProcess =
+                boolean hasIncrementalInfo =
                         dexConversionParameters.isDirectoryBased()
+                                && dexConversionParameters.isIncremental;
+                Predicate<Path> toProcess =
+                        hasIncrementalInfo
                                 ? path -> {
                                     Map<File, Status> changedFiles =
                                             ((DirectoryInput) dexConversionParameters.input)
                                                     .getChangedFiles();
-                                    if (changedFiles.isEmpty()) {
-                                        return true;
-                                    }
 
                                     File resolved = inputPath.resolve(path).toFile();
                                     Status status = changedFiles.get(resolved);
@@ -465,7 +469,8 @@ public class DexArchiveBuilderTransform extends Transform {
     private List<File> convertToDexArchive(
             @NonNull Context context,
             @NonNull QualifiedContent input,
-            @NonNull TransformOutputProvider outputProvider)
+            @NonNull TransformOutputProvider outputProvider,
+            boolean isIncremental)
             throws Exception {
 
         logger.verbose("Dexing {}", input.getFile().getAbsolutePath());
@@ -486,7 +491,8 @@ public class DexArchiveBuilderTransform extends Transform {
                             inBufferSize,
                             outBufferSize,
                             dexer,
-                            isDebuggable);
+                            isDebuggable,
+                            isIncremental);
 
             if (useGradleWorkers) {
                 context.getWorkerExecutor()
