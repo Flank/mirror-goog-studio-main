@@ -186,6 +186,10 @@ public class DexArchiveBuilderTransform extends Transform {
         TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();
         Preconditions.checkNotNull(outputProvider, "Missing output provider.");
 
+        if (dexer == DexerTool.D8) {
+            logger.info("D8 is used to build dex.");
+        }
+
         if (dexOptions.getAdditionalParameters().contains("--no-optimize")) {
             logger.warning(DefaultDexOptions.OPTIMIZE_WARNING);
         }

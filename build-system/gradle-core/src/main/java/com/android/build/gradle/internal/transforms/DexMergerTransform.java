@@ -185,6 +185,10 @@ public class DexMergerTransform extends Transform {
         Preconditions.checkNotNull(
                 outputProvider, "Missing output object for transform " + getName());
 
+        if (dexMerger == DexMergerTool.D8) {
+            logger.info("D8 is used to merge dex.");
+        }
+
         ProcessOutputHandler outputHandler =
                 new ParsingProcessOutputHandler(
                         new ToolOutputParser(new DexParser(), Message.Kind.ERROR, logger),
