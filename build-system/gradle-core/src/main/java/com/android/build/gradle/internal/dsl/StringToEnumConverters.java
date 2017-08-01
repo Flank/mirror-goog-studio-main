@@ -16,17 +16,52 @@
 
 package com.android.build.gradle.internal.dsl;
 
+import com.android.annotations.NonNull;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;
 import com.google.common.base.Enums;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /** Utility for using enums in the DSL. */
 public final class StringToEnumConverters {
     private StringToEnumConverters() {}
 
     public static <T extends Enum<T>> Converter<String, T> forClass(Class<T> klass) {
-        return CaseFormat.LOWER_UNDERSCORE
-                .converterTo(CaseFormat.UPPER_UNDERSCORE)
-                .andThen(Enums.stringConverter(klass));
+        return new HelpfulEnumConverter<>(klass);
+    }
+
+    private static class HelpfulEnumConverter<T extends Enum<T>> extends Converter<String, T> {
+        private final Converter<String, T> delegate;
+        private final Class<T> klass;
+
+        private HelpfulEnumConverter(Class<T> klass) {
+            this.klass = klass;
+            this.delegate =
+                    CaseFormat.LOWER_UNDERSCORE
+                            .converterTo(CaseFormat.UPPER_UNDERSCORE)
+                            .andThen(Enums.stringConverter(klass));
+        }
+
+        @Override
+        public T doForward(@NonNull String value) {
+            try {
+                return delegate.convert(value);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalArgumentException(
+                        String.format(
+                                "Unknown %s value '%s'. Possible values are %s.",
+                                klass.getSimpleName(),
+                                value,
+                                Arrays.stream(klass.getEnumConstants())
+                                        .map(c -> "'" + c.name().toLowerCase() + "'")
+                                        .collect(Collectors.joining(", "))));
+            }
+        }
+
+        @Override
+        public String doBackward(@NonNull T anEnum) {
+            return delegate.reverse().convert(anEnum);
+        }
     }
 }

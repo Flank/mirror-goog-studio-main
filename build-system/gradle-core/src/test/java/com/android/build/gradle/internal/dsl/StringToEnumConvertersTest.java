@@ -43,8 +43,9 @@ public class StringToEnumConvertersTest {
             converter.convert("made_up");
             Assert.fail();
         } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage()).contains("No enum constant");
-            assertThat(e.getMessage()).contains("MADE_UP");
+            assertThat(e.getMessage())
+                    .isEqualTo(
+                            "Unknown TestEnum value 'made_up'. Possible values are 'foo', 'bar_baz'.");
         }
     }
 

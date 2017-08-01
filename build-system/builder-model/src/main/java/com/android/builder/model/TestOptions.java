@@ -25,7 +25,7 @@ public interface TestOptions {
         ANDROID_TEST_ORCHESTRATOR
     }
 
-    public boolean getAnimationsDisabled();
+    boolean getAnimationsDisabled();
 
-    public Execution getExecutionEnum();
+    Execution getExecutionEnum();
 }
