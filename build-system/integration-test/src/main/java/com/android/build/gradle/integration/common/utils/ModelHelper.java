@@ -197,6 +197,11 @@ public class ModelHelper {
         return getDebugVariant(project).getMainArtifact();
     }
 
+    @NonNull
+    public static Collection<JavaArtifact> getExtraJavaArtifacts(@NonNull AndroidProject project) {
+        return getDebugVariant(project).getExtraJavaArtifacts();
+    }
+
     /**
      * return the only item with the given name, or throw an exception if 0 or 2+ items match
      */
