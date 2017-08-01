@@ -575,8 +575,11 @@ public class ArtifactDependencyGraph {
                     List<String> lines = ImmutableList.copyOf(splitter.split(message));
 
                     // check if the first line contains a data we care about
-                    if (data == null) {
-                        data = checkForData(lines.get(0));
+                    data = checkForData(lines.get(0));
+
+                    //noinspection VariableNotUsedInsideIf
+                    if (data != null) {
+                        break;
                     }
 
                     // add them to the main list
@@ -601,15 +604,28 @@ public class ArtifactDependencyGraph {
                 cause = cause.getCause();
             }
 
-            failureConsumer.accept(
-                    new SyncIssueImpl(
-                            SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                            SyncIssue.SEVERITY_ERROR,
-                            data,
-                            String.format(
-                                    "Unable to resolve dependency for '%s': %s",
-                                    entry.getKey(), messages.get(0)),
-                            messages));
+            SyncIssue issue;
+            if (data != null) {
+                issue =
+                        new SyncIssueImpl(
+                                SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                                SyncIssue.SEVERITY_ERROR,
+                                data,
+                                String.format("Unable to resolve dependency %s", data),
+                                null);
+            } else {
+                issue =
+                        new SyncIssueImpl(
+                                SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                                SyncIssue.SEVERITY_ERROR,
+                                null,
+                                String.format(
+                                        "Unable to resolve dependency for '%s': %s",
+                                        entry.getKey(), messages.get(0)),
+                                messages);
+            }
+
+            failureConsumer.accept(issue);
         }
     }
 

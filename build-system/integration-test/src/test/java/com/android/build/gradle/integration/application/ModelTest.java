@@ -17,19 +17,15 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.utils.SyncIssueHelperKt.checkIssuesForSameData;
-import static com.android.build.gradle.integration.common.utils.SyncIssueHelperKt.checkIssuesForSameSeverity;
-import static com.android.build.gradle.integration.common.utils.SyncIssueHelperKt.checkIssuesForSameType;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,28 +58,12 @@ public class ModelTest {
         AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
 
         Collection<SyncIssue> issues = model.getSyncIssues();
-        assertThat(issues).hasSize(10);
+        assertThat(issues).hasSize(1);
 
-        // all the issues should have the same type/severity/data
-        checkIssuesForSameSeverity(issues, SyncIssue.SEVERITY_ERROR);
-        checkIssuesForSameType(issues, SyncIssue.TYPE_UNRESOLVED_DEPENDENCY);
-        checkIssuesForSameData(issues, "foo:bar:1.2.3");
-
-        // now gather and test all the messages
-        List<String> messages =
-                issues.stream().map(SyncIssue::getMessage).collect(Collectors.toList());
-        assertThat(messages)
-                .containsExactly(
-                        "Unable to resolve dependency for ':@debug/runtimeClasspath': Could not find foo:bar:1.2.3.",
-                        "Unable to resolve dependency for ':@debug/compileClasspath': Could not find foo:bar:1.2.3.",
-                        "Unable to resolve dependency for ':@debugAndroidTest/compileClasspath': Could not find foo:bar:1.2.3.",
-                        "Unable to resolve dependency for ':@debugAndroidTest/runtimeClasspath': Could not find foo:bar:1.2.3.",
-                        "Unable to resolve dependency for ':@debugUnitTest/runtimeClasspath': Could not find foo:bar:1.2.3.",
-                        "Unable to resolve dependency for ':@debugUnitTest/compileClasspath': Could not find foo:bar:1.2.3.",
-                        "Unable to resolve dependency for ':@release/compileClasspath': Could not find foo:bar:1.2.3.",
-                        "Unable to resolve dependency for ':@release/runtimeClasspath': Could not find foo:bar:1.2.3.",
-                        "Unable to resolve dependency for ':@releaseUnitTest/runtimeClasspath': Could not find foo:bar:1.2.3.",
-                        "Unable to resolve dependency for ':@releaseUnitTest/compileClasspath': Could not find foo:bar:1.2.3.");
+        SyncIssue issue = Iterables.getOnlyElement(issues);
+        assertThat(issue).hasType(SyncIssue.TYPE_UNRESOLVED_DEPENDENCY);
+        assertThat(issue).hasSeverity(SyncIssue.SEVERITY_ERROR);
+        assertThat(issue).hasData("foo:bar:1.2.3");
     }
 
     @Test
@@ -97,27 +77,11 @@ public class ModelTest {
         AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
 
         Collection<SyncIssue> issues = model.getSyncIssues();
-        assertThat(issues).hasSize(10);
+        assertThat(issues).hasSize(1);
 
-        // all the issues should have the same type/severity/data
-        checkIssuesForSameSeverity(issues, SyncIssue.SEVERITY_ERROR);
-        checkIssuesForSameType(issues, SyncIssue.TYPE_UNRESOLVED_DEPENDENCY);
-        checkIssuesForSameData(issues, "foo:bar:+");
-
-        // now gather and test all the messages
-        List<String> messages =
-                issues.stream().map(SyncIssue::getMessage).collect(Collectors.toList());
-        assertThat(messages)
-                .containsExactly(
-                        "Unable to resolve dependency for ':@debug/runtimeClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
-                        "Unable to resolve dependency for ':@debug/compileClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
-                        "Unable to resolve dependency for ':@debugAndroidTest/compileClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
-                        "Unable to resolve dependency for ':@debugAndroidTest/runtimeClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
-                        "Unable to resolve dependency for ':@debugUnitTest/runtimeClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
-                        "Unable to resolve dependency for ':@debugUnitTest/compileClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
-                        "Unable to resolve dependency for ':@release/compileClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
-                        "Unable to resolve dependency for ':@release/runtimeClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
-                        "Unable to resolve dependency for ':@releaseUnitTest/runtimeClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.",
-                        "Unable to resolve dependency for ':@releaseUnitTest/compileClasspath': Could not find any matches for foo:bar:+ as no versions of foo:bar are available.");
+        SyncIssue issue = Iterables.getOnlyElement(issues);
+        assertThat(issue).hasType(SyncIssue.TYPE_UNRESOLVED_DEPENDENCY);
+        assertThat(issue).hasSeverity(SyncIssue.SEVERITY_ERROR);
+        assertThat(issue).hasData("foo:bar:+");
     }
 }
