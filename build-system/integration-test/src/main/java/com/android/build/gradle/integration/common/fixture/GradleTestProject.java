@@ -148,16 +148,7 @@ public final class GradleTestProject implements TestRule {
             OUT_DIR = new File(BUILD_DIR, "tests");
             ANDROID_SDK_HOME = new File(BUILD_DIR, "ANDROID_SDK_HOME");
 
-            // Use a temporary directory, so that shards don't share daemons. Gradle builds are not
-            // hermetic anyway and Gradle does not clean up test runfiles, so use the same home
-            // across invocations to save disk space.
-            GRADLE_USER_HOME =
-                    TestUtils.runningFromBazel()
-                            ? BazelIntegrationTestsSuite.GRADLE_USER_HOME
-                            : BUILD_DIR
-                                    .toPath()
-                                    .resolve("GRADLE_USER_HOME")
-                                    .resolve(System.getProperty("org.gradle.test.worker"));
+            GRADLE_USER_HOME = getGradleUserHome(BUILD_DIR);
 
             boolean useNightly =
                     Boolean.parseBoolean(
@@ -304,7 +295,7 @@ public final class GradleTestProject implements TestRule {
         withDependencyChecker = rootProject.withDependencyChecker;
         gradleProperties = ImmutableList.of();
         testProject = null;
-        targetGradleVersion = rootProject.getTargetGradleVersion();
+        targetGradleVersion = rootProject.targetGradleVersion;
         openConnections = null;
         buildToolsVersion = null;
         benchmarkRecorder = rootProject.benchmarkRecorder;
@@ -312,8 +303,19 @@ public final class GradleTestProject implements TestRule {
         this.relativeProfileDirectory = rootProject.relativeProfileDirectory;
     }
 
-    private String getTargetGradleVersion() {
-        return targetGradleVersion;
+    private static Path getGradleUserHome(File buildDir) {
+        if (TestUtils.runningFromBazel()) {
+            return BazelIntegrationTestsSuite.GRADLE_USER_HOME;
+        }
+        // Use a temporary directory, so that shards don't share daemons. Gradle builds are not
+        // hermetic anyway and Gradle does not clean up test runfiles, so use the same home
+        // across invocations to save disk space.
+        Path gradle_user_home = buildDir.toPath().resolve("GRADLE_USER_HOME");
+        String worker = System.getProperty("org.gradle.test.worker");
+        if (worker != null) {
+            gradle_user_home = gradle_user_home.resolve(worker);
+        }
+        return gradle_user_home;
     }
 
     public static GradleTestProjectBuilder builder() {
