@@ -85,4 +85,8 @@ public class BazelModule {
         }
         return entries;
     }
+
+    public Set<Module> getModules() {
+        return modules;
+    }
 }

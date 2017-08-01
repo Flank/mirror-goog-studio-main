@@ -4,6 +4,7 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.layoutlib-api",
     srcs = ["src/main/java"],
+    iml_files = ["layoutlib-api.iml"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],

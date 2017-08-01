@@ -4,6 +4,7 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.android-annotations",
     srcs = ["src/main/java"],
+    iml_files = ["android-annotations.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
 )

@@ -5,6 +5,7 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.builder-model",
     srcs = ["src/main/java"],
+    iml_files = ["builder-model.iml"],
     javacopts = [
         "-source 6",
         "-target 6",

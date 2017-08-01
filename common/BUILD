@@ -4,6 +4,10 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.common",
     srcs = ["src/main/java"],
+    bundle_data = [
+        "src/main/java/com/android/SdkConstants.java",
+    ],
+    iml_files = ["common.iml"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],

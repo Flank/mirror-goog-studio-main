@@ -4,6 +4,7 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.java-lib-model",
     srcs = ["src/main/java"],
+    iml_files = ["java-lib-model.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     deps = ["//tools/base/annotations:studio.android-annotations[module]"],

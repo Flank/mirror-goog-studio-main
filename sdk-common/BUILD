@@ -5,6 +5,7 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.sdk-common",
     srcs = ["src/main/java"],
+    iml_files = ["sdk-common.iml"],
     plugins = [
         "//tools/base:auto-value-plugin",
     ],

@@ -3,6 +3,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.instant-run-common",
     srcs = ["instant-run-common/src/main/java"],
+    iml_files = ["instant-run-common/instant-run-common.iml"],
     javacopts = [
         "-source 6",
         "-target 6",
@@ -15,6 +16,7 @@ iml_module(
 iml_module(
     name = "studio.instant-run-client",
     srcs = ["instant-run-client/src/main/java"],
+    iml_files = ["instant-run-client/instant-run-client.iml"],
     tags = ["managed"],
     test_resources = ["instant-run-client/src/test/resources"],
     test_srcs = ["instant-run-client/src/test/java"],

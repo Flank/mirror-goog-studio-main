@@ -116,6 +116,17 @@ public class GenerateBazelAction extends AnAction {
 
             Package pkg = bazel.findPackage(rel);
             ImlModule iml = new ImlModule(pkg, config.nameRule(pkg.getName(), rel, name));
+            for (Module module : bazelModule.getModules()) {
+                VirtualFile moduleFile = module.getModuleFile();
+                if (moduleFile != null) {
+                    String path =
+                            FileUtil.getRelativePath(
+                                    pkg.getPackageDir(), VfsUtil.virtualToIoFile(moduleFile));
+                    iml.addModuleFile(path);
+                } else {
+                    LOG.error("Cannot get file for module: " + module.getName());
+                }
+            }
             bazelModule.rule = iml;
 
             // Add all the source and resource paths

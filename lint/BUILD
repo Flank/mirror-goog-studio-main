@@ -5,6 +5,7 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 iml_module(
     name = "studio.lint-api",
     srcs = ["libs/lint-api/src/main/java"],
+    iml_files = ["libs/lint-api/lint-api.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
@@ -83,6 +84,7 @@ maven_pom(
 iml_module(
     name = "studio.lint-checks",
     srcs = ["libs/lint-checks/src/main/java"],
+    iml_files = ["libs/lint-checks/lint-checks.iml"],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     exports = ["//tools/base/lint:studio.lint-api"],

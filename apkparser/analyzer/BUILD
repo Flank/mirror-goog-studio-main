@@ -3,6 +3,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.analyzer",
     srcs = ["src/main/java"],
+    iml_files = ["analyzer.iml"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],

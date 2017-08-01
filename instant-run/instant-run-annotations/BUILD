@@ -15,6 +15,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.instant-run-annotations",
     srcs = ["src/main/java"],
+    iml_files = ["instant-run-annotations.iml"],
     javacopts = [
         "-source 6",
         "-target 6",

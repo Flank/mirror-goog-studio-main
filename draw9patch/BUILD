@@ -7,6 +7,7 @@ iml_module(
         "src/main/java",
         "src/main/resources",
     ],
+    iml_files = ["draw9patch.iml"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],

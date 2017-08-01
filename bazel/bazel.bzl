@@ -12,8 +12,7 @@ def _form_jar_impl(ctx):
 
   class_jar = ctx.outputs.class_jar
 
-  args, option_files = create_java_compiler_args(ctx, class_jar.path,
-                                                 all_deps)
+  args, option_files = create_java_compiler_args(ctx, class_jar.path, all_deps)
 
   ctx.action(
       inputs = ctx.files.srcs + list(all_deps) + option_files,
@@ -143,6 +142,59 @@ def _get_label_and_tags(label):
   return label[:rfind], [tag.strip() for tag in label[rfind+1:-1].split(",")]
 
 
+def _iml_module_impl(ctx):
+  names = [iml.basename[:-4] for iml in ctx.files.iml_files if iml.basename.endswith(".iml")]
+
+  module_jars = dict()
+  module_runtime = dict()
+  transitive_runtime_deps = set()
+  transitive_data = set()
+
+  for this_dep in ctx.attr.deps:
+    if hasattr(this_dep, "java"):
+      transitive_runtime_deps += this_dep.java.transitive_runtime_deps
+    if hasattr(this_dep, "module"):
+      transitive_runtime_deps += this_dep.module.transitive_runtime_deps
+      transitive_data += this_dep.module.transitive_data
+      module_jars.update(this_dep.module.module_jars)
+      module_runtime.update(this_dep.module.module_runtime)
+
+  for name in names:
+    module_jars[name] = ctx.file.production_jar
+    module_runtime[name] = transitive_runtime_deps
+  transitive_data += set(ctx.files.iml_files + ctx.files.data)
+  transitive_runtime_deps += set([ctx.file.production_jar])
+
+
+  return struct(
+    module = struct(
+      module_jars = module_jars,
+      module_runtime = module_runtime,
+      transitive_runtime_deps = transitive_runtime_deps,
+      transitive_data = transitive_data,
+    )
+  )
+
+_iml_module = rule(
+    attrs = {
+      "iml_files" : attr.label_list(
+        allow_files = True,
+        allow_empty = False,
+        mandatory = True,
+      ),
+      "production_jar" : attr.label(
+        allow_files = True,
+        single_file = True,
+      ),
+      "deps" : attr.label_list(
+      ),
+      "data" : attr.label_list(
+        allow_files = True,
+      ),
+    },
+    implementation = _iml_module_impl,
+)
+
 # Macro implementation of an iml_module "rule".
 # This rule corresponds to the building artifacts needed to build an IntelliJ module.
 # Instantiating this rule looks similar to an .iml definition:
@@ -185,6 +237,7 @@ def iml_module(name,
     res_zips=[],
     test_resources=[],
     deps=[],
+    runtime_deps=[],
     test_runtime_deps=[],
     visibility=[],
     exports=[],
@@ -197,12 +250,15 @@ def iml_module(name,
     tags=None,
     test_tags=None,
     back_target=0,
+    iml_files=None,
+    bundle_data=[],
     back_deps=[]):
 
   # Create the explicit lists of main, tests and exports the same way IntelliJ does
   main_deps = []
   test_deps = [":" + name]
   test_exports = []
+  module_deps = []
   for dep in deps:
     label, tags = _get_label_and_tags(dep)
     if "test" not in tags:
@@ -210,6 +266,7 @@ def iml_module(name,
     new_test_deps = [label]
     if "module" in tags:
       new_test_deps += [explicit_target(label) + "_testlib"]
+      module_deps += [explicit_target(label)]
     test_deps += new_test_deps
     if label in exports:
       test_exports += new_test_deps
@@ -259,4 +316,13 @@ def iml_module(name,
       test_class = test_class,
       visibility = ["//visibility:public"],
     )
+
+  _iml_module(
+    name = name + "_module",
+    visibility = ["//visibility:public"],
+    iml_files = iml_files,
+    production_jar = name,
+    deps = [dep + "_module" for dep in module_deps] + list(set(test_deps + main_deps + runtime_deps)),
+    data = bundle_data
+  )
 

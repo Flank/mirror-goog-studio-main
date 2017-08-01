@@ -3,6 +3,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.testutils",
     srcs = ["src/main/java"],
+    iml_files = ["testutils.iml"],
     tags = ["managed"],
     test_data = ["//prebuilts/studio/sdk:platforms/latest"],
     test_srcs = ["src/test/java"],
