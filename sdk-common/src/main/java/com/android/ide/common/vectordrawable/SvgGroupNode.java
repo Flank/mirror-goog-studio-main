@@ -40,13 +40,16 @@ class SvgGroupNode extends SvgNode {
     @Override
     public SvgGroupNode deepCopy() {
         SvgGroupNode newInstance = new SvgGroupNode(getTree(), getDocumentNode(), getName());
+        copyTo(newInstance);
+        return newInstance;
+    }
+
+    protected void copyTo(SvgGroupNode newInstance) {
+        super.copyTo(newInstance);
         for (SvgNode n : mChildren) {
             SvgNode m = n.deepCopy();
             newInstance.addChild(m);
         }
-        newInstance.fillEmptyAttributes(mVdAttributesMap);
-        newInstance.mLocalTransform = (AffineTransform) mLocalTransform.clone();
-        return newInstance;
     }
 
     public void addChild(SvgNode child) {

@@ -196,12 +196,16 @@ class SvgLeafNode extends SvgNode {
     }
 
     @Override
-    public SvgNode deepCopy() {
+    public SvgLeafNode deepCopy() {
         SvgLeafNode newInstance = new SvgLeafNode(getTree(), getDocumentNode(), getName());
-        newInstance.setPathData(getPathData());
-        newInstance.mLocalTransform = (AffineTransform) mLocalTransform.clone();
-        newInstance.fillEmptyAttributes(mVdAttributesMap);
+        copyTo(newInstance);
         return newInstance;
+
+    }
+
+    protected void copyTo(SvgLeafNode newInstance) {
+        super.copyTo(newInstance);
+        newInstance.setPathData(getPathData());
     }
 
     private String getAttributeValues() {

@@ -269,4 +269,9 @@ abstract class SvgNode {
 
     public abstract SvgNode deepCopy();
 
+    protected void copyTo(SvgNode newInstance) {
+        newInstance.fillEmptyAttributes(mVdAttributesMap);
+        newInstance.mLocalTransform = (AffineTransform) mLocalTransform.clone();
+    }
+
 }

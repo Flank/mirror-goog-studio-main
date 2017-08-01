@@ -32,7 +32,6 @@ public class SvgClipPathNode extends SvgGroupNode {
     private static final Logger logger = Logger.getLogger(SvgLeafNode.class.getSimpleName());
     private static final String INDENT_LEVEL = "    ";
 
-    private final ArrayList<SvgNode> mChildren = new ArrayList<>();
     private final ArrayList<SvgNode> mAffectedNodes = new ArrayList<>();
 
     public SvgClipPathNode(SvgTree svgTree, Node docNode, String name) {
@@ -42,13 +41,15 @@ public class SvgClipPathNode extends SvgGroupNode {
     @Override
     public SvgClipPathNode deepCopy() {
         SvgClipPathNode newInstance = new SvgClipPathNode(getTree(), getDocumentNode(), getName());
-        for (SvgNode n : mChildren) {
-            SvgNode m = n.deepCopy();
-            newInstance.addChild(m);
-        }
-        newInstance.fillEmptyAttributes(mVdAttributesMap);
-        newInstance.mLocalTransform = (AffineTransform) mLocalTransform.clone();
+        copyTo(newInstance);
         return newInstance;
+    }
+
+    protected void copyTo(SvgClipPathNode newInstance) {
+        super.copyTo(newInstance);
+        for (SvgNode n : mAffectedNodes) {
+            newInstance.addAffectedNode(n);
+        }
     }
 
     @Override
