@@ -27,11 +27,11 @@ final class TestOptionsImpl implements TestOptions, Serializable {
     private static final long serialVersionUID = 1L;
     private final boolean animationsDisabled;
 
-    @Nullable private final Execution executionEnum;
+    @Nullable private final Execution execution;
 
-    public TestOptionsImpl(boolean animationsDisabled, @Nullable Execution executionEnum) {
+    public TestOptionsImpl(boolean animationsDisabled, @Nullable Execution execution) {
         this.animationsDisabled = animationsDisabled;
-        this.executionEnum = executionEnum;
+        this.execution = execution;
     }
 
     @Override
@@ -41,7 +41,7 @@ final class TestOptionsImpl implements TestOptions, Serializable {
 
     @Override
     @Nullable
-    public Execution getExecutionEnum() {
-        return executionEnum;
+    public Execution getExecution() {
+        return execution;
     }
 }
