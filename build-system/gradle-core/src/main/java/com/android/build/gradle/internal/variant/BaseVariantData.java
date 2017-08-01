@@ -136,7 +136,7 @@ public abstract class BaseVariantData implements TaskContainer {
 
     private ImmutableList<ConfigurableFileTree> defaultJavaSources;
 
-    private List<File> extraGeneratedSourceFolders;
+    private List<File> extraGeneratedSourceFolders = Lists.newArrayList();
     private List<ConfigurableFileTree> extraGeneratedSourceFileTrees;
     private final ConfigurableFileCollection extraGeneratedResFolders;
     private Map<Object, FileCollection> preJavacGeneratedBytecodeMap;
@@ -314,7 +314,7 @@ public abstract class BaseVariantData implements TaskContainer {
         return prefix + StringHelper.capitalize(variantConfiguration.getFullName()) + suffix;
     }
 
-    @Nullable
+    @NonNull
     public List<File> getExtraGeneratedSourceFolders() {
         return extraGeneratedSourceFolders;
     }
@@ -349,26 +349,14 @@ public abstract class BaseVariantData implements TaskContainer {
     }
 
     public void addJavaSourceFoldersToModel(@NonNull File generatedSourceFolder) {
-        if (extraGeneratedSourceFolders == null) {
-            extraGeneratedSourceFolders = Lists.newArrayList();
-        }
-
         extraGeneratedSourceFolders.add(generatedSourceFolder);
     }
 
     public void addJavaSourceFoldersToModel(@NonNull File... generatedSourceFolders) {
-        if (extraGeneratedSourceFolders == null) {
-            extraGeneratedSourceFolders = Lists.newArrayList();
-        }
-
         Collections.addAll(extraGeneratedSourceFolders, generatedSourceFolders);
     }
 
     public void addJavaSourceFoldersToModel(@NonNull Collection<File> generatedSourceFolders) {
-        if (extraGeneratedSourceFolders == null) {
-            extraGeneratedSourceFolders = Lists.newArrayList();
-        }
-
         extraGeneratedSourceFolders.addAll(generatedSourceFolders);
     }
 

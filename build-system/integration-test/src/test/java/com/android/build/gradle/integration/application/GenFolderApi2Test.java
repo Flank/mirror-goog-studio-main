@@ -76,7 +76,7 @@ public class GenFolderApi2Test {
                             .stream()
                             .sorted()
                             .collect(Collectors.toList());
-            assertThat(sortedFolders).hasSize(2);
+            assertThat(sortedFolders).hasSize(3);
             assertThat(sortedFolders.get(0).getAbsolutePath()).startsWith(sourceFolderStart);
             assertThat(sortedFolders.get(0).getAbsolutePath()).endsWith("-1");
             assertThat(sortedFolders.get(1).getAbsolutePath()).startsWith(sourceFolderStart);

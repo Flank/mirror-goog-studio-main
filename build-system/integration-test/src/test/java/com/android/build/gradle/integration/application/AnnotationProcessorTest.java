@@ -32,9 +32,12 @@ import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.JavaArtifact;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.util.Arrays;
@@ -199,6 +202,26 @@ public class AnnotationProcessorTest {
         AndroidProject model = project.model().getMulti().getModelMap().get(":app");
         assertThat(ModelHelper.getDebugArtifact(model).getGeneratedSourceFolders())
                 .contains(aptOutputFolder);
+
+        // Ensure that test sources also have their generated sources files sent to the IDE. This
+        // specifically tests for the issue described in
+        // https://issuetracker.google.com/37121918.
+        File testAptOutputFolder =
+                project.getSubproject(":app").file("build/generated/source/apt/test/debug");
+        JavaArtifact testArtifact =
+                Iterables.getOnlyElement(ModelHelper.getExtraJavaArtifacts(model));
+        assertThat(testArtifact.getGeneratedSourceFolders()).contains(testAptOutputFolder);
+
+        // Ensure that test projects also have their generated sources files sent to the IDE. This
+        // specifically tests for the issue described in
+        // https://issuetracker.google.com/37121918.
+        File androidTestAptOutputFolder =
+                project.getSubproject(":app").file("build/generated/source/apt/androidTest/debug");
+        AndroidArtifact androidTest =
+                ModelHelper.getAndroidArtifact(
+                        ModelHelper.getDebugVariant(model).getExtraAndroidArtifacts(),
+                        AndroidProject.ARTIFACT_ANDROID_TEST);
+        assertThat(androidTest.getGeneratedSourceFolders()).contains(androidTestAptOutputFolder);
 
         // check incrementality.
         GradleBuildResult result = project.executor().run("assembleDebug");

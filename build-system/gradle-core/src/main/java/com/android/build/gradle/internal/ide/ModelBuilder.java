@@ -455,10 +455,7 @@ public class ModelBuilder implements ToolingModelBuilder {
             @NonNull VariantType variantType, @NonNull BaseVariantData variantData) {
         SourceProviders sourceProviders = determineSourceProviders(variantData);
 
-        List<File> extraGeneratedSourceFolders = variantData.getExtraGeneratedSourceFolders();
-
         final VariantScope scope = variantData.getScope();
-
         Pair<Dependencies, DependencyGraphs> result =
                 getDependencies(
                         scope, extraModelInfo, syncIssues, modelLevel, modelWithFullDependency);
@@ -477,9 +474,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 scope.getAssembleTask().getName(),
                 scope.getCompileTask().getName(),
                 Sets.newHashSet(taskManager.createMockableJar.getName()),
-                extraGeneratedSourceFolders != null
-                        ? extraGeneratedSourceFolders
-                        : Collections.emptyList(),
+                getGeneratedSourceFoldersForUnitTests(variantData),
                 scope.getOutput(JAVAC).getSingleFile(),
                 additionalTestClasses,
                 variantData.getJavaResourcesForUnitTesting(),
@@ -813,20 +808,30 @@ public class ModelBuilder implements ToolingModelBuilder {
     }
 
     @NonNull
+    private static List<File> getGeneratedSourceFoldersForUnitTests(
+            @Nullable BaseVariantData variantData) {
+        if (variantData == null) {
+            return Collections.emptyList();
+        }
+
+        List<File> folders = Lists.newArrayList(variantData.getExtraGeneratedSourceFolders());
+        folders.add(variantData.getScope().getAnnotationProcessorOutputDir());
+        return folders;
+    }
+
+    @NonNull
     private static List<File> getGeneratedSourceFolders(@Nullable BaseVariantData variantData) {
         if (variantData == null) {
             return Collections.emptyList();
         }
 
-        List<File> extraFolders = variantData.getExtraGeneratedSourceFolders();
+        List<File> extraFolders = getGeneratedSourceFoldersForUnitTests(variantData);
 
-        List<File> folders;
-        if (extraFolders != null) {
-            folders = Lists.newArrayListWithExpectedSize(5 + extraFolders.size());
-            folders.addAll(extraFolders);
-        } else {
-            folders = Lists.newArrayListWithExpectedSize(5);
-        }
+        // Set this to the number of folders you expect to add explicitly in the code below.
+        int additionalFolders = 4;
+        List<File> folders =
+                Lists.newArrayListWithExpectedSize(additionalFolders + extraFolders.size());
+        folders.addAll(extraFolders);
 
         VariantScope scope = variantData.getScope();
 
@@ -839,7 +844,6 @@ public class ModelBuilder implements ToolingModelBuilder {
         if (ndkMode == null || !ndkMode) {
             folders.add(scope.getRenderscriptSourceOutputDir());
         }
-        folders.add(scope.getAnnotationProcessorOutputDir());
 
         return folders;
     }
