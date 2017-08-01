@@ -113,16 +113,17 @@ public class AaptV2Test {
 
     @Test
     public void pngCrunchingTest() throws Exception {
-        Aapt aapt = makeAapt();
-        Future<File> compiledFuture =
-                aapt.compile(
-                        new CompileResourceRequest(
-                                AaptTestUtils.getTestPng(mTemporaryFolder),
-                                AaptTestUtils.getOutputDir(mTemporaryFolder),
-                                "test"));
-        File compiled = compiledFuture.get();
-        assertNotNull(compiled);
-        assertTrue(compiled.isFile());
+        try (Aapt aapt = makeAapt()) {
+            Future<File> compiledFuture =
+                    aapt.compile(
+                            new CompileResourceRequest(
+                                    AaptTestUtils.getTestPng(mTemporaryFolder),
+                                    AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                    "test"));
+            File compiled = compiledFuture.get();
+            assertNotNull(compiled);
+            assertTrue(compiled.isFile());
+        }
     }
 
     @Test
@@ -130,16 +131,17 @@ public class AaptV2Test {
         // This fails on Windows due to issues in aapt handling of long paths.
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
 
-        Aapt aapt = makeAapt();
-        Future<File> compiledFuture =
-                aapt.compile(
-                        new CompileResourceRequest(
-                                AaptTestUtils.getTestPngWithLongFileName(mTemporaryFolder),
-                                AaptTestUtils.getOutputDir(mTemporaryFolder),
-                                "test"));
-        File compiled = compiledFuture.get();
-        assertNotNull(compiled);
-        assertTrue(compiled.isFile());
+        try (Aapt aapt = makeAapt()) {
+            Future<File> compiledFuture =
+                    aapt.compile(
+                            new CompileResourceRequest(
+                                    AaptTestUtils.getTestPngWithLongFileName(mTemporaryFolder),
+                                    AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                    "test"));
+            File compiled = compiledFuture.get();
+            assertNotNull(compiled);
+            assertTrue(compiled.isFile());
+        }
     }
 
 
@@ -149,41 +151,46 @@ public class AaptV2Test {
             throw new AssumptionViolatedException("Not in SDK version of AAPT2 yet");
         }
 
-        Aapt aapt = makeAapt();
-        File in = AaptTestUtils.getTestPng(mTemporaryFolder);
-        File outDir = AaptTestUtils.getOutputDir(mTemporaryFolder);
-        Future<File> compiledFuture =
-                aapt.compile(new CompileResourceRequest(in, outDir, "test", false, true));
-        long withCrunchEnabled = Files.size(compiledFuture.get().toPath());
-        compiledFuture = aapt.compile(new CompileResourceRequest(in, outDir, "test", false, false));
-        long withCrunchDisabled = Files.size(compiledFuture.get().toPath());
-        assertThat(withCrunchEnabled).isLessThan(withCrunchDisabled);
+        try (Aapt aapt = makeAapt()) {
+            File in = AaptTestUtils.getTestPng(mTemporaryFolder);
+            File outDir = AaptTestUtils.getOutputDir(mTemporaryFolder);
+            Future<File> compiledFuture =
+                    aapt.compile(new CompileResourceRequest(in, outDir, "test", false, true));
+            long withCrunchEnabled = Files.size(compiledFuture.get().toPath());
+            compiledFuture =
+                    aapt.compile(new CompileResourceRequest(in, outDir, "test", false, false));
+            long withCrunchDisabled = Files.size(compiledFuture.get().toPath());
+            assertThat(withCrunchEnabled).isLessThan(withCrunchDisabled);
+        }
     }
 
     @Test
     public void ninePatchPngsAlwaysProcessedEvenWhenCrunchingDisabled() throws Exception {
-        Aapt aapt = makeAapt();
-        File in = AaptTestUtils.getTest9Patch(mTemporaryFolder);
-        File outDir = AaptTestUtils.getOutputDir(mTemporaryFolder);
-        Future<File> compiledFuture =
-                aapt.compile(new CompileResourceRequest(in, outDir, "test", false, true));
-        byte[] withCrunchEnabled = Files.readAllBytes(compiledFuture.get().toPath());
-        compiledFuture = aapt.compile(new CompileResourceRequest(in, outDir, "test", false, false));
-        byte[] withCrunchDisabled = Files.readAllBytes(compiledFuture.get().toPath());
-        assertThat(withCrunchDisabled).isEqualTo(withCrunchEnabled);
+        try (Aapt aapt = makeAapt()) {
+            File in = AaptTestUtils.getTest9Patch(mTemporaryFolder);
+            File outDir = AaptTestUtils.getOutputDir(mTemporaryFolder);
+            Future<File> compiledFuture =
+                    aapt.compile(new CompileResourceRequest(in, outDir, "test", false, true));
+            byte[] withCrunchEnabled = Files.readAllBytes(compiledFuture.get().toPath());
+            compiledFuture =
+                    aapt.compile(new CompileResourceRequest(in, outDir, "test", false, false));
+            byte[] withCrunchDisabled = Files.readAllBytes(compiledFuture.get().toPath());
+            assertThat(withCrunchDisabled).isEqualTo(withCrunchEnabled);
+        }
     }
 
     @Test
     public void resourceProcessingTest() throws Exception {
-        Aapt aapt = makeAapt();
-        Future<File> compiledFuture =
-                aapt.compile(
-                        new CompileResourceRequest(
-                                AaptTestUtils.getTestTxt(mTemporaryFolder),
-                                AaptTestUtils.getOutputDir(mTemporaryFolder),
-                                "test"));
-        File compiled = compiledFuture.get();
-        assertNotNull(compiled);
-        assertTrue(compiled.isFile());
+        try (Aapt aapt = makeAapt()) {
+            Future<File> compiledFuture =
+                    aapt.compile(
+                            new CompileResourceRequest(
+                                    AaptTestUtils.getTestTxt(mTemporaryFolder),
+                                    AaptTestUtils.getOutputDir(mTemporaryFolder),
+                                    "test"));
+            File compiled = compiledFuture.get();
+            assertNotNull(compiled);
+            assertTrue(compiled.isFile());
+        }
     }
 }

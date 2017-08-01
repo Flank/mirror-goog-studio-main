@@ -127,7 +127,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
         Collection<BuildOutput> manifestsOutputs = BuildOutputs.load(taskInputType, manifestFiles);
         File manifestFile = Iterables.getOnlyElement(manifestsOutputs).getOutputFile();
 
-        Aapt aapt =
+        try (Aapt aapt =
                 AaptGradleFactory.make(
                         aaptGeneration,
                         builder,
@@ -135,16 +135,17 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                         fileCache,
                         true,
                         FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
-                        0);
+                        0)) {
 
-        if (aapt instanceof AaptV1) {
-            // If we're using AAPT1 we only need to link the resources.
-            linkResources(inputDirectory.getSingleFile(), aapt, manifestFile);
-        } else {
-            // If we're using AAPT2 we need to compile the resources into the compiled directory
-            // first as we need the .flat files for linking.
-            compileResources(inputs, compiledDirectory, aapt);
-            linkResources(compiledDirectory, aapt, manifestFile);
+            if (aapt instanceof AaptV1) {
+                // If we're using AAPT1 we only need to link the resources.
+                linkResources(inputDirectory.getSingleFile(), aapt, manifestFile);
+            } else {
+                // If we're using AAPT2 we need to compile the resources into the compiled directory
+                // first as we need the .flat files for linking.
+                compileResources(inputs, compiledDirectory, aapt);
+                linkResources(compiledDirectory, aapt, manifestFile);
+            }
         }
     }
 

@@ -239,7 +239,6 @@ public class MergedResourceWriter
         // now perform all the databinding, PNG crunching (AAPT1) and resources compilation (AAPT2).
         Map<Future, String> outstandingRequests = new HashMap<>();
         try {
-            mResourceCompiler.start();
             File tmpDir = new File(mTemporaryDirectory, "stripped.dir");
             try {
                 FileUtils.cleanOutputDir(tmpDir);
@@ -311,8 +310,6 @@ public class MergedResourceWriter
                     throw MergingException.wrapException(e).withFile(request.getInput()).build();
                 }
             }
-            mResourceCompiler.end();
-
         } catch (Exception e) {
             throw new ConsumerException(e);
         }

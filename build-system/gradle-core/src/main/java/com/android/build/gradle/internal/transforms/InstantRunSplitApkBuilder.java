@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import static java.nio.file.Files.deleteIfExists;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -147,37 +149,40 @@ public abstract class InstantRunSplitApkBuilder extends Transform {
         String uniqueName = dexFiles.encodeName();
         final File alignedOutput = new File(outputDirectory, uniqueName + ".apk");
         Files.createParentDirs(alignedOutput);
-        File resPackageFile =
-                generateSplitApkResourcesAp(
-                        logger,
-                        getAapt(),
-                        packagingScope,
-                        supportDirectory,
-                        aaptOptions,
-                        androidBuilder,
-                        uniqueName);
 
-        // packageCodeSplitApk uses a temporary directory for incremental runs. Since we don't
-        // do incremental builds here, make sure it gets an empty directory.
-        File tempDir = new File(supportDirectory, "package_" + uniqueName);
-        if (!tempDir.exists() && !tempDir.mkdirs()) {
-            throw new TransformException("Cannot create temporary folder "
-                    + tempDir.getAbsolutePath());
+        try (Aapt aapt = getAapt()) {
+            File resPackageFile =
+                    generateSplitApkResourcesAp(
+                            logger,
+                            aapt,
+                            packagingScope,
+                            supportDirectory,
+                            aaptOptions,
+                            androidBuilder,
+                            uniqueName);
+
+            // packageCodeSplitApk uses a temporary directory for incremental runs. Since we don't
+            // do incremental builds here, make sure it gets an empty directory.
+            File tempDir = new File(supportDirectory, "package_" + uniqueName);
+            if (!tempDir.exists() && !tempDir.mkdirs()) {
+                throw new TransformException(
+                        "Cannot create temporary folder " + tempDir.getAbsolutePath());
+            }
+
+            FileUtils.cleanOutputDir(tempDir);
+
+            androidBuilder.packageCodeSplitApk(
+                    resPackageFile,
+                    dexFiles.dexFiles,
+                    signingConf,
+                    alignedOutput,
+                    tempDir,
+                    ApkCreatorFactories.fromProjectProperties(project, true));
+
+            buildContext.addChangedFile(FileType.SPLIT, alignedOutput);
+            deleteIfExists(resPackageFile.toPath());
         }
 
-        FileUtils.cleanOutputDir(tempDir);
-
-        androidBuilder.packageCodeSplitApk(
-                resPackageFile,
-                dexFiles.dexFiles,
-                signingConf,
-                alignedOutput,
-                tempDir,
-                ApkCreatorFactories.fromProjectProperties(project, true));
-
-        buildContext.addChangedFile(FileType.SPLIT, alignedOutput);
-        //noinspection ResultOfMethodCallIgnored
-        resPackageFile.delete();
         return alignedOutput;
     }
 

@@ -20,16 +20,23 @@ import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import java.io.Closeable;
 import java.io.File;
+import java.io.IOException;
 
 /**
- * A specialization of the {@link ResourceCompiler} that can queue compile request and execute
- * them all using slave threads or processes.
+ * A specialization of the {@link ResourceCompiler} that can queue compile request and execute them
+ * all using slave threads or processes.
  */
-public interface QueueableResourceCompiler extends ResourceCompiler {
+public interface QueueableResourceCompiler extends ResourceCompiler, Closeable {
 
     QueueableResourceCompiler NONE =
             new QueueableResourceCompiler() {
+
+                @Override
+                public void close() throws IOException {
+                    // no batching
+                }
 
                 @NonNull
                 @Override
@@ -41,12 +48,6 @@ public interface QueueableResourceCompiler extends ResourceCompiler {
                     return Futures.immediateFuture(out);
                 }
 
-                @Override
-                public void start() {}
-
-                @Override
-                public void end() throws InterruptedException {}
-
                 @NonNull
                 @Override
                 public File compileOutputFor(@NonNull CompileResourceRequest request) {
@@ -55,23 +56,6 @@ public interface QueueableResourceCompiler extends ResourceCompiler {
                     return new File(parentDir, request.getInput().getName());
                 }
             };
-
-    /**
-     * Start a new queueing request for compile activities. All calls made to {@link
-     * ResourceCompiler#compile(CompileResourceRequest)} will be part of the same batch of requests.
-     */
-    void start();
-
-    /**
-     * End the current batch of request. This will wait until requested compilation requested issued
-     * with {@link ResourceCompiler#compile(CompileResourceRequest)} have finished before returning.
-     *
-     * <p>Each compile request result will be available through the {@link
-     * com.google.common.util.concurrent.ListenableFuture} returned by {@link ResourceCompiler}.
-     *
-     * @throws InterruptedException
-     */
-    void end() throws InterruptedException;
 
     /**
      * Obtains the file that will receive the compilation output of a given file. This method will

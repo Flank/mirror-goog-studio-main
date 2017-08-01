@@ -220,31 +220,26 @@ public class MergeResources extends IncrementalTask {
 
         // create a new merger and populate it with the sets.
         ResourceMerger merger = new ResourceMerger(minSdk);
+        MergingLog mergingLog =
+                getBlameLogFolder() != null ? new MergingLog(getBlameLogFolder()) : null;
 
-        try {
-            for (ResourceSet resourceSet : resourceSets) {
-                resourceSet.loadFromFiles(getILogger());
-                merger.addDataSet(resourceSet);
-            }
-
-            // get the merged set and write it down.
-            QueueableResourceCompiler resourceCompiler;
-            MergingLog mergingLog =
-                    getBlameLogFolder() != null ? new MergingLog(getBlameLogFolder()) : null;
-
-            if (processResources) {
-                resourceCompiler =
-                        makeAapt(
+        try (QueueableResourceCompiler resourceCompiler =
+                processResources
+                        ? makeAapt(
                                 aaptGeneration,
                                 getBuilder(),
                                 fileCache,
                                 crunchPng,
                                 variantScope,
                                 getAaptTempDir(),
-                                mergingLog);
-            } else {
-                resourceCompiler = QueueableResourceCompiler.NONE;
+                                mergingLog)
+                        : QueueableResourceCompiler.NONE) {
+
+            for (ResourceSet resourceSet : resourceSets) {
+                resourceSet.loadFromFiles(getILogger());
+                merger.addDataSet(resourceSet);
             }
+
             MergedResourceWriter writer =
                     new MergedResourceWriter(
                             workerExecutorFacade,
@@ -327,47 +322,44 @@ public class MergeResources extends IncrementalTask {
                 }
             }
 
-
-            QueueableResourceCompiler resourceCompiler;
             MergingLog mergingLog =
                     getBlameLogFolder() != null ? new MergingLog(getBlameLogFolder()) : null;
 
-            if (processResources) {
-                resourceCompiler =
-                        makeAapt(
-                                aaptGeneration,
-                                getBuilder(),
-                                fileCache,
-                                crunchPng,
-                                variantScope,
-                                getAaptTempDir(),
-                                mergingLog);
-            } else {
-                resourceCompiler = QueueableResourceCompiler.NONE;
+            try (QueueableResourceCompiler resourceCompiler =
+                    processResources
+                            ? makeAapt(
+                                    aaptGeneration,
+                                    getBuilder(),
+                                    fileCache,
+                                    crunchPng,
+                                    variantScope,
+                                    getAaptTempDir(),
+                                    mergingLog)
+                            : QueueableResourceCompiler.NONE) {
+
+                MergedResourceWriter writer =
+                        new MergedResourceWriter(
+                                workerExecutorFacade,
+                                getOutputDir(),
+                                getPublicFile(),
+                                mergingLog,
+                                preprocessor,
+                                resourceCompiler,
+                                getIncrementalFolder(),
+                                dataBindingLayoutProcessor,
+                                mergedNotCompiledResourcesOutputDirectory,
+                                pseudoLocalesEnabled,
+                                getCrunchPng());
+
+                merger.mergeData(writer, false /*doCleanUp*/);
+
+                if (dataBindingLayoutProcessor != null) {
+                    dataBindingLayoutProcessor.end();
+                }
+
+                // No exception? Write the known state.
+                merger.writeBlobTo(getIncrementalFolder(), writer, false);
             }
-
-            MergedResourceWriter writer =
-                    new MergedResourceWriter(
-                            workerExecutorFacade,
-                            getOutputDir(),
-                            getPublicFile(),
-                            mergingLog,
-                            preprocessor,
-                            resourceCompiler,
-                            getIncrementalFolder(),
-                            dataBindingLayoutProcessor,
-                            mergedNotCompiledResourcesOutputDirectory,
-                            pseudoLocalesEnabled,
-                            getCrunchPng());
-
-            merger.mergeData(writer, false /*doCleanUp*/);
-
-            if (dataBindingLayoutProcessor != null) {
-                dataBindingLayoutProcessor.end();
-            }
-
-            // No exception? Write the known state.
-            merger.writeBlobTo(getIncrementalFolder(), writer, false);
         } catch (MergingException e) {
             merger.cleanBlob(getIncrementalFolder());
             throw new ResourceException(e.getMessage(), e);

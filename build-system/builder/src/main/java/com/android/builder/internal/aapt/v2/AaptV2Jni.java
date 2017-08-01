@@ -118,12 +118,7 @@ public class AaptV2Jni extends AbstractAapt {
     }
 
     @Override
-    public void start() {
-        // we don't batch.
-    }
-
-    @Override
-    public void end() throws InterruptedException {
+    public void close() {
         // since we don't batch, we are done.
     }
 

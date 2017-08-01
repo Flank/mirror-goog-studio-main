@@ -130,12 +130,7 @@ public class OutOfProcessAaptV2 extends AbstractProcessExecutionAapt {
     }
 
     @Override
-    public void start() {
-        // we don't batch.
-    }
-
-    @Override
-    public void end() throws InterruptedException {
+    public void close() {
         // since we don't batch, we are done.
     }
 
