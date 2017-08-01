@@ -33,6 +33,7 @@ import com.android.resources.ScreenRound;
 import com.android.resources.ScreenSize;
 import com.android.resources.TouchScreen;
 import com.android.resources.UiMode;
+import com.android.utils.XmlUtils;
 import com.google.common.base.Splitter;
 
 import com.google.common.collect.HashBasedTable;
@@ -447,7 +448,7 @@ public class DeviceParser {
 
     static {
         sParserFactory = SAXParserFactory.newInstance();
-        sParserFactory.setNamespaceAware(true);
+        XmlUtils.configureSaxFactory(sParserFactory, true, false);
     }
 
     @NonNull
@@ -505,6 +506,6 @@ public class DeviceParser {
         if (schema != null) {
             sParserFactory.setSchema(schema);
         }
-        return sParserFactory.newSAXParser();
+        return XmlUtils.createSaxParser(sParserFactory);
     }
 }

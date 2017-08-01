@@ -24,10 +24,10 @@
 namespace {
 
 // In the case where we are sending a connect request to agent, try to
-// connect a few times before giving up. The time when the agent starts
+// connect for five minutes before giving up. The time when the agent starts
 // creating and listening from the socket |kAgentSocketName| can vary quite a
 // bit. For example, an app can be stuck on waiting for debugger to attach.
-const int kRetryMaxCount = 20;
+const int kRetryMaxCount = 600;
 // Interval between retry to connect to agent, in microseconds.
 const int kTimeoutUs = profiler::Clock::ms_to_us(500);
 

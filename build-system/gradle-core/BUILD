@@ -58,6 +58,7 @@ kotlin_library(
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/gradle-api",
         "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",
@@ -118,6 +119,7 @@ kotlin_test(
         "//tools/base/build-system/gradle-api",
         "//tools/base/build-system/gradle-core/src/main/proto",  # TODO: move this to this package?
         "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/lint:tools.lint-checks",
         "//tools/base/repository:tools.repository",

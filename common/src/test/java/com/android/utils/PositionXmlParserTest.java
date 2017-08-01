@@ -19,8 +19,10 @@ package com.android.utils;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.ide.common.blame.SourcePosition;
+import com.google.common.base.Charsets;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -34,6 +36,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+import org.xml.sax.SAXException;
 
 @SuppressWarnings({"javadoc", "IOResourceOpenedButNotSafelyClosed"})
 public class PositionXmlParserTest extends TestCase {
@@ -571,5 +574,18 @@ public class PositionXmlParserTest extends TestCase {
 
         assertThat(data.item(4).getTextContent()).isEqualTo("ZZZ");
         assertThat(data.item(4).getNodeType()).isEqualTo(Node.TEXT_NODE);
+    }
+
+    public void testPreventDocType() throws Exception {
+        String xml =
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                "<!DOCTYPE module PUBLIC\n" +
+                "    \"-//TEST//DTD Check Configuration 1.3//EN\"\n" +
+                "    \"http://schemas.android.com/apk/res/android\">\n"
+                + "<resources>\n"
+                + "</resources>";
+
+        // Ok (earlier this would throw networking errors attempting to load schemas.android.com)
+        PositionXmlParser.parse(new ByteArrayInputStream(xml.getBytes(Charsets.UTF_8)));
     }
 }

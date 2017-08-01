@@ -226,8 +226,9 @@ final class AdbHelper {
             resp.okay = false;
         }
 
-        // not a loop -- use "while" so we can use "break"
         try {
+            // not a loop -- use "while" so we can use "break"
+            //noinspection LoopConditionNotUpdatedInsideLoop
             while (readDiagString) {
                 // length string is in next 4 bytes
                 byte[] lenBuf = new byte[4];

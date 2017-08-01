@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
 import com.android.build.gradle.internal.incremental.FileType;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
@@ -55,7 +56,7 @@ import org.gradle.api.tasks.TaskAction;
  */
 public class InstantRunResourcesApkBuilder extends BaseTask {
 
-    private static final String APK_FILE_NAME = "resources";
+    @VisibleForTesting public static final String APK_FILE_NAME = "resources";
 
     private AndroidBuilder androidBuilder;
     private InstantRunBuildContext instantRunBuildContext;
@@ -124,7 +125,7 @@ public class InstantRunResourcesApkBuilder extends BaseTask {
                                 outputFile,
                                 tempDir,
                                 ApkCreatorFactories.fromProjectProperties(getProject(), true));
-                        instantRunBuildContext.addChangedFile(FileType.RESOURCES, outputFile);
+                        instantRunBuildContext.addChangedFile(FileType.SPLIT, outputFile);
                         return outputFile;
 
                     } catch (KeytoolException | PackagerException e) {

@@ -22,6 +22,7 @@ import com.android.ide.common.blame.SourcePosition;
 import com.android.utils.PositionXmlParser;
 import com.google.common.base.Strings;
 import java.awt.geom.AffineTransform;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
@@ -83,7 +84,7 @@ class SvgTree {
 
     public Document parse(File f) throws Exception {
         mFileName = f.getName();
-        return PositionXmlParser.parse(new FileInputStream(f), false);
+        return PositionXmlParser.parse(new BufferedInputStream(new FileInputStream(f)), false);
     }
 
     public void normalize() {

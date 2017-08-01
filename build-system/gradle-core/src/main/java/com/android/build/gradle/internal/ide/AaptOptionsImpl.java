@@ -24,6 +24,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -59,6 +60,11 @@ public final class AaptOptionsImpl implements AaptOptions, Serializable {
                 Boolean.TRUE.equals(aaptOptions.getNamespaced())
                         ? Namespacing.REQUIRED
                         : Namespacing.DISABLED);
+    }
+
+    public static AaptOptions createDummy() {
+        return new AaptOptionsImpl(
+                "", Collections.emptyList(), false, Collections.emptyList(), Namespacing.DISABLED);
     }
 
     public AaptOptionsImpl(

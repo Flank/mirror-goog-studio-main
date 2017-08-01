@@ -92,6 +92,7 @@ def select_android(android, default):
         "//tools/base/bazel:android_cpu_x86_64": android,
         "//tools/base/bazel:android_cpu_arm": android,
         "//tools/base/bazel:android_cpu_arm_64": android,
+        "//tools/base/bazel:android_cpu_armeabi": android,
         "//conditions:default": default,
         })
 
@@ -110,6 +111,7 @@ ANDROID_COPTS = select_android([
 
 ANDROID_LINKOPTS = select_android([
     "-llog",
+    "-latomic",
     "-lm",
     "-ldl",
     "-pie",

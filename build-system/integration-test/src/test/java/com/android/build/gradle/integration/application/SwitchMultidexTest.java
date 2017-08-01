@@ -92,8 +92,7 @@ public class SwitchMultidexTest {
                 .withEnabledAapt2(true)
                 .withProperty("inject.minsdk", "19")
                 .withProperty("inject.multidex", "true")
-                .with(BooleanOption.ENABLE_D8_DEXER, false)
-                .with(BooleanOption.ENABLE_D8_MERGER, false)
+                .with(BooleanOption.ENABLE_D8, false)
                 .run("assembleDebug");
         Apk debug = project.getApk("debug");
         assertTrue(debug.getMainDexFile().isPresent());
@@ -106,6 +105,7 @@ public class SwitchMultidexTest {
                                 "Landroid/support/multidex/MultiDex;",
                                 "Landroid/support/multidex/MultiDexApplication;",
                                 "Landroid/support/multidex/MultiDexExtractor$1;",
+                                "Landroid/support/multidex/MultiDexExtractor$ExtractedDex;",
                                 "Landroid/support/multidex/MultiDexExtractor;",
                                 "Landroid/support/multidex/ZipUtil$CentralDirectory;",
                                 "Landroid/support/multidex/ZipUtil;",

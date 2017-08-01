@@ -21,8 +21,23 @@ import com.android.annotations.Nullable;
 import com.android.xml.XmlBuilder;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
-import com.google.devrel.gmscore.tools.apk.arsc.*;
-import java.util.*;
+import com.google.devrel.gmscore.tools.apk.arsc.BinaryResourceFile;
+import com.google.devrel.gmscore.tools.apk.arsc.BinaryResourceValue;
+import com.google.devrel.gmscore.tools.apk.arsc.Chunk;
+import com.google.devrel.gmscore.tools.apk.arsc.StringPoolChunk;
+import com.google.devrel.gmscore.tools.apk.arsc.XmlAttribute;
+import com.google.devrel.gmscore.tools.apk.arsc.XmlChunk;
+import com.google.devrel.gmscore.tools.apk.arsc.XmlEndElementChunk;
+import com.google.devrel.gmscore.tools.apk.arsc.XmlNamespaceEndChunk;
+import com.google.devrel.gmscore.tools.apk.arsc.XmlNamespaceStartChunk;
+import com.google.devrel.gmscore.tools.apk.arsc.XmlResourceMapChunk;
+import com.google.devrel.gmscore.tools.apk.arsc.XmlStartElementChunk;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 public class BinaryXmlParser {
     @NonNull

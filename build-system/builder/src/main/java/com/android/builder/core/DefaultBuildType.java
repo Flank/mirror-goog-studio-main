@@ -22,7 +22,6 @@ import com.android.builder.internal.BaseConfigImpl;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.SigningConfig;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 
 public class DefaultBuildType extends BaseConfigImpl implements BuildType {
     private static final long serialVersionUID = 1L;
@@ -245,44 +244,6 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
 
     public void setEmbedMicroApp(boolean embedMicroApp) {
         mEmbedMicroApp = embedMicroApp;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        DefaultBuildType buildType = (DefaultBuildType) o;
-
-        return Objects.equal(mName, buildType.mName) &&
-                mDebuggable == buildType.mDebuggable &&
-                mTestCoverageEnabled == buildType.mTestCoverageEnabled &&
-                mJniDebuggable == buildType.mJniDebuggable &&
-                mPseudoLocalesEnabled == buildType.mPseudoLocalesEnabled &&
-                mRenderscriptDebuggable == buildType.mRenderscriptDebuggable &&
-                mRenderscriptOptimLevel == buildType.mRenderscriptOptimLevel &&
-                mMinifyEnabled == buildType.mMinifyEnabled &&
-                mZipAlignEnabled == buildType.mZipAlignEnabled &&
-                mEmbedMicroApp == buildType.mEmbedMicroApp &&
-                Objects.equal(mSigningConfig, buildType.mSigningConfig);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(
-                super.hashCode(),
-                mName,
-                mDebuggable,
-                mTestCoverageEnabled,
-                mJniDebuggable,
-                mPseudoLocalesEnabled,
-                mRenderscriptDebuggable,
-                mRenderscriptOptimLevel,
-                mMinifyEnabled,
-                mZipAlignEnabled,
-                mSigningConfig,
-                mEmbedMicroApp);
     }
 
     @Override

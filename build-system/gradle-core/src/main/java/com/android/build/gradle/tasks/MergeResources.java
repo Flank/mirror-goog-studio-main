@@ -19,7 +19,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.ANDROID_RES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 
-import android.databinding.tool.store.LayoutFileParser;
+import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.LoggerWrapper;
@@ -75,6 +75,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import javax.xml.bind.JAXBException;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ArtifactCollection;
@@ -144,9 +145,10 @@ public class MergeResources extends IncrementalTask {
 
     private AaptGeneration aaptGeneration;
 
-    @Nullable private SingleFileProcessor dataBindingExpressionRemover;
+    @Nullable private SingleFileProcessor dataBindingLayoutProcessor;
 
-    @Nullable private File dataBindingLayoutOutputFolder;
+    /** Where data binding exports its outputs after parsing layout files. */
+    @Nullable private File dataBindingLayoutInfoOutFolder;
 
     @Nullable private File mergedNotCompiledResourcesOutputDirectory;
 
@@ -191,6 +193,12 @@ public class MergeResources extends IncrementalTask {
         return true;
     }
 
+    @OutputDirectory
+    @Optional
+    public File getDataBindingLayoutInfoOutFolder() {
+        return dataBindingLayoutInfoOutFolder;
+    }
+
     private final WorkerExecutorFacade<MergedResourceWriter.FileGenerationParameters>
             workerExecutorFacade;
 
@@ -201,7 +209,7 @@ public class MergeResources extends IncrementalTask {
     }
 
     @Override
-    protected void doFullTaskAction() throws IOException, ExecutionException {
+    protected void doFullTaskAction() throws IOException, ExecutionException, JAXBException {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
         // this is full run, clean the previous output
@@ -237,7 +245,6 @@ public class MergeResources extends IncrementalTask {
             } else {
                 resourceCompiler = QueueableResourceCompiler.NONE;
             }
-
             MergedResourceWriter writer =
                     new MergedResourceWriter(
                             workerExecutorFacade,
@@ -247,13 +254,16 @@ public class MergeResources extends IncrementalTask {
                             preprocessor,
                             resourceCompiler,
                             getIncrementalFolder(),
-                            dataBindingExpressionRemover,
-                            dataBindingLayoutOutputFolder,
+                            dataBindingLayoutProcessor,
                             mergedNotCompiledResourcesOutputDirectory,
                             pseudoLocalesEnabled,
                             getCrunchPng());
 
             merger.mergeData(writer, false /*doCleanUp*/);
+
+            if (dataBindingLayoutProcessor != null) {
+                dataBindingLayoutProcessor.end();
+            }
 
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer, false);
@@ -268,7 +278,7 @@ public class MergeResources extends IncrementalTask {
 
     @Override
     protected void doIncrementalTaskAction(Map<File, FileStatus> changedInputs)
-            throws IOException, ExecutionException {
+            throws IOException, ExecutionException, JAXBException {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
         // create a merger and load the known state.
@@ -345,13 +355,17 @@ public class MergeResources extends IncrementalTask {
                             preprocessor,
                             resourceCompiler,
                             getIncrementalFolder(),
-                            dataBindingExpressionRemover,
-                            dataBindingLayoutOutputFolder,
+                            dataBindingLayoutProcessor,
                             mergedNotCompiledResourcesOutputDirectory,
                             pseudoLocalesEnabled,
                             getCrunchPng());
 
             merger.mergeData(writer, false /*doCleanUp*/);
+
+            if (dataBindingLayoutProcessor != null) {
+                dataBindingLayoutProcessor.end();
+            }
+
             // No exception? Write the known state.
             merger.writeBlobTo(getIncrementalFolder(), writer, false);
         } catch (MergingException e) {
@@ -631,13 +645,6 @@ public class MergeResources extends IncrementalTask {
     @Nullable
     @OutputDirectory
     @Optional
-    public File getDataBindingLayoutOutputFolder() {
-        return dataBindingLayoutOutputFolder;
-    }
-
-    @Nullable
-    @OutputDirectory
-    @Optional
     public File getMergedNotCompiledResourcesOutputDirectory() {
         return mergedNotCompiledResourcesOutputDirectory;
     }
@@ -776,7 +783,6 @@ public class MergeResources extends IncrementalTask {
             mergeResourcesTask.setVariantName(scope.getVariantConfiguration().getFullName());
             mergeResourcesTask.setIncrementalFolder(scope.getIncrementalDir(getName()));
             mergeResourcesTask.variantScope = scope;
-
             // Libraries use this task twice, once for compilation (with dependencies),
             // where blame is useful, and once for packaging where it is not.
             if (includeDependencies) {
@@ -836,11 +842,31 @@ public class MergeResources extends IncrementalTask {
             variantData.mergeResourcesTask = mergeResourcesTask;
 
             if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
-                mergeResourcesTask.dataBindingExpressionRemover =
-                        LayoutFileParser::stripSingleLayoutFile;
-                // Output for the merge resources task to pass the layouts to data binding tasks.
-                mergeResourcesTask.dataBindingLayoutOutputFolder =
-                        scope.getLayoutInputFolderForDataBinding();
+                // Keep as an output.
+                mergeResourcesTask.dataBindingLayoutInfoOutFolder =
+                        scope.getLayoutInfoOutputForDataBinding();
+
+                mergeResourcesTask.dataBindingLayoutProcessor =
+                        new SingleFileProcessor() {
+                            final LayoutXmlProcessor processor =
+                                    variantData.getLayoutXmlProcessor();
+
+                            @Override
+                            public boolean processSingleFile(File file, File out) throws Exception {
+                                return processor.processSingleFile(file, out);
+                            }
+
+                            @Override
+                            public void processRemovedFile(File file) {
+                                processor.processRemovedFile(file);
+                            }
+
+                            @Override
+                            public void end() throws JAXBException {
+                                processor.writeLayoutInfoFiles(
+                                        mergeResourcesTask.dataBindingLayoutInfoOutFolder);
+                            }
+                        };
             }
 
             mergeResourcesTask.mergedNotCompiledResourcesOutputDirectory =

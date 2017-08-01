@@ -277,19 +277,23 @@ public class MergeJavaResourcesTransform extends Transform {
         // Prefix libraries with "lib/" if we're doing libraries.
         assert mergedType.size() == 1;
         if (mergedType.iterator().next() == ExtendedContentType.NATIVE_LIBS) {
-            inputs = inputs.stream()
-                    .map(i -> {
-                        QualifiedContent qc = contentMap.get(i);
-                        if (!qc.getScopes().contains(Scope.SUB_PROJECTS)
-                                && qc.getFile().isDirectory()) {
-                            i = new RenameIncrementalFileMergerInput(
-                                    i, s -> "lib/" + s, s -> s.substring("lib/".length()));
-                            contentMap.put(i, qc);
-                        }
+            inputs =
+                    inputs.stream()
+                            .map(
+                                    i -> {
+                                        QualifiedContent qc = contentMap.get(i);
+                                        if (qc.getFile().isDirectory()) {
+                                            i =
+                                                    new RenameIncrementalFileMergerInput(
+                                                            i,
+                                                            s -> "lib/" + s,
+                                                            s -> s.substring("lib/".length()));
+                                            contentMap.put(i, qc);
+                                        }
 
-                        return i;
-                    })
-                    .collect(Collectors.toList());
+                                        return i;
+                                    })
+                            .collect(Collectors.toList());
         }
 
         // Filter inputs.

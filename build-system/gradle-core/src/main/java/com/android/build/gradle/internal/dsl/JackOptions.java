@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Collections;
@@ -125,27 +124,6 @@ public class JackOptions implements CoreJackOptions {
     @NonNull
     public List<String> getPluginNames() {
         return pluginNames;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        JackOptions that = (JackOptions) o;
-        return Objects.equal(isEnabledFlag, that.isEnabledFlag)
-                && Objects.equal(isJackInProcessFlag, that.isJackInProcessFlag)
-                && Objects.equal(additionalParameters, that.additionalParameters)
-                && Objects.equal(pluginNames, that.pluginNames);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(
-                isEnabledFlag, isJackInProcessFlag, additionalParameters, pluginNames);
     }
 
     @Override

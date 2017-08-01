@@ -542,6 +542,14 @@ public class LintGradleProject extends Project {
         }
     }
 
+    // FIXME: Remove this once instant apps no longer output an AndroidProject.
+    private static class InstantAppGradleProject extends LintGradleProject {
+        private InstantAppGradleProject(
+                @NonNull LintGradleClient client, @NonNull File dir, @NonNull File referenceDir) {
+            super(client, dir, referenceDir, null);
+        }
+    }
+
     private static class LibraryProject extends LintGradleProject {
         private final AndroidLibrary mLibrary;
 
@@ -934,7 +942,12 @@ public class LintGradleProject extends Project {
             }
             mSeen.add(project);
             File dir = gradleProject.getProjectDir();
-            AppGradleProject lintProject = new AppGradleProject(client, dir, dir, project, variant);
+            LintGradleProject lintProject;
+            if (project.getProjectType() == AndroidProject.PROJECT_TYPE_INSTANTAPP) {
+                lintProject = new InstantAppGradleProject(client, dir, dir);
+            } else {
+                lintProject = new AppGradleProject(client, dir, dir, project, variant);
+            }
             appProjects.put(project, lintProject);
 
             File appLintJar = new File(gradleProject.getBuildDir(),

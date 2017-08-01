@@ -121,7 +121,7 @@ public final class GradleTestProject implements TestRule {
 
     public static final File BUILD_DIR;
     public static final File OUT_DIR;
-    public static final File GRADLE_USER_HOME;
+    private static final Path GRADLE_USER_HOME;
     public static final File ANDROID_SDK_HOME;
 
     /**
@@ -153,8 +153,11 @@ public final class GradleTestProject implements TestRule {
             // across invocations to save disk space.
             GRADLE_USER_HOME =
                     TestUtils.runningFromBazel()
-                            ? BazelIntegrationTestsSuite.GRADLE_USER_HOME.toFile()
-                            : new File(BUILD_DIR, "GRADLE_USER_HOME");
+                            ? BazelIntegrationTestsSuite.GRADLE_USER_HOME
+                            : BUILD_DIR
+                                    .toPath()
+                                    .resolve("GRADLE_USER_HOME")
+                                    .resolve(System.getProperty("org.gradle.test.worker"));
 
             boolean useNightly =
                     Boolean.parseBoolean(
@@ -1213,7 +1216,7 @@ public final class GradleTestProject implements TestRule {
         projectConnection =
                 connector
                         .useDistribution(distributionZip.toURI())
-                        .useGradleUserHomeDir(GRADLE_USER_HOME)
+                        .useGradleUserHomeDir(GRADLE_USER_HOME.toFile())
                         .forProjectDirectory(getTestDir())
                         .connect();
 

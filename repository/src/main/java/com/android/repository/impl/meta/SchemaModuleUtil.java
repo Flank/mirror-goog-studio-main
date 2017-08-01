@@ -241,6 +241,7 @@ public class SchemaModuleUtil {
         try {
             SAXParser sp = spf.newSAXParser();
             xr = sp.getXMLReader();
+            xr.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
         } catch (ParserConfigurationException | SAXException e) {
             // Shouldn't happen
             progress.logError("Error setting up parser", e);

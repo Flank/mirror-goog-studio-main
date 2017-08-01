@@ -69,10 +69,11 @@ public class SymbolTest {
     @Test
     public void nameCannotBeNull() {
         try {
+            // noinspection ConstantConditions
             SymbolTestUtils.createSymbol("attr", null, "int[]", "");
             fail();
         } catch (IllegalArgumentException e) {
-            assertThat("Resource name cannot be null").isEqualTo(e.getMessage());
+            assertThat(e.getMessage()).contains("name");
         }
     }
 

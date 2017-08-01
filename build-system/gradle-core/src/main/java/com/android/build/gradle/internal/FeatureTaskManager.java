@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal;
 
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
@@ -28,6 +29,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
+import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ApplicationId;
@@ -57,7 +59,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
-import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.tasks.bundling.Jar;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
@@ -89,6 +91,19 @@ public class FeatureTaskManager extends TaskManager {
     @Override
     public void createTasksForVariantScope(
             @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
+        // Ensure the compile SDK is at least 26 (O).
+        final AndroidVersion androidVersion =
+                AndroidTargetHash.getVersionFromHash(
+                        variantScope.getGlobalScope().getExtension().getCompileSdkVersion());
+        if (androidVersion == null
+                || androidVersion.getApiLevel() < AndroidVersion.VersionCodes.O) {
+            String message = "Feature modules require compileSdkVersion set to 26 or higher.";
+            if (androidVersion != null) {
+                message += " compileSdkVersion is set to " + androidVersion.getApiString();
+            }
+            throw new GradleException(message);
+        }
+
         BaseVariantData variantData = variantScope.getVariantData();
         assert variantData instanceof FeatureVariantData;
 
@@ -379,17 +394,7 @@ public class FeatureTaskManager extends TaskManager {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
         }
 
-        // FIXME: This is temporary until we enforce usage of compile SDK 26 on features.
-        final AndroidVersion androidVersion =
-                AndroidTargetHash.getVersionFromHash(
-                        variantScope.getGlobalScope().getExtension().getCompileSdkVersion());
-        final boolean preO =
-                androidVersion != null
-                        && androidVersion.getApiLevel() < AndroidVersion.VersionCodes.O;
-
-        if (!preO) {
-            optionalFeatures.add(ManifestMerger2.Invoker.Feature.TARGET_SANDBOX_VERSION);
-        }
+        optionalFeatures.add(ManifestMerger2.Invoker.Feature.TARGET_SANDBOX_VERSION);
 
         AndroidTask<? extends ManifestProcessorTask> mergeManifestsAndroidTask;
         if (variantScope.isBaseFeature()) {
@@ -402,11 +407,6 @@ public class FeatureTaskManager extends TaskManager {
         } else {
             // Non-base split. Publish the feature manifest.
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_INFO);
-
-            if (preO) {
-                optionalFeatures.add(
-                        ManifestMerger2.Invoker.Feature.TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES);
-            }
 
             mergeManifestsAndroidTask =
                     androidTasks.create(
@@ -470,12 +470,46 @@ public class FeatureTaskManager extends TaskManager {
     @Override
     protected void postJavacCreation(
             @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
-        // create an anchor collection for usage inside the same module (unit tests basically)
-        ConfigurableFileCollection fileCollection =
-                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS);
-        fileCollection.from(scope.getOutput(JAVAC));
-        fileCollection.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
-        fileCollection.from(scope.getVariantData().getAllPostJavacGeneratedBytecode());
+        // Create the classes artifact for use by dependent features.
+        File dest =
+                new File(
+                        globalScope.getBuildDir(),
+                        FileUtils.join(
+                                FD_INTERMEDIATES,
+                                "classes-jar",
+                                scope.getVariantConfiguration().getDirName()));
+
+        AndroidTask<Jar> task =
+                androidTasks.create(
+                        tasks,
+                        new TaskConfigAction<Jar>() {
+                            @NonNull
+                            @Override
+                            public String getName() {
+                                return scope.getTaskName("bundle", "Classes");
+                            }
+
+                            @NonNull
+                            @Override
+                            public Class<Jar> getType() {
+                                return Jar.class;
+                            }
+
+                            @Override
+                            public void execute(@NonNull Jar task) {
+                                task.from(scope.getOutput(JAVAC));
+                                task.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
+                                task.from(
+                                        scope.getVariantData().getAllPostJavacGeneratedBytecode());
+                                task.setDestinationDir(dest);
+                                task.setArchiveName("classes.jar");
+                            }
+                        });
+
+        scope.addTaskOutput(
+                TaskOutputHolder.TaskOutputType.FEATURE_CLASSES,
+                new File(dest, "classes.jar"),
+                task.getName());
     }
 
     @NonNull
@@ -494,9 +528,7 @@ public class FeatureTaskManager extends TaskManager {
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
             @NonNull MergeType sourceTaskOutputType,
             @NonNull String baseName) {
-        // TODO: we need a better way to determine if we are dealing with a base split or not.
         if (scope.isBaseFeature()) {
-            // Base feature split.
             return super.createProcessAndroidResourcesConfigAction(
                     scope,
                     symbolLocation,
@@ -506,7 +538,6 @@ public class FeatureTaskManager extends TaskManager {
                     sourceTaskOutputType,
                     baseName);
         } else {
-            // Non-base feature split.
             return new ProcessAndroidResources.FeatureSplitConfigAction(
                     scope,
                     symbolLocation,

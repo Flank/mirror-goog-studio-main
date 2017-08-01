@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -233,8 +232,7 @@ public class AntennaPodPerformanceMatrixTest {
                 .withEnableInfoLogging(false)
                 .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
                 .with(BooleanOption.ENABLE_AAPT2, false)
-                .with(BooleanOption.ENABLE_D8_DEXER, projectScenario.useD8())
-                .with(BooleanOption.ENABLE_D8_MERGER, projectScenario.useD8())
+                .with(BooleanOption.ENABLE_D8, projectScenario.useD8())
                 .withUseDexArchive(projectScenario.useDexArchive());
     }
 

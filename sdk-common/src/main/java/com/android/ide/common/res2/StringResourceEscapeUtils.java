@@ -16,10 +16,12 @@
 package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
+import com.android.utils.XmlUtils;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.InputSource;
@@ -48,8 +50,10 @@ final class StringResourceEscapeUtils {
         XMLReader reader;
 
         try {
-            reader = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
-
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            XmlUtils.configureSaxFactory(factory, false, false);
+            SAXParser parser = XmlUtils.createSaxParser(factory);
+            reader = parser.getXMLReader();
             reader.setContentHandler(handler);
             reader.setProperty("http://xml.org/sax/properties/lexical-handler", handler);
         } catch (ParserConfigurationException | SAXException exception) {

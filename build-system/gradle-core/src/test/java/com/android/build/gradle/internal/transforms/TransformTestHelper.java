@@ -74,6 +74,7 @@ class TransformTestHelper {
 
     static class InvocationBuilder {
 
+        private Context context = Mockito.mock(Context.class);
         private TransformOutputProvider transformOutputProvider;
         private Set<TransformInput> inputs = new HashSet<>();
         private Set<TransformInput> referencedInputs = new HashSet<>();
@@ -124,8 +125,14 @@ class TransformTestHelper {
             return this;
         }
 
+        public InvocationBuilder setContext(@NonNull Context context) {
+            this.context = context;
+            return this;
+        }
+
         TransformInvocation build() {
             return new FakeTransformInvocation(
+                    context,
                     transformOutputProvider,
                     ImmutableSet.copyOf(inputs),
                     ImmutableSet.copyOf(referencedInputs),
@@ -136,6 +143,7 @@ class TransformTestHelper {
 
     private static class FakeTransformInvocation implements TransformInvocation {
 
+        @NonNull private final Context context;
         @NonNull
         private final TransformOutputProvider transformOutputProvider;
         @NonNull
@@ -147,11 +155,13 @@ class TransformTestHelper {
         private final boolean isIncremental;
 
         private FakeTransformInvocation(
+                @NonNull Context context,
                 @NonNull TransformOutputProvider transformOutputProvider,
                 @NonNull ImmutableSet<TransformInput> inputs,
                 @NonNull ImmutableSet<TransformInput> referencedInputs,
                 @NonNull ImmutableSet<SecondaryInput> secondaryInputs,
                 boolean isIncremental) {
+            this.context = context;
             this.transformOutputProvider = transformOutputProvider;
             this.inputs = inputs;
             this.referencedInputs = referencedInputs;
@@ -162,7 +172,7 @@ class TransformTestHelper {
         @NonNull
         @Override
         public Context getContext() {
-            return Mockito.mock(Context.class);
+            return context;
         }
 
         @NonNull

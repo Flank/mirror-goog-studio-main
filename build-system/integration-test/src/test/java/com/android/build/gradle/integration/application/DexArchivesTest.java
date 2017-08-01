@@ -225,8 +225,7 @@ public class DexArchivesTest {
         return project.executor()
                 .withUseDexArchive(true)
                 .withEnabledAapt2(true)
-                .with(BooleanOption.ENABLE_D8_DEXER, dexerTool == DexerTool.D8)
-                .with(BooleanOption.ENABLE_D8_MERGER, mergerTool == DexMergerTool.D8)
+                .with(BooleanOption.ENABLE_D8, dexerTool == DexerTool.D8)
                 .run(taskName);
     }
 

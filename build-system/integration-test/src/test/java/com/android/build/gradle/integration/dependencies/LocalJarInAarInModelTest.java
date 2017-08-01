@@ -18,26 +18,25 @@ package com.android.build.gradle.integration.dependencies;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_BUILD_TOOL_VERSION;
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.DEFAULT_COMPILE_SDK_VERSION;
-import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.ANDROID;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
-import static org.junit.Assert.fail;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
+import com.google.common.collect.Iterables;
 import java.io.File;
-import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
-import org.gradle.tooling.BuildException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -48,6 +47,8 @@ import org.junit.Test;
  */
 public class LocalJarInAarInModelTest {
 
+    private static final String JARS_LIBS_INTERNAL_IMPL_24_0_0_JAR =
+            "jars" + File.separatorChar + "libs" + File.separatorChar + "internal_impl-24.0.0.jar";
     @Rule
     public GradleTestProject project = GradleTestProject.builder()
             .fromTestApp(HelloWorldApp.noBuildFile())
@@ -61,8 +62,12 @@ public class LocalJarInAarInModelTest {
                         + "apply plugin: \"com.android.application\"\n"
                         + "\n"
                         + "android {\n"
-                        + "  compileSdkVersion " + DEFAULT_COMPILE_SDK_VERSION + "\n"
-                        + "  buildToolsVersion \"" + DEFAULT_BUILD_TOOL_VERSION + "\"\n"
+                        + "  compileSdkVersion "
+                        + DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "  buildToolsVersion \""
+                        + DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
                         + "\n"
                         + "  defaultConfig {\n"
                         + "    minSdkVersion 4\n"
@@ -70,7 +75,7 @@ public class LocalJarInAarInModelTest {
                         + "}\n"
                         + "\n"
                         + "dependencies {\n"
-                        + "  compile \"com.android.support:support-v4:" + SUPPORT_LIB_VERSION
+                        + "  compile \"com.android.support:support-v4:24.0.0" // we need to use this version as later versions don't use internal jars under libs/ anymore
                         + "\"\n"
                         + "}\n");
     }
@@ -81,7 +86,7 @@ public class LocalJarInAarInModelTest {
     }
 
     @Test
-    public void checkAarsExplodedAfterSync() throws Exception {
+    public void checkAarsExplodedAfterSync_Level4() throws Exception {
         ModelContainer<AndroidProject> model = project.model().getSingle();
         LibraryGraphHelper helper = new LibraryGraphHelper(model);
 
@@ -90,17 +95,50 @@ public class LocalJarInAarInModelTest {
         DependencyGraphs graph = variant.getMainArtifact().getDependencyGraphs();
         LibraryGraphHelper.Items androidItems = helper.on(graph).withType(ANDROID);
 
-        // check the model validity: making sure the folders are extracted and the local
-        // jars are present.
+        // check the model validity: making sure the folder are extracted and the local
+        // jar is present.
         List<Library> libraries = androidItems.asLibraries();
-        assertThat(libraries).hasSize(6);
-        for (Library androidLibrary : libraries) {
-            File rootFolder = androidLibrary.getFolder();
-            assertThat(rootFolder).isDirectory();
-            assertThat(new File(rootFolder, androidLibrary.getJarFile())).isFile();
-            for (String localJar : androidLibrary.getLocalJars()) {
-                assertThat(new File(rootFolder, localJar)).isFile();
-            }
-        }
+        assertThat(libraries).hasSize(1);
+
+        Library singleLibrary = Iterables.getOnlyElement(libraries);
+
+        File rootFolder = singleLibrary.getFolder();
+        assertThat(rootFolder).isDirectory();
+        assertThat(new File(rootFolder, singleLibrary.getJarFile())).isFile();
+
+        // check the local jars
+        final Collection<String> localJars = singleLibrary.getLocalJars();
+        assertThat(localJars).containsExactly(JARS_LIBS_INTERNAL_IMPL_24_0_0_JAR);
+        assertThat(new File(rootFolder, JARS_LIBS_INTERNAL_IMPL_24_0_0_JAR)).isFile();
+    }
+
+    @Test
+    public void checkAarsExplodedAfterSync_Level1() throws Exception {
+        // need to test level 1 until Studio 3.0 move to level 4
+        ModelContainer<AndroidProject> model =
+                project.model()
+                        .level(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD)
+                        .getSingle();
+
+        Variant variant = ModelHelper.getVariant(model.getOnlyModel().getVariants(), "debug");
+
+        Dependencies deps = variant.getMainArtifact().getDependencies();
+
+        // check the model validity: making sure the folder are extracted and the local
+        // jar is present.
+        Collection<AndroidLibrary> libraries = deps.getLibraries();
+        assertThat(libraries).hasSize(1);
+
+        AndroidLibrary singleLibrary = Iterables.getOnlyElement(libraries);
+
+        File rootFolder = singleLibrary.getFolder();
+        assertThat(rootFolder).isDirectory();
+        assertThat(singleLibrary.getJarFile()).isFile();
+
+        // check the local jars
+        Collection<File> localJars = singleLibrary.getLocalJars();
+        final File expectedLocalJarFile = new File(rootFolder, JARS_LIBS_INTERNAL_IMPL_24_0_0_JAR);
+        assertThat(localJars).containsExactly(expectedLocalJarFile);
+        assertThat(expectedLocalJarFile).isFile();
     }
 }

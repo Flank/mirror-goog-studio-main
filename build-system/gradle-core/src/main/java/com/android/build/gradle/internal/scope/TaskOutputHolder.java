@@ -43,6 +43,8 @@ public interface TaskOutputHolder {
         LIBRARY_CLASSES,
         // the packaged classes published by APK modules.
         APP_CLASSES,
+        // the packaged classes published by feature modules.
+        FEATURE_CLASSES,
 
         // --- java res ---
         // java processing output

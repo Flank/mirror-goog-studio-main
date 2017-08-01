@@ -23,9 +23,11 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.InstantAppTaskManager;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
+import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
+import com.android.build.gradle.internal.ide.InstantAppModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.InstantAppVariantFactory;
@@ -85,7 +87,6 @@ public class InstantAppPlugin extends BasePlugin implements Plugin<Project> {
     @NonNull
     @Override
     protected GradleBuildProject.PluginType getAnalyticsPluginType() {
-        // FIXME: Use the right type once the enums are updated.
         return GradleBuildProject.PluginType.INSTANTAPP;
     }
 
@@ -112,6 +113,19 @@ public class InstantAppPlugin extends BasePlugin implements Plugin<Project> {
                 sdkHandler,
                 toolingRegistry,
                 recorder);
+    }
+
+    @Override
+    protected void registerModels(
+            @NonNull ToolingModelBuilderRegistry registry,
+            @NonNull GlobalScope globalScope,
+            @NonNull VariantManager variantManager,
+            @NonNull AndroidConfig config,
+            @NonNull ExtraModelInfo extraModelInfo) {
+        InstantAppModelBuilder instantAppModelBuilder =
+                new InstantAppModelBuilder(
+                        variantManager, config, extraModelInfo, AndroidProject.GENERATION_ORIGINAL);
+        registry.register(instantAppModelBuilder);
     }
 
     @Override

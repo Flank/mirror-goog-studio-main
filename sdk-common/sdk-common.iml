@@ -26,5 +26,17 @@
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="auto-value-1.4.1" level="project" />
     <orderEntry type="library" name="jimfs" level="project" scope="TEST" />
+    <orderEntry type="module" module-name="android-annotations" />
+    <orderEntry type="module" module-name="ddmlib" />
+    <orderEntry type="library" name="Guava" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/aia-manifest-proto-1.0-jarjar.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

@@ -51,6 +51,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
@@ -376,7 +377,7 @@ public class PluginDslTest {
     }
 
     @Test
-    public void testProguardDsl() throws Exception {
+    public void testProguardFiles_oldDsl() throws Exception {
         Eval.me(
                 "project",
                 project,
@@ -415,12 +416,83 @@ public class PluginDslTest {
                         + "}\n");
         plugin.createAndroidTasks(false);
 
-        Map<String, List<String>> expected = new HashMap<>();
+        Map<String, List<String>> expected = new TreeMap<>();
         expected.put(
                 "f1Release",
                 ImmutableList.of("file1.1", "file1.2", "file1.3", "file2.1", "file2.2", "file2.3"));
         expected.put("f1Debug", ImmutableList.of("file2.1", "file2.2", "file2.3"));
         expected.put("f2Release", ImmutableList.of("file1.1", "file1.2", "file1.3"));
+        expected.put("f2Custom", ImmutableList.of("file3.1"));
+        expected.put("f3Custom", ImmutableList.of("file3.1", "file4.1"));
+
+        checkProguardFiles(expected);
+    }
+
+    @Test
+    public void testProguardFiles_newDsl() throws Exception {
+        Eval.me(
+                "project",
+                project,
+                "\n"
+                        + "project.android {\n"
+                        + "    buildTypes {\n"
+                        + "        release {\n"
+                        + "            postprocessing{\n"
+                        + "                proguardFile 'file1.1'\n"
+                        + "                proguardFiles 'file1.2', 'file1.3'\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "\n"
+                        + "        custom {\n"
+                        + "            postprocessing {\n"
+                        + "                proguardFile 'file3.1'\n"
+                        + "                proguardFiles 'file3.2', 'file3.3'\n"
+                        + "                proguardFiles = ['file3.1']\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "\n"
+                        + "    flavorDimensions 'foo'\n"
+                        + "    productFlavors {\n"
+                        + "        f1 {\n"
+                        + "            proguardFile 'file2.1'\n"
+                        + "            proguardFiles 'file2.2', 'file2.3'\n"
+                        + "        }\n"
+                        + "\n"
+                        + "        f2  {\n"
+                        + "\n"
+                        + "        }\n"
+                        + "\n"
+                        + "        f3 {\n"
+                        + "            proguardFile 'file4.1'\n"
+                        + "            proguardFiles 'file4.2', 'file4.3'\n"
+                        + "            proguardFiles = ['file4.1']\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+        plugin.createAndroidTasks(false);
+
+        String defaultFile =
+                new File(
+                                project.getBuildDir(),
+                                "intermediates/proguard-files/proguard-defaults.txt-"
+                                        + Version.ANDROID_GRADLE_PLUGIN_VERSION)
+                        .getAbsolutePath();
+
+        Map<String, List<String>> expected = new TreeMap<>();
+        expected.put(
+                "f1Release",
+                ImmutableList.of(
+                        defaultFile,
+                        "file1.1",
+                        "file1.2",
+                        "file1.3",
+                        "file2.1",
+                        "file2.2",
+                        "file2.3"));
+        expected.put("f2Release", ImmutableList.of(defaultFile, "file1.1", "file1.2", "file1.3"));
+
+        // The custom build type uses setProguardFiles, so the default file will not be there.
         expected.put("f2Custom", ImmutableList.of("file3.1"));
         expected.put("f3Custom", ImmutableList.of("file3.1", "file4.1"));
 
@@ -617,18 +689,21 @@ public class PluginDslTest {
 
     public void checkProguardFiles(Map<String, List<String>> expected) {
         Map<String, VariantScope> variantMap = getVariantMap();
-        expected.forEach(
-                (variantName, expectedFileNames) -> {
-                    List<File> proguardFiles = variantMap.get(variantName).getProguardFiles();
-                    Set<File> expectedFiles =
-                            expectedFileNames
-                                    .stream()
-                                    .map(project::file)
-                                    .collect(Collectors.toSet());
-                    assertThat(proguardFiles)
-                            .named("Proguard files for " + variantName)
-                            .containsExactlyElementsIn(expectedFiles);
-                });
+        for (Map.Entry<String, List<String>> entry : expected.entrySet()) {
+            String variantName = entry.getKey();
+            Set<File> proguardFiles =
+                    variantMap
+                            .get(variantName)
+                            .getProguardFiles()
+                            .stream()
+                            .map(File::getAbsoluteFile)
+                            .collect(Collectors.toSet());
+            Set<File> expectedFiles =
+                    entry.getValue().stream().map(project::file).collect(Collectors.toSet());
+            assertThat(proguardFiles)
+                    .named("Proguard files for " + variantName)
+                    .containsExactlyElementsIn(expectedFiles);
+        }
     }
 
     public Map<String, VariantScope> getVariantMap() {

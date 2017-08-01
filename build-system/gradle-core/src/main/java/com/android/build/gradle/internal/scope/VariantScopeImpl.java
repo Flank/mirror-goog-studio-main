@@ -70,7 +70,6 @@ import com.android.build.gradle.internal.tasks.CheckManifest;
 import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.tasks.databinding.DataBindingExportBuildInfoTask;
-import com.android.build.gradle.internal.tasks.databinding.DataBindingProcessLayoutsTask;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -182,8 +181,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     private AndroidTask<Sync> processJavaResourcesTask;
     private AndroidTask<TransformTask> mergeJavaResourcesTask;
-
-    @Nullable private AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask;
 
     @Nullable private AndroidTask<? extends JavaCompile> javacTask;
 
@@ -568,19 +565,20 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     private List<File> gatherProguardFiles(
             @NonNull Function<PostprocessingOptions, List<File>> postprocessingGetter,
             @NonNull Function<BaseConfig, Collection<File>> baseConfigGetter) {
+        GradleVariantConfiguration variantConfiguration = getVariantConfiguration();
+
         List<File> result = new ArrayList<>();
+        result.addAll(baseConfigGetter.apply(variantConfiguration.getDefaultConfig()));
 
         PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
         if (postprocessingOptions == null) {
-            GradleVariantConfiguration variantConfiguration = getVariantConfiguration();
-            result.addAll(baseConfigGetter.apply(variantConfiguration.getDefaultConfig()));
             result.addAll(baseConfigGetter.apply(variantConfiguration.getBuildType()));
-            for (CoreProductFlavor flavor : variantConfiguration.getProductFlavors()) {
-                result.addAll(baseConfigGetter.apply(flavor));
-            }
         } else {
-            // The postprocessing block is only in the build type for now.
             result.addAll(postprocessingGetter.apply(postprocessingOptions));
+        }
+
+        for (CoreProductFlavor flavor : variantConfiguration.getProductFlavors()) {
+            result.addAll(baseConfigGetter.apply(flavor));
         }
 
         return result;
@@ -731,18 +729,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public void setNdkBuildable(@NonNull Collection<Object> ndkBuildable) {
         this.ndkBuildable = ndkBuildable;
-    }
-
-    @Nullable
-    @Override
-    public AndroidTask<DataBindingProcessLayoutsTask> getDataBindingProcessLayoutsTask() {
-        return dataBindingProcessLayoutsTask;
-    }
-
-    @Override
-    public void setDataBindingProcessLayoutsTask(
-            @Nullable AndroidTask<DataBindingProcessLayoutsTask> dataBindingProcessLayoutsTask) {
-        this.dataBindingProcessLayoutsTask = dataBindingProcessLayoutsTask;
     }
 
     @Override
@@ -2091,7 +2077,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public DexerTool getDexer() {
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8_DEXER)) {
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8)) {
             return DexerTool.D8;
         } else {
             return DexerTool.DX;
@@ -2101,7 +2087,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public DexMergerTool getDexMerger() {
-        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8_MERGER)) {
+        if (globalScope.getProjectOptions().get(BooleanOption.ENABLE_D8)) {
             return DexMergerTool.D8;
         } else {
             return DexMergerTool.DX;

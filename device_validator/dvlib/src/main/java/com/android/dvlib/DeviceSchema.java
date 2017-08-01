@@ -19,16 +19,7 @@ package com.android.dvlib;
 import com.android.annotations.Nullable;
 import com.android.io.NonClosingInputStream;
 import com.android.io.NonClosingInputStream.CloseBehavior;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.xml.sax.Attributes;
-import org.xml.sax.ErrorHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.helpers.DefaultHandler;
-
+import com.android.utils.XmlUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,7 +27,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -46,6 +36,14 @@ import javax.xml.parsers.SAXParserFactory;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.xml.sax.Attributes;
+import org.xml.sax.ErrorHandler;
+import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
+import org.xml.sax.helpers.DefaultHandler;
 
 public class DeviceSchema {
 
@@ -303,7 +301,7 @@ public class DeviceSchema {
             factory.setNamespaceAware(true);
             factory.setSchema(schema);
             DevicesValidationHandler devicesValidator = new DevicesValidationHandler(parent, writer);
-            SAXParser parser = factory.newSAXParser();
+            SAXParser parser = XmlUtils.createSaxParser(factory);
 
             deviceXml.reset();
             parser.parse(deviceXml, devicesValidator);

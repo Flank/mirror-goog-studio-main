@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,9 +18,7 @@ package com.android.build.gradle.internal.ide;
 
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
-import com.android.build.gradle.internal.dsl.*;
 import com.android.builder.model.TestOptions;
-import com.android.builder.model.TestOptions.Execution;
 import java.io.Serializable;
 
 /** Implementation of the {@link TestOptions} model */

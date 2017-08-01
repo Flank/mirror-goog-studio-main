@@ -28,6 +28,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.Serializable;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -43,7 +45,9 @@ public final class BuildOutput implements OutputFile, Serializable {
 
     @NonNull private final VariantScope.OutputType outputType;
     @NonNull private final ApkInfo apkInfo;
-    @NonNull private final File outputFile;
+    // the right abstraction would be Path but it's not serializable so reconstruct the Path
+    // instance from its String representation.
+    @NonNull private final String path;
     @NonNull private final Map<String, String> properties;
 
     public BuildOutput(
@@ -58,9 +62,17 @@ public final class BuildOutput implements OutputFile, Serializable {
             @NonNull ApkInfo apkInfo,
             @NonNull File outputFile,
             @NonNull Map<String, String> properties) {
+        this(outputType, apkInfo, outputFile.toPath(), properties);
+    }
+
+    public BuildOutput(
+            @NonNull VariantScope.OutputType outputType,
+            @NonNull ApkInfo apkInfo,
+            @NonNull Path outputPath,
+            @NonNull Map<String, String> properties) {
         this.outputType = outputType;
         this.apkInfo = apkInfo;
-        this.outputFile = outputFile;
+        this.path = outputPath.toString();
         this.properties = properties;
     }
 
@@ -79,7 +91,7 @@ public final class BuildOutput implements OutputFile, Serializable {
     @NonNull
     @Override
     public File getOutputFile() {
-        return new File(outputFile.getPath());
+        return Paths.get(path).toFile();
     }
 
     /**
@@ -181,7 +193,7 @@ public final class BuildOutput implements OutputFile, Serializable {
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("apkInfo", apkInfo)
-                .add("outputFile", outputFile)
+                .add("path", path)
                 .add("properties", Joiner.on(",").join(properties.entrySet()))
                 .toString();
     }
@@ -198,11 +210,15 @@ public final class BuildOutput implements OutputFile, Serializable {
         return outputType == that.outputType
                 && Objects.equals(properties, that.properties)
                 && Objects.equals(apkInfo, that.apkInfo)
-                && Objects.equals(outputFile, that.outputFile);
+                && Objects.equals(path, that.path);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(outputType, apkInfo, outputFile, properties);
+        return Objects.hash(outputType, apkInfo, path, properties);
+    }
+
+    public Path getOutputPath() {
+        return Paths.get(path);
     }
 }

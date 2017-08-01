@@ -71,19 +71,27 @@ public class AndroidArtifacts {
     private static final String TYPE_METADATA_APP_ID_DECLARATION = "android-metadata-app-id-decl";
 
     public enum ConsumedConfigType {
-        COMPILE_CLASSPATH(API_ELEMENTS, true),
-        RUNTIME_CLASSPATH(RUNTIME_ELEMENTS, true),
-        ANNOTATION_PROCESSOR(RUNTIME_ELEMENTS, false),
-        METADATA_VALUES(METADATA_ELEMENTS, false);
+        COMPILE_CLASSPATH("compileClasspath", API_ELEMENTS, true),
+        RUNTIME_CLASSPATH("runtimeClasspath", RUNTIME_ELEMENTS, true),
+        ANNOTATION_PROCESSOR("annotationProcessorClasspath", RUNTIME_ELEMENTS, false),
+        METADATA_VALUES("metadata", METADATA_ELEMENTS, false);
 
-        @NonNull
-        private final PublishedConfigType publishedTo;
+        @NonNull private final String name;
+        @NonNull private final PublishedConfigType publishedTo;
         private final boolean needsTestedComponents;
 
         ConsumedConfigType(
-                @NonNull PublishedConfigType publishedTo, boolean needsTestedComponents) {
+                @NonNull String name,
+                @NonNull PublishedConfigType publishedTo,
+                boolean needsTestedComponents) {
+            this.name = name;
             this.publishedTo = publishedTo;
             this.needsTestedComponents = needsTestedComponents;
+        }
+
+        @NonNull
+        public String getName() {
+            return name;
         }
 
         @NonNull

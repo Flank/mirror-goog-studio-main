@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.google.common.base.Objects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.Serializable;
@@ -179,27 +178,5 @@ public class NdkOptions implements CoreNdkOptions, Serializable {
 
     public void setJobs(Integer jobs) {
         this.jobs = jobs;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        NdkOptions that = (NdkOptions) o;
-        return Objects.equal(moduleName, that.moduleName) &&
-                Objects.equal(cFlags, that.cFlags) &&
-                Objects.equal(ldLibs, that.ldLibs) &&
-                Objects.equal(abiFilters, that.abiFilters) &&
-                Objects.equal(stl, that.stl) &&
-                Objects.equal(jobs, that.jobs);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(moduleName, cFlags, ldLibs, abiFilters, stl, jobs);
     }
 }

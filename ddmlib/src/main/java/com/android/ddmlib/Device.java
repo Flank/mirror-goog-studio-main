@@ -77,7 +77,7 @@ final class Device implements IDevice {
     /** Maps pid's of clients in {@link #mClients} to their package name. */
     private final Map<Integer, String> mClientInfo = new ConcurrentHashMap<Integer, String>();
 
-    private DeviceMonitor mMonitor;
+    private ClientTracker mClientTracer;
 
     private static final String LOG_TAG = "Device";
     private static final char SEPARATOR = '-';
@@ -688,14 +688,14 @@ final class Device implements IDevice {
                 String.format("%s:%s", namespace.getType(), remoteSocketName));   //$NON-NLS-1$
     }
 
-    Device(DeviceMonitor monitor, String serialNumber, DeviceState deviceState) {
-        mMonitor = monitor;
+    Device(ClientTracker clientTracer, String serialNumber, DeviceState deviceState) {
+        mClientTracer = clientTracer;
         mSerialNumber = serialNumber;
         mState = deviceState;
     }
 
-    DeviceMonitor getMonitor() {
-        return mMonitor;
+    ClientTracker getClientTracker() {
+        return mClientTracer;
     }
 
     @Override
@@ -753,7 +753,7 @@ final class Device implements IDevice {
      * @param notify Whether or not to notify the listeners of a change.
      */
     void removeClient(Client client, boolean notify) {
-        mMonitor.addPortToAvailableList(client.getDebuggerListenPort());
+        mClientTracer.trackDisconnectedClient(client);
         synchronized (mClients) {
             mClients.remove(client);
         }

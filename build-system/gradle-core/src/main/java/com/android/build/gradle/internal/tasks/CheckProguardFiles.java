@@ -17,13 +17,17 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.ProguardFiles;
+import com.android.build.gradle.ProguardFiles.ProguardFile;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.shrinker.ProguardConfig;
 import com.android.build.gradle.shrinker.parser.ProguardFlags;
 import com.android.build.gradle.shrinker.parser.UnsupportedFlagsHandler;
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.tasks.InputFiles;
@@ -38,9 +42,32 @@ public class CheckProguardFiles extends DefaultTask {
 
     @TaskAction
     public void run() {
+        // Below we assume new postprocessing DSL is used, since otherwise TaskManager does not
+        // create this task.
+
         ProguardConfig proguardConfig = new ProguardConfig();
 
+        Map<File, ProguardFile> oldFiles = new HashMap<>();
+        oldFiles.put(
+                ProguardFiles.getDefaultProguardFile(ProguardFile.OPTIMIZE.fileName, getProject())
+                        .getAbsoluteFile(),
+                ProguardFile.OPTIMIZE);
+        oldFiles.put(
+                ProguardFiles.getDefaultProguardFile(
+                                ProguardFile.DONT_OPTIMIZE.fileName, getProject())
+                        .getAbsoluteFile(),
+                ProguardFile.DONT_OPTIMIZE);
+
         for (File file : proguardFiles) {
+            if (oldFiles.containsKey(file.getAbsoluteFile())) {
+                String name = oldFiles.get(file.getAbsoluteFile()).fileName;
+                throw new InvalidUserDataException(
+                        name
+                                + " should not be used together with the new postprocessing DSL. "
+                                + "The new DSL includes sensible settings by default, you can override this "
+                                + "using `postprocessing { proguardFiles = []}`");
+            }
+
             try {
                 proguardConfig.parse(file, UnsupportedFlagsHandler.NO_OP);
             } catch (Exception e) {

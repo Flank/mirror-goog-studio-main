@@ -42,6 +42,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.ApplicationId;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
+import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
@@ -105,6 +106,7 @@ public class MergeManifests extends ManifestProcessorTask {
     private Set<String> supportedAbis;
     private String buildTargetAbi;
     private String buildTargetDensity;
+    private String featureName;
 
     @Override
     protected void doFullTaskAction() throws IOException {
@@ -151,6 +153,7 @@ public class MergeManifests extends ManifestProcessorTask {
                                     getMainManifest(),
                                     getManifestOverlays(),
                                     computeFullProviderList(compatibleScreenManifestForSplit),
+                                    getFeatureName(),
                                     packageOverride,
                                     apkData.getVersionCode(),
                                     apkData.getVersionName(),
@@ -172,8 +175,12 @@ public class MergeManifests extends ManifestProcessorTask {
             ImmutableMap<String, String> properties =
                     mergedXmlDocument != null
                             ? ImmutableMap.of(
-                                    "packageId", mergedXmlDocument.getPackageName(),
-                                    "split", mergedXmlDocument.getSplitName())
+                                    "packageId",
+                                    mergedXmlDocument.getPackageName(),
+                                    "split",
+                                    mergedXmlDocument.getSplitName(),
+                                    SdkConstants.ATTR_MIN_SDK_VERSION,
+                                    mergedXmlDocument.getMinSdkVersion())
                             : ImmutableMap.of();
 
             outputScope.addOutputForSplit(
@@ -440,6 +447,12 @@ public class MergeManifests extends ManifestProcessorTask {
         return buildTargetDensity;
     }
 
+    @Input
+    @Optional
+    public String getFeatureName() {
+        return featureName;
+    }
+
     public static class ConfigAction implements TaskConfigAction<MergeManifests> {
 
         protected final VariantScope variantScope;
@@ -582,6 +595,8 @@ public class MergeManifests extends ManifestProcessorTask {
         public void execute(@NonNull MergeManifests processManifestTask) {
             super.execute(processManifestTask);
 
+            processManifestTask.featureName =
+                    ((FeatureVariantData) variantScope.getVariantData()).getFeatureName();
             processManifestTask.packageManifest =
                     variantScope.getArtifactFileCollection(
                             COMPILE_CLASSPATH, MODULE, FEATURE_APPLICATION_ID_DECLARATION);

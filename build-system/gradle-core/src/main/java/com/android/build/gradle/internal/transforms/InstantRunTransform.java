@@ -68,6 +68,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.logging.Logging;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
@@ -164,9 +165,14 @@ public class InstantRunTransform extends Transform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
-        Collection<File> jarFiles = TransformInputUtil.getJarFiles(invocation.getInputs());
+        List<JarInput> jarInputs =
+                invocation
+                        .getInputs()
+                        .stream()
+                        .flatMap(input -> input.getJarInputs().stream())
+                        .collect(Collectors.toList());
         Preconditions.checkState(
-                jarFiles.isEmpty(), "Unexpected inputs: " + Joiner.on(", ").join(jarFiles));
+                jarInputs.isEmpty(), "Unexpected inputs: " + Joiner.on(", ").join(jarInputs));
         InstantRunBuildContext buildContext = transformScope.getInstantRunBuildContext();
         buildContext.startRecording(InstantRunBuildContext.TaskType.INSTANT_RUN_TRANSFORM);
         try {

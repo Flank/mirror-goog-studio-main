@@ -942,14 +942,14 @@ public class ManifestMerger2SmallTest {
         ManifestMerger2.Invoker invoker =
                 ManifestMerger2.newMerger(
                         inputFile, mockLog, ManifestMerger2.MergeType.APPLICATION);
-        validateFeatureName(invoker, "-split12", false);
-        validateFeatureName(invoker, ":-split12", false);
-        validateFeatureName(invoker, ":split12", true);
-        validateFeatureName(invoker, ":split-12", true);
-        validateFeatureName(invoker, ":split_12", true);
-        validateFeatureName(invoker, ":foo:split_12", true);
-        validateFeatureName(invoker, ":SPLIT", true);
-        validateFeatureName(invoker, ":-SPLIT", false);
+        validateFeatureName(invoker, "_split12", false);
+        validateFeatureName(invoker, ":split12", false);
+        validateFeatureName(invoker, "split12", true);
+        validateFeatureName(invoker, "split-12", false);
+        validateFeatureName(invoker, "split_12", true);
+        validateFeatureName(invoker, "foosplit_12", true);
+        validateFeatureName(invoker, "SPLIT", true);
+        validateFeatureName(invoker, "_SPLIT", false);
     }
 
     @Test

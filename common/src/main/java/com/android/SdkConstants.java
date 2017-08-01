@@ -2178,7 +2178,7 @@ public final class SdkConstants {
     public static final String GRADLE_COMPILE_CONFIGURATION = "compile";
     public static final String GRADLE_TEST_COMPILE_CONFIGURATION = "testCompile";
     public static final String GRADLE_ANDROID_TEST_COMPILE_CONFIGURATION = "androidTestCompile";
-    public static final String TEST_HELPERS_CONFIGURATION = "androidTestUtil";
+    public static final String GRADLE_ANDROID_TEST_UTIL_CONFIGURATION = "androidTestUtil";
     public static final String CURRENT_BUILD_TOOLS_VERSION = "26.0.0";
     public static final String SUPPORT_LIB_GROUP_ID = "com.android.support";
     public static final String SUPPORT_LIB_ARTIFACT = "com.android.support:support-v4";

@@ -387,10 +387,7 @@ public class ManifestMerger2 {
         }
 
         if (mOptionalFeatures.contains(Invoker.Feature.ADD_FEATURE_SPLIT_INFO)) {
-            boolean transitionalAttributes =
-                    mOptionalFeatures.contains(
-                            Invoker.Feature.TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES);
-            addFeatureSplitAttributes(document, mFeatureName, transitionalAttributes);
+            addFeatureSplitAttributes(document, mFeatureName);
             mergingReport.setMergedDocument(
                     MergingReport.MergedManifestKind.MERGED,
                     XmlPrettyPrinter.prettyPrint(
@@ -447,30 +444,30 @@ public class ManifestMerger2 {
     }
 
     /**
-     * Set "android:splitName" or "android:split" attributes to <code>featureName</code> for every
-     * activity, service and provider elements. Set "featureSplit" or "split" attribute to <code>
-     * featureName</code> for the manifest element.
+     * Set "android:splitName" attributes to <code>featureName</code> for every activity, service
+     * and provider elements. Set "featureSplit" attribute to <code>featureName</code> for the
+     * manifest element.
      *
      * @param document the document whose attributes are changed
      * @param featureName the value all of the changed attributes are set to
-     * @param transitionalAttributes boolean, determines names of changed attributes
      */
-    private static void addFeatureSplitAttributes(
-            Document document, String featureName, boolean transitionalAttributes) {
+    private static void addFeatureSplitAttributes(Document document, String featureName) {
         // first update attribute in manifest element
         Element manifest = document.getDocumentElement();
         if (manifest == null) {
             return;
         }
-        String attributeName =
-                transitionalAttributes ? SdkConstants.ATTR_SPLIT : SdkConstants.ATTR_FEATURE_SPLIT;
+
+        String attributeName = SdkConstants.ATTR_FEATURE_SPLIT;
         manifest.setAttribute(attributeName, featureName);
+
         // then update attributes in the application element's child elements
         ImmutableList<Element> applicationElements =
                 getChildElementsByName(manifest, SdkConstants.TAG_APPLICATION);
         if (applicationElements.isEmpty()) {
             return;
         }
+
         // assumes just 1 application element among manifest's immediate children.
         Element application = applicationElements.get(0);
         List<String> elementNamesToUpdate =
@@ -479,14 +476,8 @@ public class ManifestMerger2 {
                         SdkConstants.TAG_SERVICE,
                         SdkConstants.TAG_PROVIDER);
         for (String elementName : elementNamesToUpdate) {
-            ImmutableList<Element> elementsToUpdate =
-                    getChildElementsByName(application, elementName);
-            for (Element elementToUpdate : elementsToUpdate) {
-                if (transitionalAttributes) {
-                    elementToUpdate.setAttribute(SdkConstants.ATTR_SPLIT, featureName);
-                } else {
-                    setAndroidAttribute(elementToUpdate, SdkConstants.ATTR_SPLIT_NAME, featureName);
-                }
+            for (Element elementToUpdate : getChildElementsByName(application, elementName)) {
+                setAndroidAttribute(elementToUpdate, SdkConstants.ATTR_SPLIT_NAME, featureName);
             }
         }
     }
@@ -1168,9 +1159,6 @@ public class ManifestMerger2 {
             /** Add feature split information */
             ADD_FEATURE_SPLIT_INFO,
 
-            /** Set transitional feature split attributes */
-            TRANSITIONAL_FEATURE_SPLIT_ATTRIBUTES,
-
             /** Set the android:debuggable flag to the application. */
             DEBUGGABLE,
 
@@ -1333,7 +1321,7 @@ public class ManifestMerger2 {
 
         /** Regular expression defining legal feature split name. */
         private static final Pattern FEATURE_NAME_PATTERN =
-                Pattern.compile("[a-zA-Z0-9][a-zA-Z0-9-]*");
+                Pattern.compile("[a-zA-Z0-9][a-zA-Z0-9_]*");
 
         /**
          * Specify the feature name for feature merging.
@@ -1342,14 +1330,16 @@ public class ManifestMerger2 {
          * @return itself.
          */
         @NonNull
-        public Invoker setFeatureName(@NonNull String featureName) {
-            mFeatureName = featureName.replaceAll("[^a-zA-Z0-9-]", "");
-            if (!FEATURE_NAME_PATTERN.matcher(mFeatureName).matches()) {
-                throw new IllegalArgumentException(
-                        "FeatureName must follow "
-                                + FEATURE_NAME_PATTERN.pattern()
-                                + " regex, found "
-                                + featureName);
+        public Invoker setFeatureName(@Nullable String featureName) {
+            if (featureName != null) {
+                mFeatureName = featureName;
+                if (!FEATURE_NAME_PATTERN.matcher(mFeatureName).matches()) {
+                    throw new IllegalArgumentException(
+                            "FeatureName must follow "
+                                    + FEATURE_NAME_PATTERN.pattern()
+                                    + " regex, found "
+                                    + featureName);
+                }
             }
             return thisAsT();
         }

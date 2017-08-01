@@ -18,10 +18,18 @@ package com.android.build.gradle.integration.component;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
+import static com.android.builder.model.level2.Library.LIBRARY_MODULE;
 
 import com.android.build.gradle.integration.common.category.SmokeTests;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
+import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.builder.core.BuilderConstants;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Variant;
+import com.android.builder.model.level2.Library;
 import com.android.testutils.apk.Aar;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,7 +61,7 @@ public class LibraryComponentPluginTest {
                         + "'\n"
                         + "}\n");
 
-        project.execute("assemble");
+        project.executor().run("assemble");
         Aar releaseAar = project.getSubproject("lib").getAar("release");
         assertThat(releaseAar).containsClass("Lcom/example/helloworld/BuildConfig;");
     }
@@ -94,7 +102,19 @@ public class LibraryComponentPluginTest {
                         + "    }\n"
                         + "}\n");
 
-        project.execute(":app:assembleDebug");
+        project.executor().run(":app:assembleDebug");
         assertThat(lib.file("build/intermediates/bundles/freeDebug")).isDirectory();
+
+        GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
+                project.model().getMulti();
+        LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
+        AndroidProject model = modelContainer.getModelMap().get(":app");
+        Variant variant = ModelHelper.getVariant(model.getVariants(), BuilderConstants.DEBUG);
+
+        Library library =
+                helper.on(variant.getMainArtifact().getDependencyGraphs()).asSingleLibrary();
+        assertThat(library.getArtifactAddress()).isEqualTo(":lib::freeDebug");
+        assertThat(library.getProjectPath()).isEqualTo(":lib");
+        assertThat(library.getType()).isEqualTo(LIBRARY_MODULE);
     }
 }

@@ -25,7 +25,6 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -734,71 +733,6 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         else{
             return base;
         }
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        if (!super.equals(o)) {
-            return false;
-        }
-
-        DefaultProductFlavor that = (DefaultProductFlavor) o;
-
-        return Objects.equal(mDimension, that.mDimension) &&
-                Objects.equal(mApplicationId, that.mApplicationId) &&
-                Objects.equal(mMaxSdkVersion, that.mMaxSdkVersion) &&
-                Objects.equal(mMinSdkVersion, that.mMinSdkVersion) &&
-                Objects.equal(mName, that.mName) &&
-                Objects.equal(mRenderscriptNdkModeEnabled, that.mRenderscriptNdkModeEnabled) &&
-                Objects.equal(mRenderscriptSupportModeEnabled,
-                        that.mRenderscriptSupportModeEnabled) &&
-                Objects.equal(mRenderscriptSupportModeBlasEnabled,
-                        that.mRenderscriptSupportModeBlasEnabled) &&
-                Objects.equal(mRenderscriptTargetApi, that.mRenderscriptTargetApi) &&
-                Objects.equal(mResourceConfiguration, that.mResourceConfiguration) &&
-                Objects.equal(mSigningConfig, that.mSigningConfig) &&
-                Objects.equal(mTargetSdkVersion, that.mTargetSdkVersion) &&
-                Objects.equal(mTestApplicationId, that.mTestApplicationId) &&
-                Objects.equal(mTestFunctionalTest, that.mTestFunctionalTest) &&
-                Objects.equal(mTestHandleProfiling, that.mTestHandleProfiling) &&
-                Objects.equal(mTestInstrumentationRunner, that.mTestInstrumentationRunner) &&
-                Objects.equal(mTestInstrumentationRunnerArguments,
-                        that.mTestInstrumentationRunnerArguments) &&
-                Objects.equal(mVersionCode, that.mVersionCode) &&
-                Objects.equal(mVersionName, that.mVersionName) &&
-                Objects.equal(mWearAppUnbundled, that.mWearAppUnbundled);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(
-                super.hashCode(),
-                mName,
-                mDimension,
-                mMinSdkVersion,
-                mTargetSdkVersion,
-                mMaxSdkVersion,
-                mRenderscriptTargetApi,
-                mRenderscriptSupportModeEnabled,
-                mRenderscriptSupportModeBlasEnabled,
-                mRenderscriptNdkModeEnabled,
-                mVersionCode,
-                mVersionName,
-                mApplicationId,
-                mTestApplicationId,
-                mTestInstrumentationRunner,
-                mTestInstrumentationRunnerArguments,
-                mTestHandleProfiling,
-                mTestFunctionalTest,
-                mSigningConfig,
-                mResourceConfiguration,
-                mWearAppUnbundled);
     }
 
     @Override

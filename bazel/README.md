@@ -157,8 +157,8 @@ two.
 
 ### add\_dependency
 
-Can be used to download one or more Maven artifacts into prebuilts, including
-all transitive dependencies.
+Can be used to download one or more Maven artifacts (JARs, AARs or APKs) into
+prebuilts, including all transitive dependencies.
 
 Invoked by running:
 
@@ -170,6 +170,14 @@ You can also use it to download protoc binaries, like this:
 
 ```
 bazel run //tools/base/bazel:add_dependency com.google.protobuf:protoc:exe:linux-x86_64:3.0.0
+```
+
+The tool by default uses Maven Central, JCenter and the Google Maven
+repository. You can add more (like a staging repository for libraries to be
+pushed to maven.google.com) using a flag:
+
+```
+bazel run //tools/base/bazel:add_dependency -- --repo=https://example.com/m2 com.example:foo:1.0
 ```
 
 ### java\_import\_generator

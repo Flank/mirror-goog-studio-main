@@ -16,6 +16,7 @@
 
 package com.android.dvlib;
 
+import com.android.utils.XmlUtils;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -233,8 +234,8 @@ public class DeviceSchemaTest extends TestCase {
     public static InputStream getReplacedStream(Map<String, String> replacements) throws Exception {
         InputStream xml = DeviceSchema.class.getResourceAsStream("devices_minimal.xml");
         SAXParserFactory factory = SAXParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        SAXParser parser = factory.newSAXParser();
+        XmlUtils.configureSaxFactory(factory, true, false);
+        SAXParser parser = XmlUtils.createSaxParser(factory);
         ReplacementHandler replacer = new ReplacementHandler(replacements);
         parser.parse(xml, replacer);
         Document doc = replacer.getGeneratedDocument();

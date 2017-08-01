@@ -20,7 +20,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
-import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -368,47 +367,6 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     @Override
     public List<File> getJarJarRuleFiles() {
         return mJarJarRuleFiles;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof BaseConfigImpl)) {
-            return false;
-        }
-
-        BaseConfigImpl that = (BaseConfigImpl) o;
-
-        return Objects.equal(mApplicationIdSuffix, that.mApplicationIdSuffix) &&
-                Objects.equal(mVersionNameSuffix, that.mVersionNameSuffix) &&
-                Objects.equal(mBuildConfigFields, that.mBuildConfigFields) &&
-                Objects.equal(mConsumerProguardFiles, that.mConsumerProguardFiles) &&
-                Objects.equal(mManifestPlaceholders, that.mManifestPlaceholders) &&
-                Objects.equal(mMultiDexEnabled, that.mMultiDexEnabled) &&
-                Objects.equal(mMultiDexKeepFile, that.mMultiDexKeepFile) &&
-                Objects.equal(mMultiDexKeepProguard, that.mMultiDexKeepProguard) &&
-                Objects.equal(mProguardFiles, that.mProguardFiles) &&
-                Objects.equal(mResValues, that.mResValues) &&
-                Objects.equal(mJarJarRuleFiles, that.mJarJarRuleFiles);
-
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(
-                mApplicationIdSuffix,
-                mVersionNameSuffix,
-                mBuildConfigFields,
-                mResValues,
-                mProguardFiles,
-                mConsumerProguardFiles,
-                mManifestPlaceholders,
-                mMultiDexEnabled,
-                mMultiDexKeepFile,
-                mMultiDexKeepProguard,
-                mJarJarRuleFiles);
     }
 
     @Override

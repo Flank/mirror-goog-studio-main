@@ -104,7 +104,7 @@ import org.gradle.api.model.ObjectFactory;
  */
 public class VariantManager implements VariantModel {
 
-    private static final String MULTIDEX_VERSION = "1.0.1";
+    private static final String MULTIDEX_VERSION = "1.0.2";
 
     protected static final String COM_ANDROID_SUPPORT_MULTIDEX =
             "com.android.support:multidex:" + MULTIDEX_VERSION;

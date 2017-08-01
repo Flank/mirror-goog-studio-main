@@ -17,8 +17,14 @@
 package com.android.ide.common.res2;
 
 import java.io.File;
+import javax.xml.bind.JAXBException;
 
 /** An interface for a single file processor. */
 public interface SingleFileProcessor {
+
     boolean processSingleFile(File file, File out) throws Exception;
+
+    void processRemovedFile(File file);
+
+    void end() throws JAXBException;
 }

@@ -51,6 +51,7 @@ public class DexArchiveMergerCallable implements Callable<Void> {
     @Override
     public Void call() throws Exception {
         try {
+
             DexMerger dexMerger =
                     new DexMerger(
                             dexesToMerge.toArray(new Dex[dexesToMerge.size()]),
@@ -60,8 +61,8 @@ public class DexArchiveMergerCallable implements Callable<Void> {
             Dex output = dexMerger.merge();
             Verify.verifyNotNull(
                     output,
-                    "Merged dex is null. We tried to merge %d DEX files",
-                    dexesToMerge.size());
+                    "Merged dex is null. We tried to merge %s DEX files",
+                    String.valueOf(dexesToMerge.size()));
             Files.write(outputDex, output.getBytes());
         } catch (Exception e) {
             dxContext.err.println(DexParser.DX_UNEXPECTED_EXCEPTION);

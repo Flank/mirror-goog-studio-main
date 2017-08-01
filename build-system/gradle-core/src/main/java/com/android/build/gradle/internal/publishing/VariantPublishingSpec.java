@@ -26,10 +26,10 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APP_CLASSES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.CONSUMER_PROGUARD_FILE;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_APPLICATION_ID_DECLARATION;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_CLASSES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_IDS_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FULL_JAR;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVA_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_CLASSES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_JAVA_RES;
@@ -201,7 +201,7 @@ public class VariantPublishingSpec {
                         API_ELEMENTS_ONLY),
                 outputSpec(
                         FEATURE_RESOURCE_PKG, ArtifactType.FEATURE_RESOURCE_PKG, API_ELEMENTS_ONLY),
-                outputSpec(JAVAC, ArtifactType.CLASSES, API_ELEMENTS_ONLY),
+                outputSpec(FEATURE_CLASSES, ArtifactType.CLASSES, API_ELEMENTS_ONLY),
                 outputSpec(APK, ArtifactType.APK, RUNTIME_ELEMENTS_ONLY));
 
         // empty specs

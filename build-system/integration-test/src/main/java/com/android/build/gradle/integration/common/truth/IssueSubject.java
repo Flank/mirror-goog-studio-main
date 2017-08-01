@@ -23,6 +23,7 @@ import com.google.common.base.Objects;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
+import java.util.List;
 
 public class IssueSubject extends Subject<IssueSubject, SyncIssue> {
 
@@ -72,13 +73,22 @@ public class IssueSubject extends Subject<IssueSubject, SyncIssue> {
         }
     }
 
+    public void hasMultiLineMessage(@NonNull List<String> lines) {
+        if (!Objects.equal(lines, getSubject().getMultiLineMessage())) {
+            failWithBadResults(
+                    "has multi-line message", lines, "is", getSubject().getMultiLineMessage());
+        }
+    }
+
     @Override
     protected String getDisplaySubject() {
         String name = (internalCustomName() == null) ? "" : "\"" + this.internalCustomName() + "\" ";
 
         SyncIssue issue = getSubject();
-        String fullName = String.format(
-                "%d|%d|%s", issue.getSeverity(), issue.getType(), issue.getData());
+        String fullName =
+                String.format(
+                        "%d|%d|%s|%s",
+                        issue.getSeverity(), issue.getType(), issue.getData(), issue.getMessage());
 
         return name + "<" + fullName + ">";
     }

@@ -1,14 +1,21 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:groovy.bzl", "groovy_jar")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 java_library(
-    name = "integration-test",
-    srcs = glob([
-        "src/main/java/**/*.java",
-    ]) + [
-        "//tools/base/build-system/integration-test/src/main/proto:proto_srcs",
-    ],
+    name = "protos",
+    srcs = ["//tools/base/build-system/integration-test/src/main/proto:proto_srcs"],
     deps = [
+        "//tools/analytics-library/protos/src/main/proto",
+        "//tools/base/third_party:com.google.protobuf_protobuf-java",
+    ],
+)
+
+kotlin_library(
+    name = "integration-test",
+    srcs = ["src/main/java"],
+    deps = [
+        ":protos",
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/apksig",
         "//tools/base/annotations",
@@ -128,14 +135,6 @@ java_library(
     deps = TEST_DEPS,
 )
 
-groovy_jar(
-    name = "groovy_tests",
-    srcs = glob(
-        ["src/test/groovy/**/*.groovy"],
-    ),
-    deps = TEST_DEPS,
-)
-
 java_test(
     name = "tests",
     timeout = "eternal",
@@ -160,7 +159,6 @@ java_test(
         # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
         "//tools/base/third_party:junit_junit",
         ":java_tests",
-        ":libgroovy_tests.jar",
     ],
 )
 
@@ -282,6 +280,12 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/amazonaws/aws-java-sdk-workspaces/1.11.18:jar",
         "//prebuilts/tools/common/m2/repository/com/amazonaws/aws-java-sdk/1.11.18:jar",
         "//prebuilts/tools/common/m2/repository/com/andkulikov/transitionseverywhere/1.6.9:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/multidex-instrumentation/1.0.2:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/multidex/1.0.2:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/24.0.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-v4/24.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/test/orchestrator/1.0.0:apk",
+        "//prebuilts/tools/common/m2/repository/com/android/support/test/services/test-services/1.0.0:apk",
         "//prebuilts/tools/common/m2/repository/com/android/tools/build/transform-api/1.5.0:jar",
         "//prebuilts/tools/common/m2/repository/com/artemzin/rxjava/proguard-rules/1.1.0.0:aar",
         "//prebuilts/tools/common/m2/repository/com/automattic/rest/1.0.7:aar",
@@ -376,7 +380,6 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/com/joanzapata/iconify/android-iconify-material/2.1.1:aar",
         "//prebuilts/tools/common/m2/repository/com/joanzapata/iconify/android-iconify/2.1.1:aar",
         "//prebuilts/tools/common/m2/repository/com/koushikdutta/async/androidasync/2.1.3:jar",
-        "//prebuilts/tools/common/m2/repository/com/linkedin/testbutler/test-butler-app/1.3.1:apk",
         "//prebuilts/tools/common/m2/repository/com/lovedise/permissiongen/0.0.6:aar",
         "//prebuilts/tools/common/m2/repository/com/mcxiaoke/volley/library/1.0.10:jar",
         "//prebuilts/tools/common/m2/repository/com/mcxiaoke/volley/library/1.0.18:jar",

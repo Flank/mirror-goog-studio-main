@@ -151,4 +151,21 @@ public class PostprocessingTest {
         assertThat(result.getFailureMessage())
                 .contains("postprocessing features are configured in the DSL");
     }
+
+    @Test
+    public void configFilesValidation_oldDefaults() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android {\n"
+                        + "    buildTypes.release.postprocessing {\n"
+                        + "        removeUnusedCode true\n"
+                        + "        proguardFile getDefaultProguardFile('proguard-android.txt')\n"
+                        + "    }\n"
+                        + "}\n");
+
+        GradleBuildResult result = project.executor().expectFailure().run("assembleRelease");
+
+        assertThat(result.getFailureMessage()).contains("proguard-android.txt ");
+        assertThat(result.getFailureMessage()).contains("new postprocessing DSL");
+    }
 }

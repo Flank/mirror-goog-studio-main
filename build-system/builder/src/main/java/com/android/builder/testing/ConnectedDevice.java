@@ -360,4 +360,12 @@ public class ConnectedDevice extends DeviceConnector {
             throw new DeviceException(e);
         }
     }
+
+    /**
+     * Returns the corresponding {@link IDevice}. Used in packages common to Studio and the Plugin.
+     */
+    @NonNull
+    public IDevice getIDevice() {
+        return iDevice;
+    }
 }

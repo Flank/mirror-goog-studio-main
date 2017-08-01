@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
+import com.android.utils.XmlUtils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -44,7 +45,8 @@ public class Api {
     public static Api parseApi(File apiFile) {
         try (InputStream inputStream = new FileInputStream(apiFile)) {
             SAXParserFactory parserFactory = SAXParserFactory.newInstance();
-            SAXParser parser = parserFactory.newSAXParser();
+            XmlUtils.configureSaxFactory(parserFactory, false, false);
+            SAXParser parser = XmlUtils.createSaxParser(parserFactory);
             ApiParser apiParser = new ApiParser();
             parser.parse(inputStream, apiParser);
             inputStream.close();

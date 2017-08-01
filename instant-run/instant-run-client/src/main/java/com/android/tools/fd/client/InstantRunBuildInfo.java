@@ -250,4 +250,10 @@ public class InstantRunBuildInfo {
     public void serializeTo(@NonNull Writer writer) throws IOException {
         writer.write(myXml);
     }
+
+    public boolean hasHotSwapResources() {
+        return getArtifacts()
+                .stream()
+                .anyMatch(artifact -> artifact.type == InstantRunArtifactType.RESOURCES);
+    }
 }

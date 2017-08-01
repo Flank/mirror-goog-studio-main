@@ -33,6 +33,7 @@ cc_library(
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],
+    linkstatic = 1,
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/studio/jdk:jni_headers",

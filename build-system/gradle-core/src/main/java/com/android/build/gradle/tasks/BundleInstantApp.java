@@ -22,9 +22,11 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
+import com.android.build.gradle.internal.scope.InstantAppOutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.ApplicationId;
 import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.android.utils.FileUtils;
 import java.io.File;
@@ -32,6 +34,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -70,6 +73,14 @@ public class BundleInstantApp extends DefaultAndroidTask {
                 }
             }
         }
+
+        // Write the json output.
+        InstantAppOutputScope instantAppOutputScope =
+                new InstantAppOutputScope(
+                        ApplicationId.load(applicationId.getSingleFile()).getApplicationId(),
+                        bundleFile,
+                        apkDirectories.getFiles().stream().collect(Collectors.toList()));
+        instantAppOutputScope.save(bundleDirectory);
     }
 
     @OutputDirectory
@@ -86,12 +97,19 @@ public class BundleInstantApp extends DefaultAndroidTask {
 
     @InputFiles
     @NonNull
+    public FileCollection getApplicationId() {
+        return applicationId;
+    }
+
+    @InputFiles
+    @NonNull
     public FileCollection getApkDirectories() {
         return apkDirectories;
     }
 
     private File bundleDirectory;
     private String bundleName;
+    private FileCollection applicationId;
     private FileCollection apkDirectories;
 
     public static class ConfigAction implements TaskConfigAction<BundleInstantApp> {
@@ -122,6 +140,11 @@ public class BundleInstantApp extends DefaultAndroidTask {
                             + "-"
                             + scope.getVariantConfiguration().getBaseName()
                             + DOT_ZIP;
+            bundleInstantApp.applicationId =
+                    scope.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.MODULE,
+                            AndroidArtifacts.ArtifactType.FEATURE_APPLICATION_ID_DECLARATION);
             bundleInstantApp.apkDirectories =
                     scope.getArtifactFileCollection(
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,

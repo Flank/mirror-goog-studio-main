@@ -29,7 +29,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Queues;
 import com.google.common.util.concurrent.Uninterruptibles;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.UnknownHostException;
@@ -52,17 +51,17 @@ import java.util.concurrent.TimeUnit;
 /**
  * The {@link DeviceMonitor} monitors devices attached to adb.
  *
- * On one thread, it runs the {@link com.android.ddmlib.DeviceMonitor.DeviceListMonitorTask}.
- * This  establishes a socket connection to the adb host, and issues a
- * {@link #ADB_TRACK_DEVICES_COMMAND}. It then monitors that socket for all changes about device
- * connection and device state.
+ * <p>On one thread, it runs the {@link com.android.ddmlib.DeviceMonitor.DeviceListMonitorTask}.
+ * This establishes a socket connection to the adb host, and issues a {@link
+ * #ADB_TRACK_DEVICES_COMMAND}. It then monitors that socket for all changes about device connection
+ * and device state.
  *
- * For each device that is detected to be online, it then opens a new socket connection to adb,
- * and issues a "track-jdwp" command to that device. On this connection, it monitors active
- * clients on the device. Note: a single thread monitors jdwp connections from all devices.
- * The different socket connections to adb (one per device) are multiplexed over a single selector.
+ * <p>For each device that is detected to be online, it then opens a new socket connection to adb,
+ * and issues a "track-jdwp" command to that device. On this connection, it monitors active clients
+ * on the device. Note: a single thread monitors jdwp connections from all devices. The different
+ * socket connections to adb (one per device) are multiplexed over a single selector.
  */
-final class DeviceMonitor {
+final class DeviceMonitor implements ClientTracker {
     private static final String ADB_TRACK_DEVICES_COMMAND = "host:track-devices";
     private static final String ADB_TRACK_JDWP_COMMAND = "track-jdwp";
 
@@ -151,7 +150,8 @@ final class DeviceMonitor {
         return mServer;
     }
 
-    void addClientToDropAndReopen(Client client, int port) {
+    @Override
+    public void trackClientToDropAndReopen(@NonNull Client client, int port) {
         synchronized (mClientsToReopen) {
             Log.d("DeviceMonitor",
                     "Adding " + client + " to list of client to reopen (" + port + ").");
@@ -591,8 +591,9 @@ final class DeviceMonitor {
         return mDebuggerPorts.next();
     }
 
-    void addPortToAvailableList(int port) {
-        mDebuggerPorts.free(port);
+    @Override
+    public void trackDisconnectedClient(@NonNull Client client) {
+        mDebuggerPorts.free(client.getDebuggerListenPort());
     }
 
     /**

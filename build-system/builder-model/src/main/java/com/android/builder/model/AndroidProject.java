@@ -22,8 +22,8 @@ import java.io.File;
 import java.util.Collection;
 
 /**
- * Entry point for the model of the Android Projects. This models a single module, whether
- * the module is an app project or a library project.
+ * Entry point for the model of the Android Projects. This models a single module, whether the
+ * module is an app project, a library project, a feature project or an instantApp project.
  */
 public interface AndroidProject {
     //  Injectable properties to use with -P
@@ -183,7 +183,7 @@ public interface AndroidProject {
     boolean isLibrary();
 
     /**
-     * Returns the type of project: Android application, library.
+     * Returns the type of project: Android application, library, feature, instantApp.
      *
      * @return the type of project.
      * @since 2.3

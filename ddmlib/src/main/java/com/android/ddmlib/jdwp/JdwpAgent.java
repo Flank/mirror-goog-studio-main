@@ -18,7 +18,6 @@ package com.android.ddmlib.jdwp;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.JdwpPacket;
-
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -66,6 +65,10 @@ public abstract class JdwpAgent {
 
     public void addJdwpInterceptor(@NonNull JdwpInterceptor interceptor) {
         mInterceptors.add(interceptor);
+    }
+
+    public void removeJdwpInterceptor(@NonNull JdwpInterceptor interceptor) {
+        mInterceptors.remove(interceptor);
     }
 
     public void incoming(@NonNull JdwpPacket packet, @Nullable JdwpAgent target) throws IOException {

@@ -320,6 +320,7 @@ public class ModelBuilderTest {
                 createVariantData(testVariantScope, testVariantConfiguration);
         when(testVariantData.getType()).thenReturn(VariantType.UNIT_TEST);
         when(testVariantScope.getTestedVariantData()).thenReturn(variantData);
+        when(testVariantScope.getJavaOutputDir()).thenReturn(temporaryFolder.getRoot());
 
         when(variantManager.getVariantScopes())
                 .thenReturn(ImmutableList.of(variantScope, testVariantScope));

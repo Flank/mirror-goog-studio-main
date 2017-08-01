@@ -51,8 +51,6 @@ public class D8DexingTest {
 
     @NonNull
     private RunGradleTasks executor() {
-        return project.executor()
-                .with(BooleanOption.ENABLE_D8_DEXER, true)
-                .with(BooleanOption.ENABLE_D8_MERGER, true);
+        return project.executor().with(BooleanOption.ENABLE_D8, true);
     }
 }

@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import org.gradle.api.Action;
 import org.gradle.internal.reflect.Instantiator;
 
@@ -61,20 +60,4 @@ public class JavaCompileOptions implements com.android.build.gradle.api.JavaComp
                 .toString();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-        JavaCompileOptions that = (JavaCompileOptions) o;
-        return Objects.equal(annotationProcessorOptions, that.annotationProcessorOptions);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(annotationProcessorOptions);
-    }
 }

@@ -22,6 +22,7 @@ import com.android.io.IAbstractFile;
 import com.android.io.StreamException;
 import com.android.resources.ResourceType;
 
+import com.android.utils.XmlUtils;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
@@ -42,7 +43,8 @@ import javax.xml.parsers.SAXParserFactory;
  */
 public final class MultiResourceFile extends ResourceFile implements IValueResourceRepository {
 
-    private static final SAXParserFactory sParserFactory = SAXParserFactory.newInstance();
+    private static final SAXParserFactory sParserFactory = XmlUtils.configureSaxFactory(
+            SAXParserFactory.newInstance(), false, false);
 
     private final Map<ResourceType, ResourceValueMap> mResourceItems =
         new EnumMap<ResourceType, ResourceValueMap>(ResourceType.class);
@@ -165,7 +167,7 @@ public final class MultiResourceFile extends ResourceFile implements IValueResou
      */
     private void parseFile() {
         try {
-            SAXParser parser = sParserFactory.newSAXParser();
+            SAXParser parser = XmlUtils.createSaxParser(sParserFactory);
             parser.parse(getFile().getContents(), new ValueResourceParser(this, isFramework(), null));
         } catch (ParserConfigurationException e) {
         } catch (SAXException e) {

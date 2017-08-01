@@ -74,7 +74,7 @@ public class DefaultProductFlavorTest extends TestCase {
 
     public void testClone() {
         ProductFlavor flavor = DefaultProductFlavor.clone(custom);
-        assertEquals(custom, flavor);
+        assertEquals(custom.toString(), flavor.toString());
 
         CopyOfTester.assertAllGettersCalled(
                 DefaultProductFlavor.class, custom, DefaultProductFlavor::clone);

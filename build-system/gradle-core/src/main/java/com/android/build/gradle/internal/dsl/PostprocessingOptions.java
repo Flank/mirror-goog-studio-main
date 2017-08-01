@@ -110,8 +110,11 @@ public class PostprocessingOptions {
         return proguardFiles;
     }
 
-    public void setProguardFiles(List<File> proguardFiles) {
-        this.proguardFiles = proguardFiles;
+    public void setProguardFiles(List<Object> proguardFiles) {
+        this.proguardFiles = new ArrayList<>();
+        for (Object file : proguardFiles) {
+            this.proguardFiles.add(project.file(file));
+        }
     }
 
     public void proguardFile(Object file) {
@@ -128,8 +131,11 @@ public class PostprocessingOptions {
         return testProguardFiles;
     }
 
-    public void setTestProguardFiles(List<File> testProguardFiles) {
-        this.testProguardFiles = testProguardFiles;
+    public void setTestProguardFiles(List<Object> testProguardFiles) {
+        this.testProguardFiles = new ArrayList<>();
+        for (Object file : testProguardFiles) {
+            this.testProguardFiles.add(project.file(file));
+        }
     }
 
     public void testProguardFile(Object file) {
@@ -146,8 +152,11 @@ public class PostprocessingOptions {
         return consumerProguardFiles;
     }
 
-    public void setConsumerProguardFiles(List<File> consumerProguardFiles) {
-        this.consumerProguardFiles = consumerProguardFiles;
+    public void setConsumerProguardFiles(List<Object> consumerProguardFiles) {
+        this.consumerProguardFiles = new ArrayList<>();
+        for (Object file : consumerProguardFiles) {
+            this.consumerProguardFiles.add(project.file(file));
+        }
     }
 
     public void consumerProguardFile(Object file) {

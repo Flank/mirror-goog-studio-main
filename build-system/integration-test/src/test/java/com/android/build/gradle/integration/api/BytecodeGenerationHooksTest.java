@@ -189,6 +189,39 @@ public class BytecodeGenerationHooksTest {
                 "library/build/intermediates/intermediate-jars/debug/classes.jar");
     }
 
+    @Test
+    public void buildFeature() throws IOException, InterruptedException {
+        GradleBuildResult result = project.executor().run("clean", "bundle:assembleDebug");
+
+        // check that the feature dex file contains the App class.
+        Apk apk =
+                project.getSubproject("baseFeature").getFeatureApk(GradleTestProject.ApkType.DEBUG);
+        assertThat(apk.getFile()).isFile();
+        Optional<Dex> dexOptional = apk.getMainDexFile();
+        assertThat(dexOptional).isPresent();
+        //noinspection OptionalGetWithoutIsPresent
+        final Dex dexFile = dexOptional.get();
+        assertThat(dexFile).containsClasses("Lcom/example/bytecode/App;");
+        assertThat(dexFile).containsClasses("Lcom/example/bytecode/PostJavacApp;");
+
+        assertThat(apk).contains("META-INF/app.kotlin_module");
+        assertThat(apk).contains("META-INF/post-app.kotlin_module");
+        assertThat(apk).contains("META-INF/lib.kotlin_module");
+        assertThat(apk).contains("META-INF/post-lib.kotlin_module");
+
+        // verify the compile classpath
+        checkDependencies(
+                result,
+                "BytecodeGeneratingTask(:baseFeature:generateBytecodeFordebugFeature): ",
+                true,
+                "library/build/intermediates/intermediate-jars/debug/classes.jar",
+                "jar/build/libs/jar.jar");
+
+        // verify source folders
+        checkSourceFolders(
+                result, "SourceFoldersApi(:baseFeature:debug): ", "baseFeature/src/custom/java");
+    }
+
     private static void checkDependencies(
             GradleBuildResult result, String prefix, boolean exactly, String... dependencies) {
         List<String> lines = result.getStdoutAsLines();

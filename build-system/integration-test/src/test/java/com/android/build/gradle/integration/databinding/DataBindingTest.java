@@ -80,7 +80,6 @@ public class DataBindingTest {
     public void checkApkContainsDataBindingClasses() throws Exception {
         project.setBuildFile(buildFile);
         GradleBuildResult result = project.executor().run("assembleDebug");
-        assertThat(result.getTask(":dataBindingProcessLayoutsDebug")).wasExecuted();
 
         if (myLibrary) {
             Aar aar = project.getAar("debug");

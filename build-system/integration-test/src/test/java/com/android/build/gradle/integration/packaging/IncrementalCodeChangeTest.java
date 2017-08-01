@@ -70,7 +70,7 @@ public class IncrementalCodeChangeTest {
     }
 
     @Test
-    public void checkLegayMultiDex() throws Exception {
+    public void checkLegacyMultiDex() throws Exception {
         Files.write("include 'app', 'library'", project.getSettingsFile(), Charsets.UTF_8);
         TestFileUtils.appendToFile(project.getSubproject("app").getBuildFile(),
                 "\n"

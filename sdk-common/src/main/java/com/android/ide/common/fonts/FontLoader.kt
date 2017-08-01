@@ -16,6 +16,7 @@
 package com.android.ide.common.fonts
 
 import com.android.annotations.concurrency.GuardedBy
+import com.android.utils.XmlUtils
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
 import org.xml.sax.helpers.DefaultHandler
@@ -133,7 +134,7 @@ open class FontLoader {
     }
 
     private fun loadProviders() {
-        val localSdkHome = sdkHome;
+        val localSdkHome = sdkHome
         if (localSdkHome != null && localSdkHome.exists()) {
             val fontFolder = File(localSdkHome, FONTS_FOLDER)
             val providerFolder = File(fontFolder, FONT_PROVIDERS)
@@ -162,7 +163,7 @@ open class FontLoader {
                 for (family in families) {
                     fonts[family] = family
                 }
-                sortedFontFamilies.addAll(families);
+                sortedFontFamilies.addAll(families)
             }
         }
         sortedFontFamilies.sort()
@@ -184,8 +185,8 @@ open class FontLoader {
     private fun parseXml(source: InputSource, handler: DefaultHandler) {
         try {
             val factory = SAXParserFactory.newInstance()
-            factory.isNamespaceAware = false
-            val parser = factory.newSAXParser()
+            XmlUtils.configureSaxFactory(factory, false, false)
+            val parser = XmlUtils.createSaxParser(factory)
             parser.parse(source, handler)
         } catch (ex: SAXException) {
         } catch (ex: ParserConfigurationException) {

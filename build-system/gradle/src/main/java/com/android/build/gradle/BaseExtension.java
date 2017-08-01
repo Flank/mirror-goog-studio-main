@@ -343,7 +343,7 @@ public abstract class BaseExtension implements AndroidConfig {
         // running task, so that we can install all the found APKs before running tests.
         createConfiguration(
                 project.getConfigurations(),
-                SdkConstants.TEST_HELPERS_CONFIGURATION,
+                SdkConstants.GRADLE_ANDROID_TEST_UTIL_CONFIGURATION,
                 "Additional APKs used during instrumentation testing.",
                 true);
 
@@ -751,14 +751,6 @@ public abstract class BaseExtension implements AndroidConfig {
 
     public void setPublishNonDefault(boolean publishNonDefault) {
         logger.warn("publishNonDefault is deprecated and has no effect anymore. All variants are now published.");
-    }
-
-    // FIXME bug #62356943
-    public void flavorSelection(String name, String value) {
-        extraModelInfo.handleSyncError(
-                "",
-                SyncIssue.TYPE_GENERIC,
-                "flavorSelection is now replaced with defaultConfig.flavorSelection. It's also available on product flavors, build types and variant.");
     }
 
     public void buildTypeMatching(@NonNull String consumer, @NonNull String... alternates) {

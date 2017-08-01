@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.builder.core.ErrorReporter;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.blame.Message;
+import java.util.List;
 
 /** Error reporter that does not processes the messages. Also, it ignores handling the issues. */
 public class NoOpErrorReporter extends ErrorReporter {
@@ -47,6 +48,12 @@ public class NoOpErrorReporter extends ErrorReporter {
                 @Override
                 public String getMessage() {
                     return "";
+                }
+
+                @Nullable
+                @Override
+                public List<String> getMultiLineMessage() {
+                    return null;
                 }
             };
 

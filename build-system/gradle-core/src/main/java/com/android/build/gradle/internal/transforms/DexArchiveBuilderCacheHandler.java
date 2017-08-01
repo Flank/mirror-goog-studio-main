@@ -54,15 +54,22 @@ class DexArchiveBuilderCacheHandler {
     private static final LoggerWrapper logger =
             LoggerWrapper.getLogger(DexArchiveBuilderTransform.class);
 
-    private static final int CACHE_KEY_VERSION = 1;
+    private static final int CACHE_KEY_VERSION = 2;
 
     @Nullable private final FileCache userLevelCache;
     @NonNull private final DexOptions dexOptions;
+    private final int minSdkVersion;
+    private final boolean isDebuggable;
 
     DexArchiveBuilderCacheHandler(
-            @Nullable FileCache userLevelCache, @NonNull DexOptions dexOptions) {
+            @Nullable FileCache userLevelCache,
+            @NonNull DexOptions dexOptions,
+            int minSdkVersion,
+            boolean isDebuggable) {
         this.userLevelCache = userLevelCache;
         this.dexOptions = dexOptions;
+        this.minSdkVersion = minSdkVersion;
+        this.isDebuggable = isDebuggable;
     }
 
     @Nullable
@@ -77,7 +84,7 @@ class DexArchiveBuilderCacheHandler {
 
         FileCache.Inputs buildCacheInputs =
                 DexArchiveBuilderCacheHandler.getBuildCacheInputs(
-                        input.getFile(), dexOptions, DexerTool.DX);
+                        input.getFile(), dexOptions, DexerTool.DX, minSdkVersion, isDebuggable);
         return cache.cacheEntryExists(buildCacheInputs)
                 ? cache.getFileInCache(buildCacheInputs)
                 : null;
@@ -93,7 +100,11 @@ class DexArchiveBuilderCacheHandler {
             if (cache != null) {
                 FileCache.Inputs buildCacheInputs =
                         DexArchiveBuilderCacheHandler.getBuildCacheInputs(
-                                input.getFile(), dexOptions, DexerTool.DX);
+                                input.getFile(),
+                                dexOptions,
+                                DexerTool.DX,
+                                minSdkVersion,
+                                isDebuggable);
                 FileCache.QueryResult result =
                         cache.createFileInCacheIfAbsent(
                                 buildCacheInputs,
@@ -195,6 +206,12 @@ class DexArchiveBuilderCacheHandler {
 
         /** Version of the cache key. */
         CACHE_KEY_VERSION,
+
+        /** Min sdk version used to generate dex. */
+        MIN_SDK_VERSION,
+
+        /** If generate dex is debuggable. */
+        IS_DEBUGGABLE,
     }
 
     /**
@@ -203,7 +220,11 @@ class DexArchiveBuilderCacheHandler {
      */
     @NonNull
     public static FileCache.Inputs getBuildCacheInputs(
-            @NonNull File inputFile, @NonNull DexOptions dexOptions, @NonNull DexerTool dexerTool)
+            @NonNull File inputFile,
+            @NonNull DexOptions dexOptions,
+            @NonNull DexerTool dexerTool,
+            int minSdkVersion,
+            boolean isDebuggable)
             throws IOException {
         // To use the cache, we need to specify all the inputs that affect the outcome of a pre-dex
         // (see DxDexKey for an exhaustive list of these inputs)
@@ -234,7 +255,6 @@ class DexArchiveBuilderCacheHandler {
 
         // In all cases, in addition to the (full or extracted) file path, we always use the file's
         // hash to identify an input file, and provide other input parameters to the cache
-        // hash to identify an input file, and provide other input parameters to the cache
         buildCacheInputs
                 .putFileHash(FileCacheInputParams.FILE_HASH.name(), inputFile)
                 .putString(FileCacheInputParams.DX_VERSION.name(), Version.VERSION)
@@ -243,7 +263,9 @@ class DexArchiveBuilderCacheHandler {
                         FileCacheInputParams.OPTIMIZE.name(),
                         !dexOptions.getAdditionalParameters().contains("--no-optimize"))
                 .putString(FileCacheInputParams.DEXER_TOOL.name(), dexerTool.name())
-                .putLong(FileCacheInputParams.CACHE_KEY_VERSION.name(), CACHE_KEY_VERSION);
+                .putLong(FileCacheInputParams.CACHE_KEY_VERSION.name(), CACHE_KEY_VERSION)
+                .putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion)
+                .putBoolean(FileCacheInputParams.IS_DEBUGGABLE.name(), isDebuggable);
 
         return buildCacheInputs.build();
     }

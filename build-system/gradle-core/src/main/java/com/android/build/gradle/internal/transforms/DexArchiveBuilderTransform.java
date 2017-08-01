@@ -100,7 +100,6 @@ public class DexArchiveBuilderTransform extends Transform {
 
     @NonNull private final DexOptions dexOptions;
     @NonNull private final ErrorReporter errorReporter;
-    @Nullable private final FileCache userLevelCache;
     @VisibleForTesting @NonNull final WaitableExecutor executor;
     private final int minSdkVersion;
     @NonNull private final DexerTool dexer;
@@ -122,11 +121,12 @@ public class DexArchiveBuilderTransform extends Transform {
             boolean isDebuggable) {
         this.dexOptions = dexOptions;
         this.errorReporter = errorReporter;
-        this.userLevelCache = userLevelCache;
         this.minSdkVersion = minSdkVersion;
         this.dexer = dexer;
         this.executor = WaitableExecutor.useGlobalSharedThreadPool();
-        this.cacheHandler = new DexArchiveBuilderCacheHandler(userLevelCache, dexOptions);
+        this.cacheHandler =
+                new DexArchiveBuilderCacheHandler(
+                        userLevelCache, dexOptions, minSdkVersion, isDebuggable);
         this.useGradleWorkers = useGradleWorkers;
         this.inBufferSize =
                 (inBufferSize == null ? DEFAULT_BUFFER_SIZE_IN_KB : inBufferSize) * 1024;
@@ -186,6 +186,10 @@ public class DexArchiveBuilderTransform extends Transform {
         TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();
         Preconditions.checkNotNull(outputProvider, "Missing output provider.");
 
+        if (dexer == DexerTool.D8) {
+            logger.info("D8 is used to build dex.");
+        }
+
         if (dexOptions.getAdditionalParameters().contains("--no-optimize")) {
             logger.warning(DefaultDexOptions.OPTIMIZE_WARNING);
         }
@@ -212,7 +216,8 @@ public class DexArchiveBuilderTransform extends Transform {
                     convertToDexArchive(
                             transformInvocation.getContext(),
                             dirInput,
-                            outputProvider);
+                            outputProvider,
+                            transformInvocation.isIncremental());
                 }
 
                 for (JarInput jarInput : input.getJarInputs()) {
@@ -231,7 +236,7 @@ public class DexArchiveBuilderTransform extends Transform {
             if (useGradleWorkers) {
                 transformInvocation.getContext().getWorkerExecutor().await();
             } else {
-                executor.waitForAllTasks();
+                executor.waitForTasksWithQuickFail(true);
             }
 
             // if we are in incremental mode, delete all removed files.
@@ -291,14 +296,17 @@ public class DexArchiveBuilderTransform extends Transform {
             } else {
                 FileUtils.deleteIfExists(jarInput.getFile());
             }
-        } else {
-            if (jarInput.getStatus() == Status.REMOVED) {
-                for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
-                    FileUtils.deleteIfExists(
-                            getPreDexJar(transformOutputProvider, jarInput, bucketId));
+        } else if (jarInput.getStatus() != Status.NOTCHANGED) {
+            // delete all preDex jars if they exists.
+            for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
+                File contentLocation = getPreDexJar(transformOutputProvider, jarInput, bucketId);
+                FileUtils.deleteIfExists(contentLocation);
+                if (jarInput.getStatus() != Status.REMOVED) {
+                    FileUtils.mkdirs(contentLocation.getParentFile());
                 }
-            } else if (jarInput.getStatus() == Status.ADDED
-                    || jarInput.getStatus() == Status.CHANGED) {
+            }
+            // and perform dexing if necessary.
+            if (jarInput.getStatus() == Status.ADDED || jarInput.getStatus() == Status.CHANGED) {
                 return convertJarToDexArchive(context, jarInput, transformOutputProvider);
             }
         }
@@ -313,7 +321,7 @@ public class DexArchiveBuilderTransform extends Transform {
 
         File cachedVersion = cacheHandler.getCachedVersionIfPresent(toConvert);
         if (cachedVersion == null) {
-            return convertToDexArchive(context, toConvert, transformOutputProvider);
+            return convertToDexArchive(context, toConvert, transformOutputProvider, false);
         } else {
             File outputFile = getPreDexJar(transformOutputProvider, toConvert, null);
             Files.copy(
@@ -336,6 +344,7 @@ public class DexArchiveBuilderTransform extends Transform {
         private final int outBufferSize;
         private final DexerTool dexer;
         private final boolean isDebuggable;
+        private final boolean isIncremental;
 
         public DexConversionParameters(
                 QualifiedContent input,
@@ -347,7 +356,8 @@ public class DexArchiveBuilderTransform extends Transform {
                 int inBufferSize,
                 int outBufferSize,
                 DexerTool dexer,
-                boolean isDebuggable) {
+                boolean isDebuggable,
+                boolean isIncremental) {
             this.input = input;
             this.numberOfBuckets = numberOfBuckets;
             this.buckedId = buckedId;
@@ -358,6 +368,7 @@ public class DexArchiveBuilderTransform extends Transform {
             this.outBufferSize = outBufferSize;
             this.dexer = dexer;
             this.isDebuggable = isDebuggable;
+            this.isIncremental = isIncremental;
         }
 
         public boolean belongsToThisBucket(Path path) {
@@ -390,20 +401,20 @@ public class DexArchiveBuilderTransform extends Transform {
                                 dexConversionParameters.dexer,
                                 dexConversionParameters.isDebuggable);
 
-                Path rootFolder = dexConversionParameters.input.getFile().toPath();
+                Path inputPath = dexConversionParameters.input.getFile().toPath();
                 Predicate<Path> bucketFilter = dexConversionParameters::belongsToThisBucket;
 
-                Predicate<Path> toProcess =
+                boolean hasIncrementalInfo =
                         dexConversionParameters.isDirectoryBased()
+                                && dexConversionParameters.isIncremental;
+                Predicate<Path> toProcess =
+                        hasIncrementalInfo
                                 ? path -> {
                                     Map<File, Status> changedFiles =
                                             ((DirectoryInput) dexConversionParameters.input)
                                                     .getChangedFiles();
-                                    if (changedFiles.isEmpty()) {
-                                        return true;
-                                    }
 
-                                    File resolved = rootFolder.resolve(path).toFile();
+                                    File resolved = inputPath.resolve(path).toFile();
                                     Status status = changedFiles.get(resolved);
                                     return status == Status.ADDED || status == Status.CHANGED;
                                 }
@@ -411,7 +422,7 @@ public class DexArchiveBuilderTransform extends Transform {
 
                 bucketFilter = bucketFilter.and(toProcess);
 
-                try (ClassFileInput input = ClassFileInputs.fromPath(rootFolder)) {
+                try (ClassFileInput input = ClassFileInputs.fromPath(inputPath)) {
                     dexArchiveBuilder.convert(
                             input.entries(bucketFilter),
                             Paths.get(new URI(dexConversionParameters.output)),
@@ -462,7 +473,8 @@ public class DexArchiveBuilderTransform extends Transform {
     private List<File> convertToDexArchive(
             @NonNull Context context,
             @NonNull QualifiedContent input,
-            @NonNull TransformOutputProvider outputProvider)
+            @NonNull TransformOutputProvider outputProvider,
+            boolean isIncremental)
             throws Exception {
 
         logger.verbose("Dexing {}", input.getFile().getAbsolutePath());
@@ -483,7 +495,8 @@ public class DexArchiveBuilderTransform extends Transform {
                             inBufferSize,
                             outBufferSize,
                             dexer,
-                            isDebuggable);
+                            isDebuggable,
+                            isIncremental);
 
             if (useGradleWorkers) {
                 context.getWorkerExecutor()
@@ -521,15 +534,11 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull JarInput qualifiedContent,
             @Nullable Integer bucketId) {
 
-        File contentLocation =
-                output.getContentLocation(
-                        qualifiedContent.getName() + (bucketId == null ? "" : ("-" + bucketId)),
-                        ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
-                        qualifiedContent.getScopes(),
-                        Format.JAR);
-
-        FileUtils.mkdirs(contentLocation.getParentFile());
-        return contentLocation;
+        return output.getContentLocation(
+                qualifiedContent.getName() + (bucketId == null ? "" : ("-" + bucketId)),
+                ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
+                qualifiedContent.getScopes(),
+                Format.JAR);
     }
 
     @NonNull

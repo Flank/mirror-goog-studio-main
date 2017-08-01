@@ -686,11 +686,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
      */
     @NonNull
     public String getApplicationId() {
-        if (mType == VariantType.INSTANTAPP) {
-            // FIXME: Stop sending a dummy value just for IDE sync purposes.
-            return "unused";
-        }
-
         String id;
 
         if (mType.isForTesting()) {

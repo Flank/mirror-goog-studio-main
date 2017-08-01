@@ -72,7 +72,7 @@ final class NonIncrementalJarDexArchive implements DexArchive {
     @Override
     public void addFile(@NonNull Path relativePath, byte[] bytes, int offset, int end)
             throws IOException {
-        Preconditions.checkNotNull(jarOutputStream, "Archive is not writeable.");
+        Preconditions.checkNotNull(jarOutputStream, "Archive is not writeable : %s", targetPath);
         // Need to pre-compute checksum for STORED (uncompressed) entries)
         CRC32 checksum = new CRC32();
         checksum.update(bytes, offset, end);
@@ -100,7 +100,7 @@ final class NonIncrementalJarDexArchive implements DexArchive {
     @NonNull
     @Override
     public List<DexArchiveEntry> getFiles() throws IOException {
-        Preconditions.checkNotNull(readOnlyZipFile, "Archive is not readable.");
+        Preconditions.checkNotNull(readOnlyZipFile, "Archive is not readable : %s", targetPath);
         List<DexArchiveEntry> dexEntries = new ArrayList<>();
         Enumeration<? extends ZipEntry> entries = readOnlyZipFile.entries();
         while (entries.hasMoreElements()) {
