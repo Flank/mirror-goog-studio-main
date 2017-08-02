@@ -179,6 +179,7 @@ public class ActionRecorder {
             @NonNull Actions.NodeRecord nodeRecord) {
         Actions.DecisionTreeRecord nodeDecisionTree = getDecisionTreeRecord(mergedElement);
         nodeDecisionTree.addNodeRecord(nodeRecord);
+        updateRecordsIfNodeKeyChanged(mergedElement);
     }
 
     @NonNull
@@ -269,6 +270,21 @@ public class ActionRecorder {
                 AttributeOperationType.REPLACE
         );
         attributeRecords.add(attributeRecord);
+    }
+
+    /**
+     * Adds the xmlElement's current node key to the map of NodeKeys to DecisionTreeRecords, if the
+     * node key has changed.
+     *
+     * @param xmlElement the xmlElement whose calculated node key may have changed from its original
+     *     node key.
+     */
+    private synchronized void updateRecordsIfNodeKeyChanged(@NonNull XmlElement xmlElement) {
+        NodeKey originalNodeKey = xmlElement.getOriginalId();
+        // by now the original NodeKey should have been added for this element.
+        Preconditions.checkState(
+                mRecords.containsKey(originalNodeKey), "No record for key [%s]", originalNodeKey);
+        mRecords.putIfAbsent(xmlElement.getId(), mRecords.get(originalNodeKey));
     }
 
     /**
