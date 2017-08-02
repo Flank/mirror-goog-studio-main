@@ -21,17 +21,16 @@ def _fileset_impl(ctx):
 
   remap = {}
   for a, b in ctx.attr.maps.items():
-    if a.startswith("//"):
-      key = a[2:].replace(':', '/')
-    else:
-      key = ctx.label.package + "/" + a
-    remap[key] = b
+    remap[ctx.label.relative(a)] = b
 
   cmd = ""
   for f in ctx.files.srcs:
-    # Use short_path, which for outputs of other rules doesn't include "bazel-out" etc.
-    if f.short_path in remap:
-      dest = remap[f.short_path]
+    # Use the label of file, which is more reliable than fiddling with paths.
+    # If f is not a source file, then the rule that generates f may have
+    # a different name.
+    label = f.owner if f.is_source else f.owner.relative(f.basename)
+    if label in remap:
+      dest = remap[label]
       fd = ctx.new_file(dest)
       cmd += "mkdir -p " + fd.dirname + "\n"
       cmd += "cp -f '" + f.path + "' '" + fd.path + "'\n"
