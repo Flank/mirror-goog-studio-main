@@ -40,19 +40,81 @@ final class TrackedHttpURLConnection {
     private final HttpConnectionTracker myConnectionTracker;
 
     private boolean myConnectTracked;
-    private InputStream myTrackedInputStream;
+    private boolean myResponseTracked;
+    private OutputStream myTrackedRequestStream;
+    private InputStream myTrackedResponseStream;
 
     public TrackedHttpURLConnection(HttpURLConnection wrapped, StackTraceElement[] callstack) {
         myWrapped = wrapped;
         myConnectionTracker = HttpTracker.trackConnection(wrapped.getURL().toString(), callstack);
     }
 
-    public void disconnect() {
-        // Close the input stream in case the user didn't explicitly themselves, ensuring any
-        // remaining data we want to track is flushed.
-        if (myTrackedInputStream != null) {
+    /**
+     * Calls {@link HttpConnectionTracker#trackRequest(String, Map)} only if it hasn't been called
+     * before.
+     *
+     * <p>You should call this method just before {@link HttpURLConnection#connect()} is called,
+     * after which point, {@link HttpURLConnection} throws exceptions if you try to access the
+     * fields we want to track.
+     */
+    private void trackPreConnect() {
+        if (!myConnectTracked) {
             try {
-                myTrackedInputStream.close();
+                myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
+            } finally {
+                myConnectTracked = true;
+            }
+        }
+    }
+
+    /**
+     * Calls {@link HttpConnectionTracker#trackResponse(String, Map)} only if it hasn't been called
+     * before. This should be called to indicate that we received a response and can now start to
+     * read its contents.
+     *
+     * <p>IMPORTANT: This method, as a side-effect, will cause the request to get sent if it hasn't
+     * t been sent already. Therefore, if this method is called too early, it can cause problems if
+     * the user then tries to modify the request afterwards, e.g. by updating its body via {@link
+     * #getOutputStream()}.
+     */
+    private void trackResponse() throws IOException {
+        if (!myResponseTracked) {
+            try {
+                // Don't call our getResponseMessage/getHeaderFields overrides, as it would call
+                // this method recursively.
+                myConnectionTracker.trackResponse(
+                        myWrapped.getResponseMessage(), myWrapped.getHeaderFields());
+            } finally {
+                myResponseTracked = true;
+            }
+        }
+    }
+
+    /**
+     * Like {@link #trackResponse()} but swallows the exception. This is useful because there are
+     * many methods in {@link HttpURLConnection} that a user can call which indicate that a request
+     * has been completed (for example, {@link HttpURLConnection#getResponseCode()} which don't,
+     * itself, throw an exception.
+     */
+    private void tryTrackResponse() {
+        try {
+            trackResponse();
+        } catch (IOException ignored) {
+        }
+    }
+
+    public void disconnect() {
+        // Close streams in case the user didn't explicitly do it themselves, ensuring any
+        // remaining data we want to track is flushed.
+        if (myTrackedRequestStream != null) {
+            try {
+                myTrackedRequestStream.close();
+            } catch (Exception ignored) {
+            }
+        }
+        if (myTrackedResponseStream != null) {
+            try {
+                myTrackedResponseStream.close();
             } catch (Exception ignored) {
             }
         }
@@ -61,17 +123,15 @@ final class TrackedHttpURLConnection {
     }
 
     public void connect() throws IOException {
-        if (!myConnectTracked) {
-            myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
-        }
+        trackPreConnect();
         try {
             myWrapped.connect();
-            myConnectionTracker.trackResponse(getResponseMessage(), getHeaderFields());
+            // Note: Just because the user "connect"ed doesn't mean the request was sent out yet.
+            // A user can still modify it further, for example updating the request body, before
+            // actually sending the request out. Therefore, we don't call trackResponse here.
         } catch (IOException e) {
             myConnectionTracker.error(e.toString());
             throw e;
-        } finally {
-            myConnectTracked = true;
         }
     }
 
@@ -221,16 +281,15 @@ final class TrackedHttpURLConnection {
     }
 
     public OutputStream getOutputStream() throws IOException {
-        if (!myConnectTracked) {
-            myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
-        }
+        // getOutputStream internally calls connect if not already connected.
+        trackPreConnect();
         try {
-            return myConnectionTracker.trackRequestBody(myWrapped.getOutputStream());
+            myTrackedRequestStream =
+                    myConnectionTracker.trackRequestBody(myWrapped.getOutputStream());
+            return myTrackedRequestStream;
         } catch (IOException e) {
             myConnectionTracker.error(e.toString());
             throw e;
-        } finally {
-            myConnectTracked = true;
         }
     }
 
@@ -246,75 +305,86 @@ final class TrackedHttpURLConnection {
                 // side-effect to calling getResponseCode
             }
         }
+        tryTrackResponse();
         return myWrapped.getResponseCode();
     }
 
     public String getResponseMessage() throws IOException {
+        tryTrackResponse();
         return myWrapped.getResponseMessage();
     }
 
     public String getHeaderField(int pos) {
+        tryTrackResponse();
         return myWrapped.getHeaderField(pos);
     }
 
     public Map<String, List<String>> getHeaderFields() {
+        tryTrackResponse();
         return myWrapped.getHeaderFields();
     }
 
     public String getHeaderField(String key) {
+        tryTrackResponse();
         return myWrapped.getHeaderField(key);
     }
 
     public int getHeaderFieldInt(String field, int defaultValue) {
+        tryTrackResponse();
         return myWrapped.getHeaderFieldInt(field, defaultValue);
     }
 
     public String getHeaderFieldKey(int posn) {
+        tryTrackResponse();
         return myWrapped.getHeaderFieldKey(posn);
     }
 
     public long getHeaderFieldDate(String field, long defaultValue) {
+        tryTrackResponse();
         return myWrapped.getHeaderFieldDate(field, defaultValue);
     }
 
     public long getHeaderFieldLong(String name, long Default) {
+        tryTrackResponse();
         return myWrapped.getHeaderFieldLong(name, Default);
     }
 
     public InputStream getInputStream() throws IOException {
-        if (!myConnectTracked) {
-            myConnectionTracker.trackRequest(getRequestMethod(), getRequestProperties());
-        }
+        // getInputStream internally calls connect if not already connected.
+        trackPreConnect();
         try {
             InputStream stream = myWrapped.getInputStream();
-            myConnectionTracker.trackResponse(getResponseMessage(), getHeaderFields());
-            myTrackedInputStream = myConnectionTracker.trackResponseBody(stream);
-            return myTrackedInputStream;
+            trackResponse();
+            myTrackedResponseStream = myConnectionTracker.trackResponseBody(stream);
+            return myTrackedResponseStream;
         } catch (IOException e) {
             myConnectionTracker.error(e.toString());
             throw e;
-        } finally {
-            myConnectTracked = true;
         }
     }
 
     public Object getContent() throws IOException {
+        tryTrackResponse();
         return myWrapped.getContent();
     }
 
     public Object getContent(Class[] types) throws IOException {
+        tryTrackResponse();
         return myWrapped.getContent(types);
     }
 
     public int getContentLength() {
+        tryTrackResponse();
         return myWrapped.getContentLength();
     }
 
     public long getContentLengthLong() {
+        tryTrackResponse();
         return myWrapped.getContentLengthLong();
     }
 
     public String getContentType() {
+        tryTrackResponse();
         return myWrapped.getContentType();
     }
 
