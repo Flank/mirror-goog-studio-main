@@ -232,44 +232,45 @@ method Target.foo(int, java.lang.String):int
 	.prologue_end
 	.line 65
 	    0| invoke-static/range {v9..v11}, Tracer.onFooEntry(Target, int, java.lang.String):void
-	    3| move-object v0, v9
+	    3| invoke-static/range {v9..v11}, Tracer.onFooEntry(java.lang.Object, int, java.lang.String):void
+	    6| move-object v0, v9
 	.local v0, "this", Target
-	    4| move v1, v10
+	    7| move v1, v10
 	.local v1, "x", int
-	    5| move-object v2, v11
+	    8| move-object v2, v11
 	.local v2, "msg", java.lang.String
-	    6| const/4 v5, #+0 (0x00000000 | 0.00000)
-	    7| move v3, v5
+	    9| const/4 v5, #+0 (0x00000000 | 0.00000)
+	   10| move v3, v5
 	.line 66
 	.local v3, "sum", int
-	    8| const/4 v5, #+0 (0x00000000 | 0.00000)
-	    9| move v4, v5
+	   11| const/4 v5, #+0 (0x00000000 | 0.00000)
+	   12| move v4, v5
 Label_1:
 	.local v4, "i", int
-	   10| move v5, v4
-	   11| move v6, v1
-	   12| if-ge v5, v6, Label_2
+	   13| move v5, v4
+	   14| move v6, v1
+	   15| if-ge v5, v6, Label_2
 	.line 68
-	   14| move v5, v3
-	   15| move-object v6, v0
-	   16| iget-object v6, v6, Target.test
-	   18| move v7, v4
-	   19| move-object v8, v2
-	   20| invoke-static {v6,v7,v8}, Tracer.wrapFoo(Base, int, java.lang.String):int
-	   23| move-result v6
-	   24| add-int/2addr v5, v6
-	   25| move v3, v5
+	   17| move v5, v3
+	   18| move-object v6, v0
+	   19| iget-object v6, v6, Target.test
+	   21| move v7, v4
+	   22| move-object v8, v2
+	   23| invoke-static {v6,v7,v8}, Tracer.wrapFoo(Base, int, java.lang.String):int
+	   26| move-result v6
+	   27| add-int/2addr v5, v6
+	   28| move v3, v5
 	.line 66
-	   26| add-int/lit8 v4, v4, #+1 (0x00000001 | 1.40130e-45)
-	   28| goto/16 Label_1
+	   29| add-int/lit8 v4, v4, #+1 (0x00000001 | 1.40130e-45)
+	   31| goto/16 Label_1
 Label_2:
 	.line 70
-	   30| move v5, v3
-	   31| move v0, v5
+	   33| move v5, v3
+	   34| move v0, v5
 	.end_local v0
-	   32| invoke-static/range {v0..v0}, Tracer.onFooExit(int):int
-	   35| move-result v0
-	   36| return v0
+	   35| invoke-static/range {v0..v0}, Tracer.onFooExit(int):int
+	   38| move-result v0
+	   39| return v0
 }
 
 method Target.foo(int, java.lang.String, java.lang.String):int
@@ -320,20 +321,21 @@ method Target.foo(int, java.lang.String[][]):java.lang.Integer
 	.prologue_end
 	.line 78
 	    0| invoke-static/range {v4..v6}, Tracer.onFooEntry(Target, int, java.lang.String[][]):void
-	    3| move-object v0, v4
+	    3| invoke-static/range {v4..v6}, Tracer.onFooEntry(java.lang.Object, int, java.lang.String[][]):void
+	    6| move-object v0, v4
 	.local v0, "this", Target
-	    4| move v1, v5
+	    7| move v1, v5
 	.local v1, "x", int
-	    5| move-object v2, v6
+	    8| move-object v2, v6
 	.local v2, "msgs", java.lang.String[][]
-	    6| const/4 v3, #+5 (0x00000005 | 7.00649e-45)
-	    7| invoke-static {v3}, java.lang.Integer.valueOf(int):java.lang.Integer
-	   10| move-result-object v3
-	   11| move-object v0, v3
+	    9| const/4 v3, #+5 (0x00000005 | 7.00649e-45)
+	   10| invoke-static {v3}, java.lang.Integer.valueOf(int):java.lang.Integer
+	   13| move-result-object v3
+	   14| move-object v0, v3
 	.end_local v0
-	   12| invoke-static/range {v0..v0}, Tracer.onFooExit(java.lang.Integer):java.lang.Integer
-	   15| move-result-object v0
-	   16| return-object v0
+	   15| invoke-static/range {v0..v0}, Tracer.onFooExit(java.lang.Integer):java.lang.Integer
+	   18| move-result-object v0
+	   19| return-object v0
 }
 
 method Target.foo():void

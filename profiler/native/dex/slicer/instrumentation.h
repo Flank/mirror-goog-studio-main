@@ -40,7 +40,11 @@ class Transformation {
 // an explicit "this" argument for non-static methods.
 class EntryHook : public Transformation {
  public:
-  explicit EntryHook(const ir::MethodId& hook_method_id) : hook_method_id_(hook_method_id) {
+  explicit EntryHook(
+      const ir::MethodId& hook_method_id,
+      bool use_object_type_for_this_argument = false)
+      : hook_method_id_(hook_method_id),
+        use_object_type_for_this_argument_(use_object_type_for_this_argument) {
     // hook method signature is generated automatically
     CHECK(hook_method_id_.signature == nullptr);
   }
@@ -49,6 +53,10 @@ class EntryHook : public Transformation {
 
  private:
   ir::MethodId hook_method_id_;
+  // If true, "this" argument of non-static methods is forwarded as Object type.
+  // For example "this" argument of OkHttpClient type is forwared as Object and
+  // is used to get OkHttp class loader.
+  bool use_object_type_for_this_argument_;
 };
 
 // Insert a call to the "exit hook" method before every return
