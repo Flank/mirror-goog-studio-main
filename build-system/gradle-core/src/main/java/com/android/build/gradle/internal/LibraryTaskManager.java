@@ -87,9 +87,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.BuildException;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-/**
- * TaskManager for creating tasks in an Android library project.
- */
+/** TaskManager for creating tasks in an Android library project. */
 public class LibraryTaskManager extends TaskManager {
 
     public static final String ANNOTATIONS = "annotations";
@@ -167,10 +165,7 @@ public class LibraryTaskManager extends TaskManager {
                         ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
                         projectPath,
                         variantName,
-                        () -> createMergeResourcesTask(
-                                tasks,
-                                variantScope,
-                                variantBundleDir));
+                        () -> createMergeResourcesTask(tasks, variantScope, variantBundleDir));
 
         // Add a task to merge the assets folders
         recorder.record(
@@ -256,7 +251,6 @@ public class LibraryTaskManager extends TaskManager {
                     TaskManager.setJavaCompilerTask(javacTask, tasks, variantScope);
                 });
 
-
         // Add dependencies on NDK tasks if NDK plugin is applied.
         if (!isComponentModelPlugin()) {
             // Add NDK tasks
@@ -304,7 +298,6 @@ public class LibraryTaskManager extends TaskManager {
                             return task;
                         });
 
-
         // merge consumer proguard files from different build types and flavors
         AndroidTask<MergeFileTask> mergeProguardFilesTask =
                 recorder.record(
@@ -312,7 +305,6 @@ public class LibraryTaskManager extends TaskManager {
                         projectPath,
                         variantName,
                         () -> createMergeFileTask(tasks, variantScope));
-
 
         // copy lint.jar into the bundle folder
         AndroidTask<Copy> copyLintTask =
@@ -553,8 +545,10 @@ public class LibraryTaskManager extends TaskManager {
         bundle.dependsOn(variantScope.getNdkBuildable());
 
         Preconditions.checkNotNull(variantScope.getOutputScope().getMainSplit());
-        bundle.setDescription("Assembles a bundle containing the library in " +
-                variantConfig.getFullName() + ".");
+        bundle.setDescription(
+                "Assembles a bundle containing the library in "
+                        + variantConfig.getFullName()
+                        + ".");
         bundle.setDestinationDir(variantScope.getAarLocation());
         bundle.setArchiveNameSupplier(
                 () -> variantScope.getOutputScope().getMainSplit().getOutputFileName());
@@ -633,8 +627,7 @@ public class LibraryTaskManager extends TaskManager {
 
     @NonNull
     private AndroidTask<MergeFileTask> createMergeFileTask(
-            @NonNull TaskFactory tasks,
-            @NonNull VariantScope variantScope) {
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
         File outputFile = new File(variantScope.getBaseBundleDir(), SdkConstants.FN_PROGUARD_TXT);
 
         final AndroidTask<MergeFileTask> task =
@@ -642,7 +635,10 @@ public class LibraryTaskManager extends TaskManager {
                         .create(
                                 tasks,
                                 new MergeConsumerProguardFilesConfigAction(
-                                        project, variantScope, outputFile));
+                                        project,
+                                        androidBuilder.getErrorReporter(),
+                                        variantScope,
+                                        outputFile));
 
         variantScope.addTaskOutput(
                 TaskOutputType.CONSUMER_PROGUARD_FILE, outputFile, task.getName());
@@ -669,8 +665,7 @@ public class LibraryTaskManager extends TaskManager {
 
         File publicTxt = new File(variantBundleDir, FN_PUBLIC_TXT);
 
-        mergeResourceTask.configure(
-                tasks, task -> task.setPublicFile(publicTxt));
+        mergeResourceTask.configure(tasks, task -> task.setPublicFile(publicTxt));
 
         // publish the intermediate public res file
         variantScope.addTaskOutput(
@@ -690,19 +685,18 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     private void excludeDataBindingClassesIfNecessary(
-            @NonNull final VariantScope variantScope,
-            @NonNull LibraryBaseTransform transform) {
+            @NonNull final VariantScope variantScope, @NonNull LibraryBaseTransform transform) {
         if (!extension.getDataBinding().isEnabled()) {
             return;
         }
         transform.addExcludeListProvider(
                 () -> {
-                    final File excludeFile = variantScope.getVariantData().getType()
-                            .isExportDataBindingClassList() ? variantScope
-                            .getGeneratedClassListOutputFileForDataBinding() : null;
+                    final File excludeFile =
+                            variantScope.getVariantData().getType().isExportDataBindingClassList()
+                                    ? variantScope.getGeneratedClassListOutputFileForDataBinding()
+                                    : null;
                     return dataBindingBuilder.getJarExcludeList(
-                            variantScope.getVariantData().getLayoutXmlProcessor(), excludeFile
-                    );
+                            variantScope.getVariantData().getLayoutXmlProcessor(), excludeFile);
                 });
     }
 
@@ -736,5 +730,4 @@ public class LibraryTaskManager extends TaskManager {
         verifyLibraryResources.dependsOn(tasks, scope.getMergeResourcesTask());
         scope.getAssembleTask().dependsOn(tasks, verifyLibraryResources);
     }
-
 }

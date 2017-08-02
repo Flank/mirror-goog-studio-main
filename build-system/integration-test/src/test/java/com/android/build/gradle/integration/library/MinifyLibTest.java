@@ -27,8 +27,11 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -63,6 +66,22 @@ public class MinifyLibTest {
         Apk apk = project.getSubproject(":app").getApk(DEBUG);
         TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/StringProvider;");
         TruthHelper.assertThatApk(apk).containsClass("Lcom/android/tests/basic/UnusedClass;");
+    }
+
+    @Test
+    public void wrongConsumerProguardFile() throws Exception {
+        TestFileUtils.appendToFile(
+                project.getSubproject(":lib").getBuildFile(),
+                "android {\n"
+                        + "defaultConfig.consumerProguardFiles getDefaultProguardFile('proguard-android.txt')\n"
+                        + "}\n");
+
+        AndroidProject model =
+                project.model().ignoreSyncIssues().getMulti().getModelMap().get(":lib");
+        assertThat(model).hasSingleIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
+        assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
+                .contains(
+                        "proguard-android.txt should not be used as a consumer configuration file");
     }
 
     @Test
