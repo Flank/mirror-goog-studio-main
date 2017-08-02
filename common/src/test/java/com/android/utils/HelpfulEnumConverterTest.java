@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl;
+package com.android.utils;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -22,13 +22,13 @@ import com.google.common.base.Converter;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class StringToEnumConvertersTest {
+public class HelpfulEnumConverterTest {
     private enum TestEnum {
         FOO,
         BAR_BAZ,
     }
 
-    private Converter<String, TestEnum> converter = StringToEnumConverters.forClass(TestEnum.class);
+    private Converter<String, TestEnum> converter = new HelpfulEnumConverter<>(TestEnum.class);
 
     @Test
     public void stringToEnum() throws Exception {

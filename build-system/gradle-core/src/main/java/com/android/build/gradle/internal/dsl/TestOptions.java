@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.TestOptions.Execution;
+import com.android.utils.HelpfulEnumConverter;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import groovy.lang.Closure;
@@ -31,11 +32,12 @@ import org.gradle.util.ConfigureUtil;
 /** Options for running tests. */
 @SuppressWarnings("unused") // Exposed in the DSL.
 public class TestOptions {
-    @Nullable
-    private String resultsDir;
+    private static final HelpfulEnumConverter<Execution> EXECUTION_CONVERTER =
+            new HelpfulEnumConverter<>(Execution.class);
 
-    @Nullable
-    private String reportDir;
+    @Nullable private String resultsDir;
+
+    @Nullable private String reportDir;
 
     private boolean animationsDisabled;
 
@@ -92,7 +94,9 @@ public class TestOptions {
     }
 
     /** Disables animations during instrumented tests. */
-    public boolean getAnimationsDisabled() { return animationsDisabled; }
+    public boolean getAnimationsDisabled() {
+        return animationsDisabled;
+    }
 
     public void setAnimationsDisabled(boolean animationsDisabled) {
         this.animationsDisabled = animationsDisabled;
@@ -101,7 +105,7 @@ public class TestOptions {
     @NonNull
     public String getExecution() {
         return Verify.verifyNotNull(
-                StringToEnumConverters.forClass(Execution.class).reverse().convert(execution),
+                EXECUTION_CONVERTER.reverse().convert(execution),
                 "No string representation for enum.");
     }
 
@@ -113,13 +117,11 @@ public class TestOptions {
     public void setExecution(@NonNull String execution) {
         this.execution =
                 Preconditions.checkNotNull(
-                        StringToEnumConverters.forClass(Execution.class).convert(execution),
+                        EXECUTION_CONVERTER.convert(execution),
                         "The value of `execution` cannot be null.");
     }
 
-    /**
-     * Options for controlling unit tests execution.
-     */
+    /** Options for controlling unit tests execution. */
     public static class UnitTestOptions {
         // Used by testTasks.all below, DSL docs generator can't handle diamond operator.
         @SuppressWarnings({"MismatchedQueryAndUpdateOfCollection", "Convert2Diamond"})
@@ -132,7 +134,8 @@ public class TestOptions {
          * Whether unmocked methods from android.jar should throw exceptions or return default
          * values (i.e. zero or null).
          *
-         * <p>See <a href="https://developer.android.com/studio/test/index.html">Test Your App</a> for details.
+         * <p>See <a href="https://developer.android.com/studio/test/index.html">Test Your App</a>
+         * for details.
          *
          * @since 1.1
          */
@@ -202,13 +205,12 @@ public class TestOptions {
                     });
         }
 
-
         /**
-         * Configures a given test task. The configuration closures that were passed to
-         * {@link #all(Closure)} will be applied to it.
+         * Configures a given test task. The configuration closures that were passed to {@link
+         * #all(Closure)} will be applied to it.
          *
-         * <p>Not meant to be called from build scripts. The reason it exists is that tasks
-         * are created after the build scripts are evaluated, so users have to "register" their
+         * <p>Not meant to be called from build scripts. The reason it exists is that tasks are
+         * created after the build scripts are evaluated, so users have to "register" their
          * configuration closures first and we can only apply them later.
          *
          * @since 1.2
