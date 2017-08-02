@@ -208,6 +208,20 @@ public class ModelHelper {
     }
 
     /**
+     * Gets the java artifact with the given name.
+     *
+     * @param items the java artifacts to search
+     * @param name the name to match, e.g. {@link AndroidProject#ARTIFACT_UNIT_TEST}
+     * @return the only item with the given name
+     * @throws AssertionError if no items match or if multiple items match
+     */
+    @NonNull
+    public static JavaArtifact getJavaArtifact(
+            @NonNull Collection<JavaArtifact> items, @NonNull String name) {
+        return searchForExistingItem(items, name, JavaArtifact::getName, "JavaArtifact");
+    }
+
+    /**
      * search for an item matching the name and return it if found.
      *
      */

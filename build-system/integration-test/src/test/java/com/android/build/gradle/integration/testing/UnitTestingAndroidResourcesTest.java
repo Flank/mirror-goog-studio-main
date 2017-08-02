@@ -2,16 +2,26 @@ package com.android.build.gradle.integration.testing;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertNotNull;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.JavaArtifact;
+import com.android.builder.model.Variant;
 import java.io.File;
+import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Properties;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -117,5 +127,36 @@ public class UnitTestingAndroidResourcesTest {
                         "build/test-results/testDebugUnitTest/"
                                 + "TEST-com.android.tests.WelcomeActivityTest.xml");
         assertThat(xmlResults).isFile();
+
+        // Check that the model contains the generated file
+        AndroidProject model = project.model().getSingle().getOnlyModel();
+        Variant debug = ModelHelper.getVariant(model.getVariants(), "debug");
+        JavaArtifact debugUnitTest =
+                ModelHelper.getJavaArtifact(
+                        debug.getExtraJavaArtifacts(), AndroidProject.ARTIFACT_UNIT_TEST);
+
+        Path configFile = getConfigFile(debugUnitTest.getAdditionalClassesFolders());
+        assertNotNull(configFile);
+        Properties properties = new Properties();
+        try (Reader reader = Files.newBufferedReader(configFile)) {
+            properties.load(reader);
+        }
+        properties.forEach((name, value) -> assertThat(Paths.get(value.toString())).exists());
+    }
+
+    @Nullable
+    private static Path getConfigFile(@NonNull Iterable<File> directories) {
+        for (File dir : directories) {
+            Path candidateConfigFile =
+                    dir.toPath()
+                            .resolve("com")
+                            .resolve("android")
+                            .resolve("tools")
+                            .resolve("test_config.properties");
+            if (Files.isRegularFile(candidateConfigFile)) {
+                return candidateConfigFile;
+            }
+        }
+        return null;
     }
 }

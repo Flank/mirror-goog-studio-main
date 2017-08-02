@@ -464,6 +464,11 @@ public class ModelBuilder implements ToolingModelBuilder {
         Set<File> additionalTestClasses = new HashSet<>();
         additionalTestClasses.addAll(variantData.getAllPreJavacGeneratedBytecode().getFiles());
         additionalTestClasses.addAll(variantData.getAllPostJavacGeneratedBytecode().getFiles());
+        if (scope.hasOutput(TaskOutputHolder.TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY)) {
+            additionalTestClasses.add(
+                    scope.getOutput(TaskOutputHolder.TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY)
+                            .getSingleFile());
+        }
 
         return new JavaArtifactImpl(
                 variantType.getArtifactName(),
