@@ -27,7 +27,7 @@ public class ProvisionException extends Exception {
     }
 
     ProvisionException(@NonNull ErrorType errorType, @NonNull Throwable cause) {
-        super(createMessageForError(errorType), cause);
+        super(createMessageForError(errorType) + " Caused by: " + cause.getMessage(), cause);
         myErrorType = errorType;
     }
 
@@ -38,7 +38,13 @@ public class ProvisionException extends Exception {
 
     ProvisionException(
             @NonNull ErrorType errorType, @NonNull String message, @NonNull Throwable cause) {
-        super(createMessageForError(errorType) + " " + message, cause);
+        super(
+                createMessageForError(errorType)
+                        + " "
+                        + message
+                        + " Caused by: "
+                        + cause.getMessage(),
+                cause);
         myErrorType = errorType;
     }
 
