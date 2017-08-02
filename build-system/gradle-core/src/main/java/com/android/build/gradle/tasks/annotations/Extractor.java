@@ -44,9 +44,8 @@ import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
@@ -98,6 +97,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -182,17 +183,14 @@ public class Extractor {
     public static final String ATTR_VAL = "val";
     public static final String ATTR_PURE = "pure";
 
-    @NonNull
-    private final Map<String, List<AnnotationData>> types = Maps.newHashMap();
+    @NonNull private final Map<String, List<AnnotationData>> types = new HashMap<>();
 
-    @NonNull
-    private final Set<String> irrelevantAnnotations = Sets.newHashSet();
+    @NonNull private final Set<String> irrelevantAnnotations = new HashSet<>();
 
     private final File classDir;
 
     /** Map from package to map from class to items */
-    @NonNull
-    private final Map<String, Map<String, List<Item>>> itemMap = Maps.newHashMap();
+    @NonNull private final Map<String, Map<String, List<Item>>> itemMap = new HashMap<>();
     private Map<String, PackageItem> packageMap;
 
     @Nullable
@@ -200,19 +198,19 @@ public class Extractor {
 
     private final boolean displayInfo;
 
-    private final Map<String,Integer> stats = Maps.newHashMap();
+    private final Map<String, Integer> stats = new HashMap<>();
     private int filteredCount;
     private int mergedCount;
 
-    private final Set<String> ignoredAnnotations = Sets.newHashSet();
+    private final Set<String> ignoredAnnotations = new HashSet<>();
     private boolean listIgnored;
     private List<String> typedefsToRemove;
     private Map<String,Boolean> sourceRetention;
-    private final List<Item> keepItems = Lists.newArrayList();
+    private final List<Item> keepItems = new ArrayList<>();
 
     public static List<PsiJavaFile> createUnitsForFiles(@NonNull Project project,
             @NonNull List<File> specificSources) {
-        List<PsiJavaFile> units = Lists.newArrayListWithCapacity(specificSources.size());
+        List<PsiJavaFile> units = new ArrayList<>(specificSources.size());
         VirtualFileSystem fileSystem = StandardFileSystems.local();
         PsiManager manager = PsiManager.getInstance(project);
 
@@ -249,7 +247,7 @@ public class Extractor {
     }
 
     private static List<File> gatherJavaSources(List<File> sourcePath) {
-        List<File> sources = Lists.newArrayList();
+        List<File> sources = new ArrayList<>();
         for (File file : sourcePath) {
             addJavaSources(sources, file);
         }
@@ -346,7 +344,7 @@ public class Extractor {
         }
 
         if (!stats.isEmpty()) {
-            List<String> annotations = Lists.newArrayList(stats.keySet());
+            List<String> annotations = new ArrayList<>(stats.keySet());
             annotations.sort((s1, s2) -> {
                 int frequency1 = stats.get(s1);
                 int frequency2 = stats.get(s2);
@@ -356,7 +354,7 @@ public class Extractor {
                 }
                 return s1.compareTo(s2);
             });
-            Map<String,String> fqnToName = Maps.newHashMap();
+            Map<String, String> fqnToName = new HashMap<>();
             int max = 0;
             int count = 0;
             for (String fqn : annotations) {
@@ -833,7 +831,7 @@ public class Extractor {
         }
 
         if (packageMap == null) {
-            packageMap = Maps.newHashMap();
+            packageMap = new HashMap<>();
         }
 
         packageMap.put(pkg, item);
@@ -862,7 +860,7 @@ public class Extractor {
         }
         List<Item> items = classMap.get(fqn);
         if (items == null) {
-            items = Lists.newArrayList();
+            items = new ArrayList<>();
             classMap.put(fqn, items);
         }
 
@@ -1330,14 +1328,14 @@ public class Extractor {
                             // that class implements ZipConstants and therefore imports a large
                             // number of irrelevant constants that aren't valid here. Instead,
                             // only allow these two:
-                            fields = Sets.newHashSet("STORED", "DEFLATED");
+                            fields = ImmutableSet.of("STORED", "DEFLATED");
                         }
 
                         if (fields != null) {
-                            List<String> sorted = Lists.newArrayList(fields);
+                            List<String> sorted = new ArrayList<>(fields);
                             Collections.sort(sorted);
                             if (reflectionFields != null) {
-                                final Map<String,Integer> rank = Maps.newHashMap();
+                                final Map<String, Integer> rank = new HashMap<>();
                                 for (int i = 0, n = sorted.size(); i < n; i++) {
                                     rank.put(sorted.get(i), reflectionFields.length + i);
 
@@ -1456,7 +1454,7 @@ public class Extractor {
             if (children.isEmpty()) {
                 return new AnnotationData(name);
             }
-            List<String> attributeStrings = Lists.newArrayList();
+            List<String> attributeStrings = new ArrayList<>();
             for (Element valueElement : children) {
                 attributeStrings.add(valueElement.getAttribute(ATTR_NAME));
                 attributeStrings.add(valueElement.getAttribute(ATTR_VAL));
@@ -1915,7 +1913,7 @@ public class Extractor {
             this.containingClass = containingClass;
         }
 
-        public final List<AnnotationData> annotations = Lists.newArrayList();
+        public final List<AnnotationData> annotations = new ArrayList<>();
 
         void write(StringPrintWriter writer) {
             if (annotations.isEmpty()) {
@@ -2502,7 +2500,7 @@ public class Extractor {
     }
 
     private class AnnotationVisitor extends JavaRecursiveElementVisitor {
-        private List<String> privateTypedefs = Lists.newArrayList();
+        private List<String> privateTypedefs = new ArrayList<>();
         private final boolean requireHide;
         private final boolean requireSourceRetention;
 
@@ -2646,9 +2644,7 @@ public class Extractor {
                             }
                             if (isHiddenTypeDef(aClass)) {
                                 String cls = LintUtils.getInternalName(aClass);
-                                if (!privateTypedefs.contains(cls)) {
-                                    privateTypedefs.add(cls);
-                                }
+                                privateTypedefs.add(cls);
                             }
 
                             break;
