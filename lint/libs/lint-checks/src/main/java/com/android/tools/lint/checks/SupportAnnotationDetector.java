@@ -83,7 +83,6 @@ import com.android.tools.lint.checks.PermissionFinder.Operation;
 import com.android.tools.lint.checks.PermissionFinder.Result;
 import com.android.tools.lint.checks.PermissionHolder.SetPermissionLookup;
 import com.android.tools.lint.client.api.JavaEvaluator;
-import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
@@ -103,7 +102,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.android.utils.XmlUtils;
-import com.android.utils.CharSequences;
 import com.android.xml.AndroidManifest;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -126,7 +124,6 @@ import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -172,8 +169,6 @@ import org.jetbrains.uast.util.UastExpressionUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  * Looks up annotations on method calls and enforces the various things they
@@ -893,19 +888,31 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
         if (mPermissions == null) {
             Set<String> permissions = Sets.newHashSetWithExpectedSize(30);
             Set<String> revocable = Sets.newHashSetWithExpectedSize(4);
-            LintClient client = context.getClient();
-            // Gather permissions from all projects that contribute to the
-            // main project.
             Project mainProject = context.getMainProject();
-            for (File manifest : mainProject.getManifestFiles()) {
-                addPermissions(client, permissions, revocable, manifest);
-            }
-            for (Project library : mainProject.getAllLibraries()) {
-                for (File manifest : library.getManifestFiles()) {
-                    addPermissions(client, permissions, revocable, manifest);
+            Document mergedManifest = mainProject.getMergedManifest();
+
+            if (mergedManifest != null) {
+                for (Element element : XmlUtils.getSubTags(mergedManifest.getDocumentElement())) {
+                    String nodeName = element.getNodeName();
+                    if (TAG_USES_PERMISSION.equals(nodeName)
+                            || TAG_USES_PERMISSION_SDK_23.equals(nodeName)
+                            || TAG_USES_PERMISSION_SDK_M.equals(nodeName)) {
+                        String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                        if (!name.isEmpty()) {
+                            permissions.add(name);
+                        }
+                    } else if (nodeName.equals(TAG_PERMISSION)) {
+                        String protectionLevel = element.getAttributeNS(ANDROID_URI,
+                                ATTR_PROTECTION_LEVEL);
+                        if (VALUE_DANGEROUS.equals(protectionLevel)) {
+                            String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
+                            if (!name.isEmpty()) {
+                                revocable.add(name);
+                            }
+                        }
+                    }
                 }
             }
-
             AndroidVersion minSdkVersion = mainProject.getMinSdkVersion();
             AndroidVersion targetSdkVersion = mainProject.getTargetSdkVersion();
             mPermissions = new SetPermissionLookup(permissions, revocable, minSdkVersion,
@@ -913,48 +920,6 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
         }
 
         return mPermissions;
-    }
-
-    private static void addPermissions(@NonNull LintClient client,
-            @NonNull Set<String> permissions,
-            @NonNull Set<String> revocable,
-            @NonNull File manifest) {
-        CharSequence xml = client.readFile(manifest);
-        Document document = CharSequences.parseDocumentSilently(xml, true);
-        if (document == null) {
-            return;
-        }
-        Element root = document.getDocumentElement();
-        if (root == null) {
-            return;
-        }
-        NodeList children = root.getChildNodes();
-        for (int i = 0, n = children.getLength(); i < n; i++) {
-            Node item = children.item(i);
-            if (item.getNodeType() != Node.ELEMENT_NODE) {
-                continue;
-            }
-            String nodeName = item.getNodeName();
-            if (nodeName.equals(TAG_USES_PERMISSION)
-                || nodeName.equals(TAG_USES_PERMISSION_SDK_23)
-                || nodeName.equals(TAG_USES_PERMISSION_SDK_M)) {
-                Element element = (Element)item;
-                String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                if (!name.isEmpty()) {
-                    permissions.add(name);
-                }
-            } else if (nodeName.equals(TAG_PERMISSION)) {
-                Element element = (Element)item;
-                String protectionLevel = element.getAttributeNS(ANDROID_URI,
-                        ATTR_PROTECTION_LEVEL);
-                if (VALUE_DANGEROUS.equals(protectionLevel)) {
-                    String name = element.getAttributeNS(ANDROID_URI, ATTR_NAME);
-                    if (!name.isEmpty()) {
-                        revocable.add(name);
-                    }
-                }
-            }
-        }
     }
 
     private static void checkResult(@NonNull JavaContext context, @NonNull UExpression node,
