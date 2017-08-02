@@ -31,10 +31,10 @@ import org.jetbrains.uast.UClassInitializer
 import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UField
-import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.USuperExpression
+import org.jetbrains.uast.UastVisibility
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.toUElement
@@ -42,36 +42,19 @@ import org.jetbrains.uast.toUElementOfType
 import org.jetbrains.uast.util.isConstructorCall
 import org.jetbrains.uast.visitor.AbstractUastVisitor
 
-private val defaultCallGraphEdges = Edge.Kind.values().filter {
-    it.isLikely || it == BASE || it == INVOKE
-}.toTypedArray()
-
-fun buildClassHierarchy(files: Collection<UFile>): ClassHierarchy {
-    val classHierarchyVisitor = ClassHierarchyVisitor()
-    files.forEach { it.accept(classHierarchyVisitor) }
-    return classHierarchyVisitor.classHierarchy
-}
-
-fun buildIntraproceduralReceiverEval(files: Collection<UFile>,
-                                     cha: ClassHierarchy): CallReceiverEvaluator {
-    val receiverEval = IntraproceduralReceiverVisitor(cha)
-    files.forEach { it.accept(receiverEval) }
-    return receiverEval
-}
-
-fun buildCallGraph(files: Collection<UFile>,
-                   receiverEval: CallReceiverEvaluator,
-                   classHierarchy: ClassHierarchy,
-                   vararg edgeKinds: Edge.Kind = defaultCallGraphEdges): CallGraph {
-    val callGraphVisitor = CallGraphVisitor(receiverEval, classHierarchy, *edgeKinds)
-    files.forEach { it.accept(callGraphVisitor) }
-    return callGraphVisitor.callGraph
-}
-
+/**
+ * Builds a call graph by traversing UAST.
+ *
+ * Uses [receiverEval] to estimate dispatch receivers, and uses [classHierarchy] to resolve
+ * to unique overriding implementations when possible.
+ *
+ * If [conservative] is true, then adds edges to all overriding methods of each call target. This
+ * trades precision for soundness.
+ */
 class CallGraphVisitor(
-        private val receiverEval: CallReceiverEvaluator,
-        private val classHierarchy: ClassHierarchy,
-        private vararg val edgeKinds: Edge.Kind = defaultCallGraphEdges) : AbstractUastVisitor() {
+        val receiverEval: DispatchReceiverEvaluator,
+        val classHierarchy: ClassHierarchy,
+        val conservative: Boolean = false) : AbstractUastVisitor() {
     private val mutableCallGraph: MutableCallGraph = MutableCallGraph()
     val callGraph: CallGraph get() = mutableCallGraph
 
@@ -84,8 +67,8 @@ class CallGraphVisitor(
         return super.visitElement(node)
     }
 
+    // Checks for implicit calls to super constructors.
     override fun visitClass(node: UClass): Boolean {
-        // Check for an implicit call to a super constructor.
         val superClass = node.superClass?.psi?.navigationElement.toUElementOfType<UClass>()
         if (superClass != null) {
             val constructors = node.constructors()
@@ -108,6 +91,7 @@ class CallGraphVisitor(
         return super.visitClass(node)
     }
 
+    // Creates edges from caller to callee due to simple call expressions.
     override fun visitCallExpression(node: UCallExpression): Boolean {
 
         // Find surrounding context.
@@ -142,9 +126,10 @@ class CallGraphVisitor(
         }
 
         val callerNodes = callers.map { mutableCallGraph.getNode(it) }
+
         fun addEdge(callee: UElement?, kind: Edge.Kind) {
-            if (kind !in edgeKinds) return // Filter out unwanted edges.
-            val edge = Edge(callee?.let { mutableCallGraph.getNode(it) }, node, kind)
+            val calleeNode = callee?.let { mutableCallGraph.getNode(it) }
+            val edge = Edge(calleeNode, node, kind)
             callerNodes.forEach { it.edges.add(edge) }
         }
 
@@ -156,7 +141,7 @@ class CallGraphVisitor(
                         ?.resolve()?.navigationElement.toUElement() as? UClass
                         ?: return super.visitCallExpression(node) // Unable to resolve class.
                 addEdge(constructedClass, DIRECT)
-            } else {
+            } else if (node.methodName == "invoke") {
                 // This is likely an invocation of a function expression, such as a Kotlin lambda.
                 addEdge(null, INVOKE)
                 node.getTargets(receiverEval).forEach { addEdge(it.element, TYPE_EVIDENCED) }
@@ -167,28 +152,32 @@ class CallGraphVisitor(
         val overrides = classHierarchy.allOverridesOf(baseCallee).toList()
 
         // Create an edge based on the type of call.
-        val cannotOverride = !baseCallee.canBeOverridden()
+        val staticallyDispatched = baseCallee.isStaticallyDispatched()
         val throughSuper = node.receiver is USuperExpression
         val isFunctionalCall =
                 baseCallee.psi == LambdaUtil.getFunctionalInterfaceMethod(node.receiverType)
-        val uniqueBase = overrides.isEmpty() && !isFunctionalCall
-        val uniqueOverride = !baseCallee.isCallable() && overrides.size == 1 && !isFunctionalCall
+        val uniqueImpl = (overrides + baseCallee)
+                .filter { it.isCallable() }
+                .singleOrNull()
         when {
-            cannotOverride || throughSuper -> addEdge(baseCallee, DIRECT)
-            uniqueBase -> addEdge(baseCallee, UNIQUE)
-            uniqueOverride -> {
-                addEdge(baseCallee, BASE) // We don't want to lose an edge to the base callee.
-                addEdge(overrides.first(), UNIQUE)
+            staticallyDispatched || throughSuper -> addEdge(baseCallee, DIRECT)
+            uniqueImpl != null && !isFunctionalCall -> {
+                if (uniqueImpl != baseCallee)
+                    addEdge(baseCallee, BASE)
+                addEdge(uniqueImpl, UNIQUE)
             }
             else -> {
-                // Use static analyses to indicate which overriding methods are likely targets.
+                // Use static analysis to indicate which overriding methods are likely targets.
                 val evidencedTargets = node.getTargets(receiverEval).map { it.element }
                 evidencedTargets.forEach { addEdge(it, TYPE_EVIDENCED) }
                 // We don't want to lose the edge to the base callee.
-                if (baseCallee !in evidencedTargets) addEdge(baseCallee, BASE)
-                overrides
-                        .filter { it !in evidencedTargets }
-                        .forEach { addEdge(it, NON_UNIQUE_OVERRIDE) }
+                if (baseCallee !in evidencedTargets)
+                    addEdge(baseCallee, BASE)
+                if (conservative) {
+                    overrides
+                            .filter { it !in evidencedTargets && it.isCallable() }
+                            .forEach { addEdge(it, NON_UNIQUE_OVERRIDE) }
+                }
             }
         }
 
@@ -197,23 +186,22 @@ class CallGraphVisitor(
 
     private fun UClass.constructors() = methods.filter { it.isConstructor }
 
-    // TODO: Verify functionality for Kotlin.
+    /** Returns whether this method could be the runtime target of a call. */
     private fun UMethod.isCallable() = when {
         hasModifierProperty(PsiModifier.ABSTRACT) -> false
         containingClass?.isInterface == true -> hasModifierProperty(PsiModifier.DEFAULT)
         else -> true
     }
 
-    // TODO: Verify functionality for Kotlin.
-    private fun UMethod.canBeOverridden(): Boolean {
-        val parentClass = containingClass
-        return parentClass != null
-                && !isConstructor
-                && !hasModifierProperty(PsiModifier.STATIC)
-                && !hasModifierProperty(PsiModifier.FINAL)
-                && !hasModifierProperty(PsiModifier.PRIVATE)
-                && parentClass !is PsiAnonymousClass
-                && !parentClass.hasModifierProperty(PsiModifier.FINAL)
+    /** Returns whether this method is statically dispatched. */
+    private fun UMethod.isStaticallyDispatched(): Boolean {
+        val parentClass = containingClass ?: return true
+        return isConstructor
+                || isStatic
+                || isFinal
+                || visibility == UastVisibility.PRIVATE
+                || parentClass is PsiAnonymousClass
+                || parentClass.hasModifierProperty(PsiModifier.FINAL)
     }
 
     /**

@@ -17,11 +17,16 @@ package com.android.tools.lint.detector.api.interprocedural
 
 import com.android.tools.lint.detector.api.interprocedural.CallGraph.Edge
 import com.android.tools.lint.detector.api.interprocedural.CallGraph.Node
-import com.android.tools.lint.detector.api.interprocedural.CallTarget.DefaultConstructor
+import com.android.tools.lint.detector.api.interprocedural.CallTarget.DefaultCtor
 import com.android.tools.lint.detector.api.interprocedural.CallTarget.Lambda
 import com.android.tools.lint.detector.api.interprocedural.CallTarget.Method
+import com.google.common.collect.HashMultimap
 import com.google.common.collect.Lists
+import com.google.common.collect.Multimap
 import com.intellij.psi.PsiElement
+import com.intellij.psi.impl.cache.TypeInfo
+import com.intellij.psi.impl.java.stubs.impl.PsiParameterStubImpl
+import com.intellij.psi.impl.source.PsiParameterImpl
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
@@ -32,6 +37,7 @@ import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UThisExpression
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
+import org.jetbrains.uast.java.JavaUParameter
 import org.jetbrains.uast.toUElement
 import java.io.BufferedWriter
 import java.io.FileWriter
@@ -40,11 +46,12 @@ import java.util.ArrayDeque
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
+import kotlin.collections.set
 
 sealed class CallTarget(open val element: UElement) {
     data class Method(override val element: UMethod) : CallTarget(element)
     data class Lambda(override val element: ULambdaExpression) : CallTarget(element)
-    data class DefaultConstructor(override val element: UClass) : CallTarget(element)
+    data class DefaultCtor(override val element: UClass) : CallTarget(element)
 }
 
 /**
@@ -55,14 +62,14 @@ interface CallGraph {
     val nodes: Collection<Node>
 
     interface Node {
-        val caller: CallTarget
+        val target: CallTarget
         val edges: Collection<Edge>
         val likelyEdges: Collection<Edge> get() = edges.filter { it.isLikely }
     }
 
     /**
      * An edge to [node] of type [kind] due to [call].
-     * [call] can be null for, e.g., implicit calls to super constructors.
+     * [call] can be null for, e.g., implicit calls to super constructors or method references.
      * [node] can be null for variable function invocations in Kotlin.
      */
     data class Edge(val node: Node?, val call: UCallExpression?, val kind: Kind) {
@@ -76,10 +83,11 @@ interface CallGraph {
             NON_UNIQUE_OVERRIDE, // A call that is one of several overriding implementations.
             INVOKE; // A function expression invocation in Kotlin.
 
-            val isLikely: Boolean get() = when (this) {
-                DIRECT, UNIQUE, TYPE_EVIDENCED -> true
-                BASE, NON_UNIQUE_OVERRIDE, INVOKE -> false
-            }
+            val isLikely: Boolean
+                get() = when (this) {
+                    DIRECT, UNIQUE, TYPE_EVIDENCED -> true
+                    BASE, NON_UNIQUE_OVERRIDE, INVOKE -> false
+                }
         }
     }
 
@@ -110,29 +118,31 @@ interface CallGraph {
 }
 
 /** Describes this node in a form like class#method, using "anon" for anonymous classes/lambdas. */
-val Node?.shortName: String get() {
-    if (this == null)
-        return "[unresolved invoke]"
-    val containingClass = caller.element.getContainingUClass()
-    val containingClassStr =
-            if (containingClass?.name == "Companion")
-                containingClass.containingClass?.name ?: "anon"
-            else containingClass?.name ?: "anon"
-    val containingMethod = caller.element.getContainingUMethod()?.name ?: "anon"
-    val caller = caller // Enables smart casts.
-    return when (caller) {
-        is Method -> "$containingClassStr#${caller.element.name}"
-        is Lambda -> "$containingClassStr#$containingMethod#lambda"
-        is DefaultConstructor -> "${caller.element.name}#${caller.element.name}"
+val Node?.shortName: String
+    get() {
+        if (this == null)
+            return "[unresolved invoke]"
+        val containingClass = target.element.getContainingUClass()
+        val containingClassStr =
+                if (containingClass?.name == "Companion")
+                    containingClass.containingClass?.name ?: "anon"
+                else containingClass?.name ?: "anon"
+        val containingMethod = target.element.getContainingUMethod()?.name ?: "anon"
+        val target = target // Enables smart casts.
+        return when (target) {
+            is Method -> "$containingClassStr#${target.element.name}"
+            is Lambda -> "$containingClassStr#$containingMethod#lambda"
+            is DefaultCtor -> "${target.element.name}#${target.element.name}"
+        }
     }
-}
 
 class MutableCallGraph : CallGraph {
     private val nodeMap = LinkedHashMap<PsiElement, MutableNode>()
     override val nodes get() = nodeMap.values
 
-    class MutableNode(override val caller: CallTarget,
-                      override val edges: MutableCollection<Edge> = ArrayList()) : Node {
+    class MutableNode(
+            override val target: CallTarget,
+            override val edges: MutableCollection<Edge> = ArrayList()) : Node {
         override fun toString() = shortName
     }
 
@@ -148,7 +158,7 @@ class MutableCallGraph : CallGraph {
             val caller = when (element) {
                 is UMethod -> Method(element)
                 is ULambdaExpression -> Lambda(element)
-                is UClass -> DefaultConstructor(element)
+                is UClass -> DefaultCtor(element)
                 else -> throw Error("Unexpected UElement type ${element.javaClass}")
             }
             MutableNode(caller)
@@ -165,9 +175,10 @@ class MutableCallGraph : CallGraph {
  * Returns non-intersecting paths from nodes in [sources]
  * to nodes for which [isSink] returns true.
  */
-fun <T : Any> searchForPaths(sources: Collection<T>,
-                             isSink: (T) -> Boolean,
-                             getNeighbors: (T) -> Collection<T>): Collection<List<T>> {
+fun <T : Any> searchForPaths(
+        sources: Collection<T>,
+        isSink: (T) -> Boolean,
+        getNeighbors: (T) -> Collection<T>): Collection<List<T>> {
     val res = ArrayList<List<T>>()
     val prev = HashMap<T, T?>(sources.associate { Pair(it, null) })
     fun T.seen() = this in prev
@@ -195,7 +206,10 @@ fun <T : Any> searchForPaths(sources: Collection<T>,
 }
 
 /** Describes a parameter specialization tuple, mapping each parameter to one concrete receiver. */
-data class ParamContext(val params: List<Pair<UParameter, Receiver>>, val implicitThis: Receiver?) {
+data class ParamContext(
+        val params: List<Pair<UParameter, DispatchReceiver>>,
+        val implicitThis: DispatchReceiver?
+) {
     operator fun get(param: UParameter) = params.firstOrNull { it.first == param }?.second
 
     companion object {
@@ -207,11 +221,11 @@ data class ParamContext(val params: List<Pair<UParameter, Receiver>>, val implic
     // equals/hashCode correctly. We should be able to remove the methods below once we can fix
     // this issue in the Kotlin source code.
 
-    private fun List<Pair<UParameter, Receiver>>.mapToPsi() = map { (param, receiver) ->
+    private fun List<Pair<UParameter, DispatchReceiver>>.mapToPsi() = map { (param, receiver) ->
         Pair(param.psi.navigationElement, receiver.element.psi?.navigationElement)
     }
 
-    private fun Receiver?.mapToPsi() = this?.element?.psi?.navigationElement
+    private fun DispatchReceiver?.mapToPsi() = this?.element?.psi?.navigationElement
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -220,37 +234,36 @@ data class ParamContext(val params: List<Pair<UParameter, Receiver>>, val implic
                 params.mapToPsi() == o.params.mapToPsi()
     }
 
-    override fun hashCode(): Int {
-        return 31 * (implicitThis.mapToPsi()?.hashCode() ?: 0) + params.mapToPsi().hashCode()
-    }
+    override fun hashCode() =
+            31 * (implicitThis.mapToPsi()?.hashCode() ?: 0) + params.mapToPsi().hashCode()
+
 }
+
+/** A specialization of a call graph node on a parameter context. */
+data class ContextualNode(val node: Node, val paramContext: ParamContext)
 
 /**
- * A specialization of a call graph node on a parameter context.
+ * An edge to [contextualNode] due to [cause] (usually a call expression).
+ * By convention, an edge without cause (e.g., the beginning endpoint of a call path) will
+ * have its [cause] field set to the UElement of its own node.
  */
-@Suppress("DataClassPrivateConstructor")
-data class SearchNode private constructor(val node: Node, val paramContext: ParamContext) {
-    // The [cause] field indicates the UAST element (usually a call expression) that led to this
-    // search node. It does not participate in the data class equality method, as in the end we
-    // only care about the path that *first* reaches a given node with a given parameter context.
-    // We want others to be preempted during the BFS.
-    lateinit var cause: UElement
-
-    constructor(node: Node, context: ParamContext, cause: UElement) : this(node, context) {
-        this.cause = cause
-    }
-}
+data class ContextualEdge(
+        val contextualNode: ContextualNode,
+        val cause: UElement)
 
 /** Augments the non-contextual receiver evaluator with a parameter context. */
-class ContextualReceiverEvaluator(
+class ContextualDispatchReceiverEvaluator(
         val paramContext: ParamContext,
-        val nonContextualReceiverEval: CallReceiverEvaluator) : CallReceiverEvaluator {
+        nonContextualEval: IntraproceduralDispatchReceiverEvaluator
+) : DispatchReceiverEvaluator(nonContextualEval) {
 
-    override fun get(element: UElement): Collection<Receiver> = when (element) {
+    override fun getOwn(
+            element: UElement,
+            root: DispatchReceiverEvaluator): Collection<DispatchReceiver> = when (element) {
         is UThisExpression -> getForImplicitThis() // TODO: Qualified `this` not yet in UAST.
-        is UParameter -> nonContextualReceiverEval[element] + listOfNotNull(paramContext[element])
+        is UParameter -> listOfNotNull(paramContext[element])
         is USimpleNameReferenceExpression -> {
-            element.resolve()?.navigationElement?.toUElement()?.let { this[it] } ?: emptyList()
+            element.resolve()?.navigationElement?.toUElement()?.let { root[it] } ?: emptyList()
         }
         else -> {
             // TODO(kotlin-uast-cleanup)
@@ -260,14 +273,14 @@ class ContextualReceiverEvaluator(
             // sometimes we have to use the former to help with name resolution. Thus here we use
             // the [navigationElement] to get the original Kotlin Psi while doing equality checks,
             // in case [element] is a parameter in disguise.
-            val ours = paramContext.params.find { (param, _) ->
-                param.psi.navigationElement.toUElement() == element
-            }?.second
-            nonContextualReceiverEval[element] + listOfNotNull(ours)
+            paramContext.params
+                    .find { (param, _) -> param.psi.navigationElement.toUElement() == element }
+                    ?.second
+                    ?.let { listOf(it) } ?: emptyList()
         }
     }
 
-    override fun getForImplicitThis(): Collection<Receiver> =
+    override fun getOwnForImplicitThis(): Collection<DispatchReceiver> =
             listOfNotNull(paramContext.implicitThis)
 }
 
@@ -276,16 +289,29 @@ class ContextualReceiverEvaluator(
  * argument receivers. Returns an empty parameter context if there are no call argument receivers.
  * See "The Cartesian Product Algorithm" by Ole Agesen.
  */
-fun CallTarget.buildParamContextsFromCall(
+fun buildParamContextsFromCall(
+        callee: CallTarget,
         call: UCallExpression,
-        receiverEval: CallReceiverEvaluator): Collection<ParamContext> {
-    val params = when (this) {
-        is Method -> element.uastParameters
-        is Lambda -> element.valueParameters
-        is DefaultConstructor -> emptyList()
+        implicitThisDispatchReceivers: List<DispatchReceiver>,
+        receiverEval: ContextualDispatchReceiverEvaluator): Collection<ParamContext> {
+
+    // The potential for an implicit receiver argument to the callee complicates the logic here.
+    // When creating the Cartesian product we include the implicit receiver argument as a "normal"
+    // call argument, then pull it out again when creating parameter contexts.
+
+    val implicitThisParamPsiStub = PsiParameterStubImpl(
+            null, "phony", TypeInfo.createConstructorType(), false, false)
+    val implicitThisParamPsi = PsiParameterImpl(implicitThisParamPsiStub)
+    val implicitThisParam = JavaUParameter(implicitThisParamPsi, null)
+    val explicitParams = when (callee) {
+        is Method -> callee.element.uastParameters
+        is Lambda -> callee.element.valueParameters
+        is DefaultCtor -> emptyList()
     }
-    val args = call.valueArguments
-    val argReceivers = args.map { receiverEval[it].toList() }
+    val params = listOf(implicitThisParam) + explicitParams
+
+    val explicitArgReceivers = call.valueArguments.map { receiverEval[it].toList() }
+    val argReceivers = listOf(implicitThisDispatchReceivers) + explicitArgReceivers
 
     // Note that the size of params may not match the size of args when there is
     // a variadic parameter; in that case the variadic parameter is ignored.
@@ -295,79 +321,104 @@ fun CallTarget.buildParamContextsFromCall(
             .filter { it.second.isNotEmpty() }
             .unzip()
 
-    // The potential for an implicit receiver argument to the callee complicates the logic here.
-    // When creating the Cartesian product we include the implicit receiver argument as a "normal"
-    // call argument, then pull it out again when creating parameter contexts.
-
-    val callHasReceiver = when (this) {
-        is Method -> !element.isStatic
-        is Lambda -> false // TODO: Kotlin receivers not reflected in UAST (yet?).
-        is DefaultConstructor -> false
-    }
-
-    val callReceiver = call.receiver
-    val implicitReceiverReceivers = when {
-        callHasReceiver && callReceiver != null -> receiverEval[callReceiver].toList()
-        callHasReceiver && callReceiver == null -> receiverEval.getForImplicitThis().toList()
-        else -> emptyList()
-    }
-
-    val hasImplicitReceivers = implicitReceiverReceivers.isNotEmpty()
-    val allReceiverLists =
-            if (hasImplicitReceivers) listOf(implicitReceiverReceivers) + nonEmptyArgReceivers
-            else nonEmptyArgReceivers
-    val numImplicitArgs = if (hasImplicitReceivers) 1 else 0
-
-    if (allReceiverLists.isEmpty())
+    if (nonEmptyArgReceivers.isEmpty())
         return listOf(ParamContext.EMPTY) // Optimization.
 
     // Zip formal parameters with all possible argument receiver combinations.
-    val cartesianProd = Lists.cartesianProduct(allReceiverLists)
+    val cartesianProd = Lists.cartesianProduct(nonEmptyArgReceivers)
+    val numImplicitArgs = if (implicitThisDispatchReceivers.isNotEmpty()) 1 else 0
     val maxNumParamContexts = 1000
     val paramContexts = cartesianProd
             .take(maxNumParamContexts) // Cap combinatorial explosions.
             .map { receiverTuple ->
-                val zippedArgs = paramsWithReceivers.zip(receiverTuple.drop(numImplicitArgs))
-                // TODO: May be able to extract implicit `this` args from callable references
-                val implicitThis = receiverTuple
-                        .take(numImplicitArgs)
-                        .filterIsInstance<Receiver.Class>()
-                        .firstOrNull()
-                ParamContext(zippedArgs, implicitThis)
+                val zippedArgs = paramsWithReceivers.zip(receiverTuple)
+                val implicitThis = receiverTuple.take(numImplicitArgs).firstOrNull()
+                ParamContext(zippedArgs.drop(numImplicitArgs), implicitThis)
             }
     assert(paramContexts.isNotEmpty())
     return paramContexts
 }
 
 /** Examines call sites to find contextualized neighbors of a search node. */
-fun SearchNode.getNeighbors(
+fun ContextualNode.computeEdges(
         callGraph: CallGraph,
-        nonContextualReceiverEval: CallReceiverEvaluator): Collection<SearchNode> {
-    val contextualReceiverEval =
-            ContextualReceiverEvaluator(paramContext, nonContextualReceiverEval)
-    return node.edges.flatMap { edge ->
-        fun CallTarget.buildParamContextsFromThisEdge() =
-                if (edge.call == null) listOf(ParamContext.EMPTY)
-                else buildParamContextsFromCall(edge.call, contextualReceiverEval)
+        nonContextualReceiverEval: IntraproceduralDispatchReceiverEvaluator
+): Collection<ContextualEdge> {
 
-        val cause = edge.call ?: node.caller.element
+    val contextualReceiverEval =
+            ContextualDispatchReceiverEvaluator(paramContext, nonContextualReceiverEval)
+
+    // TODO: Kotlin lambda receivers not yet reflected in UAST.
+    fun DispatchReceiver.deriveImplicitThisDispatchReceiver() = when (this) {
+        is DispatchReceiver.Class -> this
+        is DispatchReceiver.Functional.Reference -> this.receiver
+        is DispatchReceiver.Functional.Lambda -> null
+    }
+
+    return node.edges.flatMap { edge ->
+
+        val cause = edge.call ?: node.target.element
         when {
             edge.isLikely && edge.node != null -> {
-                val paramContexts = edge.node.caller.buildParamContextsFromThisEdge()
-                paramContexts.map { calleeContext -> SearchNode(edge.node, calleeContext, cause) }
+                // Resolved edges are created directly.
+                val implicitReceiverDispatchReceivers = edge.call
+                        ?.getDispatchReceivers(contextualReceiverEval)
+                        ?.mapNotNull { it.deriveImplicitThisDispatchReceiver() }
+                        ?: emptyList()
+                val paramContexts =
+                        if (edge.call == null) listOf(ParamContext.EMPTY)
+                        else buildParamContextsFromCall(
+                                edge.node.target, edge.call,
+                                implicitReceiverDispatchReceivers,
+                                contextualReceiverEval)
+                paramContexts.map { calleeContext ->
+                    val node = ContextualNode(edge.node, calleeContext)
+                    ContextualEdge(node, cause)
+                }
             }
             (edge.kind == Edge.Kind.BASE || edge.kind == Edge.Kind.INVOKE) && edge.call != null -> {
-                // Try to refine the base method to a concrete target.
-                edge.call.getTargets(contextualReceiverEval).flatMap { target ->
-                    val paramContexts = target.buildParamContextsFromThisEdge()
-                    paramContexts.map { calleeContext ->
-                        SearchNode(callGraph.getNode(target.element), calleeContext, cause)
+                // Try to refine the base method to concrete targets.
+                edge.call.getDispatchReceivers(contextualReceiverEval).flatMap { dispatchReceiver ->
+                    val target = edge.call.getTarget(dispatchReceiver)
+                    if (target == null)
+                        emptyList()
+                    else {
+                        val implicitThisDispatchReceiver =
+                                dispatchReceiver.deriveImplicitThisDispatchReceiver()
+                        val paramContexts = buildParamContextsFromCall(
+                                target, edge.call,
+                                listOfNotNull(implicitThisDispatchReceiver),
+                                contextualReceiverEval)
+                        paramContexts.map { calleeContext ->
+                            val node = ContextualNode(
+                                    callGraph.getNode(target.element),
+                                    calleeContext)
+                            ContextualEdge(node, cause)
+                        }
                     }
                 }
             }
             else -> emptyList()
         }
     }
+}
+
+interface ContextualCallGraph {
+    val contextualNodes: Collection<ContextualNode>
+
+    fun outEdges(n: ContextualNode): Collection<ContextualEdge>
+
+    fun inEdges(n: ContextualNode): Collection<ContextualEdge>
+}
+
+class MutableContextualCallGraph : ContextualCallGraph {
+    override val contextualNodes = ArrayList<ContextualNode>()
+    val outEdgeMap: Multimap<ContextualNode, ContextualEdge> = HashMultimap.create()
+    val inEdgeMap: Multimap<ContextualNode, ContextualEdge> = HashMultimap.create()
+
+    override fun outEdges(n: ContextualNode): Collection<ContextualEdge> = outEdgeMap[n]
+
+    override fun inEdges(n: ContextualNode): Collection<ContextualEdge> = inEdgeMap[n]
 }
 
 /**
@@ -382,39 +433,54 @@ fun SearchNode.getNeighbors(
  * initialized the path search with empty parameter contexts, then we would never see evidenced
  * thread violations through the lambda parameter.
  */
-fun CallGraph.buildAllReachableSearchNodes(
-        nonContextualReceiverEval: CallReceiverEvaluator): Collection<SearchNode> {
-    val res = ArrayList<SearchNode>()
-    val allSources = nodes.map { SearchNode(it, ParamContext.EMPTY, cause = it.caller.element) }
+fun CallGraph.buildContextualCallGraph(
+        nonContextualReceiverEval: IntraproceduralDispatchReceiverEvaluator): ContextualCallGraph {
+    val contextualGraph = MutableContextualCallGraph()
+    val allSources = nodes.map { ContextualNode(it, ParamContext.EMPTY) }
     searchForPaths(
             sources = allSources,
-            isSink = { res.add(it); false },
-            getNeighbors = { it.getNeighbors(this, nonContextualReceiverEval) })
-    return res
+            isSink = { contextualGraph.contextualNodes.add(it); false },
+            getNeighbors = { n ->
+                val edges = n.computeEdges(this, nonContextualReceiverEval)
+                contextualGraph.outEdgeMap.putAll(n, edges)
+                edges.forEach { (nbr, cause) ->
+                    contextualGraph.inEdgeMap.put(nbr, ContextualEdge(n, cause))
+                }
+                edges.map { it.contextualNode }
+            })
+    return contextualGraph
 }
 
-/** A context-sensitive search for paths from contextualized [searchSources] to [searchSinks]. */
-fun CallGraph.searchForPathsFromSearchNodes(
-        searchSources: Collection<SearchNode>,
-        searchSinks: Collection<SearchNode>,
-        nonContextualReceiverEval: CallReceiverEvaluator): Collection<List<SearchNode>> {
-    val sinkSet = searchSinks.toSet()
+/**
+ * A context-sensitive search for paths from
+ * contextualized [contextualSources] to [contextualSinks].
+ */
+fun ContextualCallGraph.searchForContextualPaths(
+        contextualSources: Collection<ContextualNode>,
+        contextualSinks: Collection<ContextualNode>
+): Collection<List<ContextualEdge>> {
+
+    val searchSources = contextualSources.map { ContextualEdge(it, it.node.target.element) }
+    val sinkSet = contextualSinks.toSet()
     return searchForPaths(
             sources = searchSources,
-            isSink = { it in sinkSet },
-            getNeighbors = { it.getNeighbors(this, nonContextualReceiverEval) })
+            isSink = { it.contextualNode in sinkSet },
+            getNeighbors = { outEdges(it.contextualNode) })
 }
 
 /** A context-sensitive search for paths from [sources] to [sinks]. */
 fun CallGraph.searchForPaths(
         sources: Collection<Node>,
         sinks: Collection<Node>,
-        nonContextualReceiverEval: CallReceiverEvaluator): Collection<List<SearchNode>> {
+        nonContextualReceiverEval: IntraproceduralDispatchReceiverEvaluator
+): Collection<List<ContextualEdge>> {
 
-    val allSearchNodes = buildAllReachableSearchNodes(nonContextualReceiverEval)
+    val contextualGraph = buildContextualCallGraph(nonContextualReceiverEval)
     val sourceSet = sources.toSet()
     val sinkSet = sinks.toSet()
-    val searchSources = allSearchNodes.filter { it.node in sourceSet }
-    val searchSinks = allSearchNodes.filter { it.node in sinkSet }
-    return searchForPathsFromSearchNodes(searchSources, searchSinks, nonContextualReceiverEval)
+    val searchSources = contextualGraph.contextualNodes.filter { it.node in sourceSet }
+    val searchSinks = contextualGraph.contextualNodes.filter { it.node in sinkSet }
+    return contextualGraph.searchForContextualPaths(
+            searchSources,
+            searchSinks)
 }
