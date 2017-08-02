@@ -518,6 +518,7 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.5:jar",
         "//prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.7.6:jar",
         "//prebuilts/tools/common/m2/repository/org/thoughtcrime/ssl/pinning/AndroidPinning/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/org/threeten/threetenbp/1.3.3:jar",
         "//prebuilts/tools/common/m2/repository/org/wordpress/drag-sort-listview/0.6.1:aar",
         "//prebuilts/tools/common/m2/repository/org/wordpress/emailchecker2/1.1.0:aar",
         "//prebuilts/tools/common/m2/repository/org/wordpress/graphview/3.4.0:aar",
