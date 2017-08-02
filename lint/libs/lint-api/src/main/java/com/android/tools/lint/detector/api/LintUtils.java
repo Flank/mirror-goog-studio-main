@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.lint.detector.api;
 
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
@@ -94,8 +93,6 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Objects;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.intellij.ide.util.JavaAnonymousClassesHelper;
 import com.intellij.pom.java.LanguageLevel;
@@ -127,6 +124,7 @@ import java.nio.charset.CharacterCodingException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Queue;
@@ -146,7 +144,6 @@ import org.objectweb.asm.tree.FieldNode;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
 
 /**
  * Useful utility methods related to lint.
@@ -250,7 +247,7 @@ public class LintUtils {
      */
     public static String formatList(@NonNull List<String> strings, int maxItems, boolean sort) {
         if (sort) {
-            List<String> sorted = Lists.newArrayList(strings);
+            List<String> sorted = new ArrayList<>(strings);
             Collections.sort(sorted);
             strings = sorted;
         }
@@ -1158,7 +1155,7 @@ public class LintUtils {
 
         Queue<ResourceValue> queue = new ArrayDeque<>();
         queue.add(new ResourceValue(ResourceUrl.create(style.type, style.name, false), null));
-        Set<String> seen = Sets.newHashSet();
+        Set<String> seen = new HashSet<>();
         int count = 0;
         boolean isFrameworkAttribute = ANDROID_URI.equals(namespace);
         while (count < 30 && !queue.isEmpty()) {
@@ -1174,7 +1171,7 @@ public class LintUtils {
                         ItemResourceValue value = srv.getItem(attribute, isFrameworkAttribute);
                         if (value != null) {
                             if (result == null) {
-                                result = Lists.newArrayList();
+                                result = new ArrayList<>();
                             }
                             if (!result.contains(value)) {
                                 result.add(value);
@@ -1238,7 +1235,7 @@ public class LintUtils {
 
         Queue<ResourceValue> queue = new ArrayDeque<>();
         queue.add(new ResourceValue(ResourceUrl.create(null, style.type, style.name), null));
-        Set<String> seen = Sets.newHashSet();
+        Set<String> seen = new HashSet<>();
         int count = 0;
         while (count < 30 && !queue.isEmpty()) {
             ResourceValue front = queue.remove();
@@ -1251,7 +1248,7 @@ public class LintUtils {
                     if (rv instanceof StyleResourceValue) {
                         StyleResourceValue srv = (StyleResourceValue) rv;
                         if (result == null) {
-                            result = Lists.newArrayList();
+                            result = new ArrayList<>();
                         }
                         result.add(srv);
 
@@ -1544,7 +1541,7 @@ public class LintUtils {
             Matcher matcher = compile.matcher(errorMessage);
             if (matcher.find()) {
                 int groupCount = matcher.groupCount();
-                List<String> parameters = Lists.newArrayListWithExpectedSize(groupCount);
+                List<String> parameters = new ArrayList<>(groupCount);
                 for (int i = 1; i <= groupCount; i++) {
                     parameters.add(matcher.group(i));
                 }
@@ -1851,7 +1848,7 @@ public class LintUtils {
     public static List<SourceProvider> getSourceProviders(
             @NonNull AndroidProject project,
             @NonNull Variant variant) {
-        List<SourceProvider> providers = Lists.newArrayList();
+        List<SourceProvider> providers = new ArrayList<>();
         AndroidArtifact mainArtifact = variant.getMainArtifact();
 
         providers.add(project.getDefaultConfig().getSourceProvider());
@@ -1896,7 +1893,7 @@ public class LintUtils {
     public static List<SourceProvider> getTestSourceProviders(
             @NonNull AndroidProject project,
             @NonNull Variant variant) {
-        List<SourceProvider> providers = Lists.newArrayList();
+        List<SourceProvider> providers = new ArrayList<>();
 
         ProductFlavorContainer defaultConfig = project.getDefaultConfig();
         for (SourceProviderContainer extra : defaultConfig.getExtraSourceProviders()) {

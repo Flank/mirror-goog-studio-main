@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Category
-import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -138,7 +137,7 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
             if (aClass != null) { // Found in SDK: not internal
                 return
             }
-            val owner = ClassContext.getInternalName(value)
+            val owner = value
             val apiLookup = ApiLookup.get(context.client,
                     context.getMainProject().buildTarget) ?: return
             isInternal = !apiLookup.containsClass(owner)

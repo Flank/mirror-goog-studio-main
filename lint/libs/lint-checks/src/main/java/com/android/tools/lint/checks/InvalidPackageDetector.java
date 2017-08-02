@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
@@ -26,9 +25,10 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.objectweb.asm.Opcodes;
@@ -198,23 +198,32 @@ public class InvalidPackageDetector extends Detector implements Detector.ClassSc
         }
     }
 
-    private boolean isInvalidPackage(String owner) {
-        if (owner.startsWith(JAVA_PKG_PREFIX)) {
-            return !mApiDatabase.isValidJavaPackage(owner);
+    private boolean isInvalidPackage(String className) {
+        if (className.startsWith(JAVA_PKG_PREFIX)) {
+            return !mApiDatabase.isValidJavaPackage(className, getPackageNameLength(className));
         }
 
-        if (owner.startsWith(JAVAX_PKG_PREFIX)) {
+        if (className.startsWith(JAVAX_PKG_PREFIX)) {
             // Annotations-related code is usually fine; these tend to be for build time
             // jars, such as dagger
             //noinspection SimplifiableIfStatement
-            if (owner.startsWith("javax/annotation/") || owner.startsWith("javax/lang/model")) {
+            if (className.startsWith("javax/annotation/") ||
+                    className.startsWith("javax/lang/model")) {
                 return false;
             }
 
-            return !mApiDatabase.isValidJavaPackage(owner);
+            return !mApiDatabase.isValidJavaPackage(className, getPackageNameLength(className));
         }
 
         return false;
+    }
+
+    private static int getPackageNameLength(String className) {
+        int packageLength = className.lastIndexOf('/');
+        if (packageLength < 0) {
+            packageLength = className.length();
+        }
+        return packageLength;
     }
 
     private void record(ClassContext context, MethodNode method,
@@ -226,7 +235,7 @@ public class InvalidPackageDetector extends Detector implements Detector.ClassSc
         }
 
         if (mCandidates == null) {
-            mCandidates = Lists.newArrayList();
+            mCandidates = new ArrayList<>();
         }
         mCandidates.add(new Candidate(owner, context.getClassNode().name, context.getJarFile()));
     }
@@ -237,7 +246,7 @@ public class InvalidPackageDetector extends Detector implements Detector.ClassSc
             return;
         }
 
-        Set<String> seen = Sets.newHashSet();
+        Set<String> seen = new HashSet<>();
 
         for (Candidate candidate : mCandidates) {
             String type = candidate.mClass;

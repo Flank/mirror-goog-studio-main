@@ -16,14 +16,11 @@
 
 package com.android.tools.lint.helpers;
 
-import static com.android.SdkConstants.CONSTRUCTOR_NAME;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.Variant;
 import com.android.tools.lint.client.api.JavaEvaluator;
-import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Sets;
@@ -32,7 +29,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaDirectoryService;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiArrayType;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiCompiledFile;
@@ -41,12 +37,9 @@ import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiPackage;
-import com.intellij.psi.PsiParameter;
-import com.intellij.psi.PsiPrimitiveType;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.impl.file.PsiPackageImpl;
 import com.intellij.psi.impl.source.tree.java.PsiCompositeModifierList;
@@ -221,8 +214,25 @@ public class DefaultJavaEvaluator extends JavaEvaluator {
 
     @Nullable
     @Override
+    public String getQualifiedName(@NonNull PsiClassType psiClassType) {
+        PsiType erased = erasure(psiClassType);
+        if (erased instanceof PsiClassType) {
+            return super.getQualifiedName((PsiClassType) erased);
+        }
+
+        return super.getQualifiedName(psiClassType);
+    }
+
+    @Override
+    @Nullable
+    public String getQualifiedName(@NonNull PsiClass psiClass) {
+        return psiClass.getQualifiedName();
+    }
+
+    @Nullable
+    @Override
     public String getInternalName(@NonNull PsiClassType psiClassType) {
-        PsiType erased = TypeConversionUtil.erasure(psiClassType);
+        PsiType erased = erasure(psiClassType);
         if (erased instanceof PsiClassType) {
             return super.getInternalName((PsiClassType) erased);
         }
@@ -230,113 +240,15 @@ public class DefaultJavaEvaluator extends JavaEvaluator {
         return super.getInternalName(psiClassType);
     }
 
-    /**
-     * Computes the internal class name of the given class.
-     * For example, for PsiClass foo.bar.Foo.Bar it returns foo/bar/Foo$Bar.
-     *
-     * @param psiClass the class to look up the internal name for
-     * @return the internal class name
-     * @see ClassContext#getInternalName(String)
-     */
     @Override
     @Nullable
     public String getInternalName(@NonNull PsiClass psiClass) {
         return LintUtils.getInternalName(psiClass);
     }
 
-    /**
-     * Computes the internal JVM description of the given method. This is in the same
-     * format as the ASM desc fields for methods; meaning that a method named foo which for example takes an
-     * int and a String and returns a void will have description {@code foo(ILjava/lang/String;):V}.
-     *
-     * @param method the method to look up the description for
-     * @param includeName whether the name should be included
-     * @param includeReturn whether the return type should be included
-     * @return the internal JVM description for this method
-     */
     @Override
     @Nullable
-    public String getInternalDescription(@NonNull PsiMethod method, boolean includeName,
-            boolean includeReturn) {
-        assert !includeName; // not yet tested
-        assert !includeReturn; // not yet tested
-
-        StringBuilder signature = new StringBuilder();
-
-        if (includeName) {
-            if (method.isConstructor()) {
-                final PsiClass declaringClass = method.getContainingClass();
-                if (declaringClass != null) {
-                    final PsiClass outerClass = declaringClass.getContainingClass();
-                    if (outerClass != null) {
-                        // declaring class is an inner class
-                        if (!declaringClass.hasModifierProperty(PsiModifier.STATIC)) {
-                            if (!appendJvmTypeName(signature, outerClass)) {
-                                return null;
-                            }
-                        }
-                    }
-                }
-                signature.append(CONSTRUCTOR_NAME);
-            } else {
-                signature.append(method.getName());
-            }
-        }
-
-        signature.append('(');
-
-        for (PsiParameter psiParameter : method.getParameterList().getParameters()) {
-            if (!appendJvmSignature(signature, psiParameter.getType())) {
-                return null;
-            }
-        }
-        signature.append(')');
-        if (includeReturn) {
-            if (!method.isConstructor()) {
-                if (!appendJvmSignature(signature, method.getReturnType())) {
-                    return null;
-                }
-            }
-            else {
-                signature.append('V');
-            }
-        }
-        return signature.toString();
-    }
-
-    private boolean appendJvmTypeName(@NonNull StringBuilder signature, @NonNull PsiClass outerClass) {
-        String className = getInternalName(outerClass);
-        if (className == null) {
-            return false;
-        }
-        signature.append('L').append(className.replace('.', '/')).append(';');
-        return true;
-    }
-
-    private boolean appendJvmSignature(@NonNull StringBuilder buffer, @Nullable PsiType type) {
-        if (type == null) {
-            return false;
-        }
-        final PsiType psiType = TypeConversionUtil.erasure(type);
-        if (psiType instanceof PsiArrayType) {
-            buffer.append('[');
-            appendJvmSignature(buffer, ((PsiArrayType)psiType).getComponentType());
-        }
-        else if (psiType instanceof PsiClassType) {
-            PsiClass resolved = ((PsiClassType)psiType).resolve();
-            if (resolved == null) {
-                return false;
-            }
-            if (!appendJvmTypeName(buffer, resolved)) {
-                return false;
-            }
-        }
-        else if (psiType instanceof PsiPrimitiveType) {
-            buffer.append(getPrimitiveSignature(psiType.getCanonicalText()));
-        }
-        else {
-            return false;
-        }
-        return true;
+    public PsiType erasure(@Nullable PsiType type) {
+        return TypeConversionUtil.erasure(type);
     }
 }

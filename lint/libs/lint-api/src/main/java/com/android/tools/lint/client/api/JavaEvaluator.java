@@ -242,6 +242,31 @@ public abstract class JavaEvaluator {
     }
 
     @Nullable
+    public String getQualifiedName(@NonNull PsiClass psiClass) {
+        String qualifiedName = psiClass.getQualifiedName();
+        if (qualifiedName == null) {
+            qualifiedName = psiClass.getName();
+            if (qualifiedName == null) {
+                assert psiClass instanceof PsiAnonymousClass;
+                //noinspection ConstantConditions
+                return getQualifiedName(psiClass.getContainingClass());
+            }
+        }
+        return qualifiedName;
+    }
+
+    @Nullable
+    public String getQualifiedName(@NonNull PsiClassType psiClassType) {
+        return psiClassType.getCanonicalText();
+    }
+
+    /**
+     * @deprecated Most lint APIs (such as ApiLookup) no longer require internal JVM names and
+     * accept qualified names that can be obtained by calling the
+     * {@link #getQualifiedName(PsiClass)} method.
+     */
+    @Deprecated
+    @Nullable
     public String getInternalName(@NonNull PsiClass psiClass) {
         String qualifiedName = psiClass.getQualifiedName();
         if (qualifiedName == null) {
@@ -255,21 +280,84 @@ public abstract class JavaEvaluator {
         return ClassContext.getInternalName(qualifiedName);
     }
 
+    /**
+     * @deprecated Most lint APIs (such as ApiLookup) no longer require internal JVM names and
+     * accept qualified names that can be obtained by calling the
+     * {@link #getQualifiedName(PsiClassType)} method.
+     */
+    @Deprecated
     @Nullable
     public String getInternalName(@NonNull PsiClassType psiClassType) {
         return ClassContext.getInternalName(psiClassType.getCanonicalText());
     }
 
     /**
-     * Computes the internal JVM description of the given method. This is in the same
-     * format as the ASM desc fields for methods; meaning that a method named foo which for example takes an
-     * int and a String and returns a void will have description {@code foo(ILjava/lang/String;):V}.
+     * Computes a simplified version of the internal JVM description of the given method. This is in
+     * the same format as the ASM desc fields for methods with an exception that the dot ('.')
+     * character is used instead of slash ('/') and dollar sign ('$') characters. For example,
+     * a method named "foo" that takes an int and a String and returns a void will have description
+     * {@code foo(ILjava.lang.String;):V}.
      *
      * @param method the method to look up the description for
      * @param includeName whether the name should be included
      * @param includeReturn whether the return type should be included
-     * @return the internal JVM description for this method
+     * @return a simplified version of the internal JVM description for the method
      */
+    @Nullable
+    public String getMethodDescription(@NonNull PsiMethod method, boolean includeName,
+            boolean includeReturn) {
+        assert !includeName; // not yet tested
+        assert !includeReturn; // not yet tested
+
+        StringBuilder signature = new StringBuilder();
+
+        if (includeName) {
+            if (method.isConstructor()) {
+                final PsiClass declaringClass = method.getContainingClass();
+                if (declaringClass != null) {
+                    final PsiClass outerClass = declaringClass.getContainingClass();
+                    if (outerClass != null) {
+                        // declaring class is an inner class
+                        if (!declaringClass.hasModifierProperty(PsiModifier.STATIC)) {
+                            if (!appendJvmEquivalentTypeName(signature, outerClass)) {
+                                return null;
+                            }
+                        }
+                    }
+                }
+                signature.append(CONSTRUCTOR_NAME);
+            } else {
+                signature.append(method.getName());
+            }
+        }
+
+        signature.append('(');
+
+        for (PsiParameter psiParameter : method.getParameterList().getParameters()) {
+            if (!appendJvmEquivalentSignature(signature, psiParameter.getType())) {
+                return null;
+            }
+        }
+        signature.append(')');
+        if (includeReturn) {
+            if (!method.isConstructor()) {
+                if (!appendJvmEquivalentSignature(signature, method.getReturnType())) {
+                    return null;
+                }
+            }
+            else {
+                signature.append('V');
+            }
+        }
+        return signature.toString();
+    }
+
+    /**
+     * @deprecated Most lint APIs (such as ApiLookup) no longer require internal JVM method
+     * descriptions and accept JVM equivalent descriptions that can be obtained by calling the
+     * {@link #getMethodDescription} method.
+     */
+    @Deprecated
     @Nullable
     public String getInternalDescription(@NonNull PsiMethod method, boolean includeName,
             boolean includeReturn) {
@@ -319,20 +407,74 @@ public abstract class JavaEvaluator {
         return signature.toString();
     }
 
-    private boolean appendJvmTypeName(@NonNull StringBuilder signature, @NonNull PsiClass outerClass) {
+    /**
+     * The JVM equivalent type name differs from the real JVM name by using dot ('.') instead of
+     * slash ('/') and dollar sign ('$') characters.
+     */
+    protected boolean appendJvmEquivalentTypeName(@NonNull StringBuilder signature,
+            @NonNull PsiClass outerClass) {
+        String className = getQualifiedName(outerClass);
+        if (className == null) {
+            return false;
+        }
+        signature.append('L').append(className).append(';');
+        return true;
+    }
+
+    /**
+     * The JVM equivalent signature differs from the real JVM signature by using dot ('.') instead
+     * of slash ('/') and dollar sign ('$') characters.
+     */
+    protected boolean appendJvmEquivalentSignature(@NonNull StringBuilder buffer,
+            @Nullable PsiType type) {
+        if (type == null) {
+            return false;
+        }
+
+        PsiType psiType = erasure(type);
+
+        if (psiType instanceof PsiArrayType) {
+            buffer.append('[');
+            appendJvmEquivalentSignature(buffer, ((PsiArrayType)psiType).getComponentType());
+        }
+        else if (psiType instanceof PsiClassType) {
+            PsiClass resolved = ((PsiClassType)psiType).resolve();
+            if (resolved == null) {
+                return false;
+            }
+            if (!appendJvmEquivalentTypeName(buffer, resolved)) {
+                return false;
+            }
+        }
+        else if (psiType instanceof PsiPrimitiveType) {
+            buffer.append(getPrimitiveSignature(psiType.getCanonicalText()));
+        }
+        else {
+            return false;
+        }
+        return true;
+    }
+
+    @Deprecated
+    private boolean appendJvmTypeName(@NonNull StringBuilder signature,
+            @NonNull PsiClass outerClass) {
         String className = getInternalName(outerClass);
         if (className == null) {
             return false;
         }
-        signature.append('L').append(className.replace('.', '/')).append(';');
+        signature.append('L').append(className).append(';');
         return true;
     }
 
-    private boolean appendJvmSignature(@NonNull StringBuilder buffer, @Nullable PsiType type) {
+    @Deprecated
+    private boolean appendJvmSignature(@NonNull StringBuilder buffer,
+            @Nullable PsiType type) {
         if (type == null) {
             return false;
         }
+
         final PsiType psiType = erasure(type);
+
         if (psiType instanceof PsiArrayType) {
             buffer.append('[');
             appendJvmSignature(buffer, ((PsiArrayType)psiType).getComponentType());
@@ -383,7 +525,7 @@ public abstract class JavaEvaluator {
     }
 
     @Nullable
-    public static PsiType erasure(@Nullable final PsiType type) {
+    public PsiType erasure(@Nullable final PsiType type) {
         if (type == null) {
             return null;
         }

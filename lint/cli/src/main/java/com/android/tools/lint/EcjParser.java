@@ -39,7 +39,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.helpers.DefaultJavaEvaluator;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.intellij.codeInsight.ExternalAnnotationsManager;
@@ -54,6 +53,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -332,7 +332,7 @@ public class EcjParser extends JavaParser {
                 ideaProject);
         ((LintExternalAnnotationsManager) annotationsManager).updateAnnotationRoots(client);
 
-        List<EcjSourceFile> sources = Lists.newArrayListWithExpectedSize(contexts.size());
+        List<EcjSourceFile> sources = new ArrayList<>(contexts.size());
         sourceUnits = Maps.newHashMapWithExpectedSize(sources.size());
         for (JavaContext context : contexts) {
             CharSequence contents = context.getContents();
@@ -600,7 +600,7 @@ public class EcjParser extends JavaParser {
     @NonNull
     private List<String> computeClassPath(@NonNull List<JavaContext> contexts) {
         assert project != null;
-        List<String> classPath = Lists.newArrayList();
+        List<String> classPath = new ArrayList<>();
 
         IAndroidTarget compileTarget = project.getBuildTarget();
         if (compileTarget != null) {
@@ -1214,7 +1214,7 @@ public class EcjParser extends JavaParser {
 
         // Convert "foo/bar/Baz" into char[][] 'foo','bar','Baz' as required for
         // ECJ name lookup
-        List<char[]> arrays = Lists.newArrayList();
+        List<char[]> arrays = new ArrayList<>();
         for (String segment : Splitter.on('/').split(internal)) {
             arrays.add(segment.toCharArray());
         }
@@ -1261,7 +1261,7 @@ public class EcjParser extends JavaParser {
                 if (argument != null) {
                     if (argument.type instanceof UnionTypeReference) {
                         UnionTypeReference typeRef = (UnionTypeReference) argument.type;
-                        List<TypeDescriptor> types = Lists.newArrayListWithCapacity(typeRef.typeReferences.length);
+                        List<TypeDescriptor> types = new ArrayList<>(typeRef.typeReferences.length);
                         for (TypeReference typeReference : typeRef.typeReferences) {
                             TypeBinding binding = typeReference.resolvedType;
                             if (binding != null) {
@@ -1337,7 +1337,7 @@ public class EcjParser extends JavaParser {
             return first;
         } else {
             int size = first.size() + second.size();
-            List<ResolvedAnnotation> merged = Lists.newArrayListWithExpectedSize(size);
+            List<ResolvedAnnotation> merged = new ArrayList<>(size);
             merged.addAll(first);
             merged.addAll(second);
             return merged;
@@ -1592,14 +1592,13 @@ public class EcjParser extends JavaParser {
         }
 
         @NonNull
-        @Override
         public String getInternalName() {
             if (mBinding instanceof ReferenceBinding) {
                 ReferenceBinding ref = (ReferenceBinding) mBinding;
                 StringBuilder sb = new StringBuilder(100);
                 char[][] name = ref.compoundName;
                 if (name == null) {
-                    return super.getInternalName();
+                    return ClassContext.getInternalName(getName());
                 }
                 for (char[] segment : name) {
                     if (sb.length() != 0) {
@@ -1611,7 +1610,7 @@ public class EcjParser extends JavaParser {
                 }
                 return sb.toString();
             }
-            return super.getInternalName();
+            return ClassContext.getInternalName(getName());
         }
 
         @Override
@@ -1719,7 +1718,7 @@ public class EcjParser extends JavaParser {
         @NonNull
         @Override
         public Iterable<ResolvedAnnotation> getAnnotations() {
-            List<ResolvedAnnotation> all = Lists.newArrayListWithExpectedSize(4);
+            List<ResolvedAnnotation> all = new ArrayList<>(4);
             ExternalAnnotationRepository manager = ExternalAnnotationRepository.get(client);
 
             MethodBinding binding = this.mBinding;
@@ -1754,7 +1753,7 @@ public class EcjParser extends JavaParser {
         @NonNull
         @Override
         public Iterable<ResolvedAnnotation> getParameterAnnotations(int index) {
-            List<ResolvedAnnotation> all = Lists.newArrayListWithExpectedSize(4);
+            List<ResolvedAnnotation> all = new ArrayList<>(4);
             ExternalAnnotationRepository manager = ExternalAnnotationRepository.get(client);
 
             MethodBinding binding = this.mBinding;
@@ -1918,7 +1917,7 @@ public class EcjParser extends JavaParser {
             if (interfaces.length == 0) {
                 return Collections.emptyList();
             }
-            List<ResolvedClass> classes = Lists.newArrayListWithExpectedSize(interfaces.length);
+            List<ResolvedClass> classes = new ArrayList<>(interfaces.length);
             for (ReferenceBinding binding : interfaces) {
                 classes.add(new EcjResolvedClass(binding));
             }
@@ -1997,7 +1996,7 @@ public class EcjParser extends JavaParser {
                 MethodBinding[] methods = cls.getMethods(TypeConstants.INIT);
                 if (methods != null) {
                     int count = methods.length;
-                    List<ResolvedMethod> result = Lists.newArrayListWithExpectedSize(count);
+                    List<ResolvedMethod> result = new ArrayList<>(count);
                     for (MethodBinding method : methods) {
                         if (method.isConstructor()) {
                             result.add(new EcjResolvedMethod(method));
@@ -2037,7 +2036,7 @@ public class EcjParser extends JavaParser {
                             int count = methods.length;
                             if (count > 0) {
                                 if (result == null) {
-                                    result = Lists.newArrayListWithExpectedSize(count);
+                                    result = new ArrayList<>(count);
                                 }
                                 for (MethodBinding method : methods) {
                                     if ((method.modifiers & Modifier.PRIVATE) != 0 &&
@@ -2073,7 +2072,7 @@ public class EcjParser extends JavaParser {
                             name != null ? cls.getMethods(name.toCharArray()) : cls.methods();
                     if (methods != null) {
                         int count = methods.length;
-                        List<ResolvedMethod> result = Lists.newArrayListWithExpectedSize(count);
+                        List<ResolvedMethod> result = new ArrayList<>(count);
                         for (MethodBinding method : methods) {
                             if (!method.isConstructor()) {
                                 result.add(new EcjResolvedMethod(method));
@@ -2090,7 +2089,7 @@ public class EcjParser extends JavaParser {
         @NonNull
         @Override
         public Iterable<ResolvedAnnotation> getAnnotations() {
-            List<ResolvedAnnotation> all = Lists.newArrayListWithExpectedSize(2);
+            List<ResolvedAnnotation> all = new ArrayList<>(2);
             ExternalAnnotationRepository manager = ExternalAnnotationRepository.get(client);
 
             if (mBinding instanceof ReferenceBinding) {
@@ -2099,7 +2098,7 @@ public class EcjParser extends JavaParser {
                     AnnotationBinding[] annotations = cls.getAnnotations();
                     int count = annotations.length;
                     if (count > 0) {
-                        all = Lists.newArrayListWithExpectedSize(count);
+                        all = new ArrayList<>(count);
                         for (AnnotationBinding annotation : annotations) {
                             if (annotation != null) {
                                 all.add(new EcjResolvedAnnotation(annotation));
@@ -2140,7 +2139,7 @@ public class EcjParser extends JavaParser {
                             int count = fields.length;
                             if (count > 0) {
                                 if (result == null) {
-                                    result = Lists.newArrayListWithExpectedSize(count);
+                                    result = new ArrayList<>(count);
                                 }
                                 for (FieldBinding field : fields) {
                                     if ((field.modifiers & Modifier.PRIVATE) != 0 &&
@@ -2175,7 +2174,7 @@ public class EcjParser extends JavaParser {
                     FieldBinding[] fields = cls.fields();
                     if (fields != null) {
                         int count = fields.length;
-                        List<ResolvedField> result = Lists.newArrayListWithExpectedSize(count);
+                        List<ResolvedField> result = new ArrayList<>(count);
                         for (FieldBinding field : fields) {
                             result.add(new EcjResolvedField(field));
                         }
@@ -2329,7 +2328,7 @@ public class EcjParser extends JavaParser {
         @NonNull
         @Override
         public Iterable<ResolvedAnnotation> getAnnotations() {
-            List<ResolvedAnnotation> all = Lists.newArrayListWithExpectedSize(2);
+            List<ResolvedAnnotation> all = new ArrayList<>(2);
 
             AnnotationBinding[] annotations = mBinding.getAnnotations();
             int count = annotations.length;
@@ -2465,7 +2464,7 @@ public class EcjParser extends JavaParser {
             AnnotationBinding[] annotations = mBinding.getAnnotations();
             int count = annotations.length;
             if (count > 0) {
-                compiled = Lists.newArrayListWithExpectedSize(count);
+                compiled = new ArrayList<>(count);
                 for (AnnotationBinding annotation : annotations) {
                     if (annotation != null) {
                         compiled.add(new EcjResolvedAnnotation(annotation));
@@ -2587,7 +2586,7 @@ public class EcjParser extends JavaParser {
             AnnotationBinding[] annotations = mBinding.getAnnotations();
             int count = annotations.length;
             if (count > 0) {
-                List<ResolvedAnnotation> result = Lists.newArrayListWithExpectedSize(count);
+                List<ResolvedAnnotation> result = new ArrayList<>(count);
                 for (AnnotationBinding annotation : annotations) {
                     if (annotation != null) {
                         result.add(new EcjResolvedAnnotation(annotation));
@@ -2669,7 +2668,7 @@ public class EcjParser extends JavaParser {
                     AnnotationBinding[] annotations = mBinding.getAnnotations();
                     int count = annotations.length;
                     if (count > 0) {
-                        List<ResolvedAnnotation> result = Lists.newArrayListWithExpectedSize(count);
+                        List<ResolvedAnnotation> result = new ArrayList<>(count);
                         for (AnnotationBinding annotation : annotations) {
                             if (annotation != null) {
                                 // Special case: If you look up the annotations *on* annotations,
@@ -2727,7 +2726,7 @@ public class EcjParser extends JavaParser {
         public List<Value> getValues() {
             ElementValuePair[] pairs = binding.getElementValuePairs();
             if (pairs != null && pairs.length > 0) {
-                List<Value> values = Lists.newArrayListWithExpectedSize(pairs.length);
+                List<Value> values = new ArrayList<>(pairs.length);
                 for (ElementValuePair pair : pairs) {
                     values.add(new Value(new String(pair.getName()), getPairValue(pair)));
                 }
@@ -2774,7 +2773,7 @@ public class EcjParser extends JavaParser {
             AnnotationBinding[] annotations = binding.getAnnotationType().getAnnotations();
             int count = annotations.length;
             if (count > 0) {
-                compiled = Lists.newArrayListWithExpectedSize(count);
+                compiled = new ArrayList<>(count);
                 for (AnnotationBinding annotation : annotations) {
                     if (annotation != null) {
                         compiled.add(new EcjResolvedAnnotation(annotation));
@@ -2805,8 +2804,7 @@ public class EcjParser extends JavaParser {
             public List<Value> getValues() {
                 if (mValues == null) {
                     MemberValuePair[] memberValuePairs = mAstAnnotation.memberValuePairs();
-                    List<Value> result = Lists
-                            .newArrayListWithExpectedSize(memberValuePairs.length);
+                    List<Value> result = new ArrayList<>(memberValuePairs.length);
 
                     for (MemberValuePair pair : memberValuePairs) {
                         //  String n = new String(pair.name);
@@ -2815,7 +2813,7 @@ public class EcjParser extends JavaParser {
                         if (expression instanceof ArrayInitializer) {
                             ArrayInitializer initializer = (ArrayInitializer) expression;
                             Expression[] expressions = initializer.expressions;
-                            List<Object> values = Lists.newArrayList();
+                            List<Object> values = new ArrayList<>();
                             for (Expression e : expressions) {
                                 if (e instanceof NameReference) {
                                     ResolvedNode resolved = resolve(((NameReference) e).binding);
@@ -2918,7 +2916,7 @@ public class EcjParser extends JavaParser {
         } else if (value instanceof Object[]) {
             Object[] array = (Object[]) value;
             if (array.length > 0) {
-                List<Object> list = Lists.newArrayListWithExpectedSize(array.length);
+                List<Object> list = new ArrayList<>(array.length);
                 for (Object element : array) {
                     list.add(getConstantValue(element));
                 }

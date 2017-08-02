@@ -17,26 +17,27 @@
 package com.android.tools.lint.checks;
 
 import com.android.annotations.NonNull;
-import com.google.common.collect.Lists;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Represents a package and its classes
+ * Represents a package or a class containing inner classes.
  */
-public class ApiPackage implements Comparable<ApiPackage> {
+public class ApiClassOwner implements Comparable<ApiClassOwner> {
     private final String mName;
-    private final List<ApiClass> mClasses = Lists.newArrayListWithExpectedSize(100);
+    private final boolean isClass;
+    private final List<ApiClass> mClasses = new ArrayList<>(100);
 
     // Persistence data: Used when writing out binary data in ApiLookup
     int indexOffset;         // offset of the package entry
 
-    ApiPackage(@NonNull String name) {
+    ApiClassOwner(@NonNull String name, boolean isClass) {
         mName = name;
+        this.isClass = isClass;
     }
 
     /**
-     * Returns the name of the class (fully qualified name)
-     * @return the name of the class
+     * Returns the fully qualified name of the container.
      */
     @NonNull
     public String getName() {
@@ -44,20 +45,28 @@ public class ApiPackage implements Comparable<ApiPackage> {
     }
 
     /**
-     * Returns the classes in this package
-     * @return the classes in this package
+     * Returns true if this container is a class, or false if it is a package.
+     */
+    public boolean isClass() {
+        return isClass;
+    }
+
+    /**
+     * If this container is a package, returns the classes in this package, or, if this container is
+     * a class, the inner classes.
+     * @return the classes in this container
      */
     @NonNull
     public List<ApiClass> getClasses() {
         return mClasses;
     }
 
-    void addClass(@NonNull ApiClass clz) {
-        mClasses.add(clz);
+    void addClass(@NonNull ApiClass cls) {
+        mClasses.add(cls);
     }
 
     @Override
-    public int compareTo(@NonNull ApiPackage other) {
+    public int compareTo(@NonNull ApiClassOwner other) {
         return mName.compareTo(other.mName);
     }
 

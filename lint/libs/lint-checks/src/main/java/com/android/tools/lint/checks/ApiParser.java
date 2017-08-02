@@ -37,8 +37,8 @@ public class ApiParser extends DefaultHandler {
     private static final String ATTR_DEPRECATED = "deprecated";
     private static final String ATTR_REMOVED = "removed";
 
-    private final Map<String, ApiClass> mClasses = new HashMap<>(1000);
-    private final Map<String, ApiPackage> mPackages = new HashMap<>();
+    private final Map<String, ApiClass> mClasses = new HashMap<>(6000);
+    private final Map<String, ApiClassOwner> mContainers = new HashMap<>();
 
     private ApiClass mCurrentClass;
 
@@ -48,12 +48,11 @@ public class ApiParser extends DefaultHandler {
     Map<String, ApiClass> getClasses() {
         return mClasses;
     }
-    Map<String, ApiPackage> getPackages() { return mPackages; }
+    Map<String, ApiClassOwner> getContainers() { return mContainers; }
 
     @Override
     public void startElement(String uri, String localName, String qName, Attributes attributes)
             throws SAXException {
-
         if (localName == null || localName.isEmpty()) {
             localName = qName;
         }
@@ -95,23 +94,25 @@ public class ApiParser extends DefaultHandler {
     }
 
     private ApiClass addClass(String name, int apiLevel, int deprecatedIn, int removedIn) {
-        // There should not be any duplicates
-        ApiClass theClass = mClasses.get(name);
-        assert theClass == null;
-        theClass = new ApiClass(name, apiLevel, deprecatedIn, removedIn);
-        mClasses.put(name, theClass);
+        // There should not be any duplicates.
+        ApiClass cls = mClasses.get(name);
+        assert cls == null;
+        cls = new ApiClass(name, apiLevel, deprecatedIn, removedIn);
+        mClasses.put(name, cls);
 
-        String pkg = theClass.getPackage();
-        if (pkg != null) {
-            ApiPackage apiPackage = mPackages.get(pkg);
-            if (apiPackage == null) {
-                apiPackage = new ApiPackage(pkg);
-                mPackages.put(pkg, apiPackage);
-            }
-            apiPackage.addClass(theClass);
+        String containerName = cls.getContainerName();
+        int len = containerName.length();
+        boolean isClass = len < name.length() && name.charAt(len) == '$';
+        ApiClassOwner container = mContainers.get(containerName);
+        if (container == null) {
+            container = new ApiClassOwner(containerName, isClass);
+            mContainers.put(containerName, container);
+        } else if (container.isClass() != isClass) {
+            throw new RuntimeException("\"" + containerName + "\" is both a package and a class");
         }
+        container.addClass(cls);
 
-        return theClass;
+        return cls;
     }
 
     private int getSince(Attributes attributes) {

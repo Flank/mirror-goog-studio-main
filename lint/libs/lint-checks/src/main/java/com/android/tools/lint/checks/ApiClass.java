@@ -347,14 +347,24 @@ final class ApiClass implements Comparable<ApiClass> {
         }
     }
 
-    @Nullable
-    public String getPackage() {
-        int index = mName.lastIndexOf('/');
-        if (index != -1) {
+    @NonNull
+    public String getContainerName() {
+        int index = lastIndexOfSlashOrDollar(mName);
+        if (index >= 0) {
             return mName.substring(0, index);
         }
 
-        return null;
+        return "";
+    }
+
+    private static int lastIndexOfSlashOrDollar(String className) {
+        for (int i = className.length(); --i >= 0;) {
+            char c = className.charAt(i);
+            if (c == '/' || c == '$') {
+                return i;
+            }
+        }
+        return -1;
     }
 
     @NonNull

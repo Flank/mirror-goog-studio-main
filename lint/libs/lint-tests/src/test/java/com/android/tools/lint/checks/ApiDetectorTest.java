@@ -4255,7 +4255,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
     @SuppressWarnings("all") // Sample code
     public void testConcurrentHashMapUsage() {
         ApiLookup lookup = ApiLookup.get(createClient());
-        int version = lookup.getCallVersion("java/util/concurrent/ConcurrentHashMap", "keySet",
+        int version = lookup.getMethodVersion("java/util/concurrent/ConcurrentHashMap", "keySet",
                 "(Ljava/lang/Object;)");
         if (version == -1) {
             // This test machine doesn't have the right version of Nougat yet

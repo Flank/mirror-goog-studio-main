@@ -20,7 +20,6 @@ import static com.android.SdkConstants.ATTR_VALUE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.lint.detector.api.ClassContext;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner;
@@ -490,17 +489,6 @@ public abstract class JavaParser {
          * etc
          */
         @NonNull public abstract String getSignature();
-
-        /**
-         * Computes the internal class name of the given fully qualified class name.
-         * For example, it converts foo.bar.Foo.Bar into foo/bar/Foo$Bar.
-         * This should only be called for class types, not primitives.
-         *
-         * @return the internal class name
-         */
-        @NonNull public String getInternalName() {
-            return ClassContext.getInternalName(getName());
-        }
 
         public abstract boolean matchesName(@NonNull String name);
 
