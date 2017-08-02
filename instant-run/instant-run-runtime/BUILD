@@ -17,6 +17,10 @@ java_library(
 java_test(
     name = "tests",
     srcs = glob(["src/test/java/**/*.java"]),
+    javacopts = [
+        "-source 6",
+        "-target 6",
+    ],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     deps = [

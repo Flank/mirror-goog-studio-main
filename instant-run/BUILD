@@ -3,6 +3,10 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.instant-run-common",
     srcs = ["instant-run-common/src/main/java"],
+    javacopts = [
+        "-source 6",
+        "-target 6",
+    ],
     tags = ["managed"],
     visibility = ["//visibility:public"],
     deps = ["//tools/base/annotations:studio.android-annotations[module]"],
