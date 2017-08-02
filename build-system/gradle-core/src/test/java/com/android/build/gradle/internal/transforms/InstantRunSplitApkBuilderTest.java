@@ -21,6 +21,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
+import com.android.SdkConstants;
 import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -42,6 +43,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.logging.Logger;
 import org.junit.Before;
 import org.junit.Rule;
@@ -64,6 +67,8 @@ public class InstantRunSplitApkBuilderTest {
     @Mock Aapt aapt;
     @Mock PackagingScope packagingScope;
     @Mock CoreSigningConfig coreSigningConfig;
+    @Mock FileCollection mainResources;
+    @Mock FileTree mainResourcesApkFileTree;
 
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
@@ -85,6 +90,7 @@ public class InstantRunSplitApkBuilderTest {
         when(packagingScope.getApplicationId()).thenReturn("com.foo.test");
         when(packagingScope.getVersionName()).thenReturn("test_version_name");
         when(packagingScope.getVersionCode()).thenReturn(12345);
+        when(mainResources.getAsFileTree()).thenReturn(mainResourcesApkFileTree);
     }
 
     @Before
@@ -106,7 +112,9 @@ public class InstantRunSplitApkBuilderTest {
                         outputDirectory.getRoot(),
                         instantRunFolder,
                         aaptTempFolder, /* runAapt2Serially */
-                        false) {
+                        false,
+                        mainResources,
+                        mainResources) {
                     @Override
                     protected Aapt getAapt() {
                         return aapt;
@@ -179,6 +187,8 @@ public class InstantRunSplitApkBuilderTest {
         InstantRunSplitApkBuilder.DexFiles dexFiles =
                 new InstantRunSplitApkBuilder.DexFiles(files, "folderName");
 
+        File mainResourcesApk = new File("mainResources" + SdkConstants.DOT_RES);
+        when(mainResourcesApkFileTree.getFiles()).thenReturn(ImmutableSet.of(mainResourcesApk));
         ArgumentCaptor<AaptPackageConfig.Builder> aaptConfigCaptor =
                 ArgumentCaptor.forClass(AaptPackageConfig.Builder.class);
 
@@ -188,6 +198,8 @@ public class InstantRunSplitApkBuilderTest {
 
         AaptPackageConfig build = aaptConfigCaptor.getValue().build();
         File resourceOutputApk = build.getResourceOutputApk();
+        assertThat(build.getImports()).hasSize(1);
+        assertThat(build.getImports()).containsExactly(mainResourcesApk);
         assertThat(resourceOutputApk.getName()).isEqualTo("resources_ap");
 
         ArgumentCaptor<File> outApkLocation = ArgumentCaptor.forClass(File.class);
@@ -199,7 +211,6 @@ public class InstantRunSplitApkBuilderTest {
         assertThat(outApkLocation.getValue().getName()).isEqualTo(dexFiles.encodeName() + ".apk");
         Mockito.verify(buildContext).addChangedFile(eq(FileType.SPLIT),
                 eq(outApkLocation.getValue()));
-
     }
 
     @Test
@@ -221,7 +232,9 @@ public class InstantRunSplitApkBuilderTest {
                         outputDirectory.getRoot(),
                         instantRunFolder,
                         aaptTempFolder, /* runAapt2Serially */
-                        false) {
+                        false,
+                        mainResources,
+                        mainResources) {
                     @Override
                     protected Aapt getAapt() {
                         return aapt;

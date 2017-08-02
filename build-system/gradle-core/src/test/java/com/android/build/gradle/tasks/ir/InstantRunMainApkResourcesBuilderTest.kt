@@ -70,7 +70,6 @@ open class InstantRunMainApkResourcesBuilderTest {
     @Mock private lateinit var variantConfiguration: GradleVariantConfiguration
     @Mock private lateinit var variantScope: VariantScope
     @Mock private lateinit var globalScope: GlobalScope
-    @Mock private lateinit var packagingScope: PackagingScope
     @Mock private lateinit var fileCache: FileCache
     private val projectOptions = ProjectOptions(ImmutableMap.of())
     private val outputScope = OutputScope(MultiOutputPolicy.MULTI_APK)
@@ -87,10 +86,10 @@ open class InstantRunMainApkResourcesBuilderTest {
         MockitoAnnotations.initMocks(this)
         testDir = temporaryFolder.newFolder()
         project = ProjectBuilder.builder().withProjectDir(testDir).build()
-        `when`(packagingScope.fullVariantName).thenReturn("variantName")
-        `when`(packagingScope.projectOptions).thenReturn(projectOptions)
+        `when`(variantScope.fullVariantName).thenReturn("variantName")
         `when`(variantConfiguration.baseName).thenReturn("variantName")
         `when`(globalScope.buildCache).thenReturn(fileCache)
+        `when`(globalScope.projectOptions).thenReturn(projectOptions)
         `when`(variantScope.getTaskName(any(String::class.java))).thenReturn("taskFoo")
         `when`(variantScope.globalScope).thenReturn(globalScope)
         `when`(variantScope.outputScope).thenReturn(outputScope)
@@ -106,7 +105,6 @@ open class InstantRunMainApkResourcesBuilderTest {
         task = project.tasks.create("test", InstantRunMainApkResourcesBuilder::class.java)
         val configAction = InstantRunMainApkResourcesBuilder.ConfigAction(
                 variantScope,
-                packagingScope,
                 TaskOutputHolder.TaskOutputType.MERGED_RES)
 
         val outDir = temporaryFolder.newFolder()
@@ -133,7 +131,6 @@ open class InstantRunMainApkResourcesBuilderTest {
 
         val configAction = InstantRunMainApkResourcesBuilder.ConfigAction(
                 variantScope,
-                packagingScope,
                 TaskOutputHolder.TaskOutputType.MERGED_RES)
 
         val outDir = temporaryFolder.newFolder()

@@ -47,6 +47,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.junit.Before;
 import org.junit.Rule;
@@ -67,6 +68,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
     @Mock AndroidBuilder androidBuilder;
     @Mock PackagingScope packagingScope;
     @Mock CoreSigningConfig coreSigningConfig;
+    @Mock FileCollection mainResources;
 
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
@@ -109,7 +111,9 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         outputDirectory.getRoot(),
                         supportDirectory.newFolder("instant-run"),
                         supportDirectory.newFolder("aapt-temp"), /* runAapt2Serially */
-                        false) {
+                        false,
+                        mainResources,
+                        mainResources) {
                     @Override
                     @NonNull
                     protected File generateSplitApk(@NonNull DexFiles dexFiles) {

@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.junit.Before;
 import org.junit.Rule;
@@ -69,6 +70,7 @@ public class InstantRunDependenciesApkBuilderTest {
     @Mock AndroidBuilder androidBuilder;
     @Mock CoreSigningConfig coreSigningConfig;
     @Mock PackagingScope packagingScope;
+    @Mock FileCollection mainResources;
 
     @Mock TargetInfo targetInfo;
     @Mock BuildToolInfo buildTools;
@@ -108,7 +110,9 @@ public class InstantRunDependenciesApkBuilderTest {
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         supportDirectory.newFolder("instant-run"),
-                        supportDirectory.newFolder("aapt-temp")) {
+                        supportDirectory.newFolder("aapt-temp"),
+                        mainResources,
+                        mainResources) {
                     @NonNull
                     @Override
                     protected File generateSplitApk(@NonNull DexFiles dexFiles)

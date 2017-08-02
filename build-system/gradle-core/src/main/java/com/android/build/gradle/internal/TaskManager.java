@@ -86,7 +86,6 @@ import com.android.build.gradle.internal.dsl.PackagingOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoLoaderTask;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.incremental.InstantRunAnchorTaskConfigAction;
-import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
@@ -203,7 +202,6 @@ import com.android.build.gradle.tasks.factory.AndroidUnitTest;
 import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
 import com.android.build.gradle.tasks.factory.ProcessJavaResConfigAction;
 import com.android.build.gradle.tasks.factory.TestServerTaskConfigAction;
-import com.android.build.gradle.tasks.ir.InstantRunMainApkResourcesBuilder;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DesugarProcessBuilder;
@@ -2690,9 +2688,6 @@ public abstract class TaskManager {
         FileCollection instantRunMergedManifests =
                 variantScope.getOutput(INSTANT_RUN_MERGED_MANIFESTS);
 
-        FileCollection processedResources =
-                variantScope.getOutput(VariantScope.TaskOutputType.PROCESSED_RES);
-
         variantScope.setInstantRunTaskManager(instantRunTaskManager);
         AndroidVersion minSdkForDx = variantScope.getMinSdkVersion();
         BuildInfoLoaderTask buildInfoLoaderTask =
@@ -2703,7 +2698,6 @@ public abstract class TaskManager {
                         allActionAnchorTask,
                         getResMergingScopes(variantScope),
                         instantRunMergedManifests,
-                        processedResources,
                         true /* addResourceVerifier */,
                         minSdkForDx.getFeatureLevel());
 
@@ -2977,8 +2971,6 @@ public abstract class TaskManager {
 
         boolean signedApk = variantData.isSigned();
 
-        GradleVariantConfiguration variantConfiguration = variantScope.getVariantConfiguration();
-
         /*
          * PrePackaging step class that will look if the packaging of the main FULL_APK split is
          * necessary when running in InstantRun mode. In InstantRun mode targeting an api 23 or
@@ -3014,34 +3006,21 @@ public abstract class TaskManager {
                         : TaskOutputHolder.TaskOutputType.APK;
 
         boolean useSeparateApkForResources =
-                variantScope.getInstantRunBuildContext().isInInstantRunMode()
-                        && (variantScope.getInstantRunBuildContext().getPatchingPolicy()
-                                == InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES);
+                variantScope.getInstantRunBuildContext().useSeparateApkForResources();
 
         VariantScope.TaskOutputType resourceFilesInputType =
                 variantScope.useResourceShrinker()
                         ? VariantScope.TaskOutputType.SHRUNK_PROCESSED_RES
                         : VariantScope.TaskOutputType.PROCESSED_RES;
 
-        TaskOutputHolder.TaskOutputType resourcesForAppOrBaseApkPackaging = resourceFilesInputType;
-        if (useSeparateApkForResources) {
-            // add a task to create an empty resource with the merged manifest file that
-            // will eventually get packaged in the main APK.
-            // We need to pass the published resource type as the generated manifest can use
-            // a String resource for its version name (so AAPT can check for resources existence).
-            taskFactory.create(
-                    new InstantRunMainApkResourcesBuilder.ConfigAction(
-                            variantScope, packagingScope, resourceFilesInputType));
-            resourcesForAppOrBaseApkPackaging = INSTANT_RUN_MAIN_APK_RESOURCES;
-        }
-
         PackageApplication packageApp =
                 taskFactory.create(
                         new PackageApplication.StandardConfigAction(
                                 packagingScope,
                                 outputDirectory,
-                                resourcesForAppOrBaseApkPackaging,
-                                variantScope.getOutput(resourcesForAppOrBaseApkPackaging),
+                                useSeparateApkForResources
+                                        ? INSTANT_RUN_MAIN_APK_RESOURCES
+                                        : resourceFilesInputType,
                                 manifests,
                                 manifestType,
                                 variantScope.getOutputScope(),
@@ -3068,7 +3047,6 @@ public abstract class TaskManager {
                                         variantScope.getInstantRunResourcesFile(),
                                         packagingScope,
                                         resourceFilesInputType,
-                                        variantScope.getOutput(resourceFilesInputType),
                                         manifests,
                                         INSTANT_RUN_MERGED_MANIFESTS,
                                         globalScope.getBuildCache(),

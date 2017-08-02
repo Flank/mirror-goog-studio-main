@@ -798,7 +798,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         protected final PackagingScope packagingScope;
         @NonNull protected final FileCollection manifests;
         @NonNull protected final VariantScope.TaskOutputType inputResourceFilesType;
-        @NonNull protected final FileCollection resourceFiles;
         @NonNull protected final File outputDirectory;
         @NonNull protected final OutputScope outputScope;
         @Nullable private final FileCache fileCache;
@@ -808,7 +807,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                 @NonNull PackagingScope packagingScope,
                 @NonNull File outputDirectory,
                 @NonNull VariantScope.TaskOutputType inputResourceFilesType,
-                @NonNull FileCollection resourceFiles,
                 @NonNull FileCollection manifests,
                 @NonNull VariantScope.TaskOutputType manifestType,
                 @Nullable FileCache fileCache,
@@ -818,7 +816,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             this.inputResourceFilesType = inputResourceFilesType;
             this.manifests = manifests;
             this.outputDirectory = outputDirectory;
-            this.resourceFiles = resourceFiles;
             this.outputScope = outputScope;
             this.manifestType = manifestType;
             this.fileCache = fileCache;
@@ -837,7 +834,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                             packagingScope.getIncrementalDir(packageAndroidArtifact.getName()),
                             "aapt-temp");
 
-            packageAndroidArtifact.resourceFiles = resourceFiles;
+            packageAndroidArtifact.resourceFiles = packagingScope.getOutput(inputResourceFilesType);
             packageAndroidArtifact.outputDirectory = outputDirectory;
             packageAndroidArtifact.setIncrementalFolder(
                     new File(

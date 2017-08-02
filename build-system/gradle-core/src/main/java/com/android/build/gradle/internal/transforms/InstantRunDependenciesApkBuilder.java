@@ -38,6 +38,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Set;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 
 /**
@@ -63,7 +64,9 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
             @NonNull AaptOptions aaptOptions,
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
-            @NonNull File aaptIntermediateDirectory) {
+            @NonNull File aaptIntermediateDirectory,
+            @NonNull FileCollection resources,
+            @NonNull FileCollection resourcesWithMainManifest) {
         super(
                 logger,
                 project,
@@ -76,7 +79,9 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
                 aaptOptions,
                 outputDirectory,
                 supportDirectory,
-                aaptIntermediateDirectory);
+                aaptIntermediateDirectory,
+                resources,
+                resourcesWithMainManifest);
     }
 
     @NonNull

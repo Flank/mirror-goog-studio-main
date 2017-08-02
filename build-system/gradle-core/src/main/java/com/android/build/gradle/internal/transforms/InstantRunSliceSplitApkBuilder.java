@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 
 /**
@@ -70,7 +71,9 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
             @NonNull File outputDirectory,
             @NonNull File supportDirectory,
             @NonNull File aaptIntermediateDirectory,
-            @Nullable Boolean runAapt2Serially) {
+            @Nullable Boolean runAapt2Serially,
+            @NonNull FileCollection resources,
+            @NonNull FileCollection resourcesWithMainManifest) {
         super(
                 logger,
                 project,
@@ -83,7 +86,9 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
                 aaptOptions,
                 outputDirectory,
                 supportDirectory,
-                aaptIntermediateDirectory);
+                aaptIntermediateDirectory,
+                resources,
+                resourcesWithMainManifest);
         runSerially = runAapt2Serially == null
                 ? SdkConstants.CURRENT_PLATFORM == SdkConstants.PLATFORM_WINDOWS
                 : runAapt2Serially;

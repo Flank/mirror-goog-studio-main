@@ -27,8 +27,8 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
-import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
+import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.transforms.InstantRunDex;
 import com.android.build.gradle.internal.transforms.InstantRunSlicer;
 import com.android.build.gradle.internal.transforms.InstantRunTransform;
@@ -39,6 +39,7 @@ import com.android.build.gradle.tasks.CheckManifestInInstantRunMode;
 import com.android.build.gradle.tasks.PreColdSwapTask;
 import com.android.build.gradle.tasks.ir.FastDeployRuntimeExtractorTask;
 import com.android.build.gradle.tasks.ir.GenerateInstantRunAppInfoTask;
+import com.android.build.gradle.tasks.ir.InstantRunMainApkResourcesBuilder;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
 import com.android.builder.model.OptionalCompilationStep;
@@ -69,8 +70,7 @@ public class InstantRunTaskManager {
     @NonNull
     private final Logger logger;
 
-    @NonNull
-    private final InstantRunVariantScope variantScope;
+    @NonNull private final VariantScope variantScope;
 
     @NonNull
     private final TransformManager transformManager;
@@ -80,7 +80,7 @@ public class InstantRunTaskManager {
 
     public InstantRunTaskManager(
             @NonNull Logger logger,
-            @NonNull InstantRunVariantScope instantRunVariantScope,
+            @NonNull VariantScope instantRunVariantScope,
             @NonNull TransformManager transformManager,
             @NonNull TaskFactory taskFactory,
             @NonNull Recorder recorder) {
@@ -98,7 +98,6 @@ public class InstantRunTaskManager {
             Task anchorTask,
             Set<? super QualifiedContent.Scope> resMergingScopes,
             FileCollection instantRunMergedManifests,
-            FileCollection processedResources,
             boolean addDependencyChangeChecker,
             int minSdkForDx) {
         final Project project = variantScope.getGlobalScope().getProject();
@@ -150,17 +149,27 @@ public class InstantRunTaskManager {
                 transformManager.addTransform(
                         taskFactory, transformVariantScope, instantRunTransform);
 
+        VariantScope.TaskOutputType resourceFilesInputType =
+                variantScope.useResourceShrinker()
+                        ? VariantScope.TaskOutputType.SHRUNK_PROCESSED_RES
+                        : VariantScope.TaskOutputType.PROCESSED_RES;
+
+        if (variantScope.getInstantRunBuildContext().useSeparateApkForResources()) {
+            // add a task to create an empty resource with the merged manifest file that
+            // will eventually get packaged in the main APK.
+            // We need to pass the published resource type as the generated manifest can use
+            // a String resource for its version name (so AAPT can check for resources existence).
+            taskFactory.create(
+                    new InstantRunMainApkResourcesBuilder.ConfigAction(
+                            variantScope, resourceFilesInputType));
+        }
+
         // create the manifest file change checker. This task should always run even if the
         // processAndroidResources task did not run. It is possible (through an IDE sync mainly)
         // that the processAndroidResources task ran in a previous non InstantRun enabled
         // invocation.
         CheckManifestInInstantRunMode checkManifestTask =
-                taskFactory.create(
-                        new CheckManifestInInstantRunMode.ConfigAction(
-                                transformVariantScope,
-                                variantScope,
-                                instantRunMergedManifests,
-                                processedResources));
+                taskFactory.create(new CheckManifestInInstantRunMode.ConfigAction(variantScope));
 
         instantRunTask.ifPresent(t ->
                 t.dependsOn(

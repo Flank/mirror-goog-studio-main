@@ -304,6 +304,11 @@ public class ApplicationTaskManager extends TaskManager {
 
         PackagingScope packagingScope = new DefaultGradlePackagingScope(variantScope);
 
+        TaskOutputHolder.TaskOutputType resourcesWithMainManifest =
+                variantScope.getInstantRunBuildContext().useSeparateApkForResources()
+                        ? TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES
+                        : TaskOutputHolder.TaskOutputType.PROCESSED_RES;
+
         // create the transforms that will create the dependencies apk.
         InstantRunDependenciesApkBuilder dependenciesApkBuilder =
                 new InstantRunDependenciesApkBuilder(
@@ -323,7 +328,9 @@ public class ApplicationTaskManager extends TaskManager {
                         new File(
                                 getIncrementalFolder(
                                         variantScope, "InstantRunDependenciesApkBuilder"),
-                                "aapt-temp"));
+                                "aapt-temp"),
+                        variantScope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
+                        variantScope.getOutput(resourcesWithMainManifest));
 
         Optional<TransformTask> dependenciesApkBuilderTask =
                 variantScope
@@ -351,7 +358,9 @@ public class ApplicationTaskManager extends TaskManager {
                                 getIncrementalFolder(
                                         variantScope, "InstantRunSliceSplitApkBuilder"),
                                 "aapt-temp"),
-                        globalScope.getProjectOptions().get(OptionalBooleanOption.SERIAL_AAPT2));
+                        globalScope.getProjectOptions().get(OptionalBooleanOption.SERIAL_AAPT2),
+                        variantScope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
+                        variantScope.getOutput(resourcesWithMainManifest));
 
         Optional<TransformTask> transformTaskAndroidTask =
                 variantScope
