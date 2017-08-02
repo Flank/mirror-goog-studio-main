@@ -245,7 +245,7 @@ Status ProfilerServiceImpl::AttachAgent(
     if (!IsAppAgentAlive(request->process_id(), package_name.c_str())) {
       // Only attach agent if one is not detected.
       if (RunAgent(app_name, package_name, config_.GetConfigFilePath(),
-          request->agent_lib_file_name())) {
+                   request->agent_lib_file_name())) {
         response->set_status(profiler::proto::AgentAttachResponse::SUCCESS);
       } else {
         response->set_status(
@@ -253,19 +253,24 @@ Status ProfilerServiceImpl::AttachAgent(
       }
     }
 
-    int fork_pid = fork();
-    if (fork_pid == -1) {
-      perror("fork connector");
-      return ::grpc::Status(::grpc::StatusCode::RESOURCE_EXHAUSTED,
-                            "Cannot fork a process to run connector");
-    } else if (fork_pid == 0) {
-      // child process
-      string socket_name;
-      socket_name.append(config_.GetAgentConfig().service_socket_name());
-      RunConnector(request->process_id(), package_name, socket_name);
-      // RunConnector calls execl() at the end. It returns only if an error
-      // has occured.
-      exit(EXIT_FAILURE);
+    // Only reconnect to perfa if an existing connection has not been detected.
+    // This can be identified by whether perfa has a valid grpc channel to send
+    // this perfd instance the heartbeats.
+    if (!CheckAppHeartBeat(request->process_id())) {
+      int fork_pid = fork();
+      if (fork_pid == -1) {
+        perror("fork connector");
+        return ::grpc::Status(::grpc::StatusCode::RESOURCE_EXHAUSTED,
+                              "Cannot fork a process to run connector");
+      } else if (fork_pid == 0) {
+        // child process
+        string socket_name;
+        socket_name.append(config_.GetAgentConfig().service_socket_name());
+        RunConnector(request->process_id(), package_name, socket_name);
+        // RunConnector calls execl() at the end. It returns only if an error
+        // has occured.
+        exit(EXIT_FAILURE);
+      }
     }
 
     return Status::OK;
@@ -281,6 +286,18 @@ bool ProfilerServiceImpl::IsAppAgentAlive(int app_pid, const char* app_name) {
   args << kConnectCmdLineArg << "=" << app_pid << " " << kHeartBeatRequest;
   BashCommandRunner ping(kConnectorRelativePath);
   return ping.RunAs(args.str(), app_name, nullptr);
+}
+
+bool ProfilerServiceImpl::CheckAppHeartBeat(int app_pid) {
+  auto got = heartbeat_timestamp_map_.find(app_pid);
+  if (got != heartbeat_timestamp_map_.end()) {
+    int64_t current_time = clock_.GetCurrentTime();
+    if (GenericComponent::kHeartbeatThresholdNs >
+        (current_time - got->second)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace profiler
