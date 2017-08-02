@@ -16,12 +16,24 @@
 
 package com.android.builder.packaging;
 
+import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+
 /**
  * Classes which implement this interface provides a method to check whether a file should
  * be added to a Jar file.
  */
 public interface ZipEntryFilter {
 
+    ZipEntryFilter CLASSES_ONLY = archivePath -> archivePath.endsWith(SdkConstants.DOT_CLASS);
+
+    @NonNull
+    default ZipEntryFilter and(@Nullable ZipEntryFilter other) {
+        return other == null
+                ? this
+                : archivePath -> checkEntry(archivePath) && other.checkEntry(archivePath);
+    }
 
     /**
      * Checks a file for inclusion in a Jar archive.

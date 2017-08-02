@@ -21,6 +21,7 @@ import static org.objectweb.asm.Opcodes.ASM5;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.packaging.JarMerger;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
@@ -36,14 +37,13 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 
 /**
- * Finds and deletes typedef annotation classes (and also warns if their
- * retention is wrong, such that usages of the annotation embeds data
- * into the .class file.)
- * <p>
- * (Based on the similar class in {@code development/tools/rmtypedefs/})
+ * Finds and deletes typedef annotation classes (and also warns if their retention is wrong, such
+ * that usages of the annotation embeds data into the .class file.)
+ *
+ * <p>(Based on the similar class in {@code development/tools/rmtypedefs/})
  */
 @SuppressWarnings("SpellCheckingInspection")
-public class TypedefRemover {
+public class TypedefRemover implements JarMerger.Transformer {
     @Nullable private final Extractor mExtractor;
     private final boolean mQuiet;
     private final boolean mVerbose;
@@ -113,12 +113,13 @@ public class TypedefRemover {
     /**
      * Filter the given file (given by a path).
      *
-     * @param path  the path within the jar file
+     * @param path the path within the jar file
      * @param input the contents of the file
      * @return a stream which provides the content of the file, which may be null (to delete/not
-     * package the file), or the original input stream if the file should be packaged as is, or
-     * possibly a different input stream with the file rewritten
+     *     package the file), or the original input stream if the file should be packaged as is, or
+     *     possibly a different input stream with the file rewritten
      */
+    @Override
     @Nullable
     public InputStream filter(@NonNull String path, @NonNull InputStream input) {
         if (mAnnotationClassFiles.contains(path)) {
@@ -138,10 +139,6 @@ public class TypedefRemover {
             Extractor.error("Could not process " + path + ": " + ioe.getLocalizedMessage());
             return input;
         }
-    }
-
-    public boolean isRemoved(@NonNull String path) {
-        return mAnnotationClassFiles.contains(path);
     }
 
     public void removeFromTypedefFile(@NonNull File classDir, @NonNull File file) {

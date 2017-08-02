@@ -16,6 +16,7 @@
 
 package com.android.testutils.truth;
 
+import com.google.common.base.Joiner;
 import com.google.common.truth.FailureStrategy;
 import com.google.common.truth.Subject;
 import com.google.common.truth.SubjectFactory;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Truth support for validating java.nio.file.Path.
@@ -87,6 +89,22 @@ public class PathSubject extends Subject<PathSubject, Path> {
                         "byte[" + expectedContents.length + "]",
                         "is",
                         "byte[" + contents.length + "]");
+            }
+        } catch (IOException e) {
+            failWithRawMessage("Unable to read %s", getSubject());
+        }
+    }
+
+    public void hasContents(String... expectedContents) throws IOException {
+        exists();
+        try {
+            List<String> contents = Files.readAllLines(getSubject());
+            if (!Arrays.asList(expectedContents).equals(contents)) {
+                failWithBadResults(
+                        "contains",
+                        Joiner.on('\n').join(expectedContents),
+                        "is",
+                        Joiner.on('\n').join(contents));
             }
         } catch (IOException e) {
             failWithRawMessage("Unable to read %s", getSubject());
