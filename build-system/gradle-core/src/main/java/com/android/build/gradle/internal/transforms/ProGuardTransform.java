@@ -53,12 +53,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import proguard.ClassPath;
 
 /**
  * ProGuard support as a transform
  */
 public class ProGuardTransform extends BaseProguardAction {
+    private static final Logger LOG = Logging.getLogger(ProGuardTransform.class);
 
     private final VariantScope variantScope;
 
@@ -237,6 +240,7 @@ public class ProGuardTransform extends BaseProguardAction {
             mkdirs(proguardOut);
 
             for (File configFile : getAllConfigurationFiles()) {
+                LOG.info("Applying ProGuard configuration file {}", configFile);
                 applyConfigurationFile(configFile);
             }
 
