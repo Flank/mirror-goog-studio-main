@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.OutputFile;
 import com.android.build.gradle.internal.packaging.IncrementalPackagerBuilder;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.scope.BuildOutputs;
@@ -44,7 +45,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
@@ -73,6 +73,8 @@ public class PackageSplitAbi extends BaseTask {
     private Collection<String> aaptOptionsNoCompress;
     private OutputScope outputScope;
 
+    private Set<String> splits;
+
     @InputFiles
     public FileCollection getProcessedAbiResources() {
         return processedAbiResources;
@@ -85,11 +87,7 @@ public class PackageSplitAbi extends BaseTask {
 
     @Input
     public Set<String> getSplits() {
-        return outputScope
-                .getApkDatas()
-                .stream()
-                .map(ApkData::getFilterName)
-                .collect(Collectors.toSet());
+        return splits;
     }
 
     @Input
@@ -217,6 +215,8 @@ public class PackageSplitAbi extends BaseTask {
                     scope.getTransformManager()
                             .getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS);
             packageSplitAbiTask.jniDebuggable = config.getBuildType().isJniDebuggable();
+            packageSplitAbiTask.splits =
+                    scope.getVariantData().getFilters(OutputFile.FilterType.ABI);
         }
     }
 }
