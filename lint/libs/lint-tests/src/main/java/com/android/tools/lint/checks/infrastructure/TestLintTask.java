@@ -552,7 +552,7 @@ public class TestLintTask {
 
     /** Constructs the actual lint projects on disk */
     @NonNull
-    private List<File> createProjects(File rootDir) {
+    public List<File> createProjects(File rootDir) {
         List<ProjectDescription> allProjects = Lists.newArrayListWithCapacity(2 * projects.length);
         addProjects(allProjects, projects);
 
