@@ -522,15 +522,17 @@ public class ModelBuilder implements ToolingModelBuilder {
                         Pair.of(
                                 EMPTY_DEPENDENCIES_IMPL,
                                 graph.createLevel2DependencyGraph(
-                                        variantScope, modelWithFullDependency, downloadSources));
+                                        variantScope,
+                                        modelWithFullDependency,
+                                        downloadSources,
+                                        syncIssues::add));
             } else {
                 result =
                         Pair.of(
-                                graph.createDependencies(variantScope, downloadSources),
+                                graph.createDependencies(
+                                        variantScope, downloadSources, syncIssues::add),
                                 EMPTY_DEPENDENCY_GRAPH);
             }
-
-            graph.collectFailures(syncIssues::add);
         }
 
         return result;

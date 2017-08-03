@@ -73,6 +73,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -90,12 +91,12 @@ import org.gradle.api.component.Artifact;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
 import org.gradle.jvm.JvmLibrary;
 import org.gradle.language.base.artifact.SourcesArtifact;
-import org.gradle.language.java.artifact.JavadocArtifact;
 
 /** For creating dependency graph based on {@link ResolvedArtifactResult}. */
 public class ArtifactDependencyGraph {
 
     private static final String LOCAL_AAR_GROUPID = "__local_aars__";
+    private static final Splitter LINE_SPLITTER = Splitter.on(System.lineSeparator());
 
     private static final CreatingCache<HashableResolvedArtifactResult, MavenCoordinates>
             sMavenCoordinatesCache =
@@ -395,156 +396,168 @@ public class ArtifactDependencyGraph {
     public DependencyGraphs createLevel2DependencyGraph(
             @NonNull VariantScope variantScope,
             boolean withFullDependency,
-            boolean downloadSources) {
-        final Project project = variantScope.getGlobalScope().getProject();
+            boolean downloadSources,
+            @NonNull Consumer<SyncIssue> failureConsumer) {
+        try {
+            final Project project = variantScope.getGlobalScope().getProject();
 
-        List<GraphItem> compileItems = Lists.newArrayList();
+            List<GraphItem> compileItems = Lists.newArrayList();
 
-        Set<HashableResolvedArtifactResult> compileArtifacts =
-                getAllArtifacts(variantScope, COMPILE_CLASSPATH, failureToMap);
+            Set<HashableResolvedArtifactResult> compileArtifacts =
+                    getAllArtifacts(variantScope, COMPILE_CLASSPATH, failureToMap);
 
-        for (HashableResolvedArtifactResult artifact : compileArtifacts) {
-            compileItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
-            sLibraryCache.get(artifact);
-        }
+            for (HashableResolvedArtifactResult artifact : compileArtifacts) {
+                compileItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
+                sLibraryCache.get(artifact);
+            }
 
-        // get the runtime artifacts.
-        List<GraphItem> runtimeItems = Lists.newArrayList();
-        Set<HashableResolvedArtifactResult> runtimeArtifacts =
-                getAllArtifacts(variantScope, RUNTIME_CLASSPATH, failureToMap);
+            // get the runtime artifacts.
+            List<GraphItem> runtimeItems = Lists.newArrayList();
+            Set<HashableResolvedArtifactResult> runtimeArtifacts =
+                    getAllArtifacts(variantScope, RUNTIME_CLASSPATH, failureToMap);
 
-        for (HashableResolvedArtifactResult artifact : runtimeArtifacts) {
-            runtimeItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
-            sLibraryCache.get(artifact);
-        }
+            for (HashableResolvedArtifactResult artifact : runtimeArtifacts) {
+                runtimeItems.add(new GraphItemImpl(computeAddress(artifact), ImmutableList.of()));
+                sLibraryCache.get(artifact);
+            }
 
-        // compute the provided dependency list.
-        List<GraphItem> providedItems = Lists.newArrayList(compileItems);
-        providedItems.removeAll(runtimeItems);
-        final ImmutableList<String> providedAddresses =
-                providedItems
-                        .stream()
-                        .map(GraphItem::getArtifactAddress)
-                        .collect(ImmutableCollectors.toImmutableList());
-
-        // force download the javadoc/source artifacts of compile scope only, since the
-        // the runtime-only is never used from the IDE.
-        if (downloadSources) {
-            handleJavadoc(
-                    project,
-                    compileArtifacts
+            // compute the provided dependency list.
+            List<GraphItem> providedItems = Lists.newArrayList(compileItems);
+            providedItems.removeAll(runtimeItems);
+            final ImmutableList<String> providedAddresses =
+                    providedItems
                             .stream()
-                            .map(artifact -> artifact.getId().getComponentIdentifier())
-                            .collect(Collectors.toSet()));
+                            .map(GraphItem::getArtifactAddress)
+                            .collect(ImmutableCollectors.toImmutableList());
+
+            // force download the javadoc/source artifacts of compile scope only, since the
+            // the runtime-only is never used from the IDE.
+            if (downloadSources) {
+                handleSources(
+                        project,
+                        compileArtifacts
+                                .stream()
+                                .map(artifact -> artifact.getId().getComponentIdentifier())
+                                .collect(Collectors.toSet()),
+                        failureConsumer);
+            }
+
+            if (!withFullDependency) {
+                return new SimpleDependencyGraphsImpl(compileItems, providedAddresses);
+            }
+
+            // FIXME: when full dependency is enabled, this should return a full graph instead of a
+            // flat list.
+
+            return new FullDependencyGraphsImpl(
+                    compileItems,
+                    runtimeItems,
+                    providedAddresses,
+                    ImmutableList.of()); // FIXME: actually get skip list
+        } finally {
+            collectFailures(failureConsumer);
         }
-
-
-        if (!withFullDependency) {
-            return new SimpleDependencyGraphsImpl(compileItems, providedAddresses);
-        }
-
-        // FIXME: when full dependency is enabled, this should return a full graph instead of a
-        // flat list.
-
-        return new FullDependencyGraphsImpl(
-                compileItems,
-                runtimeItems,
-                providedAddresses,
-                ImmutableList.of()); // FIXME: actually get skip list
     }
 
     /** Create a level 1 dependency list. */
     @NonNull
     public DependenciesImpl createDependencies(
-            @NonNull VariantScope variantScope, boolean downloadSources) {
-        ImmutableList.Builder<String> projects = ImmutableList.builder();
-        ImmutableList.Builder<AndroidLibrary> androidLibraries = ImmutableList.builder();
-        ImmutableList.Builder<JavaLibrary> javaLibrary = ImmutableList.builder();
+            @NonNull VariantScope variantScope,
+            boolean downloadSources,
+            @NonNull Consumer<SyncIssue> failureConsumer) {
+        try {
+            ImmutableList.Builder<String> projects = ImmutableList.builder();
+            ImmutableList.Builder<AndroidLibrary> androidLibraries = ImmutableList.builder();
+            ImmutableList.Builder<JavaLibrary> javaLibrary = ImmutableList.builder();
 
-        // get the runtime artifact. We only care about the ComponentIdentifier so we don't
-        // need to call getAllArtifacts() which computes a lot more many things.
-        // Instead just get all the jars to get all the dependencies.
-        ArtifactCollection runtimeArtifactCollection =
-                computeArtifactList(
-                        variantScope,
-                        RUNTIME_CLASSPATH,
-                        AndroidArtifacts.ArtifactScope.ALL,
-                        AndroidArtifacts.ArtifactType.JAR);
+            // get the runtime artifact. We only care about the ComponentIdentifier so we don't
+            // need to call getAllArtifacts() which computes a lot more many things.
+            // Instead just get all the jars to get all the dependencies.
+            ArtifactCollection runtimeArtifactCollection =
+                    computeArtifactList(
+                            variantScope,
+                            RUNTIME_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.ALL,
+                            AndroidArtifacts.ArtifactType.JAR);
 
-        // build a list of the artifacts
-        Set<ComponentIdentifier> runtimeIdentifiers =
-                new HashSet<>(runtimeArtifactCollection.getArtifacts().size());
-        for (ResolvedArtifactResult result : runtimeArtifactCollection.getArtifacts()) {
-            runtimeIdentifiers.add(result.getId().getComponentIdentifier());
-        }
-
-        Set<HashableResolvedArtifactResult> artifacts =
-                getAllArtifacts(variantScope, COMPILE_CLASSPATH, failureToMap);
-
-        for (HashableResolvedArtifactResult artifact : artifacts) {
-            ComponentIdentifier id = artifact.getId().getComponentIdentifier();
-
-            boolean isProvided = !runtimeIdentifiers.contains(id);
-
-            boolean isSubproject = id instanceof ProjectComponentIdentifier;
-            String projectPath =
-                    isSubproject ? ((ProjectComponentIdentifier) id).getProjectPath() : null;
-
-            if (artifact.getDependencyType() == JAVA) {
-                if (projectPath != null) {
-                    projects.add(projectPath);
-                    continue;
-                }
-                // FIXME: Dependencies information is not set correctly.
-                javaLibrary.add(
-                        new com.android.build.gradle.internal.ide.JavaLibraryImpl(
-                                artifact.getFile(),
-                                null,
-                                ImmutableList.of(), /* dependencies */
-                                null, /* requestedCoordinates */
-                                checkNotNull(sMavenCoordinatesCache.get(artifact)),
-                                false, /* isSkipped */
-                                isProvided));
-            } else {
-                if (artifact.isWrappedModule()) {
-                    // force external dependency mode.
-                    projectPath = null;
-                }
-
-                final File explodedFolder = artifact.getFile();
-
-                //noinspection VariableNotUsedInsideIf
-                androidLibraries.add(
-                        new com.android.build.gradle.internal.ide.AndroidLibraryImpl(
-                                // FIXME: Dependencies information is not set correctly.
-                                checkNotNull(sMavenCoordinatesCache.get(artifact)),
-                                projectPath,
-                                artifact.bundleResult != null
-                                        ? artifact.bundleResult.getFile()
-                                        : explodedFolder, // fallback so that the value is non-null
-                                explodedFolder, /*exploded folder*/
-                                getVariant(artifact),
-                                isProvided,
-                                false, /* dependencyItem.isSkipped() */
-                                ImmutableList.of(), /* androidLibraries */
-                                ImmutableList.of(), /* javaLibraries */
-                                findLocalJarsAsFiles(explodedFolder)));
+            // build a list of the artifacts
+            Set<ComponentIdentifier> runtimeIdentifiers =
+                    new HashSet<>(runtimeArtifactCollection.getArtifacts().size());
+            for (ResolvedArtifactResult result : runtimeArtifactCollection.getArtifacts()) {
+                runtimeIdentifiers.add(result.getId().getComponentIdentifier());
             }
+
+            Set<HashableResolvedArtifactResult> artifacts =
+                    getAllArtifacts(variantScope, COMPILE_CLASSPATH, failureToMap);
+
+            for (HashableResolvedArtifactResult artifact : artifacts) {
+                ComponentIdentifier id = artifact.getId().getComponentIdentifier();
+
+                boolean isProvided = !runtimeIdentifiers.contains(id);
+
+                boolean isSubproject = id instanceof ProjectComponentIdentifier;
+                String projectPath =
+                        isSubproject ? ((ProjectComponentIdentifier) id).getProjectPath() : null;
+
+                if (artifact.getDependencyType() == JAVA) {
+                    if (projectPath != null) {
+                        projects.add(projectPath);
+                        continue;
+                    }
+                    // FIXME: Dependencies information is not set correctly.
+                    javaLibrary.add(
+                            new com.android.build.gradle.internal.ide.JavaLibraryImpl(
+                                    artifact.getFile(),
+                                    null,
+                                    ImmutableList.of(), /* dependencies */
+                                    null, /* requestedCoordinates */
+                                    checkNotNull(sMavenCoordinatesCache.get(artifact)),
+                                    false, /* isSkipped */
+                                    isProvided));
+                } else {
+                    if (artifact.isWrappedModule()) {
+                        // force external dependency mode.
+                        projectPath = null;
+                    }
+
+                    final File explodedFolder = artifact.getFile();
+
+                    //noinspection VariableNotUsedInsideIf
+                    androidLibraries.add(
+                            new com.android.build.gradle.internal.ide.AndroidLibraryImpl(
+                                    // FIXME: Dependencies information is not set correctly.
+                                    checkNotNull(sMavenCoordinatesCache.get(artifact)),
+                                    projectPath,
+                                    artifact.bundleResult != null
+                                            ? artifact.bundleResult.getFile()
+                                            : explodedFolder,
+                                    // fallback so that the value is non-null
+                                    explodedFolder, /*exploded folder*/
+                                    getVariant(artifact),
+                                    isProvided,
+                                    false, /* dependencyItem.isSkipped() */
+                                    ImmutableList.of(), /* androidLibraries */
+                                    ImmutableList.of(), /* javaLibraries */
+                                    findLocalJarsAsFiles(explodedFolder)));
+                }
+            }
+
+            // force download the source artifacts of the compile classpath only.
+            if (downloadSources) {
+                handleSources(
+                        variantScope.getGlobalScope().getProject(),
+                        artifacts
+                                .stream()
+                                .map(artifact -> artifact.getId().getComponentIdentifier())
+                                .collect(Collectors.toSet()),
+                        failureConsumer);
+            }
+
+            return new DependenciesImpl(
+                    androidLibraries.build(), javaLibrary.build(), projects.build());
+        } finally {
+            collectFailures(failureConsumer);
         }
-
-        // force download the javadoc/source artifacts of the compile classpath only.
-        if (downloadSources) {
-            handleJavadoc(
-                    variantScope.getGlobalScope().getProject(),
-                    artifacts
-                            .stream()
-                            .map(artifact -> artifact.getId().getComponentIdentifier())
-                            .collect(Collectors.toSet()));
-        }
-
-
-        return new DependenciesImpl(
-                androidLibraries.build(), javaLibrary.build(), projects.build());
     }
 
     private static final Pattern pattern =
@@ -552,81 +565,90 @@ public class ArtifactDependencyGraph {
     private static final Pattern pattern2 =
             Pattern.compile(".*Could not find ([a-zA-Z0-9:\\-.]+)\\..*", Pattern.DOTALL);
 
-    public void collectFailures(@NonNull Consumer<SyncIssue> failureConsumer) {
+    private void collectFailures(@NonNull Consumer<SyncIssue> failureConsumer) {
         if (failures.isEmpty()) {
             return;
         }
 
-        final Splitter splitter = Splitter.on(System.lineSeparator());
-
         for (Map.Entry<String, Throwable> entry : failures.entrySet()) {
-            Throwable cause = entry.getValue();
-
-            // gather all the messages.
-            List<String> messages = Lists.newArrayList();
-            String firstIndent = " > ";
-            String allIndent = "";
-
-            String data = null;
-
-            while (cause != null) {
-                final String message = cause.getMessage();
-                if (message != null) {
-                    List<String> lines = ImmutableList.copyOf(splitter.split(message));
-
-                    // check if the first line contains a data we care about
-                    data = checkForData(lines.get(0));
-
-                    //noinspection VariableNotUsedInsideIf
-                    if (data != null) {
-                        break;
-                    }
-
-                    // add them to the main list
-                    for (int i = 0, count = lines.size(); i < count; i++) {
-                        String line = lines.get(i);
-
-                        if (allIndent.isEmpty()) {
-                            messages.add(line);
-                        } else if (i == 0) {
-                            messages.add(firstIndent + line);
+            processThrowable(
+                    entry.getValue(),
+                    ArtifactDependencyGraph::checkForData,
+                    (data, messages) -> {
+                        SyncIssue issue;
+                        if (data != null) {
+                            issue =
+                                    new SyncIssueImpl(
+                                            SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                                            SyncIssue.SEVERITY_ERROR,
+                                            data,
+                                            String.format("Unable to resolve dependency %s", data),
+                                            null);
                         } else {
-                            messages.add(allIndent + line);
+                            issue =
+                                    new SyncIssueImpl(
+                                            SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
+                                            SyncIssue.SEVERITY_ERROR,
+                                            null,
+                                            String.format(
+                                                    "Unable to resolve dependency for '%s': %s",
+                                                    entry.getKey(), messages.get(0)),
+                                            messages);
                         }
-                    }
+                        failureConsumer.accept(issue);
+                    });
+        }
+    }
 
-                    //noinspection StringConcatenationInLoop
-                    firstIndent = allIndent + firstIndent;
-                    //noinspection StringConcatenationInLoop
-                    allIndent = allIndent + "   ";
+    private static void processThrowable(
+            @NonNull Throwable throwable,
+            @NonNull Function<String, String> dataExtractor,
+            @NonNull BiConsumer<String, List<String>> resultConsumer) {
+        Throwable cause = throwable;
+
+        // gather all the messages.
+        List<String> messages = Lists.newArrayList();
+        String firstIndent = " > ";
+        String allIndent = "";
+
+        String data = null;
+
+        while (cause != null) {
+            final String message = cause.getMessage();
+            if (message != null) {
+                List<String> lines = ImmutableList.copyOf(LINE_SPLITTER.split(message));
+
+                // check if the first line contains a data we care about
+                data = dataExtractor.apply(lines.get(0));
+
+                //noinspection VariableNotUsedInsideIf
+                if (data != null) {
+                    break;
                 }
 
-                cause = cause.getCause();
+                // add them to the main list
+                for (int i = 0, count = lines.size(); i < count; i++) {
+                    String line = lines.get(i);
+
+                    if (allIndent.isEmpty()) {
+                        messages.add(line);
+                    } else if (i == 0) {
+                        messages.add(firstIndent + line);
+                    } else {
+                        messages.add(allIndent + line);
+                    }
+                }
+
+                //noinspection StringConcatenationInLoop
+                firstIndent = allIndent + firstIndent;
+                //noinspection StringConcatenationInLoop
+                allIndent = allIndent + "   ";
             }
 
-            SyncIssue issue;
-            if (data != null) {
-                issue =
-                        new SyncIssueImpl(
-                                SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                                SyncIssue.SEVERITY_ERROR,
-                                data,
-                                String.format("Unable to resolve dependency %s", data),
-                                null);
-            } else {
-                issue =
-                        new SyncIssueImpl(
-                                SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                                SyncIssue.SEVERITY_ERROR,
-                                null,
-                                String.format(
-                                        "Unable to resolve dependency for '%s': %s",
-                                        entry.getKey(), messages.get(0)),
-                                messages);
-            }
-
-            failureConsumer.accept(issue);
+            cause = cause.getCause();
         }
+
+        resultConsumer.accept(data, messages);
     }
 
     @Nullable
@@ -691,19 +713,36 @@ public class ArtifactDependencyGraph {
         return new SimpleDependencyGraphsImpl(nodes, cdg.getProvidedLibraries());
     }
 
-    private static void handleJavadoc(
-            @NonNull Project project, @NonNull Set<ComponentIdentifier> artifacts) {
+    private static void handleSources(
+            @NonNull Project project,
+            @NonNull Set<ComponentIdentifier> artifacts,
+            @NonNull Consumer<SyncIssue> failureConsumer) {
         final DependencyHandler dependencies = project.getDependencies();
 
-        ArtifactResolutionQuery query = dependencies.createArtifactResolutionQuery();
-        query.forComponents(artifacts);
+        try {
+            ArtifactResolutionQuery query = dependencies.createArtifactResolutionQuery();
+            query.forComponents(artifacts);
 
-        @SuppressWarnings("unchecked")
-        Class<? extends Artifact>[] artifactTypesArray =
-                (Class<? extends Artifact>[])
-                        new Class<?>[] {JavadocArtifact.class, SourcesArtifact.class};
-        query.withArtifacts(JvmLibrary.class, artifactTypesArray);
-        query.execute().getResolvedComponents();
+            @SuppressWarnings("unchecked")
+            Class<? extends Artifact>[] artifactTypesArray =
+                    (Class<? extends Artifact>[]) new Class<?>[] {SourcesArtifact.class};
+            query.withArtifacts(JvmLibrary.class, artifactTypesArray);
+            query.execute().getResolvedComponents();
+        } catch (Throwable t) {
+            processThrowable(
+                    t,
+                    s -> null,
+                    (data, messages) ->
+                            failureConsumer.accept(
+                                    new SyncIssueImpl(
+                                            SyncIssue.TYPE_GENERIC,
+                                            SyncIssue.SEVERITY_WARNING,
+                                            null,
+                                            String.format(
+                                                    "Unable to download sources: %s",
+                                                    messages.get(0)),
+                                            messages)));
+        }
     }
 
     public enum DependencyType {
