@@ -13,9 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.tools.ir.server;
 
+import static android.app.ActivityManager.ProcessErrorStateInfo.NO_ERROR;
+import static com.android.tools.ir.server.Logging.LOG_TAG;
+
 import android.app.Activity;
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -28,6 +33,8 @@ import android.widget.Toast;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,18 +42,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Handler capable of restarting parts of the application in order for changes to become
- * apparent to the user:
+ * Handler capable of restarting parts of the application in order for changes to become apparent to
+ * the user:
+ *
  * <ul>
- *     <li> Apply a tiny change immediately - possible if we can detect that the change
- *          is only used in a limited context (such as in a layout) and we can directly
- *          poke the view hierarchy and schedule a paint.
- *     <li> Apply a change to the current activity. We can restart just the activity
- *          while the app continues running.
- *     <li> Restart the app with state persistence (simulates what happens when a user
- *          puts an app in the background, then it gets killed by the memory monitor,
- *          and then restored when the user brings it back
- *     <li> Restart the app completely.
+ *   <li>Apply a tiny change immediately - possible if we can detect that the change is only used in
+ *       a limited context (such as in a layout) and we can directly poke the view hierarchy and
+ *       schedule a paint.
+ *   <li>Apply a change to the current activity. We can restart just the activity while the app
+ *       continues running.
+ *   <li>Restart the app with state persistence (simulates what happens when a user puts an app in
+ *       the background, then it gets killed by the memory monitor, and then restored when the user
+ *       brings it back
+ *   <li>Restart the app completely.
  * </ul>
  */
 public class Restarter {
@@ -56,8 +64,8 @@ public class Restarter {
                 new Runnable() {
                     @Override
                     public void run() {
-                        if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                            Log.v(Logging.LOG_TAG, "Resources updated: notify activities");
+                        if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+                            Log.v(LOG_TAG, "Resources updated: notify activities");
                         }
                         updateActivity(activity);
                     }
@@ -65,15 +73,15 @@ public class Restarter {
     }
 
     private static void restartActivity(@NonNull Activity activity) {
-        if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-            Log.v(Logging.LOG_TAG, "About to restart " + activity.getClass().getSimpleName());
+        if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+            Log.v(LOG_TAG, "About to restart " + activity.getClass().getSimpleName());
         }
 
         // You can't restart activities that have parents: find the top-most activity
         while (activity.getParent() != null) {
-            if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+            if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
                 Log.v(
-                        Logging.LOG_TAG,
+                        LOG_TAG,
                         activity.getClass().getSimpleName()
                                 + " is not a top level activity; restarting "
                                 + activity.getParent().getClass().getSimpleName()
@@ -112,8 +120,8 @@ public class Restarter {
                 if (toast) {
                     showToast(foreground, "Restarting app to apply incompatible changes");
                 }
-                if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-                    Log.v(Logging.LOG_TAG, "RESTARTING APP");
+                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+                    Log.v(LOG_TAG, "RESTARTING APP");
                 }
                 @SuppressWarnings("UnnecessaryLocalVariable") // fore code clarify
                 Context context = foreground;
@@ -123,18 +131,18 @@ public class Restarter {
                         intent, PendingIntent.FLAG_CANCEL_CURRENT);
                 AlarmManager mgr = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
                 mgr.set(AlarmManager.RTC, System.currentTimeMillis() + 100, pendingIntent);
-                if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
                     Log.v(
-                            Logging.LOG_TAG,
+                            LOG_TAG,
                             "Scheduling activity "
                                     + foreground
                                     + " to start after exiting process");
                 }
             } else {
                 showToast(knownActivities.iterator().next(), "Unable to restart app");
-                if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
+                if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
                     Log.v(
-                            Logging.LOG_TAG,
+                            LOG_TAG,
                             "Couldn't find any foreground activities to restart "
                                     + "for resource refresh");
                 }
@@ -144,8 +152,8 @@ public class Restarter {
     }
 
     static void showToast(@NonNull final Activity activity, @NonNull final String text) {
-        if (Log.isLoggable(Logging.LOG_TAG, Log.VERBOSE)) {
-            Log.v(Logging.LOG_TAG, "About to show toast for activity " + activity + ": " + text);
+        if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+            Log.v(LOG_TAG, "About to show toast for activity " + activity + ": " + text);
         }
         activity.runOnUiThread(
                 new Runnable() {
@@ -156,10 +164,8 @@ public class Restarter {
                             if (context instanceof ContextWrapper) {
                                 Context base = ((ContextWrapper) context).getBaseContext();
                                 if (base == null) {
-                                    if (Log.isLoggable(Logging.LOG_TAG, Log.WARN)) {
-                                        Log.w(
-                                                Logging.LOG_TAG,
-                                                "Couldn't show toast: no base context");
+                                    if (Log.isLoggable(LOG_TAG, Log.WARN)) {
+                                        Log.w(LOG_TAG, "Couldn't show toast: no base context");
                                     }
                                     return;
                                 }
@@ -176,8 +182,8 @@ public class Restarter {
                             //        not called Looper.prepare()
                             Toast.makeText(activity, text, duration).show();
                         } catch (Throwable e) {
-                            if (Log.isLoggable(Logging.LOG_TAG, Log.WARN)) {
-                                Log.w(Logging.LOG_TAG, "Couldn't show toast", e);
+                            if (Log.isLoggable(LOG_TAG, Log.WARN)) {
+                                Log.w(LOG_TAG, "Couldn't show toast", e);
                             }
                         }
                     }
@@ -200,6 +206,11 @@ public class Restarter {
             Field activitiesField = activityThreadClass.getDeclaredField("mActivities");
             activitiesField.setAccessible(true);
 
+            // check app hasn't crashed, if it has, return empty list of activities.
+            if (hasAppCrashed(context, activityThreadClass, activityThread)) {
+                return new ArrayList<Activity>();
+            }
+
             Collection c;
             Object collection = activitiesField.get(activityThread);
 
@@ -214,25 +225,70 @@ public class Restarter {
             } else {
                 return list;
             }
-            for (Object activityRecord : c) {
-                Class activityRecordClass = activityRecord.getClass();
+
+            for (Object activityClientRecord : c) {
+                Class activityClientRecordClass = activityClientRecord.getClass();
                 if (foregroundOnly) {
-                    Field pausedField = activityRecordClass.getDeclaredField("paused");
+                    Field pausedField = activityClientRecordClass.getDeclaredField("paused");
                     pausedField.setAccessible(true);
-                    if (pausedField.getBoolean(activityRecord)) {
+                    if (pausedField.getBoolean(activityClientRecord)) {
                         continue;
                     }
                 }
-                Field activityField = activityRecordClass.getDeclaredField("activity");
+                Field activityField = activityClientRecordClass.getDeclaredField("activity");
                 activityField.setAccessible(true);
-                Activity activity = (Activity) activityField.get(activityRecord);
+                Activity activity = (Activity) activityField.get(activityClientRecord);
                 if (activity != null) {
                     list.add(activity);
                 }
             }
-        } catch (Throwable ignore) {
+        } catch (Throwable e) {
+            if (Log.isLoggable(LOG_TAG, Log.WARN)) {
+                Log.w(LOG_TAG, "Error retrieving activities", e);
+            }
         }
         return list;
+    }
+
+    /**
+     * Checks if the application has crashed by comparing the package name against the list of
+     * processes in error state.
+     */
+    private static boolean hasAppCrashed(
+            @Nullable Context context,
+            @NonNull Class activityThreadClass,
+            @Nullable Object activityThread)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        if (context == null || activityThread == null) {
+            return false;
+        }
+
+        String currentPackageName = getPackageName(activityThreadClass, activityThread);
+
+        ActivityManager manager =
+                (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.ProcessErrorStateInfo> processesInErrorState =
+                manager.getProcessesInErrorState();
+        if (processesInErrorState != null) { // returns null if no process in error state
+            for (ActivityManager.ProcessErrorStateInfo info : processesInErrorState) {
+                if (info.processName.equals(currentPackageName) && info.condition != NO_ERROR) {
+                    if (Log.isLoggable(LOG_TAG, Log.VERBOSE)) {
+                        Log.v(LOG_TAG, "App Thread has crashed, return empty activity list.");
+                    }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Use reflection to determine the package name from activity thread.
+    private static String getPackageName(
+            @NonNull Class activityThreadClass, @Nullable Object activityThread)
+            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        Method currentPackageNameMethod =
+                activityThreadClass.getDeclaredMethod("currentPackageName");
+        return (String) currentPackageNameMethod.invoke(activityThread);
     }
 
     private static void updateActivity(@NonNull Activity activity) {
@@ -271,7 +327,6 @@ public class Restarter {
         //    if (changeManager.isSimpleDelta()) {
         //        changeManager.applyDirectly(this);
         //    } else {
-
 
         // Note: This doesn't handle manifest changes like changing the application title
 
