@@ -501,6 +501,42 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_clip_path_path_over_rect");
     }
 
+    // Style tests start here
+    public void testSvgStyleBasicShapes() throws Exception {
+        checkSvgConversion("test_style_basic_shapes");
+    }
+
+    public void testSvgStyleBlobfish() throws Exception {
+        checkSvgConversion("test_style_blobfish");
+    }
+
+    public void testSvgStyleCircle() throws Exception {
+        checkSvgConversion("test_style_circle");
+    }
+
+    public void testSvgStyleGroup() throws Exception {
+        checkSvgConversion("test_style_group");
+    }
+
+    public void testSvgStyleGroupClipPath() throws Exception {
+        checkSvgConversion("test_style_group_clip_path");
+    }
+
+    public void testSvgStyleGroupDuplicateAttr() throws Exception {
+        checkSvgConversion("test_style_group_duplicate_attr");
+    }
+
+    public void testSvgStyleMultiClass() throws Exception {
+        checkSvgConversion("test_style_multi_class");
+    }
+
+    public void testSvgStyleTwoShapes() throws Exception {
+        checkSvgConversion("test_style_two_shapes");
+    }
+
+    public void testSvgStylePathClassNames() throws Exception {
+        checkSvgConversion("test_style_path_class_names");
+    }
 
     // XML files start here.
     public void testXmlIconSizeOpacity() throws Exception {

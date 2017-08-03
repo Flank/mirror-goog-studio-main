@@ -1,0 +1,32 @@
+<svg width="64" height="64">
+
+  <style type="text/css">
+    <![CDATA[
+
+        .myGreen, .myRed, .myBlue {
+           stroke-width:3;
+           stroke:rgb(0,0,0);
+        }
+
+        .myGreen {
+        	fill:rgb(255, 255, 0);
+        }
+
+        .myRed {
+            fill:rgb(255,0,255);
+		}
+
+        .myBlue {
+        	fill: rgb(0,255,255);
+        }
+
+      ]]>
+  </style>
+
+
+  <rect class="myGreen" width="30" height="20" x="20" y="20"/>
+  <circle class="myRed" cx="19" cy="19" r="15"/>
+  <ellipse class="myBlue" cx="38" cy="43" rx="8" ry="10"/>
+
+</svg>
+

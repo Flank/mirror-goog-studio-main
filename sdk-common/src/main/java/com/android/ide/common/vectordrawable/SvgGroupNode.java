@@ -108,7 +108,10 @@ class SvgGroupNode extends SvgNode {
     @Override
     public void fillPresentationAttributes(String name, String value) {
         for (SvgNode n : mChildren) {
-            n.fillPresentationAttributes(name, value);
+            // Group presentation attribute should not override child.
+            if (!n.mVdAttributesMap.containsKey(name)) {
+                n.fillPresentationAttributes(name, value);
+            }
         }
     }
 }
