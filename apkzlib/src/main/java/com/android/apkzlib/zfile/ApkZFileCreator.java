@@ -26,6 +26,7 @@ import com.google.common.io.Closer;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.annotation.Nonnull;
@@ -114,14 +115,30 @@ class ApkZFileCreator implements ApkCreator {
         try {
             ZFile toMerge = closer.register(new ZFile(zip));
 
-            Predicate<String> predicate;
+            Predicate<String> ignorePredicate;
             if (isIgnored == null) {
-                predicate = s -> false;
+                ignorePredicate = s -> false;
             } else {
-                predicate = isIgnored;
+                ignorePredicate = isIgnored;
             }
 
-            this.zip.mergeFrom(toMerge, predicate);
+            // Files that *must* be uncompressed in the result should not be merged and should be
+            // added after. This is just very slightly less efficient than ignoring just the ones
+            // that were compressed and must be uncompressed, but it is a lot simpler :)
+            Predicate<String> noMergePredicate = ignorePredicate.or(noCompressPredicate);
+
+            this.zip.mergeFrom(toMerge, noMergePredicate);
+
+            for (StoredEntry toMergeEntry : toMerge.entries()) {
+                String path = toMergeEntry.getCentralDirectoryHeader().getName();
+                if (noCompressPredicate.test(path) && !ignorePredicate.test(path)) {
+                    // This entry *must* be uncompressed so it was ignored in the merge and should
+                    // now be added to the apk.
+                    try (InputStream ignoredData = toMergeEntry.open()) {
+                        this.zip.add(path, ignoredData, false);
+                    }
+                }
+            }
         } catch (Throwable t) {
             throw closer.rethrow(t);
         } finally {
