@@ -77,6 +77,8 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.BuildOutputs;
@@ -584,14 +586,23 @@ public abstract class TaskManager {
 
             VariantScope testedVariantScope = testedVariantData.getScope();
 
+            VariantPublishingSpec testedSpec =
+                    testedVariantScope
+                            .getPublishingSpec()
+                            .getTestingSpec(variantScope.getVariantConfiguration().getType());
+
+            // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
+            VariantPublishingSpec.OutputPublishingSpec taskOutputSpec =
+                    testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
+            // now get the output type
+            TaskOutputHolder.OutputType testedOutputType = taskOutputSpec.getOutputType();
+
             // create two streams of different types.
             transformManager.addStream(
-                    OriginalStream.builder(project, "tested-code-javac-out")
+                    OriginalStream.builder(project, "tested-code-classes")
                             .addContentTypes(DefaultContentType.CLASSES)
                             .addScope(Scope.TESTED_CODE)
-                            .setFolders(
-                                    () -> ImmutableList.of(testedVariantScope.getJavaOutputDir()))
-                            .setDependency(testedVariantScope.getJavacTask().getName())
+                            .setFileCollection(testedVariantScope.getOutput(testedOutputType))
                             .build());
 
             transformManager.addStream(
@@ -1402,13 +1413,19 @@ public abstract class TaskManager {
         preCompileTask.dependsOn(tasks, scope.getPreBuildTask());
         scope.addTaskOutput(ANNOTATION_PROCESSOR_LIST, processorListFile, preCompileTask.getName());
 
+        // create the output folder
+        File outputFolder =
+                new File(
+                        globalScope.getIntermediatesDir(),
+                        "/classes/" + scope.getVariantConfiguration().getDirName());
+
         final AndroidTask<? extends JavaCompile> javacTask =
-                androidTasks.create(tasks, new JavaCompileConfigAction(scope));
+                androidTasks.create(tasks, new JavaCompileConfigAction(scope, outputFolder));
         scope.setJavacTask(javacTask);
 
         setupCompileTaskDependencies(tasks, scope, javacTask);
 
-        scope.addTaskOutput(JAVAC, scope.getJavaOutputDir(), javacTask.getName());
+        scope.addTaskOutput(JAVAC, outputFolder, javacTask.getName());
 
         postJavacCreation(tasks, scope);
 
@@ -1430,16 +1447,17 @@ public abstract class TaskManager {
      * This should not be called for classes that will also be compiled from source by jack.
      */
     public void addJavacClassesStream(VariantScope scope) {
-        checkNotNull(scope.getJavacTask());
-        // create the output stream from this task
+        // create separate streams for the output of JAVAC and for the pre/post javac
+        // bytecode hooks
         scope.getTransformManager()
                 .addStream(
                         OriginalStream.builder(project, "javac-output")
+                                // Need both classes and resources because some annotation
+                                // processors generate resources
                                 .addContentTypes(
                                         DefaultContentType.CLASSES, DefaultContentType.RESOURCES)
                                 .addScope(Scope.PROJECT)
-                                .setFolder(scope.getJavaOutputDir())
-                                .setDependency(scope.getJavacTask().getName())
+                                .setFileCollection(scope.getOutput(JAVAC))
                                 .build());
 
         scope.getTransformManager()

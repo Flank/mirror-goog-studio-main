@@ -27,6 +27,7 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AbstractAndroidCompile;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -61,7 +62,7 @@ import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.CompileClasspath;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
@@ -94,7 +95,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     private String encoding;
 
-    private File classDir;
+    private FileCollection classDir;
 
     private ArtifactCollection libraries;
 
@@ -161,13 +162,13 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
      * removed prior to .jar packaging.
      */
     @Optional
-    @InputDirectory
+    @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    public File getClassDir() {
+    public FileCollection getClassDir() {
         return classDir;
     }
 
-    public void setClassDir(File classDir) {
+    public void setClassDir(FileCollection classDir) {
         this.classDir = classDir;
     }
 
@@ -197,7 +198,8 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
             boolean displayInfo = getLogger().isEnabled(LogLevel.INFO);
 
-            Extractor extractor = new Extractor(null, classDir, displayInfo, false, false);
+            Extractor extractor =
+                    new Extractor(null, classDir.getSingleFile(), displayInfo, false, false);
 
             extractor.extractFromProjectSource(parsedUnits);
             extractor.export(output, null);
@@ -295,7 +297,11 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
             outputFile = new File(task.getDestinationDir(), SdkConstants.FN_ANNOTATIONS_ZIP);
             task.setOutput(outputFile);
             task.setTypedefFile(variantScope.getTypedefFile());
-            task.setClassDir(variantScope.getJavaOutputDir());
+
+            // FIXME Replace with TaskOutputHolder.AnchorOutputType.ALL_CLASSES
+            // https://issuetracker.google.com/64344432
+            task.setClassDir(variantScope.getOutput(TaskOutputHolder.TaskOutputType.JAVAC));
+
             task.setSource(variantScope.getVariantData().getJavaSources());
             task.setEncoding(extension.getCompileOptions().getEncoding());
             task.setSourceCompatibility(

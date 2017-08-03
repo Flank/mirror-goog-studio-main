@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.publishing;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.AIDL_PARCELABLE;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING;
@@ -136,7 +136,7 @@ public class VariantPublishingSpec {
                         // java output query is done via CLASSES instead of JAR, so provide
                         // the right backward mapping. Also add it to the runtime as it's
                         // needed to run the tests!
-                        outputSpec(APP_CLASSES, ArtifactType.CLASSES, API_AND_RUNTIME_ELEMENTS),
+                        outputSpec(ALL_CLASSES, ArtifactType.CLASSES, API_AND_RUNTIME_ELEMENTS),
                         // JAVA_RES isn't published by the app, but we need it for the unit tests
                         outputSpec(JAVA_RES, ArtifactType.JAVA_RES, API_AND_RUNTIME_ELEMENTS));
 
@@ -173,13 +173,9 @@ public class VariantPublishingSpec {
                         outputSpec(LINT_JAR, ArtifactType.LINT, API_AND_RUNTIME_ELEMENTS))
                 .withTestingSpec(
                         VariantType.UNIT_TEST,
-                        // unit test need CLASSES_FOR_UNIT_TESTS instead of LIBRARY_CLASSES to get
-                        // access to
-                        // the R class. Also scope should be API+Runtime.
-                        outputSpec(
-                                CLASSES_FOR_UNIT_TESTS,
-                                ArtifactType.CLASSES,
-                                API_AND_RUNTIME_ELEMENTS));
+                        // unit test need ALL_CLASSES instead of LIBRARY_CLASSES to get
+                        // access to the R class. Also scope should be API+Runtime.
+                        outputSpec(ALL_CLASSES, ArtifactType.CLASSES, API_AND_RUNTIME_ELEMENTS));
 
         variantSpec(
                 VariantType.FEATURE,

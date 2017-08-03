@@ -32,9 +32,11 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
     private static final ILogger LOG = LoggerWrapper.getLogger(JavaCompileConfigAction.class);
 
     @NonNull private final VariantScope scope;
+    @NonNull private final File outputFolder;
 
-    public JavaCompileConfigAction(@NonNull VariantScope scope) {
+    public JavaCompileConfigAction(@NonNull VariantScope scope, @NonNull File outputFolder) {
         this.scope = scope;
+        this.outputFolder = outputFolder;
     }
 
     @NonNull
@@ -88,7 +90,7 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         }
         javacTask.setClasspath(classpath);
 
-        javacTask.setDestinationDir(scope.getJavaOutputDir());
+        javacTask.setDestinationDir(outputFolder);
 
         CompileOptions compileOptions = globalScope.getExtension().getCompileOptions();
 

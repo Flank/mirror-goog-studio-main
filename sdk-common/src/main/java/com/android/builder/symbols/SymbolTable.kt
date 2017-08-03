@@ -38,7 +38,7 @@ import javax.lang.model.SourceVersion
  * generate the `R.java` file.
  */
 @Immutable
-abstract class SymbolTable private constructor() {
+abstract class SymbolTable protected constructor() {
 
     abstract val tablePackage: String
     abstract val symbols: ImmutableTable<ResourceType, String, Symbol>

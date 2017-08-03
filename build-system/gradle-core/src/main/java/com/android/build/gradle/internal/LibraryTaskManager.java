@@ -331,7 +331,6 @@ public class LibraryTaskManager extends TaskManager {
                             .create(
                                     tasks,
                                     new ExtractAnnotations.ConfigAction(extension, variantScope));
-            extractAnnotationsTask.dependsOn(tasks, libVariantData.getScope().getJavacTask());
 
             // publish intermediate annotation data
             variantScope.addTaskOutput(
@@ -678,7 +677,7 @@ public class LibraryTaskManager extends TaskManager {
             @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
         // create an anchor collection for usage inside the same module (unit tests basically)
         ConfigurableFileCollection fileCollection =
-                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS);
+                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
         fileCollection.from(scope.getOutput(JAVAC));
         fileCollection.from(scope.getVariantData().getAllPreJavacGeneratedBytecode());
         fileCollection.from(scope.getVariantData().getAllPostJavacGeneratedBytecode());

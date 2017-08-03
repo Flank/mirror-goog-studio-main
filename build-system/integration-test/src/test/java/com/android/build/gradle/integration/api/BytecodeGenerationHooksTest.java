@@ -139,7 +139,9 @@ public class BytecodeGenerationHooksTest {
                 result,
                 "BytecodeGeneratingTask(:app:generateBytecodeFordebugUnitTest): ",
                 false,
-                "app/build/intermediates/classes-jar/debug/classes.jar",
+                "app/build/intermediates/classes/debug",
+                "app/build/generated/preJavacbytecode/debug",
+                "app/build/generated/postJavacBytecode/debug",
                 "library/build/intermediates/intermediate-jars/debug/classes.jar",
                 "jar/build/libs/jar.jar");
     }
@@ -155,7 +157,6 @@ public class BytecodeGenerationHooksTest {
             assertThat(classes).contains("META-INF/lib.kotlin_module");
             assertThat(classes).contains("META-INF/post-lib.kotlin_module");
         }
-
     }
 
     @Test

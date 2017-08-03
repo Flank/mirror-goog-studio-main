@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.ide;
 
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
 import static com.android.builder.model.AndroidProject.PROJECT_TYPE_FEATURE;
 
@@ -41,6 +42,7 @@ import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.model.NativeLibraryFactory;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
+import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -478,9 +480,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 extraGeneratedSourceFolders != null
                         ? extraGeneratedSourceFolders
                         : Collections.emptyList(),
-                (variantData.javacTask != null)
-                        ? variantData.javacTask.getDestinationDir()
-                        : scope.getJavaOutputDir(),
+                scope.getOutput(JAVAC).getSingleFile(),
                 additionalTestClasses,
                 variantData.getJavaResourcesForUnitTesting(),
                 globalScope.getMockableAndroidJarFile(),
@@ -664,9 +664,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                         : scope.getCompileTask().getName(),
                 getGeneratedSourceFolders(variantData),
                 getGeneratedResourceFolders(variantData),
-                (variantData.javacTask != null)
-                        ? variantData.javacTask.getDestinationDir()
-                        : scope.getJavaOutputDir(),
+                scope.getOutput(JAVAC).getSingleFile(),
                 additionalTestClasses,
                 scope.getVariantData().getJavaResourcesForUnitTesting(),
                 dependencies.getFirst(),
@@ -686,6 +684,8 @@ public class ModelBuilder implements ToolingModelBuilder {
 
     private static BuildOutputSupplier<Collection<BuildOutput>> getBuildOutputSupplier(
             BaseVariantData variantData) {
+        final VariantScope variantScope = variantData.getScope();
+
         switch (variantData.getType()) {
             case DEFAULT:
             case FEATURE:
@@ -694,7 +694,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                                 VariantScope.TaskOutputType.APK,
                                 VariantScope.TaskOutputType.ABI_PACKAGED_SPLIT,
                                 VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_PACKAGED_SPLIT),
-                        ImmutableList.of(variantData.getScope().getApkLocation()));
+                        ImmutableList.of(variantScope.getApkLocation()));
             case LIBRARY:
                 ApkInfo mainApkInfo =
                         ApkInfo.of(VariantOutput.OutputType.MAIN, ImmutableList.of(), 0);
@@ -703,27 +703,49 @@ public class ModelBuilder implements ToolingModelBuilder {
                                 new BuildOutput(
                                         VariantScope.TaskOutputType.AAR,
                                         mainApkInfo,
-                                        variantData
-                                                .getScope()
+                                        variantScope
                                                 .getOutput(TaskOutputHolder.TaskOutputType.AAR)
                                                 .getSingleFile())));
             case ANDROID_TEST:
                 return new BuildOutputsSupplier(
                         ImmutableList.of(VariantScope.TaskOutputType.APK),
-                        ImmutableList.of(variantData.getScope().getApkLocation()));
+                        ImmutableList.of(variantScope.getApkLocation()));
             case UNIT_TEST:
                 return (BuildOutputSupplier<Collection<BuildOutput>>)
-                        () ->
-                                ImmutableList.of(
-                                        new BuildOutput(
-                                                VariantScope.TaskOutputType.JAVAC,
-                                                ApkInfo.of(
-                                                        VariantOutput.OutputType.MAIN,
-                                                        ImmutableList.of(),
-                                                        variantData
-                                                                .getVariantConfiguration()
-                                                                .getVersionCode()),
-                                                variantData.getScope().getJavaOutputDir()));
+                        () -> {
+                            final BaseVariantData testedVariantData =
+                                    variantScope.getTestedVariantData();
+                            //noinspection ConstantConditions
+                            final VariantScope testedVariantScope = testedVariantData.getScope();
+
+                            VariantPublishingSpec testedSpec =
+                                    testedVariantScope
+                                            .getPublishingSpec()
+                                            .getTestingSpec(
+                                                    variantScope
+                                                            .getVariantConfiguration()
+                                                            .getType());
+
+                            // get the OutputPublishingSpec from the ArtifactType for this particular variant spec
+                            VariantPublishingSpec.OutputPublishingSpec taskOutputSpec =
+                                    testedSpec.getSpec(AndroidArtifacts.ArtifactType.CLASSES);
+                            // now get the output type
+                            TaskOutputHolder.OutputType testedOutputType =
+                                    taskOutputSpec.getOutputType();
+
+                            return ImmutableList.of(
+                                    new BuildOutput(
+                                            JAVAC,
+                                            ApkInfo.of(
+                                                    VariantOutput.OutputType.MAIN,
+                                                    ImmutableList.of(),
+                                                    variantData
+                                                            .getVariantConfiguration()
+                                                            .getVersionCode()),
+                                            variantScope
+                                                    .getOutput(testedOutputType)
+                                                    .getSingleFile()));
+                        };
             case INSTANTAPP:
             default:
                 throw new RuntimeException("Unhandled build type " + variantData.getType());

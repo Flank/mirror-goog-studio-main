@@ -54,7 +54,7 @@ import com.google.common.collect.ImmutableList
  * this class is independent of any use.
  */
 @Immutable
-abstract class Symbol private constructor() {
+abstract class Symbol protected constructor() {
 
     abstract val resourceType: ResourceType
     abstract val value:String
