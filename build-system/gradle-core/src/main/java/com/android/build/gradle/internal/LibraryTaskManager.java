@@ -684,18 +684,21 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     private void excludeDataBindingClassesIfNecessary(
-            @NonNull final VariantScope variantScope, @NonNull LibraryBaseTransform transform) {
+            @NonNull VariantScope variantScope, @NonNull LibraryBaseTransform transform) {
         if (!extension.getDataBinding().isEnabled()) {
             return;
         }
         transform.addExcludeListProvider(
                 () -> {
-                    final File excludeFile =
+                    File excludeFile =
                             variantScope.getVariantData().getType().isExportDataBindingClassList()
                                     ? variantScope.getGeneratedClassListOutputFileForDataBinding()
                                     : null;
+                    File dataBindingFolder = variantScope.getBuildFolderForDataBindingCompiler();
                     return dataBindingBuilder.getJarExcludeList(
-                            variantScope.getVariantData().getLayoutXmlProcessor(), excludeFile);
+                            variantScope.getVariantData().getLayoutXmlProcessor(),
+                            excludeFile,
+                            dataBindingFolder);
                 });
     }
 
