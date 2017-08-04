@@ -152,7 +152,7 @@ public class XmlDocument {
             boolean addImplicitPermissions) {
 
         if (getFileType() == Type.MAIN) {
-            mergingReportBuilder.getActionRecorder().recordDefaultNodeAction(getRootNode());
+            mergingReportBuilder.getActionRecorder().recordAddedNodeAction(getRootNode(), false);
         }
 
         getRootNode().mergeWithLowerPriorityNode(

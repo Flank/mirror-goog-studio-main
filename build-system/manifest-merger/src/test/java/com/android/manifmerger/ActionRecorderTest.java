@@ -306,6 +306,78 @@ public class ActionRecorderTest extends TestCase {
                 actions.getNodeRecords(originalNodeKey), actions.getNodeRecords(changedNodeKey));
     }
 
+    public void testRecordAddedNodeAction()
+            throws ParserConfigurationException, SAXException, IOException {
+
+        String other =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/apk/res/android/tools\"\n"
+                        + "    package=\"com.example.lib3\">\n"
+                        + "\n"
+                        + "    <activity android:name=\"activityOne\">\n"
+                        + "        <meta-data\n"
+                        + "            android:name=\"foo\"\n"
+                        + "            android:value=\"bar\"/>\n"
+                        + "    </activity>\n"
+                        + "\n"
+                        + "</manifest>";
+
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), REFEFENCE_DOCUMENT), REFERENCE);
+
+        XmlDocument otherDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "other_document"), other);
+
+        XmlElement activityElement =
+                otherDocument
+                        .getRootNode()
+                        .getNodeByTypeAndKey(
+                                ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne")
+                        .get();
+        XmlElement metaDataElement =
+                activityElement.getNodeByTypeAndKey(ManifestModel.NodeTypes.META_DATA, "foo").get();
+
+        // added during initial document loading
+        mActionRecorderBuilder.recordAddedNodeAction(xmlDocument.getRootNode(), false);
+
+        Actions firstActions = mActionRecorderBuilder.build();
+        assertEquals(3, firstActions.getNodeKeys().size());
+        assertEquals(1, firstActions.getNodeRecords(activityElement.getId()).size());
+
+        // added by highest priority manifest, exhaustiveSearch false
+        mActionRecorderBuilder.recordAddedNodeAction(otherDocument.getRootNode(), false);
+
+        Actions secondActions = mActionRecorderBuilder.build();
+        assertEquals(3, secondActions.getNodeKeys().size());
+        assertEquals(1, secondActions.getNodeRecords(activityElement.getId()).size());
+
+        // added by highest priority manifest, exhaustiveSearch true
+        mActionRecorderBuilder.recordAddedNodeAction(otherDocument.getRootNode(), true);
+
+        Actions thirdActions = mActionRecorderBuilder.build();
+        XmlNode.NodeKey metaDataNodeKey = metaDataElement.getId();
+        assertEquals(4, thirdActions.getNodeKeys().size());
+        assertEquals(1, thirdActions.getNodeRecords(activityElement.getId()).size());
+        assertEquals(1, thirdActions.getNodeRecords(metaDataNodeKey).size());
+        assertEquals(
+                Actions.ActionType.ADDED,
+                thirdActions.getNodeRecords(metaDataNodeKey).get(0).getActionType());
+        assertEquals(2, thirdActions.getRecordedAttributeNames(metaDataNodeKey).size());
+        for (XmlNode.NodeName nodeName : thirdActions.getRecordedAttributeNames(metaDataNodeKey)) {
+            assertEquals(1, thirdActions.getAttributeRecords(metaDataNodeKey, nodeName).size());
+            assertEquals(
+                    Actions.ActionType.ADDED,
+                    thirdActions
+                            .getAttributeRecords(metaDataNodeKey, nodeName)
+                            .get(0)
+                            .getActionType());
+        }
+    }
+
     private void appendNode(StringBuilder out,
             Actions.ActionType actionType,
             String docString,

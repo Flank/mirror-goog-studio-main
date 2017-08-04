@@ -776,7 +776,7 @@ public class ManifestMerger2 {
         // are used in key attributes.
         performPlaceHolderSubstitution(manifestInfo, xmlDocument, builder, mMergeType);
 
-        builder.getActionRecorder().recordDefaultNodeAction(xmlDocument.getRootNode());
+        builder.getActionRecorder().recordAddedNodeAction(xmlDocument.getRootNode(), false);
 
         return new LoadedManifestInfo(manifestInfo,
                 Optional.fromNullable(originalPackageName), xmlDocument);
@@ -847,8 +847,16 @@ public class ManifestMerger2 {
                     lowerPriorityDocument.getXmlDocument(), mergingReportBuilder,
                     !mOptionalFeatures.contains(Invoker.Feature.NO_IMPLICIT_PERMISSION_ADDITION));
         } else {
-            mergingReportBuilder.getActionRecorder().recordDefaultNodeAction(
-                    lowerPriorityDocument.getXmlDocument().getRootNode());
+            // exhaustiveSearch is true in recordAddedNodeAction() below because some of this
+            // manifest's nodes might have already been recorded from the loading of
+            // the main manifest, but we want to record any unrecorded descendants.
+            // e.g., if the main manifest did not contain any meta-data nodes below its
+            // application node, we still want to record the addition of any such
+            // meta-data nodes this manifest contains.
+            mergingReportBuilder
+                    .getActionRecorder()
+                    .recordAddedNodeAction(
+                            lowerPriorityDocument.getXmlDocument().getRootNode(), true);
             result = Optional.of(lowerPriorityDocument.getXmlDocument());
         }
 
@@ -895,7 +903,7 @@ public class ManifestMerger2 {
             // a placeholder in a key element, we however do not need to record these
             // substitutions so feed it with a fake merging report.
             MergingReport.Builder builder = new MergingReport.Builder(mergingReportBuilder.getLogger());
-            builder.getActionRecorder().recordDefaultNodeAction(libraryDocument.getRootNode());
+            builder.getActionRecorder().recordAddedNodeAction(libraryDocument.getRootNode(), false);
             performPlaceHolderSubstitution(
                     manifestInfo, libraryDocument, builder, MergeType.LIBRARY);
             if (builder.hasErrors()) {
