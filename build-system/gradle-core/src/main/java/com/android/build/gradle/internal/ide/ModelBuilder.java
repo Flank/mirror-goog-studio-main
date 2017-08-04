@@ -521,7 +521,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 result =
                         Pair.of(
                                 EMPTY_DEPENDENCIES_IMPL,
-                                graph.createLevel2DependencyGraph(
+                                graph.createLevel4DependencyGraph(
                                         variantScope,
                                         modelWithFullDependency,
                                         downloadSources,
