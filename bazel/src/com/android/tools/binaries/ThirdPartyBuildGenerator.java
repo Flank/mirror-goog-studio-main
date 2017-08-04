@@ -84,6 +84,7 @@ public class ThirdPartyBuildGenerator {
      */
     static final ImmutableList<Exclusion> EXCLUSIONS =
             ImmutableList.of(
+                    new Exclusion("com.google.guava", "guava-jdk5", "*", "*"),
                     new Exclusion("org.ow2.asm", "asm-all", "*", "*"),
                     new Exclusion("org.ow2.asm", "asm-debug-all", "*", "*"));
 

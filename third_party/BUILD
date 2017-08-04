@@ -48,7 +48,6 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/com/google/api-client/google-api-client/1.22.0:jar",
     visibility = ["//visibility:public"],
     exports = [
-        ":com.google.guava_guava-jdk5",
         ":com.google.http-client_google-http-client-jackson2",
         ":com.google.oauth-client_google-oauth-client",
     ],
@@ -106,13 +105,6 @@ maven_java_library(
         ":com.google.j2objc_j2objc-annotations",
         ":org.codehaus.mojo_animal-sniffer-annotations",
     ],
-)
-
-maven_java_library(
-    name = "com.google.guava_guava-jdk5",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/guava/guava-jdk5/17.0:jar",
-    visibility = ["//visibility:public"],
-    exports = [],
 )
 
 maven_java_library(
@@ -845,6 +837,13 @@ maven_java_library(
 maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-gradle-plugin-api",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin-api/1.1.3-2:jar",
+    visibility = ["//visibility:public"],
+    exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
+)
+
+maven_java_library(
+    name = "org.jetbrains.kotlin_kotlin-reflect",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-reflect/1.1.3-2:jar",
     visibility = ["//visibility:public"],
     exports = [":org.jetbrains.kotlin_kotlin-stdlib"],
 )

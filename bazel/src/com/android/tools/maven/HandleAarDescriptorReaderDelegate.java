@@ -29,7 +29,8 @@ public class HandleAarDescriptorReaderDelegate extends ArtifactDescriptorReaderD
             RepositorySystemSession session, ArtifactDescriptorResult result, Model model) {
         super.populateResult(session, result, model);
 
-        if (!model.getPackaging().equals(result.getArtifact().getExtension())) {
+        if (!model.getPackaging().equals(result.getArtifact().getExtension())
+                && !model.getPackaging().equals("bundle")) {
             // This is something that Gradle seems to handle automatically, we have to do the same.
             result.setArtifact(
                     new DifferentExtensionArtifact(model.getPackaging(), result.getArtifact()));
