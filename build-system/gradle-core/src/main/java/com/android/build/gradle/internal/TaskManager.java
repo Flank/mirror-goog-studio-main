@@ -1645,6 +1645,7 @@ public abstract class TaskManager {
                     TaskOutputHolder.TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY,
                     unitTestConfigDir,
                     generateTestConfig.getName());
+            variantScope.getCompileTask().dependsOn(tasks, generateTestConfig);
         }
 
         // :app:compileDebugUnitTestSources should be enough for running tests from AS, so add
