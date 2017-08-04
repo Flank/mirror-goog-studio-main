@@ -94,23 +94,37 @@ public class ActionRecorder {
             new LinkedHashMap<NodeKey, Actions.DecisionTreeRecord>();
 
     /**
-     * When the first xml file is loaded, there is nothing to merge with, however, each xml element
-     * and attribute added to the initial merged file need to be recorded.
+     * Record an {@link com.android.manifmerger.Actions.ActionType.ADDED} action for an unrecorded
+     * XmlElement and its unrecorded descendants. If exhaustiveSearch is true, we check all the
+     * XmlElement's descendants; if it's false, we stop searching through an XmlElement's
+     * descendants if that XmlElement has already been recorded.
      *
-     * @param xmlElement xml element added to the initial merged document.
+     * <p>When the first xml file is loaded, there is nothing to merge with, however, each xml
+     * element and attribute added to the initial merged file need to be recorded.
+     *
+     * @param xmlElement XmlElement added to the merged document.
+     * @param exhaustiveSearch whether to check an already recorded XmlElement's descendants
      */
-    synchronized void recordDefaultNodeAction(@NonNull XmlElement xmlElement) {
-        Actions.DecisionTreeRecord nodeDecisionTree = getDecisionTreeRecord(xmlElement);
-        if (nodeDecisionTree.getNodeRecords().isEmpty()) {
+    synchronized void recordAddedNodeAction(
+            @NonNull XmlElement xmlElement, boolean exhaustiveSearch) {
+        boolean nodeRecorded = !getDecisionTreeRecord(xmlElement).getNodeRecords().isEmpty();
+        if (!nodeRecorded) {
             recordNodeAction(xmlElement, Actions.ActionType.ADDED);
-            for (XmlAttribute xmlAttribute : xmlElement.getAttributes()) {
-                AttributeOperationType attributeOperation =
-                        xmlElement.getAttributeOperationType(xmlAttribute.getName());
-                recordAttributeAction(xmlAttribute, Actions.ActionType.ADDED, attributeOperation);
+        } else if (!exhaustiveSearch) {
+            return;
+        }
+        for (XmlAttribute xmlAttribute : xmlElement.getAttributes()) {
+            // check !nodeRecorded first because if it's true, we don't have
+            // to call getAttributeCreationRecord(xmlAttribute)
+            if (!nodeRecorded || getAttributeCreationRecord(xmlAttribute) == null) {
+                recordAttributeAction(
+                        xmlAttribute,
+                        Actions.ActionType.ADDED,
+                        xmlElement.getAttributeOperationType(xmlAttribute.getName()));
             }
-            for (XmlElement childNode : xmlElement.getMergeableElements()) {
-                recordDefaultNodeAction(childNode);
-            }
+        }
+        for (XmlElement childNode : xmlElement.getMergeableElements()) {
+            recordAddedNodeAction(childNode, exhaustiveSearch);
         }
     }
 

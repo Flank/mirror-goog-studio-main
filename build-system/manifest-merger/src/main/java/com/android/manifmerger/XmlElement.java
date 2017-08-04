@@ -656,7 +656,7 @@ public class XmlElement extends OrphanXmlElement {
         List<Node> comments = getLeadingComments(elementToBeAdded.getXml());
         // record all the actions before the node is moved from the library document to the main
         // merged document.
-        mergingReport.getActionRecorder().recordDefaultNodeAction(elementToBeAdded);
+        mergingReport.getActionRecorder().recordAddedNodeAction(elementToBeAdded, false);
 
         // only in the new file, just import it.
         Node node = getXml().getOwnerDocument().adoptNode(elementToBeAdded.getXml());
