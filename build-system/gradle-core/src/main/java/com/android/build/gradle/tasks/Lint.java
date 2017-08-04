@@ -133,9 +133,6 @@ public class Lint extends BaseTask {
 
     @TaskAction
     public void lint() throws IOException {
-        // we run by default in headless mode, so the JVM doesn't steal focus.
-        System.setProperty("java.awt.headless", "true");
-
         AndroidProject modelProject = createAndroidProject(getProject());
         if (getVariantName() != null && !getVariantName().isEmpty()) {
             for (Variant variant : modelProject.getVariants()) {

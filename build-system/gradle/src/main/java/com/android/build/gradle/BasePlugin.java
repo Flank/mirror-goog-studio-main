@@ -236,6 +236,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     }
 
     protected void apply(@NonNull Project project) {
+        // We run by default in headless mode, so the JVM doesn't steal focus.
+        System.setProperty("java.awt.headless", "true");
 
         project.getPluginManager().apply(AndroidBasePlugin.class);
         checkPluginVersion();
