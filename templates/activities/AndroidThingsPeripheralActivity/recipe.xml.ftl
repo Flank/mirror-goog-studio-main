@@ -5,6 +5,8 @@
   <#include "../common/recipe_theme.xml.ftl" />
   </#if>
 
+  <dependency mavenUrl="com.android.support:support-v4:${buildApi}.+" />
+
   <merge from="root/AndroidManifest.xml.ftl"
            to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
   <merge from="root/build.gradle.ftl"

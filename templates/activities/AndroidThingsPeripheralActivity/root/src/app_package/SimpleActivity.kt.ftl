@@ -40,7 +40,6 @@ import com.google.android.things.contrib.driver.cap12xx.Cap12xx
 import com.google.android.things.contrib.driver.cap12xx.Cap12xxInputDriver
 </#if>
 <#if integrateAccelerometer || integrateTemperaturePressureSensor>
-import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -421,7 +420,7 @@ class ${activityClass} : ${superClass}() {
 <#if integrateAccelerometer>
     private fun startAccelerometerRequest() {
         this.startService(Intent(this, ${accelerometerServiceClass}::class.java))
-        mSensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         mSensorManager.registerDynamicSensorCallback(mDynamicSensorCallback)
     }
 
@@ -435,7 +434,7 @@ class ${activityClass} : ${superClass}() {
     private fun startLocationRequest() {
         this.startService(Intent(this, ${gpsServiceClass}::class.java))
 
-        mLocationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        mLocationManager = getSystemService(LOCATION_SERVICE) as LocationManager
 
         // We need permission to get location updates
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -456,7 +455,7 @@ class ${activityClass} : ${superClass}() {
 <#if integrateTemperaturePressureSensor>
     private fun startTemperaturePressureRequest() {
         this.startService(Intent(this, ${temperaturePressureServiceClass}::class.java))
-        mSensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        mSensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
         mSensorManager.registerDynamicSensorCallback(mDynamicSensorCallback)
     }
 
