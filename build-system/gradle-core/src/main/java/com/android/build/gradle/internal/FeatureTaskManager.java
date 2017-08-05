@@ -24,6 +24,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
@@ -102,7 +103,20 @@ public class FeatureTaskManager extends TaskManager {
             if (androidVersion != null) {
                 message += " compileSdkVersion is set to " + androidVersion.getApiString();
             }
-            throw new GradleException(message);
+            androidBuilder
+                    .getErrorReporter()
+                    .handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
+        }
+
+        // Ensure we're not using aapt1.
+        if (AaptGeneration.fromProjectOptions(projectOptions) == AaptGeneration.AAPT_V1
+                && !extension.getBaseFeature()) {
+            androidBuilder
+                    .getErrorReporter()
+                    .handleSyncError(
+                            null,
+                            SyncIssue.TYPE_GENERIC,
+                            "Non-base feature modules require AAPTv2 to build.");
         }
 
         BaseVariantData variantData = variantScope.getVariantData();
