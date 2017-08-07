@@ -31,7 +31,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.StringReader;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
@@ -43,7 +42,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
 
 @SuppressWarnings("javadoc")
 public class XmlUtilsTest extends TestCase {
@@ -570,15 +568,15 @@ public class XmlUtilsTest extends TestCase {
         Element root = XmlUtils.getFirstSubTag(document);
         assertThat(root).isNotNull();
         assertThat(XmlUtils.getNextTag(root)).isNull();
-        Element child1 = XmlUtils.getFirstSubTagTagByName(root, "child1");
+        Element child1 = XmlUtils.getFirstSubTagByName(root, "child1");
         assertThat(child1).isNotNull();
         Element child2 = XmlUtils.getNextTagByName(child1, "child2");
         assertThat(child2).isNotNull();
         assertThat(XmlUtils.getPreviousTagByName(child2, "child1")).isSameAs(child1);
-        assertThat(XmlUtils.getFirstSubTagTagByName(root, "child2")).isSameAs(child2);
+        assertThat(XmlUtils.getFirstSubTagByName(root, "child2")).isSameAs(child2);
         Element child3 = XmlUtils.getNextTagByName(child1, "child3");
         assertThat(child3).isNotNull();
-        assertThat(XmlUtils.getFirstSubTagTagByName(root, "child2")).isSameAs(child2);
+        assertThat(XmlUtils.getFirstSubTagByName(root, "child2")).isSameAs(child2);
         Element grandchild = XmlUtils.getFirstSubTag(child3);
         assertThat(grandchild).isNotNull();
         assertThat(XmlUtils.getNextTag(child3)).isNull();

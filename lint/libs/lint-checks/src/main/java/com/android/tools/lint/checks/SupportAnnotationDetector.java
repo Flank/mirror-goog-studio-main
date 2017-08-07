@@ -2550,11 +2550,11 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 return false;
             }
 
-            Element application = XmlUtils.getFirstSubTagTagByName(manifest, TAG_APPLICATION);
+            Element application = XmlUtils.getFirstSubTagByName(manifest, TAG_APPLICATION);
             if (application == null) {
                 return false;
             }
-            Element usesLibrary = XmlUtils.getFirstSubTagTagByName(application, TAG_USES_LIBRARY);
+            Element usesLibrary = XmlUtils.getFirstSubTagByName(application, TAG_USES_LIBRARY);
 
             while (usesLibrary != null && mIsAndroidThingsProject == null) {
                 String name = usesLibrary.getAttributeNS(ANDROID_URI, ATTR_NAME);

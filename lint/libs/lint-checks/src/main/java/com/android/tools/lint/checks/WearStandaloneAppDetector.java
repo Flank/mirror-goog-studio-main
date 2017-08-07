@@ -158,7 +158,7 @@ public class WearStandaloneAppDetector extends Detector implements Detector.XmlS
                 && context.getMainProject().getTargetSdk() >= 23) {
             XmlContext xmlContext = (XmlContext) context;
             Element root = xmlContext.document.getDocumentElement();
-            Element application = XmlUtils.getFirstSubTagTagByName(root, NODE_APPLICATION);
+            Element application = XmlUtils.getFirstSubTagByName(root, NODE_APPLICATION);
             if (application != null) {
                 xmlContext.report(WEAR_STANDALONE_APP_ISSUE, application,
                         xmlContext.getLocation(application),

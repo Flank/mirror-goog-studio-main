@@ -17,7 +17,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.CLASS_ACTIVITY;
-import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
+import static com.android.utils.XmlUtils.getFirstSubTagByName;
 import static com.android.utils.XmlUtils.getSubTagsByName;
 import static com.android.xml.AndroidManifest.ATTRIBUTE_NAME;
 import static com.android.xml.AndroidManifest.NODE_ACTIVITY;
@@ -373,7 +373,7 @@ public class AppIndexingApiDetector extends Detector implements XmlScanner, Uast
                 for (Element app : getSubTagsByName(child, NODE_APPLICATION)) {
                     for (Element act : getSubTagsByName(app, NODE_ACTIVITY)) {
                         for (Element intent : getSubTagsByName(act, NODE_INTENT)) {
-                            boolean hasData = getFirstSubTagTagByName(intent, NODE_DATA) != null;
+                            boolean hasData = getFirstSubTagByName(intent, NODE_DATA) != null;
                             if (hasData && act.hasAttributeNS(ANDROID_URI, ATTRIBUTE_NAME)) {
                                 String activityName = LintUtils.resolveManifestName(act);
                                 activitiesToCheck.add(activityName);

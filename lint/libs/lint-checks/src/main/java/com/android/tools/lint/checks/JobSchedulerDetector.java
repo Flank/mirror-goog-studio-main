@@ -160,12 +160,12 @@ public class JobSchedulerDetector extends Detector implements UastScanner {
         if (manifest == null) {
             return;
         }
-        Element application = XmlUtils.getFirstSubTagTagByName(manifest, TAG_APPLICATION);
+        Element application = XmlUtils.getFirstSubTagByName(manifest, TAG_APPLICATION);
         if (application == null) {
             return;
         }
 
-        Element service = XmlUtils.getFirstSubTagTagByName(application, TAG_SERVICE);
+        Element service = XmlUtils.getFirstSubTagByName(application, TAG_SERVICE);
 
         while (service != null) {
             String name = LintUtils.resolveManifestName(service).replace('$', '.');

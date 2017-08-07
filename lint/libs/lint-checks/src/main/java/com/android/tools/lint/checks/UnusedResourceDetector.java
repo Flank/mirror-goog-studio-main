@@ -28,7 +28,7 @@ import static com.android.SdkConstants.TAG_LAYOUT;
 import static com.android.SdkConstants.TOOLS_PREFIX;
 import static com.android.SdkConstants.XMLNS_PREFIX;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
-import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
+import static com.android.utils.XmlUtils.getFirstSubTagByName;
 import static com.android.utils.XmlUtils.getNextTagByName;
 import static com.google.common.base.Charsets.UTF_8;
 
@@ -503,7 +503,7 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
                 }
                 String fileName = context.file.getName();
                 String resourceName = LintUtils.getBaseName(fileName);
-                Element data = getFirstSubTagTagByName(root, TAG_DATA);
+                Element data = getFirstSubTagByName(root, TAG_DATA);
                 String bindingClass = null;
                 while (data != null) {
                     bindingClass = data.getAttribute(ATTR_CLASS);

@@ -906,7 +906,7 @@ public class XmlUtils {
 
         public NamedSubTagIterator(@Nullable Node parent, @NonNull String name) {
             this.name = name;
-            this.next = getFirstSubTagTagByName(parent, name);
+            this.next = getFirstSubTagByName(parent, name);
         }
 
         @Override
@@ -984,9 +984,15 @@ public class XmlUtils {
         return null;
     }
 
-    /** Returns the next sibling element from the given node that matches the given name */
+    @Deprecated
     @Nullable
     public static Element getFirstSubTagTagByName(@Nullable Node parent, @NonNull String name) {
+        return getFirstSubTagByName(parent, name);
+    }
+
+    /** Returns the next sibling element from the given node that matches the given name */
+    @Nullable
+    public static Element getFirstSubTagByName(@Nullable Node parent, @NonNull String name) {
         if (parent == null) {
             return null;
         }
