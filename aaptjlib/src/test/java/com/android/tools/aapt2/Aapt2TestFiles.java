@@ -56,4 +56,15 @@ public class Aapt2TestFiles {
         lines.add("</resources>");
         Files.write(stringsXml, lines, StandardCharsets.UTF_8);
     }
+
+    static void writeIncorrectLayout(@Nonnull Path layoutXml) throws IOException {
+        Files.createDirectories(layoutXml.getParent());
+        List<String> lines = new ArrayList<>();
+        lines.add("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+        lines.add("<LinearLayout");
+        lines.add("    xmlns:android=\"http://schemas.android.com/apk/res/android\"");
+        lines.add("    android:gravity=\"centervertical\"");
+        lines.add("/>");
+        Files.write(layoutXml, lines, StandardCharsets.UTF_8);
+    }
 }
