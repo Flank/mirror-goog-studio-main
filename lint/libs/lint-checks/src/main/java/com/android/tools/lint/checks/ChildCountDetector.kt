@@ -73,15 +73,13 @@ ListAdapter.""",
                         "http://developer.android.com/reference/android/widget/AdapterView.html")
     }
 
-    override fun getApplicableElements(): Collection<String>? {
-        return Arrays.asList(
-                SCROLL_VIEW,
-                HORIZONTAL_SCROLL_VIEW,
-                LIST_VIEW,
-                GRID_VIEW
-                // TODO: Shouldn't Spinner be in this list too? (Was not there in layoutopt)
-        )
-    }
+    override fun getApplicableElements(): Collection<String>? = Arrays.asList(
+            SCROLL_VIEW,
+            HORIZONTAL_SCROLL_VIEW,
+            LIST_VIEW,
+            GRID_VIEW
+            // TODO: Shouldn't Spinner be in this list too? (Was not there in layoutopt)
+    )
 
     override fun visitElement(context: XmlContext, element: Element) {
         val childCount = LintUtils.getChildCount(element)

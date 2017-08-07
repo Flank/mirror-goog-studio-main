@@ -190,7 +190,7 @@ constructor(client: LintCliClient, output: File) : Reporter(client, output) {
 
     @Throws(IOException::class)
     private fun indent(writer: Writer, indent: Int) {
-        for (level in 0..indent - 1) {
+        for (level in 0 until indent) {
             writer.write("    ")
         }
     }

@@ -60,14 +60,13 @@ developer believes the text to be functional)""",
 
     private var foundText: Boolean = false
 
-    override fun appliesTo(folderType: ResourceFolderType): Boolean {
-        return folderType == ResourceFolderType.LAYOUT
-                || folderType == ResourceFolderType.MENU
-                || folderType == ResourceFolderType.ANIM
-                || folderType == ResourceFolderType.ANIMATOR
-                || folderType == ResourceFolderType.DRAWABLE
-                || folderType == ResourceFolderType.COLOR
-    }
+    override fun appliesTo(folderType: ResourceFolderType): Boolean =
+            folderType == ResourceFolderType.LAYOUT
+                    || folderType == ResourceFolderType.MENU
+                    || folderType == ResourceFolderType.ANIM
+                    || folderType == ResourceFolderType.ANIMATOR
+                    || folderType == ResourceFolderType.DRAWABLE
+                    || folderType == ResourceFolderType.COLOR
 
     override fun visitDocument(context: XmlContext, document: Document) {
         foundText = false
@@ -100,7 +99,7 @@ developer believes the text to be functional)""",
                             var column = start.column
                             var offset = start.offset
 
-                            for (j in 0..i - 1) {
+                            for (j in 0 until i) {
                                 offset++
 
                                 if (text[j] == '\n') {

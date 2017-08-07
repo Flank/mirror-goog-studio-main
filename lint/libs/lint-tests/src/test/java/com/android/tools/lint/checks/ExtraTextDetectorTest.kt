@@ -19,9 +19,7 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.detector.api.Detector
 
 class ExtraTextDetectorTest : AbstractCheckTest() {
-    override fun getDetector(): Detector {
-        return ExtraTextDetector()
-    }
+    override fun getDetector(): Detector = ExtraTextDetector()
 
     fun testBroken() {
         val expected =

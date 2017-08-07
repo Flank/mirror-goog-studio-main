@@ -130,9 +130,7 @@ open class JavaContext
      */
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("Use {@link getLocation(UElement)} instead (see {@link UastScanner})")
-    fun getLocation(node: Node): Location {
-        return parser!!.getLocation(this, node)
-    }
+    fun getLocation(node: Node): Location = parser!!.getLocation(this, node)
 
     /**
      * Returns a location for the given node range (from the starting offset of the first node to
@@ -154,9 +152,7 @@ open class JavaContext
             from: Node,
             fromDelta: Int,
             to: Node,
-            toDelta: Int): Location {
-        return parser!!.getRangeLocation(this, from, fromDelta, to, toDelta)
-    }
+            toDelta: Int): Location = parser!!.getRangeLocation(this, from, fromDelta, to, toDelta)
 
     /**
      * Returns a location for the given node range (from the starting offset of the first node to
@@ -177,10 +173,10 @@ open class JavaContext
             fromDelta: Int,
             to: PsiElement,
             toDelta: Int): Location {
-        if (uastParser != null) {
-            return uastParser!!.getRangeLocation(this, from, fromDelta, to, toDelta)
+        return if (uastParser != null) {
+            uastParser!!.getRangeLocation(this, from, fromDelta, to, toDelta)
         } else {
-            return parser!!.getRangeLocation(this, from, fromDelta, to, toDelta)
+            parser!!.getRangeLocation(this, from, fromDelta, to, toDelta)
         }
     }
 
@@ -188,18 +184,16 @@ open class JavaContext
             from: UElement,
             fromDelta: Int,
             to: UElement,
-            toDelta: Int): Location {
-        return uastParser!!.getRangeLocation(this, from, fromDelta, to, toDelta)
-    }
+            toDelta: Int): Location =
+            uastParser!!.getRangeLocation(this, from, fromDelta, to, toDelta)
 
     // Disambiguate since UDeclarations implement both PsiElement and UElement
     fun getRangeLocation(
             from: UDeclaration,
             fromDelta: Int,
             to: UDeclaration,
-            toDelta: Int): Location {
-        return uastParser!!.getRangeLocation(this, from as PsiElement, fromDelta, to, toDelta)
-    }
+            toDelta: Int): Location =
+            uastParser!!.getRangeLocation(this, from as PsiElement, fromDelta, to, toDelta)
 
     /**
      * Returns a location for the given node range (from the starting offset of the first node to
@@ -218,19 +212,18 @@ open class JavaContext
             from: PsiElement,
             fromDelta: Int,
             length: Int): Location {
-        if (uastParser != null) {
-            return uastParser!!.getRangeLocation(this, from, fromDelta, fromDelta + length)
+        return if (uastParser != null) {
+            uastParser!!.getRangeLocation(this, from, fromDelta, fromDelta + length)
         } else {
-            return parser!!.getRangeLocation(this, from, fromDelta, fromDelta + length)
+            parser!!.getRangeLocation(this, from, fromDelta, fromDelta + length)
         }
     }
 
     fun getRangeLocation(
             from: UElement,
             fromDelta: Int,
-            length: Int): Location {
-        return uastParser!!.getRangeLocation(this, from, fromDelta, fromDelta + length)
-    }
+            length: Int): Location =
+            uastParser!!.getRangeLocation(this, from, fromDelta, fromDelta + length)
 
     /**
      * Returns a [Location] for the given node. This attempts to pick a shorter
@@ -244,9 +237,7 @@ open class JavaContext
      */
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("Use {@link getNameLocation(UElement)} instead (see {@link UastScanner})")
-    fun getNameLocation(node: Node): Location {
-        return parser!!.getNameLocation(this, node)
-    }
+    fun getNameLocation(node: Node): Location = parser!!.getNameLocation(this, node)
 
     /**
      * Returns a [Location] for the given element. This attempts to pick a shorter
@@ -259,18 +250,18 @@ open class JavaContext
      * @return a location for the given element
      */
     fun getNameLocation(element: PsiElement): Location {
-        if (uastParser != null) {
+        return if (uastParser != null) {
             if (element is PsiSwitchStatement) {
                 // Just use keyword
                 return uastParser!!.getRangeLocation(this, element, 0, 6) // 6: "switch".length()
             }
-            return uastParser!!.getNameLocation(this, element)
+            uastParser!!.getNameLocation(this, element)
         } else {
             if (element is PsiSwitchStatement) {
                 // Just use keyword
                 return parser!!.getRangeLocation(this, element, 0, 6) // 6: "switch".length()
             }
-            return parser!!.getNameLocation(this, element)
+            parser!!.getNameLocation(this, element)
         }
     }
 
@@ -308,9 +299,7 @@ open class JavaContext
      *
      * @return a location for the given element
      */
-    fun getNameLocation(cls: UClass): Location {
-        return getNameLocation(cls as UElement)
-    }
+    fun getNameLocation(cls: UClass): Location = getNameLocation(cls as UElement)
 
     /**
      * Returns a [Location] for the given element. This attempts to pick a shorter
@@ -328,15 +317,13 @@ open class JavaContext
      *
      * @return a location for the given element
      */
-    fun getNameLocation(cls: UMethod): Location {
-        return getNameLocation(cls as UElement)
-    }
+    fun getNameLocation(cls: UMethod): Location = getNameLocation(cls as UElement)
 
     fun getLocation(node: PsiElement): Location {
-        if (uastParser != null) {
-            return uastParser!!.getLocation(this, node)
+        return if (uastParser != null) {
+            uastParser!!.getLocation(this, node)
         } else {
-            return parser!!.getLocation(this, node)
+            parser!!.getLocation(this, node)
         }
     }
 
@@ -347,13 +334,11 @@ open class JavaContext
         return uastParser!!.getLocation(this, element)
     }
 
-    fun getLocation(element: UMethod): Location {
-        return uastParser!!.getLocation(this, element as PsiMethod)
-    }
+    fun getLocation(element: UMethod): Location =
+            uastParser!!.getLocation(this, element as PsiMethod)
 
-    fun getLocation(element: UField): Location {
-        return uastParser!!.getLocation(this, element as PsiField)
-    }
+    fun getLocation(element: UField): Location =
+            uastParser!!.getLocation(this, element as PsiField)
 
     /**
      * Creates a location for the given call.
@@ -370,9 +355,8 @@ open class JavaContext
     fun getCallLocation(
             call: UCallExpression,
             includeReceiver: Boolean,
-            includeArguments: Boolean): Location {
-        return uastParser!!.getCallLocation(this, call, includeReceiver, includeArguments)
-    }
+            includeArguments: Boolean): Location =
+            uastParser!!.getCallLocation(this, call, includeReceiver, includeArguments)
 
     val evaluator: JavaEvaluator
         get() = if (uastParser != null) uastParser!!.evaluator else parser!!.evaluator
@@ -383,14 +367,14 @@ open class JavaContext
      * @return the parsed Java source file
      */
     @Suppress("unused")
-    @Deprecated("Use {@link #getPsiFile()} instead")
+    @Deprecated("Use {@link #getPsiFile()} instead",
+            replaceWith = ReplaceWith("psiFile"))
     val javaFile: PsiJavaFile?
-        @Deprecated("Use {@link #getPsiFile()} instead")
         get() {
-            if (psiFile is PsiJavaFile) {
-                return psiFile as PsiJavaFile?
+            return if (psiFile is PsiJavaFile) {
+                psiFile as PsiJavaFile?
             } else {
-                return null
+                null
             }
         }
 
@@ -476,9 +460,7 @@ open class JavaContext
             scope: PsiElement?,
             location: Location,
             message: String,
-            quickfixData: Any?) {
-        report(issue, scope, location, message)
-    }
+            quickfixData: Any?) = report(issue, scope, location, message)
 
     /**
      * Reports an issue applicable to a given AST node. The AST node is used as the
@@ -517,9 +499,7 @@ open class JavaContext
             scope: UElement?,
             location: Location,
             message: String,
-            quickfixData: Any?) {
-        report(issue, scope, location, message)
-    }
+            quickfixData: Any?) = report(issue, scope, location, message)
 
     /**
      * [UClass] is both a [PsiElement] and a [UElement] so this method
@@ -530,9 +510,7 @@ open class JavaContext
             issue: Issue,
             scopeClass: UClass?,
             location: Location,
-            message: String) {
-        report(issue, scopeClass as UElement?, location, message)
-    }
+            message: String) = report(issue, scopeClass as UElement?, location, message)
 
     /**
      * [UClass] is both a [PsiElement] and a [UElement] so this method
@@ -544,9 +522,7 @@ open class JavaContext
             scopeClass: UClass?,
             location: Location,
             message: String,
-            quickfixData: LintFix?) {
-        report(issue, scopeClass as UElement?, location, message, quickfixData)
-    }
+            quickfixData: LintFix?) = report(issue, scopeClass as UElement?, location, message, quickfixData)
 
     /**
      * [UMethod] is both a [PsiElement] and a [UElement] so this method
@@ -557,9 +533,7 @@ open class JavaContext
             issue: Issue,
             scopeClass: UMethod?,
             location: Location,
-            message: String) {
-        report(issue, scopeClass as UElement?, location, message)
-    }
+            message: String) = report(issue, scopeClass as UElement?, location, message)
 
     /**
      * [UMethod] is both a [PsiElement] and a [UElement] so this method
@@ -571,9 +545,8 @@ open class JavaContext
             scopeClass: UMethod?,
             location: Location,
             message: String,
-            quickfixData: LintFix?) {
-        report(issue, scopeClass as UElement?, location, message, quickfixData)
-    }
+            quickfixData: LintFix?) =
+            report(issue, scopeClass as UElement?, location, message, quickfixData)
 
     /**
      * [UField] is both a [PsiElement] and a [UElement] so this method
@@ -584,9 +557,8 @@ open class JavaContext
             issue: Issue,
             scopeClass: UField?,
             location: Location,
-            message: String) {
-        report(issue, scopeClass as UElement?, location, message)
-    }
+            message: String) =
+            report(issue, scopeClass as UElement?, location, message)
 
     /**
      * [UField] is both a [PsiElement] and a [UElement] so this method
@@ -598,9 +570,8 @@ open class JavaContext
             scopeClass: UField?,
             location: Location,
             message: String,
-            quickfixData: LintFix?) {
-        report(issue, scopeClass as UElement?, location, message, quickfixData)
-    }
+            quickfixData: LintFix?) =
+            report(issue, scopeClass as UElement?, location, message, quickfixData)
 
     /**
      * Report an error.
@@ -615,12 +586,10 @@ open class JavaContext
             scope: Node?,
             location: Location,
             message: String,
-            data: Any?) {
-        report(issue, scope, location, message)
-    }
+            data: Any?) = report(issue, scope, location, message)
 
     override val suppressCommentPrefix: String?
-        get() = SUPPRESS_COMMENT_PREFIX
+        get() = SUPPRESS_JAVA_COMMENT_PREFIX
 
     @Deprecated("Use {@link #isSuppressedWithComment(PsiElement, Issue)} instead")
     fun isSuppressedWithComment(scope: Node, issue: Issue): Boolean {
@@ -652,28 +621,22 @@ open class JavaContext
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("Location handles aren't needed for AST nodes anymore; just use the " +
             "{@link PsiElement} from the AST")
-    fun createLocationHandle(node: Node): Location.Handle {
-        return parser!!.createLocationHandle(this, node)
-    }
+    fun createLocationHandle(node: Node): Location.Handle =
+            parser!!.createLocationHandle(this, node)
 
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("Use PsiElement resolve methods (varies by AST node type, e.g. " +
             "{@link PsiMethodCallExpression#resolveMethod()}")
-    fun resolve(node: Node): ResolvedNode? {
-        return parser!!.resolve(this, node)
-    }
+    fun resolve(node: Node): ResolvedNode? = parser!!.resolve(this, node)
 
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("Use {@link JavaEvaluator#findClass(String)} instead")
-    fun findClass(fullyQualifiedName: String): ResolvedClass? {
-        return parser!!.findClass(this, fullyQualifiedName)
-    }
+    fun findClass(fullyQualifiedName: String): ResolvedClass? =
+            parser!!.findClass(this, fullyQualifiedName)
 
     @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("Use {@link PsiExpression#getType()} )} instead")
-    fun getType(node: Node): TypeDescriptor? {
-        return parser!!.getType(this, node)
-    }
+    fun getType(node: Node): TypeDescriptor? = parser!!.getType(this, node)
 
     /**
      * Returns true if the given method invocation node corresponds to a call on a
@@ -706,8 +669,6 @@ open class JavaContext
         get() = uastParser!!.uastContext!!
 
     companion object {
-        internal const val SUPPRESS_COMMENT_PREFIX = "//noinspection "
-
         @Deprecated("Use {@link PsiTreeUtil#getParentOfType(PsiElement, Class[])} " +
                 "with PsiMethod.class instead")
         @JvmStatic
@@ -747,55 +708,35 @@ open class JavaContext
             return null
         }
 
+        @Suppress("DeprecatedCallableAddReplaceWith")
         @Deprecated("Use {@link #getMethodName(PsiElement)} instead")
         @JvmStatic
-        fun getMethodName(call: Node): String? {
-            if (call is MethodInvocation) {
-                return call.astName().astValue()
-            } else if (call is ConstructorInvocation) {
-                return call.astTypeReference().typeName
-            } else if (call is EnumConstant) {
-                return call.astName().astValue()
-            } else {
-                return null
-            }
-        }
+        fun getMethodName(call: Node): String? =
+                when (call) {
+                    is MethodInvocation -> call.astName().astValue()
+                    is ConstructorInvocation -> call.astTypeReference().typeName
+                    is EnumConstant -> call.astName().astValue()
+                    else -> null
+                }
 
         // Not necessary in UAST
         @JvmStatic
-        fun getMethodName(call: PsiElement): String? {
-            if (call is PsiMethodCallExpression) {
-                return call.methodExpression.referenceName
-            } else if (call is PsiNewExpression) {
-                val classReference = call.classReference
-                if (classReference != null) {
-                    return classReference.referenceName
-                } else {
-                    return null
+        fun getMethodName(call: PsiElement): String? =
+                when (call) {
+                    is PsiMethodCallExpression -> call.methodExpression.referenceName
+                    is PsiNewExpression -> call.classReference?.referenceName
+                    is PsiEnumConstant -> call.name
+                    else -> null
                 }
-            } else if (call is PsiEnumConstant) {
-                return call.name
-            } else {
-                return null
-            }
-        }
 
         // TODO: Move to LintUtils etc
         @JvmStatic
-        fun getMethodName(call: UElement): String? {
-            if (call is UEnumConstant) {
-                return call.name
-            } else if (call is UCallExpression) {
-                val methodName = call.methodName
-                if (methodName != null) {
-                    return methodName
-                } else {
-                    return call.classReference?.resolvedName
+        fun getMethodName(call: UElement): String? =
+                when (call) {
+                    is UEnumConstant -> call.name
+                    is UCallExpression -> call.methodName ?: call.classReference?.resolvedName
+                    else -> null
                 }
-            } else {
-                return null
-            }
-        }
 
         /**
          * Searches for a name node corresponding to the given node
@@ -804,32 +745,23 @@ open class JavaContext
          */
         @Deprecated("Use {@link #findNameElement(PsiElement)} instead")
         @JvmStatic
-        fun findNameNode(node: Node): Node? {
-            if (node is TypeDeclaration) {
-                // ClassDeclaration, AnnotationDeclaration, EnumDeclaration, InterfaceDeclaration
-                return node.astName()
-            } else if (node is MethodDeclaration) {
-                return node.astMethodName()
-            } else if (node is ConstructorDeclaration) {
-                return node.astTypeName()
-            } else if (node is MethodInvocation) {
-                return node.astName()
-            } else if (node is ConstructorInvocation) {
-                return node.astTypeReference()
-            } else if (node is EnumConstant) {
-                return node.astName()
-            } else if (node is AnnotationElement) {
-                return node.astName()
-            } else if (node is AnnotationMethodDeclaration) {
-                return node.astMethodName()
-            } else if (node is VariableReference) {
-                return node.astIdentifier()
-            } else if (node is LabelledStatement) {
-                return node.astLabel()
-            }
-
-            return null
-        }
+        fun findNameNode(node: Node): Node? =
+                when (node) {
+                    is TypeDeclaration ->
+                        // ClassDeclaration, AnnotationDeclaration, EnumDeclaration,
+                        // InterfaceDeclaration
+                        node.astName()
+                    is MethodDeclaration -> node.astMethodName()
+                    is ConstructorDeclaration -> node.astTypeName()
+                    is MethodInvocation -> node.astName()
+                    is ConstructorInvocation -> node.astTypeReference()
+                    is EnumConstant -> node.astName()
+                    is AnnotationElement -> node.astName()
+                    is AnnotationMethodDeclaration -> node.astMethodName()
+                    is VariableReference -> node.astIdentifier()
+                    is LabelledStatement -> node.astLabel()
+                    else -> null
+                }
 
         /**
          * Searches for a name node corresponding to the given node
@@ -837,28 +769,23 @@ open class JavaContext
          */
         @JvmStatic
         fun findNameElement(element: PsiElement): PsiElement? {
-            if (element is PsiClass) {
-                if (element is PsiAnonymousClass) {
-                    return element.baseClassReference
+            when (element) {
+                is PsiClass -> {
+                    if (element is PsiAnonymousClass) {
+                        return element.baseClassReference
+                    }
+                    return element.nameIdentifier
                 }
-                return element.nameIdentifier
-            } else if (element is PsiMethod) {
-                return element.nameIdentifier
-            } else if (element is PsiMethodCallExpression) {
-                return element.methodExpression.referenceNameElement
-            } else if (element is PsiNewExpression) {
-                return element.classReference
-            } else if (element is PsiField) {
-                return element.nameIdentifier
-            } else if (element is PsiAnnotation) {
-                return element.nameReferenceElement
-            } else if (element is PsiReferenceExpression) {
-                return element.referenceNameElement
-            } else if (element is PsiLabeledStatement) {
-                return element.labelIdentifier
+                is PsiMethod -> return element.nameIdentifier
+                is PsiMethodCallExpression -> return element.methodExpression.referenceNameElement
+                is PsiNewExpression -> return element.classReference
+                is PsiField -> return element.nameIdentifier
+                is PsiAnnotation -> return element.nameReferenceElement
+                is PsiReferenceExpression -> return element.referenceNameElement
+                is PsiLabeledStatement -> return element.labelIdentifier
+                else -> return null
             }
 
-            return null
         }
 
         @JvmStatic
@@ -874,26 +801,23 @@ open class JavaContext
             return null
         }
 
+        @Suppress("DeprecatedCallableAddReplaceWith")
         @Deprecated("")
         @JvmStatic
-        fun getParameters(call: Node): Iterator<Expression> {
-            if (call is MethodInvocation) {
-                return call.astArguments().iterator()
-            } else if (call is ConstructorInvocation) {
-                return call.astArguments().iterator()
-            } else if (call is EnumConstant) {
-                return call.astArguments().iterator()
-            } else {
-                return Collections.emptyIterator<Expression>()
-            }
+        fun getParameters(call: Node): Iterator<Expression> = when (call) {
+            is MethodInvocation -> call.astArguments().iterator()
+            is ConstructorInvocation -> call.astArguments().iterator()
+            is EnumConstant -> call.astArguments().iterator()
+            else -> Collections.emptyIterator<Expression>()
         }
 
+        @Suppress("DeprecatedCallableAddReplaceWith")
         @Deprecated("")
         @JvmStatic
         fun getParameter(call: Node, parameter: Int): Node? {
             val iterator = getParameters(call)
 
-            for (i in 0..parameter - 1 - 1) {
+            for (i in 0 until parameter - 1) {
                 if (!iterator.hasNext()) {
                     return null
                 }
@@ -919,9 +843,7 @@ open class JavaContext
         @JvmStatic
         fun <T : Node> getParentOfType(
                 element: Node?,
-                clz: Class<T>): T? {
-            return getParentOfType(element, clz, true)
-        }
+                clz: Class<T>): T? = getParentOfType(element, clz, true)
 
         /**
          * Returns the first ancestor node of the given type

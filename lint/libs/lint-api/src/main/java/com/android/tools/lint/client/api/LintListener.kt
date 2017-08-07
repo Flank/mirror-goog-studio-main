@@ -32,10 +32,10 @@ interface LintListener {
         /** A lint check is about to begin  */
         STARTING,
 
-        /** Lint is about to check the given project, see [Context.getProject]  */
+        /** Lint is about to check the given project, see [Context.project]  */
         SCANNING_PROJECT,
 
-        /** Lint is about to check the given library project, see [Context.getProject]  */
+        /** Lint is about to check the given library project, see [Context.project]  */
         SCANNING_LIBRARY_PROJECT,
 
         /** Lint is about to check the given file, see [Context.file]  */

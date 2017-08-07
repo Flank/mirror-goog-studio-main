@@ -224,9 +224,7 @@ protected constructor(
      *
      * @return whether this message is self explanatory.
      */
-    fun isSelfExplanatory(): Boolean {
-        return selfExplanatory
-    }
+    fun isSelfExplanatory(): Boolean = selfExplanatory
 
     /**
      * Sets whether this message is self-explanatory. See [.isSelfExplanatory].
@@ -253,9 +251,8 @@ protected constructor(
         return this
     }
 
-    override fun toString(): String {
-        return "Location [file=$file, start=$start, end=$end, message=$message]"
-    }
+    override fun toString(): String =
+            "Location [file=$file, start=$start, end=$end, message=$message]"
 
     /**
      * A [Handle] is a reference to a location. The point of a location
@@ -293,9 +290,7 @@ protected constructor(
         private val contents: CharSequence = context.getContents() ?: ""
         override var clientData: Any? = null
 
-        override fun resolve(): Location {
-            return create(file, contents, startOffset, endOffset)
-        }
+        override fun resolve(): Location = create(file, contents, startOffset, endOffset)
     }
 
     class ResourceItemHandle(private val item: ResourceItem) : Handle {
@@ -308,7 +303,7 @@ protected constructor(
 
         override var clientData: Any?
             get() = null
-            set(clientData) {}
+            set(clientData) = Unit
     }
 
     /**
@@ -422,9 +417,7 @@ protected constructor(
              *
              * @return a new @link SearchHints} object
              */
-            @JvmStatic fun create(direction: SearchDirection): SearchHints {
-                return SearchHints(direction)
-            }
+            @JvmStatic fun create(direction: SearchDirection): SearchHints = SearchHints(direction)
         }
     }
 
@@ -432,30 +425,24 @@ protected constructor(
         private const val SUPER_KEYWORD = "super"
 
         /**
-         * Special marker location which means location not available, or not applicable, or filtered
-         * out, etc. For example, the infrastructure may return [.NONE] if you ask
+         * Special marker location which means location not available, or not applicable,
+         * or filtered out, etc. For example, the infrastructure may return [.NONE] if you ask
          * [JavaParser.getLocation] for an element which is not in the current
          * file during an incremental lint run in a single file.
          */
         @JvmField
         val NONE: Location = object : Location(File("NONE"), null, null) {
-            override fun setMessage(message: String, selfExplanatory: Boolean): Location {
-                return this
-            }
+            override fun setMessage(message: String, selfExplanatory: Boolean): Location = this
 
-            override fun setClientData(clientData: Any?): Location {
-                return this
-            }
+            override fun setClientData(clientData: Any?): Location = this
 
-            override fun setSelfExplanatory(selfExplanatory: Boolean): Location {
-                return this
-            }
+            override fun setSelfExplanatory(selfExplanatory: Boolean): Location = this
 
             override var visible: Boolean = false
-                set(value) { }
+                set(value) = Unit
 
             override var secondary: Location? = null
-                set(value) { }
+                set(value) = Unit
         }
 
         /**
@@ -466,9 +453,7 @@ protected constructor(
          * @return a new location
          */
         @JvmStatic
-        fun create(file: File): Location {
-            return Location(file, null, null)
-        }
+        fun create(file: File): Location = Location(file, null, null)
 
         /**
          * Creates a new location for the given file and SourcePosition.
@@ -513,9 +498,7 @@ protected constructor(
         fun create(
                 file: File,
                 start: Position,
-                end: Position?): Location {
-            return Location(file, start, end)
-        }
+                end: Position?): Location = Location(file, start, end)
 
         /**
          * Creates a new location for the given file, with the given contents, for
@@ -593,9 +576,8 @@ protected constructor(
          * @return a new location
          */
         @JvmStatic
-        fun create(file: File, contents: String, line: Int): Location {
-            return create(file, contents, line, null, null, null)
-        }
+        fun create(file: File, contents: String, line: Int): Location =
+                create(file, contents, line, null, null, null)
 
         /**
          * Creates a new location for the given file, with the given contents, for
@@ -679,13 +661,13 @@ protected constructor(
                             targetLine = adjustLine(contents, targetLine, offset, index)
                         } else {
                             var newLinesBefore = 0
-                            for (i in before..offset - 1) {
+                            for (i in before until offset) {
                                 if (contents[i] == '\n') {
                                     newLinesBefore++
                                 }
                             }
                             var newLinesAfter = 0
-                            for (i in offset..after - 1) {
+                            for (i in offset until after) {
                                 if (contents[i] == '\n') {
                                     newLinesAfter++
                                 }
@@ -841,17 +823,17 @@ protected constructor(
                 return line
             }
 
-            if (newOffset < offset) {
-                return line - countLines(doc, newOffset, offset)
+            return if (newOffset < offset) {
+                line - countLines(doc, newOffset, offset)
             } else {
-                return line + countLines(doc, offset, newOffset)
+                line + countLines(doc, offset, newOffset)
             }
         }
 
         @JvmStatic
         private fun countLines(doc: CharSequence, start: Int, end: Int): Int {
             var lines = 0
-            for (offset in start..end - 1) {
+            for (offset in start until end) {
                 val c = doc[offset]
                 if (c == '\n') {
                     lines++

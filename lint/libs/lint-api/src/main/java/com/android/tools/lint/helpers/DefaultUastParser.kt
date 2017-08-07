@@ -51,17 +51,16 @@ open class DefaultUastParser(
     init {
         @Suppress("LeakingThis")
         javaEvaluator = createEvaluator(project, p)
-        if (!p.isDisposed) {
-            uastContext = ServiceManager.getService(p, UastContext::class.java)
+        uastContext = if (!p.isDisposed) {
+            ServiceManager.getService(p, UastContext::class.java)
         } else {
-            uastContext = null
+            null
         }
     }
 
     open protected fun createEvaluator(project: Project?,
-                                  p: com.intellij.openapi.project.Project): DefaultJavaEvaluator {
-        return DefaultJavaEvaluator(p, project)
-    }
+                                  p: com.intellij.openapi.project.Project): DefaultJavaEvaluator =
+            DefaultJavaEvaluator(p, project)
 
     /**
      * Prepare to parse the given contexts. This method will be called before
@@ -76,9 +75,7 @@ open class DefaultUastParser(
      *
      * @return true if the preparation succeeded; false if there were errors
      */
-    override fun prepare(contexts: List<JavaContext>): Boolean {
-        return true
-    }
+    override fun prepare(contexts: List<JavaContext>): Boolean = true
 
     /**
      * Returns an evaluator which can perform various resolution tasks,
@@ -86,9 +83,7 @@ open class DefaultUastParser(
      *
      * @return an evaluator
      */
-    override fun getEvaluator(): JavaEvaluator {
-        return javaEvaluator
-    }
+    override fun getEvaluator(): JavaEvaluator = javaEvaluator
 
     /**
      * Parse the file pointed to by the given context.
@@ -109,21 +104,17 @@ open class DefaultUastParser(
 
         val psiFile = PsiManager.getInstance(ideaProject).findFile(virtualFile) ?: return null
 
-        val uElement = uastContext?.convertElementWithParent(psiFile, UFile::class.java) as? UFile ?:
+        return uastContext.convertElementWithParent(psiFile, UFile::class.java) as? UFile ?:
                 // No need to log this; the parser should be reporting
                 // a full warning (such as IssueRegistry#PARSER_ERROR)
                 // with details, location, etc.
                 return null
-
-        return uElement
     }
 
     /**
      * Returns a UastContext which can provide UAST representations for source files
      */
-    override fun getUastContext(): UastContext? {
-        return uastContext
-    }
+    override fun getUastContext(): UastContext? = uastContext
 
     /**
      * Returns a [Location] for the given element
@@ -211,9 +202,8 @@ open class DefaultUastParser(
         if (element is UElementWithLocation) {
             val file = element.getContainingFile() ?: return Location.NONE
             val ioFile = file.getIoFile() ?: return Location.NONE
-            val segment = element
             val text = file.psi.text
-            val location = Location.create(ioFile, text, segment.startOffset, segment.endOffset)
+            val location = Location.create(ioFile, text, element.startOffset, element.endOffset)
             location.setSource(element)
             return location
         } else {
@@ -262,9 +252,7 @@ open class DefaultUastParser(
         return if (virtualFile != null) VfsUtilCore.virtualToIoFile(virtualFile) else null
     }
 
-    override fun getFileContents(file: PsiFile): CharSequence {
-        return file.text
-    }
+    override fun getFileContents(file: PsiFile): CharSequence = file.text
 
     override fun createLocation(element: PsiElement): Location {
         val range = element.textRange
@@ -280,10 +268,9 @@ open class DefaultUastParser(
         if (element is UElementWithLocation) {
             val file = element.getContainingFile() ?: return Location.NONE
             val ioFile = file.getIoFile() ?: return Location.NONE
-            val segment = element
             val text = file.psi.text
-            val location = Location.create(ioFile, text, segment.startOffset,
-                    segment.endOffset)
+            val location = Location.create(ioFile, text, element.startOffset,
+                    element.endOffset)
             location.setSource(element)
             return location
         } else {
@@ -333,8 +320,7 @@ open class DefaultUastParser(
 
     private fun getTextRange(element: UElement): TextRange? {
         if (element is UElementWithLocation) {
-            val segment = element
-            return TextRange(segment.startOffset, segment.endOffset)
+            return TextRange(element.startOffset, element.endOffset)
         } else {
             val psiElement = element.psi
             if (psiElement != null) {
@@ -413,10 +399,8 @@ open class DefaultUastParser(
      * @return a location for the given node
      */
     override fun getRangeLocation(context: JavaContext, from: PsiElement,
-                         fromDelta: Int, toDelta: Int): Location {
-        return getRangeLocation(context, from, fromDelta, from,
-                -(from.textRange.length - toDelta))
-    }
+                         fromDelta: Int, toDelta: Int): Location =
+            getRangeLocation(context, from, fromDelta, from, -(from.textRange.length - toDelta))
 
     override fun getRangeLocation(context: JavaContext, from: UElement,
                          fromDelta: Int, toDelta: Int): Location {

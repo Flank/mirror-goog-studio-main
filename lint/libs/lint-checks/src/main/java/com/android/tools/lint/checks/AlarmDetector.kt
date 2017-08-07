@@ -56,9 +56,7 @@ Handler.""",
                 IMPLEMENTATION)
     }
 
-    override fun getApplicableMethodNames(): List<String>? {
-        return listOf("setRepeating")
-    }
+    override fun getApplicableMethodNames(): List<String>? = listOf("setRepeating")
 
     override fun visitMethod(context: JavaContext, node: UCallExpression,
                              method: PsiMethod) {

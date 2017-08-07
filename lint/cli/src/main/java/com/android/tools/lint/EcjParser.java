@@ -2731,6 +2731,7 @@ public class EcjParser extends JavaParser {
                 for (ElementValuePair pair : pairs) {
                     values.add(new Value(new String(pair.getName()), getPairValue(pair)));
                 }
+                return values;
             }
 
             return Collections.emptyList();

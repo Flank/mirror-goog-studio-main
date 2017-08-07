@@ -51,29 +51,23 @@ package test.pkg;
         LintDriver.clearCrashCount()
     }
 
-    override fun getIssues(): List<Issue> {
-        return listOf(CrashingDetector.CRASHING_ISSUE)
-    }
+    override fun getIssues(): List<Issue> = listOf(CrashingDetector.CRASHING_ISSUE)
 
-    override fun getDetector(): Detector {
-        return CrashingDetector()
-    }
+    override fun getDetector(): Detector = CrashingDetector()
 
     class CrashingDetector : Detector(), Detector.UastScanner {
 
-        override fun getApplicableUastTypes(): List<Class<out UElement>>? {
-            return listOf<Class<out UElement>>(UFile::class.java)
-        }
+        override fun getApplicableUastTypes(): List<Class<out UElement>>? =
+                listOf<Class<out UElement>>(UFile::class.java)
 
-        override fun createUastHandler(context: JavaContext): UElementHandler? {
-            return object : UElementHandler() {
-                override fun visitFile(uFile: UFile) {
-                    @Suppress("DIVISION_BY_ZERO", "UNUSED_VARIABLE") // Intentional crash
-                    val x = 1 / 0
-                    super.visitFile(uFile)
+        override fun createUastHandler(context: JavaContext): UElementHandler? =
+                object : UElementHandler() {
+                    override fun visitFile(uFile: UFile) {
+                        @Suppress("DIVISION_BY_ZERO", "UNUSED_VARIABLE") // Intentional crash
+                        val x = 1 / 0
+                        super.visitFile(uFile)
+                    }
                 }
-            }
-        }
 
         companion object {
             val CRASHING_ISSUE = Issue

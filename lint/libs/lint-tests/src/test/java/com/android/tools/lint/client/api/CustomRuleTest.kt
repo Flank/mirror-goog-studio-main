@@ -57,13 +57,9 @@ class CustomRuleTest {
                 appCompatTestSource,
                 appCompatTestClass)
                 .client(object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> {
-                        return emptyList()
-                    }
+                    override fun findGlobalRuleJars(): List<File> = emptyList()
 
-                    override fun findRuleJars(project: Project): List<File> {
-                        return listOf(lintJar!!)
-                    }
+                    override fun findRuleJars(project: Project): List<File> = listOf(lintJar!!)
                 }).customRules(lintJar!!).allowMissingSdk().run().expect(expected)
     }
 
@@ -90,13 +86,9 @@ class CustomRuleTest {
         lint()
                 .files(classpath(), manifest().minSdk(1), appCompatTestSource, appCompatTestClass)
                 .client(object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> {
-                        return listOf(lintJar!!)
-                    }
+                    override fun findGlobalRuleJars(): List<File> = listOf(lintJar!!)
 
-                    override fun findRuleJars(project: Project): List<File> {
-                        return emptyList()
-                    }
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
                 }).customRules(lintJar!!).allowMissingSdk().run().expect(expected)
     }
 
@@ -121,13 +113,9 @@ class CustomRuleTest {
                         "    }\n"
                         + "}"))
                 .client(object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> {
-                        return listOf(oldLintJar!!)
-                    }
+                    override fun findGlobalRuleJars(): List<File> = listOf(oldLintJar!!)
 
-                    override fun findRuleJars(project: Project): List<File> {
-                        return emptyList()
-                    }
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
                 }).issueIds("MyId").allowMissingSdk().allowCompilationErrors().run().expect(expected)
     }
 
@@ -152,13 +140,9 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
                         "    }\n"
                         + "}"))
                 .client(object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> {
-                        return listOf(psiLintJar!!)
-                    }
+                    override fun findGlobalRuleJars(): List<File> = listOf(psiLintJar!!)
 
-                    override fun findRuleJars(project: Project): List<File> {
-                        return emptyList()
-                    }
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
                 }).issueIds("MainActivityDetector").allowMissingSdk().allowCompilationErrors().run().expect(expected)
     }
 

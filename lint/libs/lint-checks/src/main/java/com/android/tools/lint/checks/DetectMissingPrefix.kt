@@ -82,26 +82,22 @@ Similarly, in manifest files, nearly all attributes should be in the `android:` 
                         Scope.MANIFEST_SCOPE, Scope.RESOURCE_FILE_SCOPE))
     }
 
-    override fun appliesTo(folderType: ResourceFolderType): Boolean {
-        return folderType == LAYOUT
-                || folderType == MENU
-                || folderType == DRAWABLE
-                || folderType == ANIM
-                || folderType == ANIMATOR
-                || folderType == COLOR
-                || folderType == INTERPOLATOR
-    }
+    override fun appliesTo(folderType: ResourceFolderType): Boolean =
+            folderType == LAYOUT
+            || folderType == MENU
+            || folderType == DRAWABLE
+            || folderType == ANIM
+            || folderType == ANIMATOR
+            || folderType == COLOR
+            || folderType == INTERPOLATOR
 
-    override fun getApplicableAttributes(): Collection<String>? {
-        return Detector.XmlScanner.ALL
-    }
+    override fun getApplicableAttributes(): Collection<String>? = Detector.XmlScanner.ALL
 
-    private fun isNoPrefixAttribute(attribute: String): Boolean {
-        when (attribute) {
-            ATTR_CLASS, ATTR_STYLE, ATTR_LAYOUT, ATTR_PACKAGE, ATTR_CORE_APP -> return true
-            else -> return false
-        }
-    }
+    private fun isNoPrefixAttribute(attribute: String): Boolean =
+            when (attribute) {
+                ATTR_CLASS, ATTR_STYLE, ATTR_LAYOUT, ATTR_PACKAGE, ATTR_CORE_APP -> true
+                else -> false
+            }
 
     override fun visitAttribute(context: XmlContext, attribute: Attr) {
         val uri = attribute.namespaceURI
@@ -218,9 +214,7 @@ Similarly, in manifest files, nearly all attributes should be in the `android:` 
         }
     }
 
-    private fun isFragment(element: Element): Boolean {
-        return VIEW_FRAGMENT == element.tagName
-    }
+    private fun isFragment(element: Element): Boolean = VIEW_FRAGMENT == element.tagName
 
     private fun isCustomView(element: Element): Boolean {
         // If this is a custom view, the usage of custom attributes can be legitimate

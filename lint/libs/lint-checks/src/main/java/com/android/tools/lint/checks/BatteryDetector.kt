@@ -66,9 +66,7 @@ For more details on how to update your code, please seehttp://developer.android.
                 .addMoreInfo("http://developer.android.com/preview/features/background-optimization.html")
     }
 
-    override fun getApplicableElements(): Collection<String>? {
-        return listOf(TAG_ACTION)
-    }
+    override fun getApplicableElements(): Collection<String>? = listOf(TAG_ACTION)
 
     override fun visitElement(context: XmlContext, element: Element) {
         assert(element.tagName == TAG_ACTION)
@@ -104,9 +102,8 @@ For more details on how to update your code, please seehttp://developer.android.
         }
     }
 
-    override fun getApplicableReferenceNames(): List<String>? {
-        return listOf("ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS")
-    }
+    override fun getApplicableReferenceNames(): List<String>? =
+            listOf("ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS")
 
     override fun visitReference(context: JavaContext,
                                 reference: UReferenceExpression, resolved: PsiElement) {

@@ -50,7 +50,8 @@ class CallSuperDetector : Detector(), UastScanner {
                 "Missing Super Call",
 
                 """
-Some methods, such as `View#onDetachedFromWindow`, require that you also call the super implementation as part of your method.
+Some methods, such as `View#onDetachedFromWindow`, require that you also call the super
+implementation as part of your method.
 """,
 
                 Category.CORRECTNESS,
@@ -63,22 +64,20 @@ Some methods, such as `View#onDetachedFromWindow`, require that you also call th
         private const val ON_VISIBILITY_CHANGED = "onVisibilityChanged"
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>>? {
-        return listOf<Class<out UElement>>(UMethod::class.java)
-    }
+    override fun getApplicableUastTypes(): List<Class<out UElement>>? =
+            listOf<Class<out UElement>>(UMethod::class.java)
 
-    override fun createUastHandler(context: JavaContext): UElementHandler? {
-        return object : UElementHandler() {
-            override fun visitMethod(method: UMethod) {
-                val superMethod = getRequiredSuperMethod(context, method) ?: return
-                if (!callsSuper(method, superMethod)) {
-                    val message = "Overriding method should call `super.${method.name}`"
-                    val location = context.getNameLocation(method)
-                    context.report(ISSUE, method, location, message)
+    override fun createUastHandler(context: JavaContext): UElementHandler? =
+            object : UElementHandler() {
+                override fun visitMethod(method: UMethod) {
+                    val superMethod = getRequiredSuperMethod(context, method) ?: return
+                    if (!callsSuper(method, superMethod)) {
+                        val message = "Overriding method should call `super.${method.name}`"
+                        val location = context.getNameLocation(method)
+                        context.report(ISSUE, method, location, message)
+                    }
                 }
             }
-        }
-    }
 
     /**
      * Checks whether the given method overrides a method which requires the super method

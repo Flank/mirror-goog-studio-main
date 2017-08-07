@@ -58,6 +58,7 @@ class ProjectInitializerTest {
                 java("src/test/pkg/Loader.java", """
 package test.pkg;
 
+@SuppressWarnings("ClassNameDiffersFromFileName")
 public abstract class Loader<P> {
     private P mParam;
 
@@ -71,6 +72,7 @@ public abstract class Loader<P> {
                 java("src/test/pkg/NotInProject.java", """
 package test.pkg;
 
+@SuppressWarnings("ClassNameDiffersFromFileName")
 public class Foo {
     private String foo = "/sdcard/foo";
 }

@@ -157,7 +157,7 @@ public class PropertyFileDetector extends Detector {
                     + escapedPath
                     // String is already escaped for Java; must double escape for the raw text
                     // format
-                    .replace("\\", "\\\\");;
+                    .replace("\\", "\\\\");
             int startOffset = offset + errorStart;
             int endOffset = offset + errorEnd + 1;
 

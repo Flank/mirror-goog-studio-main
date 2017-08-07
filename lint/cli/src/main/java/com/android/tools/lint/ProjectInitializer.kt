@@ -412,11 +412,10 @@ constructor(client: LintClient, dir: File, name: String, library: Boolean,
     }
 
     /** Sets the global class path for this module */
-    fun setClasspath(allClasses: List<File>, useForAnalysis: Boolean) {
-        if (useForAnalysis) {
-            this.javaClassFolders = allClasses
-        } else {
-            this.javaLibraries = allClasses
-        }
-    }
+    fun setClasspath(allClasses: List<File>, useForAnalysis: Boolean) =
+            if (useForAnalysis) {
+                this.javaClassFolders = allClasses
+            } else {
+                this.javaLibraries = allClasses
+            }
 }

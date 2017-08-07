@@ -35,9 +35,7 @@ class GoogleMavenRepositoryTest : BaseTestCase() {
             cacheDir: File? = null) : GoogleMavenRepository(cacheDir = cacheDir) {
         override fun readUrlData(url: String, timeout: Int): ByteArray? = map[url]?.toByteArray()
 
-        override fun error(throwable: Throwable, message: String?) {
-            throw throwable
-        }
+        override fun error(throwable: Throwable, message: String?) = throw throwable
     }
 
     @Test

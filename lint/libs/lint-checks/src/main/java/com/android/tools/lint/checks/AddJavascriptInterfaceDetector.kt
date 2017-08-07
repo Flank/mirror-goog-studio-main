@@ -56,9 +56,7 @@ the injected object's public fields and thus manipulate the host application in 
 
     // ---- Implements UastScanner ----
 
-    override fun getApplicableMethodNames(): List<String>? {
-        return listOf(ADD_JAVASCRIPT_INTERFACE)
-    }
+    override fun getApplicableMethodNames(): List<String>? = listOf(ADD_JAVASCRIPT_INTERFACE)
 
     override fun visitMethod(context: JavaContext, node: UCallExpression,
                              method: PsiMethod) {

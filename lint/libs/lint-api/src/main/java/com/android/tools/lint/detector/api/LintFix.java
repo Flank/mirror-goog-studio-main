@@ -502,7 +502,7 @@ public class LintFix {
     }
 
     public static class FixMapBuilder {
-        @Nls protected String displayName;
+        @Nls protected final String displayName;
 
         /** Constructed from {@link Builder#map()} */
         private FixMapBuilder(String displayName) {

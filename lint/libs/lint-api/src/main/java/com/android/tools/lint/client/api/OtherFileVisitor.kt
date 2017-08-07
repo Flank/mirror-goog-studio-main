@@ -20,9 +20,9 @@ import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_XML
 import com.android.SdkConstants.FD_ASSETS
-import com.android.tools.lint.detector.api.Detector.OtherFileScanner
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Detector.OtherFileScanner
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Scope
 import com.android.utils.SdkUtils

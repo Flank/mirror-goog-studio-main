@@ -156,7 +156,7 @@ class LintDriver
     /** The associated [LintClient] */
     val client: LintClient = LintClientWrapper(client)
 
-    val projectRoots: Collection<Project>
+    private val projectRoots: Collection<Project>
 
     init {
         projectRoots =
@@ -284,9 +284,7 @@ class LintDriver
      * @return true if any files were not properly processed because they
      *         contained parser errors
      */
-    fun hasParserErrors(): Boolean {
-        return parserErrors
-    }
+    fun hasParserErrors(): Boolean = parserErrors
 
     /**
      * Sets whether lint has encountered files with fatal parser errors.
@@ -562,7 +560,7 @@ class LintDriver
                         for (s in union) {
                             var list: MutableList<Detector>? = scopeToDetectors[s]
                             if (list == null) {
-                                list = ArrayList<Detector>()
+                                list = ArrayList()
                                 scopeToDetectors.put(s, list)
                             }
                             list.add(detector)
@@ -700,6 +698,7 @@ class LintDriver
         }
         // Always use absoluteFiles so that we can check the file's getParentFile()
         // which is null if the file is not absolute.
+        @Suppress("UnnecessaryVariable")
         val files = absolute
 
         if (files.size > 1) {
@@ -963,7 +962,7 @@ class LintDriver
                 var haveXmlChecks = !checks.isEmpty()
                 val xmlDetectors: MutableList<ResourceXmlDetector>
                 if (haveXmlChecks) {
-                    xmlDetectors = ArrayList<ResourceXmlDetector>(checks.size)
+                    xmlDetectors = ArrayList(checks.size)
                     for (detector in checks) {
                         if (detector is ResourceXmlDetector) {
                             xmlDetectors.add(detector)
@@ -971,7 +970,7 @@ class LintDriver
                     }
                     haveXmlChecks = !xmlDetectors.isEmpty()
                 } else {
-                    xmlDetectors = mutableListOf<ResourceXmlDetector>()
+                    xmlDetectors = mutableListOf()
                 }
                 if (haveXmlChecks
                         || dirChecks != null && !dirChecks.isEmpty()
@@ -1130,9 +1129,7 @@ class LintDriver
      *
      * @return the corresponding super class name (in VM format), or null if not known
      */
-    fun getSuperClass(name: String): String? {
-        return client.getSuperClass(currentProject!!, name)
-    }
+    fun getSuperClass(name: String): String? = client.getSuperClass(currentProject!!, name)
 
     /**
      * Returns true if the given class is a subclass of the given super class.
@@ -1185,7 +1182,7 @@ class LintDriver
 
         val classFolders = project.javaClassFolders
         val classEntries: List<ClassEntry>
-        if (classFolders.isEmpty()) {
+        classEntries = if (classFolders.isEmpty()) {
             val message = String.format("No `.class` files were found in project \"%1\$s\", "
                     + "so none of the classfile based checks could be run. "
                     + "Does the project need to be built first?", project.name)
@@ -1194,9 +1191,9 @@ class LintDriver
                     IssueRegistry.LINT_ERROR,
                     project.getConfiguration(this).getSeverity(IssueRegistry.LINT_ERROR),
                     location, message, TextFormat.RAW, null)
-            classEntries = emptyList<ClassEntry>()
+            emptyList()
         } else {
-            classEntries = ClassEntry.fromClassPath(client, classFolders, true)
+            ClassEntry.fromClassPath(client, classFolders, true)
         }
 
         // Actually run the detectors. Libraries should be called before the
@@ -1480,7 +1477,7 @@ class LintDriver
 
         // Force all test sources into the normal source check (where all checks apply) ?
         if (isCheckTestSources) {
-            visitJavaFiles(checks, project, allContexts, allContexts, emptyList<JavaContext>())
+            visitJavaFiles(checks, project, allContexts, allContexts, emptyList())
         } else {
             visitJavaFiles(checks, project, allContexts, contexts, testContexts)
         }
@@ -1738,7 +1735,7 @@ class LintDriver
         // as non-tests now. This gives you warnings if you're editing an individual
         // test file for example.
 
-        visitJavaFiles(checks, project, contexts, emptyList<JavaContext>())
+        visitJavaFiles(checks, project, contexts, emptyList())
     }
 
     private var currentFolderType: ResourceFolderType? = null
@@ -1762,7 +1759,7 @@ class LintDriver
             }
             var applicableBinaryChecks: MutableList<Detector>? = null
             if (binaryChecks != null) {
-                applicableBinaryChecks = ArrayList<Detector>(binaryChecks.size)
+                applicableBinaryChecks = ArrayList(binaryChecks.size)
                 for (check in binaryChecks) {
                     if (check.appliesTo(type)) {
                         applicableBinaryChecks.add(check)
@@ -1881,9 +1878,8 @@ class LintDriver
         }
     }
 
-    private fun disposeXmlContext(context: XmlContext) {
-        context.parser.dispose(context, context.document)
-    }
+    private fun disposeXmlContext(context: XmlContext) =
+            context.parser.dispose(context, context.document)
 
     private fun createXmlContext(
             project: Project,
@@ -1973,7 +1969,7 @@ class LintDriver
      */
     fun addLintListener(listener: LintListener) {
         if (listeners == null) {
-            listeners = ArrayList<LintListener>(1)
+            listeners = ArrayList(1)
         }
         listeners!!.add(listener)
     }
@@ -2008,23 +2004,19 @@ class LintDriver
      */
     private inner class LintClientWrapper(private val delegate: LintClient) : LintClient(clientName) {
 
-        override fun getMergedManifest(project: Project): Document? {
-            return delegate.getMergedManifest(project)
-        }
+        override fun getMergedManifest(project: Project): Document? =
+                delegate.getMergedManifest(project)
 
         override fun resolveMergeManifestSources(mergedManifest: Document,
-                                                 reportFile: Any) {
-            delegate.resolveMergeManifestSources(mergedManifest, reportFile)
-        }
+                                                 reportFile: Any) =
+                delegate.resolveMergeManifestSources(mergedManifest, reportFile)
 
         override fun findManifestSourceNode(
-                mergedNode: org.w3c.dom.Node): Pair<File, org.w3c.dom.Node>? {
-            return delegate.findManifestSourceNode(mergedNode)
-        }
+                mergedNode: org.w3c.dom.Node): Pair<File, org.w3c.dom.Node>? =
+                delegate.findManifestSourceNode(mergedNode)
 
-        override fun findManifestSourceLocation(mergedNode: org.w3c.dom.Node): Location? {
-            return delegate.findManifestSourceLocation(mergedNode)
-        }
+        override fun findManifestSourceLocation(mergedNode: org.w3c.dom.Node): Location? =
+                delegate.findManifestSourceLocation(mergedNode)
 
         override fun report(
                 context: Context,
@@ -2069,107 +2061,74 @@ class LintDriver
             delegate.report(context, issue, severity, location, message, format, fix)
         }
 
-        private fun unsupported(): Nothing {
-            throw UnsupportedOperationException("This method should not be called by lint " +
-                    "detectors; it is intended only for usage by the lint infrastructure")
-        }
+        private fun unsupported(): Nothing =
+                throw UnsupportedOperationException("This method should not be called by lint " +
+                        "detectors; it is intended only for usage by the lint infrastructure")
 
         // Everything else just delegates to the embedding lint client
 
         override fun getConfiguration(project: Project,
-                                      driver: LintDriver?): Configuration {
-            return delegate.getConfiguration(project, driver)
-        }
+                                      driver: LintDriver?): Configuration =
+                delegate.getConfiguration(project, driver)
 
-        override fun getDisplayPath(file: File): String {
-            return delegate.getDisplayPath(file)
-        }
+        override fun getDisplayPath(file: File): String = delegate.getDisplayPath(file)
 
         override fun log(severity: Severity, exception: Throwable?,
-                         format: String?, vararg args: Any) {
-            delegate.log(exception, format, *args)
-        }
+                         format: String?, vararg args: Any) = delegate.log(exception, format, *args)
 
-        override fun getTestLibraries(project: Project): List<File> {
-            return delegate.getTestLibraries(project)
-        }
+        override fun getTestLibraries(project: Project): List<File> =
+                delegate.getTestLibraries(project)
 
-        override fun getClientRevision(): String? {
-            return delegate.getClientRevision()
-        }
+        override fun getClientRevision(): String? = delegate.getClientRevision()
 
-        override fun runReadAction(runnable: Runnable) {
-            delegate.runReadAction(runnable)
-        }
+        override fun runReadAction(runnable: Runnable) = delegate.runReadAction(runnable)
 
-        override fun readFile(file: File): CharSequence {
-            return delegate.readFile(file)
-        }
+        override fun readFile(file: File): CharSequence = delegate.readFile(file)
 
         @Throws(IOException::class)
-        override fun readBytes(file: File): ByteArray {
-            return delegate.readBytes(file)
-        }
+        override fun readBytes(file: File): ByteArray = delegate.readBytes(file)
 
-        override fun getJavaSourceFolders(project: Project): List<File> {
-            return delegate.getJavaSourceFolders(project)
-        }
+        override fun getJavaSourceFolders(project: Project): List<File> =
+                delegate.getJavaSourceFolders(project)
 
-        override fun getGeneratedSourceFolders(project: Project): List<File> {
-            return delegate.getGeneratedSourceFolders(project)
-        }
+        override fun getGeneratedSourceFolders(project: Project): List<File> =
+                delegate.getGeneratedSourceFolders(project)
 
-        override fun getJavaClassFolders(project: Project): List<File> {
-            return delegate.getJavaClassFolders(project)
-        }
+        override fun getJavaClassFolders(project: Project): List<File> =
+                delegate.getJavaClassFolders(project)
 
-        override fun getJavaLibraries(project: Project, includeProvided: Boolean): List<File> {
-            return delegate.getJavaLibraries(project, includeProvided)
-        }
+        override fun getJavaLibraries(project: Project, includeProvided: Boolean): List<File> =
+                delegate.getJavaLibraries(project, includeProvided)
 
-        override fun getTestSourceFolders(project: Project): List<File> {
-            return delegate.getTestSourceFolders(project)
-        }
+        override fun getTestSourceFolders(project: Project): List<File> =
+                delegate.getTestSourceFolders(project)
 
-        override fun getBuildTools(project: Project): BuildToolInfo? {
-            return delegate.getBuildTools(project)
-        }
+        override fun getBuildTools(project: Project): BuildToolInfo? =
+                delegate.getBuildTools(project)
 
-        override fun createSuperClassMap(project: Project): Map<String, String> {
-            return delegate.createSuperClassMap(project)
-        }
+        override fun createSuperClassMap(project: Project): Map<String, String> =
+                delegate.createSuperClassMap(project)
 
-        override fun getResourceFolders(project: Project): List<File> {
-            return delegate.getResourceFolders(project)
-        }
+        override fun getResourceFolders(project: Project): List<File> =
+                delegate.getResourceFolders(project)
 
         override val xmlParser: XmlParser
             get() = delegate.xmlParser
 
         override fun replaceDetector(
-                detectorClass: Class<out Detector>): Class<out Detector> {
-            return delegate.replaceDetector(detectorClass)
-        }
+                detectorClass: Class<out Detector>): Class<out Detector> =
+                delegate.replaceDetector(detectorClass)
 
-        override fun getSdkInfo(project: Project): SdkInfo {
-            return delegate.getSdkInfo(project)
-        }
+        override fun getSdkInfo(project: Project): SdkInfo = delegate.getSdkInfo(project)
 
-        override fun getProject(dir: File, referenceDir: File): Project {
-            return delegate.getProject(dir, referenceDir)
-        }
+        override fun getProject(dir: File, referenceDir: File): Project =
+                delegate.getProject(dir, referenceDir)
 
-        override fun getJavaParser(project: Project?): JavaParser? {
-            return delegate.getJavaParser(project)
-        }
+        override fun getJavaParser(project: Project?): JavaParser? = delegate.getJavaParser(project)
 
-        override fun getUastParser(project: Project?): UastParser? {
-            return delegate.getUastParser(project)
-        }
+        override fun getUastParser(project: Project?): UastParser? = delegate.getUastParser(project)
 
-        override fun findResource(relativePath: String): File? {
-            return delegate.findResource(relativePath)
-        }
+        override fun findResource(relativePath: String): File? = delegate.findResource(relativePath)
 
         @Suppress("OverridingDeprecatedMember") // forwarding required by API
         override fun getCacheDir(create: Boolean): File? {
@@ -2177,99 +2136,61 @@ class LintDriver
             return delegate.getCacheDir(create)
         }
 
-        override fun getCacheDir(name: String?, create: Boolean): File? {
-            return delegate.getCacheDir(name, create)
-        }
+        override fun getCacheDir(name: String?, create: Boolean): File? =
+                delegate.getCacheDir(name, create)
 
-        override fun getClassPath(project: Project): LintClient.ClassPathInfo {
-            return delegate.performGetClassPath(project)
-        }
+        override fun getClassPath(project: Project): LintClient.ClassPathInfo =
+                delegate.performGetClassPath(project)
 
         override fun log(exception: Throwable?, format: String?,
-                         vararg args: Any) {
-            delegate.log(exception, format, *args)
-        }
+                         vararg args: Any) = delegate.log(exception, format, *args)
 
-        override fun initializeProjects(knownProjects: Collection<Project>) {
-            unsupported()
-        }
+        override fun initializeProjects(knownProjects: Collection<Project>): Unit = unsupported()
 
-        override fun disposeProjects(knownProjects: Collection<Project>) {
-            unsupported()
-        }
+        override fun disposeProjects(knownProjects: Collection<Project>): Unit = unsupported()
 
-        override fun getSdkHome(): File? {
-            return delegate.getSdkHome()
-        }
+        override fun getSdkHome(): File? = delegate.getSdkHome()
 
-        override fun getTargets(): Array<IAndroidTarget> {
-            return delegate.getTargets()
-        }
+        override fun getTargets(): Array<IAndroidTarget> = delegate.getTargets()
 
-        override fun getSdk(): AndroidSdkHandler? {
-            return delegate.getSdk()
-        }
+        override fun getSdk(): AndroidSdkHandler? = delegate.getSdk()
 
-        override fun getCompileTarget(project: Project): IAndroidTarget? {
-            return delegate.getCompileTarget(project)
-        }
+        override fun getCompileTarget(project: Project): IAndroidTarget? =
+                delegate.getCompileTarget(project)
 
-        override fun getSuperClass(project: Project, name: String): String? {
-            return delegate.getSuperClass(project, name)
-        }
+        override fun getSuperClass(project: Project, name: String): String? =
+                delegate.getSuperClass(project, name)
 
         override fun isSubclassOf(project: Project, name: String,
-                                  superClassName: String): Boolean? {
-            return delegate.isSubclassOf(project, name, superClassName)
-        }
+                                  superClassName: String): Boolean? =
+                delegate.isSubclassOf(project, name, superClassName)
 
-        override fun getProjectName(project: Project): String {
-            return delegate.getProjectName(project)
-        }
+        override fun getProjectName(project: Project): String = delegate.getProjectName(project)
 
-        override fun isGradleProject(project: Project): Boolean {
-            return delegate.isGradleProject(project)
-        }
+        override fun isGradleProject(project: Project): Boolean = delegate.isGradleProject(project)
 
-        override fun createProject(dir: File, referenceDir: File): Project {
-            unsupported()
-        }
+        override fun createProject(dir: File, referenceDir: File): Project = unsupported()
 
-        override fun findGlobalRuleJars(): List<File> {
-            return delegate.findGlobalRuleJars()
-        }
+        override fun findGlobalRuleJars(): List<File> = delegate.findGlobalRuleJars()
 
-        override fun findRuleJars(project: Project): List<File> {
-            return delegate.findRuleJars(project)
-        }
+        override fun findRuleJars(project: Project): List<File> = delegate.findRuleJars(project)
 
-        override fun isProjectDirectory(dir: File): Boolean {
-            return delegate.isProjectDirectory(dir)
-        }
+        override fun isProjectDirectory(dir: File): Boolean = delegate.isProjectDirectory(dir)
 
-        override fun registerProject(dir: File, project: Project) {
-            unsupported()
-        }
+        override fun registerProject(dir: File, project: Project): Unit = unsupported()
 
-        override fun addCustomLintRules(registry: IssueRegistry): IssueRegistry {
-            return delegate.addCustomLintRules(registry)
-        }
+        override fun addCustomLintRules(registry: IssueRegistry): IssueRegistry =
+                delegate.addCustomLintRules(registry)
 
-        override fun getAssetFolders(project: Project): List<File> {
-            return delegate.getAssetFolders(project)
-        }
+        override fun getAssetFolders(project: Project): List<File> =
+                delegate.getAssetFolders(project)
 
-        override fun createUrlClassLoader(urls: Array<URL>, parent: ClassLoader): ClassLoader {
-            return delegate.createUrlClassLoader(urls, parent)
-        }
+        override fun createUrlClassLoader(urls: Array<URL>, parent: ClassLoader): ClassLoader =
+                delegate.createUrlClassLoader(urls, parent)
 
-        override fun checkForSuppressComments(): Boolean {
-            return delegate.checkForSuppressComments()
-        }
+        override fun checkForSuppressComments(): Boolean = delegate.checkForSuppressComments()
 
-        override fun supportsProjectResources(): Boolean {
-            return delegate.supportsProjectResources()
-        }
+        override fun supportsProjectResources(): Boolean = delegate.supportsProjectResources()
 
         @Suppress("OverridingDeprecatedMember") // forwarding required by API
         override fun getProjectResources(project: Project,
@@ -2280,36 +2201,27 @@ class LintDriver
 
         override fun getResourceRepository(project: Project,
                                            includeModuleDependencies: Boolean,
-                                           includeLibraries: Boolean): AbstractResourceRepository? {
-            return delegate.getResourceRepository(project, includeModuleDependencies,
-                    includeLibraries)
-        }
+                                           includeLibraries: Boolean): AbstractResourceRepository? =
+                delegate.getResourceRepository(project, includeModuleDependencies,
+                        includeLibraries)
 
-        override fun getRepositoryLogger(): ProgressIndicator {
-            return delegate.getRepositoryLogger()
-        }
+        override fun getRepositoryLogger(): ProgressIndicator = delegate.getRepositoryLogger()
 
-        override fun getResourceVisibilityProvider(): ResourceVisibilityLookup.Provider {
-            return delegate.getResourceVisibilityProvider()
-        }
+        override fun getResourceVisibilityProvider(): ResourceVisibilityLookup.Provider =
+                delegate.getResourceVisibilityProvider()
 
-        override fun createResourceItemHandle(item: ResourceItem): Location.Handle {
-            return delegate.createResourceItemHandle(item)
-        }
+        override fun createResourceItemHandle(item: ResourceItem): Location.Handle =
+                delegate.createResourceItemHandle(item)
 
         @Throws(IOException::class)
-        override fun openConnection(url: URL): URLConnection? {
-            return delegate.openConnection(url)
-        }
+        override fun openConnection(url: URL): URLConnection? = delegate.openConnection(url)
 
         @Throws(IOException::class)
-        override fun openConnection(url: URL, timeout: Int): URLConnection? {
-            return delegate.openConnection(url, timeout)
-        }
+        override fun openConnection(url: URL, timeout: Int): URLConnection? =
+                delegate.openConnection(url, timeout)
 
-        override fun closeConnection(connection: URLConnection) {
-            delegate.closeConnection(connection)
-        }
+        override fun closeConnection(connection: URLConnection) =
+                delegate.closeConnection(connection)
     }
 
     /**
@@ -2330,7 +2242,7 @@ class LintDriver
      */
     fun requestRepeat(detector: Detector, scope: EnumSet<Scope>?) {
         if (repeatingDetectors == null) {
-            repeatingDetectors = ArrayList<Detector>()
+            repeatingDetectors = ArrayList()
         }
         repeatingDetectors!!.add(detector)
 
@@ -2431,8 +2343,8 @@ class LintDriver
                 }
             }
 
-            if (includeInherited) {
-                current = getOuterClassNode(current)
+            current = if (includeInherited) {
+                getOuterClassNode(current)
             } else {
                 break
             }
@@ -2829,22 +2741,21 @@ class LintDriver
         @Contract("!null,_->!null")
         private fun union(
                 list1: List<Detector>?,
-                list2: List<Detector>?): List<Detector>? {
-            if (list1 == null) {
-                return list2
-            } else if (list2 == null) {
-                return list1
-            } else {
-                // Use set to pick out unique detectors, since it's possible for there to be overlap,
-                // e.g. the DuplicateIdDetector registers both a cross-resource issue and a
-                // single-file issue, so it shows up on both scope lists:
-                val set = HashSet<Detector>(list1.size + list2.size)
-                set.addAll(list1)
-                set.addAll(list2)
+                list2: List<Detector>?): List<Detector>? =
+                when {
+                    list1 == null -> list2
+                    list2 == null -> list1
+                    else -> {
+                        // Use set to pick out unique detectors, since it's possible for there to be overlap,
+                        // e.g. the DuplicateIdDetector registers both a cross-resource issue and a
+                        // single-file issue, so it shows up on both scope lists:
+                        val set = HashSet<Detector>(list1.size + list2.size)
+                        set.addAll(list1)
+                        set.addAll(list2)
 
-                return ArrayList(set)
-            }
-        }
+                        ArrayList(set)
+                    }
+                }
 
         private fun gatherJavaFiles(dir: File, result: MutableList<File>) {
             val files = dir.listFiles()
@@ -2983,7 +2894,7 @@ class LintDriver
             return false
         }
 
-        val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
+        private val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
 
         /**
          * Returns true if the given AST modifier has a suppress annotation for the

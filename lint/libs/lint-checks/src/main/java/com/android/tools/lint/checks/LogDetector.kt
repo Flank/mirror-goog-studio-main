@@ -107,16 +107,15 @@ Log tags are only allowed to be at most 23 tag characters long.""",
         private const val PRINTLN = "println"
     }
 
-    override fun getApplicableMethodNames(): List<String>? {
-        return Arrays.asList(
-                "d",
-                "e",
-                "i",
-                "v",
-                "w",
-                PRINTLN,
-                IS_LOGGABLE)
-    }
+    override fun getApplicableMethodNames(): List<String>? =
+            Arrays.asList(
+                    "d",
+                    "e",
+                    "i",
+                    "v",
+                    "w",
+                    PRINTLN,
+                    IS_LOGGABLE)
 
     override fun visitMethod(context: JavaContext, node: UCallExpression,
                              method: PsiMethod) {
@@ -159,16 +158,15 @@ Log tags are only allowed to be at most 23 tag characters long.""",
         }
     }
 
-    private fun getTagForMethod(method: String): String? {
-        when (method) {
-            "d" -> return "DEBUG"
-            "e" -> return "ERROR"
-            "i" -> return "INFO"
-            "v" -> return "VERBOSE"
-            "w" -> return "WARN"
-            else -> return null
-        }
-    }
+    private fun getTagForMethod(method: String): String? =
+            when (method) {
+                "d" -> "DEBUG"
+                "e" -> "ERROR"
+                "i" -> "INFO"
+                "v" -> "VERBOSE"
+                "w" -> "WARN"
+                else -> null
+            }
 
     /** Returns true if the given logging call performs "work" to compute the message  */
     private fun performsWork(

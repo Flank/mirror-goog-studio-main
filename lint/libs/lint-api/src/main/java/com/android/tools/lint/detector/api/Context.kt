@@ -96,9 +96,7 @@ open class Context
      *
      * @return the main project, never null
      */
-    fun getMainProject(): Project {
-        return mainProject ?: project
-    }
+    fun getMainProject(): Project = mainProject ?: project
 
     /**
      * The lint client requesting the lint check
@@ -140,9 +138,7 @@ open class Context
      *
      * @return false if the issue has been disabled
      */
-    fun isEnabled(issue: Issue): Boolean {
-        return configuration.isEnabled(issue)
-    }
+    fun isEnabled(issue: Issue): Boolean = configuration.isEnabled(issue)
 
     /**
      * Reports an issue. Convenience wrapper around [LintClient.report]
@@ -165,30 +161,28 @@ open class Context
         // check to see if the warning might be suppressed.
         val source = location.source
         if (source is Node) {
-            val node = source
             // Also see if we have the context for this location (e.g. code could
             // have directly called XmlContext/JavaContext report methods instead); this
             // is better because the context also checks for issues suppressed via comment
             if (this is XmlContext) {
-                if (node.ownerDocument === this.document) {
-                    this.report(issue, node, location, message, quickfixData)
+                if (source.ownerDocument === this.document) {
+                    this.report(issue, source, location, message, quickfixData)
                     return
                 }
             }
-            if (driver.isSuppressed(null, issue, node)) {
+            if (driver.isSuppressed(null, issue, source)) {
                 return
             }
         } else if (source is PsiElement) {
             // Check for suppressed issue via location node
-            val element = source
             if (this is JavaContext) {
                 val javaContext = this
-                if (element.containingFile == javaContext.psiFile) {
-                    javaContext.report(issue, element, location, message, quickfixData)
+                if (source.containingFile == javaContext.psiFile) {
+                    javaContext.report(issue, source, location, message, quickfixData)
                     return
                 }
             }
-            if (driver.isSuppressed(null, issue, element)) {
+            if (driver.isSuppressed(null, issue, source)) {
                 return
             }
         } else if (source is UElement) {
@@ -214,9 +208,7 @@ open class Context
             issue: Issue,
             location: Location,
             message: String,
-            quickfixData: Any?) {
-        report(issue, location, message)
-    }
+            quickfixData: Any?) = report(issue, location, message)
 
     // Method not callable outside of the lint infrastructure: perform the actual reporting.
     // This is a separate method instead of just having Context#report() do this work,
@@ -279,9 +271,7 @@ open class Context
     fun log(
             exception: Throwable?,
             format: String?,
-            vararg args: Any) {
-        driver.client.log(exception, format, *args)
-    }
+            vararg args: Any) = driver.client.log(exception, format, *args)
 
     /**
      * Returns the current phase number. The first pass is numbered 1. Only one pass
@@ -308,9 +298,8 @@ open class Context
      *       scopes as well (since they may have been requested by other detectors).
      *       You can pall null to indicate "all".
      */
-    fun requestRepeat(detector: Detector, scope: EnumSet<Scope>?) {
-        driver.requestRepeat(detector, scope)
-    }
+    fun requestRepeat(detector: Detector, scope: EnumSet<Scope>?) =
+            driver.requestRepeat(detector, scope)
 
     /** Returns the comment marker used in Studio to suppress statements for language, if any  */
     protected open val suppressCommentPrefix: String?
@@ -318,9 +307,9 @@ open class Context
 
             val path = file.path
             if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_GRADLE)) {
-                return JavaContext.SUPPRESS_COMMENT_PREFIX
+                return SUPPRESS_JAVA_COMMENT_PREFIX
             } else if (path.endsWith(DOT_XML)) {
-                return XmlContext.SUPPRESS_COMMENT_PREFIX
+                return SUPPRESS_XML_COMMENT_PREFIX
             } else if (path.endsWith(".cfg") || path.endsWith(".pro")) {
                 return "#suppress "
             }

@@ -374,7 +374,6 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
         // at most one folder does not have -v21 among the script options
         if (mBcp47Folders != null &&
                 !context.getMainProject().getMinSdkVersion().isGreaterOrEqualThan(21)) {
-            Map<String,FolderConfiguration> folderToConfig = Maps.newHashMap();
             Map<FolderConfiguration,File> configToFile = Maps.newHashMap();
             Multimap<String,FolderConfiguration> languageToConfigs = ArrayListMultimap.create();
             for (String folderName : mBcp47Folders.keySet()) {
@@ -382,7 +381,6 @@ public class LocaleFolderDetector extends Detector implements Detector.ResourceF
                 assert config != null : folderName; // we checked before adding to mBcp47Folders
                 LocaleQualifier locale = config.getLocaleQualifier();
                 assert locale != null : folderName;
-                folderToConfig.put(folderName, config);
                 configToFile.put(config, mBcp47Folders.get(folderName));
                 String key = locale.getLanguage();
                 if (locale.hasRegion()) {

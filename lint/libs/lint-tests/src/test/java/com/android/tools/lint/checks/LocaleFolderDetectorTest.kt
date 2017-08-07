@@ -22,9 +22,7 @@ import org.intellij.lang.annotations.Language
 
 class LocaleFolderDetectorTest : AbstractCheckTest() {
 
-    override fun getDetector(): Detector {
-        return LocaleFolderDetector()
-    }
+    override fun getDetector(): Detector = LocaleFolderDetector()
 
     fun testDeprecated() {
         lint().files(
