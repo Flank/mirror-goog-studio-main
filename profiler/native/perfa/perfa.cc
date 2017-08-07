@@ -211,8 +211,7 @@ void BindJNIMethod(JNIEnv* jni, const char* class_name, const char* method_name,
   }
 }
 
-void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, bool log_live_alloc_count,
-             const proto::AgentConfig& config) {
+void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, bool log_live_alloc_count) {
   // Load in perfa.jar which should be in to data/data.
   std::string agent_lib_path(GetAppDataPath());
   agent_lib_path.append("perfa.jar");
@@ -314,8 +313,7 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, bool log_live_alloc_count,
 
   jclass service =
       jni->FindClass("com/android/tools/profiler/support/ProfilerService");
-  jmethodID initialize =
-      jni->GetStaticMethodID(service, "initialize", "(Z)V");
+  jmethodID initialize = jni->GetStaticMethodID(service, "initialize", "(Z)V");
   jni->CallStaticVoidMethod(service, initialize, !log_live_alloc_count);
 }
 
@@ -337,7 +335,7 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   Agent::Instance(&config);
 
   JNIEnv* jni_env = GetThreadLocalJNI(vm);
-  LoadDex(jvmti_env, jni_env, agent_config.use_live_alloc(), agent_config);
+  LoadDex(jvmti_env, jni_env, agent_config.mem_config().use_live_alloc());
 
   SetAllCapabilities(jvmti_env);
 
@@ -386,7 +384,8 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   }
   jvmti_env->Deallocate(reinterpret_cast<unsigned char*>(loaded_classes));
 
-  MemoryTrackingEnv::Instance(vm, agent_config.use_live_alloc());
+  MemoryTrackingEnv::Instance(vm, agent_config.mem_config().use_live_alloc(),
+                              agent_config.mem_config().max_stack_depth());
 
   return JNI_OK;
 }

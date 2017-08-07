@@ -51,9 +51,6 @@ constexpr int64_t kDataTransferIntervalNs = Clock::ms_to_ns(500);
 // should tweak the limit for profilers.
 constexpr int32_t kDataBatchSize = 2000;
 
-// The max depth of callstacks to query per allocation.
-constexpr int32_t kMaxStackDepth = 100;
-
 // Line numbers are 1-based in Studio.
 constexpr int32_t kInvalidLineNumber = 0;
 }
@@ -85,20 +82,22 @@ const char* MemTagToString(MemTag tag) {
 }
 
 MemoryTrackingEnv* MemoryTrackingEnv::Instance(JavaVM* vm,
-                                               bool log_live_alloc_count) {
+                                               bool log_live_alloc_count,
+                                               int max_stack_depth) {
   if (g_env == nullptr) {
     // Create a stand-alone jvmtiEnv to avoid any callback conflicts
     // with other profilers' agents.
     g_vm = vm;
     jvmtiEnv* jvmti = CreateJvmtiEnv(g_vm);
-    g_env = new MemoryTrackingEnv(jvmti, log_live_alloc_count);
+    g_env = new MemoryTrackingEnv(jvmti, log_live_alloc_count, max_stack_depth);
     g_env->Initialize();
   }
 
   return g_env;
 }
 
-MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count)
+MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count,
+                                     int max_stack_depth)
     : jvmti_(jvmti),
       log_live_alloc_count_(log_live_alloc_count),
       is_first_tracking_(true),
@@ -108,6 +107,7 @@ MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count)
       class_class_tag_(-1),
       current_capture_time_ns_(-1),
       last_gc_start_ns_(-1),
+      max_stack_depth_(max_stack_depth),
       total_live_count_(0),
       total_free_count_(0),
       current_class_tag_(kClassStartTag),
@@ -156,9 +156,9 @@ void MemoryTrackingEnv::Initialize() {
                              this, JVMTI_THREAD_NORM_PRIORITY);
   CheckJvmtiError(jvmti_, error);
   if (log_live_alloc_count_) {
-    error =
-        jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni), &AllocCountWorker,
-                              this, JVMTI_THREAD_NORM_PRIORITY);
+    error = jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni),
+                                   &AllocCountWorker, this,
+                                   JVMTI_THREAD_NORM_PRIORITY);
     CheckJvmtiError(jvmti_, error);
   }
 }
@@ -294,20 +294,20 @@ void MemoryTrackingEnv::SuspendLiveTracking() {
  * initial heap walk.
  */
 void MemoryTrackingEnv::SendBackClassData() {
-    std::lock_guard<std::mutex> lock(class_data_mutex_);
-    BatchAllocationSample class_sample;
-    for (const AllocatedClass& klass : class_data_) {
-      AllocationEvent* event = class_sample.add_events();
-      event->mutable_class_data()->CopyFrom(klass);
-      event->set_timestamp(current_capture_time_ns_);
-      if (class_sample.events_size() >= kDataBatchSize) {
-        profiler::EnqueueAllocationEvents(class_sample);
-        class_sample = BatchAllocationSample();
-      }
-    }
-    if (class_sample.events_size() > 0) {
+  std::lock_guard<std::mutex> lock(class_data_mutex_);
+  BatchAllocationSample class_sample;
+  for (const AllocatedClass& klass : class_data_) {
+    AllocationEvent* event = class_sample.add_events();
+    event->mutable_class_data()->CopyFrom(klass);
+    event->set_timestamp(current_capture_time_ns_);
+    if (class_sample.events_size() >= kDataBatchSize) {
       profiler::EnqueueAllocationEvents(class_sample);
+      class_sample = BatchAllocationSample();
     }
+  }
+  if (class_sample.events_size() > 0) {
+    profiler::EnqueueAllocationEvents(class_sample);
+  }
 }
 
 /**
@@ -542,7 +542,7 @@ void MemoryTrackingEnv::GCFinishCallback(jvmtiEnv* jvmti) {
 }
 
 void MemoryTrackingEnv::AllocCountWorker(jvmtiEnv* jvmti, JNIEnv* jni,
-                                        void* ptr) {
+                                         void* ptr) {
   Stopwatch stopwatch;
   MemoryTrackingEnv* env = static_cast<MemoryTrackingEnv*>(ptr);
   assert(env != nullptr);
@@ -754,9 +754,10 @@ void MemoryTrackingEnv::FillAllocEventThreadData(
   sw.Start();
   {
     // Collect stack frames
-    jvmtiFrameInfo frames[kMaxStackDepth];
+    int32_t depth = env->max_stack_depth_;
+    jvmtiFrameInfo frames[depth];
     jint count = 0;
-    error = jvmti->GetStackTrace(thread, 0, kMaxStackDepth, frames, &count);
+    error = jvmti->GetStackTrace(thread, 0, depth, frames, &count);
     CheckJvmtiError(jvmti, error);
     for (int i = 0; i < count; i++) {
       int64_t method_id = reinterpret_cast<int64_t>(frames[i].method);

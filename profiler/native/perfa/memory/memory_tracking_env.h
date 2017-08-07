@@ -82,7 +82,8 @@ using ThreadIdMap = std::unordered_map<std::string, int32_t>;
 
 class MemoryTrackingEnv {
  public:
-  static MemoryTrackingEnv* Instance(JavaVM* vm, bool log_live_alloc_count);
+  static MemoryTrackingEnv* Instance(JavaVM* vm, bool log_live_alloc_count,
+                                     int max_stack_depth);
 
  private:
   // POD for encoding the method/instruction location data into trie.
@@ -93,7 +94,8 @@ class MemoryTrackingEnv {
     }
   };
 
-  explicit MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count);
+  explicit MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count,
+                             int max_stack_depth);
 
   // Environment is alive through the app's lifetime, don't bother cleaning up.
   ~MemoryTrackingEnv() = delete;
@@ -175,6 +177,7 @@ class MemoryTrackingEnv {
   int32_t class_class_tag_;
   int64_t current_capture_time_ns_;
   int64_t last_gc_start_ns_;
+  int32_t max_stack_depth_;
   std::mutex tracking_data_mutex_;
   std::mutex tracking_count_mutex_;
   std::atomic<int32_t> total_live_count_;
