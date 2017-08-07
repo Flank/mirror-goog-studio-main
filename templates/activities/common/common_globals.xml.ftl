@@ -29,6 +29,7 @@
     <global id="instantAppActivityHost" type="string" value="instantapp.example.com" />
     <global id="instantAppActivityRoute" type="string" value="" />
     <global id="instantAppActivityRouteType" type="string" value="path" />
+    <global id="baseFeatureOut" type="string" value="${escapeXmlAttribute(baseFeatureDir!'.')}" />
     <global id="baseFeatureResOut" type="string" value="${escapeXmlAttribute(baseFeatureResDir!'./src/main/res')}" />
 
     <global id="manifestOut" value="${manifestDir}" />

@@ -11,8 +11,18 @@
     <instantiate from="root/res/layout/activity_map.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
 
+    <#if isInstantApp>
+        <#assign finalResOut="${escapeXmlAttribute(baseFeatureResOut)}">
+        <#assign finalDebugResOut="${escapeXmlAttribute(baseFeatureOut)}/src/debug/res">
+        <#assign finalReleaseResOut="${escapeXmlAttribute(baseFeatureOut)}/src/release/res">
+    <#else>
+        <#assign finalResOut="${escapeXmlAttribute(resOut)}">
+        <#assign finalDebugResOut="${escapeXmlAttribute(projectOut)}/src/debug/res">
+        <#assign finalReleaseResOut="${escapeXmlAttribute(projectOut)}/src/release/res">
+    </#if>
+
     <merge from="root/res/values/strings.xml.ftl"
-             to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
+             to="${finalResOut}/values/strings.xml" />
 
 <#if generateKotlin>
     <instantiate from="root/src/app_package/MapActivity.kt.ftl"
@@ -23,13 +33,13 @@
 </#if>
 
     <merge from="root/debugRes/values/google_maps_api.xml.ftl"
-             to="${escapeXmlAttribute(debugResOut)}/values/google_maps_api.xml" />
+             to="${finalDebugResOut}/values/google_maps_api.xml" />
 
     <merge from="root/releaseRes/values/google_maps_api.xml.ftl"
-             to="${escapeXmlAttribute(releaseResOut)}/values/google_maps_api.xml" />
+             to="${finalReleaseResOut}/values/google_maps_api.xml" />
 
     <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
 
     <!-- Display the API key instructions. -->
-    <open file="${escapeXmlAttribute(debugResOut)}/values/google_maps_api.xml" />
+    <open file="${finalDebugResOut}/values/google_maps_api.xml" />
 </recipe>
