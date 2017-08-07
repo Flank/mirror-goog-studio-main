@@ -45,7 +45,7 @@ maven_java_library(
 maven_pom(
     name = "pom",
     artifact = "ddmlib",
-    group = "com.android.tools",
+    group = "com.android.tools.ddms",
     source = "//tools/buildSrc/base:base_version",
 )
 
