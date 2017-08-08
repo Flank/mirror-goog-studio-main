@@ -327,6 +327,7 @@ maven_repo(
         "//tools/base/build-system/gradle",
         "//tools/base/build-system/gradle-experimental",
         "//tools/base/build-system/java-lib-plugin/java-lib-model-builder",
+        "//tools/base/testutils:tools.testutils",
     ],
     include_sources = True,
     visibility = ["//visibility:public"],
