@@ -151,9 +151,9 @@ class WrongThreadInterproceduralDetector : Detector(), Detector.UastScanner {
 
     /** Advance the analysis phase, returning false when there are no more phase changes left. */
     private fun advanceState(): Boolean {
-        when (phase) {
-            State.BuildingClassHierarchy -> phase = State.EvaluatingReceivers
-            State.EvaluatingReceivers -> phase = State.BuildingCallGraph
+        phase = when (phase) {
+            State.BuildingClassHierarchy -> State.EvaluatingReceivers
+            State.EvaluatingReceivers -> State.BuildingCallGraph
             State.BuildingCallGraph -> return false
         }
         return true

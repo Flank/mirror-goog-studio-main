@@ -32,9 +32,8 @@ import org.jetbrains.uast.UClass
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.UMethod
-import org.jetbrains.uast.UParameter
-import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UThisExpression
+import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.getContainingUClass
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.java.JavaUParameter
@@ -207,10 +206,10 @@ fun <T : Any> searchForPaths(
 
 /** Describes a parameter specialization tuple, mapping each parameter to one concrete receiver. */
 data class ParamContext(
-        val params: List<Pair<UParameter, DispatchReceiver>>,
-        val implicitThis: DispatchReceiver?
-) {
-    operator fun get(param: UParameter) = params.firstOrNull { it.first == param }?.second
+        val params: List<Pair<UVariable, DispatchReceiver>>,
+        val implicitThis: DispatchReceiver?) {
+
+    operator fun get(param: UVariable) = params.firstOrNull { it.first == param }?.second
 
     companion object {
         val EMPTY = ParamContext(emptyList(), /*implicitReceiver*/ null)
@@ -221,22 +220,17 @@ data class ParamContext(
     // equals/hashCode correctly. We should be able to remove the methods below once we can fix
     // this issue in the Kotlin source code.
 
-    private fun List<Pair<UParameter, DispatchReceiver>>.mapToPsi() = map { (param, receiver) ->
-        Pair(param.psi.navigationElement, receiver.element.psi?.navigationElement)
+    private fun List<Pair<UVariable, DispatchReceiver>>.mapToPsi() = map { (param, receiver) ->
+        Pair(param.psi.navigationElement, receiver)
     }
-
-    private fun DispatchReceiver?.mapToPsi() = this?.element?.psi?.navigationElement
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         val o = other as? ParamContext ?: return false
-        return implicitThis.mapToPsi() == o.implicitThis.mapToPsi() &&
-                params.mapToPsi() == o.params.mapToPsi()
+        return implicitThis == o.implicitThis && params.mapToPsi() == o.params.mapToPsi()
     }
 
-    override fun hashCode() =
-            31 * (implicitThis.mapToPsi()?.hashCode() ?: 0) + params.mapToPsi().hashCode()
-
+    override fun hashCode() = 31 * (implicitThis?.hashCode() ?: 0) + params.mapToPsi().hashCode()
 }
 
 /** A specialization of a call graph node on a parameter context. */
@@ -261,10 +255,7 @@ class ContextualDispatchReceiverEvaluator(
             element: UElement,
             root: DispatchReceiverEvaluator): Collection<DispatchReceiver> = when (element) {
         is UThisExpression -> getForImplicitThis() // TODO: Qualified `this` not yet in UAST.
-        is UParameter -> listOfNotNull(paramContext[element])
-        is USimpleNameReferenceExpression -> {
-            element.resolve()?.navigationElement?.toUElement()?.let { root[it] } ?: emptyList()
-        }
+        is UVariable -> listOfNotNull(paramContext[element])
         else -> {
             // TODO(kotlin-uast-cleanup)
             // The Kotlin plugin appears to use two completely separate sets of Psi elements: one
@@ -292,7 +283,7 @@ class ContextualDispatchReceiverEvaluator(
 fun buildParamContextsFromCall(
         callee: CallTarget,
         call: UCallExpression,
-        implicitThisDispatchReceivers: List<DispatchReceiver>,
+        implicitThisDispatchReceivers: Collection<DispatchReceiver>,
         receiverEval: ContextualDispatchReceiverEvaluator): Collection<ParamContext> {
 
     // The potential for an implicit receiver argument to the callee complicates the logic here.
@@ -311,7 +302,7 @@ fun buildParamContextsFromCall(
     val params = listOf(implicitThisParam) + explicitParams
 
     val explicitArgReceivers = call.valueArguments.map { receiverEval[it].toList() }
-    val argReceivers = listOf(implicitThisDispatchReceivers) + explicitArgReceivers
+    val argReceivers = listOf(implicitThisDispatchReceivers.toList()) + explicitArgReceivers
 
     // Note that the size of params may not match the size of args when there is
     // a variadic parameter; in that case the variadic parameter is ignored.
@@ -324,6 +315,18 @@ fun buildParamContextsFromCall(
     if (nonEmptyArgReceivers.isEmpty())
         return listOf(ParamContext.EMPTY) // Optimization.
 
+    // TODO: Kotlin lambda receivers not yet reflected in UAST.
+    fun DispatchReceiver.deriveImplicitThisDispatchReceiver() = when (this) {
+        is DispatchReceiver.Class -> this
+        is DispatchReceiver.Functional.Reference -> receiver
+        is DispatchReceiver.Functional.Lambda -> captureContext.implicitThis
+    }
+
+    fun DispatchReceiver?.getCaptures() = when (this) {
+        is DispatchReceiver.Functional.Lambda -> captureContext.params
+        else -> emptyList()
+    }
+
     // Zip formal parameters with all possible argument receiver combinations.
     val cartesianProd = Lists.cartesianProduct(nonEmptyArgReceivers)
     val numImplicitArgs = if (implicitThisDispatchReceivers.isNotEmpty()) 1 else 0
@@ -331,9 +334,11 @@ fun buildParamContextsFromCall(
     val paramContexts = cartesianProd
             .take(maxNumParamContexts) // Cap combinatorial explosions.
             .map { receiverTuple ->
-                val zippedArgs = paramsWithReceivers.zip(receiverTuple)
-                val implicitThis = receiverTuple.take(numImplicitArgs).firstOrNull()
-                ParamContext(zippedArgs.drop(numImplicitArgs), implicitThis)
+                val zipped = paramsWithReceivers.zip(receiverTuple)
+                val dispatchReceiver = receiverTuple.take(numImplicitArgs).firstOrNull()
+                val implicitThis = dispatchReceiver?.deriveImplicitThisDispatchReceiver()
+                val captures = dispatchReceiver.getCaptures()
+                ParamContext(zipped.drop(numImplicitArgs) + captures, implicitThis)
             }
     assert(paramContexts.isNotEmpty())
     return paramContexts
@@ -348,13 +353,6 @@ fun ContextualNode.computeEdges(
     val contextualReceiverEval =
             ContextualDispatchReceiverEvaluator(paramContext, nonContextualReceiverEval)
 
-    // TODO: Kotlin lambda receivers not yet reflected in UAST.
-    fun DispatchReceiver.deriveImplicitThisDispatchReceiver() = when (this) {
-        is DispatchReceiver.Class -> this
-        is DispatchReceiver.Functional.Reference -> this.receiver
-        is DispatchReceiver.Functional.Lambda -> null
-    }
-
     return node.edges.flatMap { edge ->
 
         val cause = edge.call ?: node.target.element
@@ -363,7 +361,6 @@ fun ContextualNode.computeEdges(
                 // Resolved edges are created directly.
                 val implicitReceiverDispatchReceivers = edge.call
                         ?.getDispatchReceivers(contextualReceiverEval)
-                        ?.mapNotNull { it.deriveImplicitThisDispatchReceiver() }
                         ?: emptyList()
                 val paramContexts =
                         if (edge.call == null) listOf(ParamContext.EMPTY)
@@ -383,11 +380,9 @@ fun ContextualNode.computeEdges(
                     if (target == null)
                         emptyList()
                     else {
-                        val implicitThisDispatchReceiver =
-                                dispatchReceiver.deriveImplicitThisDispatchReceiver()
                         val paramContexts = buildParamContextsFromCall(
                                 target, edge.call,
-                                listOfNotNull(implicitThisDispatchReceiver),
+                                listOfNotNull(dispatchReceiver),
                                 contextualReceiverEval)
                         paramContexts.map { calleeContext ->
                             val node = ContextualNode(
@@ -457,8 +452,7 @@ fun CallGraph.buildContextualCallGraph(
  */
 fun ContextualCallGraph.searchForContextualPaths(
         contextualSources: Collection<ContextualNode>,
-        contextualSinks: Collection<ContextualNode>
-): Collection<List<ContextualEdge>> {
+        contextualSinks: Collection<ContextualNode>): Collection<List<ContextualEdge>> {
 
     val searchSources = contextualSources.map { ContextualEdge(it, it.node.target.element) }
     val sinkSet = contextualSinks.toSet()
@@ -469,18 +463,13 @@ fun ContextualCallGraph.searchForContextualPaths(
 }
 
 /** A context-sensitive search for paths from [sources] to [sinks]. */
-fun CallGraph.searchForPaths(
+fun ContextualCallGraph.searchForPaths(
         sources: Collection<Node>,
-        sinks: Collection<Node>,
-        nonContextualReceiverEval: IntraproceduralDispatchReceiverEvaluator
-): Collection<List<ContextualEdge>> {
+        sinks: Collection<Node>): Collection<List<ContextualEdge>> {
 
-    val contextualGraph = buildContextualCallGraph(nonContextualReceiverEval)
     val sourceSet = sources.toSet()
     val sinkSet = sinks.toSet()
-    val searchSources = contextualGraph.contextualNodes.filter { it.node in sourceSet }
-    val searchSinks = contextualGraph.contextualNodes.filter { it.node in sinkSet }
-    return contextualGraph.searchForContextualPaths(
-            searchSources,
-            searchSinks)
+    val searchSources = contextualNodes.filter { it.node in sourceSet }
+    val searchSinks = contextualNodes.filter { it.node in sinkSet }
+    return searchForContextualPaths(searchSources, searchSinks)
 }
