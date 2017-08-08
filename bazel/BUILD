@@ -319,7 +319,6 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
-# TODO: Temporary test rule for repo generation
 maven_repo(
     name = "offline_repo",
     artifacts = [
@@ -327,6 +326,7 @@ maven_repo(
         "//tools/base/build-system/gradle",
         "//tools/base/build-system/gradle-experimental",
         "//tools/base/build-system/java-lib-plugin/java-lib-model-builder",
+        "//tools/base/lint/libs/lint-tests",
         "//tools/base/testutils:tools.testutils",
     ],
     include_sources = True,

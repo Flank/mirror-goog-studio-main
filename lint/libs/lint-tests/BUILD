@@ -1,8 +1,10 @@
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
+load("//tools/base/bazel:maven.bzl", "maven_pom")
 
 kotlin_library(
     name = "lint-tests",
     srcs = ["src/main/java"],
+    pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
         "//prebuilts/tools/common/intellij-core:intellij-core-171.4249.32",
@@ -72,4 +74,11 @@ kotlin_test(
         "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:org.ow2.asm_asm-tree",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "lint-tests",
+    group = "com.android.tools.lint",
+    source = "//tools/buildSrc/base:build_version",
 )
