@@ -17,6 +17,7 @@
 package com.android.tools.lint.client.api
 
 import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Project
 import com.google.common.annotations.Beta
 
 /**
@@ -29,13 +30,15 @@ import com.google.common.annotations.Beta
 interface LintListener {
     /** The various types of events provided to lint listeners  */
     enum class EventType {
+        REGISTERED_PROJECT,
+
         /** A lint check is about to begin  */
         STARTING,
 
-        /** Lint is about to check the given project, see [Context.project]  */
+        /** Lint is about to check the given project  */
         SCANNING_PROJECT,
 
-        /** Lint is about to check the given library project, see [Context.project]  */
+        /** Lint is about to check the given library project  */
         SCANNING_LIBRARY_PROJECT,
 
         /** Lint is about to check the given file, see [Context.file]  */
@@ -63,7 +66,13 @@ interface LintListener {
      *
      * @param type the type of event that occurred
      *
+     * @param project the applicable project, if any
+     *
      * @param context the context providing additional information
      */
-    fun update(driver: LintDriver, type: EventType, context: Context?)
+    fun update(
+            driver: LintDriver,
+            type: EventType,
+            project: Project? = null,
+            context: Context? = null)
 }

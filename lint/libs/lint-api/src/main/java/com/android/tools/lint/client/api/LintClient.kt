@@ -27,6 +27,7 @@ import com.android.SdkConstants.GEN_FOLDER
 import com.android.SdkConstants.LIBS_FOLDER
 import com.android.SdkConstants.RES_FOLDER
 import com.android.SdkConstants.SRC_FOLDER
+import com.android.builder.model.AndroidLibrary
 import com.android.ide.common.repository.ResourceVisibilityLookup
 import com.android.ide.common.res2.AbstractResourceRepository
 import com.android.ide.common.res2.ResourceItem
@@ -1085,7 +1086,7 @@ abstract class LintClient {
      */
     open fun findRuleJars(project: Project): List<File> {
         if (project.isGradleProject) {
-            if (project.isLibrary) {
+            if (project.isLibrary && project.gradleLibraryModel != null) {
                 val model = project.gradleLibraryModel
                 if (model != null) {
                     val lintJar = model.lintJar
@@ -1096,21 +1097,12 @@ abstract class LintClient {
             } else if (project.subset != null) {
                 // Probably just analyzing a single file: we still want to look for custom
                 // rules applicable to the file
-                var rules: MutableList<File>? = null
                 val variant = project.currentVariant
                 if (variant != null) {
-                    val libraries = variant.mainArtifact
-                            .dependencies.libraries
-                    for (library in libraries) {
-                        val lintJar = library.lintJar
-                        if (lintJar.exists()) {
-                            if (rules == null) {
-                                rules = Lists.newArrayListWithExpectedSize<File>(4)
-                            }
-                            rules!!.add(lintJar)
-                        }
-                    }
-                    if (rules != null) {
+                    val rules = Lists.newArrayListWithExpectedSize<File>(4)
+                    addLintJarsFromDependencies(rules, variant.mainArtifact.dependencies.libraries,
+                            mutableSetOf())
+                    if (!rules.isEmpty()) {
                         return rules
                     }
                 }
@@ -1124,6 +1116,38 @@ abstract class LintClient {
 
         return emptyList()
     }
+
+    /**
+     * Recursively add all lint jars found recursively from the given collection of
+     * [AndroidLibrary] instances into the given [lintJars] list
+     */
+    private fun addLintJarsFromDependencies(
+            lintJars: MutableList<File>,
+            libraries: Collection<AndroidLibrary>,
+            seen: MutableSet<AndroidLibrary>) {
+        for (library in libraries) {
+            if (!seen.add(library)) { // Already processed
+                return
+            }
+            addLintJarsFromDependency(lintJars, library, seen)
+        }
+    }
+
+    /**
+     * Recursively add all lint jars found from the given [AndroidLibrary] **or its dependencies**
+     * into the given [lintJars] list
+     */
+    private fun addLintJarsFromDependency(
+            lintJars: MutableList<File>,
+            library: AndroidLibrary,
+            seen: MutableSet<AndroidLibrary>) {
+        val lintJar = library.lintJar
+        if (lintJar.exists()) {
+            lintJars.add(lintJar)
+        }
+        addLintJarsFromDependencies(lintJars, library.libraryDependencies, seen)
+    }
+
 
     /**
      * Opens a URL connection.

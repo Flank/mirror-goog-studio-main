@@ -348,6 +348,10 @@ class LintDriver
             return
         }
 
+        for (project in projects) {
+            fireEvent(EventType.REGISTERED_PROJECT, project = project)
+        }
+
         registerCustomDetectors(projects)
 
         // See if the lint.xml file specifies a baseline and we're not in incremental mode
@@ -1987,10 +1991,13 @@ class LintDriver
     }
 
     /** Notifies listeners, if any, that the given event has occurred  */
-    private fun fireEvent(type: LintListener.EventType, context: Context?) {
+    private fun fireEvent(
+            type: LintListener.EventType,
+            context: Context? = null,
+            project: Project? = context?.project) {
         if (listeners != null) {
             for (listener in listeners!!) {
-                listener.update(this, type, context)
+                listener.update(this, type, project, context)
             }
         }
     }

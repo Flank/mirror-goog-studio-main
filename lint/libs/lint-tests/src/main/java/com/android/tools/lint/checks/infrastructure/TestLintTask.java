@@ -84,6 +84,7 @@ public class TestLintTask {
     String incrementalFileName;
     Issue[] issues;
     String[] issueIds;
+    boolean allowDelayedIssueRegistration;
     public File sdkHome;
     LintListener listener;
     GradleMockModifier mockModifier;
@@ -292,6 +293,38 @@ public class TestLintTask {
         checkedIssues = null; // force recompute
         return this;
     }
+
+    /**
+     * Normally you're forced to pick issue id's to register up front. However, for
+     * custom views you may not want those issues to be discovered until the project
+     * has been initialized and the custom views read from lint.jar files provided
+     * by the project dependencies. In that case, you can disable the check which
+     * enforces that at least one issue is registered (which in normal scenarios helps
+     * catch incorrect lint test setups.)
+     *
+     * @param allowDelayedIssueRegistration if true, allow delayed issue registration
+     * @return this, for constructor chaining
+     */
+    public TestLintTask allowDelayedIssueRegistration(boolean allowDelayedIssueRegistration) {
+        this.allowDelayedIssueRegistration = allowDelayedIssueRegistration;
+        checkedIssues = null; // force recompute
+        return this;
+    }
+
+    /**
+     * Normally you're forced to pick issue id's to register up front. However, for
+     * custom views you may not want those issues to be discovered until the project
+     * has been initialized and the custom views read from lint.jar files provided
+     * by the project dependencies. In that case, you can disable the check which
+     * enforces that at least one issue is registered (which in normal scenarios helps
+     * catch incorrect lint test setups.)
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask allowDelayedIssueRegistration() {
+        return allowDelayedIssueRegistration(true);
+    }
+
     /**
      * Configures the test task to look for issues in the given set of custom rule jars
      *
@@ -849,6 +882,10 @@ public class TestLintTask {
                 }
 
                 return checkedIssues;
+            }
+
+            if (allowDelayedIssueRegistration) {
+                return checkedIssues = Collections.emptyList();
             }
 
             throw new RuntimeException("No issues configured; you must call either issues(), "

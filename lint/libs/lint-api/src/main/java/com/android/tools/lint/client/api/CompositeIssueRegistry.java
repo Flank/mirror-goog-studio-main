@@ -39,7 +39,11 @@ class CompositeIssueRegistry extends IssueRegistry {
     @Override
     public List<Issue> getIssues() {
         if (issues == null) {
-            List<Issue> issues = Lists.newArrayListWithExpectedSize(200);
+            int capacity = 0;
+            for (IssueRegistry registry : registries) {
+                capacity += registry.getIssues().size();
+            }
+            List<Issue> issues = Lists.newArrayListWithExpectedSize(capacity);
             for (IssueRegistry registry : registries) {
                 issues.addAll(registry.getIssues());
             }

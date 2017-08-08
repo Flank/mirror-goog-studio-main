@@ -17,20 +17,20 @@ package com.android.tools.lint.client.api
 
 import com.android.tools.lint.checks.infrastructure.TestFiles.base64gzip
 import com.android.tools.lint.checks.infrastructure.TestFiles.classpath
+import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.detector.api.Project
 import org.junit.ClassRule
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import org.mockito.Mockito
 import java.io.File
 
 class CustomRuleTest {
 
-    @Ignore("bug: 62636843")
     @Test
     fun testProjectLintJar() {
         val expected = "" +
@@ -59,11 +59,53 @@ class CustomRuleTest {
                 .client(object : TestLintClient() {
                     override fun findGlobalRuleJars(): List<File> = emptyList()
 
-                    override fun findRuleJars(project: Project): List<File> = listOf(lintJar!!)
-                }).customRules(lintJar!!).allowMissingSdk().run().expect(expected)
+                    override fun findRuleJars(project: Project): List<File> = listOf(lintJar)
+                }).customRules(lintJar).allowMissingSdk().run().expect(expected)
     }
 
-    @Ignore("bug: 62636843")
+    @Test
+    fun testProjectIsLibraryLintJar() {
+        val expected = "" +
+                "src/main/java/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [AppCompatMethod]\n" +
+                "        getActionBar();                    // ERROR\n" +
+                "        ~~~~~~~~~~~~\n" +
+                "src/main/java/test/pkg/AppCompatTest.java:10: Warning: Should use startSupportActionMode instead of startActionMode name [AppCompatMethod]\n" +
+                "        startActionMode(null);             // ERROR\n" +
+                "        ~~~~~~~~~~~~~~~\n" +
+                "src/main/java/test/pkg/AppCompatTest.java:13: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [AppCompatMethod]\n" +
+                "        requestWindowFeature(0);           // ERROR\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/main/java/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [AppCompatMethod]\n" +
+                "        setProgressBarVisibility(true);    // ERROR\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/main/java/test/pkg/AppCompatTest.java:17: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [AppCompatMethod]\n" +
+                "        setProgressBarIndeterminate(true);\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/main/java/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [AppCompatMethod]\n" +
+                "        setProgressBarIndeterminateVisibility(true);\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 6 warnings\n"
+        lint().files(
+                classpath(),
+                manifest().minSdk(1),
+                gradle(""
+                        + "apply plugin: 'com.android.library'\n"
+                        + "dependencies {\n"
+                        + "    compile 'my.test.group:artifact:1.0'\n"
+                        + "}\n"),
+
+                appCompatTestSource,
+                appCompatTestClass)
+                .incremental("bin/classes/test/pkg/AppCompatTest.class")
+                .allowDelayedIssueRegistration()
+                .issueIds("AppCompatMethod")
+                .modifyGradleMocks { _, variant ->
+                    val dependencies = variant.mainArtifact.dependencies
+                    val library = dependencies.libraries.iterator().next()
+                    Mockito.`when`(library.lintJar).thenReturn(lintJar)
+                }.allowMissingSdk().run().expect(expected)
+    }
+
     @Test
     fun testGlobalLintJar() {
         val expected = "" +
@@ -86,10 +128,10 @@ class CustomRuleTest {
         lint()
                 .files(classpath(), manifest().minSdk(1), appCompatTestSource, appCompatTestClass)
                 .client(object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> = listOf(lintJar!!)
+                    override fun findGlobalRuleJars(): List<File> = listOf(lintJar)
 
                     override fun findRuleJars(project: Project): List<File> = emptyList()
-                }).customRules(lintJar!!).allowMissingSdk().run().expect(expected)
+                }).customRules(lintJar).allowMissingSdk().run().expect(expected)
     }
 
     @Test
@@ -113,7 +155,7 @@ class CustomRuleTest {
                         "    }\n"
                         + "}"))
                 .client(object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> = listOf(oldLintJar!!)
+                    override fun findGlobalRuleJars(): List<File> = listOf(oldLintJar)
 
                     override fun findRuleJars(project: Project): List<File> = emptyList()
                 }).issueIds("MyId").allowMissingSdk().allowCompilationErrors().run().expect(expected)
@@ -140,15 +182,17 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
                         "    }\n"
                         + "}"))
                 .client(object : TestLintClient() {
-                    override fun findGlobalRuleJars(): List<File> = listOf(psiLintJar!!)
+                    override fun findGlobalRuleJars(): List<File> = listOf(psiLintJar)
 
                     override fun findRuleJars(project: Project): List<File> = emptyList()
                 }).issueIds("MainActivityDetector").allowMissingSdk().allowCompilationErrors().run().expect(expected)
     }
 
     private // Sample code
-    val appCompatTestSource = java(
-            "" + "package test.pkg;\n" + "\n" + "import android.support.v7.app.ActionBarActivity;\n" + "\n" +
+    val appCompatTestSource = java("" +
+                    "package test.pkg;\n" +
+                    "\n" +
+                    "import android.support.v7.app.ActionBarActivity;\n" + "\n" +
                     "public class AppCompatTest extends ActionBarActivity {\n" +
                     "    public void test() {\n" +
                     "        getActionBar();                    // ERROR\n" +
@@ -165,8 +209,8 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
                     "        setSupportProgressBarIndeterminateVisibility(true);\n" + "    }\n" +
                     "}\n")
 
-    private val appCompatTestClass = base64gzip("bin/classes/test/pkg/AppCompatTest.class",
-            "" + "H4sIAAAAAAAAAJVU21ITQRA9E0ICcRTkjqAogmwisuIF1AASolRRFS1LqKSK" +
+    private val appCompatTestClass = base64gzip("bin/classes/test/pkg/AppCompatTest.class", "" +
+                    "H4sIAAAAAAAAAJVU21ITQRA9E0ICcRTkjqAogmwisuIF1AASolRRFS1LqKSK" +
                     "t0kyhSNhd92dhPJb/ApfYpUPfoAfZdmzhFzKxOg+nLmd7j7d07M/f33/AeAR" +
                     "XscRYZjSMtC2d3piZzwv6555Qh/RThxRBks4Zd9VZTuoep7ra7u2aQvPszMl" +
                     "rVxnT/hmUlP6M0NsSzlK7zAMWMk8QzTrlmUCAxjmGESMYSSnHPm2elaU/pEo" +
@@ -183,18 +227,6 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
                     "4oAsItjCDnZjw8TImvE3oCvXeGsFAAA=")
 
     companion object {
-
-        @ClassRule @JvmField var temp = TemporaryFolder()
-
-        private val lintJar: File?
-            get() = base64gzip("lint1.jar", LINT_JAR_BASE64_GZIP).createFile(temp.root)
-
-        private val oldLintJar: File?
-            get() = base64gzip("lint2.jar", LOMBOK_LINT_JAR_BASE64_GZIP).createFile(temp.root)
-
-        private val psiLintJar: File?
-            get() = base64gzip("lint3.jar", PSI_LINT_JAR_BASE64_GZIP).createFile(temp.root)
-
 
         @JvmField
         val LINT_JAR_BASE64_GZIP = "" +
@@ -361,5 +393,12 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
                 "N/ZGVVJZJ6Ar8uPJEFYRtvSvRTu6gcqPDV5YX3hiv+o/l/g/5/cQQkLyM1Vq" +
                 "7dNZk2Ns+nz7B9ep+6YCCgAA"
 
+        @ClassRule @JvmField var temp = TemporaryFolder()
+        init {
+            temp.create()
+        }
+        private val lintJar: File = base64gzip("lint1.jar", LINT_JAR_BASE64_GZIP).createFile(temp.root)
+        private val oldLintJar: File = base64gzip("lint2.jar", LOMBOK_LINT_JAR_BASE64_GZIP).createFile(temp.root)
+        private val psiLintJar: File = base64gzip("lint3.jar", PSI_LINT_JAR_BASE64_GZIP).createFile(temp.root)
     }
 }

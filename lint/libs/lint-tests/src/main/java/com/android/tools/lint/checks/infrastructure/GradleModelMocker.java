@@ -213,6 +213,16 @@ public class GradleModelMocker {
         return javaLibraryPlugin;
     }
 
+    public boolean isLibrary() {
+        return project.getProjectType() == AndroidProject.PROJECT_TYPE_LIBRARY
+                || hasJavaLibraryPlugin();
+    }
+
+    /** Whether the Gradle file applied the java-library plugin */
+    public boolean hasAndroidLibraryPlugin() {
+        return javaLibraryPlugin;
+    }
+
     public AndroidProject getProject() {
         ensureInitialized();
         return project;
