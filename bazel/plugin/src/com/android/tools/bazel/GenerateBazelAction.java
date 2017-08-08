@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.tools.bazel.model.BazelRule;
 import com.android.tools.bazel.model.ImlModule;
+import com.android.tools.bazel.model.ImlProject;
 import com.android.tools.bazel.model.JavaImport;
 import com.android.tools.bazel.model.JavaLibrary;
 import com.android.tools.bazel.model.Package;
@@ -60,9 +61,14 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
 
@@ -315,6 +321,20 @@ public class GenerateBazelAction extends AnAction {
               }
             }
         }
+
+        Set<ImlModule> roots = modules.stream()
+                .map(module -> module.rule)
+                .filter(BazelRule::isExport)
+                .collect(Collectors.toSet());
+
+        for (BazelModule module : modules) {
+            roots.removeAll(module.rule.getDependencies());
+        }
+
+        File projectDir = VfsUtil.virtualToIoFile(project.getBaseDir());
+        Package projectPkg = bazel.findPackage(FileUtil.getRelativePath(workspace, projectDir));
+        ImlProject imlProject = new ImlProject(projectPkg, "android-studio");
+        roots.stream().sorted(Comparator.comparing(BazelRule::getLabel)).forEach(imlProject::addModule);
 
         progress.println("Updating BUILD files...");
         CountingListener listener = new CountingListener(progress);

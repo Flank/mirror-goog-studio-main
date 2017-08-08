@@ -326,3 +326,96 @@ def iml_module(name,
     data = bundle_data
   )
 
+def _iml_project_impl(ctx):
+  imls = []
+  deps = []
+  inputs = []
+
+  module_jars = dict()
+  module_runtime = dict()
+  transitive_data = set()
+  transitive_runtime_deps = set()
+  for dep in ctx.attr.modules:
+    if hasattr(dep, "module"):
+      module_jars.update(dep.module.module_jars)
+      module_runtime.update(dep.module.module_runtime)
+      transitive_data += dep.module.transitive_data
+      transitive_runtime_deps += dep.module.transitive_runtime_deps
+
+  text = ""
+  for name, files in module_runtime.items():
+    text += name + ": " + module_jars[name].path
+    for file in files:
+      text += ":" + file.path
+    text += "\n"
+
+
+  module_info = ctx.new_file(ctx.label.name + ".module_info")
+  ctx.file_action(
+    output = module_info,
+    content = text
+  )
+
+  outs = [ctx.outputs.win, ctx.outputs.win32, ctx.outputs.mac, ctx.outputs.linux, ctx.outputs.output]
+
+  args = ["--win", ctx.outputs.win.path,
+          "--win32", ctx.outputs.win32.path,
+          "--mac", ctx.outputs.mac.path,
+          "--linux", ctx.outputs.linux.path,
+          "--bin_dir", ctx.var["BINDIR"],
+          "--gen_dir", ctx.var["GENDIR"],
+          "--build", ctx.file.build.path,
+          "--tmp", module_info.path + ".tmp",
+          "--out", ctx.outputs.output.path,
+          "--module_info", module_info.path]
+
+  ctx.action(
+    mnemonic = "Ant",
+    inputs = [ctx.file.build, module_info] + ctx.files.data + list(transitive_data + transitive_runtime_deps),
+    outputs = outs,
+    executable = ctx.executable.ant,
+    arguments = args,
+  )
+
+_iml_project = rule(
+    attrs = {
+        "modules": attr.label_list(
+            non_empty = True,
+        ),
+        "data": attr.label_list(
+          allow_files = True,
+        ),
+        "deps": attr.label_list(
+        ),
+        "ant": attr.label(
+          executable = True,
+          cfg = "host",
+        ),
+        "build": attr.label(
+          allow_files = True,
+          single_file = True,
+        ),
+    },
+    outputs = {
+        "win": "%{name}.win.zip",
+        "win32": "%{name}.win32.zip",
+        "mac": "%{name}.mac.zip",
+        "linux": "%{name}.tar.gz",
+        "output": "%{name}.log",
+    },
+    implementation = _iml_project_impl,
+)
+
+def iml_project(name,modules=[], **kwargs):
+  # TODO Once iml_modules can be more than just java_imports we can make this part of the rule
+  normalized_modules = []
+  for module in modules:
+    if ':' not in module:
+      module = module + ":" + module[module.rfind('/') + 1:]
+    normalized_modules += [module + "_module"]
+
+  _iml_project(
+    name = name,
+    modules = normalized_modules,
+    **kwargs
+  )

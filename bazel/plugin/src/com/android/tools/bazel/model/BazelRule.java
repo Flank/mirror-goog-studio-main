@@ -19,7 +19,6 @@ package com.android.tools.bazel.model;
 import com.android.tools.bazel.parser.ast.*;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
-
 import java.io.IOException;
 import java.util.Set;
 
@@ -116,5 +115,9 @@ public abstract class BazelRule {
         loadStatement.setHidden(false);
         pkg.getBuildFile().addStatementBefore(loadStatement, functionCall);
         return loadStatement;
+    }
+
+    public Set<BazelRule> getDependencies() {
+        return dependencies;
     }
 }
