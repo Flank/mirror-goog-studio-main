@@ -65,7 +65,6 @@ public class JarContentsTest {
             ImmutableSet.of(
                     "archquery",
                     "chimpchat",
-                    "fakeadbserver",
                     "inspector",
                     "jobb",
                     "ninepatch",

@@ -32,7 +32,7 @@ maven_java_library(
 maven_pom(
     name = "pom",
     artifact = "fakeadbserver",
-    group = "com.android.tools",
+    group = "com.android.tools.fakeadbserver",
     source = "//tools/buildSrc/base:base_version",
 )
 
