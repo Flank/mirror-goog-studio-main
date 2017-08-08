@@ -8,7 +8,7 @@
 <#if hasAppBar && appBarLayoutName??>
     tools:showIn="@layout/${appBarLayoutName}"
 </#if>
-    tools:context="${relativePackage}.${fragmentClass}">
+    tools:context="${packageName}.${fragmentClass}">
 
 <#if isNewProject!false>
     <TextView

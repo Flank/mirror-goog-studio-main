@@ -5,7 +5,7 @@
 
         <uses-library android:name="com.google.android.things"/>
 
-        <activity android:name="${relativePackage}.${activityClass}"
+        <activity android:name="${packageName}.${activityClass}"
             <#if generateActivityTitle!true>
                 <#if isNewProject>
                     android:label="@string/app_name"

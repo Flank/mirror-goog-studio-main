@@ -60,6 +60,5 @@
     <global id="resOut" value="${resDir}" />
     <global id="menuName" value="${classToResource(activityClass!'')}" />
     <global id="simpleName" value="${activityToLayout(activityClass!'')}" />
-    <global id="relativePackage" value="<#if relativePackage?has_content>${relativePackage}<#else>${packageName}</#if>" />
     <#include "root://activities/common/kotlin_globals.xml.ftl" />
 </globals>

@@ -19,7 +19,7 @@
          -->
         <meta-data android:name="com.google.android.geo.API_KEY" android:value="@string/google_maps_key"/>
 
-        <activity android:name="${relativePackage}.${activityClass}"
+        <activity android:name="${packageName}.${activityClass}"
             android:label="@string/title_${simpleName}">
             <#if parentActivityClass != "">
             <meta-data android:name="android.support.PARENT_ACTIVITY"

@@ -5,5 +5,4 @@
     <global id="SupportPackage" value="${useSupport?string('.support.v4','')}" />
     <global id="resOut" value="${resDir}" />
     <global id="srcOut" value="${srcDir}/${slashedPackageName(packageName)}" />
-    <global id="relativePackage" value="<#if relativePackage?has_content>${relativePackage}<#else>${packageName}</#if>" />
 </globals>

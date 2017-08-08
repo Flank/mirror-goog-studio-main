@@ -5,7 +5,6 @@
     <global id="debugResOut" value="${escapeXmlAttribute(projectOut)}/src/debug/res" />
     <global id="releaseResOut" value="${escapeXmlAttribute(projectOut)}/src/release/res" />
     <global id="resOut" value="${resDir}" />
-    <global id="relativePackage" value="<#if relativePackage?has_content>${relativePackage}<#else>${packageName}</#if>" />
 
     <#if Mobileincluded!false>
         <global id="appManifestOut" value="${topOut}/${MobileprojectName}/${manifestDir}" />

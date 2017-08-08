@@ -7,5 +7,5 @@
     android:clipToPadding="false"
     android:paddingBottom="@dimen/list_item_spacing_half"
     android:paddingTop="@dimen/list_item_spacing_half"
-    tools:context="${relativePackage}.${className}"
+    tools:context="${packageName}.${className}"
     tools:listitem="@layout/${itemLayout}"/>
