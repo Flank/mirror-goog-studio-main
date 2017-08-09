@@ -221,7 +221,7 @@ public class TestFile {
     }
 
     public static class KotlinTestFile extends LintDetectorTest.TestFile {
-        private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(.*)\\s*;");
+        private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+([\\S&&[^;]]*)");
         private static final Pattern CLASS_PATTERN = Pattern
                 .compile("(class|interface|enum)\\s*(\\S+)\\s*(extends.*)?\\s*(implements.*)?\\{",
                         Pattern.MULTILINE);
@@ -238,11 +238,17 @@ public class TestFile {
             String pkg = matcher.group(1).trim();
             matcher = CLASS_PATTERN.matcher(source);
             boolean foundClass = matcher.find();
-            assert foundClass : "Couldn't find class declaration in source";
-            String cls = matcher.group(2).trim();
-            if (cls.contains("<")) {
-                // Remove type variables
-                cls = cls.substring(0, cls.indexOf('<'));
+            String cls;
+            if (foundClass) {
+                cls = matcher.group(2).trim();
+                if (cls.contains("<")) {
+                    // Remove type variables
+                    cls = cls.substring(0, cls.indexOf('<'));
+                }
+            } else {
+                // Don't require Kotlin test files to contain a class -- it could just be
+                // top level functions
+                cls = "test";
             }
             String to = pkg.replace('.', '/') + '/' + cls + DOT_KT;
 

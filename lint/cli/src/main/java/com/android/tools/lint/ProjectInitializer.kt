@@ -38,7 +38,7 @@ import java.io.File
 import java.util.regex.Pattern
 
 /** Regular expression used to match package statements with [ProjectInitializer.findPackage] */
-private val PACKAGE_PATTERN = Pattern.compile("package\\s+(.*)\\s*;?")
+private val PACKAGE_PATTERN = Pattern.compile("package\\s+([\\S&&[^;]]*)")
 private const val TAG_PROJECT = "project"
 private const val TAG_MODULE = "module"
 private const val TAG_CLASSES = "classes"

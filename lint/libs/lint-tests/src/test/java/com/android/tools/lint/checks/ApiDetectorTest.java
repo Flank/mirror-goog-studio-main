@@ -2818,6 +2818,28 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    @Ignore("Kotlin UAST not yet working from tests")
+    public void ignore_testKotlinVirtualDispatch() {
+        // Regression test for https://issuetracker.google.com/64528052
+
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(1),
+                kotlin("", "" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.os.Bundle\n" +
+                        "\n" +
+                        "fun test() {\n" +
+                        "    Bundle().apply {\n" +
+                        "        putString(\"\",\"\")\n" +
+                        "    }\n" +
+                        "}\n"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expectClean();
+    }
+
     public void testThisCall() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=93158
         // Make sure we properly resolve super classes in Class.this.call()
