@@ -17,12 +17,13 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
+import com.android.ddmlib.Device.InstallReceiver;
+import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
 
-import java.util.concurrent.TimeUnit;
-
+/** Unit tests for {@link Device}. */
 public class DeviceTest extends TestCase {
     public void testScreenRecorderOptions() {
         ScreenRecorderOptions options =
@@ -78,5 +79,23 @@ public class DeviceTest extends TestCase {
         EasyMock.expect(mockDevice.getSerialNumber()).andStubReturn("serial");
         EasyMock.expect(mockDevice.isOnline()).andStubReturn(Boolean.TRUE);
         return mockDevice;
+    }
+
+    /**
+     * Test that {@link InstallReceiver} properly reports different states based on install output.
+     */
+    public void testInstallReceiver() {
+        InstallReceiver receiver = new InstallReceiver();
+        // Check default message is not empty.
+        assertEquals("Did not receive any ouput from command.", receiver.getErrorMessage());
+        // In case of success, the error message is null.
+        receiver.processNewLines(new String[] {"Success"});
+        assertNull(receiver.getErrorMessage());
+        // In case of recognized failure, the error message captures it.
+        receiver.processNewLines(new String[] {"Failure [INSTALL_ERROR oups i failed]"});
+        assertEquals("INSTALL_ERROR oups i failed", receiver.getErrorMessage());
+        // In case of non-recognized failure, special error message.
+        receiver.processNewLines(new String[] {"Well it didn't go as planned"});
+        assertEquals("Unknown failure (Well it didn't go as planned)", receiver.getErrorMessage());
     }
 }

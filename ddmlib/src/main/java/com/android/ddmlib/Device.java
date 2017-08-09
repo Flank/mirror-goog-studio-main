@@ -131,8 +131,8 @@ final class Device implements IDevice {
 
         private static final String SUCCESS_OUTPUT = "Success"; //$NON-NLS-1$
         private static final Pattern FAILURE_PATTERN = Pattern.compile("Failure\\s+\\[(.*)\\]"); //$NON-NLS-1$
-
-        private String mErrorMessage = null;
+        // Give a default message in case we do not receive anything from the output
+        private String mErrorMessage = "Did not receive any ouput from command.";
 
         public InstallReceiver() {
         }
@@ -998,7 +998,12 @@ final class Device implements IDevice {
             }
             String cmd = String.format("pm install %1$s \"%2$s\"", optionString.toString(),
                     remoteFilePath);
-            executeShellCommand(cmd, receiver, INSTALL_TIMEOUT_MINUTES, TimeUnit.MINUTES);
+            executeShellCommand(
+                    cmd,
+                    receiver,
+                    INSTALL_TIMEOUT_MINUTES,
+                    INSTALL_TIMEOUT_MINUTES,
+                    TimeUnit.MINUTES);
             String error = receiver.getErrorMessage();
             if (error != null) {
                 throw new InstallException(error);
