@@ -37,6 +37,7 @@ import static com.android.SdkConstants.ATTR_WIDTH;
 import static com.android.SdkConstants.BUTTON;
 import static com.android.SdkConstants.CHECK_BOX;
 import static com.android.SdkConstants.CONSTRUCTOR_NAME;
+import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.FQCN_TARGET_API;
 import static com.android.SdkConstants.PREFIX_ANDROID;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
@@ -1629,7 +1630,24 @@ public class ApiDetector extends ResourceXmlDetector
                     }
                 } else {
                     // Unqualified call; need to search in our super hierarchy
-                    PsiClass cls = UastUtils.getContainingClass(expression);
+                    // Unfortunately, expression.getReceiverType() does not work correctly
+                    // in Java; it returns the type of the static binding of the call
+                    // instead of giving the virtual dispatch type, as described in
+                    // https://issuetracker.google.com/64528052 (and covered by
+                    // for example ApiDetectorTest#testListView). Therefore, we continue
+                    // to use the workaround method for Java (which isn't correct, and is
+                    // particularly broken in Kotlin where the dispatch needs to take into
+                    // account top level functions and extension methods), and then we use
+                    // the correct receiver type in Kotlin.
+                    PsiClass cls = null;
+                    if (mContext.file.getPath().endsWith(DOT_JAVA)) {
+                        cls = UastUtils.getContainingClass(expression);
+                    } else {
+                        PsiType receiverType = expression.getReceiverType();
+                        if (receiverType instanceof PsiClassType) {
+                            cls = ((PsiClassType) receiverType).resolve();
+                        }
+                    }
 
                     //noinspection ConstantConditions
                     if (qualifier instanceof UThisExpression

@@ -145,7 +145,9 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
 
     /** Attempt to register the Kotlin plugin, assuming the Kotlin plugin has been enabled */
     public static void registerKotlinUastPlugin() {
-        if (!kotlinAttempted) {
+        // Not yet working (needs additional fixes to the app and project environment instances;
+        // disable for now)
+        if (false && !kotlinAttempted) {
             kotlinAttempted = true;
 
             try {
