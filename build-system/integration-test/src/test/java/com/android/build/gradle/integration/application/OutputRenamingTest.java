@@ -16,19 +16,21 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildOutput;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -41,6 +43,7 @@ import org.junit.Test;
 public class OutputRenamingTest {
 
     private static AndroidProject model;
+    private static ProjectBuildOutput outputModel;
 
     @ClassRule
     public static GradleTestProject project =
@@ -61,6 +64,7 @@ public class OutputRenamingTest {
                         + "  }\n"
                         + "}");
         model = project.executeAndReturnModel("clean", "assemble").getOnlyModel();
+        outputModel = project.model().getSingle(ProjectBuildOutput.class);
     }
 
     @AfterClass
@@ -78,21 +82,19 @@ public class OutputRenamingTest {
         assertFileRenaming(RELEASE);
     }
 
-    private static void assertFileRenaming(String buildType) {
-        Variant variant = ModelHelper.getVariant(model.getVariants(), buildType);
-        AndroidArtifact mainArtifact = variant.getMainArtifact();
-        assertNotNull("main info null-check", mainArtifact);
+    private static void assertFileRenaming(String buildType) throws IOException {
+        Collection<VariantBuildOutput> variantBuildOutputs = outputModel.getVariantsBuildOutput();
+        assertThat(variantBuildOutputs).hasSize(2);
+        VariantBuildOutput buildOutput =
+                ModelHelper.getVariantBuildOutput(variantBuildOutputs, buildType);
 
         // get the outputs.
-        Collection<AndroidArtifactOutput> outputs = mainArtifact.getOutputs();
+        Collection<OutputFile> outputs = buildOutput.getOutputs();
         assertNotNull(outputs);
-
-        assertEquals(1, outputs.size());
-        AndroidArtifactOutput output = outputs.iterator().next();
-        assertEquals(5, output.getOutputs().size());
+        assertThat(outputs).hasSize(5);
 
         String expectedFileName = "project--12-" + buildType.toLowerCase() + "-signed.apk";
-        File mainOutputFile = output.getMainOutputFile().getOutputFile();
+        File mainOutputFile = ModelHelper.getMainOutputFile(outputs).getOutputFile();
         assertEquals(expectedFileName, mainOutputFile.getName());
         assertTrue(mainOutputFile.exists());
     }

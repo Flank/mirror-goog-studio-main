@@ -29,7 +29,6 @@ import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -69,10 +68,13 @@ public class BasicTest {
     public Adb adb = new Adb();
 
     public static AndroidProject model;
+    public static ProjectBuildOutput outputModel;
 
     @BeforeClass
     public static void getModel() throws Exception {
-        project.execute("clean", "assembleDebug");
+        outputModel =
+                project.executeAndReturnModel(
+                        ProjectBuildOutput.class, "clean", "assembleDebug", "assembleRelease");
         // basic project overwrites buildConfigField which emits a sync warning
         model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
         model.getSyncIssues()
@@ -148,7 +150,7 @@ public class BasicTest {
 
     @Test
     public void checkDebugAndReleaseOutputHaveDifferentNames() throws Exception {
-        ModelHelper.compareDebugAndReleaseOutput(model);
+        ModelHelper.compareDebugAndReleaseOutput(outputModel);
     }
 
     @Test

@@ -18,18 +18,15 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.builder.core.BuilderConstants.DEBUG;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
+import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import com.android.testutils.apk.Apk;
 import java.util.Collection;
 import org.junit.Before;
@@ -41,7 +38,7 @@ import org.junit.Test;
  */
 public class AutoResConfig {
 
-    private AndroidProject model;
+    private ProjectBuildOutput model;
 
     @Rule
     public GradleTestProject project =
@@ -78,30 +75,21 @@ public class AutoResConfig {
                         + "    compile 'com.android.support:support-v4:" + SUPPORT_LIB_VERSION
                         + "'\n"
                         + "}\n");
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
+        model = project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
     }
 
     @Test
     public void testAutoResConfigsOnlyPackageApplicationSpecificLanguage() throws Exception {
-        // Load the custom model for the project
-        Collection<Variant> variants = model.getVariants();
-        assertEquals("Variant Count", 2, variants.size());
-
-        // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG);
-        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
-        assertNotNull("Debug main info null-check", debugMainArtifact);
+        VariantBuildOutput debugBuildOutput = ModelHelper.getDebugVariantBuildOutput(model);
 
         // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
-        assertNotNull(debugOutputs);
+        Collection<OutputFile> debugOutputs = debugBuildOutput.getOutputs();
 
         assertEquals(1, debugOutputs.size());
-        AndroidArtifactOutput output = debugOutputs.iterator().next();
-        assertEquals(1, output.getOutputs().size());
+        OutputFile output = debugOutputs.iterator().next();
 
-        System.out.println(output.getMainOutputFile().getOutputFile().getAbsolutePath());
-        Apk apk = new Apk(output.getMainOutputFile().getOutputFile());
+        System.out.println(output.getOutputFile().getAbsolutePath());
+        Apk apk = new Apk(output.getOutputFile());
 
         assertThatApk(apk).locales().containsAllOf("en", "fr", "fr-CA", "fr-BE");
     }

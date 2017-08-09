@@ -24,6 +24,7 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 
 import com.android.annotations.NonNull;
+import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.category.DeviceTestsQuarantine;
 import com.android.build.gradle.integration.common.fixture.Adb;
@@ -34,13 +35,15 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.ProductFlavor;
+import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
+import com.android.builder.model.TestVariantBuildOutput;
 import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildOutput;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
 import com.google.common.collect.ImmutableSet;
@@ -49,10 +52,12 @@ import com.google.common.collect.Sets;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -92,10 +97,13 @@ public class BasicTest2 {
     public Adb adb = new Adb();
 
     public static ModelContainer<AndroidProject> modelContainer;
+    public static ProjectBuildOutput outputModel;
 
     @BeforeClass
     public static void getModel() throws Exception {
-        project.execute("clean", "assemble", "assembleAndroidTest");
+        outputModel =
+                project.executeAndReturnModel(
+                        ProjectBuildOutput.class, "clean", "assemble", "assembleAndroidTest");
         // basic project overwrites buildConfigField which emits a sync warning
         modelContainer = project.model().ignoreSyncIssues().getSingle();
         modelContainer
@@ -154,23 +162,18 @@ public class BasicTest2 {
                 .named("debug compile task name")
                 .isEqualTo("compileDebugSources");
 
-        Collection<AndroidArtifactOutput> debugMainOutputs = debugMainInfo.getOutputs();
-        assertThat(debugMainOutputs).named("debug outputs").isNotNull();
-        assertThat(debugMainOutputs).named("debug outputs").hasSize(1);
+        VariantBuildOutput debugVariantOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
 
-        AndroidArtifactOutput debugMainOutput = Iterables.getOnlyElement(debugMainOutputs);
+        Collection<OutputFile> debugVariantOutputFiles = debugVariantOutput.getOutputs();
+        assertThat(debugVariantOutputFiles).named("debug outputs").isNotNull();
+        assertThat(debugVariantOutputFiles).named("debug outputs").hasSize(1);
+
+        OutputFile debugMainOutput = Iterables.getOnlyElement(debugVariantOutputFiles);
         assertThat(debugMainOutput)
                 .named("debug output")
                 .isNotNull();
-        assertThat(debugMainOutput.getMainOutputFile())
-                .named("debug output file")
-                .isNotNull();
-        assertThat(debugMainOutput.getMainOutputFile())
-                .named("debug output assemble task name")
-                .isNotNull();
-        assertThat(debugMainOutput.getGeneratedManifest())
-                .named("debug output generate manifest task name")
-                .isNotNull();
+        assertThat(debugMainOutput.getOutputFile()).named("debug output file").isNotNull();
+        assertThat(debugMainOutput.getOutputFile()).named("debug output file").exists();
         assertThat(debugMainOutput.getVersionCode())
                 .named("debug output versionCode")
                 .isEqualTo(12);
@@ -203,6 +206,7 @@ public class BasicTest2 {
         // this variant is tested.
         Collection<AndroidArtifact> debugExtraAndroidArtifacts = debugVariant
                 .getExtraAndroidArtifacts();
+        debugExtraAndroidArtifacts.forEach(art -> System.out.println(art));
         AndroidArtifact debugTestInfo = ModelHelper.getAndroidArtifact(
                 debugExtraAndroidArtifacts,
                 AndroidProject.ARTIFACT_ANDROID_TEST);
@@ -225,20 +229,32 @@ public class BasicTest2 {
         // size 2 = rs output + resValue output
         assertThat(generatedResFolders).named("test generated res folders").hasSize(2);
 
-        Collection<AndroidArtifactOutput> debugTestOutputs = debugTestInfo.getOutputs();
-        assertThat(debugTestOutputs).named("test outputs").isNotNull();
-        assertThat(debugTestOutputs).named("test outputs").hasSize(1);
+        Collection<TestVariantBuildOutput> testVariantBuildOutputs =
+                debugVariantOutput.getTestingVariants();
+        List<TestVariantBuildOutput> androidTestVariantOutputs =
+                testVariantBuildOutputs
+                        .stream()
+                        .filter(
+                                testVariant ->
+                                        testVariant.getType()
+                                                == TestVariantBuildOutput.ANDROID_TEST)
+                        .collect(Collectors.toList());
 
-        AndroidArtifactOutput debugTestOutput = Iterables.getOnlyElement(debugTestOutputs);
-        assertThat(debugTestOutput)
-                .named("test output")
-                .isNotNull();
-        assertThat(debugTestOutput.getMainOutputFile())
-                .named("test output file")
-                .isNotNull();
-        assertThat(debugTestOutput.getGeneratedManifest())
-                .named("test output generate manifest task name")
-                .isNotNull();
+        assertThat(androidTestVariantOutputs)
+                .named("Test Variant Outputs with type ANDROID_TEST")
+                .hasSize(1);
+        TestVariantBuildOutput androidTestVariantOutput =
+                Iterables.getOnlyElement(androidTestVariantOutputs);
+
+        assertThat(androidTestVariantOutput.getOutputs())
+                .named("Test Variant Output output files")
+                .hasSize(1);
+        OutputFile androidTestOutputFile =
+                Iterables.getOnlyElement(androidTestVariantOutput.getOutputs());
+
+        assertThat(androidTestOutputFile).named("test output").isNotNull();
+        assertThat(androidTestOutputFile.getOutputFile()).named("test output file").isNotNull();
+        assertThat(androidTestOutputFile.getOutputFile()).named("test output file").exists();
 
         // test the resValues and buildConfigFields.
         ProductFlavor defaultConfig = model.getDefaultConfig().getProductFlavor();
@@ -299,23 +315,21 @@ public class BasicTest2 {
                 .named("release compile task name")
                 .isEqualTo("compileReleaseSources");
 
-        Collection<AndroidArtifactOutput> relMainOutputs = relMainInfo.getOutputs();
-        assertThat(relMainOutputs).named("release outputs").isNotNull();
-        assertThat(relMainOutputs).named("release outputs").hasSize(1);
+        Collection<VariantBuildOutput> variantBuildOutputs = outputModel.getVariantsBuildOutput();
+        assertThat(variantBuildOutputs).hasSize(2);
+        VariantBuildOutput releaseVariantOutput =
+                ModelHelper.getVariantBuildOutput(variantBuildOutputs, "release");
 
-        AndroidArtifactOutput relMainOutput = Iterables.getOnlyElement(relMainOutputs);
+        Collection<OutputFile> releaseVariantOutputFiles = releaseVariantOutput.getOutputs();
+        assertThat(releaseVariantOutputFiles).named("debug outputs").isNotNull();
+        assertThat(releaseVariantOutputFiles).named("debug outputs").hasSize(1);
+
+        OutputFile relMainOutput = Iterables.getOnlyElement(releaseVariantOutputFiles);
         assertThat(relMainOutput)
                 .named("release output")
                 .isNotNull();
-        assertThat(relMainOutput.getMainOutputFile())
-                .named("release output file")
-                .isNotNull();
-        assertThat(relMainOutput.getMainOutputFile())
-                .named("release output assemble task name")
-                .isNotNull();
-        assertThat(relMainOutput.getMainOutputFile())
-                .named("release output generate manifest task name")
-                .isNotNull();
+        assertThat(relMainOutput.getOutputFile()).named("release output file").isNotNull();
+        assertThat(relMainOutput.getOutputFile()).named("release output file").exists();
         assertThat(relMainOutput.getVersionCode())
                 .named("release output versionCode")
                 .isEqualTo(13);

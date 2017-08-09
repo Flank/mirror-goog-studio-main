@@ -10,9 +10,10 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.Collection;
@@ -75,8 +76,9 @@ public class AutoPureSplits {
         assertNotNull("Debug main info null-check", debugMainArtifact);
 
         // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
-        assertNotNull(debugOutputs);
+        ProjectBuildOutput projectBuildOutput = project.model().getSingle(ProjectBuildOutput.class);
+        VariantBuildOutput debugVariantOutput =
+                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(5);
@@ -89,11 +91,9 @@ public class AutoPureSplits {
         expected.add("fr-rBE");
         expected.add("fr-rCA");
 
-        assertEquals(1, debugOutputs.size());
-        AndroidArtifactOutput output = debugOutputs.iterator().next();
-        assertEquals(9, output.getOutputs().size());
+        assertEquals(9, debugVariantOutput.getOutputs().size());
         Set<String> actual = new HashSet<>();
-        for (OutputFile outputFile : output.getOutputs()) {
+        for (OutputFile outputFile : debugVariantOutput.getOutputs()) {
             String filter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY);
             if (filter == null) {
                 filter = ModelHelper.getFilter(outputFile, OutputFile.LANGUAGE);
@@ -104,7 +104,7 @@ public class AutoPureSplits {
                     outputFile.getOutputType());
 
             // with pure splits, all split have the same version code.
-            assertEquals(12, output.getVersionCode());
+            assertEquals(12, outputFile.getVersionCode());
             if (filter != null) {
                 actual.add(filter);
             }
@@ -112,7 +112,7 @@ public class AutoPureSplits {
         }
 
         // this checks we didn't miss any expected output.
-        assertEquals(expected, actual);
+        assertThat(actual).containsExactlyElementsIn(expected);
     }
 
     @Test
@@ -130,8 +130,9 @@ public class AutoPureSplits {
         assertNotNull("Debug main info null-check", debugMainArtifact);
 
         // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
-        assertNotNull(debugOutputs);
+        ProjectBuildOutput projectBuildOutput = project.model().getSingle(ProjectBuildOutput.class);
+        VariantBuildOutput debugVariantOutput =
+                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(5);
@@ -144,11 +145,9 @@ public class AutoPureSplits {
         expected.add("fr-rBE");
         expected.add("fr-rCA");
 
-        assertEquals(1, debugOutputs.size());
-        AndroidArtifactOutput output = debugOutputs.iterator().next();
-        assertEquals(9, output.getOutputs().size());
+        assertEquals(9, debugVariantOutput.getOutputs().size());
         Set<String> actual = new HashSet<>();
-        for (OutputFile outputFile : output.getOutputs()) {
+        for (OutputFile outputFile : debugVariantOutput.getOutputs()) {
             String filter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY);
             if (filter == null) {
                 filter = ModelHelper.getFilter(outputFile, OutputFile.LANGUAGE);
@@ -159,7 +158,7 @@ public class AutoPureSplits {
                     outputFile.getOutputType());
 
             // with pure splits, all split have the same version code.
-            assertEquals(12, output.getVersionCode());
+            assertEquals(12, outputFile.getVersionCode());
             if (filter != null) {
                 actual.add(filter);
             }

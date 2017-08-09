@@ -1,7 +1,6 @@
 package com.android.build.gradle.integration.application;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.build.OutputFile;
@@ -11,11 +10,8 @@ import com.android.build.gradle.integration.common.utils.ApkHelper;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.core.BuilderConstants;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.Sets;
 import com.google.common.truth.Truth;
 import java.io.IOException;
@@ -52,20 +48,10 @@ public class CombinedLanguageWithDisabledDensityTest {
 
     @Test
     public void testCombinedDensityAndDisabledLanguagePureSplit() throws Exception {
-        AndroidProject model =
-                project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
-        // Load the custom model for the project
-        Collection<Variant> variants = model.getVariants();
-        assertEquals("Variant Count", 2, variants.size());
-
-        // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, BuilderConstants.DEBUG);
-        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
-        assertNotNull("Debug main info null-check", debugMainArtifact);
-
-        // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
-        assertNotNull(debugOutputs);
+        ProjectBuildOutput projectBuildOutput =
+                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
+        VariantBuildOutput debugVariantOutput =
+                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(3);
@@ -73,17 +59,16 @@ public class CombinedLanguageWithDisabledDensityTest {
         expected.add("fr,fr-rBE");
         expected.add("fr-rCA");
 
-        assertEquals(1, debugOutputs.size());
-        AndroidArtifactOutput output = debugOutputs.iterator().next();
-        assertEquals(4, output.getOutputs().size());
-        for (OutputFile outputFile : output.getOutputs()) {
+        Collection<OutputFile> debugOutputs = debugVariantOutput.getOutputs();
+        assertEquals(4, debugOutputs.size());
+        for (OutputFile outputFile : debugOutputs) {
             String filter = ModelHelper.getFilter(outputFile, VariantOutput.LANGUAGE);
             assertEquals(
                     filter == null ? VariantOutput.MAIN : VariantOutput.SPLIT,
                     outputFile.getOutputType());
 
             // with pure splits, all split have the same version code.
-            assertEquals(12, output.getVersionCode());
+            assertEquals(12, outputFile.getVersionCode());
             if (filter != null) {
                 expected.remove(filter);
             }
@@ -94,7 +79,9 @@ public class CombinedLanguageWithDisabledDensityTest {
         assertTrue(expected.isEmpty());
 
         // check that our density resources are indeed packaged in the main APK.
-        List<String> apkDump = ApkHelper.getApkBadging(output.getMainOutputFile().getOutputFile());
+        List<String> apkDump =
+                ApkHelper.getApkBadging(
+                        ModelHelper.getMainOutputFile(debugOutputs).getOutputFile());
         Truth.assertThat(apkDump).contains("densities: '160' '240' '320' '480'");
     }
 

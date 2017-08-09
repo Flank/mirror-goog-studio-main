@@ -2,7 +2,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
@@ -11,11 +10,8 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.core.BuilderConstants;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import com.android.testutils.apk.Zip;
 import com.android.testutils.truth.MoreTruth;
 import com.google.common.collect.ImmutableList;
@@ -47,7 +43,7 @@ public class AbiPureSplits {
 
     @Test
     public void testAbiPureSplits() throws Exception {
-        AndroidProject model = assembleAndGetModel();
+        ProjectBuildOutput outputModel = assembleAndGetModel();
 
         // build a set of expected outputs
         Set<String> expected = Sets.newHashSetWithExpectedSize(5);
@@ -55,7 +51,7 @@ public class AbiPureSplits {
         expected.add("x86");
         expected.add("armeabi-v7a");
 
-        List<? extends OutputFile> outputs = getOutputs(model);
+        List<? extends OutputFile> outputs = getOutputs(outputModel);
         assertEquals(4, outputs.size());
         for (OutputFile outputFile : outputs) {
             String filter = ModelHelper.getFilter(outputFile, OutputFile.ABI);
@@ -96,11 +92,12 @@ public class AbiPureSplits {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
-        AndroidProject model = assembleAndGetModel();
+        ProjectBuildOutput outputModel = assembleAndGetModel();
 
         // get the last modified time of the initial APKs so we can make sure incremental build
         // does not rebuild things unnecessarily.
-        Map<String, Long> lastModifiedTimePerAbi = getApkModifiedTimePerAbi(getOutputs(model));
+        Map<String, Long> lastModifiedTimePerAbi =
+                getApkModifiedTimePerAbi(getOutputs(outputModel));
 
         TemporaryProjectModification.doTest(
                 project,
@@ -109,8 +106,9 @@ public class AbiPureSplits {
                             "build.gradle",
                             "include 'x86', 'armeabi-v7a', 'mips'",
                             "include 'x86', 'armeabi-v7a', 'mips', 'armeabi'");
-                    AndroidProject incrementalModel =
-                            project.executeAndReturnModel("assembleDebug").getOnlyModel();
+                    ProjectBuildOutput incrementalModel =
+                            project.executeAndReturnModel(
+                                    ProjectBuildOutput.class, "assembleDebug");
 
                     List<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     for (OutputFile output : outputs) {
@@ -147,10 +145,11 @@ public class AbiPureSplits {
         // This test uses the deprecated NDK integration, which does not work properly on Windows.
         AssumeUtil.assumeNotWindows();
 
-        AndroidProject model = assembleAndGetModel();
+        ProjectBuildOutput outputModel = assembleAndGetModel();
 
         // record the build time of each APK to ensure we don't rebuild those in incremental mode.
-        Map<String, Long> lastModifiedTimePerAbi = getApkModifiedTimePerAbi(getOutputs(model));
+        Map<String, Long> lastModifiedTimePerAbi =
+                getApkModifiedTimePerAbi(getOutputs(outputModel));
 
         TemporaryProjectModification.doTest(
                 project,
@@ -159,8 +158,9 @@ public class AbiPureSplits {
                             "build.gradle",
                             "include 'x86', 'armeabi-v7a', 'mips'",
                             "include 'x86', 'armeabi-v7a'");
-                    AndroidProject incrementalModel =
-                            project.executeAndReturnModel("assembleDebug").getOnlyModel();
+                    ProjectBuildOutput incrementalModel =
+                            project.executeAndReturnModel(
+                                    ProjectBuildOutput.class, "assembleDebug");
 
                     List<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     assertThat(outputs).hasSize(3);
@@ -181,27 +181,20 @@ public class AbiPureSplits {
                 });
     }
 
-    private List<? extends OutputFile> getOutputs(AndroidProject projectModel) {
-        // Load the custom model for the project
-        Collection<Variant> variants = projectModel.getVariants();
-        assertEquals("Variant Count", 2, variants.size());
-
-        // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, BuilderConstants.DEBUG);
-        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
-        assertNotNull("Debug main info null-check", debugMainArtifact);
-
-        // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
-        assertNotNull(debugOutputs);
-
-        assertEquals(1, debugOutputs.size());
-        AndroidArtifactOutput output = debugOutputs.iterator().next();
+    private List<? extends OutputFile> getOutputs(ProjectBuildOutput outputModel)
+            throws IOException {
+        // Load the project build outputs
+        VariantBuildOutput debugBuildOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
 
         // all splits have the same version.
-        assertEquals(123, output.getVersionCode());
+        debugBuildOutput
+                .getOutputs()
+                .forEach(
+                        output -> {
+                            assertEquals(123, output.getVersionCode());
+                        });
 
-        return ImmutableList.copyOf(output.getOutputs());
+        return ImmutableList.copyOf(debugBuildOutput.getOutputs());
     }
 
     @NonNull
@@ -216,8 +209,8 @@ public class AbiPureSplits {
         return builder.build();
     }
 
-    private AndroidProject assembleAndGetModel() throws IOException, InterruptedException {
+    private ProjectBuildOutput assembleAndGetModel() throws IOException, InterruptedException {
         project.executor().withLocalAndroidSdkHome().run("clean", "assembleDebug");
-        return project.model().getSingle().getOnlyModel();
+        return project.model().getSingle(ProjectBuildOutput.class);
     }
 }

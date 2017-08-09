@@ -17,14 +17,14 @@
 package com.android.build.gradle.integration.application;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
+import com.android.builder.core.BuilderConstants;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -39,43 +39,36 @@ public class RenamedApkTest {
     public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("renamedApk").create();
 
-    private static AndroidProject model;
+    private static ProjectBuildOutput outputModel;
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
+        outputModel =
+                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        model = null;
+        outputModel = null;
     }
 
     @Test
     public void checkModelReflectsRenamedApk() throws Exception {
         File projectDir = project.getTestDir();
-
-        Collection<Variant> variants = model.getVariants();
-        assertEquals("Variant Count", 2, variants.size());
+        VariantBuildOutput variantBuildOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
+        Collection<OutputFile> outputFiles = variantBuildOutput.getOutputs();
 
         File buildDir = new File(projectDir, "build/outputs/apk/debug");
 
-        for (Variant variant : variants) {
-            if (!variant.getName().equals("debug")) {
-                continue;
-            }
-            AndroidArtifact mainInfo = variant.getMainArtifact();
-            assertNotNull(
-                    "Null-check on mainArtifactInfo for " + variant.getDisplayName(), mainInfo);
+        assertEquals(1, outputFiles.size());
+        OutputFile output = outputFiles.iterator().next();
 
-            AndroidArtifactOutput output = mainInfo.getOutputs().iterator().next();
-
-            assertEquals(
-                    "Output file for " + variant.getName(),
-                    new File(buildDir, variant.getName() + ".apk"),
-                    output.getMainOutputFile().getOutputFile());
-        }
+        String variantName = BuilderConstants.DEBUG;
+        assertEquals(
+                "Output file for " + variantName,
+                new File(buildDir, variantName + ".apk"),
+                output.getOutputFile());
     }
 
     @Test

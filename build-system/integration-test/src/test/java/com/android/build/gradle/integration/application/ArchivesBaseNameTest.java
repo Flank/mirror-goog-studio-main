@@ -1,14 +1,15 @@
 package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
@@ -55,22 +56,15 @@ public class ArchivesBaseNameTest {
 
     private void checkApkName(String name, String extension)
             throws IOException, InterruptedException {
-        GetAndroidModelAction.ModelContainer<AndroidProject> model =
-                project.executeAndReturnModel("assembleDebug");
-        Variant debug =
-                model.getOnlyModel()
-                        .getVariants()
-                        .stream()
-                        .filter(v -> v.getName().equals("debug"))
-                        .findFirst()
-                        .orElseThrow(AssertionError::new);
-        AndroidArtifactOutput androidArtifactOutput =
-                debug.getMainArtifact()
-                        .getOutputs()
-                        .stream()
-                        .findFirst()
-                        .orElseThrow(AssertionError::new);
-        File outputFile = androidArtifactOutput.getMainOutputFile().getOutputFile();
+        ProjectBuildOutput projectBuildOutput =
+                project.executeAndReturnModel(ProjectBuildOutput.class, "assembleDebug");
+        VariantBuildOutput debugBuildOutput =
+                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
+
+        // Get the apk file
+        assertThat(debugBuildOutput.getOutputs()).hasSize(1);
+
+        File outputFile = debugBuildOutput.getOutputs().iterator().next().getOutputFile();
 
         TruthHelper.assertThat(outputFile.getName()).isEqualTo(name + "-debug." + extension);
         TruthHelper.assertThat(outputFile).isFile();

@@ -18,20 +18,27 @@ package com.android.build.gradle.integration.common.utils;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.build.OutputFile;
 import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildOutput;
 import java.io.File;
 import java.util.Collection;
 
 public class VariantHelper {
 
     private final Variant variant;
+    private final VariantBuildOutput variantOutput;
     private final File projectDir;
     private final String outputFileName;
 
-    public VariantHelper(Variant variant, File projectDir, String outputFileName) {
+    public VariantHelper(
+            Variant variant,
+            VariantBuildOutput variantOutput,
+            File projectDir,
+            String outputFileName) {
         this.variant = variant;
+        this.variantOutput = variantOutput;
         this.projectDir = projectDir;
         this.outputFileName = outputFileName;
     }
@@ -41,21 +48,19 @@ public class VariantHelper {
         assertThat(artifact).named("Main Artifact null-check").isNotNull();
 
         String variantName = variant.getName();
+        assertThat(variantName).isEqualTo(variantOutput.getName());
         File build = new File(projectDir,  "build");
         File apk = new File(build, "outputs/apk/" + outputFileName);
 
         Collection<File> sourceFolders = artifact.getGeneratedSourceFolders();
         assertThat(sourceFolders).named("Gen src Folder count").hasSize(5);
 
-        Collection<AndroidArtifactOutput> outputs = artifact.getOutputs();
+        Collection<OutputFile> outputs = variantOutput.getOutputs();
         assertThat(outputs).named("artifact output").isNotNull();
         assertThat(outputs).hasSize(1);
 
-        AndroidArtifactOutput output = outputs.iterator().next();
+        OutputFile output = outputs.iterator().next();
 
         assertThat(output.getOutputFile()).named(variantName + " output").isEqualTo(apk);
-        assertThat(output.getGeneratedManifest())
-                .named("Generated manifest for " + variantName)
-                .isNotNull();
     }
 }

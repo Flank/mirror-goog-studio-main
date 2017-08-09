@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.ndk;
 
-import static com.android.builder.core.BuilderConstants.DEBUG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -26,10 +25,8 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.Maps;
 import java.util.Collection;
 import java.util.Map;
@@ -47,17 +44,18 @@ public class NdkSanAngelesTest {
             .fromTestProject("ndkSanAngeles")
             .create();
 
-    public static AndroidProject model;
+    public static ProjectBuildOutput outputModel;
 
     @BeforeClass
     public static void setUp() throws Exception {
-        model = project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
+        outputModel =
+                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        model = null;
+        outputModel = null;
     }
 
     @Test
@@ -67,17 +65,10 @@ public class NdkSanAngelesTest {
 
     @Test
     public void checkVersionCodeInModel() throws Exception {
-        Collection<Variant> variants = model.getVariants();
-        assertEquals("Variant Count", 2, variants.size());
-
-        // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG);
-        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
-        assertNotNull("Debug main info null-check", debugMainArtifact);
+        VariantBuildOutput debugOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
 
         // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
-        assertNotNull(debugOutputs);
+        Collection<OutputFile> debugOutputs = debugOutput.getOutputs();
         assertEquals(3, debugOutputs.size());
 
         // build a map of expected outputs and their versionCode
@@ -87,7 +78,7 @@ public class NdkSanAngelesTest {
         expected.put("x86", 3000123);
 
         assertEquals(3, debugOutputs.size());
-        for (AndroidArtifactOutput output : debugOutputs) {
+        for (OutputFile output : debugOutputs) {
             for (FilterData filterData : output.getFilters()) {
                 if (filterData.getFilterType().equals(OutputFile.ABI)) {
                     String abiFilter = filterData.getIdentifier();

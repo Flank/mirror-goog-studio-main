@@ -2,17 +2,14 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import com.android.testutils.apk.Apk;
 import java.io.IOException;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -23,7 +20,7 @@ public class AutoDensitySplitTest {
     public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("densitySplit").create();
 
-    private static GetAndroidModelAction.ModelContainer<AndroidProject> model;
+    private static ProjectBuildOutput outputModel;
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
@@ -38,33 +35,24 @@ public class AutoDensitySplitTest {
                         + "    }\n"
                         + "  }\n"
                         + "}\n");
-        model = project.executeAndReturnModel("clean", "assembleDebug");
+        outputModel =
+                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        model = null;
+        outputModel = null;
     }
 
     @Test
     public void testPackaging() throws IOException {
-        for (Variant variant : model.getOnlyModel().getVariants()) {
-            AndroidArtifact mainArtifact = variant.getMainArtifact();
-            if (!variant.getBuildType().equalsIgnoreCase("Debug")) {
-                continue;
-            }
+        VariantBuildOutput debugVariantOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
 
-            for (AndroidArtifactOutput output : mainArtifact.getOutputs()) {
-                System.out.println(output);
-            }
+        assertThat(debugVariantOutput.getOutputs()).hasSize(5);
 
-            Assert.assertEquals(5, mainArtifact.getOutputs().size());
-
-            Apk mdpiApk = project.getApk("mdpi", GradleTestProject.ApkType.DEBUG);
-            assertThat(mdpiApk).contains("res/drawable-mdpi-v4/other.png");
-        }
-
+        Apk mdpiApk = project.getApk("mdpi", GradleTestProject.ApkType.DEBUG);
+        assertThat(mdpiApk).contains("res/drawable-mdpi-v4/other.png");
     }
 
     @Test

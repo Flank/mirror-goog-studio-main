@@ -21,11 +21,10 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantAppProjectBuildOutput;
 import com.android.builder.model.InstantAppVariantBuildOutput;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
@@ -60,21 +59,12 @@ public class FeatureAndAbiPureSplitsTest {
         AndroidProject instantAppProject = projectModels.get(":bundle");
         assertThat(instantAppProject).isNotNull();
         assertThat(instantAppProject.getVariants()).hasSize(2);
-        Variant debugVariant =
-                instantAppProject
-                        .getVariants()
-                        .stream()
-                        .filter(output -> output.getName().equals("debug"))
-                        .findFirst()
-                        .get();
-        assertThat(debugVariant.getMainArtifact().getOutputs()).hasSize(1);
-        debugVariant
-                .getMainArtifact()
-                .getOutputs()
-                .forEach(
-                        androidArtifactOutput ->
-                                assertThat(androidArtifactOutput.getOutputFile().getName())
-                                        .isEqualTo("bundle-debug.zip"));
+        System.out.println(instantAppProject.getVariants());
+
+        Map<String, ProjectBuildOutput> projectOutputModels =
+                sProject.model().getMulti(ProjectBuildOutput.class);
+        assertThat(projectOutputModels).hasSize(4);
+        assertThat(projectOutputModels).doesNotContainKey(":bundle");
 
         Map<String, InstantAppProjectBuildOutput> models =
                 sProject.model().getMulti(InstantAppProjectBuildOutput.class);

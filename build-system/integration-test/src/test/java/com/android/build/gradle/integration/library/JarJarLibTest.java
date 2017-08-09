@@ -18,19 +18,16 @@ package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatAar;
-import static com.android.builder.core.BuilderConstants.DEBUG;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SyncIssue;
-import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildOutput;
 import com.android.ide.common.process.ProcessException;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -78,27 +75,14 @@ public class JarJarLibTest {
                         + "    registerTransform(new com.android.test.jarjar.JarJarTransform(false /*broken transform*/))\n"
                         + "}\n");
 
-        AndroidProject model =
-                project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
-
-        Collection<Variant> variants = model.getVariants();
-        assertEquals("Variant Count", 2, variants.size());
-
-        // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG);
-        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
-        assertNotNull("Debug main info null-check", debugMainArtifact);
-
-        // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
-        assertNotNull(debugOutputs);
-        assertEquals(1, debugOutputs.size());
+        ProjectBuildOutput outputModel =
+                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
+        VariantBuildOutput debugBuildOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
+        assertEquals(1, debugBuildOutput.getOutputs().size());
 
         // make sure the Gson library has been renamed and the original one is not present.
         File outputFile =
-                Iterators.getOnlyElement(debugOutputs.iterator())
-                        .getMainOutputFile()
-                        .getOutputFile();
+                Iterators.getOnlyElement(debugBuildOutput.getOutputs().iterator()).getOutputFile();
         assertThatAar(outputFile).containsClass("Lcom/android/tests/basic/Main;");
 
         // libraries do not include their dependencies unless they are local (which is not

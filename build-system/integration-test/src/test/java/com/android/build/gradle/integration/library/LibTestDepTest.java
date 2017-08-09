@@ -29,6 +29,7 @@ import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
@@ -49,16 +50,19 @@ public class LibTestDepTest {
             GradleTestProject.builder().fromTestProject("libTestDep").create();
 
     private static ModelContainer<AndroidProject> model;
+    private static ProjectBuildOutput outputModel;
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         model = project.executeAndReturnModel("clean", "assembleDebug");
+        outputModel = project.model().getSingle(ProjectBuildOutput.class);
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
         model = null;
+        outputModel = null;
     }
 
     @Test
@@ -88,8 +92,8 @@ public class LibTestDepTest {
     }
 
     @Test
-    public void checkDebugAndReleaseOutputHaveDifferentNames() {
-        ModelHelper.compareDebugAndReleaseOutput(model.getOnlyModel());
+    public void checkDebugAndReleaseOutputHaveDifferentNames() throws Exception {
+        ModelHelper.compareDebugAndReleaseOutput(outputModel);
     }
 
     @Test

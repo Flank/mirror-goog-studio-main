@@ -10,11 +10,9 @@ import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.core.BuilderConstants;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Maps;
 import java.io.IOException;
@@ -29,6 +27,7 @@ import org.junit.experimental.categories.Category;
 /** Assemble tests for densitySplit. */
 public class DensitySplitTest {
     private static AndroidProject model;
+    private static ProjectBuildOutput outputModel;
 
     @ClassRule
     public static GradleTestProject project =
@@ -37,29 +36,26 @@ public class DensitySplitTest {
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
         project.executor().withLocalAndroidSdkHome().run("clean", "assembleDebug");
-
         model = project.model().getSingle().getOnlyModel();
+        outputModel = project.model().getSingle(ProjectBuildOutput.class);
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
         model = null;
+        outputModel = null;
     }
 
     @Test
     public void testPackaging() throws IOException {
-        for (Variant variant : model.getVariants()) {
-            AndroidArtifact mainArtifact = variant.getMainArtifact();
-            if (!variant.getBuildType().equalsIgnoreCase("Debug")) {
-                continue;
-            }
+        VariantBuildOutput debugOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
 
-            assertEquals(5, mainArtifact.getOutputs().size());
+        Collection<OutputFile> outputFiles = debugOutput.getOutputs();
+        assertThat(outputFiles).hasSize(5);
 
-            Apk mdpiApk = project.getApk("mdpi", GradleTestProject.ApkType.DEBUG);
-            assertThat(mdpiApk).contains("res/drawable-mdpi-v4/other.png");
-        }
+        Apk mdpiApk = project.getApk("mdpi", GradleTestProject.ApkType.DEBUG);
+        assertThat(mdpiApk).contains("res/drawable-mdpi-v4/other.png");
 
     }
 
@@ -87,18 +83,10 @@ public class DensitySplitTest {
     }
 
     @Test
-    public void checkVersionCodeInModel() {
-        Collection<Variant> variants = model.getVariants();
-        assertEquals("Variant Count", 2, variants.size());
+    public void checkVersionCodeInModel() throws IOException {
+        VariantBuildOutput debugOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
 
-        // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, BuilderConstants.DEBUG);
-        AndroidArtifact debugMainArficat = debugVariant.getMainArtifact();
-        assertNotNull("Debug main info null-check", debugMainArficat);
-
-        // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArficat.getOutputs();
-        assertNotNull(debugOutputs);
+        Collection<OutputFile> debugOutputs = debugOutput.getOutputs();
         assertEquals(5, debugOutputs.size());
 
         // build a map of expected outputs and their versionCode
@@ -110,7 +98,7 @@ public class DensitySplitTest {
         expected.put("xxhdpi", 512);
 
         assertEquals(5, debugOutputs.size());
-        for (AndroidArtifactOutput output : debugOutputs) {
+        for (OutputFile output : debugOutputs) {
             assertEquals(VariantOutput.FULL_SPLIT, output.getMainOutputFile().getOutputType());
             Collection<? extends OutputFile> outputFiles = output.getOutputs();
             assertEquals(1, outputFiles.size());

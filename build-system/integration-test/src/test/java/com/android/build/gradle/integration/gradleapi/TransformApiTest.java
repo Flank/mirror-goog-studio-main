@@ -17,17 +17,16 @@
 package com.android.build.gradle.integration.gradleapi;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.builder.core.BuilderConstants.DEBUG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.SdkConstants;
+import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.Iterators;
 import com.google.common.io.Files;
@@ -66,23 +65,23 @@ public class TransformApiTest {
                         .executeAndReturnModel("assembleDebug")
                         .getOnlyModel();
 
-        Collection<Variant> variants = model.getVariants();
-        assertEquals("Variant Count", 2, variants.size());
-
-        // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, DEBUG);
-        assertNotNull("debug Variant null-check", debugVariant);
-        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
-        assertNotNull("Debug main info null-check", debugMainArtifact);
+        // get the output model
+        ProjectBuildOutput projectBuildOutput =
+                wholeProject
+                        .getSubproject("androidproject")
+                        .model()
+                        .getSingle(ProjectBuildOutput.class);
+        VariantBuildOutput debugVariantOutput =
+                ModelHelper.getDebugVariantBuildOutput(projectBuildOutput);
+        assertNotNull("debug Variant null-check", debugVariantOutput);
 
         // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
+        Collection<OutputFile> debugOutputs = debugVariantOutput.getOutputs();
         assertNotNull(debugOutputs);
         assertEquals(1, debugOutputs.size());
 
         // make sure the Gson library has been renamed and the original one is not present.
-        Apk outputFile = new Apk(Iterators.getOnlyElement(debugOutputs.iterator()).getMainOutputFile().
-                getOutputFile());
+        Apk outputFile = new Apk(Iterators.getOnlyElement(debugOutputs.iterator()).getOutputFile());
         assertThatApk(outputFile).containsClass("Lcom/google/repacked/gson/Gson;");
         assertThatApk(outputFile).doesNotContainClass("Lcom/google/gson/Gson;");
     }

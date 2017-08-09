@@ -7,13 +7,11 @@ import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.core.BuilderConstants;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
@@ -28,18 +26,18 @@ public class DensitySplitInLTest {
     public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("densitySplitInL").create();
 
-    private static AndroidProject model;
+    private static ProjectBuildOutput outputModel;
 
     @BeforeClass
     public static void setUp() throws Exception {
-        project.executor().run("clean", "assembleDebug");
-        model = project.model().getSingle().getOnlyModel();
+        outputModel =
+                project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assembleDebug");
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        model = null;
+        outputModel = null;
     }
 
     @Test
@@ -52,7 +50,7 @@ public class DensitySplitInLTest {
         expected.add("xhdpi");
         expected.add("xxhdpi");
 
-        Collection<? extends OutputFile> outputs = getOutputs(model);
+        Collection<? extends OutputFile> outputs = getOutputs(outputModel);
         assertThat(outputs).hasSize(5);
         for (OutputFile outputFile : outputs) {
             String densityFilter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY);
@@ -73,7 +71,7 @@ public class DensitySplitInLTest {
         // get the last modified time of the initial APKs so we can make sure incremental build
         // does not rebuild things unnecessarily.
         final Map<String, Long> lastModifiedTimePerDensity =
-                getApkModifiedTimePerDensity(getOutputs(model));
+                getApkModifiedTimePerDensity(getOutputs(outputModel));
 
         TemporaryProjectModification.doTest(
                 project,
@@ -82,8 +80,9 @@ public class DensitySplitInLTest {
                             "build.gradle",
                             "exclude \"ldpi\", \"tvdpi\", \"xxxhdpi\"",
                             "exclude \"ldpi\", \"tvdpi\"");
-                    AndroidProject incrementalModel =
-                            project.executeAndReturnModel("assembleDebug").getOnlyModel();
+                    ProjectBuildOutput incrementalModel =
+                            project.executeAndReturnModel(
+                                    ProjectBuildOutput.class, "assembleDebug");
 
                     Collection<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     assertThat(outputs).hasSize(6);
@@ -113,7 +112,7 @@ public class DensitySplitInLTest {
         // get the last modified time of the initial APKs so we can make sure incremental build
         // does not rebuild things unnecessarily.
         final Map<String, Long> lastModifiedTimePerDensity =
-                getApkModifiedTimePerDensity(getOutputs(model));
+                getApkModifiedTimePerDensity(getOutputs(outputModel));
 
         TemporaryProjectModification.doTest(
                 project,
@@ -122,8 +121,9 @@ public class DensitySplitInLTest {
                             "build.gradle",
                             "exclude \"ldpi\", \"tvdpi\", \"xxxhdpi\"",
                             "exclude \"ldpi\", \"tvdpi\", \"xxxhdpi\", \"xxhdpi\"");
-                    AndroidProject incrementalModel =
-                            project.executeAndReturnModel("assembleDebug").getOnlyModel();
+                    ProjectBuildOutput incrementalModel =
+                            project.executeAndReturnModel(
+                                    ProjectBuildOutput.class, "assembleDebug");
 
                     Collection<? extends OutputFile> outputs = getOutputs(incrementalModel);
                     assertThat(outputs).hasSize(4);
@@ -144,25 +144,19 @@ public class DensitySplitInLTest {
                 });
     }
 
-    private static Collection<? extends OutputFile> getOutputs(AndroidProject projectModel) {
-        Collection<Variant> variants = projectModel.getVariants();
-        assertThat(variants).hasSize(2);
+    private static Collection<? extends OutputFile> getOutputs(ProjectBuildOutput outputModel)
+            throws IOException {
+        VariantBuildOutput debugOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
 
-        // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, BuilderConstants.DEBUG);
-        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
-        assertThat(debugMainArtifact).isNotNull();
+        Collection<OutputFile> outputFiles = debugOutput.getOutputs();
 
-        // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
-        assertThat(debugOutputs).isNotNull();
-        assertThat(debugOutputs).hasSize(1);
-
-        AndroidArtifactOutput output = debugOutputs.iterator().next();
         // with pure splits, all split have the same version code.
-        assertThat(output.getVersionCode()).isEqualTo(12);
+        outputFiles.forEach(
+                output -> {
+                    assertThat(output.getVersionCode()).isEqualTo(12);
+                });
 
-        return output.getOutputs();
+        return outputFiles;
     }
 
     @NonNull

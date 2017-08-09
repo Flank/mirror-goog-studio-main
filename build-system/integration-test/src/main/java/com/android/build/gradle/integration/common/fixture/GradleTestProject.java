@@ -67,6 +67,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1191,6 +1192,21 @@ public final class GradleTestProject implements TestRule {
             throws IOException, InterruptedException {
         lastBuildResult = executor().run(tasks);
         return model().getMulti();
+    }
+
+    /**
+     * Runs gradle on the project, and returns the model of the specified type for each sub-project.
+     * Throws exception on failure.
+     *
+     * @param modelClass Class of the model to return
+     * @param tasks Variadic list of tasks to execute.
+     * @return map of project names to output models
+     */
+    @NonNull
+    public <T> Map<String, T> executeAndReturnMultiModel(Class<T> modelClass, String... tasks)
+            throws IOException, InterruptedException {
+        lastBuildResult = executor().run(tasks);
+        return model().getMulti(modelClass);
     }
 
     /** Returns the latest build result. */

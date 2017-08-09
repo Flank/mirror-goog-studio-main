@@ -16,20 +16,20 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
+import com.android.build.OutputFile;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ApkHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -38,7 +38,7 @@ import org.junit.Test;
 
 /** Test for unresolved placeholders in libraries. */
 public class PlaceholderInLibsTest {
-    private static ModelContainer<AndroidProject> models;
+    private static Map<String, ProjectBuildOutput> outputModels;
 
     @ClassRule
     public static GradleTestProject project =
@@ -46,8 +46,9 @@ public class PlaceholderInLibsTest {
 
     @BeforeClass
     public static void setup() throws IOException, InterruptedException {
-        models =
+        outputModels =
                 project.executeAndReturnMultiModel(
+                        ProjectBuildOutput.class,
                         "clean",
                         ":examplelibrary:generateDebugAndroidTestSources",
                         "app:assembleDebug");
@@ -56,27 +57,28 @@ public class PlaceholderInLibsTest {
     @AfterClass
     public static void cleanUp() {
         project = null;
-        models = null;
+        outputModels = null;
     }
 
     @Test
     public void testLibraryPlaceholderSubstitutionInFinalApk() throws Exception {
 
         // Load the custom model for the project
-        Collection<Variant> variants = models.getModelMap().get(":app").getVariants();
-        assertEquals("Variant Count", 2, variants.size());
+        ProjectBuildOutput projectBuildOutput = outputModels.get(":app");
+        Collection<VariantBuildOutput> variantBuildOutputs =
+                projectBuildOutput.getVariantsBuildOutput();
+        assertThat(variantBuildOutputs).named("Variant Count").hasSize(2);
 
         // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, "flavorDebug");
-        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
-        assertNotNull("Debug main info null-check", debugMainArtifact);
+        VariantBuildOutput debugOutput =
+                ModelHelper.getVariantBuildOutput(variantBuildOutputs, "flavorDebug");
 
         // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
+        Collection<OutputFile> debugOutputs = debugOutput.getOutputs();
         assertNotNull(debugOutputs);
 
         assertEquals(1, debugOutputs.size());
-        AndroidArtifactOutput output = debugOutputs.iterator().next();
+        OutputFile output = debugOutputs.iterator().next();
         assertEquals(1, output.getOutputs().size());
 
         List<String> apkBadging =

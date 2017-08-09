@@ -2,18 +2,16 @@ package com.android.build.gradle.integration.application;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ApkHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
+import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -30,11 +28,12 @@ public class ApplicationIdInLibsTest {
 
     @Test
     public void testLibPlaceholderSubstitutaionInFinalApk() throws Exception {
-        GetAndroidModelAction.ModelContainer<AndroidProject> models =
-                project.executeAndReturnMultiModel("clean", "app:assembleDebug");
+        Map<String, ProjectBuildOutput> outputModels =
+                project.executeAndReturnMultiModel(
+                        ProjectBuildOutput.class, "clean", "app:assembleDebug");
         assertThat(
                         checkPermissionPresent(
-                                models,
+                                outputModels,
                                 "'com.example.manifest_merger_example.flavor.permission.C2D_MESSAGE'"))
                 .isTrue();
 
@@ -43,41 +42,37 @@ public class ApplicationIdInLibsTest {
                 "manifest_merger_example.flavor",
                 "manifest_merger_example.change");
 
-        models = project.executeAndReturnMultiModel("clean", "app:assembleDebug");
+        outputModels =
+                project.executeAndReturnMultiModel(
+                        ProjectBuildOutput.class, "clean", "app:assembleDebug");
         assertThat(
                         checkPermissionPresent(
-                                models,
+                                outputModels,
                                 "'com.example.manifest_merger_example.flavor.permission.C2D_MESSAGE'"))
                 .isFalse();
         assertThat(
                         checkPermissionPresent(
-                                models,
+                                outputModels,
                                 "'com.example.manifest_merger_example.change.permission.C2D_MESSAGE'"))
                 .isTrue();
     }
 
     private static boolean checkPermissionPresent(
-            GetAndroidModelAction.ModelContainer<AndroidProject> models, String permission) {
-        // Load the custom model for the project
-        Collection<Variant> variants = models.getModelMap().get(":app").getVariants();
-        assertThat(variants).hasSize(2);
+            Map<String, ProjectBuildOutput> outputModels, String permission) {
+        assertThat(outputModels).containsKey(":app");
+        assertThat(outputModels.get(":app")).isNotNull();
+        Collection<VariantBuildOutput> variantBuildOutputs =
+                outputModels.get(":app").getVariantsBuildOutput();
+        assertThat(variantBuildOutputs).hasSize(2);
 
-        // get the main artifact of the debug artifact
-        Variant debugVariant = ModelHelper.getVariant(variants, "flavorDebug");
-        AndroidArtifact debugMainArtifact = debugVariant.getMainArtifact();
-        assertThat(debugMainArtifact).named("Debug main info null-check").isNotNull();
-
-        // get the outputs.
-        Collection<AndroidArtifactOutput> debugOutputs = debugMainArtifact.getOutputs();
-        assertThat(debugOutputs).isNotNull();
-
-        assertThat(debugOutputs).hasSize(1);
-        AndroidArtifactOutput output = Iterables.getOnlyElement(debugOutputs);
-        assertThat(output.getOutputs()).hasSize(1);
+        // select the debug variant
+        VariantBuildOutput debugBuildOutput =
+                ModelHelper.getVariantBuildOutput(variantBuildOutputs, "flavorDebug");
+        assertThat(debugBuildOutput.getOutputs()).hasSize(1);
 
         List<String> apkBadging =
                 ApkHelper.getApkBadging(
-                        Iterables.getOnlyElement(output.getOutputs()).getOutputFile());
+                        Iterables.getOnlyElement(debugBuildOutput.getOutputs()).getOutputFile());
 
         for (String line : apkBadging) {
             if (line.contains("uses-permission: name=" + permission)) {

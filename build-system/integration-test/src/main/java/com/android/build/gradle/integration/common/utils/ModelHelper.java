@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.common.utils;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.BuilderConstants.DEBUG;
+import static com.android.builder.core.BuilderConstants.RELEASE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static com.android.builder.model.AndroidProject.ARTIFACT_UNIT_TEST;
@@ -29,18 +30,21 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.FilterData;
+import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.builder.model.AndroidArtifact;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.ProductFlavorContainer;
+import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -77,36 +81,28 @@ public class ModelHelper {
 
     /**
      * Returns the APK file for a single-output variant.
-     * @param variants the list of variants
+     *
+     * @param variantOutputs the list of variants from the post-build model
      * @param variantName the name of the variant to return
      * @return the output file, always, or assert before.
      */
     @NonNull
     public static File findOutputFileByVariantName(
-            @NonNull Collection<Variant> variants,
-            @NonNull String variantName) {
+            @NonNull Collection<VariantBuildOutput> variantOutputs, @NonNull String variantName) {
 
-        Variant variant = findVariantByName(variants, variantName);
-        assertNotNull(
-                "variant '" + variantName + "' null-check",
-                variant);
+        VariantBuildOutput variantOutput =
+                ModelHelper.getVariantBuildOutput(variantOutputs, variantName);
+        assertNotNull("variant '" + variantName + "' null-check", variantOutput);
 
-        AndroidArtifact artifact = variant.getMainArtifact();
-        assertNotNull(
-                "variantName '" + variantName + "' main artifact null-check",
-                artifact);
-
-        Collection<AndroidArtifactOutput> variantOutputs = artifact.getOutputs();
-        assertNotNull(
-                "variantName '" + variantName + "' outputs null-check",
-                variantOutputs);
+        Collection<OutputFile> variantOutputFiles = variantOutput.getOutputs();
+        assertNotNull("variantName '" + variantName + "' outputs null-check", variantOutputFiles);
         // we only support single output artifact in this helper method.
         assertEquals(
                 "variantName '" + variantName + "' outputs size check",
                 1,
-                variantOutputs.size());
+                variantOutputFiles.size());
 
-        AndroidArtifactOutput output = variantOutputs.iterator().next();
+        OutputFile output = variantOutputFiles.iterator().next();
         assertNotNull(
                 "variantName '" + variantName + "' single output null-check",
                 output);
@@ -171,31 +167,18 @@ public class ModelHelper {
         }
     }
 
-    public static void compareDebugAndReleaseOutput(@NonNull AndroidProject model) {
-        Collection<Variant> variants = model.getVariants();
+    public static void compareDebugAndReleaseOutput(@NonNull ProjectBuildOutput model) {
+        Collection<VariantBuildOutput> variants = model.getVariantsBuildOutput();
         assertEquals("Variant Count", 2, variants.size());
 
         // debug variant
-        Variant debugVariant = getVariant(variants, DEBUG);
-
-        // debug artifact
-        AndroidArtifact debugMainInfo = debugVariant.getMainArtifact();
-        assertNotNull("Debug main info null-check", debugMainInfo);
-
-        Collection<AndroidArtifactOutput> debugMainOutputs = debugMainInfo.getOutputs();
-        assertNotNull("Debug main output null-check", debugMainOutputs);
+        VariantBuildOutput debugVariant = getVariantBuildOutput(variants, DEBUG);
 
         // release variant
-        Variant releaseVariant = getVariant(variants, "release");
+        VariantBuildOutput releaseVariant = getVariantBuildOutput(variants, RELEASE);
 
-        AndroidArtifact relMainInfo = releaseVariant.getMainArtifact();
-        assertNotNull("Release main info null-check", relMainInfo);
-
-        Collection<AndroidArtifactOutput> relMainOutputs = relMainInfo.getOutputs();
-        assertNotNull("Rel Main output null-check", relMainOutputs);
-
-        File debugFile = debugMainOutputs.iterator().next().getOutputFile();
-        File releaseFile = relMainOutputs.iterator().next().getOutputFile();
+        File debugFile = Iterables.getOnlyElement(debugVariant.getOutputs()).getOutputFile();
+        File releaseFile = Iterables.getOnlyElement(releaseVariant.getOutputs()).getOutputFile();
 
         assertFalse("debug: " + debugFile + " / release: " + releaseFile,
                 debugFile.equals(releaseFile));
@@ -245,6 +228,21 @@ public class ModelHelper {
     @NonNull
     public static JavaArtifact getUnitTestArtifact(@NonNull AndroidProject project) {
         return getUnitTestArtifact(project, "debug");
+    }
+
+    /**
+     * Gets the VariantBuildOutput with the given name.
+     *
+     * @param items the build outputs to search
+     * @param name the name to match, e.g. {@link com.android.builder.core.BuilderConstants#DEBUG}
+     * @return the only item with the given name
+     * @throws AssertionError if no items match or if multiple items match
+     */
+    @NonNull
+    public static VariantBuildOutput getVariantBuildOutput(
+            @NonNull Collection<VariantBuildOutput> items, @NonNull String name) {
+        return searchForExistingItem(
+                items, name, VariantBuildOutput::getName, "VariantBuildOutput");
     }
 
     /**
@@ -430,5 +428,44 @@ public class ModelHelper {
         return (name1, name2) -> {
             throw new IllegalArgumentException("Duplicate objects with name: " + name1);
         };
+    }
+
+    /**
+     * Searches the given collection of OutputFiles and returns the single item with outputType
+     * equal to {@link VariantOutput#MAIN}.
+     *
+     * @param outputFiles the outputFiles to search
+     * @return the single item with type MAIN
+     * @throws AssertionError if none of the outputFiles has type MAIN
+     * @throws IllegalArgumentException if multiple items have type MAIN
+     */
+    public static OutputFile getMainOutputFile(Collection<OutputFile> outputFiles) {
+        return outputFiles
+                .stream()
+                .filter(file -> file.getOutputType().equals(VariantOutput.MAIN))
+                .reduce(toSingleItem())
+                .orElseThrow(
+                        () ->
+                                new AssertionError(
+                                        "Unable to find main output file. Options are: "
+                                                + outputFiles)); // Unsure about this
+    }
+
+    /**
+     * Convenience method to verify that the given ProjectBuildOutput contains exactly two variants,
+     * then return the "debug" variant. This is most useful for integration tests building projects
+     * with no extra buildTypes and no specified productFlavors.
+     *
+     * @param model the post-build model
+     * @return the build output for the "debug" variant
+     * @throws AssertionError if the model contains more than two variants, or does not have a
+     *     "debug" variant
+     */
+    public static VariantBuildOutput getDebugVariantBuildOutput(ProjectBuildOutput model) {
+        Collection<VariantBuildOutput> variantBuildOutputs = model.getVariantsBuildOutput();
+        assertThat(variantBuildOutputs).hasSize(2);
+        VariantBuildOutput debugVariantOutput = getVariantBuildOutput(variantBuildOutputs, DEBUG);
+        assertThat(debugVariantOutput).isNotNull();
+        return debugVariantOutput;
     }
 }

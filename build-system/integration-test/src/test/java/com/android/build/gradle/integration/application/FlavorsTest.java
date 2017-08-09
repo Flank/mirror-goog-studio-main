@@ -35,8 +35,10 @@ import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.ProductFlavorContainer;
+import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.Variant;
+import com.android.builder.model.VariantBuildOutput;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
@@ -90,9 +92,6 @@ public class FlavorsTest {
                                 .collect(Collectors.toList()))
                 .containsExactly("debug", "release");
 
-        Collection<Variant> variants = model.getVariants();
-        assertEquals("Variant Count", 8, variants.size());
-
         Map<String, String> expected =
                 ImmutableMap.of("f1", "group1", "f2", "group1", "fa", "group2", "fb", "group2");
 
@@ -111,11 +110,25 @@ public class FlavorsTest {
                     .isEqualTo(expected.get(flavor.getName()));
         }
 
+        Collection<Variant> variants = model.getVariants();
+        assertEquals("Variant Count", 8, variants.size());
         Variant f1faDebugVariant = ModelHelper.getVariant(variants, "f1FaDebug");
         assertThat(f1faDebugVariant.getProductFlavors()).containsExactly("f1", "fa");
         new ProductFlavorHelper(f1faDebugVariant.getMergedFlavor(), "F1faDebug Merged Flavor")
                 .test();
-        new VariantHelper(f1faDebugVariant, projectDir, "/f1Fa/debug/flavors-f1-fa-debug.apk")
+
+        // Verify the build outputs
+        ProjectBuildOutput projectBuildOutput = project.model().getSingle(ProjectBuildOutput.class);
+        Collection<VariantBuildOutput> variantBuildOutputs =
+                projectBuildOutput.getVariantsBuildOutput();
+        assertThat(variantBuildOutputs).named("Variant Output Count").hasSize(8);
+        VariantBuildOutput f1f1VariantOutput =
+                ModelHelper.getVariantBuildOutput(variantBuildOutputs, "f1FaDebug");
+        new VariantHelper(
+                        f1faDebugVariant,
+                        f1f1VariantOutput,
+                        projectDir,
+                        "/f1Fa/debug/flavors-f1-fa-debug.apk")
                 .test();
     }
 
