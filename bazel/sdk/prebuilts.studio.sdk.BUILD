@@ -84,21 +84,6 @@ filegroup(
 )
 
 filegroup(
-    name = "navigation-runtime_latest",
-    srcs = [":navigation-runtime_0.0.1-SNAPSHOT"],
-    visibility = ["//visibility:public"],
-)
-
-filegroup(
-    name = "navigation-runtime_0.0.1-SNAPSHOT",
-    srcs = glob(
-        include = [
-            "*/extras/m2repository/com/android/support/navigation/navigation-runtime/0.0.1-SNAPSHOT/**",
-        ],
-    ),
-)
-
-filegroup(
     name = "constraint-layout_latest",
     srcs = [":constraint-layout_1.0.2"],
     visibility = ["//visibility:public"],

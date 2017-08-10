@@ -93,7 +93,7 @@ public class FontDetector extends ResourceXmlDetector {
                     "https://developer.android.com/guide/topics/text/downloadable-fonts.html");
 
     public static final GradleCoordinate MIN_APPSUPPORT_VERSION = new GradleCoordinate(
-      SUPPORT_LIB_GROUP_ID, APPCOMPAT_LIB_ARTIFACT_ID, "26.0.0-beta1");
+      SUPPORT_LIB_GROUP_ID, APPCOMPAT_LIB_ARTIFACT_ID, "26.0.0");
 
     protected FontLoader mFontLoader;
 
