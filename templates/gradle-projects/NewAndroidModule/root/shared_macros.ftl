@@ -43,7 +43,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     </#if>
 
-    <#if canHaveCpp && includeCppSupport!false && cppFlags != "">
+    <#if canHaveCpp && (includeCppSupport!false) && cppFlags != "">
         externalNativeBuild {
             cmake {
                 cppFlags "${cppFlags}"
@@ -61,7 +61,7 @@ android {
 
 <@proguard.proguardConfig />
 
-<#if canHaveCpp && includeCppSupport!false>
+<#if canHaveCpp && (includeCppSupport!false)>
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"

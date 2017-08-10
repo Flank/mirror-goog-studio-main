@@ -38,7 +38,7 @@
             </#if>
             <#if hasNoActionBar>
                 android:theme="@style/${themeNameNoActionBar}"
-            <#elseif requireTheme!false && !hasApplicationTheme && appCompat>
+            <#elseif (requireTheme!false) && !hasApplicationTheme && appCompat>
                 android:theme="@style/${themeName}"
             </#if>>
             <@manifestMacros.commonActivityBody />
