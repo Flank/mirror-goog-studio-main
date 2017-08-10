@@ -45,7 +45,7 @@ public class CompileTest {
     @Test
     public void compilePng() throws Exception {
         Path drawable = temporaryFolder.newFolder("drawable").toPath();
-        Path lena = drawable.resolve("lena.png");
+        Path lena = drawable.resolve("лена.png");
         Path out = temporaryFolder.newFolder().toPath();
 
         Aapt2TestFiles.writeLenaPng(lena);
@@ -60,7 +60,7 @@ public class CompileTest {
     @Test
     public void compileXml() throws Exception {
         Path values = temporaryFolder.newFolder("values-w820dp").toPath();
-        Path strings = values.resolve("strings-w820dp.xml");
+        Path strings = values.resolve("strings☃-w820dp.xml");
         Path out = temporaryFolder.newFolder().toPath();
 
         Aapt2TestFiles.writeStringsXml(strings);
