@@ -83,7 +83,7 @@ public class PlaceholderHandlerTest extends TestCase {
                 TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml);
 
         PlaceholderHandler.visit(
-                ManifestMerger2.MergeType.APPLICATION, refDocument, key -> "newValue", mBuilder);
+                MergingReport.Record.Severity.ERROR, refDocument, key -> "newValue", mBuilder);
 
         Optional<XmlElement> activityOne = refDocument.getRootNode()
                 .getNodeByTypeAndKey(ManifestModel.NodeTypes.ACTIVITY, ".activityOne");
@@ -131,7 +131,7 @@ public class PlaceholderHandlerTest extends TestCase {
                 TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml);
 
         PlaceholderHandler.visit(
-                ManifestMerger2.MergeType.APPLICATION,
+                MergingReport.Record.Severity.ERROR,
                 refDocument,
                 key -> {
                     if (key.equals("first")) {
@@ -189,8 +189,8 @@ public class PlaceholderHandlerTest extends TestCase {
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
                 TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml);
 
-        PlaceholderHandler
-                .visit(ManifestMerger2.MergeType.APPLICATION, refDocument, nullResolver, mBuilder);
+        PlaceholderHandler.visit(
+                MergingReport.Record.Severity.ERROR, refDocument, nullResolver, mBuilder);
         // verify the error was recorded.
         verify(mBuilder).addMessage(
                 any(SourceFilePosition.class),
@@ -209,8 +209,8 @@ public class PlaceholderHandlerTest extends TestCase {
         XmlDocument refDocument = TestUtils.xmlDocumentFromString(
                 TestUtils.sourceFile(getClass(), "testPlaceholders#xml"), xml);
 
-        PlaceholderHandler
-                .visit(ManifestMerger2.MergeType.LIBRARY, refDocument, nullResolver, mBuilder);
+        PlaceholderHandler.visit(
+                MergingReport.Record.Severity.INFO, refDocument, nullResolver, mBuilder);
         // verify the error was recorded.
         verify(mBuilder).addMessage(
                 any(SourceFilePosition.class),
@@ -233,7 +233,7 @@ public class PlaceholderHandlerTest extends TestCase {
 
         MergingReport.Builder builder = new MergingReport.Builder(logger);
         PlaceholderHandler.visit(
-                ManifestMerger2.MergeType.APPLICATION, refDocument, key -> ".activityOne", builder);
+                MergingReport.Record.Severity.ERROR, refDocument, key -> ".activityOne", builder);
 
         Optional<XmlElement> activityOne =
                 refDocument
