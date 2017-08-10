@@ -22,7 +22,7 @@ android {
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
-    <#if includeCppSupport!false && cppFlags != "">
+    <#if (includeCppSupport!false) && cppFlags != "">
         externalNativeBuild {
             cmake {
                 cppFlags "${cppFlags}"
