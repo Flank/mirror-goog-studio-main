@@ -42,6 +42,7 @@ import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -70,6 +71,12 @@ public class ExternalNativeBuildTaskUtils {
     @NonNull
     public static File getOutputJson(@NonNull File jsonFolder, @NonNull String abi) {
         return new File(getOutputFolder(jsonFolder, abi), "android_gradle_build.json");
+    }
+
+    /** Utility function that gets the name of the output JSON for a particular ABI. */
+    @NonNull
+    public static File getCompileCommandsJson(@NonNull File jsonFolder, @NonNull String abi) {
+        return new File(getOutputFolder(jsonFolder, abi), "compile_commands.json");
     }
 
     @NonNull
@@ -192,6 +199,26 @@ public class ExternalNativeBuildTaskUtils {
                 externalProjectPaths.get(buildSystem),
                 getExternalNativeBuildPath(config).get(buildSystem),
                 null);
+    }
+
+    /**
+     * Writes the given object as JSON to the given json file.
+     *
+     * @throws IOException I/O failure
+     */
+    public static void writeNativeBuildConfigValueToJsonFile(
+            @NonNull File outputJson, @NonNull NativeBuildConfigValue nativeBuildConfigValue)
+            throws IOException {
+        Gson gson =
+                new GsonBuilder()
+                        .registerTypeAdapter(File.class, new PlainFileGsonTypeAdaptor())
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .create();
+
+        FileWriter jsonWriter = new FileWriter(outputJson);
+        gson.toJson(nativeBuildConfigValue, jsonWriter);
+        jsonWriter.close();
     }
 
     /**

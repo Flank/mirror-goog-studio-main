@@ -17,11 +17,23 @@
 package com.android.build.gradle.external.cmake;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.build.gradle.external.cmake.server.CodeModel;
+import com.android.build.gradle.external.cmake.server.Configuration;
+import com.android.build.gradle.external.cmake.server.FileGroup;
+import com.android.build.gradle.external.cmake.server.Project;
+import com.android.build.gradle.external.cmake.server.Target;
+import com.android.build.gradle.external.gson.NativeToolchainValue;
+import com.android.build.gradle.external.gson.PlainFileGsonTypeAdaptor;
 import com.android.repository.Revision;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashSet;
+import java.util.Set;
 
 /** Cmake utility class. */
 public class CmakeUtils {
@@ -42,6 +54,80 @@ public class CmakeUtils {
     @NonNull
     public static Revision getVersion(@NonNull String cmakeVersionString) {
         return Revision.parseRevision(cmakeVersionString);
+    }
+
+    /**
+     * Returns the build command for the given target (given the output folder and cmake
+     * executable).
+     */
+    @NonNull
+    public static String getBuildCommand(
+            @NonNull File cmakeExecutable, @NonNull File outputFolder, @NonNull String targetName) {
+        return cmakeExecutable.getAbsolutePath()
+                + " --build "
+                + outputFolder.getAbsolutePath()
+                + " --target "
+                + targetName;
+    }
+
+    /**
+     * Returns the command to clean up for the given target (given the output folder and cmake
+     * executable).
+     */
+    @NonNull
+    public static String getCleanCommand(
+            @NonNull File cmakeExecutable, @NonNull File outputFolder) {
+        return cmakeExecutable.getAbsolutePath()
+                + " --build "
+                + outputFolder.getAbsolutePath()
+                + " --target clean";
+    }
+
+    /** Returns the C++ file extensions for the given code model. */
+    @NonNull
+    public static Set<String> getCppExtensionSet(@NonNull CodeModel codeModel) {
+        return getLangExtensions(codeModel, "CXX");
+    }
+
+    /** Returns the C file extensions for the given code model. */
+    @NonNull
+    public static Set<String> getCExtensionSet(CodeModel codeModel) {
+        return getLangExtensions(codeModel, "C");
+    }
+
+    /**
+     * Returns the toolchain hash for the given toolchain. If the contents of the toolchain are
+     * null, the functions returns 0.
+     */
+    public static int getToolchainHash(@NonNull NativeToolchainValue toolchainValue) {
+        StringBuilder toolchainString = new StringBuilder();
+        if (toolchainValue.cppCompilerExecutable != null) {
+            toolchainString =
+                    toolchainString
+                            .append(toolchainValue.cppCompilerExecutable.getAbsolutePath())
+                            .append(" ");
+        }
+        if (toolchainValue.cCompilerExecutable != null) {
+            toolchainString =
+                    toolchainString.append(toolchainValue.cCompilerExecutable.getAbsolutePath());
+        }
+
+        return toolchainString.toString().hashCode();
+    }
+
+    /**
+     * Returns a JSON string representation of the given object. This is used instead of 'toString'
+     * when printing an object's contents.
+     */
+    @Nullable
+    public static <ContentType> String getObjectToString(@Nullable ContentType content) {
+        Gson gson =
+                new GsonBuilder()
+                        .registerTypeAdapter(File.class, new PlainFileGsonTypeAdaptor())
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .create();
+        return gson.toJson(content);
     }
 
     /**
@@ -99,5 +185,50 @@ public class CmakeUtils {
                 inputStreamReader.close();
             }
         }
+    }
+
+    /**
+     * Returns the set of the language extensions from the given code model. For C++, Cmake server
+     * sets the language to CXX, in which case, the language param would be set to "CXX".
+     *
+     * @param codeModel - code model
+     * @param language - language for which we need the extensions
+     * @return set of language extensions
+     */
+    @NonNull
+    private static Set<String> getLangExtensions(
+            @NonNull CodeModel codeModel, @NonNull String language) {
+        Set<String> languageSet = new HashSet<>();
+        if (codeModel.configurations == null) {
+            return languageSet;
+        }
+        for (Configuration configuration : codeModel.configurations) {
+            if (configuration.projects == null) {
+                continue;
+            }
+            for (Project project : configuration.projects) {
+                if (project.targets == null) {
+                    continue;
+                }
+                for (Target target : project.targets) {
+                    if (target.fileGroups == null) {
+                        continue;
+                    }
+                    for (FileGroup fileGroup : target.fileGroups) {
+                        if (fileGroup.sources == null
+                                || fileGroup.language == null
+                                || !fileGroup.language.equals(language)) {
+                            continue;
+                        }
+                        for (String source : fileGroup.sources) {
+                            String extension = source.substring(source.lastIndexOf('.') + 1).trim();
+                            languageSet.add(extension);
+                        } // sources
+                    } // FileGroup
+                } // Target
+            } // Project
+        } // Configuration
+
+        return languageSet;
     }
 }
