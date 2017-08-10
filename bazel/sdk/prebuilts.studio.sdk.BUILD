@@ -306,3 +306,11 @@ filegroup(
     srcs = glob(["*/sources/**"]),
     visibility = ["//visibility:public"],
 )
+
+filegroup(
+    name = "instant-apps-sdk",
+    srcs = glob(
+        include = ["*/extras/google/instantapps/**"],
+    ),
+    visibility = ["//visibility:public"],
+)

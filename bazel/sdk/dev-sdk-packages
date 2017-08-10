@@ -42,5 +42,8 @@ extras;m2repository;com;android;support;constraint;constraint-layout-solver;1.0.
 
 cmake;3.6.4111459:**:docs/**
 
+# Instant apps sdk used in integration tests
+extras;google;instantapps
+
 # platforms/android-21 is included because it's needed to build lldb-server
 ndk-bundle:**:{platforms/android-9/**,platforms/android-10/**,platforms/android-11,platforms/android-12/**,platforms/android-13/**,platforms/android-14/**,platforms/android-15/**,platforms/android-16/**,platforms/android-17/**,platforms/android-18/**,platforms/android-20/**,platforms/android-22/**,platforms/android-23/**,sources/cxx-stl/**/test/**}
