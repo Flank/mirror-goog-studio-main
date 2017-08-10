@@ -1,4 +1,4 @@
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 import android.<#if appCompat>support.v4.</#if>app.Fragment
 import android.os.Bundle

@@ -1,4 +1,4 @@
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
 import android.support.design.widget.BottomNavigationView

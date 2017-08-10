@@ -1,4 +1,4 @@
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 import android.content.res.Configuration
 import android.os.Bundle

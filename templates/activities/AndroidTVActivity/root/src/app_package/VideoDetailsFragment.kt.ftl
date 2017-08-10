@@ -12,7 +12,7 @@
  * the License.
  */
 
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 import android.content.Context
 import android.content.Intent

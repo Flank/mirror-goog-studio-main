@@ -12,7 +12,7 @@
  * the License.
  */
 
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 import android.app.Activity
 import android.os.Bundle

@@ -12,7 +12,7 @@
  * the License.
  */
 
-package ${packageName};
+package ${escapeKotlinIdentifiers(packageName)};
 
 import android.graphics.drawable.Drawable
 import android.support.v17.leanback.widget.ImageCardView

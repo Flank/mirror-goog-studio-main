@@ -12,7 +12,7 @@
  * the License.
  */
 
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 import android.os.Bundle
 import android.support.v4.app.FragmentActivity

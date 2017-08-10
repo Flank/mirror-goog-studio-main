@@ -12,7 +12,7 @@
  * the License.
  */
 
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 object MovieList {
     val MOVIE_CATEGORY = arrayOf(

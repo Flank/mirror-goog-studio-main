@@ -1,4 +1,4 @@
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
