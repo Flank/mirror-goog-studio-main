@@ -22,11 +22,10 @@ public class DeviceProperties extends ExternalResource {
         mySdk = sdk;
     }
 
-    private void writeFile() {
+    public void writeFile() {
         try {
             File propertiesFile = new File("device_info.prop");
             // We always expect to create a new file.
-            Assert.assertTrue(propertiesFile.createNewFile());
             PrintStream stream = new PrintStream(propertiesFile);
             stream.println("ro.build.version.codename=" + myCodeName);
             stream.println("ro.build.version.release=" + myRelease);
@@ -34,16 +33,5 @@ public class DeviceProperties extends ExternalResource {
         } catch (IOException ex) {
             Assert.fail("Failed to write prop file: " + ex);
         }
-    }
-
-    @Override
-    protected void before() throws Throwable {
-        writeFile();
-        super.before();
-    }
-
-    @Override
-    protected void after() {
-        super.after();
     }
 }

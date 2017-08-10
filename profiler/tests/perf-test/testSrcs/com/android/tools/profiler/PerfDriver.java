@@ -45,9 +45,18 @@ public class PerfDriver {
     private FakeAndroidDriver myMockApp;
     private PerfdDriver myPerfdDriver;
     private GrpcUtils myGrpc;
+    private boolean myIsOPlusDevice;
+    private DeviceProperties myPropertiesFile;
 
-    public PerfDriver() {
+    public PerfDriver(boolean isOPlusDevice) {
         buildAndSaveConfig();
+        if (isOPlusDevice) {
+            myPropertiesFile = new DeviceProperties("O+", "26", "26");
+        } else {
+            myPropertiesFile = new DeviceProperties("Pre-O", "24", "24");
+        }
+        myPropertiesFile.writeFile();
+        myIsOPlusDevice = isOPlusDevice;
         myCommunicationPort = getAvailablePort();
         myMockApp = new FakeAndroidDriver(LOCAL_HOST, myPort, myCommunicationPort);
         myPerfdDriver = new PerfdDriver(myConfigFile.getAbsolutePath());
@@ -76,13 +85,36 @@ public class PerfDriver {
         return myPort;
     }
 
-    public void start() throws IOException {
-        copyFilesForJvmti();
+    /**
+     * Function that launches the FakeAndroid framework, as well as perfd. This function will wait
+     * until the framework has been loaded. Load the proper dex into the android framework and
+     * launch the specified activity. After the activity is launched for JVMTI (O+) test the
+     * function will attach the agent and wait until successful before returning.
+     */
+    public void start(String activity) throws IOException {
+        if (myIsOPlusDevice) {
+            copyFilesForJvmti();
+        }
         myMockApp.start();
         myPerfdDriver.start();
 
         //Block until we are in a state for the test to continue.
         assertTrue(myMockApp.waitForInput("Test Framework Server Listening"));
+        myMockApp.setProperty(
+                "profiler.service.address", String.format("%s:%d", PerfDriver.LOCAL_HOST, myPort));
+        if (!myIsOPlusDevice) {
+            myMockApp.loadDex(ProcessRunner.getProcessPath("profiler.service.location"));
+            myMockApp.loadDex(ProcessRunner.getProcessPath("instrumented.app.dex.location"));
+        } else {
+
+            myMockApp.loadDex(ProcessRunner.getProcessPath("jvmti.app.dex.location"));
+        }
+        // Load our mock application, anad launch our test activity.
+        myMockApp.launchActivity(activity);
+
+        if (myIsOPlusDevice) {
+            attachAgent();
+        }
     }
 
     private void copyFilesForJvmti() {
