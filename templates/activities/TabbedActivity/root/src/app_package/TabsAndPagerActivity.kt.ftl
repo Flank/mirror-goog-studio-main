@@ -1,4 +1,4 @@
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 <#if hasAppBar>
 <#if features == 'tabs'>

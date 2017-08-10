@@ -12,7 +12,7 @@
  * the License.
  */
 
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 import java.util.Collections
 import java.util.Timer

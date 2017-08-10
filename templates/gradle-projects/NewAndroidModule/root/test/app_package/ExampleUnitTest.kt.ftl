@@ -1,4 +1,4 @@
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 import org.junit.Test
 

@@ -1,5 +1,5 @@
 <#import "root://activities/common/kotlin_macros.ftl" as kt>
-package ${packageName}
+package ${escapeKotlinIdentifiers(packageName)}
 
 import ${superClassFqcn}
 import android.os.Bundle
