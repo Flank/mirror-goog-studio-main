@@ -77,7 +77,11 @@ public final class DesugarProcessBuilder extends ProcessEnvBuilder<DesugarProces
         bootClasspath.forEach(b -> builder.addArgs("--bootclasspath_entry", b.toString()));
 
         builder.addArgs("--min_sdk_version", Integer.toString(minSdkVersion));
-        builder.addArgs("--desugar_try_with_resources_if_needed");
+        if (minSdkVersion < MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
+            builder.addArgs("--desugar_try_with_resources_if_needed");
+        } else {
+            builder.addArgs("--nodesugar_try_with_resources_if_needed");
+        }
         builder.addArgs("--desugar_try_with_resources_omit_runtime_classes");
 
         return builder.createJavaProcess();
