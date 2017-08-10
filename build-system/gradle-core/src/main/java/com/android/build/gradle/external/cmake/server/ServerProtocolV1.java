@@ -141,6 +141,7 @@ public class ServerProtocolV1 implements Server {
         return connected;
     }
 
+    @NonNull
     @Override
     public List<ProtocolVersion> getSupportedVersion() {
         if (helloResult == null || helloResult.supportedProtocolVersions == null) {
@@ -156,6 +157,7 @@ public class ServerProtocolV1 implements Server {
         return result;
     }
 
+    @NonNull
     @Override
     public HandshakeResult handshake(@NonNull HandshakeRequest handshakeRequest)
             throws IOException {
@@ -166,8 +168,9 @@ public class ServerProtocolV1 implements Server {
         return decodeResponse(HandshakeResult.class);
     }
 
+    @NonNull
     @Override
-    public ConfigureCommandResult configure(String... cacheArguments) throws IOException {
+    public ConfigureCommandResult configure(@NonNull String... cacheArguments) throws IOException {
         if (!connected) {
             throw new RuntimeException("Not connected to Cmake server.");
         }
@@ -193,6 +196,7 @@ public class ServerProtocolV1 implements Server {
                         : "");
     }
 
+    @NonNull
     @Override
     public ComputeResult compute() throws IOException {
         if (!connected) {
@@ -210,6 +214,7 @@ public class ServerProtocolV1 implements Server {
         return computeResult;
     }
 
+    @NonNull
     @Override
     public CodeModel codemodel() throws IOException {
         if (!connected) {
@@ -224,6 +229,7 @@ public class ServerProtocolV1 implements Server {
         return decodeResponse(CodeModel.class);
     }
 
+    @NonNull
     @Override
     public CacheResult cache() throws IOException {
         if (!connected) {
@@ -235,6 +241,7 @@ public class ServerProtocolV1 implements Server {
         return decodeResponse(CacheResult.class);
     }
 
+    @NonNull
     @Override
     public GlobalSettings globalSettings() throws IOException {
         if (!connected) {
@@ -245,6 +252,7 @@ public class ServerProtocolV1 implements Server {
         return decodeResponse(GlobalSettings.class);
     }
 
+    @NonNull
     @Override
     public String getCCompilerExecutable() {
         final String prefixMessage = "Check for working C compiler: ";
@@ -253,6 +261,7 @@ public class ServerProtocolV1 implements Server {
         return hackyGetLangExecutable(prefixMessage, suffixMessage);
     }
 
+    @NonNull
     @Override
     public String getCppCompilerExecutable() {
         final String prefixMessage = "Check for working CXX compiler: ";
@@ -261,9 +270,17 @@ public class ServerProtocolV1 implements Server {
         return hackyGetLangExecutable(prefixMessage, suffixMessage);
     }
 
+    @NonNull
+    @Override
+    public String getCmakePath() {
+        return cmakeInstallPath.getAbsolutePath();
+    }
+
+    @NonNull
     public HelloResult getHelloResult() {
         return helloResult;
     }
+
 
     // Helper functions
 

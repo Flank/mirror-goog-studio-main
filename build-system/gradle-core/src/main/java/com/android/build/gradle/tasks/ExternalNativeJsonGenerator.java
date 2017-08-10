@@ -24,6 +24,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.external.cmake.CmakeUtils;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
@@ -269,7 +270,8 @@ public abstract class ExternalNativeJsonGenerator {
                     }
 
                     diagnostic("executing %s %s", getNativeBuildSystem().getName(), processBuilder);
-                    String buildOutput = executeProcess(processBuilder);
+                    String buildOutput =
+                            executeProcess(abi.getName(), abiPlatformVersion, expectedJson);
                     diagnostic("done executing %s", getNativeBuildSystem().getName());
 
                     // Write the captured process output to a file for diagnostic purposes.
@@ -336,10 +338,17 @@ public abstract class ExternalNativeJsonGenerator {
             @NonNull String abi, int abiPlatformVersion, @NonNull File outputJson);
 
     /**
-     * Execute the JSON generation process. Return the combination of STDIO and STDERR from running
+     * Executes the JSON generation process. Return the combination of STDIO and STDERR from running
      * the process.
+     *
+     * @param abi - ABI for which JSON generation process needs to be executed
+     * @param abiPlatformVersion - ABI's platform version
+     * @param outputJsonDir - directory where the JSON file and other information needs to be
+     *     created
+     * @return Returns the combination of STDIO and STDERR from running the process.
      */
-    abstract String executeProcess(ProcessInfoBuilder processBuilder)
+    abstract String executeProcess(
+            @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
             throws ProcessException, IOException;
 
     /**
@@ -650,43 +659,85 @@ public abstract class ExternalNativeJsonGenerator {
                         expectedJsons);
             }
             case CMAKE:
-                {
-                    CoreExternalNativeCmakeOptions options =
-                            variantConfig
-                                    .getExternalNativeBuildOptions()
-                                    .getExternalNativeCmakeOptions();
-                    checkNotNull(options, "CMake options not found");
-                    // Install Cmake if it's not there.
-                    ProgressIndicator progress = new ConsoleProgressIndicator();
-                    AndroidSdkHandler sdk =
-                            AndroidSdkHandler.getInstance(sdkHandler.getSdkFolder());
-                    LocalPackage cmakePackage =
-                            sdk.getLatestLocalPackageForPrefix(
-                                    SdkConstants.FD_CMAKE, null, true, progress);
-                    if (cmakePackage == null) {
-                        sdkHandler.installCMake();
-                    }
-                    return new CmakeExternalNativeJsonGenerator(
-                            sdkHandler.getSdkFolder(),
-                            ndkHandler,
-                            minSdkVersionApiLevel,
-                            variantData.getName(),
-                            validAbis,
-                            androidBuilder,
-                            sdkHandler.getSdkFolder(),
-                            sdkHandler.getNdkFolder(),
-                            soFolder,
-                            objFolder,
-                            externalNativeBuildFolder,
-                            makefile,
-                            variantConfig.getBuildType().isDebuggable(),
-                            options.getArguments(),
-                            options.getcFlags(),
-                            options.getCppFlags(),
-                            expectedJsons);
-                }
+                return createCmakeExternalNativeJsonGenerator(
+                        variantData,
+                        ndkHandler,
+                        sdkHandler,
+                        minSdkVersionApiLevel,
+                        validAbis,
+                        androidBuilder,
+                        soFolder,
+                        objFolder,
+                        externalNativeBuildFolder,
+                        makefile,
+                        expectedJsons);
             default:
                 throw new IllegalArgumentException("Unknown ExternalNativeJsonGenerator type");
+        }
+    }
+
+    /**
+     * @return creates an instance of CmakeExternalNativeJsonGenerator (server or android-ninja)
+     *     based on the version of the cmake.
+     */
+    private static ExternalNativeJsonGenerator createCmakeExternalNativeJsonGenerator(
+            @NonNull BaseVariantData variantData,
+            @NonNull NdkHandler ndkHandler,
+            @NonNull SdkHandler sdkHandler,
+            int minSdkVersionApiLevel,
+            @NonNull Collection<Abi> validAbis,
+            @NonNull AndroidBuilder androidBuilder,
+            @NonNull File soFolder,
+            @NonNull File objFolder,
+            @NonNull File externalNativeBuildFolder,
+            @NonNull File makefile,
+            List<File> expectedJsons) {
+        final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+
+        CoreExternalNativeCmakeOptions options =
+                variantConfig.getExternalNativeBuildOptions().getExternalNativeCmakeOptions();
+        checkNotNull(options, "CMake options not found");
+        // Install Cmake if it's not there.
+        ProgressIndicator progress = new ConsoleProgressIndicator();
+        AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkHandler.getSdkFolder());
+        LocalPackage cmakePackage =
+                sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, null, true, progress);
+        if (cmakePackage == null) {
+            sdkHandler.installCMake();
+        }
+        File cmakeExecutable = getSdkCmakeExecutable(sdkHandler.getSdkFolder());
+        if (!cmakeExecutable.exists()) {
+            // throw InvalidUserDataException directly for "Failed to find CMake" error. Android
+            // Studio doesn't doesn't currently produce Quick Fix UI for SyncIssues.
+            throw new InvalidUserDataException(
+                    String.format(
+                            "Failed to find CMake.\n"
+                                    + "Install from Android Studio under File/Settings/"
+                                    + "Appearance & Behavior/System Settings/Android SDK/SDK Tools/CMake.\n"
+                                    + "Expected CMake executable at %s.",
+                            cmakeExecutable));
+        }
+        try {
+            return CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
+                    CmakeUtils.getVersion(getCmakeBinFolder(sdkHandler.getSdkFolder())),
+                    ndkHandler,
+                    minSdkVersionApiLevel,
+                    variantData.getName(),
+                    validAbis,
+                    androidBuilder,
+                    sdkHandler.getSdkFolder(),
+                    sdkHandler.getNdkFolder(),
+                    soFolder,
+                    objFolder,
+                    externalNativeBuildFolder,
+                    makefile,
+                    variantConfig.getBuildType().isDebuggable(),
+                    options.getArguments(),
+                    options.getcFlags(),
+                    options.getCppFlags(),
+                    expectedJsons);
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to create the Cmake strategy");
         }
     }
 
@@ -809,5 +860,30 @@ public abstract class ExternalNativeJsonGenerator {
     @NonNull
     Collection<Abi> getAbis() {
         return abis;
+    }
+
+    @NonNull
+    protected static File getSdkCmakeExecutable(@NonNull File sdkFolder) {
+        if (isWindows()) {
+            return new File(getCmakeBinFolder(sdkFolder), "cmake.exe");
+        }
+        return new File(getCmakeBinFolder(sdkFolder), "cmake");
+    }
+
+    @NonNull
+    protected static File getCmakeBinFolder(@NonNull File sdkFolder) {
+        return new File(getCmakeFolder(sdkFolder), "bin");
+    }
+
+    @NonNull
+    protected static File getCmakeFolder(@NonNull File sdkFolder) {
+        ProgressIndicator progress = new ConsoleProgressIndicator();
+        AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkFolder);
+        LocalPackage cmakePackage =
+                sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, null, true, progress);
+        if (cmakePackage != null) {
+            return cmakePackage.getLocation();
+        }
+        return new File(sdkFolder, SdkConstants.FD_CMAKE);
     }
 }

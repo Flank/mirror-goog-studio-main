@@ -65,6 +65,7 @@ public interface Server {
      * @return HandshakeResult
      * @throws IOException I/O failure
      */
+    @NonNull
     HandshakeResult handshake(@NonNull HandshakeRequest handshakeRequest) throws IOException;
 
     /**
@@ -76,7 +77,8 @@ public interface Server {
      *     messages returned by Cmake when configuring the project.
      * @throws IOException I/O failure
      */
-    ConfigureCommandResult configure(String... cacheArguments) throws IOException;
+    @NonNull
+    ConfigureCommandResult configure(@NonNull String... cacheArguments) throws IOException;
 
     /**
      * Computes, i.e., generates the build system files in the build directory. Ideally, this
@@ -85,6 +87,7 @@ public interface Server {
      * @return ComputeResult
      * @throws IOException I/O failure
      */
+    @NonNull
     ComputeResult compute() throws IOException;
 
     /**
@@ -93,6 +96,7 @@ public interface Server {
      * @return CodeModel
      * @throws IOException I/O failure
      */
+    @NonNull
     CodeModel codemodel() throws IOException;
 
     /**
@@ -101,6 +105,7 @@ public interface Server {
      * @return CacheResult
      * @throws IOException I/O failure
      */
+    @NonNull
     CacheResult cache() throws IOException;
 
     /**
@@ -109,19 +114,28 @@ public interface Server {
      * @return global settings of Cmake's state
      * @throws IOException I/O failure
      */
+    @NonNull
     GlobalSettings globalSettings() throws IOException;
 
     /**
      * Returns the compiler executable used C files.
      *
-     * @return full path to the compiler and compiler executable
+     * @return full path to the compiler and compiler executable. If compiler executable is not
+     *     found this function returns null.
      */
+    @Nullable
     String getCCompilerExecutable();
 
     /**
      * Returns the compiler executable used Cpp files.
      *
-     * @return full path to the compiler and compiler executable
+     * @return full path to the compiler and compiler executable. If compiler executable is not
+     *     found this function returns null.
      */
+    @Nullable
     String getCppCompilerExecutable();
+
+    /** Returns to the path of the Cmake executable. */
+    @NonNull
+    String getCmakePath();
 }
