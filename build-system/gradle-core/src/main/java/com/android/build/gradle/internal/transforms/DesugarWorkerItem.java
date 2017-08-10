@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
+import com.android.builder.core.DesugarProcessBuilder;
 import com.google.common.collect.ImmutableList;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.InvocationTargetException;
@@ -148,7 +149,11 @@ public class DesugarWorkerItem {
                             ManagementFactory.getRuntimeMXBean().getName(),
                             builder.build());
                 }
-                builder.add("--desugar_try_with_resources_if_needed");
+                if (minSdkVersion < DesugarProcessBuilder.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
+                    builder.add("--desugar_try_with_resources_if_needed");
+                } else {
+                    builder.add("--nodesugar_try_with_resources_if_needed");
+                }
                 builder.add("--desugar_try_with_resources_omit_runtime_classes");
                 ImmutableList<String> parameters = builder.build();
                 mainMethod.invoke(null, (Object) parameters.toArray(new String[parameters.size()]));
