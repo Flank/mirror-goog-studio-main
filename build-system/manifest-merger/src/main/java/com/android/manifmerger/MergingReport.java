@@ -275,11 +275,18 @@ public class MergingReport {
         private boolean mHasErrors = false;
         @NonNull
         private ActionRecorder mActionRecorder = new ActionRecorder();
-        private final ILogger mLogger;
+        @NonNull private final ILogger mLogger;
+        @Nullable private final ManifestMerger2 mManifestMerger;
         private String packageName;
 
-        Builder(ILogger logger) {
+        @VisibleForTesting
+        Builder(@NonNull ILogger logger) {
+            this(logger, null);
+        }
+
+        Builder(@NonNull ILogger logger, @Nullable ManifestMerger2 manifestMerger) {
             mLogger = logger;
+            mManifestMerger = manifestMerger;
         }
 
         Builder setMergedDocument(@NonNull MergedManifestKind mergedManifestKind, @NonNull String mergedDocument) {
@@ -368,6 +375,12 @@ public class MergingReport {
                     packageName);
         }
 
+        @Nullable
+        public ManifestMerger2 getManifestMerger() {
+            return mManifestMerger;
+        }
+
+        @NonNull
         public ILogger getLogger() {
             return mLogger;
         }
