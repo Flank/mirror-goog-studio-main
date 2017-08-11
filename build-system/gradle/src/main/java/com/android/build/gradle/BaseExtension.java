@@ -15,6 +15,8 @@
  */
 package com.android.build.gradle;
 
+import static com.android.builder.model.SyncIssue.TYPE_GENERIC;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -33,6 +35,7 @@ import com.android.build.gradle.internal.dsl.AdbOptions;
 import com.android.build.gradle.internal.dsl.AndroidSourceSetFactory;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.DataBindingOptions;
+import com.android.build.gradle.internal.dsl.DefaultConfig;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.dsl.ExternalNativeBuild;
 import com.android.build.gradle.internal.dsl.LintOptions;
@@ -46,7 +49,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.LibraryRequest;
 import com.android.builder.model.SourceProvider;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
@@ -54,15 +56,12 @@ import com.android.repository.Revision;
 import com.android.resources.Density;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
@@ -97,7 +96,7 @@ public abstract class BaseExtension implements AndroidConfig {
 
     private final SdkHandler sdkHandler;
 
-    private final ProductFlavor defaultConfig;
+    private final DefaultConfig defaultConfig;
 
     private final AaptOptions aaptOptions;
 
@@ -161,9 +160,6 @@ public abstract class BaseExtension implements AndroidConfig {
 
     private final ProjectOptions projectOptions;
 
-    private Map<String, Map<String, List<String>>> flavorAttrMap = Maps.newHashMap();
-    private Map<String, List<String>> buildTypeAttrMap = Maps.newHashMap();
-
     BaseExtension(
             @NonNull final Project project,
             @NonNull final ProjectOptions projectOptions,
@@ -189,8 +185,14 @@ public abstract class BaseExtension implements AndroidConfig {
 
         logger = Logging.getLogger(this.getClass());
 
-        defaultConfig = instantiator.newInstance(ProductFlavor.class, BuilderConstants.MAIN,
-                project, instantiator, project.getLogger(), extraModelInfo);
+        defaultConfig =
+                instantiator.newInstance(
+                        DefaultConfig.class,
+                        BuilderConstants.MAIN,
+                        project,
+                        instantiator,
+                        project.getLogger(),
+                        extraModelInfo);
 
         aaptOptions = instantiator.newInstance(AaptOptions.class);
         dexOptions = instantiator.newInstance(DexOptions.class, extraModelInfo);
@@ -575,7 +577,7 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     /** The default configuration, inherited by all product flavors (if any are defined). */
-    public void defaultConfig(Action<ProductFlavor> action) {
+    public void defaultConfig(Action<DefaultConfig> action) {
         checkWritability();
         action.execute(defaultConfig);
     }
@@ -754,49 +756,22 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     public void buildTypeMatching(@NonNull String consumer, @NonNull String... alternates) {
-        if (buildTypeAttrMap.containsKey(consumer)) {
-            throw new RuntimeException(
-                    String.format("Alternate for build type '%s' already set", consumer));
-        }
-
-        buildTypeAttrMap.put(consumer, Arrays.asList(alternates));
-    }
-
-    @Override
-    @NonNull
-    public Map<String, Map<String, List<String>>> getFlavorAttrMap() {
-        return flavorAttrMap;
-    }
-
-    @Override
-    @NonNull
-    public Map<String, List<String>> getBuildTypeAttrMap() {
-        return buildTypeAttrMap;
+        // STOPSHIP
+        extraModelInfo.handleSyncError(
+                null,
+                TYPE_GENERIC,
+                "buildTypeMatching has been removed. Use buildTypes.<name>.fallbacks ...");
     }
 
     public void productFlavorMatching(
             @NonNull String consumerDimension,
             @NonNull String consumer,
             @NonNull String... alternates) {
-        // can't use a lambda because of the DSL doc parser.
-        Map<String, List<String>> flavorMap =
-                flavorAttrMap.computeIfAbsent(
-                        consumerDimension,
-                        new Function<String, Map<String, List<String>>>() {
-                            @Override
-                            public Map<String, List<String>> apply(String s) {
-                                return Maps.newHashMap();
-                            }
-                        });
-
-        if (flavorMap.containsKey(consumer)) {
-            throw new RuntimeException(
-                    String.format(
-                            "Alternate for productflavor '%s-%s' already set",
-                            consumerDimension, consumer));
-        }
-
-        flavorMap.put(consumer, Arrays.asList(alternates));
+        // STOPSHIP
+        extraModelInfo.handleSyncError(
+                null,
+                TYPE_GENERIC,
+                "productFlavorMatching has been removed. Use productFlavors.<name>.fallbacks ...");
     }
 
     public void variantFilter(Action<VariantFilter> filter) {
@@ -964,7 +939,7 @@ public abstract class BaseExtension implements AndroidConfig {
     public File getDefaultProguardFile(String name) {
         if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
             extraModelInfo.handleSyncError(
-                    null, SyncIssue.TYPE_GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE);
+                    null, TYPE_GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE);
         }
         return ProguardFiles.getDefaultProguardFile(name, project);
     }
@@ -988,7 +963,7 @@ public abstract class BaseExtension implements AndroidConfig {
 
     /** {@inheritDoc} */
     @Override
-    public ProductFlavor getDefaultConfig() {
+    public DefaultConfig getDefaultConfig() {
         return defaultConfig;
     }
 

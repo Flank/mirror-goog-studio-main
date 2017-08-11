@@ -26,7 +26,6 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldLibraryApp;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.Library;
@@ -77,7 +76,14 @@ public class LibraryComponentPluginTest {
                         + "\n"
                         + "model {\n"
                         + "    android {\n"
-                        + "        defaultConfig.flavorSelections[\"pricing\"] = \"free\"\n"
+                        + "        productFlavors {\n"
+                        + "            create(\"free\") {\n"
+                        + "                dimension \"pricing\"\n"
+                        + "            }\n"
+                        + "            create(\"premium\") {\n"
+                        + "                dimension \"pricing\"\n"
+                        + "            }\n"
+                        + "        }\n"
                         + "    }\n"
                         + "}\n");
 
@@ -109,7 +115,7 @@ public class LibraryComponentPluginTest {
                 project.model().getMulti();
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
         AndroidProject model = modelContainer.getModelMap().get(":app");
-        Variant variant = ModelHelper.getVariant(model.getVariants(), BuilderConstants.DEBUG);
+        Variant variant = ModelHelper.getVariant(model.getVariants(), "freeDebug");
 
         Library library =
                 helper.on(variant.getMainArtifact().getDependencyGraphs()).asSingleLibrary();

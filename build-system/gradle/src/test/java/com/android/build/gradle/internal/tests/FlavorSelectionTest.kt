@@ -16,9 +16,10 @@
 
 package com.android.build.gradle.internal.tests
 
+import com.android.build.api.attributes.ProductFlavorAttr
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.AppPlugin
-import com.android.build.api.attributes.ProductFlavorAttr
+import com.android.build.gradle.internal.VariantManager
 import com.android.build.gradle.internal.fixture.TestConstants
 import com.android.build.gradle.internal.fixture.TestProjects
 import com.android.build.gradle.internal.fixture.createAndConfig
@@ -61,32 +62,21 @@ class FlavorSelectionTest {
         // set some flavor selection on default config. Some that will be only applied here,
         // and some that will be overriden in different ways.
         val defaultConfig = android.defaultConfig
-        defaultConfig.flavorSelection("default", "defaultValue")
-        defaultConfig.flavorSelection("build-type", "defaultValue")
-        defaultConfig.flavorSelection("flavor", "defaultValue")
-        defaultConfig.flavorSelection("variant", "defaultValue")
+        defaultConfig.missingDimensionStrategy("default", "defaultValue")
+        defaultConfig.missingDimensionStrategy("flavor", "defaultValue")
+        defaultConfig.missingDimensionStrategy("variant", "defaultValue")
 
         // add selection on flavors
         android.flavorDimensions("dimension")
         android.productFlavors.createAndConfig("flavor") {
-            flavorSelection("flavor", "flavor")
-            flavorSelection("flavor-only", "flavor-only")
-            // and add some on build type/variant that will be overridden there
-            flavorSelection("build-type", "flavor")
-            flavorSelection("variant", "flavor")
-        }
-
-        // add on build type
-        android.buildTypes.createAndConfig("debug") {
-            flavorSelection("build-type", "build-type")
-            flavorSelection("build-type-only", "build-type-only")
-            // and add some on variant that will be overridden there
-            flavorSelection("variant", "build-type")
+            missingDimensionStrategy("flavor", "other-flavor")
+            missingDimensionStrategy("flavor-only", "other-flavor-only")
         }
 
         // now use the variant API to configure a specific variant
         android.applicationVariants.all {
-            it.flavorSelection("variant", "variant")
+            it.missingDimensionStrategy("variant", "variant")
+            it.missingDimensionStrategy("variant-only", "variant-only")
         }
 
         plugin.runAfterEvaluate()
@@ -107,20 +97,18 @@ class FlavorSelectionTest {
     }
 
     @Test
-    fun testBuildTypeAttribute() {
-        checkAttribute("build-type", "build-type")
-        checkAttribute("build-type-only", "build-type-only")
-    }
-
-    @Test
     fun testFlavorAttribute() {
-        checkAttribute("flavor", "flavor")
-        checkAttribute("flavor-only", "flavor-only")
+        // the requested name is always the modified name of the flavor that made the request.
+        checkAttribute("flavor", VariantManager.getModifiedName("flavor"))
+        checkAttribute("flavor-only", VariantManager.getModifiedName("flavor"))
+
+        // TODO: we should check the strategies but there's no API for it right now.
     }
 
     @Test
     fun testVariantAttribute() {
-        checkAttribute("variant", "variant")
+        checkAttribute("variant", VariantManager.getModifiedName("flavorDebug"))
+        checkAttribute("variant-only", VariantManager.getModifiedName("flavorDebug"))
     }
 
     private fun checkAttribute(dimension: String, value: String) {

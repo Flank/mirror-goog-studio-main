@@ -1470,15 +1470,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return fullList;
     }
 
-    @NonNull
-    public Map<String, String> getFlavorSelections() {
-        Map<String, String> map = new HashMap<>();
-        // put the merged flavor first so that it gets overridden with the build type entries.
-        map.putAll(mMergedFlavor.getFlavorSelections());
-        map.putAll(mBuildType.getFlavorSelections());
-        return ImmutableMap.copyOf(map);
-    }
-
     @Nullable
     public SigningConfig getSigningConfig() {
         if (mSigningConfigOverride != null) {

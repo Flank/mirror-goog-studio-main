@@ -23,6 +23,7 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.api.SourceKind;
+import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -42,6 +43,7 @@ import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -51,6 +53,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.Attribute;
+import org.gradle.api.attributes.AttributesSchema;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
@@ -394,20 +397,52 @@ public abstract class BaseVariantImpl implements BaseVariant {
         getVariantData().getVariantConfiguration().addResValue(type, name, value);
     }
 
+
     @Override
-    public void flavorSelection(@NonNull String dimension, @NonNull String name) {
-        VariantDependencies dependencies = getVariantData().getScope().getVariantDependencies();
+    public void missingDimensionStrategy(
+            @NonNull String dimension, @NonNull String requestedValue) {
+        _missingDimensionStrategy(dimension, ImmutableList.of(requestedValue));
+    }
+
+    @Override
+    public void missingDimensionStrategy(
+            @NonNull String dimension, @NonNull String... requestedValues) {
+        _missingDimensionStrategy(dimension, ImmutableList.copyOf(requestedValues));
+    }
+
+    @Override
+    public void missingDimensionStrategy(
+            @NonNull String dimension, @NonNull List<String> requestedValues) {
+        _missingDimensionStrategy(dimension, ImmutableList.copyOf(requestedValues));
+    }
+
+    private void _missingDimensionStrategy(
+            @NonNull String dimension, @NonNull ImmutableList<String> alternatedValues) {
+        final VariantScope variantScope = getVariantData().getScope();
+
+        // First, setup the requested value, which isn't the actual requested value, but
+        // the variant name, modified
+        final String requestedValue = VariantManager.getModifiedName(getName());
 
         final Attribute<ProductFlavorAttr> attributeKey =
                 Attribute.of(dimension, ProductFlavorAttr.class);
-        final ProductFlavorAttr attributeValue = objectFactory.named(ProductFlavorAttr.class, name);
+        final ProductFlavorAttr attributeValue =
+                objectFactory.named(ProductFlavorAttr.class, requestedValue);
 
+        VariantDependencies dependencies = variantScope.getVariantDependencies();
         dependencies.getCompileClasspath().getAttributes().attribute(attributeKey, attributeValue);
         dependencies.getRuntimeClasspath().getAttributes().attribute(attributeKey, attributeValue);
         dependencies
                 .getAnnotationProcessorConfiguration()
                 .getAttributes()
                 .attribute(attributeKey, attributeValue);
+
+        // then add the fallbacks which contain the actual requested value
+        AttributesSchema schema =
+                variantScope.getGlobalScope().getProject().getDependencies().getAttributesSchema();
+
+        VariantManager.addFlavorStrategy(
+                schema, dimension, ImmutableMap.of(requestedValue, alternatedValues));
     }
 
     @Override
