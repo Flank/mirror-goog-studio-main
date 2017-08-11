@@ -16,6 +16,8 @@
 
 package com.android.ide.common.resources.configuration;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.ide.common.res2.ResourceFile;
 import com.android.ide.common.res2.ResourceItem;
 import com.android.resources.Density;
@@ -49,7 +51,9 @@ public class FolderConfigurationTest extends TestCase {
 
         // make sure all the qualifiers were created.
         for (int i = 0 ; i < count ; i++) {
-            assertNotNull(defaultConfig.getQualifier(i));
+            assertThat(defaultConfig.getQualifier(i))
+                    .named("Qualifier with index " + i)
+                    .isNotNull();
         }
     }
 
