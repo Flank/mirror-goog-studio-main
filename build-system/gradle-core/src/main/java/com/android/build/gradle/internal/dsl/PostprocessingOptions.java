@@ -23,6 +23,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.scope.CodeShrinker;
+import com.android.utils.HelpfulEnumConverter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -33,6 +34,8 @@ import org.gradle.api.Project;
 /** DSL object for configuring postprocessing: removing dead code, obfuscating etc. */
 public class PostprocessingOptions {
     private static final String AUTO = "auto";
+    private static final HelpfulEnumConverter<CodeShrinker> SHRINKER_CONVERTER =
+            new HelpfulEnumConverter<>(CodeShrinker.class);
 
     @NonNull private final Project project;
 
@@ -174,10 +177,7 @@ public class PostprocessingOptions {
         if (codeShrinker == null) {
             return AUTO;
         } else {
-            return verifyNotNull(
-                    StringToEnumConverters.forClass(CodeShrinker.class)
-                            .reverse()
-                            .convert(codeShrinker));
+            return verifyNotNull(SHRINKER_CONVERTER.reverse().convert(codeShrinker));
         }
     }
 
@@ -185,7 +185,7 @@ public class PostprocessingOptions {
         if (name.equals(AUTO)) {
             codeShrinker = null;
         } else {
-            codeShrinker = StringToEnumConverters.forClass(CodeShrinker.class).convert(name);
+            codeShrinker = SHRINKER_CONVERTER.convert(name);
         }
     }
 

@@ -25,10 +25,7 @@ import java.awt.geom.AffineTransform;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.w3c.dom.Document;
@@ -68,8 +65,23 @@ class SvgTree {
 
     public float[] getViewBox() { return viewBox; }
 
-    private static final HashMap<String, SvgNode> idMap = new HashMap<>();
-    static final HashMap<SvgGroupNode, Node> useGroupMap = new HashMap<>();
+    // Map of SvgNode's id to the SvgNode.
+    private final HashMap<String, SvgNode> mIdMap = new HashMap<>();
+
+    // Set of SvgGroupNodes that contain use elements.
+    private final HashSet<SvgGroupNode> mUseGroupSet = new HashSet<>();
+
+    // Key is SvgNode that references a clipPath. Value is SvgGroupNode that is the referenced
+    // SvgClipPathNode
+    private final HashMap<SvgNode, SvgGroupNode> mClipPathAffectedNodes = new HashMap<>();
+
+    // Key is String that is the id of a style class.
+    // Value is set of SvgNodes referencing that class.
+    private final HashMap<String, HashSet<SvgNode>> mStyleAffectedNodes = new HashMap<>();
+
+    // Key is String that is the id of a style class. Value is a String that contains attribute
+    // information of that style class.
+    private final HashMap<String, String> mStyleClassAttributeMap = new HashMap<>();
 
 
     /** From the root, top down, pass the transformation (TODO: attributes) down the children. */
@@ -216,19 +228,54 @@ class SvgTree {
     }
 
     public void addIdToMap(String id, SvgNode svgNode) {
-        idMap.put(id, svgNode);
+        mIdMap.put(id, svgNode);
     }
 
     public SvgNode getSvgNodeFromId(String id) {
-        return idMap.get(id);
+        return mIdMap.get(id);
     }
 
-    public void addToUseMap(SvgGroupNode useGroup, Node node) {
-        useGroupMap.put(useGroup, node);
+    public void addToUseSet(SvgGroupNode useGroup) {
+        mUseGroupSet.add(useGroup);
     }
 
-    public Set<Map.Entry<SvgGroupNode, Node>> getUseSet() {
-        return useGroupMap.entrySet();
+    public Set<SvgGroupNode> getUseSet() {
+        return mUseGroupSet;
+    }
+
+    public void addClipPathAffectedNode(SvgNode child, SvgGroupNode currentGroup) {
+        mClipPathAffectedNodes.put(child, currentGroup);
+    }
+
+    public Set<Map.Entry<SvgNode, SvgGroupNode>> getClipPathAffectedNodesSet() {
+        return mClipPathAffectedNodes.entrySet();
+    }
+
+    /** Adds child to set of SvgNodes that reference the style class with id className. */
+    public void addAffectedNodeToStyleClass(String className, SvgNode child) {
+        if (mStyleAffectedNodes.containsKey(className)) {
+            mStyleAffectedNodes.get(className).add(child);
+        } else {
+            HashSet<SvgNode> styleNodesSet = new HashSet<>();
+            styleNodesSet.add(child);
+            mStyleAffectedNodes.put(className, styleNodesSet);
+        }
+    }
+
+    public void addStyleClassToTree(String className, String attributes) {
+        mStyleClassAttributeMap.put(className, attributes);
+    }
+
+    public boolean containsStyleClass(String classname) {
+        return mStyleClassAttributeMap.containsKey(classname);
+    }
+
+    public String getStyleClassAttr(String classname) {
+        return mStyleClassAttributeMap.get(classname);
+    }
+
+    public Set<Map.Entry<String, HashSet<SvgNode>>> getStyleAffectedNodes() {
+        return mStyleAffectedNodes.entrySet();
     }
 
 }

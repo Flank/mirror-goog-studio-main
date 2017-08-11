@@ -542,7 +542,7 @@ public class DefaultSdkLoader implements SdkLoader {
         RepoManager repoManager = mSdkHandler.getSdkManager(progress);
         repoManager.loadSynchronously(0, progress, null, null);
         LocalPackage localSdkToolPackage =
-                mSdkHandler.getLatestLocalPackageForPrefix(packageId, true, progress);
+                mSdkHandler.getLatestLocalPackageForPrefix(packageId, null, true, progress);
         if (localSdkToolPackage == null) {
             if (!sdkLibData.useSdkDownload()) {
                 // If we are offline and we haven't found a local package for the SDK Tool
@@ -572,7 +572,7 @@ public class DefaultSdkLoader implements SdkLoader {
                 checkResults(installResults);
                 repoManager.loadSynchronously(0, progress, null, null);
                 localSdkToolPackage =
-                        mSdkHandler.getLatestLocalPackageForPrefix(packageId, true, progress);
+                        mSdkHandler.getLatestLocalPackageForPrefix(packageId, null, true, progress);
             }
         }
         // getLatestLocalPackageForPrefix above should have set it to non-null by now, but let's be safe.

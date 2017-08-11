@@ -19,7 +19,6 @@ package com.android.build.gradle.internal.transforms;
 import static com.android.utils.FileUtils.deleteIfExists;
 import static com.google.common.base.Preconditions.checkNotNull;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
@@ -32,11 +31,11 @@ import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.builder.packaging.JarMerger;
 import com.android.builder.packaging.ZipEntryFilter;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Set;
 
@@ -92,31 +91,18 @@ public class JarMergingTransform extends Transform {
         FileUtils.mkdirs(jarFile.getParentFile());
         deleteIfExists(jarFile);
 
-        JarMerger jarMerger = new JarMerger(jarFile);
-
-        try {
-            jarMerger.setFilter(new ZipEntryFilter() {
-                @Override
-                public boolean checkEntry(String archivePath) {
-                    return archivePath.endsWith(SdkConstants.DOT_CLASS);
-                }
-            });
-
+        try (JarMerger jarMerger = new JarMerger(jarFile.toPath(), ZipEntryFilter.CLASSES_ONLY)) {
             for (TransformInput input : invocation.getInputs()) {
                 for (JarInput jarInput : input.getJarInputs()) {
-                    jarMerger.addJar(jarInput.getFile());
+                    jarMerger.addJar(jarInput.getFile().toPath());
                 }
 
                 for (DirectoryInput directoryInput : input.getDirectoryInputs()) {
-                    jarMerger.addFolder(directoryInput.getFile());
+                    jarMerger.addDirectory(directoryInput.getFile().toPath());
                 }
             }
-        } catch (FileNotFoundException e) {
-            throw new TransformException(e);
         } catch (IOException e) {
             throw new TransformException(e);
-        } finally {
-            jarMerger.close();
         }
     }
 }

@@ -43,13 +43,13 @@ public class TestOptionsExecutionTest {
                 "android { testOptions.execution \"android_test_orchestrator\" }");
 
         AndroidProject model = project.model().getSingle().getOnlyModel();
-        Execution executionEnum =
+        Execution execution =
                 Iterables.getOnlyElement(
                                 ModelHelper.getDebugVariant(model).getExtraAndroidArtifacts())
                         .getTestOptions()
-                        .getExecutionEnum();
+                        .getExecution();
 
-        assertEquals(executionEnum, Execution.ANDROID_TEST_ORCHESTRATOR);
+        assertEquals(execution, Execution.ANDROID_TEST_ORCHESTRATOR);
     }
 
     @Test
@@ -60,7 +60,7 @@ public class TestOptionsExecutionTest {
                 Iterables.getOnlyElement(
                                 ModelHelper.getDebugVariant(model).getExtraAndroidArtifacts())
                         .getTestOptions()
-                        .getExecutionEnum();
+                        .getExecution();
 
         assertEquals(executionEnum, Execution.HOST);
     }

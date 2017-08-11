@@ -38,10 +38,16 @@ enum SocketType {
 // The message itself is created and pushed to device from Studio
 // and can be access via profiler::Config::Instance().
 message AgentConfig {
+  message MemoryConfig {
+    // equivalent to profiler.livealloc flag in Studio.
+    bool use_live_alloc = 1;
+    // the maximum depth of allocation stack traces to record.
+    int32 max_stack_depth = 2;
+  }
+
   // equivalent to profiler.jvmti flag in Studio
   bool use_jvmti = 1;
-  // equivalent to profiler.livealloc flag in Studio
-  bool use_live_alloc = 2;
+  MemoryConfig mem_config = 2;
   // Which socket type we are using when setting up our service
   // if the device is O+ we use service_socket_name and
   // ABSTRACT_SOCKET. If the device is pre O we use

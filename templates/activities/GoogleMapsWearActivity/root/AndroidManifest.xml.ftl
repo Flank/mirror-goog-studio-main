@@ -22,7 +22,7 @@
          -->
         <meta-data android:name="com.google.android.geo.API_KEY" android:value="@string/google_maps_key"/>
 
-        <activity android:name="${relativePackage}.${activityClass}"
+        <activity android:name="${packageName}.${activityClass}"
             <#if isNewProject>
             android:label="@string/app_name"
             <#else>

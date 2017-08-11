@@ -35,6 +35,8 @@ public class ImlModule extends BazelRule {
     private List<String> testResources = new LinkedList<>();
     private List<String> resources = new LinkedList<>();
     private List<String> exclude = new LinkedList<>();
+    private List<String> imlFiles = new LinkedList<>();
+    private Map<String, String> prefixes = new LinkedHashMap<>();
     private Map<BazelRule, List<Tag>> dependencyTags = new HashMap<>();
 
     public ImlModule(Package pkg, String name) {
@@ -56,6 +58,9 @@ public class ImlModule extends BazelRule {
         call.setArgument("test_resources", testResources);
         call.setArgument("deps", tagDependencies(dependencies));
         call.setArgument("exports", exported);
+        call.setArgument("iml_files", imlFiles);
+        call.setArgument("package_prefixes", prefixes);
+
         if (!statement.isFromFile()) {
             call.setArgument("visibility", ImmutableList.of("//visibility:public"));
         }
@@ -92,6 +97,14 @@ public class ImlModule extends BazelRule {
             tags.remove(Tag.TEST);
         }
         dependencyTags.put(rule, tags);
+    }
+
+    public void addPackagePrefix(String src, String prefix) {
+        prefixes.put(src, prefix);
+    }
+
+    public void addModuleFile(String name) {
+        imlFiles.add(name);
     }
 
     public void addSource(String source) {

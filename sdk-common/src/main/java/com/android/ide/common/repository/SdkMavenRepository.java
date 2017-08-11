@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.repository;
 
 import static com.android.SdkConstants.FD_EXTRAS;
@@ -22,6 +21,7 @@ import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
@@ -29,24 +29,23 @@ import com.android.repository.api.RemotePackage;
 import com.android.repository.api.RepoManager;
 import com.android.repository.api.RepoPackage;
 import com.android.repository.io.FileOp;
-import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
- * A {@linkplain SdkMavenRepository} represents a Maven
- * repository that is shipped with the SDK and located in the {@code extras} folder of the
- * SDK location.
+ * Represents a Maven repository that is shipped with the SDK and located in the {@code extras}
+ * folder of the SDK location.
  */
 public enum SdkMavenRepository {
-    /** The Android repository; contains support lib, app compat, media router, etc */
+    /** The Android repository; contains support lib, app compat, media router, etc. */
     ANDROID("android"),
 
-    /** The Google repository; contains Play Services etc */
+    /** The Google repository; contains Play Services etc. */
     GOOGLE("google");
 
     @NonNull private final String mDir;
@@ -56,7 +55,7 @@ public enum SdkMavenRepository {
     }
 
     /**
-     * Returns the location of the repository within a given SDK home
+     * Returns the location of the repository within a given SDK home.
      * @param sdkHome the SDK home, or null
      * @param requireExists if true, the location will only be returned if it also exists
      * @return the location of the this repository within a given SDK
@@ -76,7 +75,7 @@ public enum SdkMavenRepository {
     }
 
     /**
-     * Returns true if the given SDK repository is installed
+     * Returns true if the given SDK repository is installed.
      *
      * @param sdkHome the SDK installation location
      * @return true if the repository is installed
@@ -86,7 +85,7 @@ public enum SdkMavenRepository {
     }
 
     /**
-     * Returns true if the given SDK repository is installed
+     * Returns true if the given SDK repository is installed.
      *
      * @param sdkHandler the SDK to check
      * @return true if the repository is installed
@@ -106,21 +105,6 @@ public enum SdkMavenRepository {
     }
 
     /**
-     * @deprecated For testability use
-     * {@link #getHighestInstalledVersion(File, String, String, String, boolean, FileOp)}
-     */
-    @Deprecated
-    public GradleCoordinate getHighestInstalledVersion(
-            @Nullable File sdkHome,
-            @NonNull String groupId,
-            @NonNull String artifactId,
-            @Nullable String filter,
-            boolean allowPreview) {
-        return getHighestInstalledVersion(sdkHome, groupId, artifactId, filter, allowPreview,
-                FileOpUtils.create());
-    }
-
-    /**
      * Find the best matching {@link GradleCoordinate}
      *
      * @param sdkHome      the SDK installation
@@ -137,7 +121,7 @@ public enum SdkMavenRepository {
             @Nullable File sdkHome,
             @NonNull String groupId,
             @NonNull String artifactId,
-            @Nullable String filter,
+            @Nullable Predicate<GradleVersion> filter,
             boolean allowPreview,
             @NonNull FileOp fileOp) {
         File repository = getRepositoryLocation(sdkHome, true, fileOp);
@@ -245,31 +229,41 @@ public enum SdkMavenRepository {
      *
      * @param coordinate The {@link GradleCoordinate} identifying the artifact we're interested in.
      * @param sdkHandler {@link AndroidSdkHandler} instance.
+     * @param filter The version filter that has to be satisfied
      * @param progress {@link ProgressIndicator}, for logging.
      * @return The {@link LocalPackage} with the same {@code groupId} and {@code artifactId} as the
      * given {@code coordinate} and the highest version.
      */
     @Nullable
     public static LocalPackage findLatestLocalVersion(@NonNull GradleCoordinate coordinate,
-            @NonNull AndroidSdkHandler sdkHandler, @NonNull ProgressIndicator progress) {
+            @NonNull AndroidSdkHandler sdkHandler,
+            @Nullable Predicate<GradleVersion> filter,
+            @NonNull ProgressIndicator progress) {
         if (coordinate.getGroupId() == null || coordinate.getArtifactId() == null) {
             return null;
         }
         String prefix = DetailsTypes.MavenType.getRepositoryPath(
                 coordinate.getGroupId(), coordinate.getArtifactId(), null);
+        Predicate<Revision> revisionFilter = filter == null ? null
+                : (revision) -> filter.test(revisionToGradleVersion(revision));
         return sdkHandler.getLatestLocalPackageForPrefix(
-                prefix, coordinate.isPreview(), GradleCoordinate::parseVersionOnly,
+                prefix, revisionFilter,  coordinate.isPreview(), GradleCoordinate::parseVersionOnly,
                 GradleCoordinate.COMPARE_PLUS_LOWER, progress);
+    }
 
+    @NonNull
+    private static GradleVersion revisionToGradleVersion(Revision revision) {
+        return GradleVersion.parse(revision.toString("-"));
     }
 
     /**
-     * Like {@link #findLatestLocalVersion(GradleCoordinate, AndroidSdkHandler, ProgressIndicator)},
-     * but for available {@link RemotePackage}s.
+     * Like {@link #findLatestLocalVersion}, but for available {@link RemotePackage}s.
      */
     @Nullable
     public static RemotePackage findLatestRemoteVersion(@NonNull GradleCoordinate coordinate,
-            @NonNull AndroidSdkHandler sdkHandler, @NonNull ProgressIndicator progress) {
+            @NonNull AndroidSdkHandler sdkHandler,
+            @Nullable Predicate<GradleVersion> filter,
+            @NonNull ProgressIndicator progress) {
         if (coordinate.getGroupId() == null || coordinate.getArtifactId() == null) {
             return null;
         }
@@ -278,18 +272,19 @@ public enum SdkMavenRepository {
         return sdkHandler.getLatestRemotePackageForPrefix(
                 prefix, coordinate.isPreview(), GradleCoordinate::parseVersionOnly,
                 GradleCoordinate.COMPARE_PLUS_LOWER, progress);
-
     }
 
     /**
-     * Like {@link #findLatestLocalVersion(GradleCoordinate, AndroidSdkHandler, ProgressIndicator)},
-     * but returns the most recent package available either locally or remotely.
+     * Like {@link #findLatestLocalVersion}, but returns the most recent package available either
+     * locally or remotely.
      */
     @Nullable
     public static RepoPackage findLatestVersion(@NonNull GradleCoordinate coordinate,
-            @NonNull AndroidSdkHandler sdkHandler, @NonNull ProgressIndicator progress) {
-        LocalPackage local = findLatestLocalVersion(coordinate, sdkHandler, progress);
-        RemotePackage remote = findLatestRemoteVersion(coordinate, sdkHandler, progress);
+            @NonNull AndroidSdkHandler sdkHandler,
+            @Nullable Predicate<GradleVersion> filter,
+            @NonNull ProgressIndicator progress) {
+        LocalPackage local = findLatestLocalVersion(coordinate, sdkHandler, filter, progress);
+        RemotePackage remote = findLatestRemoteVersion(coordinate, sdkHandler, filter, progress);
         if (local == null) {
             return remote;
         }

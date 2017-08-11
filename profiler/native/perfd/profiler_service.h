@@ -66,7 +66,12 @@ class ProfilerServiceImpl final
       profiler::proto::AgentAttachResponse* response) override;
 
  private:
+  // True if an JVMTI agent has been attached to an app. False otherwise.
   bool IsAppAgentAlive(int app_pid, const char* app_name);
+  // True if perfd has received a heartbeat from an app within the last
+  // time interval (as specified by |GenericComponent::kHeartbeatThresholdNs|.
+  // False otherwise.
+  bool CheckAppHeartBeat(int app_pid);
 
   // Clock knows about timestamps.
   const Clock& clock_;

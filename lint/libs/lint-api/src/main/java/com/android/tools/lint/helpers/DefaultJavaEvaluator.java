@@ -339,37 +339,4 @@ public class DefaultJavaEvaluator extends JavaEvaluator {
         }
         return true;
     }
-
-    @Nullable
-    @SuppressWarnings({"HardCodedStringLiteral"})
-    public static String getPrimitiveSignature(String typeName) {
-        if (PsiType.BOOLEAN.getCanonicalText().equals(typeName)) {
-            return "Z";
-        }
-        else if (PsiType.BYTE.getCanonicalText().equals(typeName)) {
-            return "B";
-        }
-        else if (PsiType.CHAR.getCanonicalText().equals(typeName)) {
-            return "C";
-        }
-        else if (PsiType.SHORT.getCanonicalText().equals(typeName)) {
-            return "S";
-        }
-        else if (PsiType.INT.getCanonicalText().equals(typeName)) {
-            return "I";
-        }
-        else if (PsiType.LONG.getCanonicalText().equals(typeName)) {
-            return "J";
-        }
-        else if (PsiType.FLOAT.getCanonicalText().equals(typeName)) {
-            return "F";
-        }
-        else if (PsiType.DOUBLE.getCanonicalText().equals(typeName)) {
-            return "D";
-        }
-        else if (PsiType.VOID.getCanonicalText().equals(typeName)) {
-            return "V";
-        }
-        return null;
-    }
 }

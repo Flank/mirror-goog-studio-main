@@ -27,9 +27,9 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
-import com.android.tools.fd.client.InstantRunArtifact;
-import com.android.tools.fd.client.InstantRunArtifactType;
-import com.android.tools.fd.client.InstantRunBuildInfo;
+import com.android.tools.ir.client.InstantRunArtifact;
+import com.android.tools.ir.client.InstantRunArtifactType;
+import com.android.tools.ir.client.InstantRunBuildInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
@@ -135,7 +135,7 @@ public class InstantRunChangeDeviceTest {
 
         try (Apk apk = new Apk(main.file)) {
             assertThat(apk).doesNotContainClass("Lcom/example/helloworld/HelloWorld;");
-            assertThat(apk).containsClass("Lcom/android/tools/fd/runtime/Server;");
+            assertThat(apk).containsClass("Lcom/android/tools/ir/server/Server;");
         }
     }
 
@@ -145,8 +145,8 @@ public class InstantRunChangeDeviceTest {
                     .hasMainClass("Lcom/example/helloworld/HelloWorld;")
                     .that()
                     .hasMethod("onCreate");
-            assertThat(apk).doesNotContainMainClass("Lcom/android/tools/fd/runtime/Server;");
-            assertThat(apk).doesNotContainMainClass("Lcom/android/tools/fd/runtime/AppInfo;");
+            assertThat(apk).doesNotContainMainClass("Lcom/android/tools/ir/server/Server;");
+            assertThat(apk).doesNotContainMainClass("Lcom/android/tools/ir/server/AppInfo;");
         }
     }
 

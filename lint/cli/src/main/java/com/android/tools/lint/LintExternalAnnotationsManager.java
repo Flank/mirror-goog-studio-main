@@ -41,7 +41,7 @@ import java.util.Set;
 
 public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManager {
 
-    private List<VirtualFile> roots = Lists.newArrayList();
+    private final List<VirtualFile> roots = Lists.newArrayList();
 
     public LintExternalAnnotationsManager(@NonNull final com.intellij.openapi.project.Project project, @NonNull PsiManager psiManager) {
         super(psiManager);

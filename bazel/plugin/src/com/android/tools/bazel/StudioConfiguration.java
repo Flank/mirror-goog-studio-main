@@ -17,7 +17,6 @@ package com.android.tools.bazel;
 
 import com.android.tools.bazel.model.BazelRule;
 import com.google.common.collect.ImmutableList;
-
 import java.util.List;
 
 public class StudioConfiguration implements Configuration {
@@ -45,12 +44,8 @@ public class StudioConfiguration implements Configuration {
     @Override
     public boolean shouldSuppress(BazelRule rule) {
         return rule.getLabel().startsWith("//prebuilts/tools/common/m2/repository/")
-            || rule.getLabel().startsWith("//tools/vendor/google3/blaze/")
-            || rule.getName().endsWith("devkit")  // Kotlin compilation fails
-            || rule.getName().endsWith("devkit-tests")  // depends on devkit
-            || rule.getName().endsWith("community-main")  // big nasty not needed module
-            || rule.getName().endsWith("community-main-tests")  // depends on community-main
-            || rule.getName().endsWith("android-uitests")  // depends on community-main
-            || rule.getName().endsWith("lldb-integration-tests");  // depends on community-main
+                || rule.getLabel().startsWith("//tools/vendor/google3/blaze/")
+                || rule.getName().endsWith("android-uitests") // TODO
+                || rule.getName().endsWith("lldb-integration-tests"); // TODO
     }
 }

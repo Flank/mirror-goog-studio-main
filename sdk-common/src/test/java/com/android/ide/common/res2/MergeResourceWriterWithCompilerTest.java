@@ -82,10 +82,7 @@ public class MergeResourceWriterWithCompilerTest {
                     }
 
                     @Override
-                    public void start() {}
-
-                    @Override
-                    public void end() throws InterruptedException {}
+                    public void close() {}
 
                     @Override
                     public File compileOutputFor(@NonNull CompileResourceRequest request) {

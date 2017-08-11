@@ -49,6 +49,7 @@ public class AndroidSdkHandlerTest extends TestCase {
 
         LocalPackage latest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("p"),
+                null,
                 false, // allowPreview
                 Revision::parseRevision,
                 Comparator.<Revision>naturalOrder());
@@ -57,6 +58,7 @@ public class AndroidSdkHandlerTest extends TestCase {
 
         LocalPackage earliest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("p"),
+                null,
                 false, // allowPreview
                 Revision::parseRevision,
                 Comparator.<Revision>reverseOrder());
@@ -65,6 +67,7 @@ public class AndroidSdkHandlerTest extends TestCase {
 
         LocalPackage longest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("p"),
+                null,
                 false, // allowPreview
                 String::length,
                 Comparator.naturalOrder());
@@ -73,6 +76,7 @@ public class AndroidSdkHandlerTest extends TestCase {
 
         longest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("p"),
+                null,
                 true, // allowPreview
                 String::length,
                 Comparator.naturalOrder());
@@ -81,6 +85,7 @@ public class AndroidSdkHandlerTest extends TestCase {
 
         latest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("p"),
+                null,
                 true, // allowPreview
                 Revision::parseRevision,
                 Comparator.<Revision>naturalOrder());
@@ -89,6 +94,7 @@ public class AndroidSdkHandlerTest extends TestCase {
 
         latest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("q;r"),
+                null,
                 true, // allowPreview
                 Revision::parseRevision,
                 Comparator.<Revision>naturalOrder());
@@ -97,6 +103,7 @@ public class AndroidSdkHandlerTest extends TestCase {
 
         latest = AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                 packages.getLocalPackagesForPrefix("o"),
+                null,
                 true, // allowPreview
                 Revision::parseRevision,
                 Comparator.<Revision>naturalOrder());
@@ -115,6 +122,7 @@ public class AndroidSdkHandlerTest extends TestCase {
         try {
             AndroidSdkHandler.getLatestPackageFromPrefixCollection(
                     packages.getLocalPackagesForPrefix("p"),
+                    null,
                     false, // allowPreview
                     Revision::parseRevision,
                     Comparator.<Revision>naturalOrder());

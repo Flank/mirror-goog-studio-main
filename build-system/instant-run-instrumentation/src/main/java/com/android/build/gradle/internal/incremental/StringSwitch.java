@@ -64,7 +64,7 @@ abstract class StringSwitch {
     private static final Type OBJECT_TYPE = Type.getType(java.lang.Object.class);
     private static final Type STRING_TYPE = Type.getType(java.lang.String.class);
     private static final Type INSTANT_RELOAD_EXCEPTION_TYPE =
-            Type.getObjectType(IncrementalVisitor.PACKAGE + "/InstantReloadException");
+            Type.getObjectType(IncrementalVisitor.RUNTIME_PACKAGE + "/InstantReloadException");
 
     // Methods overridden by caller to implement the switch behavior
 

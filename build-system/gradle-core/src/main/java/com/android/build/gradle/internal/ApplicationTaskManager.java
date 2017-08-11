@@ -439,7 +439,7 @@ public class ApplicationTaskManager extends TaskManager {
 
         // create a lighter weight version for usage inside the same module (unit tests basically)
         ConfigurableFileCollection fileCollection =
-                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS);
+                scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
         fileCollection.from(javacOutput);
         fileCollection.from(preJavacGeneratedBytecode);
         fileCollection.from(postJavacGeneratedBytecode);

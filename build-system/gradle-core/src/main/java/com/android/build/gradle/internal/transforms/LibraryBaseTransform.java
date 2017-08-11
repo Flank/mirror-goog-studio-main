@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.transforms;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.JarInput;
@@ -25,7 +24,7 @@ import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.tasks.annotations.TypedefRemover;
+import com.android.builder.packaging.JarMerger;
 import com.android.builder.packaging.ZipAbortException;
 import com.android.builder.packaging.ZipEntryFilter;
 import com.google.common.collect.ImmutableList;
@@ -163,8 +162,6 @@ public abstract class LibraryBaseTransform extends Transform {
         // somewhere else.
         // TODO: maybe do the folders separately to handle incremental?
 
-        ZipEntryFilter classOnlyFilter = path -> path.endsWith(SdkConstants.DOT_CLASS);
-
         Iterator<QualifiedContent> iterator = qualifiedContentList.iterator();
 
         while (iterator.hasNext()) {
@@ -175,19 +172,21 @@ public abstract class LibraryBaseTransform extends Transform {
                 copyJarWithContentFilter(
                         content.getFile(),
                         new File(localJarsLocation, content.getFile().getName()),
-                        classOnlyFilter);
+                        ZipEntryFilter.CLASSES_ONLY);
                 iterator.remove();
             }
         }
 
         // now handle the folders.
         if (!qualifiedContentList.isEmpty()) {
-            JarMerger jarMerger = new JarMerger(new File(localJarsLocation, "otherclasses.jar"));
-            jarMerger.setFilter(classOnlyFilter);
-            for (QualifiedContent content : qualifiedContentList) {
-                jarMerger.addFolder(content.getFile());
+            try (JarMerger jarMerger =
+                    new JarMerger(
+                            new File(localJarsLocation, "otherclasses.jar").toPath(),
+                            ZipEntryFilter.CLASSES_ONLY)) {
+                for (QualifiedContent content : qualifiedContentList) {
+                    jarMerger.addDirectory(content.getFile().toPath());
+                }
             }
-            jarMerger.close();
         }
     }
 
@@ -268,42 +267,34 @@ public abstract class LibraryBaseTransform extends Transform {
             @NonNull File fromFolder,
             @NonNull File toFile,
             @Nullable ZipEntryFilter filter,
-            @Nullable TypedefRemover typedefRemover)
+            @Nullable JarMerger.Transformer typedefRemover)
             throws IOException {
-        JarMerger jarMerger = new JarMerger(toFile);
-        jarMerger.setFilter(filter);
-        jarMerger.setTypedefRemover(typedefRemover);
-        jarMerger.addFolder(fromFolder);
-        jarMerger.close();
+        try (JarMerger jarMerger = new JarMerger(toFile.toPath())) {
+            jarMerger.addDirectory(fromFolder.toPath(), filter, typedefRemover);
+        }
     }
 
     protected static void mergeInputsToLocation(
             @NonNull List<QualifiedContent> qualifiedContentList,
             @NonNull File toFile,
-            @Nullable ZipEntryFilter filter,
-            @Nullable TypedefRemover typedefRemover)
+            @Nullable final ZipEntryFilter filter,
+            @Nullable final JarMerger.Transformer typedefRemover)
             throws IOException {
-        JarMerger jarMerger = new JarMerger(toFile);
-        jarMerger.setFilter(filter);
-        jarMerger.setTypedefRemover(typedefRemover);
+        ZipEntryFilter filterAndOnlyClasses = ZipEntryFilter.CLASSES_ONLY.and(filter);
 
-        for (QualifiedContent content : qualifiedContentList) {
-            if (content.getContentTypes().contains(QualifiedContent.DefaultContentType.RESOURCES)) {
-                jarMerger.setFilter(filter);
-            } else {
+        try (JarMerger jarMerger = new JarMerger(toFile.toPath())) {
+            for (QualifiedContent content : qualifiedContentList) {
                 // Filter out resources if they are not in the scope.
-                jarMerger.setFilter(
-                        path ->
-                                path.endsWith(SdkConstants.DOT_CLASS)
-                                        && (filter == null || filter.checkEntry(path)));
-            }
-            if (content instanceof JarInput) {
-                jarMerger.addJar(content.getFile());
-            } else {
-                jarMerger.addFolder(content.getFile());
+                boolean hasResources =
+                        content.getContentTypes()
+                                .contains(QualifiedContent.DefaultContentType.RESOURCES);
+                ZipEntryFilter thisFilter = hasResources ? filter : filterAndOnlyClasses;
+                if (content instanceof JarInput) {
+                    jarMerger.addJar(content.getFile().toPath(), thisFilter);
+                } else {
+                    jarMerger.addDirectory(content.getFile().toPath(), thisFilter, typedefRemover);
+                }
             }
         }
-
-        jarMerger.close();
     }
 }

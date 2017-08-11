@@ -73,7 +73,7 @@ into the file, and when editing the file, the editor could produce confusing vis
                 // line ending makes the error invisible in IDEs and error reports etc
                 // Find the most recent non-blank line
                 var blankLine = true
-                for (index in i - 2..i - 1) {
+                for (index in i - 2 until i) {
                     val d = contents[index]
                     if (!Character.isWhitespace(d)) {
                         blankLine = false

@@ -20,10 +20,13 @@ import com.android.resources.ResourceFolderType
 import com.android.tools.lint.client.api.LintDriver
 import com.android.tools.lint.client.api.XmlParser
 import com.google.common.annotations.Beta
-import java.io.File
 import org.w3c.dom.Attr
 import org.w3c.dom.Document
 import org.w3c.dom.Node
+import java.io.File
+
+internal const val SUPPRESS_XML_COMMENT_PREFIX = "<!--suppress "
+internal const val SUPPRESS_JAVA_COMMENT_PREFIX = "//noinspection "
 
 /**
  * A [Context] used when checking XML files.
@@ -76,9 +79,7 @@ open class XmlContext
      *
      * @return the location for the node
      */
-    fun getLocation(node: Node): Location {
-        return parser.getLocation(this, node)
-    }
+    fun getLocation(node: Node): Location = parser.getLocation(this, node)
 
     /**
      * Returns the location for name-portion of the given element or attribute.
@@ -87,9 +88,7 @@ open class XmlContext
      *
      * @return the location for the node
      */
-    fun getNameLocation(node: Node): Location {
-        return parser.getNameLocation(this, node)
-    }
+    fun getNameLocation(node: Node): Location = parser.getNameLocation(this, node)
 
     /**
      * Returns the location for value-portion of the given attribute
@@ -98,9 +97,7 @@ open class XmlContext
      *
      * @return the location for the node
      */
-    fun getValueLocation(node: Attr): Location {
-        return parser.getValueLocation(this, node)
-    }
+    fun getValueLocation(node: Attr): Location = parser.getValueLocation(this, node)
 
     /**
      * Creates a new location within an XML text node
@@ -149,15 +146,14 @@ open class XmlContext
     }
 
     @Deprecated("Here for temporary compatibility; the new typed quickfix data parameter " +
-            "should be used instead", ReplaceWith("report(issue, scope, location, message)"))
+            "should be used instead",
+            ReplaceWith("report(issue, scope, location, message)"))
     fun report(
             issue: Issue,
             scope: Node?,
             location: Location,
             message: String,
-            quickfixData: Any?) {
-        report(issue, scope, location, message)
-    }
+            quickfixData: Any?) = report(issue, scope, location, message)
 
     override fun report(
             issue: Issue,
@@ -179,7 +175,7 @@ open class XmlContext
     }
 
     override val suppressCommentPrefix: String?
-        get() = SUPPRESS_COMMENT_PREFIX
+        get() = SUPPRESS_XML_COMMENT_PREFIX
 
     fun isSuppressedWithComment(node: Node, issue: Issue): Boolean {
         // Check whether there is a comment marker
@@ -192,15 +188,9 @@ open class XmlContext
         return false
     }
 
-    fun createLocationHandle(node: Node): Location.Handle {
-        return parser.createLocationHandle(this, node)
-    }
+    fun createLocationHandle(node: Node): Location.Handle =
+            parser.createLocationHandle(this, node)
 
-    override fun getResourceFolder(): File? {
-        return if (resourceFolderType != null) file.parentFile else null
-    }
-
-    companion object {
-        internal const val SUPPRESS_COMMENT_PREFIX = "<!--suppress "
-    }
+    override fun getResourceFolder(): File? =
+            if (resourceFolderType != null) file.parentFile else null
 }

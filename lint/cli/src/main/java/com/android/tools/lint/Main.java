@@ -91,6 +91,8 @@ public class Main {
     private static final String ARG_URL        = "--url";
     private static final String ARG_VERSION    = "--version";
     private static final String ARG_EXIT_CODE  = "--exitcode";
+    private static final String ARG_SDK_HOME   = "--sdk-home";
+    private static final String ARG_PROJECT    = "--project";
     private static final String ARG_CLASSES    = "--classpath";
     private static final String ARG_SOURCES    = "--sources";
     private static final String ARG_RESOURCES  = "--resources";
@@ -107,6 +109,7 @@ public class Main {
     private static final String PROP_WORK_DIR = "com.android.tools.lint.workdir";
     private final LintCliFlags flags = new LintCliFlags();
     private IssueRegistry mGg;
+    @Nullable private File sdkHome;
 
     /** Creates a CLI driver */
     public Main() {
@@ -195,7 +198,8 @@ public class Main {
                     // Don't report any issues when analyzing a Gradle project from the
                     // non-Gradle runner; they are likely to be false, and will hide the real
                     // problem reported above
-                   return new CliConfiguration(getConfiguration(), project, true) {
+                    //noinspection ReturnOfInnerClass
+                    return new CliConfiguration(getConfiguration(), project, true) {
                        @NonNull
                        @Override
                        public Severity getSeverity(@NonNull Issue issue) {
@@ -237,6 +241,32 @@ public class Main {
                 } else {
                     return contents;
                 }
+            }
+
+            /** Creates a lint request */
+            @Override
+            @NonNull
+            protected LintRequest createLintRequest(@NonNull List<File> files) {
+                LintRequest request = super.createLintRequest(files);
+                File descriptor = flags.getProjectDescriptorOverride();
+                if (descriptor != null) {
+                    List<Project> projects = ProjectInitializerKt.computeProjects(this,
+                            descriptor);
+                    if (!projects.isEmpty()) {
+                        request.setProjects(projects);
+                    }
+                }
+
+                return request;
+            }
+
+            @Nullable
+            @Override
+            public File getSdkHome() {
+                if (Main.this.sdkHome != null) {
+                    return Main.this.sdkHome;
+                }
+                return super.getSdkHome();
             }
         };
 
@@ -640,6 +670,36 @@ public class Main {
                         flags.setLibrariesOverride(libraries);
                     }
                     libraries.add(input);
+                }
+            } else if (arg.equals(ARG_PROJECT)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing project description file");
+                    exit(ERRNO_INVALID_ARGS);
+                }
+                String paths = args[++index];
+                for (String path : LintUtils.splitPath(paths)) {
+                    File input = getInArgumentPath(path);
+                    if (!input.exists()) {
+                        System.err.println("Project descriptor " + input + " does not exist.");
+                        exit(ERRNO_INVALID_ARGS);
+                    }
+                    File descriptor = flags.getProjectDescriptorOverride();
+                    //noinspection VariableNotUsedInsideIf
+                    if (descriptor != null) {
+                        System.err.println("Project descriptor should only be specified once");
+                        exit(ERRNO_INVALID_ARGS);
+                    }
+                    flags.setProjectDescriptorOverride(input);
+                }
+            } else if (arg.equals(ARG_SDK_HOME)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing SDK home directory");
+                    exit(ERRNO_INVALID_ARGS);
+                }
+                sdkHome = new File(args[++index]);
+                if (!sdkHome.isDirectory()) {
+                    System.err.println(sdkHome + " is not a directory");
+                    exit(ERRNO_INVALID_ARGS);
                 }
             } else if (arg.equals(ARG_BASELINE)) {
                 if (index == args.length - 1) {
@@ -1068,6 +1128,9 @@ public class Main {
             ARG_XML + " <filename>", "Create an XML report instead.",
 
             "", "\nProject Options:",
+            ARG_PROJECT + " <file>", "Use the given project layout descriptor file to describe " +
+                "the set of available sources, resources and libraries. Used to drive lint with " +
+                "build systems not natively integrated with lint.",
             ARG_RESOURCES + " <dir>", "Add the given folder (or path) as a resource directory " +
                 "for the project. Only valid when running lint on a single project.",
             ARG_SOURCES + " <dir>", "Add the given folder (or path) as a source directory for " +
@@ -1076,6 +1139,8 @@ public class Main {
                 "directory for the project. Only valid when running lint on a single project.",
             ARG_LIBRARIES + " <dir>", "Add the given folder (or jar file, or path) as a class " +
                     "library for the project. Only valid when running lint on a single project.",
+            ARG_SDK_HOME + " <dir>", "Use the given SDK instead of attempting to find it " +
+                "relative to the lint installation or via $ANDROID_HOME",
 
             "", "\nExit Status:",
             "0",                                 "Success.",

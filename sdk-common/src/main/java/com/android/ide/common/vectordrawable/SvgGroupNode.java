@@ -28,23 +28,28 @@ import org.w3c.dom.Node;
  * Represent a SVG file's group element.
  */
 class SvgGroupNode extends SvgNode {
-    private static Logger logger = Logger.getLogger(SvgGroupNode.class.getSimpleName());
+    private static final Logger logger = Logger.getLogger(SvgGroupNode.class.getSimpleName());
     private static final String INDENT_LEVEL = "    ";
 
-    private ArrayList<SvgNode> mChildren = new ArrayList<SvgNode>();
+    protected final ArrayList<SvgNode> mChildren = new ArrayList<>();
 
     public SvgGroupNode(SvgTree svgTree, Node docNode, String name) {
         super(svgTree, docNode, name);
     }
 
     @Override
-    SvgGroupNode deepCopy() {
+    public SvgGroupNode deepCopy() {
         SvgGroupNode newInstance = new SvgGroupNode(getTree(), getDocumentNode(), getName());
+        copyTo(newInstance);
+        return newInstance;
+    }
+
+    protected void copyTo(SvgGroupNode newInstance) {
+        super.copyTo(newInstance);
         for (SvgNode n : mChildren) {
             SvgNode m = n.deepCopy();
             newInstance.addChild(m);
         }
-        return newInstance;
     }
 
     public void addChild(SvgNode child) {
@@ -53,6 +58,12 @@ class SvgGroupNode extends SvgNode {
         // The child has its own attributes map. But the parents can still fill some attributes
         // if they don't exists
         child.fillEmptyAttributes(mVdAttributesMap);
+    }
+
+    public void removeChild(SvgNode child) {
+        if (mChildren.contains(child)) {
+            mChildren.remove(child);
+        }
     }
 
     @Override
@@ -88,16 +99,19 @@ class SvgGroupNode extends SvgNode {
     }
 
     @Override
-    public void writeXML(OutputStreamWriter writer) throws IOException {
+    public void writeXML(OutputStreamWriter writer, boolean inClipPath) throws IOException {
         for (SvgNode node : mChildren) {
-            node.writeXML(writer);
+            node.writeXML(writer, inClipPath);
         }
     }
 
     @Override
     public void fillPresentationAttributes(String name, String value) {
         for (SvgNode n : mChildren) {
-            n.fillPresentationAttributes(name, value);
+            // Group presentation attribute should not override child.
+            if (!n.mVdAttributesMap.containsKey(name)) {
+                n.fillPresentationAttributes(name, value);
+            }
         }
     }
 }

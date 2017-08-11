@@ -268,47 +268,51 @@ public class ProcessAndroidResources extends IncrementalTask {
 
         Set<File> libraryInfoList = symbolListsWithPackageNames.getFiles();
 
-        // do a first pass at the list so we generate the code synchronously since it's required
-        // by the full splits asynchronous processing below.
-        List<ApkData> apkDataList = new ArrayList<>(splitsToGenerate);
-        for (ApkData apkData : splitsToGenerate) {
-            if (apkData.requiresAapt()) {
-                boolean codeGen =
-                        (apkData.getType() == OutputFile.OutputType.MAIN
-                                || apkData.getFilter(OutputFile.FilterType.DENSITY) == null);
-                if (codeGen) {
-                    apkDataList.remove(apkData);
-                    invokeAaptForSplit(
-                            manifestsOutputs,
-                            libraryInfoList,
-                            packageIdFileSet,
-                            splitList,
-                            featureResourcePackages,
-                            apkData,
-                            codeGen);
-                    break;
+        try (Aapt aapt = bypassAapt ? null : makeAapt()) {
+
+            // do a first pass at the list so we generate the code synchronously since it's required
+            // by the full splits asynchronous processing below.
+            List<ApkData> apkDataList = new ArrayList<>(splitsToGenerate);
+            for (ApkData apkData : splitsToGenerate) {
+                if (apkData.requiresAapt()) {
+                    boolean codeGen =
+                            (apkData.getType() == OutputFile.OutputType.MAIN
+                                    || apkData.getFilter(OutputFile.FilterType.DENSITY) == null);
+                    if (codeGen) {
+                        apkDataList.remove(apkData);
+                        invokeAaptForSplit(
+                                manifestsOutputs,
+                                libraryInfoList,
+                                packageIdFileSet,
+                                splitList,
+                                featureResourcePackages,
+                                apkData,
+                                codeGen,
+                                aapt);
+                        break;
+                    }
                 }
             }
-        }
 
-        // now all remaining splits will be generated asynchronously.
-        for (ApkData apkData : apkDataList) {
-            if (apkData.requiresAapt()) {
-                executor.execute(
-                        () -> {
-                            invokeAaptForSplit(
-                                    manifestsOutputs,
-                                    libraryInfoList,
-                                    packageIdFileSet,
-                                    splitList,
-                                    featureResourcePackages,
-                                    apkData,
-                                    false);
-                            return null;
-                        });
+            // now all remaining splits will be generated asynchronously.
+            for (ApkData apkData : apkDataList) {
+                if (apkData.requiresAapt()) {
+                    executor.execute(
+                            () -> {
+                                invokeAaptForSplit(
+                                        manifestsOutputs,
+                                        libraryInfoList,
+                                        packageIdFileSet,
+                                        splitList,
+                                        featureResourcePackages,
+                                        apkData,
+                                        false,
+                                        aapt);
+                                return null;
+                            });
+                }
             }
-        }
-        try {
+
             List<WaitableExecutor.TaskResult<Void>> taskResults = executor.waitForAllTasks();
             taskResults.forEach(
                     taskResult -> {
@@ -318,6 +322,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                     taskResult.getException());
                         }
                     });
+
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
@@ -395,23 +400,9 @@ public class ProcessAndroidResources extends IncrementalTask {
             @NonNull SplitList splitList,
             @NonNull Set<File> featureResourcePackages,
             ApkData apkData,
-            boolean generateCode)
+            boolean generateCode,
+            @Nullable Aapt aapt)
             throws IOException {
-
-        AndroidBuilder builder = getBuilder();
-        MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
-
-        MergingLogRewriter mergingLogRewriter =
-                new MergingLogRewriter(mergingLog::find, builder.getErrorReporter());
-
-        ProcessOutputHandler processOutputHandler =
-                new ParsingProcessOutputHandler(
-                        new ToolOutputParser(
-                                aaptGeneration == AaptGeneration.AAPT_V1
-                                        ? new AaptOutputParser()
-                                        : new Aapt2OutputParser(),
-                                getILogger()),
-                        mergingLogRewriter);
 
         ImmutableList.Builder<File> featurePackagesBuilder = ImmutableList.builder();
         for (File featurePackage : featureResourcePackages) {
@@ -525,15 +516,9 @@ public class ProcessAndroidResources extends IncrementalTask {
                         androidAttrSymbol,
                         disableResMergeInLib);
             } else {
-                Aapt aapt =
-                        AaptGradleFactory.make(
-                                aaptGeneration,
-                                builder,
-                                processOutputHandler,
-                                fileCache,
-                                true,
-                                FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
-                                aaptOptions.getCruncherProcesses());
+                Preconditions.checkNotNull(
+                        aapt,
+                        "AAPT needs be instantiated for linking if bypassing AAPT is disabled");
 
                 AaptPackageConfig.Builder config =
                         new AaptPackageConfig.Builder()
@@ -561,7 +546,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 .setDependentFeatures(featurePackagesBuilder.build())
                                 .setListResourceFiles(aaptGeneration == AaptGeneration.AAPT_V2);
 
-                builder.processResources(aapt, config);
+                getBuilder().processResources(aapt, config);
 
                 if (LOG.isInfoEnabled()) {
                     LOG.info("Aapt output file {}", resOutBaseNameFile.getAbsolutePath());
@@ -609,6 +594,33 @@ public class ProcessAndroidResources extends IncrementalTask {
             }
         }
         return null;
+    }
+
+    /**
+     * Create an instance of AAPT. Whenever calling this method make sure the close() method is
+     * called on the instance once the work is done.
+     */
+    private Aapt makeAapt() throws IOException {
+        AndroidBuilder builder = getBuilder();
+        MergingLog mergingLog = new MergingLog(getMergeBlameLogFolder());
+
+        ProcessOutputHandler processOutputHandler =
+                new ParsingProcessOutputHandler(
+                        new ToolOutputParser(
+                                aaptGeneration == AaptGeneration.AAPT_V1
+                                        ? new AaptOutputParser()
+                                        : new Aapt2OutputParser(),
+                                getILogger()),
+                        new MergingLogRewriter(mergingLog::find, builder.getErrorReporter()));
+
+        return AaptGradleFactory.make(
+                aaptGeneration,
+                builder,
+                processOutputHandler,
+                fileCache,
+                true,
+                FileUtils.mkdirs(new File(getIncrementalFolder(), "aapt-temp")),
+                aaptOptions.getCruncherProcesses());
     }
 
     /**

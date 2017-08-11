@@ -68,7 +68,7 @@ to the base resource's name and the translation will not be used.""",
     override fun beforeCheckFile(context: Context) {
         val source = context.getContents() ?: return
         val max = source.length
-        for (i in 1..max - 1) {
+        for (i in 1 until max) {
             val c = source[i]
             if (c == '\uFEFF') {
                 val location = Location.create(context.file, source, i, i + 1)
@@ -101,16 +101,15 @@ to the base resource's name and the translation will not be used.""",
         }
     }
 
-    override fun visitDocument(context: XmlContext, document: Document) {
-        // The work is done in beforeCheckFile()
-    }
+    override fun visitDocument(context: XmlContext, document: Document) =
+            // The work is done in beforeCheckFile()
+            Unit
 
-    override fun createUastHandler(context: JavaContext): UElementHandler? {
-        // Java files: work is done in beforeCheckFile()
-        return null
-    }
+    override fun createUastHandler(context: JavaContext): UElementHandler? =
+            // Java files: work is done in beforeCheckFile()
+            null
 
-    override fun run(context: Context) {
-        // ProGuard files: work is done in beforeCheckFile()
-    }
+    override fun run(context: Context) =
+            // ProGuard files: work is done in beforeCheckFile()
+            Unit
 }

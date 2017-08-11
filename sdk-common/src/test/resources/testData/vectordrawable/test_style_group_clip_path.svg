@@ -1,0 +1,68 @@
+<svg width="64" height="64">
+
+  <style type="text/css">
+    <![CDATA[
+
+        .myGreen, .myRed, .myBlue {
+        	stroke-width:5;
+        }
+
+        rect {
+        	fill:rgb(255, 255, 0);
+        }
+
+        circle {
+            fill:rgb(255,0,255);
+		}
+
+        ellipse.myBlue {
+        	fill: rgb(0,255,255);
+        }
+
+        .myLine {
+        	stroke:pink;
+        }
+
+        polyline {
+        	stroke:purple;
+        }
+
+        line, polygon {
+        	stroke-width:10;
+        }
+
+        .group {
+        	stroke:rgb(66,255,166);
+        }
+
+      ]]>
+  </style>
+  <defs>
+    <clipPath
+        id="clipPath3258">
+      <rect
+          width="30"
+          height="50"
+          x="10"
+          y="10"
+          id="rect3260"
+          style="fill:#917c6f"/>
+    </clipPath>
+  </defs>
+
+
+
+<g class="group" clip-path="url(#clipPath3258)">
+  <polygon fill="red" stroke="blue" stroke-width="5"
+           points="30,30 40,30 40,60 10,60"/>
+  <rect class="myGreen" width="30" height="20" x="20" y="20"/>
+  <circle class="myRed" cx="19" cy="19" r="15"/>
+  <ellipse class="myBlue" cx="38" cy="43" rx="8" ry="10"/>
+  <line class="myLine" x1="3" y1="3" x2="15" y2="15"
+        stroke-width="5"/>
+  <polyline fill="none" stroke="blue" stroke-width="5"
+            points="5,5 20,10 10,40 40,50"/>
+</g>
+
+</svg>
+

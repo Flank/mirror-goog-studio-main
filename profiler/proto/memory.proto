@@ -52,6 +52,17 @@ service MemoryService {
   rpc TrackAllocations(TrackAllocationsRequest)
       returns (TrackAllocationsResponse) {}
 
+  // Post-O only: Suspend allocation tracking when switching to another
+  // session to optimize the performance.
+  // This call will disable allocation callbacks and clear the event queue.
+  rpc SuspendTrackAllocations(SuspendTrackAllocationsRequest)
+      returns (SuspendTrackAllocationsResponse) {}
+  // Post-O only: Resume allocation tracking when switching back.
+  // This call will retrieve class data from beginning and enable allocation
+  // callbacks.
+  rpc ResumeTrackAllocations(ResumeTrackAllocationsRequest)
+      returns (ResumeTrackAllocationsResponse) {}
+
   // Pre-O only: Returns all allocation data associated with a tracking session.
   rpc GetLegacyAllocationEvents(LegacyAllocationEventsRequest)
       returns (LegacyAllocationEventsResponse) {}
@@ -107,6 +118,36 @@ message MemoryStopResponse {
     UNSPECIFICED = 0;
     SUCCESS = 1;
     FAILURE_UNKNOWN = 2;
+  }
+  Status status = 1;
+}
+
+message SuspendTrackAllocationsRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message SuspendTrackAllocationsResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    NOT_PROFILING = 2;
+    FAILURE_UNKNOWN = 3;
+  }
+  Status status = 1;
+}
+
+message ResumeTrackAllocationsRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message ResumeTrackAllocationsResponse {
+  enum Status {
+    UNSPECIFIED = 0;
+    SUCCESS = 1;
+    NOT_PROFILING = 2;
+    FAILURE_UNKNOWN = 3;
   }
   Status status = 1;
 }

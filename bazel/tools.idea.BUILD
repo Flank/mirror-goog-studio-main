@@ -3,6 +3,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "fest-swing",
     srcs = ["swing-testing/fest-swing/src/main/java"],
+    iml_files = ["swing-testing/fest-swing/fest-swing.iml"],
     javacopts = ["-XepAllErrorsAsWarnings"],
     tags = ["managed"],
     test_resources = ["swing-testing/fest-swing/src/test/resources"],

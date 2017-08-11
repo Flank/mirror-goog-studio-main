@@ -98,7 +98,7 @@ public class RegistrationDetector extends LayoutDetector implements UastScanner 
                 return null;
             }
             mManifestRegistrations = Maps.newHashMap();
-            Element application = XmlUtils.getFirstSubTagTagByName(
+            Element application = XmlUtils.getFirstSubTagByName(
                     mergedManifest.getDocumentElement(), TAG_APPLICATION);
             if (application != null) {
                 registerElement(application);

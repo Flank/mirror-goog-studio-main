@@ -1,4 +1,4 @@
 <?xml version="1.0"?>
 <globals>
-    <global id="projectOut" value="." />
+    <#include "root://gradle-projects/common/globals.xml.ftl" />
 </globals>

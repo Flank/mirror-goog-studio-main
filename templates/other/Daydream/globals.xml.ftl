@@ -7,5 +7,4 @@
     <global id="info_name" value="${classToResource(className)}_info" />
     <global id="settingsClassName"  value="${className}SettingsActivity" />
     <global id="prefs_name" value="${classToResource(className)}_prefs" />
-    <global id="relativePackage" value="<#if relativePackage?has_content>${relativePackage}<#else>${packageName}</#if>" />
 </globals>

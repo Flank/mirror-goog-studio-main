@@ -5,6 +5,7 @@ iml_module(
     name = "studio.dvlib",
     # do not sort: must match IML order
     srcs = ["dvlib/src/main/java"],
+    iml_files = ["dvlib/dvlib.iml"],
     resources = ["dvlib/src/main/resources"],
     tags = ["managed"],
     visibility = ["//visibility:public"],

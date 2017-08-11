@@ -29,6 +29,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.HashMap
 import java.util.concurrent.TimeUnit
+import java.util.function.Predicate
 
 /**
  * Provides information about the artifacts and versions available on maven.google.com
@@ -41,10 +42,10 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
          * Number of milliseconds to wait until timing out attempting to access the remote
          * repository
          */
-        val networkTimeoutMs: Int = 3000,
+        private val networkTimeoutMs: Int = 3000,
 
         /** Maximum allowed age of cached data; default is 7 days */
-        val cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt()) {
+        private val cacheExpiryHours: Int = TimeUnit.DAYS.toHours(7).toInt()) {
 
     companion object {
         /** Key used in cache directories to locate the maven.google.com network cache */
@@ -59,21 +60,41 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
 
     private var packageMap: MutableMap<String, PackageInfo>? = null
 
-    fun findVersion(dependency: GradleCoordinate): GradleVersion? {
-        return findVersion(dependency, dependency.isPreview)
-    }
+    fun findVersion(dependency: GradleCoordinate, filter: Predicate<GradleVersion>? = null):
+            GradleVersion? = findVersion(dependency, filter, dependency.isPreview)
 
-    fun findVersion(dependency: GradleCoordinate, allowPreview: Boolean = false): GradleVersion? {
+    fun findVersion(dependency: GradleCoordinate, predicate: Predicate<GradleVersion>?,
+                    allowPreview: Boolean = false): GradleVersion? {
         val groupId = dependency.groupId ?: return null
         val artifactId = dependency.artifactId ?: return null
-        val filter = if (dependency.acceptsGreaterRevisions())
-            dependency.revision.trimEnd('+') else null
+        val filter = when {
+            dependency.acceptsGreaterRevisions() -> {
+                val prefix = dependency.revision.trimEnd('+')
+                if (predicate != null) {
+                    { v: GradleVersion -> predicate.test(v) && v.toString().startsWith(prefix) }
+                } else {
+                    { v: GradleVersion -> v.toString().startsWith(prefix) }
+                }
+            }
+            predicate != null -> {
+                { v: GradleVersion -> predicate.test(v) }
+            }
+            else -> {
+                null
+            }
+        }
         return findVersion(groupId, artifactId, filter, allowPreview)
     }
 
     fun findVersion(groupId: String,
                     artifactId: String,
-                    filter: String? = null,
+                    filter: Predicate<GradleVersion>?,
+                    allowPreview: Boolean = false): GradleVersion? =
+            findVersion(groupId, artifactId, { filter?.test(it) ?: true }, allowPreview)
+
+    fun findVersion(groupId: String,
+                    artifactId: String,
+                    filter: ((GradleVersion) -> Boolean)? = null,
                     allowPreview: Boolean = false): GradleVersion? {
         val artifactInfo = findArtifact(groupId, artifactId) ?: return null
         return artifactInfo.findVersion(filter, allowPreview)
@@ -97,14 +118,14 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
     }
 
     private data class ArtifactInfo(val id: String, val versions: String) {
-        fun findVersion(filter: String? = null, allowPreview: Boolean = false): GradleVersion? {
-            return versions.splitToSequence(",")
-                    .filter { filter == null || it.startsWith(filter) }
-                    .map { GradleVersion.tryParse(it) }
-                    .filterNotNull()
-                    .filter { allowPreview || !it.isPreview }
-                    .max()
-        }
+        fun findVersion(filter: ((GradleVersion) -> Boolean)?, allowPreview: Boolean = false):
+                GradleVersion? =
+                versions.splitToSequence(",")
+                        .map { GradleVersion.tryParse(it) }
+                        .filterNotNull()
+                        .filter { filter == null || filter(it) }
+                        .filter { allowPreview || !it.isPreview }
+                        .max()
     }
 
     private fun findData(relative: String): InputStream? {
@@ -150,28 +171,27 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
         return GoogleMavenRepository::class.java.getResourceAsStream("/versions-offline/$relative")
     }
 
-    private fun readMasterIndex(stream: InputStream, map: MutableMap<String, PackageInfo>) {
-        try {
-            stream.use { stream ->
-                val parser = KXmlParser()
-                parser.setInput(stream, SdkConstants.UTF_8)
-                while (parser.next() != XmlPullParser.END_DOCUMENT) {
-                    val eventType = parser.eventType
-                    if (eventType == XmlPullParser.END_TAG) {
-                        val tag = parser.name
-                        val packageInfo = PackageInfo(tag)
-                        map[tag] = packageInfo
-                    } else if (eventType != XmlPullParser.START_TAG) {
-                        continue
+    private fun readMasterIndex(stream: InputStream, map: MutableMap<String, PackageInfo>) =
+            try {
+                stream.use {
+                    val parser = KXmlParser()
+                    parser.setInput(it, SdkConstants.UTF_8)
+                    while (parser.next() != XmlPullParser.END_DOCUMENT) {
+                        val eventType = parser.eventType
+                        if (eventType == XmlPullParser.END_TAG) {
+                            val tag = parser.name
+                            val packageInfo = PackageInfo(tag)
+                            map[tag] = packageInfo
+                        } else if (eventType != XmlPullParser.START_TAG) {
+                            continue
+                        }
                     }
                 }
+            } catch (e: IOException) {
+                error(e, null)
+            } catch (e: XmlPullParserException) {
+                error(e, null)
             }
-        } catch (e: IOException) {
-            error(e, null)
-        } catch (e: XmlPullParserException) {
-            error(e, null)
-        }
-    }
 
     private inner class PackageInfo(val pkg: String) {
         private val artifacts: Map<String, ArtifactInfo> by lazy {
@@ -187,26 +207,25 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
             stream?.let { readGroupData(stream, map) }
         }
 
-        private fun readGroupData(stream: InputStream, map: MutableMap<String, ArtifactInfo>) {
-            try {
-                stream.use { stream ->
-                    val parser = KXmlParser()
-                    parser.setInput(stream, SdkConstants.UTF_8)
-                    while (parser.next() != XmlPullParser.END_DOCUMENT) {
-                        val eventType = parser.eventType
-                        if (eventType == XmlPullParser.START_TAG) {
-                            val artifactId = parser.name
-                            val versions = parser.getAttributeValue(null, "versions")
-                            if (versions != null) {
-                                val artifactInfo = ArtifactInfo(artifactId, versions)
-                                map[artifactId] = artifactInfo
+        private fun readGroupData(stream: InputStream, map: MutableMap<String, ArtifactInfo>) =
+                try {
+                    stream.use {
+                        val parser = KXmlParser()
+                        parser.setInput(it, SdkConstants.UTF_8)
+                        while (parser.next() != XmlPullParser.END_DOCUMENT) {
+                            val eventType = parser.eventType
+                            if (eventType == XmlPullParser.START_TAG) {
+                                val artifactId = parser.name
+                                val versions = parser.getAttributeValue(null, "versions")
+                                if (versions != null) {
+                                    val artifactInfo = ArtifactInfo(artifactId, versions)
+                                    map[artifactId] = artifactInfo
+                                }
                             }
                         }
                     }
+                } catch (e: Exception) {
+                    error(e, null)
                 }
-            } catch (e: Exception) {
-                error(e, null)
-            }
-        }
     }
 }

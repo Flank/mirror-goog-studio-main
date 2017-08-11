@@ -7,7 +7,7 @@
         android:id="@+id/root_container"
         android:layout_height="match_parent"
         android:layout_width="match_parent"
-        tools:context="${relativePackage}.${activityClass}">
+        tools:context="${packageName}.${activityClass}">
 
     <FrameLayout
             android:id="@+id/map_container"

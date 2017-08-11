@@ -109,7 +109,7 @@ public class HotSwapWithNoChangesTest {
                 .that()
                 .hasMethod("onCreate");
 
-        assertThat(allApks).hasClass("Lcom/android/tools/fd/runtime/Server;");
+        assertThat(allApks).hasClass("Lcom/android/tools/ir/server/Server;");
 
         makeHotSwapChange();
         runColdSwapBuild.run();

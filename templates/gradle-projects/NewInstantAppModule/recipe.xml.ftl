@@ -6,7 +6,7 @@
                    to="${escapeXmlAttribute(projectOut)}/build.gradle" />
 
 <#if makeIgnore>
-    <copy from="root/module_ignore"
+    <copy from="root://gradle-projects/common/gitignore"
             to="${escapeXmlAttribute(projectOut)}/.gitignore" />
 </#if>
 

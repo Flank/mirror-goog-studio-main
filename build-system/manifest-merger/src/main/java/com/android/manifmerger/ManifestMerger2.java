@@ -59,8 +59,8 @@ import org.w3c.dom.NodeList;
 @Immutable
 public class ManifestMerger2 {
 
-    static final String BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER
-            = "com.android.tools.fd.runtime.InstantRunContentProvider";
+    static final String BOOTSTRAP_INSTANT_RUN_CONTENT_PROVIDER =
+            "com.android.tools.ir.server.InstantRunContentProvider";
 
     @NonNull
     private final File mManifestFile;
@@ -559,8 +559,8 @@ public class ManifestMerger2 {
 
     /**
      * Adds a provider element as a child of the document's application element, as shown here:
-     * <provider android:name="com.android.tools.fd.runtime.InstantRunContentProvider"
-     * android:authorities="com.android.tools.fd.runtime.InstantRunContentProvider"
+     * <provider android:name="com.android.tools.ir.server.InstantRunContentProvider"
+     * android:authorities="com.android.tools.ir.server.InstantRunContentProvider"
      * android:multiprocess="true" />
      *
      * @param document the document to add the provider element to

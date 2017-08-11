@@ -53,9 +53,7 @@ containing markup that also specify `textAllCaps=true`.""",
                         Scope.RESOURCE_FILE_SCOPE))
     }
 
-    override fun getApplicableAttributes(): Collection<String>? {
-        return listOf("textAllCaps")
-    }
+    override fun getApplicableAttributes(): Collection<String>? = listOf("textAllCaps")
 
     override fun visitAttribute(context: XmlContext, attribute: Attr) {
         if (ANDROID_URI != attribute.namespaceURI) {

@@ -35,7 +35,7 @@ data class Category
  *
  * @param priority a sorting priority, with higher being more important
  */
-private constructor(
+constructor(
         /**
          * The parent category, or null if this is a top level category
          */
@@ -55,17 +55,14 @@ private constructor(
      * @return a full name for this category
      */
     val fullName: String
-        get() {
+        get() =
             if (parent != null) {
-                return parent.fullName + ':' + name
+                parent.fullName + ':' + name
             } else {
-                return name
+                name
             }
-        }
 
-    override fun toString(): String {
-        return fullName
-    }
+    override fun toString(): String = fullName
 
     override fun compareTo(other: Category): Int {
         if (other.priority == priority) {
@@ -94,9 +91,8 @@ private constructor(
          *
          * @return a new category
          */
-        @JvmStatic fun create(name: String, priority: Int): Category {
-            return Category(null, name, priority)
-        }
+        @JvmStatic fun create(name: String, priority: Int): Category =
+                Category(null, name, priority)
 
         /**
          * Creates a new top level [Category] with the given sorting priority.
@@ -109,9 +105,8 @@ private constructor(
          *
          * @return a new category
          */
-        @JvmStatic fun create(parent: Category?, name: String, priority: Int): Category {
-            return Category(parent, name, priority)
-        }
+        @JvmStatic fun create(parent: Category?, name: String, priority: Int): Category =
+                Category(parent, name, priority)
 
         /** Issues related to running lint itself  */
         @JvmField val LINT = create("Lint", 110)

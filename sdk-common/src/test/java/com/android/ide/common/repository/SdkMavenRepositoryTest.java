@@ -92,24 +92,24 @@ public class SdkMavenRepositoryTest extends TestCase {
         mFileOp.recordExistingFolder("/sdk/extras/android/m2repository/com/android/support/support-v4/20.0.0");
         mFileOp.recordExistingFolder("/sdk/extras/android/m2repository/com/android/support/support-v4/22.0.0-rc1");
         assertNull(SdkMavenRepository.ANDROID.getHighestInstalledVersion(
-                null, "com.android.support", "support-v4", "19", false, mFileOp));
+                null, "com.android.support", "support-v4", v -> v.getMajor() == 19, false, mFileOp));
 
         GradleCoordinate gc1 = SdkMavenRepository.ANDROID.getHighestInstalledVersion(
-                SDK_HOME, "com.android.support", "support-v4", "19", false, mFileOp);
+                SDK_HOME, "com.android.support", "support-v4", v -> v.getMajor() == 19, false, mFileOp);
         assertEquals(GradleCoordinate.parseCoordinateString(
                 "com.android.support:support-v4:19.1.0"), gc1);
 
         GradleCoordinate gc2 = SdkMavenRepository.ANDROID.getHighestInstalledVersion(
-                SDK_HOME, "com.android.support", "support-v4", "20", false, mFileOp);
+                SDK_HOME, "com.android.support", "support-v4", v -> v.getMajor() == 20, false, mFileOp);
         assertEquals(GradleCoordinate.parseCoordinateString(
                 "com.android.support:support-v4:20.0.0"), gc2);
 
         GradleCoordinate gc3 = SdkMavenRepository.ANDROID.getHighestInstalledVersion(
-                SDK_HOME, "com.android.support", "support-v4", "22", false, mFileOp);
+                SDK_HOME, "com.android.support", "support-v4", v -> v.getMajor() == 22, false, mFileOp);
         assertNull(gc3);
 
         GradleCoordinate gc4 = SdkMavenRepository.ANDROID.getHighestInstalledVersion(
-                SDK_HOME, "com.android.support", "support-v4", "22", true, mFileOp);
+                SDK_HOME, "com.android.support", "support-v4", v -> v.getMajor() == 22, true, mFileOp);
         assertEquals(GradleCoordinate.parseCoordinateString(
                 "com.android.support:support-v4:22.0.0-rc1"), gc4);
     }

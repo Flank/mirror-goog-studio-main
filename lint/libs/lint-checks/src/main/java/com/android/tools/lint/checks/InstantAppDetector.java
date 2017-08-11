@@ -239,11 +239,11 @@ public class InstantAppDetector extends ResourceXmlDetector implements UastScann
 
     private static void checkMultipleLauncherActivities(@NonNull Context context,
             Element root) {
-        Element application = XmlUtils.getFirstSubTagTagByName(root, TAG_APPLICATION);
+        Element application = XmlUtils.getFirstSubTagByName(root, TAG_APPLICATION);
         if (application == null) {
             return;
         }
-        Element activity = XmlUtils.getFirstSubTagTagByName(application, TAG_ACTIVITY);
+        Element activity = XmlUtils.getFirstSubTagByName(application, TAG_ACTIVITY);
         Element launchableActivity = null;
         while (activity != null) {
             if (ManifestDetector.isLaunchableActivity(activity)) {
@@ -298,7 +298,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements UastScann
             Element root) {
         // Look up targetSdkVersion from the merged manifest to make sure we also pick up
         // on any Gradle-overrides
-        Element usesSdk = XmlUtils.getFirstSubTagTagByName(root, TAG_USES_SDK);
+        Element usesSdk = XmlUtils.getFirstSubTagByName(root, TAG_USES_SDK);
         if (usesSdk == null) {
             return;
         }

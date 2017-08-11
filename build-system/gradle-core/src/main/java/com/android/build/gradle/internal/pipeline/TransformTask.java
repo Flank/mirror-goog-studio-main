@@ -530,6 +530,7 @@ public class TransformTask extends StreamBasedTask implements Context {
             if (configActionCallback != null) {
                 configActionCallback.callback(transform, task);
             }
+            task.getOutputs().cacheIf(t -> transform.isCacheable());
         }
     }
 }

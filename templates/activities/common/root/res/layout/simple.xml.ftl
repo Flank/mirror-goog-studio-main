@@ -9,7 +9,7 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:showIn="@layout/${appBarLayoutName}"
 </#if>
-    tools:context="${relativePackage}.${activityClass}">
+    tools:context="${packageName}.${activityClass}">
 
 <#if isNewProject!false>
     <TextView

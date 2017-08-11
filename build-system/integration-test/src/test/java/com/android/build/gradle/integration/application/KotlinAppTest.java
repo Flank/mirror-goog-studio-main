@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.category.SmokeTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
+import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
@@ -47,29 +48,33 @@ public class KotlinAppTest {
 
     @Test
     public void projectModel() throws IOException {
-        AndroidProject model = project.model().getSingle().getOnlyModel();
-        assertThat(model.isLibrary()).named("library project").isFalse();
-        assertThat(model.getProjectType())
+        GetAndroidModelAction.ModelContainer<AndroidProject> models = project.model().getMulti();
+
+        AndroidProject appModel = models.getModelMap().get(":app");
+
+        assertThat(appModel.getProjectType())
                 .named("Project Type")
                 .isEqualTo(AndroidProject.PROJECT_TYPE_APP);
-        assertThat(model.getCompileTarget())
+        assertThat(appModel.getCompileTarget())
                 .named("Compile Target")
                 .isEqualTo(GradleTestProject.getCompileSdkHash());
     }
 
     @Test
     public void apkContents() throws Exception {
-        project.executor().run("clean", "assembleDebug");
-        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        project.executor().run("clean", "app:assembleDebug");
+        Apk apk = project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).isNotNull();
         assertThat(apk).containsResource("layout/activity_layout.xml");
+        assertThat(apk).containsResource("layout/lib_activity_layout.xml");
         assertThat(apk).containsMainClass("Lcom/example/android/kotlin/MainActivity;");
+        assertThat(apk).containsMainClass("Lcom/example/android/kotlin/LibActivity;");
     }
 
     @Test
     public void dataBindingEnabled() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
-                project.getBuildFile(),
+                project.getSubproject(":app").getBuildFile(),
                 "\n"
                         + "android.dataBinding.enabled = true\n"
                         + "\n"
@@ -77,7 +82,7 @@ public class KotlinAppTest {
                         + "    compile \"com.android.support:support-v4:${rootProject.supportLibVersion}\"\n"
                         + "}\n");
 
-        project.executor().run("clean", "assembleDebug");
+        project.executor().run("clean", "app:assembleDebug");
     }
 
     @Test

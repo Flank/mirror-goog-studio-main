@@ -71,9 +71,8 @@ are typically more intended for tools usage than runtime checks.)""",
                 .addMoreInfo("https://code.google.com/p/android/issues/detail?id=65183")
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>>? {
-        return listOf<Class<out UElement>>(UCallExpression::class.java)
-    }
+    override fun getApplicableUastTypes(): List<Class<out UElement>>? =
+            listOf<Class<out UElement>>(UCallExpression::class.java)
 
     override fun createUastHandler(context: JavaContext): UElementHandler? {
         if (!context.getMainProject().isAndroidProject) {
@@ -116,10 +115,10 @@ are typically more intended for tools usage than runtime checks.)""",
         // Attempt to just get the assert keyword location
         val location: Location
         val firstChild = expression.psi.firstChild
-        if (firstChild is PsiKeyword && PsiKeyword.ASSERT == firstChild.getText()) {
-            location = context.getLocation(firstChild)
+        location = if (firstChild is PsiKeyword && PsiKeyword.ASSERT == firstChild.getText()) {
+            context.getLocation(firstChild)
         } else {
-            location = context.getLocation(expression)
+            context.getLocation(expression)
         }
 
         context.report(ISSUE, expression, location, message)
@@ -134,20 +133,22 @@ are typically more intended for tools usage than runtime checks.)""",
         if (expression is UParenthesizedExpression) {
             return isNullCheck(expression.expression)
         }
-        if (expression is UBinaryExpression) {
-            val lOperand = expression.leftOperand
-            val rOperand = expression.rightOperand
-            return lOperand.isNullLiteral() || rOperand.isNullLiteral()
-                    || isNullCheck(lOperand) && isNullCheck(rOperand)
-        } else if (expression is UPolyadicExpression) {
-            for (operand in expression.operands) {
-                if (!isNullCheck(operand)) {
-                    return false
-                }
+        return when (expression) {
+            is UBinaryExpression -> {
+                val lOperand = expression.leftOperand
+                val rOperand = expression.rightOperand
+                lOperand.isNullLiteral() || rOperand.isNullLiteral()
+                        || isNullCheck(lOperand) && isNullCheck(rOperand)
             }
-            return true
-        } else {
-            return false
+            is UPolyadicExpression -> {
+                for (operand in expression.operands) {
+                    if (!isNullCheck(operand)) {
+                        return false
+                    }
+                }
+                true
+            }
+            else -> false
         }
     }
 }

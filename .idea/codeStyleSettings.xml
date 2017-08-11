@@ -141,6 +141,9 @@
         <codeStyleSettings language="kotlin">
           <option name="KEEP_BLANK_LINES_IN_DECLARATIONS" value="1" />
           <option name="KEEP_BLANK_LINES_IN_CODE" value="1" />
+          <option name="ALIGN_MULTILINE_PARAMETERS" value="false" />
+          <option name="CALL_PARAMETERS_WRAP" value="5" />
+          <option name="METHOD_PARAMETERS_WRAP" value="5" />
         </codeStyleSettings>
       </value>
     </option>

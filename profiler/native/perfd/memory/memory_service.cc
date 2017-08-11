@@ -40,6 +40,10 @@ using profiler::proto::ListHeapDumpInfosResponse;
 using profiler::proto::ListDumpInfosRequest;
 using profiler::proto::TrackAllocationsRequest;
 using profiler::proto::TrackAllocationsResponse;
+using profiler::proto::SuspendTrackAllocationsRequest;
+using profiler::proto::SuspendTrackAllocationsResponse;
+using profiler::proto::ResumeTrackAllocationsRequest;
+using profiler::proto::ResumeTrackAllocationsResponse;
 using profiler::proto::TriggerHeapDumpRequest;
 using profiler::proto::TriggerHeapDumpResponse;
 
@@ -85,8 +89,8 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
 }
 
 ::grpc::Status MemoryServiceImpl::GetJvmtiData(::grpc::ServerContext* context,
-                                          const MemoryRequest* request,
-                                          MemoryData* response) {
+                                               const MemoryRequest* request,
+                                               MemoryData* response) {
   Trace trace("MEM:GetJvmtiData");
   auto result = collectors_.find(request->process_id());
   if (result == collectors_.end()) {
@@ -95,8 +99,8 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
         "The memory collector for the specified pid has not been started yet.");
   }
 
-  result->second.memory_cache()->LoadMemoryJvmtiData(request->start_time(),
-                                                request->end_time(), response);
+  result->second.memory_cache()->LoadMemoryJvmtiData(
+      request->start_time(), request->end_time(), response);
 
   return ::grpc::Status::OK;
 }
@@ -217,6 +221,60 @@ grpc::Status MemoryServiceImpl::StopMonitoringApp(
     response->set_status(TrackAllocationsResponse::NOT_PROFILING);
     return ::grpc::Status::OK;
   }
+}
+
+::grpc::Status MemoryServiceImpl::SuspendTrackAllocations(
+    ::grpc::ServerContext* context,
+    const SuspendTrackAllocationsRequest* request,
+    SuspendTrackAllocationsResponse* response) {
+  int32_t app_id = request->process_id();
+
+  auto result = collectors_.find(app_id);
+  PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
+      result, collectors_, response, SuspendTrackAllocationsResponse::FAILURE_UNKNOWN)
+
+  if ((result->second).IsRunning()) {
+    // Forwards a control signal to perfa to toggle JVMTI-based tracking.
+    MemoryControlRequest control_request;
+    control_request.set_pid(app_id);
+    control_request.mutable_suspend_request();
+    if (!private_service_->SendRequestToAgent(control_request)) {
+      return ::grpc::Status(::grpc::StatusCode::UNKNOWN,
+                            "Unable to suspend live allocation tracking.");
+    }
+  } else {
+    response->set_status(SuspendTrackAllocationsResponse::NOT_PROFILING);
+    return ::grpc::Status::OK;
+  }
+  response->set_status(SuspendTrackAllocationsResponse::SUCCESS);
+  return ::grpc::Status::OK;
+}
+
+::grpc::Status MemoryServiceImpl::ResumeTrackAllocations(
+    ::grpc::ServerContext* context,
+    const ResumeTrackAllocationsRequest* request,
+    ResumeTrackAllocationsResponse* response) {
+  int32_t app_id = request->process_id();
+
+  auto result = collectors_.find(app_id);
+  PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND_WITH_STATUS(
+      result, collectors_, response, ResumeTrackAllocationsResponse::FAILURE_UNKNOWN)
+
+  if ((result->second).IsRunning()) {
+    // Forwards a control signal to perfa to toggle JVMTI-based tracking.
+    MemoryControlRequest control_request;
+    control_request.set_pid(app_id);
+    control_request.mutable_resume_request();
+    if (!private_service_->SendRequestToAgent(control_request)) {
+      return ::grpc::Status(::grpc::StatusCode::UNKNOWN,
+                            "Unable to resume live allocation tracking.");
+    }
+  } else {
+    response->set_status(ResumeTrackAllocationsResponse::NOT_PROFILING);
+    return ::grpc::Status::OK;
+  }
+  response->set_status(ResumeTrackAllocationsResponse::SUCCESS);
+  return ::grpc::Status::OK;
 }
 
 #undef PROFILER_MEMORY_SERVICE_RETURN_IF_NOT_FOUND

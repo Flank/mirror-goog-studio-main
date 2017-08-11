@@ -1,8 +1,10 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 
 iml_module(
     name = "studio.testutils",
     srcs = ["src/main/java"],
+    iml_files = ["testutils.iml"],
     tags = ["managed"],
     test_data = ["//prebuilts/studio/sdk:platforms/latest"],
     test_srcs = ["src/test/java"],
@@ -20,9 +22,10 @@ iml_module(
     ],
 )
 
-java_library(
+maven_java_library(
     name = "tools.testutils",
     srcs = glob(["src/main/java/**"]),
+    pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
@@ -35,6 +38,13 @@ java_library(
         "//tools/base/third_party:org.ow2.asm_asm",
         "//tools/base/third_party:org.smali_dexlib2",
     ],
+)
+
+maven_pom(
+    name = "pom",
+    artifact = "testutils",
+    group = "com.android.tools",
+    source = "//tools/buildSrc/base:base_version",
 )
 
 java_test(

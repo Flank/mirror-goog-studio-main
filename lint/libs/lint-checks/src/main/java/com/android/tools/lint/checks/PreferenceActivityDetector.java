@@ -159,7 +159,7 @@ public class PreferenceActivityDetector extends Detector
                 mergedManifest.getDocumentElement() == null) {
             return false;
         }
-        Element application = XmlUtils.getFirstSubTagTagByName(
+        Element application = XmlUtils.getFirstSubTagByName(
                 mergedManifest.getDocumentElement(), TAG_APPLICATION);
         if (application != null) {
             for (Element element : XmlUtils.getSubTags(application)) {

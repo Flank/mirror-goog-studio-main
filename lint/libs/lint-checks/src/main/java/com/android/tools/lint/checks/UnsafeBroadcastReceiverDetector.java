@@ -26,7 +26,7 @@ import static com.android.SdkConstants.TAG_ACTION;
 import static com.android.SdkConstants.TAG_APPLICATION;
 import static com.android.SdkConstants.TAG_INTENT_FILTER;
 import static com.android.SdkConstants.TAG_RECEIVER;
-import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
+import static com.android.utils.XmlUtils.getFirstSubTagByName;
 import static com.android.utils.XmlUtils.getSubTagsByName;
 
 import com.android.annotations.NonNull;
@@ -551,7 +551,7 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                 Element parent = (Element) element.getParentNode();
                 permission = parent.getAttributeNS(ANDROID_URI, ATTR_PERMISSION);
             }
-            Element filter = getFirstSubTagTagByName(element, TAG_INTENT_FILTER);
+            Element filter = getFirstSubTagByName(element, TAG_INTENT_FILTER);
             if (filter != null) {
                 for (Element action : getSubTagsByName(filter, TAG_ACTION)) {
                     String actionName = action.getAttributeNS(
@@ -591,12 +591,12 @@ public class UnsafeBroadcastReceiverDetector extends Detector
                 Document mergedManifest = mainProject.getMergedManifest();
                 if (mergedManifest != null &&
                         mergedManifest.getDocumentElement() != null) {
-                    Element application = getFirstSubTagTagByName(
+                    Element application = getFirstSubTagByName(
                             mergedManifest.getDocumentElement(), TAG_APPLICATION);
                     if (application != null) {
                         for (Element element : XmlUtils.getSubTags(application)) {
                             if (TAG_RECEIVER.equals(element.getTagName())) {
-                                Element filter = getFirstSubTagTagByName(element, TAG_INTENT_FILTER);
+                                Element filter = getFirstSubTagByName(element, TAG_INTENT_FILTER);
                                 if (filter != null) {
                                     for (Element action : getSubTagsByName(filter, TAG_ACTION)) {
                                         String actionName = action.getAttributeNS(

@@ -37,6 +37,7 @@ public final class SymbolTestUtils {
      * @param value the value of the symbol
      * @param styleableChildren children of declare styleables, otherwise empty
      */
+    @NonNull
     public static Symbol createSymbol(
             @NonNull String resourceType,
             @NonNull String name,
@@ -58,6 +59,7 @@ public final class SymbolTestUtils {
     }
 
     /** @see #createSymbol(String, String, String, String, List) */
+    @NonNull
     public static Symbol createSymbol(
             @NonNull String resourceType,
             @NonNull String name,
@@ -67,6 +69,7 @@ public final class SymbolTestUtils {
     }
 
     /** @see #createSymbol(String, String, String, String, List) */
+    @NonNull
     public static Symbol createSymbol(
             @NonNull String resourceType,
             @NonNull String name,

@@ -26,8 +26,8 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.StandardOpenOption;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -89,41 +89,45 @@ public final class ReadWriteProcessLock {
 
     /**
      * Map from a lock file to a {@link FileChannel}, used to make sure that there is only one
-     * instance of {@code FileChannel} per lock file within the current process within the current
-     * build.
+     * instance of {@code FileChannel} per lock file within the current process.
      */
+    @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
     @NonNull
-    private static final BuildSessionVariable<ConcurrentMap<File, FileChannel>> fileChannelMap =
-            new BuildSessionVariable<>(
-                    ReadWriteProcessLock.class.getName(),
-                    "fileChannelMap",
-                    new TypeToken<ConcurrentMap<File, FileChannel>>() {},
-                    ConcurrentHashMap::new);
+    private static final ConcurrentMap<File, FileChannel> fileChannelMap =
+            new JvmWideVariable<>(
+                            ReadWriteProcessLock.class,
+                            "fileChannelMap",
+                            new TypeToken<ConcurrentMap<File, FileChannel>>() {},
+                            ConcurrentHashMap::new)
+                    .get();
 
     /**
      * Map from a lock file to a {@link FileLock}, used to make sure that there is only one instance
-     * of {@code FileLock} per lock file within the current process within the current build.
+     * of {@code FileLock} per lock file within the current process.
      */
+    @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
     @NonNull
-    private static final BuildSessionVariable<ConcurrentMap<File, FileLock>> fileLockMap =
-            new BuildSessionVariable<>(
-                    ReadWriteProcessLock.class.getName(),
-                    "fileLockMap",
-                    new TypeToken<ConcurrentMap<File, FileLock>>() {},
-                    ConcurrentHashMap::new);
+    private static final ConcurrentMap<File, FileLock> fileLockMap =
+            new JvmWideVariable<>(
+                            ReadWriteProcessLock.class,
+                            "fileLockMap",
+                            new TypeToken<ConcurrentMap<File, FileLock>>() {},
+                            ConcurrentHashMap::new)
+                    .get();
 
     /**
      * Map from a lock file to an {@link AtomicInteger} that counts the number of actions that are
-     * holding the within-process read lock on the given lock file within the current build.
+     * holding the within-process read lock on the given lock file.
      */
+    @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
     @NonNull
-    private static final BuildSessionVariable<ConcurrentMap<File, AtomicInteger>>
-            numOfReadingActionsMap =
-                    new BuildSessionVariable<>(
-                            ReadWriteProcessLock.class.getName(),
+    private static final ConcurrentMap<File, AtomicInteger> numOfReadingActionsMap =
+            new JvmWideVariable<>(
+                            ReadWriteProcessLock.class,
                             "numOfReadingActionsMap",
                             new TypeToken<ConcurrentMap<File, AtomicInteger>>() {},
-                            ConcurrentHashMap::new);
+                            ConcurrentHashMap::new)
+                    .get();
 
     /** The lock file, used solely for synchronization purposes. */
     @NonNull private final File lockFile;
@@ -189,10 +193,8 @@ public final class ReadWriteProcessLock {
 
         this.lockFile = lockFile;
         this.readWriteThreadLock = new ReadWriteThreadLock(lockFile);
-
-        ConcurrentMap<File, AtomicInteger> map = numOfReadingActionsMap.get();
-        Preconditions.checkNotNull(map);
-        this.numOfReadingActions = map.computeIfAbsent(lockFile, (any) -> new AtomicInteger(0));
+        this.numOfReadingActions =
+                numOfReadingActionsMap.computeIfAbsent(lockFile, (any) -> new AtomicInteger(0));
     }
 
     /** Returns the lock used for reading. */
@@ -282,13 +284,8 @@ public final class ReadWriteProcessLock {
         // ineffective. Therefore, we do not allow deleting lock files in this class. As long as the
         // lock files are not deleted, this method and releaseFileLock() are safe to be called from
         // multiple processes.
-        Map<File, FileChannel> channelMap = fileChannelMap.get();
-        Map<File, FileLock> lockMap = fileLockMap.get();
-
-        Preconditions.checkNotNull(channelMap);
-        Preconditions.checkNotNull(lockMap);
         Preconditions.checkState(
-                !channelMap.containsKey(lockFile) && !lockMap.containsKey(lockFile),
+                !fileChannelMap.containsKey(lockFile) && !fileLockMap.containsKey(lockFile),
                 "acquireFileLock() must not be called twice"
                         + " (ReadWriteProcessLock is not reentrant)");
 
@@ -298,23 +295,23 @@ public final class ReadWriteProcessLock {
                         StandardOpenOption.READ,
                         StandardOpenOption.WRITE,
                         StandardOpenOption.CREATE);
-        FileLock fileLock = fileChannel.lock(0L, Long.MAX_VALUE, shared);
+        FileLock fileLock;
+        try {
+            fileLock = fileChannel.lock(0L, Long.MAX_VALUE, shared);
+        } catch (OverlappingFileLockException e) {
+            throw new RuntimeException(
+                    "Unable to acquire a file lock for " + lockFile.getAbsolutePath(), e);
+        }
 
-        channelMap.put(lockFile, fileChannel);
-        lockMap.put(lockFile, fileLock);
+        fileChannelMap.put(lockFile, fileChannel);
+        fileLockMap.put(lockFile, fileLock);
     }
 
     private void releaseFileLock() throws IOException  {
         // As commented in acquireFileLock(), this method and acquireFileLock() are never called
         // from more than one thread per process and are safe to be called from multiple processes.
-        Map<File, FileChannel> channelMap = fileChannelMap.get();
-        Map<File, FileLock> lockMap = fileLockMap.get();
-
-        Preconditions.checkNotNull(channelMap);
-        Preconditions.checkNotNull(lockMap);
-
-        FileChannel fileChannel = channelMap.get(lockFile);
-        FileLock fileLock = lockMap.get(lockFile);
+        FileChannel fileChannel = fileChannelMap.get(lockFile);
+        FileLock fileLock = fileLockMap.get(lockFile);
 
         Preconditions.checkNotNull(fileChannel);
         Preconditions.checkNotNull(fileLock);
@@ -325,8 +322,8 @@ public final class ReadWriteProcessLock {
         fileLock.release();
         fileChannel.close();
 
-        channelMap.remove(lockFile);
-        lockMap.remove(lockFile);
+        fileChannelMap.remove(lockFile);
+        fileLockMap.remove(lockFile);
     }
 
     public interface Lock {

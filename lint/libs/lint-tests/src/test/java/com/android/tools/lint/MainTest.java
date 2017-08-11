@@ -22,6 +22,7 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 
 import com.android.SdkConstants;
+import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.detector.api.Detector;
@@ -33,9 +34,27 @@ import org.intellij.lang.annotations.Language;
 
 @SuppressWarnings("javadoc")
 public class MainTest extends AbstractCheckTest {
+    public interface Cleanup {
+        String cleanup(String s);
+    }
+
+    @Override
+    public String cleanup(String result) {
+        return super.cleanup(result);
+    }
 
     private void checkDriver(String expectedOutput, String expectedError, int expectedExitCode,
             String[] args) {
+        checkDriver(expectedOutput, expectedError, expectedExitCode, args, MainTest.this::cleanup);
+    }
+
+    public static void checkDriver(
+            String expectedOutput,
+            String expectedError,
+            int expectedExitCode,
+            String[] args,
+            @Nullable Cleanup cleanup) {
+
         PrintStream previousOut = System.out;
         PrintStream previousErr = System.err;
         try {
@@ -51,9 +70,17 @@ public class MainTest extends AbstractCheckTest {
                 exitCode = e.getStatus();
             }
 
-            assertEquals(expectedError, cleanup(error.toString()));
+            String stderr = error.toString();
+            if (cleanup != null) {
+                stderr = cleanup.cleanup(stderr);
+            }
+            assertEquals(expectedError, stderr);
             if (expectedOutput != null) {
-                assertEquals(expectedOutput, cleanup(output.toString()));
+                String stdout = output.toString();
+                if (cleanup != null) {
+                    stdout = cleanup.cleanup(stdout);
+                }
+                assertEquals(expectedOutput, stdout);
             }
             assertEquals(expectedExitCode, exitCode);
         } finally {
@@ -370,6 +397,7 @@ public class MainTest extends AbstractCheckTest {
         //noinspection ResultOfMethodCallIgnored
         baseline.delete(); // shouldn't exist
         assertFalse(baseline.exists());
+        //noinspection ConcatenationWithEmptyString
         checkDriver(
                 // Expected output
                 null,

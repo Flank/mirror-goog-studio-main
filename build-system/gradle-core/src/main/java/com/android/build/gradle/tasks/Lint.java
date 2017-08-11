@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.tasks;
 
-import static com.android.SdkConstants.VALUE_TRUE;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
@@ -100,6 +99,16 @@ public class Lint extends BaseTask {
         return manifestsForVariant;
     }
 
+    // we don't directly use the apksForVariant but since we use the output model, it's important
+    // to have the APKs built (which will generate the output.json used to create the output model).
+    private FileCollection apksForVariant;
+
+    @InputFiles
+    @Optional
+    public FileCollection getApksForVariant() {
+        return apksForVariant;
+    }
+
     private VariantScope variantScope;
 
     public void setLintOptions(@NonNull LintOptions lintOptions) {
@@ -124,9 +133,6 @@ public class Lint extends BaseTask {
 
     @TaskAction
     public void lint() throws IOException {
-        // we run by default in headless mode, so the JVM doesn't steal focus.
-        System.setProperty("java.awt.headless", "true");
-
         AndroidProject modelProject = createAndroidProject(getProject());
         if (getVariantName() != null && !getVariantName().isEmpty()) {
             for (Variant variant : modelProject.getVariants()) {
@@ -540,6 +546,8 @@ public class Lint extends BaseTask {
             task.setVariantName(variantName);
             task.manifestsForVariant =
                     scope.getOutput(TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS);
+            task.apksForVariant = scope.getOutput(TaskOutputHolder.TaskOutputType.APK);
+
             task.setToolingRegistry(globalScope.getToolingRegistry());
             task.setReportsDir(globalScope.getReportsDir());
             task.setOutputsDir(scope.getGlobalScope().getOutputsDir());

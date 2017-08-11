@@ -469,9 +469,8 @@ public class TestLintClient extends LintCliClient {
         }
 
         if (task.mockModifier != null) {
-            driver.addLintListener((driver, type, context) -> {
-                if (type == LintListener.EventType.SCANNING_PROJECT && context != null) {
-                    Project project = context.getProject();
+            driver.addLintListener((driver, type, project, context) -> {
+                if (type == LintListener.EventType.REGISTERED_PROJECT && project != null) {
                     AndroidProject model = project.getGradleProjectModel();
                     Variant variant = project.getCurrentVariant();
                     if (model != null && variant != null) {
@@ -1089,7 +1088,7 @@ public class TestLintClient extends LintCliClient {
 
         @Override
         public boolean isLibrary() {
-            if (mocker != null && mocker.hasJavaLibraryPlugin()) {
+            if (mocker != null && mocker.isLibrary()) {
                 return true;
             }
 

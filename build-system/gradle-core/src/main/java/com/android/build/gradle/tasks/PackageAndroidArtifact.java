@@ -51,6 +51,7 @@ import com.android.build.gradle.options.StringOption;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
+import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.packaging.IncrementalPackager;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.builder.utils.FileCache;
@@ -407,12 +408,14 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     @NonNull
     private File generateEmptyAndroidResourcesForInstantRun(File manifestFile) throws IOException {
-        try {
+        try (Aapt aapt =
+                InstantRunSplitApkBuilder.makeAapt(
+                        aaptGeneration, getBuilder(), fileCache, aaptIntermediateFolder)) {
+
             // use default values for aaptOptions since we don't package any resources.
             return InstantRunSliceSplitApkBuilder.generateSplitApkResourcesAp(
                     getLogger(),
-                    InstantRunSplitApkBuilder.makeAapt(
-                            aaptGeneration, getBuilder(), fileCache, aaptIntermediateFolder),
+                    aapt,
                     manifestFile,
                     instantRunSupportDir,
                     new com.android.builder.internal.aapt.AaptOptions(

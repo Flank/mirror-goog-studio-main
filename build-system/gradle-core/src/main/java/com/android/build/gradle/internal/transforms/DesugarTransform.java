@@ -53,13 +53,18 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
+import com.google.common.hash.Hashing;
+import com.google.common.hash.HashingInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -68,9 +73,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import org.gradle.api.file.FileCollection;
 import org.gradle.workers.WorkerExecutor;
 
 /** Desugar all Java 8 bytecode. */
@@ -137,12 +142,17 @@ public class DesugarTransform extends Transform {
 
     private static final LoggerWrapper logger = LoggerWrapper.getLogger(DesugarTransform.class);
 
+    @SuppressWarnings("FieldAccessedSynchronizedAndUnsynchronized")
+    // we initialize this field only once, so having unsynchronized reads is fine
+    private static final AtomicReference<Path> desugarJar = new AtomicReference<Path>(null);
+
+    private static final String DESUGAR_JAR = "desugar_deploy.jar";
+
     @NonNull private final Supplier<List<File>> androidJarClasspath;
     @NonNull private final List<Path> compilationBootclasspath;
     @Nullable private final FileCache userCache;
     private final int minSdk;
     @NonNull private final JavaProcessExecutor executor;
-    @NonNull private FileCollection java8LangSupportJar;
     @NonNull private final WaitableExecutor waitableExecutor;
     private boolean verbose;
     private final boolean enableGradleWorkers;
@@ -155,7 +165,6 @@ public class DesugarTransform extends Transform {
             @Nullable FileCache userCache,
             int minSdk,
             @NonNull JavaProcessExecutor executor,
-            @NonNull FileCollection java8LangSupportJar,
             boolean verbose,
             boolean enableGradleWorkers) {
         this.androidJarClasspath = androidJarClasspath;
@@ -163,7 +172,6 @@ public class DesugarTransform extends Transform {
         this.userCache = userCache;
         this.minSdk = minSdk;
         this.executor = executor;
-        this.java8LangSupportJar = java8LangSupportJar;
         this.waitableExecutor = WaitableExecutor.useGlobalSharedThreadPool();
         this.verbose = verbose;
         this.enableGradleWorkers = enableGradleWorkers;
@@ -208,8 +216,6 @@ public class DesugarTransform extends Transform {
         compilationBootclasspath.forEach(
                 file -> files.add(SecondaryFile.nonIncremental(file.toFile())));
 
-        files.add(SecondaryFile.nonIncremental(java8LangSupportJar));
-
         return files.build();
     }
 
@@ -222,6 +228,7 @@ public class DesugarTransform extends Transform {
     public void transform(@NonNull TransformInvocation transformInvocation)
             throws TransformException, InterruptedException, IOException {
         try {
+            initDesugarJar(userCache);
             processInputs(transformInvocation);
             waitableExecutor.waitForTasksWithQuickFail(true);
 
@@ -304,7 +311,7 @@ public class DesugarTransform extends Transform {
 
                         DesugarProcessBuilder processBuilder =
                                 new DesugarProcessBuilder(
-                                        java8LangSupportJar.getSingleFile().toPath(),
+                                        desugarJar.get(),
                                         verbose,
                                         inToOut,
                                         classpath,
@@ -339,7 +346,7 @@ public class DesugarTransform extends Transform {
         for (InputEntry pathPathEntry : cacheMisses) {
             DesugarWorkerItem workerItem =
                     new DesugarWorkerItem(
-                            java8LangSupportJar.getSingleFile().toPath(),
+                            desugarJar.get(),
                             Files.createTempDirectory("gradle_lambdas"),
                             true,
                             pathPathEntry.getInputPath(),
@@ -548,5 +555,64 @@ public class DesugarTransform extends Transform {
         }
 
         return bootClasspathJars;
+    }
+
+    /** Set this location of extracted desugar jar that is used for processing. */
+    private static void initDesugarJar(@Nullable FileCache cache) throws IOException {
+        if (isDesugarJarInitialized()) {
+            return;
+        }
+
+        URL url = DesugarProcessBuilder.class.getClassLoader().getResource(DESUGAR_JAR);
+        Preconditions.checkNotNull(url);
+
+        Path extractedDesugar = null;
+        if (cache != null) {
+            try {
+                String fileHash;
+                try (HashingInputStream stream =
+                        new HashingInputStream(Hashing.sha256(), url.openStream())) {
+                    fileHash = stream.hash().toString();
+                }
+                FileCache.Inputs inputs =
+                        new FileCache.Inputs.Builder(FileCache.Command.EXTRACT_DESUGAR_JAR)
+                                .putString("pluginVersion", Version.ANDROID_GRADLE_PLUGIN_VERSION)
+                                .putString("jarUrl", url.toString())
+                                .putString("fileHash", fileHash)
+                                .build();
+
+                File cachedFile =
+                        cache.createFileInCacheIfAbsent(
+                                        inputs, file -> copyDesugarJar(url, file.toPath()))
+                                .getCachedFile();
+                Preconditions.checkNotNull(cachedFile);
+                extractedDesugar = cachedFile.toPath();
+            } catch (IOException | ExecutionException e) {
+                logger.error(e, "Unable to cache Desugar jar. Extracting to temp dir.");
+            }
+        }
+
+        synchronized (desugarJar) {
+            if (isDesugarJarInitialized()) {
+                return;
+            }
+
+            if (extractedDesugar == null) {
+                extractedDesugar = PathUtils.createTmpToRemoveOnShutdown(DESUGAR_JAR);
+                copyDesugarJar(url, extractedDesugar);
+            }
+            desugarJar.set(extractedDesugar);
+        }
+    }
+
+    private static void copyDesugarJar(@NonNull URL inputUrl, @NonNull Path targetPath)
+            throws IOException {
+        try (InputStream inputStream = inputUrl.openConnection().getInputStream()) {
+            Files.copy(inputStream, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private static boolean isDesugarJarInitialized() {
+        return desugarJar.get() != null && Files.isRegularFile(desugarJar.get());
     }
 }

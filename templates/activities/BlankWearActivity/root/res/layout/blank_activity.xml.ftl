@@ -6,7 +6,7 @@
     android:background="@color/dark_grey"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="${relativePackage}.${activityClass}"
+    tools:context="${packageName}.${activityClass}"
     tools:deviceIds="wear"
     android:padding="@dimen/box_inset_layout_padding">
 

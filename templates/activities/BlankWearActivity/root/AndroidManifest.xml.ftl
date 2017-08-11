@@ -12,7 +12,7 @@
 	-->
 	<meta-data android:name="com.google.android.wearable.standalone" android:value="false"/>
 
-        <activity android:name="${relativePackage}.${activityClass}"
+        <activity android:name="${packageName}.${activityClass}"
             <#if isNewProject>
             android:label="@string/app_name"
             <#else>

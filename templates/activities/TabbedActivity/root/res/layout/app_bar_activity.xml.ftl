@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="${relativePackage}.${activityClass}">
+    tools:context="${packageName}.${activityClass}">
 
     <android.support.design.widget.AppBarLayout
         android:id="@+id/appbar"

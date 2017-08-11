@@ -243,11 +243,11 @@ public class LintCliClient extends LintClient {
     }
 
     protected void validateIssueIds() {
-        driver.addLintListener((driver, type, context) -> {
+        driver.addLintListener((driver, type, project, context) -> {
             if (type == LintListener.EventType.SCANNING_PROJECT && !validatedIds) {
                 // Make sure all the id's are valid once the driver is all set up and
                 // ready to run (such that custom rules are available in the registry etc)
-                validateIssueIds(context != null ? context.getProject() : null);
+                validateIssueIds(project);
             }
         });
     }
@@ -728,6 +728,7 @@ public class LintCliClient extends LintClient {
         public void update(
                 @NonNull LintDriver lint,
                 @NonNull EventType type,
+                @Nullable Project project,
                 @Nullable Context context) {
             switch (type) {
                 case SCANNING_PROJECT: {
@@ -761,6 +762,7 @@ public class LintCliClient extends LintClient {
                 case COMPLETED:
                     System.out.println();
                     break;
+                case REGISTERED_PROJECT:
                 case STARTING:
                     // Ignored for now
                     break;

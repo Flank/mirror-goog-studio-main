@@ -1150,9 +1150,9 @@ public class MaterialHtmlReporter extends Reporter {
     }
 
     private static class Action {
-        public String title;
-        public String id;
-        public String function;
+        public final String title;
+        public final String id;
+        public final String function;
 
         public Action(String title, String id, String function) {
             this.title = title;
@@ -1196,7 +1196,7 @@ public class MaterialHtmlReporter extends Reporter {
 
     int cardNumber = 0;
 
-    Set<String> usedCardIds = Sets.newHashSet();
+    final Set<String> usedCardIds = Sets.newHashSet();
 
     public void writeCard(@NonNull Runnable appender, @Nullable String title, boolean dismissible,
             String cardId, Action... actions) {

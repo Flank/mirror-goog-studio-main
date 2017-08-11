@@ -155,7 +155,7 @@ public class GenerateSplitAbiRes extends BaseTask {
             File manifestFile = generateSplitManifest(split, abiApkData);
 
             AndroidBuilder builder = getBuilder();
-            Aapt aapt =
+            try (Aapt aapt =
                     AaptGradleFactory.make(
                             aaptGeneration,
                             builder,
@@ -171,16 +171,19 @@ public class GenerateSplitAbiRes extends BaseTask {
                                     .getGlobalScope()
                                     .getExtension()
                                     .getAaptOptions()
-                                    .getCruncherProcesses());
-            AaptPackageConfig.Builder aaptConfig = new AaptPackageConfig.Builder();
-            aaptConfig
-                    .setManifestFile(manifestFile)
-                    .setOptions(DslAdaptersKt.convert(aaptOptions))
-                    .setDebuggable(debuggable)
-                    .setResourceOutputApk(resPackageFile)
-                    .setVariantType(variantType);
+                                    .getCruncherProcesses())) {
 
-            getBuilder().processResources(aapt, aaptConfig);
+                AaptPackageConfig.Builder aaptConfig = new AaptPackageConfig.Builder();
+                aaptConfig
+                        .setManifestFile(manifestFile)
+                        .setOptions(DslAdaptersKt.convert(aaptOptions))
+                        .setDebuggable(debuggable)
+                        .setResourceOutputApk(resPackageFile)
+                        .setVariantType(variantType);
+
+                getBuilder().processResources(aapt, aaptConfig);
+            }
+
             outputScope.addOutputForSplit(
                     VariantScope.TaskOutputType.ABI_PROCESSED_SPLIT_RES,
                     abiApkData,

@@ -21,11 +21,9 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.tools.perflib.analyzer.Capture;
 import com.android.tools.perflib.captures.DataBuffer;
-import com.android.tools.perflib.heap.analysis.ComputationProgress;
-import com.android.tools.perflib.heap.analysis.DominatorsBase;
-import com.android.tools.perflib.heap.analysis.LinkEvalDominators;
-import com.android.tools.perflib.heap.analysis.ShortestDistanceVisitor;
-import com.android.tools.perflib.heap.analysis.TopologicalSort;
+import com.android.tools.perflib.heap.analysis.*;
+import com.android.tools.perflib.heap.ext.NativeRegistryPostProcessor;
+import com.android.tools.perflib.heap.ext.SnapshotPostProcessor;
 import com.android.tools.proguard.ProguardMap;
 import gnu.trove.THashSet;
 import gnu.trove.TIntObjectHashMap;
@@ -44,6 +42,8 @@ import java.util.List;
  * During parsing of the HPROF file HEAP_DUMP_INFO chunks change which heap is being referenced.
  */
 public class Snapshot extends Capture {
+
+
     public enum DominatorComputationStage {
         INITIALIZING(new ComputationProgress("Preparing for dominator calculation...", 0), 0.1, 0.0),
         RESOLVING_REFERENCES(new ComputationProgress("Resolving references...", 0), 0.1, 0.2),
@@ -125,9 +125,21 @@ public class Snapshot extends Capture {
 
     @NonNull
     public static Snapshot createSnapshot(@NonNull DataBuffer buffer, @NonNull ProguardMap map) {
+        return createSnapshot(buffer, map, Arrays.asList(new NativeRegistryPostProcessor()));
+    }
+
+    @NonNull
+    public static Snapshot createSnapshot(
+            @NonNull DataBuffer buffer,
+            @NonNull ProguardMap map,
+            @NonNull List<SnapshotPostProcessor> postProcessors) {
         try {
             Snapshot snapshot = new Snapshot(buffer);
             HprofParser.parseBuffer(snapshot, buffer, map);
+            for (SnapshotPostProcessor processor : postProcessors) {
+                processor.postProcess(snapshot);
+            }
+
             return snapshot;
         } catch (RuntimeException e) {
             buffer.dispose();

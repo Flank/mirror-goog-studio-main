@@ -3,6 +3,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.perflib",
     srcs = ["src/main/java"],
+    iml_files = ["perflib.iml"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],
@@ -15,5 +16,6 @@ iml_module(
         "//tools/base/testutils:studio.testutils[module, test]",
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:truth[test]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime[test]",
     ],
 )

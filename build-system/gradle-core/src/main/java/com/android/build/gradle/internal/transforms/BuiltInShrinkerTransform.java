@@ -59,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.InvalidUserDataException;
+import org.gradle.api.logging.Logging;
 import org.gradle.tooling.BuildException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +69,7 @@ import org.slf4j.LoggerFactory;
  * into the output folders (one per stream).
  */
 public class BuiltInShrinkerTransform extends ProguardConfigurable {
+    private static final Logger LOG = Logging.getLogger(BuiltInShrinkerTransform.class);
 
     private static final String NAME = "androidGradleClassShrinker";
     private static final UnsupportedFlagsHandler FLAGS_HANDLER = new ShrinkerFlagsHandler();
@@ -206,6 +208,8 @@ public class BuiltInShrinkerTransform extends ProguardConfigurable {
         ProguardConfig config = new ProguardConfig();
 
         for (File configFile : getAllConfigurationFiles()) {
+            LOG.info("Applying ProGuard configuration file {}", configFile);
+
             // the file could not exist if it's published by a library sub-module as the publication
             // happens no matter what the module is doing (in case it's dynamically generated).
             if (configFile.isFile()) {

@@ -60,15 +60,11 @@ class TestConfiguration(
             }
         }
 
-        return task.getCheckedIssues().contains(issue)
+        return task.checkedIssues.contains(issue)
     }
 
     override fun ignore(context: Context, issue: Issue,
-                        location: Location?, message: String) {
-        fail("Not supported in tests.")
-    }
+                        location: Location?, message: String) = fail("Not supported in tests.")
 
-    override fun setSeverity(issue: Issue, severity: Severity?) {
-        fail("Not supported in tests.")
-    }
+    override fun setSeverity(issue: Issue, severity: Severity?) = fail("Not supported in tests.")
 }

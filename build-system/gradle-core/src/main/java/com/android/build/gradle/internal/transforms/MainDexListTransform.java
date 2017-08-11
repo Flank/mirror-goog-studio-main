@@ -162,6 +162,11 @@ public class MainDexListTransform extends BaseProguardAction {
     }
 
     @Override
+    public boolean isCacheable() {
+        return true;
+    }
+
+    @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
         // Re-direct the output to appropriate log levels, just like the official ProGuard task.
@@ -207,7 +212,7 @@ public class MainDexListTransform extends BaseProguardAction {
                 + "}");
         keep("public class * extends android.app.backup.BackupAgent { <init>(); }");
         keep("public class * extends java.lang.annotation.Annotation { *;}");
-        keep("class com.android.tools.fd.** {*;}"); // Instant run.
+        keep("class com.android.tools.ir.** {*;}"); // Instant run.
 
         // handle inputs
         libraryJar(findShrinkedAndroidJar());

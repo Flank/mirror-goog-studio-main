@@ -98,17 +98,17 @@ public final class ReadWriteThreadLock {
 
     /**
      * Map from a lock object to a {@link ReentrantReadWriteLock}, used to make sure that there is
-     * only one instance of {@code ReentrantReadWriteLock} per lock object within the current JVM
-     * within the current build.
+     * only one instance of {@code ReentrantReadWriteLock} per lock object within the current JVM.
      */
+    @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
     @NonNull
-    private static final BuildSessionVariable<ConcurrentMap<Object, ReentrantReadWriteLock>>
-            lockMap =
-                    new BuildSessionVariable<>(
-                            ReadWriteThreadLock.class.getName(),
+    private static final ConcurrentMap<Object, ReentrantReadWriteLock> lockMap =
+            new JvmWideVariable<>(
+                            ReadWriteThreadLock.class,
                             "lockMap",
                             new TypeToken<ConcurrentMap<Object, ReentrantReadWriteLock>>() {},
-                            ConcurrentHashMap::new);
+                            ConcurrentHashMap::new)
+                    .get();
 
     /**
      * The unique {@link ReentrantReadWriteLock} instance corresponding to the given lock object.
@@ -140,9 +140,7 @@ public final class ReadWriteThreadLock {
                         lockObject.getClass(),
                         lockObject.getClass().getClassLoader()));
 
-        ConcurrentMap<Object, ReentrantReadWriteLock> map = lockMap.get();
-        Preconditions.checkNotNull(map);
-        this.lock = map.computeIfAbsent(lockObject, (any) -> new ReentrantReadWriteLock());
+        this.lock = lockMap.computeIfAbsent(lockObject, (any) -> new ReentrantReadWriteLock());
     }
 
     /** Returns the lock used for reading. */

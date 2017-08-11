@@ -20,7 +20,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.CLASSES_FOR_UNIT_TESTS;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES;
 import static com.android.builder.core.VariantType.UNIT_TEST;
 
 import com.android.annotations.NonNull;
@@ -111,7 +111,7 @@ public class AndroidUnitTest extends Test {
                             + testedVariantData.getVariantConfiguration().getFullName()
                             + " build.");
 
-            runTestsTask.setTestClassesDirs(scope.getOutput(CLASSES_FOR_UNIT_TESTS));
+            runTestsTask.setTestClassesDirs(scope.getOutput(ALL_CLASSES));
 
             boolean includeAndroidResources =
                     scope.getGlobalScope()
@@ -168,7 +168,7 @@ public class AndroidUnitTest extends Test {
                 collection.from(scope.getOutput(TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY));
             }
             // - the test component classes and java_res
-            collection.from(scope.getOutput(CLASSES_FOR_UNIT_TESTS));
+            collection.from(scope.getOutput(ALL_CLASSES));
             // TODO is this the right thing? this doesn't include the res merging via transform AFAIK
             collection.from(scope.getOutput(TaskOutputType.JAVA_RES));
 

@@ -877,6 +877,33 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testSuppressTargetApiOnFieldInitializers() {
+        //noinspection all // Sample code
+        lint().files(manifest().minSdk(14),
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.annotation.TargetApi;\n" +
+                        "import android.os.Build;\n" +
+                        "import android.view.accessibility.AccessibilityNodeInfo;\n" +
+                        "\n" +
+                        "public class FooBar {\n" +
+                        "    @TargetApi(Build.VERSION_CODES.LOLLIPOP)\n" +
+                        "    public static int MY_CONSTANT = AccessibilityNodeInfo.ACTION_SET_TEXT;\n" +
+                        "}\n"),
+                java("" +
+                        "package android.annotation;\n" +
+                        "import static java.lang.annotation.ElementType.*;\n" +
+                        "import java.lang.annotation.*;\n" +
+                        "@Target({TYPE, METHOD, CONSTRUCTOR, FIELD})\n" +
+                        "@Retention(RetentionPolicy.CLASS)\n" +
+                        "public @interface TargetApi {\n" +
+                        "    int value();\n" +
+                        "}"))
+                .run()
+                .expectClean();
+    }
+
     public void testInheritStatic() {
         //noinspection all // Sample code
         String expected = ""

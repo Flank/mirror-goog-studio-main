@@ -3,6 +3,7 @@ load("//tools/base/bazel:bazel.bzl", "iml_module")
 iml_module(
     name = "studio.flags",
     srcs = ["src/main/java"],
+    iml_files = ["flags.iml"],
     tags = ["managed"],
     test_srcs = ["src/test/java"],
     visibility = ["//visibility:public"],

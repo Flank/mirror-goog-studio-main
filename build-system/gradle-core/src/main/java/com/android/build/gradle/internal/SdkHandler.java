@@ -181,7 +181,8 @@ public class SdkHandler {
         ProgressIndicator progress = new ConsoleProgressIndicator();
         AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(getSdkFolder());
         LocalPackage platformToolsPackage =
-                sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_PLATFORM_TOOLS, true, progress);
+                sdk.getLatestLocalPackageForPrefix(
+                        SdkConstants.FD_PLATFORM_TOOLS, null, true, progress);
         if (platformToolsPackage == null) {
             if (sdkLibData.useSdkDownload()) {
                 sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);

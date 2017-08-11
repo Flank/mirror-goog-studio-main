@@ -139,12 +139,12 @@ enum class Scope {
         @JvmStatic
         fun checkSingleFile(scopes: EnumSet<Scope>): Boolean {
             val size = scopes.size
-            if (size == 2) {
+            return if (size == 2) {
                 // When single checking a Java source file, we check both its Java source
                 // and the associated class files
-                return scopes.contains(JAVA_FILE) && scopes.contains(CLASS_FILE)
+                scopes.contains(JAVA_FILE) && scopes.contains(CLASS_FILE)
             } else {
-                return size == 1 && (scopes.contains(JAVA_FILE)
+                size == 1 && (scopes.contains(JAVA_FILE)
                         || scopes.contains(CLASS_FILE)
                         || scopes.contains(RESOURCE_FILE)
                         || scopes.contains(PROGUARD_FILE)

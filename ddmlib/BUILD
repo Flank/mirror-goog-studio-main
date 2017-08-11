@@ -4,6 +4,7 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.ddmlib",
     srcs = ["src/main/java"],
+    iml_files = ["ddmlib.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     tags = ["managed"],
     test_data = ["//prebuilts/studio/sdk:platform-tools"],
@@ -44,7 +45,7 @@ maven_java_library(
 maven_pom(
     name = "pom",
     artifact = "ddmlib",
-    group = "com.android.tools",
+    group = "com.android.tools.ddms",
     source = "//tools/buildSrc/base:base_version",
 )
 

@@ -60,7 +60,7 @@ import org.objectweb.asm.ClassWriter;
 public class InstantRunSlicer extends Transform {
 
     @VisibleForTesting
-    static final String PACKAGE_FOR_GUARD_CLASS = "com/android/tools/fd/dummy";
+    static final String PACKAGE_FOR_GUARD_CLASS = "com/android/tools/ir/dummy";
 
     // since we use the last digit of the FQCN hashcode() as the bucket, 10 is the appropriate
     // number of slices.

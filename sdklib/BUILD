@@ -4,6 +4,7 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.sdklib",
     srcs = ["src/main/java"],
+    iml_files = ["sdklib.iml"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],
     test_srcs = ["src/test/java"],

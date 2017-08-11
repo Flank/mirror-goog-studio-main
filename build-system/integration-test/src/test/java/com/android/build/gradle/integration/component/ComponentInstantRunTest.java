@@ -12,7 +12,7 @@ import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
-import com.android.tools.fd.client.InstantRunBuildInfo;
+import com.android.tools.ir.client.InstantRunBuildInfo;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.File;

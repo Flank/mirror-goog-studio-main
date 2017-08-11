@@ -275,6 +275,37 @@ public class ActionRecorderTest extends TestCase {
         Mockito.verifyNoMoreInteractions(mLoggerMock);
     }
 
+    public void testChangingNodeKey()
+            throws ParserConfigurationException, SAXException, IOException {
+
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), REFEFENCE_DOCUMENT), REFERENCE);
+
+        XmlElement xmlElement =
+                xmlDocument
+                        .getRootNode()
+                        .getNodeByTypeAndKey(
+                                ManifestModel.NodeTypes.ACTIVITY, "com.example.lib3.activityOne")
+                        .get();
+        XmlNode.NodeKey originalNodeKey = xmlElement.getId();
+        assertNotNull(originalNodeKey);
+        // added during the initial file loading
+        mActionRecorderBuilder.recordNodeAction(xmlElement, Actions.ActionType.ADDED);
+
+        // simulate placeholder replacement by changing xmlElement's android:name attribute
+        xmlElement.getXml().setAttribute("android:name", "activityTwo");
+        XmlNode.NodeKey changedNodeKey = xmlElement.getId();
+        assertNotNull(changedNodeKey);
+        assertFalse(originalNodeKey.toString().equals(changedNodeKey.toString()));
+        mActionRecorderBuilder.recordNodeAction(xmlElement, Actions.ActionType.INJECTED);
+
+        Actions actions = mActionRecorderBuilder.build();
+        assertEquals(2, actions.getNodeKeys().size());
+        assertEquals(
+                actions.getNodeRecords(originalNodeKey), actions.getNodeRecords(changedNodeKey));
+    }
+
     private void appendNode(StringBuilder out,
             Actions.ActionType actionType,
             String docString,

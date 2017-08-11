@@ -23,6 +23,7 @@ import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.builder.internal.aapt.v2.AaptV2Jni;
 import com.android.builder.internal.aapt.v2.OutOfProcessAaptV2;
+import com.android.builder.internal.aapt.v2.QueueableAapt2;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.WaitableExecutor;
@@ -101,6 +102,14 @@ public final class AaptGradleFactory {
                         WaitableExecutor.useGlobalSharedThreadPool(),
                         teeOutputHandler,
                         fileCache);
+            case AAPT_V2_DAEMON_MODE:
+                return new QueueableAapt2(
+                        builder.getProcessExecutor(),
+                        teeOutputHandler,
+                        buildTools,
+                        intermediateDir,
+                        new FilteringLogger(builder.getLogger()),
+                        0 /* use default */);
             default:
                 throw new IllegalArgumentException("unknown aapt generation" + aaptGeneration);
         }

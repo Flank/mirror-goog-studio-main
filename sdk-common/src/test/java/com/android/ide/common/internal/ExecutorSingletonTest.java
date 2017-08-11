@@ -23,7 +23,6 @@ import com.android.testutils.classloader.SingleClassLoader;
 import java.lang.reflect.Method;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -31,12 +30,7 @@ import org.junit.Test;
  */
 public class ExecutorSingletonTest {
 
-    @NonNull private ExecutorService executorService;
-
-    @Before
-    public void setUp() {
-        executorService = ExecutorSingleton.getExecutor();
-    }
+    @NonNull private ExecutorService executorService = ExecutorSingleton.getExecutor();
 
     @Test
     public void testSingletons() {
@@ -51,6 +45,7 @@ public class ExecutorSingletonTest {
         assertThat(clazz.getClassLoader()).isNotEqualTo(ExecutorSingleton.class.getClassLoader());
 
         // Get ExecutorService from ExecutorSingleton loaded by the custom class loader
+        //noinspection unchecked
         Method method = clazz.getMethod("getExecutor");
         ExecutorService executorService2 = (ExecutorService) method.invoke(null);
 
@@ -88,6 +83,7 @@ public class ExecutorSingletonTest {
         assertThat(clazz.getClassLoader()).isNotEqualTo(ExecutorSingleton.class.getClassLoader());
 
         // Shutdown ExecutorService from ExecutorSingleton loaded by the custom class loader
+        //noinspection unchecked
         Method method = clazz.getMethod("shutdown");
         method.invoke(null);
 
@@ -131,6 +127,7 @@ public class ExecutorSingletonTest {
         assertThat(clazz.getClassLoader()).isNotEqualTo(ExecutorSingleton.class.getClassLoader());
 
         // Set a new thread pool size from ExecutorSingleton loaded by the custom class loader
+        //noinspection unchecked
         Method method = clazz.getMethod("setThreadPoolSize", int.class);
         method.invoke(null, threadPoolSize + 1);
 

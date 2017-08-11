@@ -44,7 +44,7 @@ import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER;
 import static com.android.tools.lint.checks.GradleDetector.GMS_GROUP_ID;
-import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
+import static com.android.utils.XmlUtils.getFirstSubTagByName;
 import static com.android.utils.XmlUtils.getNextTagByName;
 import static com.android.xml.AndroidManifest.NODE_ACTION;
 import static com.android.xml.AndroidManifest.NODE_DATA;
@@ -490,7 +490,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
         if (root == null) {
             return;
         }
-        Element application = getFirstSubTagTagByName(root, TAG_APPLICATION);
+        Element application = getFirstSubTagByName(root, TAG_APPLICATION);
         if (application == null) {
             return;
         }
@@ -963,7 +963,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
         }
 
         Map<String,String> nameToFull = null;
-        for (Element element = getFirstSubTagTagByName(merge.getDocumentElement(), TAG_PERMISSION);
+        for (Element element = getFirstSubTagByName(merge.getDocumentElement(), TAG_PERMISSION);
                 element != null;
                 element = getNextTagByName(element, TAG_PERMISSION)) {
 
@@ -1127,9 +1127,9 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             return null;
         }
 
-        Element child = getFirstSubTagTagByName(activity, TAG_INTENT_FILTER);
+        Element child = getFirstSubTagByName(activity, TAG_INTENT_FILTER);
         while (child != null) {
-            Element innerChild = getFirstSubTagTagByName(child, TAG_CATEGORY);
+            Element innerChild = getFirstSubTagByName(child, TAG_CATEGORY);
             while (innerChild != null) {
                 Attr attribute = innerChild.getAttributeNodeNS(ANDROID_URI, ATTR_NAME);
                 if (attribute != null &&

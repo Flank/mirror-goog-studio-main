@@ -35,10 +35,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.w3c.dom.NamedNodeMap;
 
-/**
- * Used to represent one VectorDrawble's path element.
- */
-class VdPath extends VdElement{
+/** Used to represent one VectorDrawable's path element. */
+class VdPath extends VdElement {
     private static final Logger LOGGER = Logger.getLogger(VdPath.class.getSimpleName());
 
     private static final String PATH_ID = "android:name";
@@ -47,7 +45,7 @@ class VdPath extends VdElement{
     private static final String PATH_FILL_OPACITY = "android:fillAlpha";
     private static final String PATH_FILL_TYPE = "android:fillType";
     private static final String PATH_STROKE = "android:strokeColor";
-    private static final String PATH_STROKE_OPACTIY = "android:strokeAlpha";
+    private static final String PATH_STROKE_OPACITY = "android:strokeAlpha";
 
     private static final String FILL_TYPE_EVEN_ODD = "evenOdd";
 
@@ -127,8 +125,7 @@ class VdPath extends VdElement{
 
         public static String NodeListToString(Node[] nodes, String decimalPlaceString) {
             StringBuilder stringBuilder = new StringBuilder();
-            for (int i = 0; i < nodes.length; i++) {
-                Node n = nodes[i];
+            for (Node n : nodes) {
                 stringBuilder.append(n.mType);
                 int len = n.mParams.length;
                 boolean implicitLineTo = false;
@@ -168,9 +165,9 @@ class VdPath extends VdElement{
             Point2D.Float currentPoint = new Point2D.Float();
             Point2D.Float currentSegmentStartPoint = new Point2D.Float();
             char previousType = INIT_TYPE;
-            for (int i = 0; i < nodes.length; i++) {
-                nodes[i].transform(totalTransform, currentPoint, currentSegmentStartPoint, previousType);
-                previousType= nodes[i].mType;
+            for (Node n : nodes) {
+                n.transform(totalTransform, currentPoint, currentSegmentStartPoint, previousType);
+                previousType = n.mType;
             }
         }
 
@@ -489,7 +486,7 @@ class VdPath extends VdElement{
             mStrokeColor = calculateColor(value);
         } else if (PATH_FILL_OPACITY.equals(name)) {
             mFillAlpha = Float.parseFloat(value);
-        } else if (PATH_STROKE_OPACTIY.equals(name)) {
+        } else if (PATH_STROKE_OPACITY.equals(name)) {
             mStrokeAlpha = Float.parseFloat(value);
         } else if (PATH_STROKE_WIDTH.equals(name)) {
             mStrokeWidth = Float.parseFloat(value);
@@ -557,14 +554,13 @@ class VdPath extends VdElement{
         g.scale(scaleX, scaleY);
         g.transform(currentMatrix);
 
-        // TODO: support clip path here.
         if (mFillColor != 0) {
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             Color fillColor = new Color(applyAlpha(mFillColor, mFillAlpha), true);
             g.setColor(fillColor);
             g.fill(path2d);
         }
-        if (mStrokeColor != 0) {
+        if (mStrokeColor != 0 && mStrokeWidth != 0) {
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             BasicStroke stroke = new BasicStroke(mStrokeWidth, mStrokeLineCap, mStrokeLineJoin, mStrokeMiterlimit);
             g.setStroke(stroke);
@@ -572,6 +568,11 @@ class VdPath extends VdElement{
             g.setColor(strokeColor);
             g.draw(path2d);
         }
+        if (isClipPath) {
+            g.setClip(path2d);
+        }
+
+
     }
 
     @Override
@@ -608,4 +609,5 @@ class VdPath extends VdElement{
                 " mStrokeWidth:" + mStrokeWidth +
                 " mStrokeAlpha:" + mStrokeAlpha;
     }
+
 }

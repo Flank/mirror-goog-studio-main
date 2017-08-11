@@ -19,7 +19,9 @@ package com.android.build.gradle.internal.ide;
 import static com.android.builder.model.AndroidProject.ARTIFACT_MAIN;
 import static com.android.builder.model.AndroidProject.PROJECT_TYPE_INSTANTAPP;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.BuildTypeData;
@@ -32,6 +34,7 @@ import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.InstantAppOutputScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TaskContainer;
@@ -231,13 +234,16 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                         modelLevel,
                         modelWithFullDependency);
         Task assembleTask = variantData.getTaskByKind(TaskContainer.TaskKind.ASSEMBLE);
+        File outputLocation = variantScope.getApkLocation();
+        String baseName =
+                variantScope.getGlobalScope().getProjectBaseName()
+                        + "-"
+                        + variantConfiguration.getBaseName();
 
         AndroidArtifact mainArtifact =
                 new AndroidArtifactImpl(
                         ARTIFACT_MAIN,
-                        variantScope.getGlobalScope().getProjectBaseName()
-                                + "-"
-                                + variantConfiguration.getBaseName(),
+                        baseName,
                         assembleTask == null
                                 ? variantScope.getTaskName("assemble")
                                 : assembleTask.getName(),
@@ -263,16 +269,24 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                         new InstantRunImpl(
                                 BuildInfoWriterTask.ConfigAction.getBuildInfoFile(variantScope),
                                 variantConfiguration.getInstantRunSupportStatus()),
-                        new BuildOutputsSupplier(
-                                ImmutableList.of(VariantScope.TaskOutputType.INSTANTAPP_BUNDLE),
-                                ImmutableList.of(variantData.getScope().getApkLocation())),
+                        (BuildOutputSupplier<Collection<BuildOutput>>)
+                                () ->
+                                        ImmutableList.of(
+                                                new BuildOutput(
+                                                        TaskOutputHolder.TaskOutputType
+                                                                .INSTANTAPP_BUNDLE,
+                                                        ApkInfo.of(
+                                                                OutputFile.OutputType.MAIN,
+                                                                ImmutableList.of(),
+                                                                -1),
+                                                        new File(
+                                                                outputLocation,
+                                                                baseName + SdkConstants.DOT_ZIP))),
                         new BuildOutputsSupplier(ImmutableList.of(), ImmutableList.of()),
                         null);
 
-        String variantName = variantConfiguration.getFullName();
-
         return new VariantImpl(
-                variantName,
+                variantConfiguration.getFullName(),
                 variantConfiguration.getBaseName(),
                 variantConfiguration.getBuildType().getName(),
                 variantData

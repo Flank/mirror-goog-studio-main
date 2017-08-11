@@ -29,6 +29,7 @@
     <global id="instantAppActivityHost" type="string" value="instantapp.example.com" />
     <global id="instantAppActivityRoute" type="string" value="" />
     <global id="instantAppActivityRouteType" type="string" value="path" />
+    <global id="baseFeatureOut" type="string" value="${escapeXmlAttribute(baseFeatureDir!'.')}" />
     <global id="baseFeatureResOut" type="string" value="${escapeXmlAttribute(baseFeatureResDir!'./src/main/res')}" />
 
     <global id="manifestOut" value="${manifestDir}" />
@@ -59,6 +60,5 @@
     <global id="resOut" value="${resDir}" />
     <global id="menuName" value="${classToResource(activityClass!'')}" />
     <global id="simpleName" value="${activityToLayout(activityClass!'')}" />
-    <global id="relativePackage" value="<#if relativePackage?has_content>${relativePackage}<#else>${packageName}</#if>" />
     <#include "root://activities/common/kotlin_globals.xml.ftl" />
 </globals>

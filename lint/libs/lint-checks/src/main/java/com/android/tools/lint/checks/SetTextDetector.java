@@ -31,7 +31,6 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiMethod;
 import java.util.Collections;
 import java.util.List;
-import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;

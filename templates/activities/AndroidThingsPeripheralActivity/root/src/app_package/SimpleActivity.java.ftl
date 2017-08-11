@@ -39,7 +39,6 @@ import com.google.android.things.contrib.driver.cap12xx.Cap12xx;
 import com.google.android.things.contrib.driver.cap12xx.Cap12xxInputDriver;
 </#if>
 <#if integrateAccelerometer || integrateTemperaturePressureSensor>
-import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -465,7 +464,7 @@ private AccelerometerListener mAccelerometerListener;
 <#if integrateAccelerometer>
     private void startAccelerometerRequest() {
         this.startService(new Intent(this, ${accelerometerServiceClass}.class));
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mSensorManager.registerDynamicSensorCallback(mDynamicSensorCallback);
     }
 
@@ -500,7 +499,7 @@ private AccelerometerListener mAccelerometerListener;
 <#if integrateTemperaturePressureSensor>
     private void startTemperaturePressureRequest() {
         this.startService(new Intent(this, ${temperaturePressureServiceClass}.class));
-        mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mSensorManager.registerDynamicSensorCallback(mDynamicSensorCallback);
     }
 

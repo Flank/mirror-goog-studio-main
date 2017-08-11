@@ -38,5 +38,9 @@ public class MainTest extends ActivityInstrumentationTestCase2<Main> {
     public void testTextViewContent() {
         assertEquals("1234", mTextView.getText().toString());
     }
-}
 
+    // Ensure androidTest is also able to reference libraries.
+    public void testStringProvider() {
+        assertEquals("123", StringProvider.getString(123));
+    }
+}

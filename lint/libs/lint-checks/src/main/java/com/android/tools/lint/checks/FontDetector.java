@@ -133,7 +133,7 @@ public class FontDetector extends ResourceXmlDetector {
         List<String> missingAppAttributes =
                 findMissingAttributes(appAuthority, appQuery, appPackage, appCerts);
 
-        Element fontTag = XmlUtils.getFirstSubTagTagByName(element, TAG_FONT);
+        Element fontTag = XmlUtils.getFirstSubTagByName(element, TAG_FONT);
 
         AndroidVersion minSdk = context.getMainProject().getMinSdkVersion();
         boolean downloadableFontFile = coalesce(firstAndroidAttribute, firstAppAttribute) != null;

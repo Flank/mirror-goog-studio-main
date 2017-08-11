@@ -104,7 +104,7 @@ public class ReadWriteProcessLockTest {
         new ReadWriteProcessLock(lockFile);
 
         // It's NOT okay that the lock file exists and it's not empty
-        Files.write("Some text", lockFile, StandardCharsets.UTF_8);
+        Files.asCharSink(lockFile, StandardCharsets.UTF_8).write("Some text");
         try {
             //noinspection ResultOfObjectAllocationIgnored
             new ReadWriteProcessLock(lockFile);

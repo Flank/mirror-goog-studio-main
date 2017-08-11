@@ -17,7 +17,6 @@
 package com.android.tools.bazel.parser.ast;
 
 import com.google.common.collect.ImmutableList;
-
 import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -148,6 +147,23 @@ public class CallExpression extends Expression {
                 values.stream().map(Object::toString).collect(Collectors.toList()));
             list.setSingleLine(values.size() <= 1);
             setArgument(name, list);
+        } else {
+            removeArgument(name);
+        }
+    }
+
+    public final void setArgument(String name, Map<?, ?> values) {
+        if (!values.isEmpty()) {
+            Map<String, String> mapped =
+                    values.entrySet()
+                            .stream()
+                            .collect(
+                                    Collectors.toMap(
+                                            e -> e.getKey().toString(),
+                                            e -> e.getValue().toString()));
+            DictExpression dict = DictExpression.build(mapped);
+            dict.setSingleLine(values.size() <= 1);
+            setArgument(name, dict);
         } else {
             removeArgument(name);
         }

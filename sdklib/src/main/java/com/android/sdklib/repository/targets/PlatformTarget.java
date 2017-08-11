@@ -29,8 +29,8 @@ import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.sdklib.internal.project.ProjectProperties;
-import com.android.sdklib.repository.PackageParserUtils;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.sdklib.repository.PackageParserUtils;
 import com.android.sdklib.repository.meta.DetailsTypes;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -40,7 +40,6 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -141,7 +140,7 @@ public class PlatformTarget implements IAndroidTarget {
         if (mBuildProps == null) {
             mBuildProps = Maps.newHashMap();
         }
-        mBuildToolInfo = sdkHandler.getLatestBuildTool(progress, getVersion().isPreview());
+        mBuildToolInfo = sdkHandler.getLatestBuildTool(progress, null, getVersion().isPreview());
 
         mSkins = Sets
           .newTreeSet(PackageParserUtils.parseSkinFolder(getFile(IAndroidTarget.SKINS), fop));

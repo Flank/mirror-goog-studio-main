@@ -51,9 +51,6 @@ constexpr int64_t kDataTransferIntervalNs = Clock::ms_to_ns(500);
 // should tweak the limit for profilers.
 constexpr int32_t kDataBatchSize = 2000;
 
-// The max depth of callstacks to query per allocation.
-constexpr int32_t kMaxStackDepth = 100;
-
 // Line numbers are 1-based in Studio.
 constexpr int32_t kInvalidLineNumber = 0;
 }
@@ -85,28 +82,32 @@ const char* MemTagToString(MemTag tag) {
 }
 
 MemoryTrackingEnv* MemoryTrackingEnv::Instance(JavaVM* vm,
-                                               bool log_live_alloc_count) {
+                                               bool log_live_alloc_count,
+                                               int max_stack_depth) {
   if (g_env == nullptr) {
     // Create a stand-alone jvmtiEnv to avoid any callback conflicts
     // with other profilers' agents.
     g_vm = vm;
     jvmtiEnv* jvmti = CreateJvmtiEnv(g_vm);
-    g_env = new MemoryTrackingEnv(jvmti, log_live_alloc_count);
+    g_env = new MemoryTrackingEnv(jvmti, log_live_alloc_count, max_stack_depth);
     g_env->Initialize();
   }
 
   return g_env;
 }
 
-MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count)
+MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count,
+                                     int max_stack_depth)
     : jvmti_(jvmti),
       log_live_alloc_count_(log_live_alloc_count),
       is_first_tracking_(true),
       is_live_tracking_(false),
+      is_suspended_(false),
       app_id_(getpid()),
       class_class_tag_(-1),
       current_capture_time_ns_(-1),
       last_gc_start_ns_(-1),
+      max_stack_depth_(max_stack_depth),
       total_live_count_(0),
       total_free_count_(0),
       current_class_tag_(kClassStartTag),
@@ -155,9 +156,9 @@ void MemoryTrackingEnv::Initialize() {
                              this, JVMTI_THREAD_NORM_PRIORITY);
   CheckJvmtiError(jvmti_, error);
   if (log_live_alloc_count_) {
-    error =
-        jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni), &AllocCountWorker,
-                              this, JVMTI_THREAD_NORM_PRIORITY);
+    error = jvmti_->RunAgentThread(AllocateJavaThread(jvmti_, jni),
+                                   &AllocCountWorker, this,
+                                   JVMTI_THREAD_NORM_PRIORITY);
     CheckJvmtiError(jvmti_, error);
   }
 }
@@ -182,6 +183,7 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   }
   Stopwatch sw;
   is_live_tracking_ = true;
+  is_suspended_ = false;
   current_capture_time_ns_ = timestamp;
   total_live_count_ = 0;
   total_free_count_ = 0;
@@ -215,26 +217,9 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
       // Should have found java/lang/Class at this point.
       assert(class_class_tag_ != -1);
     }
-
-    // Send back class data at the beginning of each session. De-duping needs to
-    // be done by the caller as class tags remain unique throughout the app.
-    // TODO: Only send back new classes since the last tracking session.
-    // Note: The Allocation event associated with each class is sent during the
-    // initial heap walk.
-    BatchAllocationSample class_sample;
-    for (const AllocatedClass& klass : class_data_) {
-      AllocationEvent* event = class_sample.add_events();
-      event->mutable_class_data()->CopyFrom(klass);
-      event->set_timestamp(current_capture_time_ns_);
-      if (class_sample.events_size() >= kDataBatchSize) {
-        profiler::EnqueueAllocationEvents(class_sample);
-        class_sample = BatchAllocationSample();
-      }
-    }
-    if (class_sample.events_size() > 0) {
-      profiler::EnqueueAllocationEvents(class_sample);
-    }
   }
+
+  SendBackClassData();
 
   // Tag all objects already allocated on the heap.
   BatchAllocationSample snapshot_sample;
@@ -247,12 +232,23 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   if (snapshot_sample.events_size() > 0) {
     profiler::EnqueueAllocationEvents(snapshot_sample);
   }
-
-  // Enable allocation+deallocation callbacks after initial heap walk.
-  SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
-  SetEventNotification(jvmti_, JVMTI_ENABLE, JVMTI_EVENT_OBJECT_FREE);
+  SetAllocationCallbacksStatus(true);
 
   Log::V("Tracking initialization took: %lldns", (long long)sw.GetElapsed());
+}
+
+void MemoryTrackingEnv::ResumeLiveTracking() {
+  std::lock_guard<std::mutex> data_lock(tracking_data_mutex_);
+  std::lock_guard<std::mutex> count_lock(tracking_count_mutex_);
+  if (!is_live_tracking_ || !is_suspended_) {
+    return;
+  }
+  Stopwatch sw;
+  is_suspended_ = false;
+  event_queue_.Reset();
+  SendBackClassData();
+  SetAllocationCallbacksStatus(true);
+  Log::V("Resuming Tracking took: %lldns", (long long)sw.GetElapsed());
 }
 
 /**
@@ -268,8 +264,7 @@ void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
     return;
   }
   is_live_tracking_ = false;
-  SetEventNotification(jvmti_, JVMTI_DISABLE, JVMTI_EVENT_VM_OBJECT_ALLOC);
-  SetEventNotification(jvmti_, JVMTI_DISABLE, JVMTI_EVENT_OBJECT_FREE);
+  SetAllocationCallbacksStatus(false);
   event_queue_.Reset();
   stack_trie_ = Trie<FrameInfo>();
 
@@ -278,6 +273,50 @@ void MemoryTrackingEnv::StopLiveTracking(int64_t timestamp) {
   }
   known_methods_.clear();
   thread_id_map_.clear();
+}
+
+void MemoryTrackingEnv::SuspendLiveTracking() {
+  std::lock_guard<std::mutex> data_lock(tracking_data_mutex_);
+  std::lock_guard<std::mutex> count_lock(tracking_count_mutex_);
+  if (!is_live_tracking_ || is_suspended_) {
+    return;
+  }
+  is_suspended_ = true;
+  SetAllocationCallbacksStatus(false);
+  event_queue_.Reset();
+}
+
+/**
+ * Send back class data at the beginning of each session. De-duping needs to
+ * be done by the caller as class tags remain unique throughout the app.
+ * TODO: Only send back new classes since the last tracking session.
+ * Note: The Allocation event associated with each class is sent during the
+ * initial heap walk.
+ */
+void MemoryTrackingEnv::SendBackClassData() {
+  std::lock_guard<std::mutex> lock(class_data_mutex_);
+  BatchAllocationSample class_sample;
+  for (const AllocatedClass& klass : class_data_) {
+    AllocationEvent* event = class_sample.add_events();
+    event->mutable_class_data()->CopyFrom(klass);
+    event->set_timestamp(current_capture_time_ns_);
+    if (class_sample.events_size() >= kDataBatchSize) {
+      profiler::EnqueueAllocationEvents(class_sample);
+      class_sample = BatchAllocationSample();
+    }
+  }
+  if (class_sample.events_size() > 0) {
+    profiler::EnqueueAllocationEvents(class_sample);
+  }
+}
+
+/**
+ * Enable/Disable allocation+deallocation callbacks.
+ */
+void MemoryTrackingEnv::SetAllocationCallbacksStatus(bool enabled) {
+  jvmtiEventMode mode = enabled ? JVMTI_ENABLE : JVMTI_DISABLE;
+  SetEventNotification(jvmti_, mode, JVMTI_EVENT_VM_OBJECT_ALLOC);
+  SetEventNotification(jvmti_, mode, JVMTI_EVENT_OBJECT_FREE);
 }
 
 const AllocatedClass& MemoryTrackingEnv::RegisterNewClass(jvmtiEnv* jvmti,
@@ -359,6 +398,14 @@ void MemoryTrackingEnv::HandleControlSignal(
     case MemoryControlRequest::kDisableRequest:
       Log::V("Live memory tracking disabled.");
       StopLiveTracking(request->disable_request().timestamp());
+      break;
+    case MemoryControlRequest::kSuspendRequest:
+      Log::V("Live memory tracking suspended.");
+      SuspendLiveTracking();
+      break;
+    case MemoryControlRequest::kResumeRequest:
+      Log::V("Live memory tracking resumed.");
+      ResumeLiveTracking();
       break;
     default:
       Log::V("Unknown memory control signal.");
@@ -495,7 +542,7 @@ void MemoryTrackingEnv::GCFinishCallback(jvmtiEnv* jvmti) {
 }
 
 void MemoryTrackingEnv::AllocCountWorker(jvmtiEnv* jvmti, JNIEnv* jni,
-                                        void* ptr) {
+                                         void* ptr) {
   Stopwatch stopwatch;
   MemoryTrackingEnv* env = static_cast<MemoryTrackingEnv*>(ptr);
   assert(env != nullptr);
@@ -503,7 +550,7 @@ void MemoryTrackingEnv::AllocCountWorker(jvmtiEnv* jvmti, JNIEnv* jni,
     int64_t start_time_ns = stopwatch.GetElapsed();
     {
       std::lock_guard<std::mutex> lock(env->tracking_count_mutex_);
-      if (env->is_live_tracking_) {
+      if (env->is_live_tracking_ && !env->is_suspended_) {
         profiler::EnqueueAllocStats(env->total_live_count_,
                                     env->total_free_count_);
       }
@@ -530,7 +577,7 @@ void MemoryTrackingEnv::AllocDataWorker(jvmtiEnv* jvmti, JNIEnv* jni,
 
     {
       std::lock_guard<std::mutex> lock(env->tracking_data_mutex_);
-      if (env->is_live_tracking_) {
+      if (env->is_live_tracking_ && !env->is_suspended_) {
         BatchAllocationSample sample;
         // Gather all the data currently in the queue and push to perfd.
         // TODO: investigate whether we need to set time cap for large queue.
@@ -707,9 +754,10 @@ void MemoryTrackingEnv::FillAllocEventThreadData(
   sw.Start();
   {
     // Collect stack frames
-    jvmtiFrameInfo frames[kMaxStackDepth];
+    int32_t depth = env->max_stack_depth_;
+    jvmtiFrameInfo frames[depth];
     jint count = 0;
-    error = jvmti->GetStackTrace(thread, 0, kMaxStackDepth, frames, &count);
+    error = jvmti->GetStackTrace(thread, 0, depth, frames, &count);
     CheckJvmtiError(jvmti, error);
     for (int i = 0; i < count; i++) {
       int64_t method_id = reinterpret_cast<int64_t>(frames[i].method);

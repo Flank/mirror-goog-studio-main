@@ -26,14 +26,15 @@ import static org.mockito.Mockito.when;
 import com.android.builder.Version;
 import com.android.ide.common.util.JvmWideVariable;
 import com.android.testutils.classloader.MultiClassLoader;
+import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import javax.management.InstanceNotFoundException;
 import org.gradle.api.Project;
 import org.gradle.api.invocation.Gradle;
 import org.junit.Before;
@@ -134,10 +135,11 @@ public class BuildSessionHelperTest {
         // Get the JVM-wide variable for BuildSessionSingleton
         JvmWideVariable<Object> jvmWideSingleton =
                 new JvmWideVariable<>(
-                        BuildSessionSingleton.class.getPackage().getName(),
+                        BuildSessionHelper.class.getName(),
                         BuildSessionSingleton.class.getSimpleName(),
-                        Object.class,
-                        null);
+                        Version.ANDROID_GRADLE_PLUGIN_VERSION,
+                        TypeToken.of(Object.class),
+                        () -> null);
 
         // Simulate finishing the build
         //noinspection ConstantConditions
@@ -147,9 +149,9 @@ public class BuildSessionHelperTest {
         // un-registered and the singleton must be set to null
         try {
             jvmWideSingleton.unregister();
-            fail("Expected InstanceNotFoundException");
-        } catch (RuntimeException e) {
-            assertThat(e.getCause()).isInstanceOf(InstanceNotFoundException.class);
+            fail("Expected VerifyException");
+        } catch (VerifyException e) {
+            assertThat(e.getMessage()).contains("has already been unregistered");
         }
         assertThat(BuildSessionHelper.getSingleton()).isNull();
 
@@ -237,10 +239,11 @@ public class BuildSessionHelperTest {
         BuildSessionHelper.startOnce(project1);
         //noinspection ConstantConditions
         ((BuildSessionSingleton) BuildSessionHelper.getSingleton()).buildFinished();
-        BuildSessionHelper.verifyPluginVersion(
-                project1,
-                Version.ANDROID_GRADLE_PLUGIN_VERSION,
-                Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION);
+        versions =
+                BuildSessionHelper.verifyPluginVersion(
+                        project1,
+                        Version.ANDROID_GRADLE_PLUGIN_VERSION,
+                        Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION);
         versions.forEach(JvmWideVariable::unregister);
 
         // Load the plugin again in the same project with a different version, and in a different
@@ -248,7 +251,7 @@ public class BuildSessionHelperTest {
         BuildSessionHelper.startOnce(project1);
         //noinspection ConstantConditions
         ((BuildSessionSingleton) BuildSessionHelper.getSingleton()).buildFinished();
-        BuildSessionHelper.verifyPluginVersion(project1, "1.2.3", "0.1.2");
+        versions = BuildSessionHelper.verifyPluginVersion(project1, "1.2.3", "0.1.2");
         versions.forEach(JvmWideVariable::unregister);
 
         // Load the plugin again in a different project with the same version, and in a different
@@ -256,10 +259,11 @@ public class BuildSessionHelperTest {
         BuildSessionHelper.startOnce(project1);
         //noinspection ConstantConditions
         ((BuildSessionSingleton) BuildSessionHelper.getSingleton()).buildFinished();
-        BuildSessionHelper.verifyPluginVersion(
-                project2,
-                Version.ANDROID_GRADLE_PLUGIN_VERSION,
-                Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION);
+        versions =
+                BuildSessionHelper.verifyPluginVersion(
+                        project2,
+                        Version.ANDROID_GRADLE_PLUGIN_VERSION,
+                        Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION);
         versions.forEach(JvmWideVariable::unregister);
 
         // Load the plugin again in a different project with a different version, and in a different
@@ -267,7 +271,7 @@ public class BuildSessionHelperTest {
         BuildSessionHelper.startOnce(project1);
         //noinspection ConstantConditions
         ((BuildSessionSingleton) BuildSessionHelper.getSingleton()).buildFinished();
-        BuildSessionHelper.verifyPluginVersion(project2, "1.2.3", "0.1.2");
+        versions = BuildSessionHelper.verifyPluginVersion(project2, "1.2.3", "0.1.2");
         versions.forEach(JvmWideVariable::unregister);
 
         // Check that the JVM-wide variables that keep track of plugin versions are un-registered at
@@ -283,9 +287,9 @@ public class BuildSessionHelperTest {
         for (JvmWideVariable<?> jvmWidePluginVersionRecord : jvmWidePluginVersionRecords) {
             try {
                 jvmWidePluginVersionRecord.unregister();
-                fail("Expected InstanceNotFoundException");
-            } catch (RuntimeException e) {
-                assertThat(e.getCause()).isInstanceOf(InstanceNotFoundException.class);
+                fail("Expected VerifyException");
+            } catch (VerifyException e) {
+                assertThat(e.getMessage()).contains("has already been unregistered");
             }
         }
     }

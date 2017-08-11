@@ -19,15 +19,14 @@ package com.android.tools.lint.detector.api
 import com.android.SdkConstants.CONSTRUCTOR_NAME
 import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_JAVA
+import com.android.tools.lint.client.api.LintDriver
+import com.android.tools.lint.detector.api.Location.SearchDirection
 import com.android.tools.lint.detector.api.Location.SearchDirection.BACKWARD
 import com.android.tools.lint.detector.api.Location.SearchDirection.EOL_BACKWARD
 import com.android.tools.lint.detector.api.Location.SearchDirection.FORWARD
-import com.android.tools.lint.client.api.LintDriver
-import com.android.tools.lint.detector.api.Location.SearchDirection
 import com.android.tools.lint.detector.api.Location.SearchHints
 import com.google.common.annotations.Beta
 import com.google.common.base.Splitter
-import java.io.File
 import org.objectweb.asm.Type
 import org.objectweb.asm.tree.AbstractInsnNode
 import org.objectweb.asm.tree.ClassNode
@@ -35,6 +34,7 @@ import org.objectweb.asm.tree.FieldNode
 import org.objectweb.asm.tree.LineNumberNode
 import org.objectweb.asm.tree.MethodInsnNode
 import org.objectweb.asm.tree.MethodNode
+import java.io.File
 
 /**
  * A [Context] used when checking .class files.
@@ -192,10 +192,10 @@ class ClassContext
      *         hasn't already been read.
      */
     fun getSourceContents(read: Boolean): CharSequence? {
-        if (read) {
-            return getSourceContents()
+        return if (read) {
+            getSourceContents()
         } else {
-            return sourceContents
+            sourceContents
         }
     }
 
@@ -221,11 +221,11 @@ class ClassContext
         val sourceFile = getSourceFile()
         if (sourceFile != null) {
             // ASM line numbers are 1-based, and lint line numbers are 0-based
-            if (line != -1) {
-                return Location.create(sourceFile, getSourceContents(), line - 1,
+            return if (line != -1) {
+                Location.create(sourceFile, getSourceContents(), line - 1,
                         patternStart, patternEnd, hints)
             } else {
-                return Location.create(sourceFile)
+                Location.create(sourceFile)
             }
         }
 
@@ -362,9 +362,7 @@ class ClassContext
             instruction: AbstractInsnNode?,
             location: Location,
             message: String,
-            data: Any?) {
-        report(issue, method, instruction, location, message)
-    }
+            data: Any?) = report(issue, method, instruction, location, message)
 
     /**
      * Report an error.
@@ -380,9 +378,7 @@ class ClassContext
             field: FieldNode?,
             location: Location,
             message: String,
-            data: Any?) {
-        report(issue, field, location, message)
-    }
+            data: Any?) = report(issue, field, location, message)
 
     /**
      * Returns a location for the given [ClassNode], where class node is
@@ -399,10 +395,10 @@ class ClassContext
         // to find a method, look up the corresponding line number then search
         // around it for a suitable tag, such as the class name.
         var pattern: String
-        if (isAnonymousClass(classNode.name)) {
-            pattern = classNode.superName
+        pattern = if (isAnonymousClass(classNode.name)) {
+            classNode.superName
         } else {
-            pattern = classNode.name
+            classNode.name
         }
         var index = pattern.lastIndexOf('$')
         if (index != -1) {
@@ -437,10 +433,10 @@ class ClassContext
         val searchMode: SearchDirection
         if (methodNode.name == CONSTRUCTOR_NAME) {
             searchMode = EOL_BACKWARD
-            if (isAnonymousClass(classNode.name)) {
-                pattern = classNode.superName.substring(classNode.superName.lastIndexOf('/') + 1)
+            pattern = if (isAnonymousClass(classNode.name)) {
+                classNode.superName.substring(classNode.superName.lastIndexOf('/') + 1)
             } else {
-                pattern = classNode.name.substring(classNode.name.lastIndexOf('$') + 1)
+                classNode.name.substring(classNode.name.lastIndexOf('$') + 1)
             }
         } else {
             searchMode = BACKWARD
@@ -463,12 +459,11 @@ class ClassContext
         var hints = SearchHints.create(FORWARD).matchJavaSymbol()
         var pattern: String? = null
         if (instruction is MethodInsnNode) {
-            val call = instruction
-            if (call.name == CONSTRUCTOR_NAME) {
-                pattern = call.owner
+            if (instruction.name == CONSTRUCTOR_NAME) {
+                pattern = instruction.owner
                 hints = hints.matchConstructor()
             } else {
-                pattern = call.name
+                pattern = instruction.name
             }
             var index = pattern!!.lastIndexOf('$')
             if (index != -1) {
@@ -593,9 +588,7 @@ class ClassContext
          * @return the corresponding fully qualified class name
          */
         @JvmStatic
-        fun getFqcn(owner: String): String {
-            return owner.replace('/', '.').replace('$', '.')
-        }
+        fun getFqcn(owner: String): String = owner.replace('/', '.').replace('$', '.')
 
         /**
          * Computes a user-readable type signature from the given class owner, name
@@ -650,10 +643,10 @@ class ClassContext
         @JvmStatic
         private fun getTypeString(type: Type): String {
             val s = type.className
-            if (s.startsWith("java.lang.")) {
-                return s.substring("java.lang.".length)
+            return if (s.startsWith("java.lang.")) {
+                s.substring("java.lang.".length)
             } else {
-                return s
+                s
             }
         }
 

@@ -3,7 +3,7 @@
 
     <application>
         <activity
-            android:name="${relativePackage}.${CollectionName}Activity"
+            android:name="${packageName}.${CollectionName}Activity"
             <#if isNewProject>
             android:label="@string/app_name"
             <#else>
@@ -22,16 +22,16 @@
             <@manifestMacros.commonActivityBody />
         </activity>
 
-        <activity android:name="${relativePackage}.${DetailName}Activity"
+        <activity android:name="${packageName}.${DetailName}Activity"
             android:label="@string/title_${detail_name}"
             <#if hasAppBar>
             android:theme="@style/${themeNameNoActionBar}"
             <#elseif !hasApplicationTheme>
             android:theme="@style/${themeName}"
             </#if>
-            <#if buildApi gte 16>android:parentActivityName="${relativePackage}.${CollectionName}Activity"</#if>>
+            <#if buildApi gte 16>android:parentActivityName="${packageName}.${CollectionName}Activity"</#if>>
             <meta-data android:name="android.support.PARENT_ACTIVITY"
-                android:value="${relativePackage}.${CollectionName}Activity" />
+                android:value="${packageName}.${CollectionName}Activity" />
         </activity>
     </application>
 

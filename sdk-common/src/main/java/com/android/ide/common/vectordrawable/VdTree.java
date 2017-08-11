@@ -17,12 +17,6 @@
 package com.android.ide.common.vectordrawable;
 
 import com.android.ide.common.util.AssetUtil;
-import org.w3c.dom.Document;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
@@ -30,18 +24,23 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.w3c.dom.Document;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * Used to represent the whole VectorDrawable XML file's tree.
  */
 class VdTree {
-    private static Logger logger = Logger.getLogger(VdTree.class.getSimpleName());
+    private static final Logger logger = Logger.getLogger(VdTree.class.getSimpleName());
 
     private static final String SHAPE_VECTOR = "vector";
     private static final String SHAPE_PATH = "path";
     private static final String SHAPE_GROUP = "group";
+    private static final String SHAPE_CLIP_PATH = "clip-path";
 
-    private VdGroup mRootGroup = new VdGroup();
+    private final VdGroup mRootGroup = new VdGroup();
 
     private float mBaseWidth = 1;
     private float mBaseHeight = 1;
@@ -49,7 +48,7 @@ class VdTree {
     private float mPortHeight = 1;
     private float mRootAlpha = 1;
 
-    private final boolean DBG_PRINT_TREE = false;
+    private static final boolean DBG_PRINT_TREE = false;
 
     private static final String INDENT = "  ";
 
@@ -117,7 +116,7 @@ class VdTree {
         }
     }
 
-    private void parseTree(Node currentNode, VdGroup currentGroup) {
+    private static void parseTree(Node currentNode, VdGroup currentGroup) {
         NodeList childrenNodes = currentNode.getChildNodes();
         int length = childrenNodes.getLength();
         for (int i = 0; i < length; i ++) {
@@ -130,20 +129,25 @@ class VdTree {
                 } else if (SHAPE_PATH.equals(child.getNodeName())) {
                     VdPath newPath = parsePathAttributes(child.getAttributes());
                     currentGroup.add(newPath);
+                } else if (SHAPE_CLIP_PATH.equals(child.getNodeName())) {
+                    VdPath newClipPath = parsePathAttributes(child.getAttributes());
+                    newClipPath.setClipPath(true);
+                    currentGroup.add(newClipPath);
                 }
             }
         }
     }
 
-    private void debugPrintTree(int level, VdGroup mRootGroup) {
+    private static void debugPrintTree(int level, VdGroup mRootGroup) {
         int len = mRootGroup.size();
         if (len == 0) {
             return;
         }
-        String prefix = "";
+        StringBuilder prefixBuilder = new StringBuilder();
         for (int i = 0; i < level; i ++) {
-            prefix += INDENT;
+            prefixBuilder.append(INDENT);
         }
+        String prefix = prefixBuilder.toString();
         ArrayList<VdElement> children = mRootGroup.getChildren();
         for (int i = 0; i < len; i ++) {
             VdElement child = children.get(i);
@@ -173,8 +177,7 @@ class VdTree {
             Matcher matcher = pattern.matcher(value);
             float size = 0;
             if (matcher.matches()) {
-                float v = Float.parseFloat(matcher.group(1));
-                size = v;
+                size = Float.parseFloat(matcher.group(1));
             }
 
             // TODO: Extract dimension units like px etc. Right now all are treated as "dp".
@@ -192,13 +195,13 @@ class VdTree {
         }
     }
 
-    private VdPath parsePathAttributes(NamedNodeMap attributes) {
+    private static VdPath parsePathAttributes(NamedNodeMap attributes) {
         VdPath vgPath = new VdPath();
         vgPath.parseAttributes(attributes);
         return vgPath;
     }
 
-    private VdGroup parseGroupAttributes(NamedNodeMap attributes) {
+    private static VdGroup parseGroupAttributes(NamedNodeMap attributes) {
         VdGroup vgGroup = new VdGroup();
         vgGroup.parseAttributes(attributes);
         return vgGroup;

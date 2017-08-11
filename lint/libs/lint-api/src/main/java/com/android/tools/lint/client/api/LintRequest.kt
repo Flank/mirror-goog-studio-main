@@ -67,9 +67,7 @@ open class LintRequest(
      *
      * @return the scope to use, or null to use the default
      */
-    open fun getScope(): EnumSet<Scope>? {
-        return scope
-    }
+    open fun getScope(): EnumSet<Scope>? = scope
 
     /**
      * Sets the scope to use; lint checks which require a wider scope set
@@ -91,9 +89,7 @@ open class LintRequest(
      *
      * @return true if this lint is running in release mode, null if not known
      */
-    fun isReleaseMode(): Boolean? {
-        return releaseMode
-    }
+    fun isReleaseMode(): Boolean? = releaseMode
 
     /**
      * Sets the release mode. Use `true` if lint is invoked as part of a
@@ -118,13 +114,9 @@ open class LintRequest(
      *
      * @return the main project
      */
-    open fun getMainProject(project: Project): Project {
-        return project
-    }
+    open fun getMainProject(project: Project): Project = project
 
-    open fun getProjects() : Collection<Project>? {
-        return projects
-    }
+    open fun getProjects() : Collection<Project>? = projects
 
     fun setProjects(projects: Collection<Project>?): LintRequest {
         this.projects = projects

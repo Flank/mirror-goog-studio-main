@@ -21,7 +21,6 @@ import com.android.annotations.concurrency.Immutable;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import java.io.DataInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -86,7 +85,7 @@ public final class MultiClassLoader extends ClassLoader {
 
     @NonNull
     private Class<?> defineClass(@NonNull String name) {
-        String classFile = name.replace('.', File.separatorChar) + ".class";
+        String classFile = name.replace('.', '/') + ".class";
         InputStream stream = getClass().getClassLoader().getResourceAsStream(classFile);
         byte[] bytes;
         try {

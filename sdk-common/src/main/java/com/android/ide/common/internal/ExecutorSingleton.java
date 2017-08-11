@@ -30,15 +30,12 @@ public class ExecutorSingleton {
     @NonNull
     private static final JvmWideVariable<ExecutorService> sExecutorService =
             new JvmWideVariable<>(
-                    ExecutorSingleton.class.getName(),
-                    "sExecutorService",
-                    ExecutorService.class,
-                    null);
+                    ExecutorSingleton.class, "sExecutorService", ExecutorService.class, null);
 
     @NonNull
     private static final JvmWideVariable<Integer> sThreadPoolSize =
             new JvmWideVariable<>(
-                    ExecutorSingleton.class.getName(),
+                    ExecutorSingleton.class,
                     "sThreadPoolSize",
                     Integer.class,
                     Runtime.getRuntime().availableProcessors());

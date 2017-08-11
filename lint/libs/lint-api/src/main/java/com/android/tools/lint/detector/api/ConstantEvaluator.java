@@ -760,7 +760,7 @@ public class ConstantEvaluator {
                 }
                 return null;
             }
-        } else if (UastExpressionUtils.isNewArrayWithDimensions((UExpression) node)) {
+        } else if (UastExpressionUtils.isNewArrayWithDimensions(node)) {
             UCallExpression call = (UCallExpression) node;
             PsiType arrayType = call.getExpressionType();
             if (arrayType instanceof PsiArrayType) {
@@ -806,7 +806,7 @@ public class ConstantEvaluator {
                 // Single-dimension array
                 if (!(componentType instanceof PsiArrayType)) {
                     int length = call.getValueArgumentCount();
-                    List<Object> evaluatedArgs = new ArrayList<Object>(length);
+                    List<Object> evaluatedArgs = new ArrayList<>(length);
                     for (UExpression arg : call.getValueArguments()) {
                         Object evaluatedArg = evaluate(arg);
                         if (!allowUnknown && evaluatedArg == null) {

@@ -8,6 +8,7 @@ iml_module(
         "src/main/java",
         "src/test/tools",
     ],
+    iml_files = ["pixelprobe.iml"],
     resources = ["src/main/resources"],
     tags = ["managed"],
     test_resources = ["src/test/resources"],

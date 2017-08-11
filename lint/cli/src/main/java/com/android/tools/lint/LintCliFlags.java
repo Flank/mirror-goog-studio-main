@@ -55,6 +55,7 @@ public class LintCliFlags {
     private boolean allErrors;
     private boolean fatalOnly;
     private boolean explainIssues;
+    private File projectDescriptor;
     private List<File> sources;
     private List<File> classes;
     private List<File> libraries;
@@ -398,6 +399,33 @@ public class LintCliFlags {
      */
     public void setResourcesOverride(@Nullable List<File> resources) {
         this.resources = resources;
+    }
+
+    /**
+     * Gets the optional <b>manual override</b> of the project hierarchy. Normally null.
+     * <p>
+     * Normally, the source, library and resource paths for a project should be computed by the
+     * {@link LintClient} itself, using available project metadata. However, the user can specify
+     * the project hierarchy explicitly. This is normally done when running lint on raw source code
+     * without proper metadata (or when using a build system unknown to lint, such as say {@code
+     * make}).
+     */
+    @Nullable
+    public File getProjectDescriptorOverride() {
+        return projectDescriptor;
+    }
+
+    /**
+     * Sets the optional <b>manual override</b> of the project hierarchy. Normally null.
+     * <p>
+     * Normally, the source, library and resource paths for a project should be computed by the
+     * {@link LintClient} itself, using available project metadata. However, the user can specify
+     * the project hierarchy explicitly. This is normally done when running lint on raw source code
+     * without proper metadata (or when using a build system unknown to lint, such as say {@code
+     * make}).
+     */
+    public void setProjectDescriptorOverride(@Nullable File projectDescriptor) {
+        this.projectDescriptor = projectDescriptor;
     }
 
     /**

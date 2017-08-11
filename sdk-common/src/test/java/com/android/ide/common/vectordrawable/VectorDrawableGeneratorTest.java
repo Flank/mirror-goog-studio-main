@@ -38,8 +38,8 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     private enum FileType {
         SVG,
-        XML;
-    };
+        XML
+    }
 
     private void checkVectorConversion(String testFileName, FileType type,
                                        boolean dumpXml, String expectedError) throws IOException {
@@ -462,6 +462,80 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     public void testSvgDefsUseOrderMatters() throws Exception {
         checkSvgConversion("test_defs_use_use_first");
+    }
+
+    // Clip Path Tests
+    public void testSvgClipPathGroup() throws Exception {
+        checkSvgConversion("test_clip_path_group");
+    }
+
+    public void testSvgClipPathTranslateAffected() throws Exception {
+        checkSvgConversion("test_clip_path_group_translate");
+    }
+
+    public void testSvgClipPathGroup2() throws Exception {
+        checkSvgConversion("test_clip_path_is_group");
+    }
+
+    public void testSvgClipPathMultiShapeClip() throws Exception {
+        checkSvgConversion("test_clip_path_mult_clip");
+    }
+
+    public void testSvgClipPathOverGroup() throws Exception {
+        checkSvgConversion("test_clip_path_over_group");
+    }
+
+    public void testSvgClipPathRect() throws Exception {
+        checkSvgConversion("test_clip_path_rect");
+    }
+
+    public void testSvgClipPathRectOverClipPath() throws Exception {
+        checkSvgConversion("test_clip_path_rect_over_circle");
+    }
+
+    public void testSvgClipPathTwoRect() throws Exception {
+        checkSvgConversion("test_clip_path_two_rect");
+    }
+
+    public void testSvgClipPathSinglePath() throws Exception {
+        checkSvgConversion("test_clip_path_path_over_rect");
+    }
+
+    // Style tests start here
+    public void testSvgStyleBasicShapes() throws Exception {
+        checkSvgConversion("test_style_basic_shapes");
+    }
+
+    public void testSvgStyleBlobfish() throws Exception {
+        checkSvgConversion("test_style_blobfish");
+    }
+
+    public void testSvgStyleCircle() throws Exception {
+        checkSvgConversion("test_style_circle");
+    }
+
+    public void testSvgStyleGroup() throws Exception {
+        checkSvgConversion("test_style_group");
+    }
+
+    public void testSvgStyleGroupClipPath() throws Exception {
+        checkSvgConversion("test_style_group_clip_path");
+    }
+
+    public void testSvgStyleGroupDuplicateAttr() throws Exception {
+        checkSvgConversion("test_style_group_duplicate_attr");
+    }
+
+    public void testSvgStyleMultiClass() throws Exception {
+        checkSvgConversion("test_style_multi_class");
+    }
+
+    public void testSvgStyleTwoShapes() throws Exception {
+        checkSvgConversion("test_style_two_shapes");
+    }
+
+    public void testSvgStylePathClassNames() throws Exception {
+        checkSvgConversion("test_style_path_class_names");
     }
 
     // XML files start here.

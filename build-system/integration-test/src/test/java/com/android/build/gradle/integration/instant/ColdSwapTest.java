@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
-import com.android.tools.fd.client.InstantRunArtifactType;
+import com.android.tools.ir.client.InstantRunArtifactType;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -99,13 +99,13 @@ public class ColdSwapTest {
                 .hasMainClass("Lcom/example/helloworld/HelloWorld;")
                 .that()
                 .hasMethod("onCreate");
-        assertThat(apk).hasMainClass("Lcom/android/tools/fd/runtime/AppInfo;");
+        assertThat(apk).hasMainClass("Lcom/android/tools/ir/server/AppInfo;");
     }
 
     @Test
     public void withMultiApk() throws Exception {
         Pattern provider =
-                Pattern.compile(".*com.android.tools.fd.runtime.InstantRunContentProvider.*");
+                Pattern.compile(".*com.android.tools.ir.server.InstantRunContentProvider.*");
         new ColdSwapTester(project)
                 .testMultiApk(
                         new ColdSwapTester.Steps() {

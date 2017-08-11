@@ -38,7 +38,7 @@ import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_PREFIX
 import static com.android.tools.lint.checks.AndroidPatternMatcher.PATTERN_SIMPLE_GLOB;
 import static com.android.tools.lint.detector.api.LintUtils.isDataBindingExpression;
 import static com.android.tools.lint.detector.api.LintUtils.isManifestPlaceHolderExpression;
-import static com.android.utils.XmlUtils.getFirstSubTagTagByName;
+import static com.android.utils.XmlUtils.getFirstSubTagByName;
 import static com.android.utils.XmlUtils.getNextTagByName;
 import static com.android.utils.XmlUtils.getPreviousTagByName;
 import static com.android.utils.XmlUtils.getSubTagsByName;
@@ -154,7 +154,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
     public void visitElement(@NonNull XmlContext context, @NonNull Element activity) {
         List<UriInfo> infos = createUriInfos(activity, context);
 
-        Element current = getFirstSubTagTagByName(activity, TAG_VALIDATION);
+        Element current = getFirstSubTagByName(activity, TAG_VALIDATION);
         while (current != null) {
             if (TOOLS_URI.equals(current.getNamespaceURI())) {
                 Attr testUrlAttr = current.getAttributeNode("testUrl");
@@ -201,7 +201,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
     public static List<UriInfo> createUriInfos(
             @NonNull Element activity,
             @Nullable XmlContext context) {
-        Element intent = getFirstSubTagTagByName(activity, TAG_INTENT_FILTER);
+        Element intent = getFirstSubTagByName(activity, TAG_INTENT_FILTER);
         List<AppLinksValidDetector.UriInfo> infos = Lists.newArrayList();
         while (intent != null) {
             UriInfo uriInfo = checkIntent(context, intent, activity);
@@ -338,7 +338,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
     private static UriInfo checkIntent(@Nullable XmlContext context,
             @NonNull Element intent,
             @NonNull Element activity) {
-        Element firstData = getFirstSubTagTagByName(intent, TAG_DATA);
+        Element firstData = getFirstSubTagByName(intent, TAG_DATA);
         boolean actionView = hasActionView(intent);
         boolean browsable = isBrowsable(intent);
 

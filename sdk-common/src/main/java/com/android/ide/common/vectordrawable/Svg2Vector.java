@@ -84,34 +84,90 @@ public class Svg2Vector {
                     .build();
 
     // List all the Svg nodes that we don't support. Categorized by the types.
-    private static final HashSet<String> unsupportedSvgNodes = Sets.newHashSet(
-        // Animation elements
-        "animate", "animateColor", "animateMotion", "animateTransform", "mpath", "set",
-        // Container elements
-        "a", "defs", "glyph", "marker", "mask", "missing-glyph", "pattern", "switch", "symbol",
-        // Filter primitive elements
-        "feBlend", "feColorMatrix", "feComponentTransfer", "feComposite", "feConvolveMatrix",
-        "feDiffuseLighting", "feDisplacementMap", "feFlood", "feFuncA", "feFuncB", "feFuncG",
-        "feFuncR", "feGaussianBlur", "feImage", "feMerge", "feMergeNode", "feMorphology",
-        "feOffset", "feSpecularLighting", "feTile", "feTurbulence",
-        // Font elements
-        "font", "font-face", "font-face-format", "font-face-name", "font-face-src", "font-face-uri",
-        "hkern", "vkern",
-        // Gradient elements
-        "linearGradient", "radialGradient", "stop",
-        // Graphics elements
-        "ellipse", "text",
-        // Light source elements
-        "feDistantLight", "fePointLight", "feSpotLight",
-        // Structural elements
-        "defs", "symbol", "use",
-        // Text content elements
-        "altGlyph", "altGlyphDef", "altGlyphItem", "glyph", "glyphRef", "textPath", "text", "tref",
-        "tspan",
-        // Text content child elements
-        "altGlyph", "textPath", "tref", "tspan",
-        // Uncategorized elements
-        "clipPath", "color-profile", "cursor", "filter", "foreignObject", "script", "view");
+    private static final HashSet<String> unsupportedSvgNodes =
+            Sets.newHashSet(
+                    // Animation elements
+                    "animate",
+                    "animateColor",
+                    "animateMotion",
+                    "animateTransform",
+                    "mpath",
+                    "set",
+                    // Container elements
+                    "a",
+                    "glyph",
+                    "marker",
+                    "mask",
+                    "missing-glyph",
+                    "pattern",
+                    "switch",
+                    "symbol",
+                    // Filter primitive elements
+                    "feBlend",
+                    "feColorMatrix",
+                    "feComponentTransfer",
+                    "feComposite",
+                    "feConvolveMatrix",
+                    "feDiffuseLighting",
+                    "feDisplacementMap",
+                    "feFlood",
+                    "feFuncA",
+                    "feFuncB",
+                    "feFuncG",
+                    "feFuncR",
+                    "feGaussianBlur",
+                    "feImage",
+                    "feMerge",
+                    "feMergeNode",
+                    "feMorphology",
+                    "feOffset",
+                    "feSpecularLighting",
+                    "feTile",
+                    "feTurbulence",
+                    // Font elements
+                    "font",
+                    "font-face",
+                    "font-face-format",
+                    "font-face-name",
+                    "font-face-src",
+                    "font-face-uri",
+                    "hkern",
+                    "vkern",
+                    // Gradient elements
+                    "linearGradient",
+                    "radialGradient",
+                    "stop",
+                    // Graphics elements
+                    "ellipse",
+                    "text",
+                    // Light source elements
+                    "feDistantLight",
+                    "fePointLight",
+                    "feSpotLight",
+                    // Structural elements
+                    "symbol",
+                    // Text content elements
+                    "altGlyph",
+                    "altGlyphDef",
+                    "altGlyphItem",
+                    "glyph",
+                    "glyphRef",
+                    "textPath",
+                    "text",
+                    "tref",
+                    "tspan",
+                    // Text content child elements
+                    "altGlyph",
+                    "textPath",
+                    "tref",
+                    "tspan",
+                    // Uncategorized elements
+                    "color-profile",
+                    "cursor",
+                    "filter",
+                    "foreignObject",
+                    "script",
+                    "view");
 
     @NonNull
     private static SvgTree parse(File f) throws Exception {
@@ -133,11 +189,10 @@ public class Svg2Vector {
         }
 
         if (svgTree.getViewBox() == null) {
-            svgTree.logErrorLine("Missing \"viewBox\" in <svg> element", rootNode, SvgTree.SvgLogLevel.ERROR);
+            svgTree.logErrorLine(
+                    "Missing \"viewBox\" in <svg> element", rootNode, SvgTree.SvgLogLevel.ERROR);
             return svgTree;
         }
-
-        // TODO: Properly handle "use" tag
 
         SvgGroupNode root = new SvgGroupNode(svgTree, rootNode, "root");
         svgTree.setRoot(root);
@@ -145,9 +200,25 @@ public class Svg2Vector {
         // Parse all the group and path nodes recursively.
         traverseSVGAndExtract(svgTree, root, rootNode);
 
+        // TODO: Handle "use" elements defined inside "defs"
+
         // Fill in all the use nodes in the svgTree.
-        for (Map.Entry<SvgGroupNode, Node> entry : svgTree.getUseSet()) {
-            extractUseNode(svgTree, entry.getKey(), entry.getValue());
+        for (SvgGroupNode n : svgTree.getUseSet()) {
+            extractUseNode(svgTree, n, n.getDocumentNode());
+        }
+
+        // Replaces elements that reference clipPaths and replaces them with clipPathNodes
+        for (Map.Entry<SvgNode, SvgGroupNode> entry : svgTree.getClipPathAffectedNodesSet()) {
+            handleClipPath(svgTree, entry.getKey(), entry.getValue());
+        }
+
+        // TODO: Handle clipPath elements that reference another clipPath
+
+        // Add attributes for all the style elements.
+        for (Map.Entry<String, HashSet<SvgNode>> entry : svgTree.getStyleAffectedNodes()) {
+            for (SvgNode n : entry.getValue()) {
+                addStyleToPath(n, svgTree.getStyleClassAttr(entry.getKey()));
+            }
         }
 
         svgTree.flatten();
@@ -180,22 +251,29 @@ public class Svg2Vector {
                 SVG_LINE.equals(nodeName)) {
                 SvgLeafNode child = new SvgLeafNode(svgTree, currentNode, nodeName + i);
 
-                processIdName(currentNode, svgTree, child);
-                extractAllItemsAs(svgTree, child, currentNode);
+                processIdName(svgTree, child);
                 currentGroup.addChild(child);
+                extractAllItemsAs(svgTree, child, currentNode, currentGroup);
                 svgTree.setHasLeafNode(true);
             } else if (SVG_GROUP.equals(nodeName)) {
                 SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
                 currentGroup.addChild(childGroup);
-                processIdName(currentNode, svgTree, childGroup);
+                processIdName(svgTree, childGroup);
+                extractGroupNode(svgTree, childGroup, currentGroup);
                 traverseSVGAndExtract(svgTree, childGroup, currentNode);
             } else if ("use".equals(nodeName)) {
                 SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
                 currentGroup.addChild(childGroup);
-                svgTree.addToUseMap(childGroup, currentNode);
+                svgTree.addToUseSet(childGroup);
             } else if ("defs".equals(nodeName)) {
                 SvgGroupNode childGroup = new SvgGroupNode(svgTree, currentNode, "child" + i);
                 traverseSVGAndExtract(svgTree, childGroup, currentNode);
+            } else if ("clipPath".equals(nodeName)) {
+                SvgClipPathNode clipPath = new SvgClipPathNode(svgTree, currentNode, nodeName + i);
+                processIdName(svgTree, clipPath);
+                traverseSVGAndExtract(svgTree, clipPath, currentNode);
+            } else if (SVG_STYLE.equals(nodeName)) {
+                extractStyleNode(svgTree, currentNode);
             } else {
                 // For other fancy tags, like <switch>, they can contain children too.
                 // Report the unsupported nodes.
@@ -214,20 +292,78 @@ public class Svg2Vector {
     }
 
     /**
-     * Checks if the id of a node exists and adds the id and SvgNode to the svgTree's idMap if it
-     * exists.
+     * Checks to see if the childGroup references any clipPath or style elements. Saves the
+     * reference in the svgTree to add the information to an SvgNode later.
      */
-    private static void processIdName(Node item, SvgTree svgTree, SvgNode child) {
-        NamedNodeMap a = item.getAttributes();
+    private static void extractGroupNode(
+            SvgTree svgTree, SvgGroupNode childGroup, SvgGroupNode currentGroup) {
+        NamedNodeMap a = childGroup.getDocumentNode().getAttributes();
         int len = a.getLength();
-        String idName = "";
         for (int j = 0; j < len; j++) {
             Node n = a.item(j);
             String name = n.getNodeName();
-            if (name.equals("id")) {
-                idName = n.getNodeValue();
+            String value = n.getNodeValue();
+            if (name.equals("clip-path")) {
+                if (!value.isEmpty()) {
+                    svgTree.addClipPathAffectedNode(childGroup, currentGroup);
+                }
+            } else if (name.equals("class")) {
+                if (!value.isEmpty()) {
+                    svgTree.addAffectedNodeToStyleClass("." + value, childGroup);
+                }
             }
         }
+    }
+
+    /**
+     * Extracts the attribute information from a style element and adds to the
+     * styleClassAttributeMap of the SvgTree. SvgNodes reference style elements using a 'class'
+     * attribute. The style attribute will be filled into the tree after the svgTree calls
+     * traverseSVGAndExtract().
+     *
+     * @param svgTree
+     * @param currentNode
+     */
+    private static void extractStyleNode(SvgTree svgTree, Node currentNode) {
+        NodeList a = currentNode.getChildNodes();
+        int len = a.getLength();
+        String styleData = "";
+        for (int j = 0; j < len; j++) {
+            Node n = a.item(j);
+            if (n.getNodeType() == Node.CDATA_SECTION_NODE || len == 1) {
+                styleData = n.getNodeValue();
+            }
+        }
+        if (!styleData.isEmpty()) {
+            // Separate each of the classes.
+            String[] classData = styleData.split("}");
+            for (int i = 0; i < classData.length - 1; i++) {
+                // Separate the class name from the attribute values.
+                String[] splitClassData = classData[i].split("\\{");
+                String className = splitClassData[0].trim();
+                String styleAttr = splitClassData[1].trim();
+                // Separate multiple classes if necessary.
+                String[] splitClassNames = className.split(",");
+                for (String splitClassName : splitClassNames) {
+                    String styleAttrTemp = styleAttr;
+                    className = splitClassName.trim();
+                    // Concatenate the attributes to existing attributes.
+                    if (svgTree.containsStyleClass(className)) {
+                        styleAttrTemp += svgTree.getStyleClassAttr(className);
+                    }
+                    svgTree.addStyleClassToTree(className, styleAttrTemp);
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Checks if the id of a node exists and adds the id and SvgNode to the svgTree's idMap if it
+     * exists.
+     */
+    private static void processIdName(SvgTree svgTree, SvgNode child) {
+        String idName = child.getAttributeValue("id");
         if (!idName.isEmpty()) {
             svgTree.addIdToMap(idName, child);
         }
@@ -275,8 +411,24 @@ public class Svg2Vector {
         }
     }
 
+    /**
+     * Replaces an SvgNode in the SvgTree that references a clipPath element with the
+     * SvgClipPathNode that corresponds to the referenced clip-path id. Adds the SvgNode as an
+     * affected node of the SvgClipPathNode.
+     */
+    private static void handleClipPath(SvgTree svg, SvgNode child, SvgGroupNode currentGroup) {
+        String value = child.getAttributeValue("clip-path");
+        String clipName = value.split("#")[1].split("\\)")[0];
+        currentGroup.removeChild(child);
+        SvgClipPathNode clip = ((SvgClipPathNode) svg.getSvgNodeFromId(clipName)).deepCopy();
+        currentGroup.addChild(clip);
+        clip.addAffectedNode(child);
+        clip.setClipPathNodeAttributes();
+    }
+
     // Read the content from currentItem, and fill into "child"
-    private static void extractAllItemsAs(SvgTree avg, SvgLeafNode child, Node currentItem) {
+    private static void extractAllItemsAs(
+            SvgTree avg, SvgLeafNode child, Node currentItem, SvgGroupNode currentG) {
         Node currentGroup = currentItem.getParentNode();
 
         boolean hasNodeAttr = false;
@@ -328,29 +480,32 @@ public class Svg2Vector {
         }
 
         if (SVG_PATH.equals(currentItem.getNodeName())) {
-            extractPathItem(avg, child, currentItem);
+            extractPathItem(avg, child, currentItem, currentG);
         }
 
         if (SVG_RECT.equals(currentItem.getNodeName())) {
-            extractRectItem(avg, child, currentItem);
+            extractRectItem(avg, child, currentItem, currentG);
         }
 
         if (SVG_CIRCLE.equals(currentItem.getNodeName())) {
-            extractCircleItem(avg, child, currentItem);
+            extractCircleItem(avg, child, currentItem, currentG);
         }
 
         if (SVG_POLYGON.equals(currentItem.getNodeName())
                 || SVG_POLYLINE.equals(currentItem.getNodeName())) {
-            extractPolyItem(avg, child, currentItem);
+            extractPolyItem(avg, child, currentItem, currentG);
         }
 
         if (SVG_LINE.equals(currentItem.getNodeName())) {
-            extractLineItem(avg, child, currentItem);
+            extractLineItem(avg, child, currentItem, currentG);
         }
 
         if (SVG_ELLIPSE.equals(currentItem.getNodeName())) {
-            extractEllipseItem(avg, child, currentItem);
+            extractEllipseItem(avg, child, currentItem, currentG);
         }
+
+        // Add the type of node as a style class name for child.
+        avg.addAffectedNodeToStyleClass(currentItem.getNodeName(), child);
     }
 
     private static void printlnCommon(Node n) {
@@ -384,10 +539,9 @@ public class Svg2Vector {
         }
     }
 
-    /**
-     * Convert polygon element into a path.
-     */
-    private static void extractPolyItem(SvgTree avg, SvgLeafNode child, Node currentGroupNode) {
+    /** Convert polygon element into a path. */
+    private static void extractPolyItem(
+            SvgTree avg, SvgLeafNode child, Node currentGroupNode, SvgGroupNode currentGroup) {
         logger.log(Level.FINE, "Polyline or Polygon found" + currentGroupNode.getTextContent());
         if (currentGroupNode.getNodeType() == Node.ELEMENT_NODE) {
 
@@ -402,6 +556,8 @@ public class Svg2Vector {
                     addStyleToPath(child, value);
                 } else if (presentationMap.containsKey(name)) {
                     child.fillPresentationAttributes(name, value);
+                } else if (name.equals("clip-path")) {
+                    avg.addClipPathAffectedNode(child, currentGroup);
                 } else if (name.equals(SVG_POINTS)) {
                     PathBuilder builder = new PathBuilder();
                     Pattern p = Pattern.compile("[\\s,]+");
@@ -420,15 +576,18 @@ public class Svg2Vector {
                         builder.relativeClose();
                     }
                     child.setPathData(builder.toString());
+                } else if (name.equals("class")) {
+                    avg.addAffectedNodeToStyleClass("." + value, child);
+                    avg.addAffectedNodeToStyleClass(
+                            currentGroupNode.getNodeName() + "." + value, child);
                 }
             }
         }
     }
 
-    /**
-     * Convert rectangle element into a path.
-     */
-    private static void extractRectItem(SvgTree avg, SvgLeafNode child, Node currentGroupNode) {
+    /** Convert rectangle element into a path. */
+    private static void extractRectItem(
+            SvgTree avg, SvgLeafNode child, Node currentGroupNode, SvgGroupNode currentGroup) {
         logger.log(Level.FINE, "Rect found" + currentGroupNode.getTextContent());
 
         if (currentGroupNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -453,8 +612,8 @@ public class Svg2Vector {
                     }
                 } else if (presentationMap.containsKey(name)) {
                     child.fillPresentationAttributes(name, value);
-                } else if (name.equals("clip-path") && value.startsWith("url(#SVGID_")) {
-                    // TODO: Handle clip path here.
+                } else if (name.equals("clip-path")) {
+                    avg.addClipPathAffectedNode(child, currentGroup);
                 } else if (name.equals("x")) {
                     x = Float.parseFloat(value);
                 } else if (name.equals("y")) {
@@ -467,8 +626,9 @@ public class Svg2Vector {
                     width = Float.parseFloat(value);
                 } else if (name.equals("height")) {
                     height = Float.parseFloat(value);
-                } else if (name.equals("style")) {
-                    // TODO: Handle style here.
+                } else if (name.equals("class")) {
+                    avg.addAffectedNodeToStyleClass("rect." + value, child);
+                    avg.addAffectedNodeToStyleClass("." + value, child);
                 }
             }
 
@@ -511,10 +671,9 @@ public class Svg2Vector {
         }
     }
 
-    /**
-     * Convert circle element into a path.
-     */
-    private static void extractCircleItem(SvgTree avg, SvgLeafNode child, Node currentGroupNode) {
+    /** Convert circle element into a path. */
+    private static void extractCircleItem(
+            SvgTree avg, SvgLeafNode child, Node currentGroupNode, SvgGroupNode currentGroup) {
         logger.log(Level.FINE, "circle found" + currentGroupNode.getTextContent());
 
         if (currentGroupNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -536,14 +695,17 @@ public class Svg2Vector {
                     }
                 } else if (presentationMap.containsKey(name)) {
                     child.fillPresentationAttributes(name, value);
-                } else if (name.equals("clip-path") && value.startsWith("url(#SVGID_")) {
-                    // TODO: Handle clip path here.
+                } else if (name.equals("clip-path")) {
+                    avg.addClipPathAffectedNode(child, currentGroup);
                 } else if (name.equals("cx")) {
                     cx = Float.parseFloat(value);
                 } else if (name.equals("cy")) {
                     cy = Float.parseFloat(value);
                 } else if (name.equals("r")) {
                     radius = Float.parseFloat(value);
+                } else if (name.equals("class")) {
+                    avg.addAffectedNodeToStyleClass("circle." + value, child);
+                    avg.addAffectedNodeToStyleClass("." + value, child);
                 }
 
             }
@@ -560,10 +722,9 @@ public class Svg2Vector {
         }
     }
 
-    /**
-     * Convert ellipse element into a path.
-     */
-    private static void extractEllipseItem(SvgTree avg, SvgLeafNode child, Node currentGroupNode) {
+    /** Convert ellipse element into a path. */
+    private static void extractEllipseItem(
+            SvgTree avg, SvgLeafNode child, Node currentGroupNode, SvgGroupNode currentGroup) {
         logger.log(Level.FINE, "ellipse found" + currentGroupNode.getTextContent());
 
         if (currentGroupNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -586,8 +747,8 @@ public class Svg2Vector {
                     }
                 } else if (presentationMap.containsKey(name)) {
                     child.fillPresentationAttributes(name, value);
-                } else if (name.equals("clip-path") && value.startsWith("url(#SVGID_")) {
-                    // TODO: Handle clip path here.
+                } else if (name.equals("clip-path")) {
+                    avg.addClipPathAffectedNode(child, currentGroup);
                 } else if (name.equals("cx")) {
                     cx = Float.parseFloat(value);
                 } else if (name.equals("cy")) {
@@ -596,8 +757,10 @@ public class Svg2Vector {
                     rx = Float.parseFloat(value);
                 } else if (name.equals("ry")) {
                     ry = Float.parseFloat(value);
+                } else if (name.equals("class")) {
+                    avg.addAffectedNodeToStyleClass("ellipse." + value, child);
+                    avg.addAffectedNodeToStyleClass("." + value, child);
                 }
-
             }
 
             if (!pureTransparent && avg != null
@@ -614,10 +777,9 @@ public class Svg2Vector {
         }
     }
 
-    /**
-     * Convert line element into a path.
-     */
-    private static void extractLineItem(SvgTree avg, SvgLeafNode child, Node currentGroupNode) {
+    /** Convert line element into a path. */
+    private static void extractLineItem(
+            SvgTree avg, SvgLeafNode child, Node currentGroupNode, SvgGroupNode currentGroup) {
         logger.log(Level.FINE, "line found" + currentGroupNode.getTextContent());
 
         if (currentGroupNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -640,8 +802,8 @@ public class Svg2Vector {
                     }
                 } else if (presentationMap.containsKey(name)) {
                     child.fillPresentationAttributes(name, value);
-                } else if (name.equals("clip-path") && value.startsWith("url(#SVGID_")) {
-                    // TODO: Handle clip path here.
+                } else if (name.equals("clip-path")) {
+                    avg.addClipPathAffectedNode(child, currentGroup);
                 } else if (name.equals("x1")) {
                     x1 = Float.parseFloat(value);
                 } else if (name.equals("y1")) {
@@ -650,6 +812,9 @@ public class Svg2Vector {
                     x2 = Float.parseFloat(value);
                 } else if (name.equals("y2")) {
                     y2 = Float.parseFloat(value);
+                } else if (name.equals("class")) {
+                    avg.addAffectedNodeToStyleClass("line." + value, child);
+                    avg.addAffectedNodeToStyleClass("." + value, child);
                 }
             }
 
@@ -665,7 +830,8 @@ public class Svg2Vector {
 
     }
 
-    private static void extractPathItem(SvgTree avg, SvgLeafNode child, Node currentGroupNode) {
+    private static void extractPathItem(
+            SvgTree avg, SvgLeafNode child, Node currentGroupNode, SvgGroupNode currentGroup) {
         logger.log(Level.FINE, "Path found " + currentGroupNode.getTextContent());
 
         if (currentGroupNode.getNodeType() == Node.ELEMENT_NODE) {
@@ -681,16 +847,21 @@ public class Svg2Vector {
                     addStyleToPath(child, value);
                 } else if (presentationMap.containsKey(name)) {
                     child.fillPresentationAttributes(name, value);
+                } else if ("clip-path".equals(name)) {
+                    avg.addClipPathAffectedNode(child, currentGroup);
                 } else if (name.equals(SVG_D)) {
                     String pathData = Pattern.compile("(\\d)-").matcher(value).replaceAll("$1,-");
                     child.setPathData(pathData);
+                } else if (name.equals("class")) {
+                    avg.addAffectedNodeToStyleClass("path." + value, child);
+                    avg.addAffectedNodeToStyleClass("." + value, child);
                 }
 
             }
         }
     }
 
-    private static void addStyleToPath(SvgLeafNode path, String value) {
+    private static void addStyleToPath(SvgNode path, String value) {
         logger.log(Level.FINE, "Style found is " + value);
         if (value != null) {
             String[] parts = value.split(";");
@@ -698,9 +869,11 @@ public class Svg2Vector {
                 String subStyle = parts[k];
                 String[] nameValue = subStyle.split(":");
                 if (nameValue.length == 2 && nameValue[0] != null && nameValue[1] != null) {
-                    if (presentationMap.containsKey(nameValue[0])) {
-                        path.fillPresentationAttributes(nameValue[0], nameValue[1]);
-                    } else if (nameValue[0].equals(SVG_OPACITY)) {
+                    String attr = nameValue[0].trim();
+                    String val = nameValue[1].trim();
+                    if (presentationMap.containsKey(attr)) {
+                        path.fillPresentationAttributes(attr, val);
+                    } else if (attr.equals(SVG_OPACITY)) {
                         // TODO: This is hacky, since we don't have a group level
                         // android:opacity. This only works when the path didn't overlap.
                         path.fillPresentationAttributes(SVG_FILL_OPACITY, nameValue[1]);
@@ -742,7 +915,7 @@ public class Svg2Vector {
         if (svgTree.getRoot() == null) {
             throw new NullPointerException("SvgTree root is null.");
         }
-        svgTree.getRoot().writeXML(fw);
+        svgTree.getRoot().writeXML(fw, false);
     }
 
     /**

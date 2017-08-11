@@ -225,6 +225,11 @@ public class ShrinkResourcesTransform extends Transform {
     }
 
     @Override
+    public boolean isCacheable() {
+        return true;
+    }
+
+    @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
 

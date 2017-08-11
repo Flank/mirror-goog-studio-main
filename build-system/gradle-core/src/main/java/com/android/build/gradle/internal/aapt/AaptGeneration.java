@@ -25,12 +25,14 @@ public enum AaptGeneration {
     @Deprecated
     AAPT_V2,
     AAPT_V2_JNI,
-    ;
+    AAPT_V2_DAEMON_MODE;
 
     public static AaptGeneration fromProjectOptions(@NonNull ProjectOptions projectOptions) {
         if (projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
             if (projectOptions.get(BooleanOption.ENABLE_IN_PROCESS_AAPT2)) {
                 return AAPT_V2_JNI;
+            } else if (projectOptions.get(BooleanOption.ENABLE_DAEMON_MODE_AAPT2)) {
+                return AAPT_V2_DAEMON_MODE;
             } else {
                 return AAPT_V2;
             }

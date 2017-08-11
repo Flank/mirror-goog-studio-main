@@ -98,7 +98,7 @@ public class NdkComponentSplitTest {
         assertThat(project.file("build/intermediates/binaries/debug/lib/x86/libhello-jni.so"))
                 .exists();
 
-        project.execute("assembleDebug");
+        project.executor().run("assembleDebug");
 
         // Verify .so are built for all platform.
         Apk apk = project.getApk(ApkType.DEBUG);
@@ -130,6 +130,11 @@ public class NdkComponentSplitTest {
     @Category(DeviceTests.class)
     public void connectedAndroidTest() throws Exception {
         IDevice device = adb.getDevice(AndroidVersionMatcher.thatUsesArt());
+        project.executor()
+                .with(StringOption.DEVICE_POOL_SERIAL, device.getSerialNumber())
+                .executeConnectedCheck();
+
+        // Run again to ensure this works - b/37498215
         project.executor()
                 .with(StringOption.DEVICE_POOL_SERIAL, device.getSerialNumber())
                 .executeConnectedCheck();

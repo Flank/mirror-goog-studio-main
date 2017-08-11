@@ -27,7 +27,7 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptUtils;
 import com.android.builder.internal.aapt.AbstractProcessExecutionAapt;
 import com.android.builder.png.QueuedCruncher;
-import com.android.ide.common.internal.PngException;
+import com.android.ide.common.internal.ResourceCompilationException;
 import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.ide.common.process.ProcessOutputHandler;
@@ -108,30 +108,22 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
     @VisibleForTesting
     public static final Revision VERSION_FOR_SERVER_AAPT = new Revision(22, 0, 1);
 
-    /**
-     * Build tools.
-     */
-    @NonNull
-    private final BuildToolInfo mBuildToolInfo;
+    /** Build tools. */
+    @NonNull private final BuildToolInfo buildToolInfo;
+
+    /** Queued cruncher, if available. */
+    @Nullable private final QueuedCruncher cruncher;
 
     /**
-     * Queued cruncher, if available.
+     * Request handlers we wait for. Everytime a request is made to the {@link #cruncher}, we add an
+     * entry here to wait for it to end.
      */
-    @Nullable
-    private final QueuedCruncher mCruncher;
+    @NonNull private final Executor waitExecutor;
 
-    /**
-     * Request handlers we wait for. Everytime a request is made to the {@link #mCruncher},
-     * we add an entry here to wait for it to end.
-     */
-    @NonNull
-    private final Executor mWaitExecutor;
+    /** The process mode to run {@code aapt} on. */
+    @NonNull private final PngProcessMode processMode;
 
-    /**
-     * The process mode to run {@code aapt} on.
-     */
-    @NonNull
-    private final PngProcessMode mProcessMode;
+    @Nullable private final Integer cruncherKey;
 
     /**
      * Creates a new entry point to the original {@code aapt}.
@@ -153,20 +145,28 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
             int cruncherProcesses) {
         super(processExecutor, processOutputHandler);
 
-        mBuildToolInfo = buildToolInfo;
-        mWaitExecutor = new ThreadPoolExecutor(
-                0, // Core threads
-                1, // Maximum threads
-                AUTO_THREAD_SHUTDOWN_MS,
-                TimeUnit.MILLISECONDS,
-                new LinkedBlockingQueue<>());
-        mProcessMode = processMode;
+        this.buildToolInfo = buildToolInfo;
+        this.waitExecutor =
+                new ThreadPoolExecutor(
+                        0, // Core threads
+                        1, // Maximum threads
+                        AUTO_THREAD_SHUTDOWN_MS,
+                        TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>());
+        this.processMode = processMode;
 
-        mCruncher =
-                QueuedCruncher.Builder.INSTANCE.newCruncher(
-                        getAaptExecutablePath(),
-                        logger,
-                        cruncherProcesses);
+        this.cruncher =
+                QueuedCruncher.builder()
+                        .executablePath(getAaptExecutablePath())
+                        .logger(logger)
+                        .numberOfProcesses(cruncherProcesses)
+                        .build();
+
+        if (cruncher != null) {
+            cruncherKey = cruncher.start();
+        } else {
+            cruncherKey = null;
+        }
     }
 
     @Override
@@ -339,19 +339,16 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         return builder;
     }
 
-    int key;
+
 
     @Override
-    public void start() {
-        if (mCruncher != null) {
-            key = mCruncher.start();
-        }
-    }
-
-    @Override
-    public void end() throws InterruptedException {
-        if (mCruncher != null && key != -1) {
-            mCruncher.end(key);
+    public void close() throws IOException {
+        if (cruncher != null && cruncherKey != null) {
+            try {
+                cruncher.end(cruncherKey);
+            } catch (InterruptedException e) {
+                throw new IOException(e);
+            }
         }
     }
 
@@ -367,41 +364,39 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
             return copyFile(request);
         }
 
-        if (mCruncher == null) {
+        if (cruncher == null || cruncherKey == null) {
             /*
              * Revert to old-style crunching.
              */
             return super.compile(request);
         }
-        Preconditions.checkArgument(request.getInput().isFile(), "!file.isFile()");
-        Preconditions.checkArgument(request.getOutput().isDirectory(), "!output.isDirectory()");
+
+        // TODO (imorlowska): move verification to CompileResourceRequest.
+        Preconditions.checkArgument(
+                request.getInput().isFile(),
+                "Input file needs to be a normal file.\nInput file: %s",
+                request.getInput().getAbsolutePath());
+        Preconditions.checkArgument(
+                request.getOutput().isDirectory(),
+                "Output for resource compilation needs to be a directory.\nOutput: %s",
+                request.getOutput().getAbsolutePath());
 
         SettableFuture<File> actualResult = SettableFuture.create();
 
-        if (!mProcessMode.shouldProcess(request.getInput())) {
+        if (!processMode.shouldProcess(request.getInput())) {
             return copyFile(request);
-        }
-        File outputFile = compileOutputFor(request);
-
-        try {
-            Files.createParentDirs(outputFile);
-        } catch (IOException e) {
-            throw new AaptException(
-                    e,
-                    String.format(
-                            "Failed to create parent directories for file '%s'",
-                            request.getOutput().getAbsolutePath()));
         }
 
         ListenableFuture<File> futureResult;
         try {
-            futureResult = mCruncher.crunchPng(key, request.getInput(), outputFile);
-        } catch (PngException e) {
+            futureResult = cruncher.compile(cruncherKey, request);
+        } catch (ResourceCompilationException e) {
             throw new AaptException(
                     e,
                     String.format(
                             "Failed to crunch file '%s' into '%s'",
-                            request.getInput().getAbsolutePath(), outputFile.getAbsolutePath()));
+                            request.getInput().getAbsolutePath(),
+                            compileOutputFor(request).getAbsolutePath()));
         }
         futureResult.addListener(
                 () -> {
@@ -442,7 +437,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
 
                     actualResult.set(result);
                 },
-                mWaitExecutor);
+                waitExecutor);
         return actualResult;
     }
 
@@ -471,7 +466,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
             return null;
         }
 
-        if (!mProcessMode.shouldProcess(request.getInput())) {
+        if (!processMode.shouldProcess(request.getInput())) {
             return null;
         }
 
@@ -509,7 +504,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
      */
     @NonNull
     private String getAaptExecutablePath() {
-        String aapt = mBuildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
+        String aapt = buildToolInfo.getPath(BuildToolInfo.PathId.AAPT);
         if (aapt == null || !new File(aapt).isFile()) {
             throw new IllegalStateException("aapt is missing on '" + aapt + "'");
         }

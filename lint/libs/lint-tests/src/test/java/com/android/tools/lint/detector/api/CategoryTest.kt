@@ -53,13 +53,9 @@ class CategoryTest : TestCase() {
                 Joiner.on("\n").join(categories))
     }
 
-    fun testGetName() {
-        assertEquals("Messages", Category.MESSAGES.name)
-    }
+    fun testGetName() = assertEquals("Messages", Category.MESSAGES.name)
 
-    fun testGetFullName() {
-        assertEquals("Correctness:Messages", Category.MESSAGES.fullName)
-    }
+    fun testGetFullName() = assertEquals("Correctness:Messages", Category.MESSAGES.fullName)
 
     fun testEquals() {
         assertEquals(Category.MESSAGES, Category.MESSAGES)

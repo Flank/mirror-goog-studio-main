@@ -55,33 +55,30 @@ Instead, use `Context.getFilesDir().getPath()`.""",
                         "http://developer.android.com/guide/topics/data/data-storage.html#filesExternal")
     }
 
-    override fun getApplicableUastTypes(): List<Class<out UElement>>? {
-        return listOf<Class<out UElement>>(ULiteralExpression::class.java)
-    }
+    override fun getApplicableUastTypes(): List<Class<out UElement>>? =
+            listOf<Class<out UElement>>(ULiteralExpression::class.java)
 
-    override fun createUastHandler(context: JavaContext): UElementHandler? {
-        return object : UElementHandler() {
-            override fun visitLiteralExpression(node: ULiteralExpression) {
-                val s = node.getValueIfStringLiteral()
-                if (s != null && !s.isEmpty()) {
-                    val c = s[0]
-                    if (c != '/' && c != 'f') {
-                        return
-                    }
+    override fun createUastHandler(context: JavaContext): UElementHandler? = object : UElementHandler() {
+        override fun visitLiteralExpression(node: ULiteralExpression) {
+            val s = node.getValueIfStringLiteral()
+            if (s != null && !s.isEmpty()) {
+                val c = s[0]
+                if (c != '/' && c != 'f') {
+                    return
+                }
 
-                    if (s.startsWith("/sdcard")
-                            || s.startsWith("/mnt/sdcard/")
-                            || s.startsWith("/system/media/sdcard")
-                            || s.startsWith("file://sdcard/")
-                            || s.startsWith("file:///sdcard/")) {
-                        val message = """Do not hardcode "/sdcard/"; use `Environment.getExternalStorageDirectory().getPath()` instead"""
-                        val location = context.getLocation(node)
-                        context.report(ISSUE, node, location, message)
-                    } else if (s.startsWith("/data/data/") || s.startsWith("/data/user/")) {
-                        val message = """Do not hardcode "`/data/`"; use `Context.getFilesDir().getPath()` instead"""
-                        val location = context.getLocation(node)
-                        context.report(ISSUE, node, location, message)
-                    }
+                if (s.startsWith("/sdcard")
+                        || s.startsWith("/mnt/sdcard/")
+                        || s.startsWith("/system/media/sdcard")
+                        || s.startsWith("file://sdcard/")
+                        || s.startsWith("file:///sdcard/")) {
+                    val message = """Do not hardcode "/sdcard/"; use `Environment.getExternalStorageDirectory().getPath()` instead"""
+                    val location = context.getLocation(node)
+                    context.report(ISSUE, node, location, message)
+                } else if (s.startsWith("/data/data/") || s.startsWith("/data/user/")) {
+                    val message = """Do not hardcode "`/data/`"; use `Context.getFilesDir().getPath()` instead"""
+                    val location = context.getLocation(node)
+                    context.report(ISSUE, node, location, message)
                 }
             }
         }

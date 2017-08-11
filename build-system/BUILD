@@ -9,6 +9,7 @@ load(
 iml_module(
     name = "studio.builder-test-api",
     srcs = ["builder-test-api/src/main/java"],
+    iml_files = ["builder-test-api/builder-test-api.iml"],
     tags = ["managed"],
     test_srcs = ["builder-test-api/src/test/java"],
     visibility = ["//visibility:public"],
@@ -25,6 +26,7 @@ iml_module(
 iml_module(
     name = "studio.manifest-merger",
     srcs = ["manifest-merger/src/main/java"],
+    iml_files = ["manifest-merger/manifest-merger.iml"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     tags = ["managed"],
     test_srcs = ["manifest-merger/src/test/java"],

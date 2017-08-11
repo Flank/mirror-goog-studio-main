@@ -21,12 +21,14 @@ import static org.junit.Assert.fail;
 
 import com.android.testutils.classloader.SingleClassLoader;
 import com.google.common.base.Throwables;
+import com.google.common.base.VerifyException;
+import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import javax.management.InstanceNotFoundException;
+import java.util.stream.Collectors;
 import org.junit.Test;
 
 /** Test cases for {@link JvmWideVariable}. */
@@ -36,16 +38,17 @@ public class JvmWideVariableTest {
     @Test
     public void testRead() {
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "Some text");
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "Some text");
         assertThat(variable.get()).isEqualTo("Some text");
         variable.unregister();
     }
 
     @Test
     public void testInitializeTwiceThenRead() {
-        new JvmWideVariable<>("group", "name", String.class, "Some text");
+        new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "Some text");
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "Some other text");
+                new JvmWideVariable<>(
+                        JvmWideVariableTest.class, "name", String.class, "Some other text");
 
         // Expect that the second default value is ignored
         assertThat(variable.get()).isEqualTo("Some text");
@@ -56,7 +59,7 @@ public class JvmWideVariableTest {
     @Test
     public void testWriteThenRead() {
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "Some text");
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "Some text");
         variable.set("Some other text");
 
         assertThat(variable.get()).isEqualTo("Some other text");
@@ -67,7 +70,7 @@ public class JvmWideVariableTest {
     @Test
     public void testWriteThenReadTwice() {
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "Some text");
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "Some text");
 
         variable.set("Some other text");
         assertThat(variable.get()).isEqualTo("Some other text");
@@ -81,9 +84,9 @@ public class JvmWideVariableTest {
     @Test
     public void testSameVariable() {
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "This text");
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "This text");
         JvmWideVariable<String> variable2 =
-                new JvmWideVariable<>("group", "name", String.class, "That text");
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "That text");
         assertThat(variable.get()).isEqualTo("This text");
         assertThat(variable2.get()).isEqualTo("This text");
 
@@ -97,9 +100,10 @@ public class JvmWideVariableTest {
     @Test
     public void testDifferentVariables() {
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "This text");
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "This text");
         JvmWideVariable<String> variable2 =
-                new JvmWideVariable<>("group", "name2", String.class, "That text");
+                new JvmWideVariable<>(
+                        JvmWideVariableTest.class, "name2", String.class, "That text");
         assertThat(variable.get()).isEqualTo("This text");
         assertThat(variable2.get()).isEqualTo("That text");
 
@@ -114,7 +118,7 @@ public class JvmWideVariableTest {
     @Test
     public void testNullValues() {
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, null);
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, null);
         assertThat(variable.get()).isNull();
 
         variable.set("Some text");
@@ -129,10 +133,10 @@ public class JvmWideVariableTest {
     @Test
     public void testDefaultValueSupplier() {
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "Some text");
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "Some text");
 
         new JvmWideVariable<>(
-                "group",
+                JvmWideVariableTest.class,
                 "name",
                 TypeToken.of(String.class),
                 () -> {
@@ -142,7 +146,7 @@ public class JvmWideVariableTest {
 
         JvmWideVariable<String> variable2 =
                 new JvmWideVariable<>(
-                        "group",
+                        JvmWideVariableTest.class,
                         "name2",
                         TypeToken.of(String.class),
                         () -> "This should be executed");
@@ -150,6 +154,44 @@ public class JvmWideVariableTest {
 
         variable.unregister();
         variable2.unregister();
+    }
+
+    @Test
+    public void testGetFullName() {
+        // Test valid full name
+        JvmWideVariable.getFullName("group", "name", "tag");
+
+        // Test invalid full names
+        try {
+            JvmWideVariable.getFullName("group with space", "name", "tag");
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+        try {
+            JvmWideVariable.getFullName("group", "name with :", "tag");
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+        try {
+            JvmWideVariable.getFullName("group", "name with =", "tag");
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+        try {
+            JvmWideVariable.getFullName("group", "name", "tag with ,");
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
+        try {
+            JvmWideVariable.getFullName("group", "name", "");
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            // Expected
+        }
     }
 
     @Test
@@ -191,93 +233,50 @@ public class JvmWideVariableTest {
     }
 
     @Test
-    public void testVariables_WithSameGroupSameName_DifferentSimpleTypes() throws Exception {
-        JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "Some text");
-
-        // Create another JVM-wide variable with the same group, same name, but different type,
-        // expect failure
-        try {
-            new JvmWideVariable<>("group", "name", Integer.class, 1);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage())
-                    .isEqualTo(
-                            String.format(
-                                    "Expected type %s but found type %s"
-                                            + " for JVM-wide variable %s:%s",
-                                    String.class, Integer.class, "group", "name"));
-        }
-
-        variable.unregister();
-    }
-
-    @Test
-    public void testVariables_WithSameGroupSameName_DifferentComplexTypes() throws Exception {
-        // Create a JVM-wide variable with a ParameterizedType
-        JvmWideVariable<List<String>> variable =
-                new JvmWideVariable<>(
-                        "group", "name", new TypeToken<List<String>>() {}, () -> null);
-
-        // Create another JVM-wide variable with the same group, same name, but a different
-        // ParameterizedType, expect failure
-        try {
-            new JvmWideVariable<>("group", "name", new TypeToken<List<Integer>>() {}, () -> null);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage())
-                    .isEqualTo(
-                            String.format(
-                                    "Expected type %s but found type %s"
-                                            + " for JVM-wide variable %s:%s",
-                                    new TypeToken<List<String>>() {},
-                                    new TypeToken<List<Integer>>() {},
-                                    "group",
-                                    "name"));
-        }
-
-        variable.unregister();
-    }
-
-    @Test
     public void testVariables_WithBootstrapAndNonBootstrapClassLoaders_SimpleTypes()
             throws Exception {
         // Create a JVM-wide variable whose type is loaded by the bootstrap class loader, expect
         // success
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "foo", String.class, null);
+                new JvmWideVariable<>(JvmWideVariableTest.class, "foo", String.class, null);
 
         // Create a JVM-wide variable whose type is loaded by the application (non-bootstrap) class
         // loader, expect failure
         try {
-            new JvmWideVariable<>("group", "fooCounter", FooCounter.class, null);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage()).isEqualTo(
-                    String.format(
-                            "Type %s used to define JVM-wide variable %s:%s must be loaded by the"
-                                    + " bootstrap class loader but is loaded by %s",
-                            FooCounter.class,
-                            "group",
-                            "fooCounter",
-                            FooCounter.class.getClassLoader()));
+            new JvmWideVariable<>(JvmWideVariableTest.class, "fooCounter", FooCounter.class, null);
+            fail("Expected VerifyException");
+        } catch (VerifyException e) {
+            assertThat(e.getMessage())
+                    .isEqualTo(
+                            String.format(
+                                    "Type %s used to define JVM-wide variable %s must be loaded by"
+                                            + " the bootstrap class loader but is loaded by %s",
+                                    FooCounter.class,
+                                    JvmWideVariable.getFullName(
+                                            JvmWideVariableTest.class.getName(),
+                                            "fooCounter",
+                                            FooCounter.class.getName()),
+                                    FooCounter.class.getClassLoader()));
         }
 
         // Create a JVM-wide variable whose type is loaded by a custom class loader, expect failure
         SingleClassLoader classLoader = new SingleClassLoader(FooCounter.class.getName());
         Class<?> clazz = classLoader.load();
         try {
-            new JvmWideVariable<>("group", "fooCounter", clazz, null);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage()).isEqualTo(
-                    String.format(
-                            "Type %s used to define JVM-wide variable %s:%s must be loaded by the"
-                                    + " bootstrap class loader but is loaded by %s",
-                            clazz,
-                            "group",
-                            "fooCounter",
-                            clazz.getClassLoader()));
+            new JvmWideVariable<>(JvmWideVariableTest.class, "fooCounter", clazz, null);
+            fail("Expected VerifyException");
+        } catch (VerifyException e) {
+            assertThat(e.getMessage())
+                    .isEqualTo(
+                            String.format(
+                                    "Type %s used to define JVM-wide variable %s must be loaded by"
+                                            + " the bootstrap class loader but is loaded by %s",
+                                    clazz,
+                                    JvmWideVariable.getFullName(
+                                            JvmWideVariableTest.class.getName(),
+                                            "fooCounter",
+                                            FooCounter.class.getName()),
+                                    clazz.getClassLoader()));
         }
 
         variable.unregister();
@@ -289,23 +288,100 @@ public class JvmWideVariableTest {
         // Create a JVM-wide variable whose type is a ParameterizeType, and its argument's type is
         // loaded by the bootstrap class loader, expect success
         JvmWideVariable<List<String>> variable =
-                new JvmWideVariable<>("group", "foo", new TypeToken<List<String>>() {}, () -> null);
+                new JvmWideVariable<>(
+                        JvmWideVariableTest.class,
+                        "foo",
+                        new TypeToken<List<String>>() {},
+                        () -> null);
 
         // Create a JVM-wide variable whose type is a ParameterizeType, and its argument's type is
         // loaded by the application (non-bootstrap) class loader, expect failure
         try {
             new JvmWideVariable<>(
-                    "group", "fooCounter", new TypeToken<List<FooCounter>>() {}, () -> null);
-            fail("Expected IllegalArgumentException");
-        } catch (IllegalArgumentException e) {
-            assertThat(e.getMessage()).isEqualTo(
-                    String.format(
-                            "Type %s used to define JVM-wide variable %s:%s must be loaded by the"
-                                    + " bootstrap class loader but is loaded by %s",
-                            FooCounter.class,
-                            "group",
-                            "fooCounter",
-                            FooCounter.class.getClassLoader()));
+                    JvmWideVariableTest.class,
+                    "fooCounter",
+                    new TypeToken<List<FooCounter>>() {},
+                    () -> null);
+            fail("Expected VerifyException");
+        } catch (VerifyException e) {
+            String tag =
+                    JvmWideVariable.collectComponentClasses(
+                                    new TypeToken<List<FooCounter>>() {}.getType())
+                            .stream()
+                            .map(Class::getName)
+                            .collect(Collectors.joining("-"));
+            assertThat(e.getMessage())
+                    .isEqualTo(
+                            String.format(
+                                    "Type %s used to define JVM-wide variable %s must be loaded by"
+                                            + " the bootstrap class loader but is loaded by %s",
+                                    JvmWideVariableTest.FooCounter.class,
+                                    JvmWideVariable.getFullName(
+                                            JvmWideVariableTest.class.getName(), "fooCounter", tag),
+                                    JvmWideVariableTest.FooCounter.class.getClassLoader()));
+        }
+
+        variable.unregister();
+    }
+
+    @Test
+    public void testVariables_WithSameGroupNameTag_DifferentSimpleTypes() throws Exception {
+        JvmWideVariable<String> variable =
+                new JvmWideVariable<>(
+                        JvmWideVariableTest.class.getName(),
+                        "name",
+                        "tag",
+                        TypeToken.of(String.class),
+                        () -> "Some text");
+
+        // Create another JVM-wide variable with the same group, same name, same tag, but different
+        // type, expect failure
+        JvmWideVariable<Integer> variable2 =
+                new JvmWideVariable<>(
+                        JvmWideVariableTest.class.getName(),
+                        "name",
+                        "tag",
+                        TypeToken.of(Integer.class),
+                        () -> 1);
+        try {
+            @SuppressWarnings("unused")
+            Integer value = variable2.get();
+            fail("Expected ClassCastException");
+        } catch (ClassCastException e) {
+            assertThat(e.getMessage())
+                    .isEqualTo("java.lang.String cannot be cast to java.lang.Integer");
+        }
+
+        variable.unregister();
+    }
+
+    @Test
+    public void testVariables_WithSameGroupNameTag_DifferentComplexTypes() throws Exception {
+        // Create a JVM-wide variable with a ParameterizedType
+        JvmWideVariable<List<String>> variable =
+                new JvmWideVariable<>(
+                        JvmWideVariableTest.class.getName(),
+                        "name",
+                        "tag",
+                        new TypeToken<List<String>>() {},
+                        () -> ImmutableList.of("Some text"));
+
+        // Create another JVM-wide variable with the same group, same name, same tag, but different
+        // ParameterizedType, expect failure
+        JvmWideVariable<List<Integer>> variable2 =
+                new JvmWideVariable<>(
+                        JvmWideVariableTest.class.getName(),
+                        "name",
+                        "tag",
+                        new TypeToken<List<Integer>>() {},
+                        () -> null);
+        try {
+            @SuppressWarnings({"unused", "ConstantConditions"})
+            Integer value = variable2.get().get(0);
+            fail("Expected ClassCastException");
+        } catch (ClassCastException e) {
+            assertThat(e.getMessage())
+                    .isEqualTo("java.lang.String cannot be cast to java.lang.Integer");
         }
 
         variable.unregister();
@@ -314,7 +390,7 @@ public class JvmWideVariableTest {
     @Test
     public void testExecuteCallableSynchronously() throws ExecutionException {
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "Some text");
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "Some text");
         Integer result = variable.executeCallableSynchronously(() -> 1);
 
         assertThat(result).isEqualTo(1);
@@ -325,7 +401,7 @@ public class JvmWideVariableTest {
     @Test
     public void testExecuteCallableSynchronously_ThrowingExecutionException() {
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "Some text");
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "Some text");
         try {
             variable.executeCallableSynchronously(
                     () -> {
@@ -364,7 +440,7 @@ public class JvmWideVariableTest {
     private static class FooCounter {
 
         private static final JvmWideVariable<Integer> COUNT =
-                new JvmWideVariable<>(FooCounter.class.getName(), "COUNT", Integer.class, 1);
+                new JvmWideVariable<>(FooCounter.class, "COUNT", Integer.class, 1);
 
         public FooCounter() {
         }
@@ -377,26 +453,56 @@ public class JvmWideVariableTest {
     @Test
     public void testUnregister() throws Exception {
         JvmWideVariable<String> variable =
-                new JvmWideVariable<>("group", "name", String.class, "Some text");
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "Some text");
+        JvmWideVariable<String> sameVariable =
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "Some text");
         JvmWideVariable<String> variable2 =
-                new JvmWideVariable<>("group", "name2", String.class, "Some other text");
+                new JvmWideVariable<>(
+                        JvmWideVariableTest.class, "name2", String.class, "Some other text");
 
-        // Unregister the first JVM-wide variable, expect that access to it afterwards will fail,
-        // while access to the second variable will still succeed
+        // Unregister the JVM-wide variable, expect that access to it afterwards will fail
         variable.unregister();
         try {
             variable.get();
-        } catch (RuntimeException e) {
-            assertThat(e.getCause()).isInstanceOf(InstanceNotFoundException.class);
+            fail("Expected VerifyException");
+        } catch (VerifyException e) {
+            assertThat(e.getMessage()).contains("has already been unregistered");
         }
+
+        // Check that access to the same JVM-wide variable from another JvmWideVariable instance
+        // will also fail
+        try {
+            sameVariable.get();
+            fail("Expected VerifyException");
+        } catch (VerifyException e) {
+            assertThat(e.getMessage()).contains("has already been unregistered");
+        }
+
+        // Check that access to the second variable will still succeed
         assertThat(variable2.get()).isEqualTo("Some other text");
 
+        // Let another JvmWideVariable instance re-register the JVM-wide variable
+        JvmWideVariable<String> anotherSameVariable =
+                new JvmWideVariable<>(JvmWideVariableTest.class, "name", String.class, "Some text");
+
+        // The first variable was unregistered, it will not be used even if the underlying JVM-wide
+        // variable is re-registered
+        try {
+            variable.get();
+            fail("Expected VerifyException");
+        } catch (VerifyException e) {
+            assertThat(e.getMessage()).contains("has already been unregistered");
+        }
+
+        // The second variable was never unregistered, so it can still be used if the underlying
+        // JVM-wide variable is re-registered
+        assertThat(sameVariable.get()).isEqualTo("Some text");
+
+        // Access to the other variables should succeed as normal
+        assertThat(anotherSameVariable.get()).isEqualTo("Some text");
+        assertThat(variable2.get()).isEqualTo("Some other text");
+
+        sameVariable.unregister();
         variable2.unregister();
     }
-
-    /** Dummy class used by testUnregisterAll() test. */
-    private static final class Dummy implements DummyMBean {}
-
-    /** Dummy interface used by testUnregisterAll() test. */
-    public interface DummyMBean {}
 }

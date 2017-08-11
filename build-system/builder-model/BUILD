@@ -5,8 +5,17 @@ load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
 iml_module(
     name = "studio.builder-model",
     srcs = ["src/main/java"],
+    iml_files = ["builder-model.iml"],
+    javacopts = [
+        "-source 6",
+        "-target 6",
+    ],
     visibility = ["//visibility:public"],
-    deps = ["//tools/base/annotations:studio.android-annotations[module]"],
+    # do not sort: must match IML order
+    deps = [
+        "//tools/base/annotations:studio.android-annotations[module]",
+        "//tools/idea/.idea/libraries:JUnit4[test]",
+    ],
 )
 
 fileset(
@@ -20,6 +29,10 @@ maven_java_library(
     srcs = glob([
         "src/main/java/**/*.java",
     ]),
+    javacopts = [
+        "-source 6",
+        "-target 6",
+    ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder-model",
     resources = [":version.properties"],
@@ -40,6 +53,10 @@ java_test(
     name = "tests",
     size = "small",
     srcs = glob(["src/test/java/**"]),
+    javacopts = [
+        "-source 6",
+        "-target 6",
+    ],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = [

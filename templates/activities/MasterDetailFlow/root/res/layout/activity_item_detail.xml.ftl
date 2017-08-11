@@ -4,7 +4,7 @@
     android:id="@+id/${detail_name}_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="${relativePackage}.${DetailName}Activity"
+    tools:context="${packageName}.${DetailName}Activity"
     tools:ignore="MergeRootFrame" />
 <#else>
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -13,7 +13,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:context="${relativePackage}.${DetailName}Activity"
+    tools:context="${packageName}.${DetailName}Activity"
     tools:ignore="MergeRootFrame">
 
     <android.support.design.widget.AppBarLayout

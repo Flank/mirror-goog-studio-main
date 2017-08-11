@@ -19,13 +19,14 @@ package com.android.build.gradle.internal.dependency;
 import com.android.annotations.NonNull;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
+import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.gradle.api.artifacts.ArtifactCollection;
-import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 
@@ -60,16 +61,18 @@ public class SubtractingArtifactCollection implements ArtifactCollection {
     @Override
     public Set<ResolvedArtifactResult> getArtifacts() {
         if (artifactResults == null) {
-            // build a set of componentIdentifier for the removed artifacts.
-            Set<ComponentIdentifier> removedIds = Sets.newHashSet();
-            for (ResolvedArtifactResult artifactResult : removedArtifacts.getArtifacts()) {
-                removedIds.add(artifactResult.getId().getComponentIdentifier());
-            }
+            // build a set of Files to remove
+            Set<File> removedFiles =
+                    removedArtifacts
+                            .getArtifacts()
+                            .stream()
+                            .map(ResolvedArtifactResult::getFile)
+                            .collect(Collectors.toSet());
 
             // build the final list from the main one, filtering our the tested IDs.
             artifactResults = Sets.newLinkedHashSet();
             for (ResolvedArtifactResult artifactResult : mainArtifacts.getArtifacts()) {
-                if (!removedIds.contains(artifactResult.getId().getComponentIdentifier())) {
+                if (!removedFiles.contains(artifactResult.getFile())) {
                     artifactResults.add(artifactResult);
                 }
             }

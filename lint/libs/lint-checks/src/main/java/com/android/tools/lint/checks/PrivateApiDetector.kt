@@ -71,9 +71,8 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
 
     // ---- Implements JavaPsiScanner ----
 
-    override fun getApplicableMethodNames(): List<String>? {
-        return listOf(FOR_NAME, LOAD_CLASS, GET_DECLARED_METHOD)
-    }
+    override fun getApplicableMethodNames(): List<String>? =
+            listOf(FOR_NAME, LOAD_CLASS, GET_DECLARED_METHOD)
 
     override fun visitMethod(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         val evaluator = context.evaluator
@@ -159,9 +158,8 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
      *
      * @return the fully qualified name of the class, if found
      */
-    fun getClassFromMemberLookup(call: UCallExpression): String? {
-        return findReflectionClass(call.receiver)
-    }
+    private fun getClassFromMemberLookup(call: UCallExpression): String? =
+            findReflectionClass(call.receiver)
 
     private fun findReflectionClass(element: UElement?): String? {
         if (element is UQualifiedReferenceExpression &&

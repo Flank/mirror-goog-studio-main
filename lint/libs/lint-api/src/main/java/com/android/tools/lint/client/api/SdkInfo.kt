@@ -80,9 +80,7 @@ abstract class SdkInfo {
      *
      * @return true if the given tag corresponds to a layout
      */
-    open fun isLayout(tag: String): Boolean {
-        return tag.endsWith("Layout")
-    }
+    open fun isLayout(tag: String): Boolean = tag.endsWith("Layout")
 
     // TODO: Add access to resource resolution here.
 }
