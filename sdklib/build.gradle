@@ -181,7 +181,7 @@ task initSdkForConnectedTests(type: JavaExec) {
             '--channel=0',
             '--verbose',
             'system-images;android-26;google_apis;x86',
-            'system-images;android-25;default;x86',
+            'system-images;android-25;google_apis;x86',
             'system-images;android-19;default;x86',
             'tools',
             'platform-tools',
