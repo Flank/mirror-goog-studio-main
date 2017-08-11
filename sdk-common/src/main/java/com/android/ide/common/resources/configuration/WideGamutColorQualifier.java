@@ -22,7 +22,7 @@ import com.android.resources.WideGamutColor;
 
 public class WideGamutColorQualifier extends EnumBasedResourceQualifier {
 
-    public static final String NAME = "Screen Roundness";
+    public static final String NAME = "Color Gamut";
 
     @Nullable private WideGamutColor mValue = null;
 
@@ -48,7 +48,7 @@ public class WideGamutColorQualifier extends EnumBasedResourceQualifier {
 
     @Override
     public String getShortName() {
-        return "Color Gamut";
+        return NAME;
     }
 
     @Override
