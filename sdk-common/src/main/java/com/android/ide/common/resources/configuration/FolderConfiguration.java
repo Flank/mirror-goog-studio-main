@@ -58,18 +58,20 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     private static final int INDEX_SCREEN_LAYOUT_SIZE    = 7;
     private static final int INDEX_SCREEN_RATIO          = 8;
     private static final int INDEX_SCREEN_ROUND          = 9;
-    private static final int INDEX_SCREEN_ORIENTATION    = 10;
-    private static final int INDEX_UI_MODE               = 11;
-    private static final int INDEX_NIGHT_MODE            = 12;
-    private static final int INDEX_PIXEL_DENSITY         = 13;
-    private static final int INDEX_TOUCH_TYPE            = 14;
-    private static final int INDEX_KEYBOARD_STATE        = 15;
-    private static final int INDEX_TEXT_INPUT_METHOD     = 16;
-    private static final int INDEX_NAVIGATION_STATE      = 17;
-    private static final int INDEX_NAVIGATION_METHOD     = 18;
-    private static final int INDEX_SCREEN_DIMENSION      = 19;
-    private static final int INDEX_VERSION               = 20;
-    private static final int INDEX_COUNT                 = 21;
+    private static final int INDEX_WIDE_COLOR_GAMUT      = 10;
+    private static final int INDEX_HIGH_DYNAMIC_RANGE    = 11;
+    private static final int INDEX_SCREEN_ORIENTATION    = 12;
+    private static final int INDEX_UI_MODE               = 13;
+    private static final int INDEX_NIGHT_MODE            = 14;
+    private static final int INDEX_PIXEL_DENSITY         = 15;
+    private static final int INDEX_TOUCH_TYPE            = 16;
+    private static final int INDEX_KEYBOARD_STATE        = 17;
+    private static final int INDEX_TEXT_INPUT_METHOD     = 18;
+    private static final int INDEX_NAVIGATION_STATE      = 19;
+    private static final int INDEX_NAVIGATION_METHOD     = 20;
+    private static final int INDEX_SCREEN_DIMENSION      = 21;
+    private static final int INDEX_VERSION               = 22;
+    private static final int INDEX_COUNT                 = 23;
 
     private static final ResourceQualifier[] NULL_QUALIFIERS = new ResourceQualifier[INDEX_COUNT];
 
@@ -463,6 +465,12 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         } else if (qualifier instanceof ScreenRoundQualifier) {
             mQualifiers[INDEX_SCREEN_ROUND] = qualifier;
 
+        } else if (qualifier instanceof WideGamutColorQualifier) {
+            mQualifiers[INDEX_WIDE_COLOR_GAMUT] = qualifier;
+
+        } else if (qualifier instanceof HighDynamicRangeQualifier) {
+            mQualifiers[INDEX_HIGH_DYNAMIC_RANGE] = qualifier;
+
         } else if (qualifier instanceof ScreenOrientationQualifier) {
             mQualifiers[INDEX_SCREEN_ORIENTATION] = qualifier;
 
@@ -622,6 +630,26 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
     @Nullable
     public ScreenRoundQualifier getScreenRoundQualifier() {
         return (ScreenRoundQualifier)mQualifiers[INDEX_SCREEN_ROUND];
+    }
+
+    public void setWideColorGamutQualifier(WideGamutColorQualifier qualifier) {
+        mQualifiers[INDEX_WIDE_COLOR_GAMUT] =
+                qualifier == null ? NULL_QUALIFIERS[INDEX_WIDE_COLOR_GAMUT] : qualifier;
+    }
+
+    @Nullable
+    public WideGamutColorQualifier getWideColorGamutQualifier() {
+        return (WideGamutColorQualifier) mQualifiers[INDEX_WIDE_COLOR_GAMUT];
+    }
+
+    public void setHighDynamicRangeQualifier(HighDynamicRangeQualifier qualifier) {
+        mQualifiers[INDEX_HIGH_DYNAMIC_RANGE] =
+                qualifier == null ? NULL_QUALIFIERS[INDEX_HIGH_DYNAMIC_RANGE] : qualifier;
+    }
+
+    @Nullable
+    public HighDynamicRangeQualifier getHighDynamicRangeQualifier() {
+        return (HighDynamicRangeQualifier) mQualifiers[INDEX_HIGH_DYNAMIC_RANGE];
     }
 
     public void setScreenOrientationQualifier(ScreenOrientationQualifier qualifier) {
@@ -1202,6 +1230,8 @@ public final class FolderConfiguration implements Comparable<FolderConfiguration
         mQualifiers[INDEX_SCREEN_LAYOUT_SIZE] = new ScreenSizeQualifier();
         mQualifiers[INDEX_SCREEN_RATIO] = new ScreenRatioQualifier();
         mQualifiers[INDEX_SCREEN_ROUND] = new ScreenRoundQualifier();
+        mQualifiers[INDEX_WIDE_COLOR_GAMUT] = new WideGamutColorQualifier();
+        mQualifiers[INDEX_HIGH_DYNAMIC_RANGE] = new HighDynamicRangeQualifier();
         mQualifiers[INDEX_SCREEN_ORIENTATION] = new ScreenOrientationQualifier();
         mQualifiers[INDEX_UI_MODE] = new UiModeQualifier();
         mQualifiers[INDEX_NIGHT_MODE] = new NightModeQualifier();
