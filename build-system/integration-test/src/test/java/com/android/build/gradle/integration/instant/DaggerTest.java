@@ -28,6 +28,7 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
@@ -154,14 +155,14 @@ public class DaggerTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void hotSwap24() throws Exception {
-        doTestHotSwap(adb.getDevice(24));
+    public void hotSwap_art() throws Exception {
+        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
     }
 
     @Test
     @Category(DeviceTests.class)
-    public void hotSwap23() throws Exception {
-        doTestHotSwap(adb.getDevice(23));
+    public void hotSwap_dalvik() throws Exception {
+        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesDalvik()));
     }
 
     private void doTestHotSwap(IDevice iDevice) throws Exception {

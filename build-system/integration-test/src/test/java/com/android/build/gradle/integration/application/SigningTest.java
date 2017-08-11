@@ -373,8 +373,8 @@ public class SigningTest {
                 "minSdkVersion \\d+",
                 "minSdkVersion " + DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS);
 
-        IDevice device24 = adb.getDevice(24);
-        checkOnDevice(device24);
+        IDevice device24Plus = adb.getDevice(AndroidVersionMatcher.atLeast(24));
+        checkOnDevice(device24Plus);
 
         // Check APK with minimum SDK 18.
         // Don't run on the oldest device, it's not compatible with the APK.
@@ -382,7 +382,7 @@ public class SigningTest {
                 project.getBuildFile(),
                 "minSdkVersion \\d+",
                 "minSdkVersion " + DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA);
-        checkOnDevice(device24);
+        checkOnDevice(device24Plus);
         IDevice device19 = adb.getDevice(19);
         checkOnDevice(device19);
 
@@ -392,7 +392,7 @@ public class SigningTest {
                     project.getBuildFile(), "minSdkVersion \\d+", "minSdkVersion " + minSdkVersion);
 
             checkOnDevice(device19);
-            checkOnDevice(device24);
+            checkOnDevice(device24Plus);
         }
     }
 

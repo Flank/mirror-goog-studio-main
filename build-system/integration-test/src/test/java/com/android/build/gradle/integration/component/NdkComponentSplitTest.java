@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
-import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import com.android.build.gradle.integration.common.utils.SigningHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -129,7 +128,7 @@ public class NdkComponentSplitTest {
     @Test
     @Category(DeviceTests.class)
     public void connectedAndroidTest() throws Exception {
-        IDevice device = adb.getDevice(AndroidVersionMatcher.thatUsesArt());
+        IDevice device = adb.getDevice(25);
         project.executor()
                 .with(StringOption.DEVICE_POOL_SERIAL, device.getSerialNumber())
                 .executeConnectedCheck();
