@@ -22,7 +22,7 @@ import com.android.resources.ResourceEnum;
 
 public class HighDynamicRangeQualifier extends EnumBasedResourceQualifier {
 
-    public static final String NAME = "Screen Roundness";
+    public static final String NAME = "Dynamic Range";
 
     @Nullable private HighDynamicRange mValue = null;
 
