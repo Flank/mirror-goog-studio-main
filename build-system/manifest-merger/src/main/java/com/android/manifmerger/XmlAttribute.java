@@ -219,14 +219,59 @@ public class XmlAttribute extends XmlNode {
             if (mergedValue != null) {
                 higherPriority.mXml.setValue(mergedValue);
             } else {
+                if (automaticallyRejected(report, higherPriority)) { // Optional feature
+                    return;
+                }
+
                 addConflictingValueMessage(report, higherPriority);
             }
             return;
         }
         // no merging policy, for now revert on checking manually for equality.
         if (!getValue().equals(higherPriority.getValue())) {
+            if (automaticallyRejected(report, higherPriority)) { // Optional feature
+                return;
+            }
+
             addConflictingValueMessage(report, higherPriority);
         }
+    }
+
+    private boolean automaticallyRejected(
+            @NonNull MergingReport.Builder report, @NonNull XmlAttribute higherPriority) {
+        ManifestMerger2 merger = report.getManifestMerger();
+        if (merger != null
+                && merger.hasFeature(
+                        ManifestMerger2.Invoker.Feature.HANDLE_VALUE_CONFLICTS_AUTOMATICALLY)) {
+            Actions.AttributeRecord attributeRecord =
+                    report.getActionRecorder().getAttributeCreationRecord(higherPriority);
+            String message =
+                    String.format(
+                            "Attribute %1$s value=(%2$s) from %3$s\n"
+                                    + "\tis also present at %4$s value=(%5$s).\n"
+                                    + "\tThe merger automatically chose %2$s. "
+                                    + "Verify that this is what you want and adjust if necessary.",
+                            higherPriority.getId(),
+                            higherPriority.getValue(),
+                            attributeRecord != null
+                                    ? attributeRecord
+                                            .getActionLocation()
+                                            .print(true /*shortFormat*/)
+                                    : "(unknown)",
+                            printPosition(),
+                            getValue());
+
+            higherPriority.addMessage(
+                    report,
+                    attributeRecord != null
+                            ? attributeRecord.getActionLocation().getPosition()
+                            : SourcePosition.UNKNOWN,
+                    MergingReport.Record.Severity.WARNING,
+                    message);
+
+            return true;
+        }
+        return false;
     }
 
     /**

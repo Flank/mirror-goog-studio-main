@@ -18,6 +18,7 @@ package com.android.manifmerger;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -981,6 +982,62 @@ public class ManifestMerger2SmallTest {
                         .getAttributeNS(
                                 SdkConstants.NS_RESOURCES,
                                 SdkConstants.ATTR_TARGET_SANDBOX_VERSION));
+    }
+
+    @Test
+    public void testAutomaticallyHandlingAttributeConflicts() throws Exception {
+        MockLog mockLog = new MockLog();
+        String overlay =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\">\n"
+                        + "        <meta-data\n"
+                        + "            android:name=\"com.google.android.wearable.standalone\"\n"
+                        + "            android:value=\"true\" />\n"
+                        + "    </application>"
+                        + "\n"
+                        + "</manifest>";
+
+        File overlayFile = inputAsFile("testAutomaticallyHandlingAttributeConflicts", overlay);
+        assertTrue(overlayFile.exists());
+
+        String libraryInput =
+                ""
+                        + "<manifest\n"
+                        + "xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "package=\"com.example.app1\">\n"
+                        + "\n"
+                        + "<application android:name=\"TheApp\" >\n"
+                        + "        <meta-data\n"
+                        + "            android:name=\"com.google.android.wearable.standalone\"\n"
+                        + "            android:value=\"false\" />\n"
+                        + "</application>\n"
+                        + "\n"
+                        + "</manifest>";
+        File libFile = inputAsFile("testAutomaticallyHandlingAttributeConflicts", libraryInput);
+
+        try {
+            MergingReport mergingReport =
+                    ManifestMerger2.newMerger(libFile, mockLog, ManifestMerger2.MergeType.LIBRARY)
+                            .withFeatures(
+                                    ManifestMerger2.Invoker.Feature
+                                            .HANDLE_VALUE_CONFLICTS_AUTOMATICALLY)
+                            .addFlavorAndBuildTypeManifest(overlayFile)
+                            .merge();
+            assertNotEquals(MergingReport.Result.ERROR, mergingReport.getResult());
+            Document xmlDocument =
+                    parse(mergingReport.getMergedDocument(MergedManifestKind.MERGED));
+            Element meta =
+                    (Element) xmlDocument.getElementsByTagName(SdkConstants.TAG_META_DATA).item(0);
+            String standalone = meta.getAttributeNS(SdkConstants.ANDROID_URI, "value");
+            assertEquals("true", standalone);
+        } finally {
+            assertTrue(overlayFile.delete());
+            assertTrue(libFile.delete());
+        }
     }
 
     public static void validateFeatureName(
