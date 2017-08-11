@@ -126,7 +126,7 @@ public class ManifestMerger2 {
     @NonNull
     private MergingReport merge() throws MergeFailureException {
         // initiate a new merging report
-        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger);
+        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mLogger, this);
 
         SelectorResolver selectors = new SelectorResolver();
         // load all the libraries xml files up front to have a list of all possible node:selector
@@ -319,6 +319,11 @@ public class ManifestMerger2 {
         }
 
         return mergingReport;
+    }
+
+    /** Returns whether the given feature is enabled for this merger */
+    public boolean hasFeature(@NonNull Invoker.Feature feature) {
+        return mOptionalFeatures.contains(feature);
     }
 
     /**
@@ -768,9 +773,10 @@ public class ManifestMerger2 {
         }
 
         String originalPackageName = xmlDocument.getPackageName();
-        MergingReport.Builder builder = manifestInfo.getType() == XmlDocument.Type.MAIN
-                ? mergingReportBuilder
-                : new MergingReport.Builder(mergingReportBuilder.getLogger());
+        MergingReport.Builder builder =
+                manifestInfo.getType() == XmlDocument.Type.MAIN
+                        ? mergingReportBuilder
+                        : new MergingReport.Builder(mergingReportBuilder.getLogger(), this);
 
         // perform place holder substitution, this is necessary to do so early in case placeholders
         // are used in key attributes.
@@ -841,6 +847,7 @@ public class ManifestMerger2 {
                     "Validation failed, exiting");
             return Optional.absent();
         }
+
         Optional<XmlDocument> result;
         if (xmlDocument.isPresent()) {
             result = xmlDocument.get().merge(
@@ -902,7 +909,8 @@ public class ManifestMerger2 {
             // perform placeholder substitution, this is useful when the library is using
             // a placeholder in a key element, we however do not need to record these
             // substitutions so feed it with a fake merging report.
-            MergingReport.Builder builder = new MergingReport.Builder(mergingReportBuilder.getLogger());
+            MergingReport.Builder builder =
+                    new MergingReport.Builder(mergingReportBuilder.getLogger(), this);
             builder.getActionRecorder().recordAddedNodeAction(libraryDocument.getRootNode(), false);
             performPlaceHolderSubstitution(
                     manifestInfo, libraryDocument, builder, MergeType.LIBRARY);
@@ -1171,7 +1179,18 @@ public class ManifestMerger2 {
             DEBUGGABLE,
 
             /** Set the android:targetSandboxVersion attribute. */
-            TARGET_SANDBOX_VERSION
+            TARGET_SANDBOX_VERSION,
+
+            /**
+             * When there are attribute value conflicts, automatically pick the higher priority
+             * value.
+             *
+             * <p>This is for example used in the IDE when we need to merge a new manifest template
+             * into an existing one and we don't want to abort the merge.
+             *
+             * <p>(This will log a warning.)
+             */
+            HANDLE_VALUE_CONFLICTS_AUTOMATICALLY
         }
 
         /**
