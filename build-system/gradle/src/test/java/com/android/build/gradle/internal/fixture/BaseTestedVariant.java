@@ -339,8 +339,21 @@ public interface BaseTestedVariant extends BaseVariant, TestedVariant {
         }
 
         @Override
-        public void flavorSelection(@NonNull String dimension, @NonNull String name) {
-            variant.flavorSelection(dimension, name);
+        public void missingDimensionStrategy(
+                @NonNull String dimension, @NonNull String requestedValue) {
+            variant.missingDimensionStrategy(dimension, requestedValue);
+        }
+
+        @Override
+        public void missingDimensionStrategy(
+                @NonNull String dimension, @NonNull String... requestedValues) {
+            variant.missingDimensionStrategy(dimension, requestedValues);
+        }
+
+        @Override
+        public void missingDimensionStrategy(
+                @NonNull String dimension, @NonNull List<String> requestedValues) {
+            variant.missingDimensionStrategy(dimension, requestedValues);
         }
 
         @Override

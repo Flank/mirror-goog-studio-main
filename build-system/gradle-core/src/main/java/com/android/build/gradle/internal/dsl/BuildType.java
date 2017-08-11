@@ -28,8 +28,10 @@ import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
 import com.android.builder.model.SyncIssue;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.Serializable;
+import java.util.List;
 import java.util.function.Supplier;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -116,6 +118,33 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         postprocessingOptions = new PostprocessingOptions(project);
     }
 
+    private ImmutableList<String> matchingFallbacks;
+
+    public void setMatchingFallbacks(String... fallbacks) {
+        this.matchingFallbacks = ImmutableList.copyOf(fallbacks);
+    }
+
+    public void setMatchingFallbacks(List<String> fallbacks) {
+        this.matchingFallbacks = ImmutableList.copyOf(fallbacks);
+    }
+
+    public void setMatchingFallbacks(String fallback) {
+        this.matchingFallbacks = ImmutableList.of(fallback);
+    }
+
+    /**
+     * Fall-backs to use during variant-aware dependency resolution in case a dependency does not
+     * have the current build type.
+     *
+     * @return the names of build types to use, in descending priority order
+     */
+    public List<String> getMatchingFallbacks() {
+        if (matchingFallbacks == null) {
+            return ImmutableList.of();
+        }
+        return matchingFallbacks;
+    }
+
     @Override
     @NonNull
     public CoreNdkOptions getNdkConfig() {
@@ -184,6 +213,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         crunchPngs = thatBuildType.isCrunchPngs();
         //noinspection deprecation Must still be copied.
         isCrunchPngsDefault = thatBuildType.isCrunchPngsDefault();
+        matchingFallbacks = ImmutableList.copyOf(thatBuildType.getMatchingFallbacks());
     }
 
     /** Override as DSL objects have no reason to be compared for equality. */

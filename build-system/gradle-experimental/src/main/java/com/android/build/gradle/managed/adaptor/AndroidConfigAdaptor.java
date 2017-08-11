@@ -266,18 +266,6 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
     }
 
 
-    @NonNull
-    @Override
-    public Map<String, Map<String, List<String>>> getFlavorAttrMap() {
-        return ImmutableMap.of();
-    }
-
-    @NonNull
-    @Override
-    public Map<String, List<String>> getBuildTypeAttrMap() {
-        return ImmutableMap.of();
-    }
-
     private void applyProjectSourceSet() {
         for (String name : getSources().keySet()) {
             FunctionalSourceSet source = getSources().get(name);
