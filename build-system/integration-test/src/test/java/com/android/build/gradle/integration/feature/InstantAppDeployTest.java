@@ -24,6 +24,7 @@ import com.android.ddmlib.IDevice;
 import com.android.sdklib.AndroidVersion;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -46,12 +47,14 @@ public class InstantAppDeployTest {
 
     @Test
     @Category(DeviceTests.class)
+    @Ignore("http://b/64600037")
     public void provision() throws Exception {
         sProject.execute("provisionInstantApp");
     }
 
     @Test
     @Category(DeviceTests.class)
+    @Ignore("http://b/64600037")
     public void sideLoadPostO() throws Exception {
         IDevice device = adb.getDevice(AndroidVersion.VersionCodes.O);
         sProject.executor()
@@ -64,6 +67,7 @@ public class InstantAppDeployTest {
 
     @Test
     @Category(DeviceTests.class)
+    @Ignore("http://b/64600037")
     public void sideLoadPreO() throws Exception {
         IDevice device = adb.getDevice(AndroidVersion.VersionCodes.N);
         sProject.executor()
