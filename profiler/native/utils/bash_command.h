@@ -34,7 +34,7 @@ class BashCommandRunner {
   // Returns true if the command runs successfully (exiting with 0).
   // If |output| is not null, it is populated with stdin and stderr from
   // running command.
-  bool Run(const std::string &parameters, std::string *output) const;
+  virtual bool Run(const std::string &parameters, std::string *output) const;
   bool RunAs(const std::string &parameters, const std::string &username,
              std::string *output) const;
   static bool IsRunAsCapable();

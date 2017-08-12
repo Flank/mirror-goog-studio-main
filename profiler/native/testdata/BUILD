@@ -24,3 +24,8 @@ filegroup(
     name = "perfd/network",
     srcs = glob(["perfd/network/**"]),
 )
+
+filegroup(
+    name = "perfd/graphics",
+    srcs = glob(["perfd/graphics/**"]),
+)

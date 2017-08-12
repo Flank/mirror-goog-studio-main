@@ -19,6 +19,7 @@
 #include <sstream>
 
 #include "utils/activity_manager.h"
+#include "utils/bash_command.h"
 #include "utils/device_info.h"
 #include "utils/log.h"
 #include "utils/stopwatch.h"
@@ -56,14 +57,18 @@ void GraphicsCollector::Collect() {
   Log::D("SDK is %d ", sdk);
 
   Stopwatch stopwatch;
+  int64_t start_timestamp_exclusive = INT64_MIN;
+  BashCommandRunner command(GraphicsFrameStatsSampler::GetDumpsysCommand(
+      app_and_activity_name_, sdk));
   while (is_running_) {
     Trace::Begin("GRAPHICS:Collect");
     int64_t start_time_ns = stopwatch.GetElapsed();
 
     std::vector<GraphicsData> data_vector;
     // For each sampler call we will get multiple GraphicsData
-    graphics_frame_stats_sampler_.GetFrameStatsVector(app_and_activity_name_,
-                                                      sdk, data_vector);
+    start_timestamp_exclusive =
+        graphics_frame_stats_sampler_.GetFrameStatsVector(
+            start_timestamp_exclusive, command, &data_vector);
 
     graphics_cache_.SaveGraphicsDataVector(data_vector);
 

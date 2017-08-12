@@ -37,6 +37,9 @@ cc_test(
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
     ],
+    data = [
+        "//tools/base/profiler/native/testdata:perfd/graphics",
+    ],
     linkstatic = 1,
     deps = [
         ":profiler_graphics",

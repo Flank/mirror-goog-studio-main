@@ -19,9 +19,7 @@
 
 namespace profiler {
 
-std::string TestUtils::getCpuTestData(const std::string &path) {
-  return path;
-}
+std::string TestUtils::getCpuTestData(const std::string &path) { return path; }
 
 std::string TestUtils::getUtilsTestData(const std::string &path) {
   return path;
@@ -32,6 +30,10 @@ std::string TestUtils::getNetworkTestData(const std::string &path) {
 }
 
 std::string TestUtils::getMemoryTestData(const std::string &path) {
+  return path;
+}
+
+std::string TestUtils::getGraphicsTestData(const std::string &path) {
   return path;
 }
 

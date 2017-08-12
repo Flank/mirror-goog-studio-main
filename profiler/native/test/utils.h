@@ -38,6 +38,10 @@ class TestUtils {
   // Returns the correct testdata path correspondent to perfd memory package
   // given a relative path.
   static std::string getMemoryTestData(const std::string &path);
+
+  // Returns the correct testdata path correspondent to perfd graphics package
+  // given a relative path.
+  static std::string getGraphicsTestData(const std::string &path);
 };
 
 }  // namespace profiler

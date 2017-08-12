@@ -35,4 +35,8 @@ std::string TestUtils::getMemoryTestData(const std::string &path) {
   return "tools/base/profiler/native/testdata/perfd/memory/" + path;
 }
 
+std::string TestUtils::getGraphicsTestData(const std::string &path) {
+  return "tools/base/profiler/native/testdata/perfd/graphics/" + path;
+}
+
 }  // namespace profiler
