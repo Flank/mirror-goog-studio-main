@@ -62,6 +62,7 @@ public class TasksRunTest {
                         ":generateDebugAssets",
                         ":mergeDebugAssets",
                         ":transformClassesWithDexBuilderForDebug",
+                        ":transformDexArchiveWithExternalLibsDexMergerForDebug",
                         ":transformDexArchiveWithDexMergerForDebug",
                         ":mergeDebugJniLibFolders",
                         ":transformNativeLibsWithMergeJniLibsForDebug",

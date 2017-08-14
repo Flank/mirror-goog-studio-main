@@ -32,7 +32,7 @@ import java.util.concurrent.ForkJoinPool;
  * Helper class to invoke the {@link com.android.builder.dexing.DexArchiveMerger} used to merge dex
  * archives.
  */
-class DexMergerTransformCallable implements Callable<Void> {
+public class DexMergerTransformCallable implements Callable<Void> {
 
     @NonNull private final DexingType dexingType;
     @NonNull private final ProcessOutput processOutput;
@@ -96,5 +96,18 @@ class DexMergerTransformCallable implements Callable<Void> {
 
         merger.mergeDexArchives(dexArchives, dexOutputDir.toPath(), mainDexList, dexingType);
         return null;
+    }
+
+    public interface Factory {
+        DexMergerTransformCallable create(
+                @NonNull DexingType dexingType,
+                @NonNull ProcessOutput processOutput,
+                @NonNull File dexOutputDir,
+                @NonNull Iterable<Path> dexArchives,
+                @Nullable Path mainDexList,
+                @NonNull ForkJoinPool forkJoinPool,
+                @NonNull DexMergerTool dexMerger,
+                int minSdkVersion,
+                boolean isDebuggable);
     }
 }

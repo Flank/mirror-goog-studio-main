@@ -117,7 +117,9 @@ import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.DesugarTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.internal.transforms.DexMergerTransform;
+import com.android.build.gradle.internal.transforms.DexMergerTransformCallable;
 import com.android.build.gradle.internal.transforms.DexTransform;
+import com.android.build.gradle.internal.transforms.ExternalLibsMergerTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.transforms.FixStackFramesTransform;
 import com.android.build.gradle.internal.transforms.JacocoTransform;
@@ -2271,6 +2273,21 @@ public abstract class TaskManager {
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
+
+        if (dexingType != DexingType.LEGACY_MULTIDEX
+                && variantScope.getCodeShrinker() == null
+                && extension.getTransforms().isEmpty()) {
+            ExternalLibsMergerTransform externalLibsMergerTransform =
+                    new ExternalLibsMergerTransform(
+                            dexingType,
+                            variantScope.getDexMerger(),
+                            variantScope.getMinSdkVersion().getFeatureLevel(),
+                            variantScope.getVariantConfiguration().getBuildType().isDebuggable(),
+                            variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
+                            DexMergerTransformCallable::new);
+
+            transformManager.addTransform(tasks, variantScope, externalLibsMergerTransform);
+        }
 
         DexMergerTransform dexTransform =
                 new DexMergerTransform(
