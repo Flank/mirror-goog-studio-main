@@ -477,7 +477,7 @@ public class DexArchiveBuilderTransform extends Transform {
             boolean isIncremental)
             throws Exception {
 
-        logger.verbose("Dexing {}", input.getFile().getAbsolutePath());
+        logger.verbose("Dexing %s", input.getFile().getAbsolutePath());
 
         ImmutableList.Builder<File> dexArchives = ImmutableList.builder();
         for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
