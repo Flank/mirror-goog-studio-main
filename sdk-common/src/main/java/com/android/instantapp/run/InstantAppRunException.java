@@ -56,7 +56,7 @@ public class InstantAppRunException extends Exception {
             case READ_IAPK_FAILED:
                 return "Failure when trying to read bundle.";
             case NO_GOOGLE_ACCOUNT:
-                return "Device is not logged in a Google account.";
+                return "There is no Google account on the target device. Please log in to a Google account and try again.";
             case SHELL_TIMEOUT:
                 return "Shell adb command has timed out.";
             case ADB_FAILURE:

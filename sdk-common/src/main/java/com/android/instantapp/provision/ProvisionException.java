@@ -56,7 +56,7 @@ public class ProvisionException extends Exception {
             case DEVICE_NOT_SUPPORTED:
                 return "The device used is not whitelisted for Instant Apps deployment.";
             case NO_GOOGLE_ACCOUNT:
-                return "Device is not logged in a Google account.";
+                return "There is no Google account on the target device. Please log in to a Google account and try again.";
             case SHELL_TIMEOUT:
                 return "Shell adb command has timed out.";
             case ADB_FAILURE:
