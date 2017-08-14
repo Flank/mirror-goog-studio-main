@@ -20,13 +20,14 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.Iterables;
-import java.io.IOException;
 import java.util.Collection;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -35,20 +36,9 @@ public class ModelTest {
 
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestApp(HelloWorldApp.noBuildFile()).create();
-
-    @Before
-    public void setUp() throws IOException {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                "apply plugin: 'com.android.application'\n"
-                        + "\n"
-                        + "android {\n"
-                        + "    compileSdkVersion "
-                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                        + "\n"
-                        + "}");
-    }
+            GradleTestProject.builder()
+                    .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                    .create();
 
     @Test
     public void unresolvedFixedDependencies() throws Exception {
@@ -83,5 +73,46 @@ public class ModelTest {
         assertThat(issue).hasType(SyncIssue.TYPE_UNRESOLVED_DEPENDENCY);
         assertThat(issue).hasSeverity(SyncIssue.SEVERITY_ERROR);
         assertThat(issue).hasData("foo:bar:+");
+    }
+
+    /** Sanity test that makes sure no unexpected directories end up in the model. */
+    @Test
+    public void generatedSources() throws Exception {
+        AndroidProject model = project.model().ignoreSyncIssues().getSingle().getOnlyModel();
+
+        AndroidArtifact debugArtifact = ModelHelper.getDebugArtifact(model);
+
+        assertThat(debugArtifact.getGeneratedSourceFolders())
+                .containsExactly(
+                        project.file("build/generated/source/aidl/debug"),
+                        project.file("build/generated/source/apt/debug"),
+                        project.file("build/generated/source/buildConfig/debug"),
+                        project.file("build/generated/source/r/debug"),
+                        project.file("build/generated/source/rs/debug"));
+
+        assertThat(debugArtifact.getGeneratedResourceFolders())
+                .containsExactly(
+                        project.file("build/generated/res/resValues/debug"),
+                        project.file("build/generated/res/rs/debug"));
+
+        AndroidArtifact androidTestArtifact = ModelHelper.getAndroidTestArtifact(model);
+
+        assertThat(androidTestArtifact.getGeneratedSourceFolders())
+                .containsExactly(
+                        project.file("build/generated/source/aidl/androidTest/debug"),
+                        project.file("build/generated/source/apt/androidTest/debug"),
+                        project.file("build/generated/source/buildConfig/androidTest/debug"),
+                        project.file("build/generated/source/r/androidTest/debug"),
+                        project.file("build/generated/source/rs/androidTest/debug"));
+
+        assertThat(androidTestArtifact.getGeneratedResourceFolders())
+                .containsExactly(
+                        project.file("build/generated/res/resValues/androidTest/debug"),
+                        project.file("build/generated/res/rs/androidTest/debug"));
+
+        JavaArtifact unitTestArtifact = ModelHelper.getUnitTestArtifact(model);
+
+        assertThat(unitTestArtifact.getGeneratedSourceFolders())
+                .containsExactly(project.file("build/generated/source/apt/test/debug"));
     }
 }

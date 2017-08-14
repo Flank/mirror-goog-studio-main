@@ -198,8 +198,17 @@ public class ModelHelper {
     }
 
     @NonNull
-    public static Collection<JavaArtifact> getExtraJavaArtifacts(@NonNull AndroidProject project) {
-        return getDebugVariant(project).getExtraJavaArtifacts();
+    public static AndroidArtifact getAndroidTestArtifact(@NonNull AndroidProject project) {
+        return getAndroidArtifact(
+                getDebugVariant(project).getExtraAndroidArtifacts(),
+                AndroidProject.ARTIFACT_ANDROID_TEST);
+    }
+
+    @NonNull
+    public static JavaArtifact getUnitTestArtifact(@NonNull AndroidProject project) {
+        return getJavaArtifact(
+                getDebugVariant(project).getExtraJavaArtifacts(),
+                AndroidProject.ARTIFACT_UNIT_TEST);
     }
 
     /**

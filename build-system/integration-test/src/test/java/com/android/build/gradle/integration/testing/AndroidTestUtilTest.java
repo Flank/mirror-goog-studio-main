@@ -54,9 +54,7 @@ public class AndroidTestUtilTest {
 
         AndroidProject model = project.model().getSingle().getOnlyModel();
         Collection<File> additionalRuntimeApks =
-                Iterables.getOnlyElement(
-                                ModelHelper.getDebugVariant(model).getExtraAndroidArtifacts())
-                        .getAdditionalRuntimeApks();
+                ModelHelper.getAndroidTestArtifact(model).getAdditionalRuntimeApks();
 
         additionalRuntimeApks.forEach(apk -> MoreTruth.assertThat(apk).isFile());
         assertThat(Iterables.transform(additionalRuntimeApks, File::getName))

@@ -24,7 +24,6 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.TestOptions.Execution;
-import com.google.common.collect.Iterables;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -44,10 +43,7 @@ public class TestOptionsExecutionTest {
 
         AndroidProject model = project.model().getSingle().getOnlyModel();
         Execution execution =
-                Iterables.getOnlyElement(
-                                ModelHelper.getDebugVariant(model).getExtraAndroidArtifacts())
-                        .getTestOptions()
-                        .getExecution();
+                ModelHelper.getAndroidTestArtifact(model).getTestOptions().getExecution();
 
         assertEquals(execution, Execution.ANDROID_TEST_ORCHESTRATOR);
     }
@@ -57,10 +53,7 @@ public class TestOptionsExecutionTest {
 
         AndroidProject model = project.model().getSingle().getOnlyModel();
         Execution executionEnum =
-                Iterables.getOnlyElement(
-                                ModelHelper.getDebugVariant(model).getExtraAndroidArtifacts())
-                        .getTestOptions()
-                        .getExecution();
+                ModelHelper.getAndroidTestArtifact(model).getTestOptions().getExecution();
 
         assertEquals(executionEnum, Execution.HOST);
     }

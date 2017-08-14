@@ -37,7 +37,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.util.Arrays;
@@ -208,8 +207,7 @@ public class AnnotationProcessorTest {
         // https://issuetracker.google.com/37121918.
         File testAptOutputFolder =
                 project.getSubproject(":app").file("build/generated/source/apt/test/debug");
-        JavaArtifact testArtifact =
-                Iterables.getOnlyElement(ModelHelper.getExtraJavaArtifacts(model));
+        JavaArtifact testArtifact = ModelHelper.getUnitTestArtifact(model);
         assertThat(testArtifact.getGeneratedSourceFolders()).contains(testAptOutputFolder);
 
         // Ensure that test projects also have their generated sources files sent to the IDE. This
@@ -217,10 +215,7 @@ public class AnnotationProcessorTest {
         // https://issuetracker.google.com/37121918.
         File androidTestAptOutputFolder =
                 project.getSubproject(":app").file("build/generated/source/apt/androidTest/debug");
-        AndroidArtifact androidTest =
-                ModelHelper.getAndroidArtifact(
-                        ModelHelper.getDebugVariant(model).getExtraAndroidArtifacts(),
-                        AndroidProject.ARTIFACT_ANDROID_TEST);
+        AndroidArtifact androidTest = ModelHelper.getAndroidTestArtifact(model);
         assertThat(androidTest.getGeneratedSourceFolders()).contains(androidTestAptOutputFolder);
 
         // check incrementality.
