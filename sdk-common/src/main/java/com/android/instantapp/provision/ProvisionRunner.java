@@ -308,6 +308,9 @@ public class ProvisionRunner {
 
     private void checkInGooglePlay(@NonNull IDevice device) throws ProvisionException {
         executeShellCommand(device, "am broadcast -a android.server.checkin.CHECKIN", false);
+        executeShellCommand(device,
+                "am broadcast -a com.google.android.finsky.action.CONTENT_FILTERS_CHANGED",
+                false);
     }
 
     private void overrideGServices(
@@ -332,6 +335,9 @@ public class ProvisionRunner {
             }
             currentGService++;
         }
+        executeShellCommand(device,
+                "am broadcast -a com.google.android.finsky.action.CONTENT_FILTERS_CHANGED",
+                false);
         executeShellCommand(device, "am force-stop com.google.android.gms", false);
     }
 
