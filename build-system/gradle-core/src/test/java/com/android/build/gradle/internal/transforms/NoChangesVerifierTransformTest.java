@@ -18,11 +18,8 @@ package com.android.build.gradle.internal.transforms;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.when;
 
-import com.android.annotations.NonNull;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
@@ -30,9 +27,8 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -45,8 +41,6 @@ import org.mockito.junit.MockitoRule;
 public class NoChangesVerifierTransformTest {
     @Rule public MockitoRule rule = MockitoJUnit.rule().silent();
 
-    @Mock
-    TransformInvocation input;
     @Mock InstantRunBuildContext buildContext;
 
     @Test
@@ -59,9 +53,10 @@ public class NoChangesVerifierTransformTest {
                 InstantRunVerifierStatus.DEPENDENCY_CHANGED);
 
         assertThat(checker.isIncremental()).isTrue();
-        when(input.isIncremental()).thenReturn(Boolean.FALSE);
+        TransformInvocation transformInvocation =
+                TransformTestHelper.invocationBuilder().setIncremental(false).build();
 
-        checker.transform(input);
+        checker.transform(transformInvocation);
 
         // make sure the verifier is not set by the constructor.
         ArgumentCaptor<InstantRunVerifierStatus> verifierStatusCaptor =
@@ -82,30 +77,19 @@ public class NoChangesVerifierTransformTest {
                 InstantRunVerifierStatus.DEPENDENCY_CHANGED);
 
         assertThat(checker.isIncremental()).isTrue();
-        when(input.isIncremental()).thenReturn(Boolean.TRUE);
-        JarInput jarInput = Mockito.mock(JarInput.class);
-        when(jarInput.getStatus()).thenReturn(Status.ADDED);
-        when(jarInput.getContentTypes()).thenReturn(TransformManager.CONTENT_CLASS);
 
-        ImmutableList<TransformInput> transformInputs =
-                ImmutableList.of(
-                        new TransformInput() {
-                            @NonNull
-                            @Override
-                            public Collection<JarInput> getJarInputs() {
-                                return ImmutableList.of(jarInput);
-                            }
+        TransformInput jarInput =
+                TransformTestHelper.singleJarBuilder(new File(""))
+                        .setStatus(Status.ADDED)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
+        TransformInvocation transformInvocation =
+                TransformTestHelper.invocationBuilder()
+                        .setIncremental(true)
+                        .addReferenceInput(jarInput)
+                        .build();
 
-                            @NonNull
-                            @Override
-                            public Collection<DirectoryInput> getDirectoryInputs() {
-                                return ImmutableList.of();
-                            }
-                        });
-
-        when(input.getReferencedInputs()).thenReturn(transformInputs);
-
-        checker.transform(input);
+        checker.transform(transformInvocation);
 
         // make sure the verifier is not set by the constructor.
         ArgumentCaptor<InstantRunVerifierStatus> verifierStatusCaptor =
@@ -128,30 +112,20 @@ public class NoChangesVerifierTransformTest {
                         InstantRunVerifierStatus.DEPENDENCY_CHANGED);
 
         assertThat(checker.isIncremental()).isTrue();
-        when(input.isIncremental()).thenReturn(Boolean.TRUE);
-        JarInput jarInput = Mockito.mock(JarInput.class);
-        when(jarInput.getStatus()).thenReturn(Status.ADDED);
-        when(jarInput.getContentTypes()).thenReturn(TransformManager.CONTENT_RESOURCES);
 
-        ImmutableList<TransformInput> transformInputs =
-                ImmutableList.of(
-                        new TransformInput() {
-                            @NonNull
-                            @Override
-                            public Collection<JarInput> getJarInputs() {
-                                return ImmutableList.of(jarInput);
-                            }
+        TransformInput jarInput =
+                TransformTestHelper.singleJarBuilder(new File(""))
+                        .setContentTypes(QualifiedContent.DefaultContentType.RESOURCES)
+                        .setStatus(Status.ADDED)
+                        .build();
+        TransformInvocation transformInvocation =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(jarInput)
+                        .addReferenceInput(jarInput)
+                        .setIncremental(true)
+                        .build();
 
-                            @NonNull
-                            @Override
-                            public Collection<DirectoryInput> getDirectoryInputs() {
-                                return ImmutableList.of();
-                            }
-                        });
-
-        when(input.getReferencedInputs()).thenReturn(transformInputs);
-
-        checker.transform(input);
+        checker.transform(transformInvocation);
 
         // make sure the verifier is not set by the constructor.
         ArgumentCaptor<InstantRunVerifierStatus> verifierStatusCaptor =

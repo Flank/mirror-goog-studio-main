@@ -24,9 +24,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Context;
-import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
-import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
@@ -44,8 +42,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.jar.JarOutputStream;
@@ -198,50 +194,11 @@ public class ExtractJarsTransformTest {
         return asJarInput(jarFile.toFile(), status);
     }
     private static TransformInput asJarInput(@NonNull File jarFile, @NonNull Status status) {
-        return new TransformInput() {
-            @NonNull
-            @Override
-            public Collection<JarInput> getJarInputs() {
-                return ImmutableList.of(
-                        new JarInput() {
-                            @NonNull
-                            @Override
-                            public Status getStatus() {
-                                return status;
-                            }
-
-                            @NonNull
-                            @Override
-                            public String getName() {
-                                return jarFile.getName();
-                            }
-
-                            @NonNull
-                            @Override
-                            public File getFile() {
-                                return jarFile;
-                            }
-
-                            @NonNull
-                            @Override
-                            public Set<ContentType> getContentTypes() {
-                                return ImmutableSet.of(DefaultContentType.CLASSES);
-                            }
-
-                            @NonNull
-                            @Override
-                            public Set<Scope> getScopes() {
-                                return ImmutableSet.of(Scope.SUB_PROJECTS);
-                            }
-                        });
-            }
-
-            @NonNull
-            @Override
-            public Collection<DirectoryInput> getDirectoryInputs() {
-                return Collections.emptyList();
-            }
-        };
+        return TransformTestHelper.singleJarBuilder(jarFile)
+                .setScopes(QualifiedContent.Scope.SUB_PROJECTS)
+                .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                .setStatus(status)
+                .build();
     }
 
     static class TransformOutputProviderImpl implements TransformOutputProvider {

@@ -23,11 +23,8 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import com.android.annotations.NonNull;
 import com.android.build.api.transform.Context;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.JarInput;
-import com.android.build.api.transform.Status;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformOutputProvider;
@@ -45,15 +42,11 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 import org.junit.After;
@@ -229,53 +222,11 @@ public class InstantRunDexTest {
         };
     }
 
-    private static TransformInput getTransformInput(
-            final File directoryInput) {
-        return new TransformInput() {
-            @NonNull
-            @Override
-            public Collection<JarInput> getJarInputs() {
-                return ImmutableList.of();
-            }
-
-            @NonNull
-            @Override
-            public Collection<DirectoryInput> getDirectoryInputs() {
-                return ImmutableList.of(
-                        new DirectoryInput() {
-                            @NonNull
-                            @Override
-                            public Map<File, Status> getChangedFiles() {
-                                return ImmutableMap.of();
-                            }
-
-                            @NonNull
-                            @Override
-                            public String getName() {
-                                return "test-input";
-                            }
-
-                            @NonNull
-                            @Override
-                            public File getFile() {
-                                return directoryInput;
-                            }
-
-                            @NonNull
-                            @Override
-                            public Set<ContentType> getContentTypes() {
-                                return ImmutableSet.of(ExtendedContentType.CLASSES_ENHANCED);
-                            }
-
-                            @NonNull
-                            @Override
-                            public Set<Scope> getScopes() {
-                                return ImmutableSet.of(Scope.PROJECT);
-                            }
-                        }
-
-                );
-            }
-        };
+    private static TransformInput getTransformInput(final File dirInput) {
+        return TransformTestHelper.directoryBuilder(dirInput)
+                .setContentType(ExtendedContentType.CLASSES_ENHANCED)
+                .setScope(QualifiedContent.Scope.PROJECT)
+                .setName("test-input")
+                .build();
     }
 }

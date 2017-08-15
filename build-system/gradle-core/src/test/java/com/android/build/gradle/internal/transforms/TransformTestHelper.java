@@ -93,6 +93,12 @@ class TransformTestHelper {
             return this;
         }
 
+        public InvocationBuilder setInputs(@NonNull TransformInput... inputs) {
+            this.inputs.clear();
+            this.inputs.addAll(Arrays.asList(inputs));
+            return this;
+        }
+
         public InvocationBuilder addInput(@NonNull TransformInput input) {
             inputs.add(input);
             return this;
@@ -321,6 +327,8 @@ class TransformTestHelper {
         private final File directory;
         private ImmutableSet.Builder<? super Scope> scopes;
         private ImmutableMap.Builder<File, Status> changedFiles;
+        private ContentType contentType = ExtendedContentType.DEX;
+        private String name = null;
 
         DirectoryInputBuilder(File directory) {
             this.directory = directory;
@@ -333,14 +341,30 @@ class TransformTestHelper {
                     ImmutableList.of(),
                     ImmutableList.of(
                             new FakeDirectoryInput(
-                                    directory.getName(),
+                                    name == null ? directory.getName() : name,
                                     scopes.build(),
                                     directory,
-                                    changedFiles.build())));
+                                    changedFiles.build(),
+                                    contentType)));
         }
 
         public DirectoryInputBuilder putChangedFiles(Map<File, Status> changedFiles) {
             this.changedFiles.putAll(changedFiles);
+            return this;
+        }
+
+        public DirectoryInputBuilder setScope(@NonNull Scope scope) {
+            this.scopes.add(scope);
+            return this;
+        }
+
+        public DirectoryInputBuilder setContentType(@NonNull ContentType contentType) {
+            this.contentType = contentType;
+            return this;
+        }
+
+        public DirectoryInputBuilder setName(@NonNull String name) {
+            this.name = name;
             return this;
         }
     }
@@ -409,16 +433,19 @@ class TransformTestHelper {
         @NonNull private final Set<? super Scope> scopes;
         @NonNull private final File file;
         @NonNull private final Map<File, Status> changedFiles;
+        @NonNull private final ContentType contentType;
 
         protected FakeDirectoryInput(
                 @NonNull String name,
                 @NonNull Set<? super Scope> scopes,
-                File rootFolder,
-                Map<File, Status> changedFiles) {
+                @NonNull File rootFolder,
+                @NonNull Map<File, Status> changedFiles,
+                @NonNull ContentType contentType) {
             this.name = name;
             this.scopes = scopes;
             this.file = rootFolder;
             this.changedFiles = changedFiles;
+            this.contentType = contentType;
         }
 
         @NonNull
@@ -430,7 +457,7 @@ class TransformTestHelper {
         @NonNull
         @Override
         public Set<ContentType> getContentTypes() {
-            return ImmutableSet.of(ExtendedContentType.DEX);
+            return ImmutableSet.of(contentType);
         }
 
         @NonNull

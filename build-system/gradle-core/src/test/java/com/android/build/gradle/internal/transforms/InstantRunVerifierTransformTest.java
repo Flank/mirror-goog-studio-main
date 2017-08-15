@@ -22,8 +22,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Context;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
@@ -39,14 +38,11 @@ import com.android.builder.model.OptionalCompilationStep;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -104,38 +100,18 @@ public class InstantRunVerifierTransformTest {
         Files.createParentDirs(inputClass);
         assertTrue(inputClass.createNewFile());
 
-        ImmutableList<TransformInput> transformInputs =
-                ImmutableList.of(new TransformInput() {
-            @NonNull
-            @Override
-            public Collection<JarInput> getJarInputs() {
-                return ImmutableList.of();
-            }
+        TransformInput transformInput =
+                TransformTestHelper.directoryBuilder(tmpDir)
+                        .setContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .putChangedFiles(ImmutableMap.of(inputClass, Status.ADDED))
+                        .build();
 
-            @NonNull
-            @Override
-            public Collection<DirectoryInput> getDirectoryInputs() {
-                return ImmutableList.of(new DirectoryInputForTests() {
-
-                    @NonNull
-                    @Override
-                    public Map<File, Status> getChangedFiles() {
-                        return ImmutableMap.of(inputClass, Status.ADDED);
-                    }
-
-                    @NonNull
-                    @Override
-                    public File getFile() {
-                        return tmpDir;
-                    }
-                });
-            }
-        });
-
-        transform.transform(new TransformInvocationBuilder(context)
-            .addOutputProvider(transformOutputProvider)
-            .addReferencedInputs(transformInputs)
-            .build());
+        transform.transform(
+                new TransformInvocationBuilder(context)
+                        .addOutputProvider(transformOutputProvider)
+                        .addReferencedInputs(ImmutableList.of(transformInput))
+                        .build());
 
         // clean up.
         FileUtils.deletePath(tmpDir);
@@ -164,41 +140,23 @@ public class InstantRunVerifierTransformTest {
         Files.createParentDirs(lastIterationChangedFile);
         assertTrue(lastIterationChangedFile.createNewFile());
 
-        ImmutableList<TransformInput> transformInputs =
-                ImmutableList.of(new TransformInput() {
-                    @NonNull
-                    @Override
-                    public Collection<JarInput> getJarInputs() {
-                        return ImmutableList.of();
-                    }
-
-                    @NonNull
-                    @Override
-                    public Collection<DirectoryInput> getDirectoryInputs() {
-                        return ImmutableList.of(new DirectoryInputForTests() {
-
-                            @NonNull
-                            @Override
-                            public Map<File, Status> getChangedFiles() {
-                                return ImmutableMap.<File, Status>builder()
+        TransformInput transformInput =
+                TransformTestHelper.directoryBuilder(tmpDir)
+                        .setContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .putChangedFiles(
+                                ImmutableMap.<File, Status>builder()
                                         .put(addedFile, Status.ADDED)
                                         .put(changedFile, Status.CHANGED)
-                                        .build();                            }
+                                        .build())
+                        .build();
 
-                            @NonNull
-                            @Override
-                            public File getFile() {
-                                return tmpDir;
-                            }
-                        });
-                    }
-                });
-
-        transform.transform(new TransformInvocationBuilder(context)
-                .addOutputProvider(transformOutputProvider)
-                .addReferencedInputs(transformInputs)
-                .setIncrementalMode(true)
-                .build());
+        transform.transform(
+                new TransformInvocationBuilder(context)
+                        .addOutputProvider(transformOutputProvider)
+                        .addReferencedInputs(ImmutableList.of(transformInput))
+                        .setIncrementalMode(true)
+                        .build());
 
         // clean up.
         FileUtils.deletePath(tmpDir);
@@ -230,41 +188,23 @@ public class InstantRunVerifierTransformTest {
 
         final File deletedFile = new File(tmpDir, "com/foo/bar/DeletedFile.class");
 
-        ImmutableList<TransformInput> transformInputs =
-                ImmutableList.of(new TransformInput() {
-                    @NonNull
-                    @Override
-                    public Collection<JarInput> getJarInputs() {
-                        return ImmutableList.of();
-                    }
-
-                    @NonNull
-                    @Override
-                    public Collection<DirectoryInput> getDirectoryInputs() {
-                        return ImmutableList.of(new DirectoryInputForTests() {
-
-                            @NonNull
-                            @Override
-                            public Map<File, Status> getChangedFiles() {
-                                return ImmutableMap.<File, Status>builder()
+        TransformInput transformInput =
+                TransformTestHelper.directoryBuilder(tmpDir)
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .setContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .putChangedFiles(
+                                ImmutableMap.<File, Status>builder()
                                         .put(changedFile, Status.CHANGED)
                                         .put(deletedFile, Status.REMOVED)
-                                        .build();                            }
+                                        .build())
+                        .build();
 
-                            @NonNull
-                            @Override
-                            public File getFile() {
-                                return tmpDir;
-                            }
-                        });
-                    }
-                });
-
-        transform.transform(new TransformInvocationBuilder(context)
-                .addOutputProvider(transformOutputProvider)
-                .addReferencedInputs(transformInputs)
-                .setIncrementalMode(true)
-                .build());
+        transform.transform(
+                new TransformInvocationBuilder(context)
+                        .addOutputProvider(transformOutputProvider)
+                        .addReferencedInputs(ImmutableList.of(transformInput))
+                        .setIncrementalMode(true)
+                        .build());
 
         // clean up.
         FileUtils.deletePath(tmpDir);
@@ -293,42 +233,23 @@ public class InstantRunVerifierTransformTest {
             assertTrue(files[i].createNewFile());
         }
 
-        ImmutableList<TransformInput> transformInputs =
-                ImmutableList.of(new TransformInput() {
-                    @NonNull
-                    @Override
-                    public Collection<JarInput> getJarInputs() {
-                        return ImmutableList.of();
-                    }
+        ImmutableMap.Builder<File, Status> changesBuilder = ImmutableMap.builder();
+        for (int i = 0; i < 5; i++) {
+            changesBuilder.put(files[i], Status.ADDED);
+        }
+        TransformInput transformInput =
+                TransformTestHelper.directoryBuilder(tmpDir)
+                        .setContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .putChangedFiles(changesBuilder.build())
+                        .build();
 
-                    @NonNull
-                    @Override
-                    public Collection<DirectoryInput> getDirectoryInputs() {
-                        return ImmutableList.of(new DirectoryInputForTests() {
-
-                            @NonNull
-                            @Override
-                            public Map<File, Status> getChangedFiles() {
-                                ImmutableMap.Builder<File, Status> builder = ImmutableMap.builder();
-                                for (int i=0; i<5; i++) {
-                                    builder.put(files[i], Status.ADDED);
-                                }
-                                return builder.build();                            }
-
-                            @NonNull
-                            @Override
-                            public File getFile() {
-                                return tmpDir;
-                            }
-                        });
-                    }
-                });
-
-        transform.transform(new TransformInvocationBuilder(context)
-                .addOutputProvider(transformOutputProvider)
-                .addReferencedInputs(transformInputs)
-                .setIncrementalMode(true)
-                .build());
+        transform.transform(
+                new TransformInvocationBuilder(context)
+                        .addOutputProvider(transformOutputProvider)
+                        .addReferencedInputs(ImmutableList.of(transformInput))
+                        .setIncrementalMode(true)
+                        .build());
 
         // clean up.
         FileUtils.deletePath(tmpDir);
@@ -359,42 +280,23 @@ public class InstantRunVerifierTransformTest {
             assertTrue(lastIterationFiles[i].createNewFile());
         }
 
-        ImmutableList<TransformInput> transformInputs =
-                ImmutableList.of(new TransformInput() {
-                    @NonNull
-                    @Override
-                    public Collection<JarInput> getJarInputs() {
-                        return ImmutableList.of();
-                    }
+        ImmutableMap.Builder<File, Status> changesBuilder = ImmutableMap.builder();
+        for (int i = 0; i < 5; i++) {
+            changesBuilder.put(files[i], Status.CHANGED);
+        }
+        TransformInput transformInput =
+                TransformTestHelper.directoryBuilder(tmpDir)
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .setContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .putChangedFiles(changesBuilder.build())
+                        .build();
 
-                    @NonNull
-                    @Override
-                    public Collection<DirectoryInput> getDirectoryInputs() {
-                        return ImmutableList.of(new DirectoryInputForTests() {
-
-                            @NonNull
-                            @Override
-                            public Map<File, Status> getChangedFiles() {
-                                ImmutableMap.Builder<File, Status> builder = ImmutableMap.builder();
-                                for (int i=0; i<5; i++) {
-                                    builder.put(files[i], Status.CHANGED);
-                                }
-                                return builder.build();                            }
-
-                            @NonNull
-                            @Override
-                            public File getFile() {
-                                return tmpDir;
-                            }
-                        });
-                    }
-                });
-
-        transform.transform(new TransformInvocationBuilder(context)
-                .addOutputProvider(transformOutputProvider)
-                .addReferencedInputs(transformInputs)
-                .setIncrementalMode(true)
-                .build());
+        transform.transform(
+                new TransformInvocationBuilder(context)
+                        .addOutputProvider(transformOutputProvider)
+                        .addReferencedInputs(ImmutableList.of(transformInput))
+                        .setIncrementalMode(true)
+                        .build());
 
         // clean up.
         FileUtils.deletePath(tmpDir);
@@ -420,39 +322,20 @@ public class InstantRunVerifierTransformTest {
         final File inputDir = temporaryFolder.newFolder();
         final File inputFile = new File(inputDir, "com/foo/bar/InputFile.class");
 
-        ImmutableList<TransformInput> transformInputs =
-                ImmutableList.<TransformInput>of(new TransformInput() {
-                    @NonNull
-                    @Override
-                    public Collection<JarInput> getJarInputs() {
-                        return ImmutableList.of();
-                    }
+        TransformInput transformInput =
+                TransformTestHelper.directoryBuilder(inputDir)
+                        .setScope(QualifiedContent.Scope.PROJECT)
+                        .setContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .putChangedFiles(ImmutableMap.of(inputFile, Status.ADDED))
+                        .build();
 
-                    @NonNull
-                    @Override
-                    public Collection<DirectoryInput> getDirectoryInputs() {
-                        return ImmutableList.<DirectoryInput>of(new DirectoryInputForTests() {
-
-                            @NonNull
-                            @Override
-                            public Map<File, Status> getChangedFiles() {
-                                return ImmutableMap.of(inputFile, Status.ADDED);
-                            }
-
-                            @NonNull
-                            @Override
-                            public File getFile() {
-                                return inputDir;
-                            }
-                        });
-                    }
-                });
-
-        getTransform().transform(new TransformInvocationBuilder(context)
-                .addOutputProvider(transformOutputProvider)
-                .addReferencedInputs(transformInputs)
-                .setIncrementalMode(true)
-                .build());
+        getTransform()
+                .transform(
+                        new TransformInvocationBuilder(context)
+                                .addOutputProvider(transformOutputProvider)
+                                .addReferencedInputs(ImmutableList.of(transformInput))
+                                .setIncrementalMode(true)
+                                .build());
 
         // check the verifier status is not reset.
         assertThat(buildContext.getVerifierResult()).isEqualTo(
@@ -482,26 +365,5 @@ public class InstantRunVerifierTransformTest {
                 recordedCopies.put(inputFile, outputFile);
             }
         };
-    }
-
-    private abstract static class DirectoryInputForTests implements DirectoryInput {
-
-        @NonNull
-        @Override
-        public String getName() {
-            return "test";
-        }
-
-        @NonNull
-        @Override
-        public Set<ContentType> getContentTypes() {
-            return ImmutableSet.of(DefaultContentType.CLASSES);
-        }
-
-        @NonNull
-        @Override
-        public Set<Scope> getScopes() {
-            return ImmutableSet.of(Scope.PROJECT);
-        }
     }
 }

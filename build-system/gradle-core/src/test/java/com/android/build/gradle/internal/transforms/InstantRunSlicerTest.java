@@ -26,9 +26,7 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Context;
-import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
-import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
@@ -42,13 +40,11 @@ import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -534,32 +530,11 @@ public class InstantRunSlicerTest {
     }
 
     private static TransformInput getInput(final File inputDir, final Map<File, Status> changedFiles) {
-        return new TransformInput() {
-            @NonNull
-            @Override
-            public Collection<JarInput> getJarInputs() {
-                return ImmutableList.of();
-            }
-
-            @NonNull
-            @Override
-            public Collection<DirectoryInput> getDirectoryInputs() {
-                return ImmutableList.of(
-                        new DirectoryInputForTests() {
-                            @NonNull
-                            @Override
-                            public File getFile() {
-                                return inputDir;
-                            }
-
-                            @NonNull
-                            @Override
-                            public Map<File, Status> getChangedFiles() {
-                                return changedFiles;
-                            }
-                        });
-            }
-        };
+        return TransformTestHelper.directoryBuilder(inputDir)
+                .setContentType(QualifiedContent.DefaultContentType.CLASSES)
+                .setScope(QualifiedContent.Scope.PROJECT)
+                .putChangedFiles(changedFiles)
+                .build();
     }
 
     private static TransformOutputProvider getOutputProvider(final File outputDir, final File jarOutput) {
@@ -582,27 +557,6 @@ public class InstantRunSlicerTest {
                 return jarOutput;
             }
         };
-    }
-
-    private abstract static class DirectoryInputForTests implements DirectoryInput {
-
-        @NonNull
-        @Override
-        public String getName() {
-            return "test";
-        }
-
-        @NonNull
-        @Override
-        public Set<ContentType> getContentTypes() {
-            return ImmutableSet.of(DefaultContentType.CLASSES);
-        }
-
-        @NonNull
-        @Override
-        public Set<Scope> getScopes() {
-            return ImmutableSet.of(Scope.PROJECT);
-        }
     }
 
     private static File createFile(File directory, String name) throws IOException {

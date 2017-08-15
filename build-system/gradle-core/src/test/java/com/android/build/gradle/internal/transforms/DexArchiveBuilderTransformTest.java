@@ -24,8 +24,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Context;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
@@ -48,8 +46,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
@@ -120,15 +116,22 @@ public class DexArchiveBuilderTransformTest {
 
     @Test
     public void testInitialBuild() throws Exception {
-        TransformInput input =
-                getInput(
-                        getDirInput(
-                                tmpDir.getRoot().toPath().resolve("dir_input"),
-                                ImmutableList.of(PACKAGE + "/A")),
-                        getJarInput(
-                                tmpDir.getRoot().toPath().resolve("input.jar"),
-                                ImmutableList.of(PACKAGE + "/B")));
-        getTransform(null).transform(getInvocation(ImmutableList.of(input), outputProvider));
+        TransformInput dirInput =
+                getDirInput(
+                        tmpDir.getRoot().toPath().resolve("dir_input"),
+                        ImmutableList.of(PACKAGE + "/A"));
+        TransformInput jarInput =
+                getJarInput(
+                        tmpDir.getRoot().toPath().resolve("input.jar"),
+                        ImmutableList.of(PACKAGE + "/B"));
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setTransformOutputProvider(outputProvider)
+                        .setInputs(ImmutableSet.of(dirInput, jarInput))
+                        .setIncremental(true)
+                        .build();
+        getTransform(null).transform(invocation);
 
         assertThat(FileUtils.find(out.toFile(), Pattern.compile(".*\\.dex"))).hasSize(1);
         List<File> jarDexArchives = FileUtils.find(out.toFile(), Pattern.compile(".*\\.jar"));
@@ -140,16 +143,23 @@ public class DexArchiveBuilderTransformTest {
         File cacheDir = FileUtils.join(tmpDir.getRoot(), "cache");
         FileCache userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
 
-        TransformInput input =
-                getInput(
-                        getDirInput(
-                                tmpDir.getRoot().toPath().resolve("dir_input"),
-                                ImmutableList.of(PACKAGE + "/A")),
-                        getJarInput(
-                                tmpDir.getRoot().toPath().resolve("input.jar"),
-                                ImmutableList.of(PACKAGE + "/B")));
+        TransformInput dirInput =
+                getDirInput(
+                        tmpDir.getRoot().toPath().resolve("dir_input"),
+                        ImmutableList.of(PACKAGE + "/A"));
+        TransformInput jarInput =
+                getJarInput(
+                        tmpDir.getRoot().toPath().resolve("input.jar"),
+                        ImmutableList.of(PACKAGE + "/B"));
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setInputs(ImmutableSet.of(dirInput, jarInput))
+                        .setTransformOutputProvider(outputProvider)
+                        .setIncremental(true)
+                        .build();
         DexArchiveBuilderTransform transform = getTransform(userCache);
-        transform.transform(getInvocation(ImmutableList.of(input), outputProvider));
+        transform.transform(invocation);
 
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1);
     }
@@ -160,15 +170,17 @@ public class DexArchiveBuilderTransformTest {
         FileCache cache = FileCache.getInstanceWithSingleProcessLocking(cacheDir);
 
         Path inputJar = tmpDir.getRoot().toPath().resolve("input.jar");
-        TestInputsGenerator.jarWithEmptyClasses(inputJar, ImmutableList.of(PACKAGE + "/A"));
-        SimpleJarInput jarInput =
-                new SimpleJarInput.Builder(inputJar.toFile())
-                        .setScopes(ImmutableSet.of(QualifiedContent.Scope.EXTERNAL_LIBRARIES))
-                        .create();
-        TransformInput input = new SimpleJarTransformInput(jarInput);
+        TransformInput input = getJarInput(inputJar, ImmutableList.of(PACKAGE + "/A"));
 
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setInputs(input)
+                        .setTransformOutputProvider(outputProvider)
+                        .setIncremental(true)
+                        .build();
         DexArchiveBuilderTransform transform = getTransform(cache);
-        transform.transform(getInvocation(ImmutableList.of(input), outputProvider));
+        transform.transform(invocation);
 
         assertThat(cacheDir.listFiles(File::isDirectory)).hasLength(1);
     }
@@ -177,66 +189,84 @@ public class DexArchiveBuilderTransformTest {
     public void testEntryRemovedFromTheArchive() throws Exception {
         Path inputDir = tmpDir.getRoot().toPath().resolve("dir_input");
         Path inputJar = tmpDir.getRoot().toPath().resolve("input.jar");
-        TransformInput input =
-                getInput(
-                        getDirInput(inputDir, ImmutableList.of(PACKAGE + "/A", PACKAGE + "/B")),
-                        getJarInput(inputJar, ImmutableList.of(PACKAGE + "/C")));
-        getTransform(null).transform(getInvocation(ImmutableList.of(input), outputProvider));
+
+        TransformInput dirTransformInput =
+                getDirInput(inputDir, ImmutableList.of(PACKAGE + "/A", PACKAGE + "/B"));
+        TransformInput jarTransformInput = getJarInput(inputJar, ImmutableList.of(PACKAGE + "/C"));
+
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setInputs(dirTransformInput, jarTransformInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setIncremental(true)
+                        .build();
+        getTransform(null).transform(invocation);
         MoreTruth.assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isFile();
 
         // remove the class file
-        DirectoryInput deletedFile =
-                new TestDirectoryInput(
-                        ImmutableMap.of(
-                                inputDir.resolve(PACKAGE + "/B.class").toFile(), Status.REMOVED),
-                        inputDir.getFileName().toString(),
-                        inputDir.toFile(),
-                        ImmutableSet.of(),
-                        ImmutableSet.of(QualifiedContent.Scope.PROJECT));
-
-        JarInput unchangedJarInput =
-                TransformTestHelper.jarBuilder(inputJar.toFile())
-                        .setStatus(Status.NOTCHANGED)
+        TransformInput deletedDirInput =
+                TransformTestHelper.directoryBuilder(inputDir.toFile())
+                        .putChangedFiles(
+                                ImmutableMap.of(
+                                        inputDir.resolve(PACKAGE + "/B.class").toFile(),
+                                        Status.REMOVED))
+                        .setScope(QualifiedContent.Scope.PROJECT)
                         .build();
-        TransformInput updatedInputs = getInput(deletedFile, unchangedJarInput);
-        getTransform(null)
-                .transform(getInvocation(ImmutableList.of(updatedInputs), outputProvider));
+
+        TransformInput unchangedJarInput =
+                TransformTestHelper.singleJarBuilder(inputJar.toFile())
+                        .setStatus(Status.NOTCHANGED)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .build();
+        TransformInvocation secondInvocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setInputs(deletedDirInput, unchangedJarInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setIncremental(true)
+                        .build();
+        getTransform(null).transform(secondInvocation);
         MoreTruth.assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isNull();
         MoreTruth.assertThat(FileUtils.find(out.toFile(), "A.dex").orNull()).isFile();
     }
 
     @Test
     public void testNonIncremental() throws Exception {
-        TransformInput input =
-                getInput(
-                        getDirInput(
-                                tmpDir.getRoot().toPath().resolve("dir_input"),
-                                ImmutableList.of(PACKAGE + "/A")),
-                        getJarInput(
-                                tmpDir.getRoot().toPath().resolve("input.jar"),
-                                ImmutableList.of(PACKAGE + "/B")));
-        getTransform(null)
-                .transform(
-                        new TransformInvocationBuilder(context)
-                                .addInputs(ImmutableList.of(input))
-                                .addOutputProvider(outputProvider)
-                                .setIncrementalMode(false)
-                                .build());
-        TransformInput secondRunInput =
-                getInput(
-                        getDirInput(
-                                tmpDir.getRoot().toPath().resolve("dir_2_input"),
-                                ImmutableList.of(PACKAGE + "/C")),
-                        getJarInput(
-                                tmpDir.getRoot().toPath().resolve("input.jar"),
-                                ImmutableList.of(PACKAGE + "/B")));
-        getTransform(null)
-                .transform(
-                        new TransformInvocationBuilder(context)
-                                .addInputs(ImmutableList.of(secondRunInput))
-                                .addOutputProvider(outputProvider)
-                                .setIncrementalMode(false)
-                                .build());
+        TransformInput dirInput =
+                getDirInput(
+                        tmpDir.getRoot().toPath().resolve("dir_input"),
+                        ImmutableList.of(PACKAGE + "/A"));
+
+        TransformInput jarInput =
+                getJarInput(
+                        tmpDir.getRoot().toPath().resolve("input.jar"),
+                        ImmutableList.of(PACKAGE + "/B"));
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setInputs(dirInput, jarInput)
+                        .setIncremental(true)
+                        .setTransformOutputProvider(outputProvider)
+                        .build();
+        getTransform(null).transform(invocation);
+
+        TransformInput dir2Input =
+                getDirInput(
+                        tmpDir.getRoot().toPath().resolve("dir_2_input"),
+                        ImmutableList.of(PACKAGE + "/C"));
+        TransformInput jar2Input =
+                getJarInput(
+                        tmpDir.getRoot().toPath().resolve("input.jar"),
+                        ImmutableList.of(PACKAGE + "/B"));
+        TransformInvocation invocation2 =
+                TransformTestHelper.invocationBuilder()
+                        .setContext(context)
+                        .setInputs(dir2Input, jar2Input)
+                        .setIncremental(false)
+                        .setTransformOutputProvider(outputProvider)
+                        .build();
+        getTransform(null).transform(invocation2);
         MoreTruth.assertThat(FileUtils.find(out.toFile(), "A.dex").orNull()).isNull();
     }
 
@@ -246,18 +276,10 @@ public class DexArchiveBuilderTransformTest {
         FileCache userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
 
         Path inputJar = tmpDir.getRoot().toPath().resolve("input.jar");
-        TestInputsGenerator.jarWithEmptyClasses(inputJar, ImmutableList.of());
-        JarInput jarInput =
-                TransformTestHelper.jarBuilder(inputJar.toFile())
-                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
-                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
-                        .setStatus(Status.ADDED)
-                        .build();
-        TransformInput transformInput =
-                TransformTestHelper.inputBuilder().addInput(jarInput).build();
+        TransformInput jarInput = getJarInput(inputJar, ImmutableList.of());
         TransformInvocation invocation =
                 TransformTestHelper.invocationBuilder()
-                        .addInput(transformInput)
+                        .addInput(jarInput)
                         .setTransformOutputProvider(outputProvider)
                         .setContext(context)
                         .build();
@@ -266,19 +288,20 @@ public class DexArchiveBuilderTransformTest {
         transform.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1);
 
-        DexArchiveBuilderTransform minChanged = getTransform(userCache, 20, true);
-        minChanged.transform(invocation);
+        DexArchiveBuilderTransform minChangedTransform = getTransform(userCache, 20, true);
+        minChangedTransform.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(2);
 
-        DexArchiveBuilderTransform debuggableChanged = getTransform(userCache, 19, false);
-        debuggableChanged.transform(invocation);
+        DexArchiveBuilderTransform debuggableChangedTransform = getTransform(userCache, 19, false);
+        debuggableChangedTransform.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(3);
 
-        DexArchiveBuilderTransform minAndDebuggableChanged = getTransform(userCache, 20, false);
-        minAndDebuggableChanged.transform(invocation);
+        DexArchiveBuilderTransform minAndDebuggableChangedTransform =
+                getTransform(userCache, 20, false);
+        minAndDebuggableChangedTransform.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(4);
 
-        DexArchiveBuilderTransform useDifferentDexer =
+        DexArchiveBuilderTransform useDifferentDexerTransform =
                 new DexArchiveBuilderTransform(
                         new DefaultDexOptions(),
                         new NoOpErrorReporter(),
@@ -289,7 +312,7 @@ public class DexArchiveBuilderTransformTest {
                         10,
                         10,
                         false);
-        useDifferentDexer.transform(invocation);
+        useDifferentDexerTransform.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(5);
     }
 
@@ -352,98 +375,32 @@ public class DexArchiveBuilderTransformTest {
     }
 
     @NonNull
-    private TransformInput getInput(
-            @NonNull DirectoryInput directoryInput, @NonNull JarInput jarInput) {
-        return new TransformInput() {
-            @NonNull
-            @Override
-            public Collection<JarInput> getJarInputs() {
-                return ImmutableList.of(jarInput);
-            }
-
-            @NonNull
-            @Override
-            public Collection<DirectoryInput> getDirectoryInputs() {
-                return ImmutableList.of(directoryInput);
-            }
-        };
-    }
-
-    @NonNull
-    private DirectoryInput getDirInput(@NonNull Path path, @NonNull Collection<String> classes)
+    private TransformInput getDirInput(@NonNull Path path, @NonNull Collection<String> classes)
             throws Exception {
         TestInputsGenerator.dirWithEmptyClasses(path, classes);
 
-        return new TestDirectoryInput(
-                classes.stream()
-                        .collect(
-                                Collectors.toMap(
-                                        e -> path.resolve(e + SdkConstants.DOT_CLASS).toFile(),
-                                        e -> Status.ADDED)),
-                path.getFileName().toString(),
-                path.toFile(),
-                ImmutableSet.of(),
-                ImmutableSet.of(QualifiedContent.Scope.EXTERNAL_LIBRARIES));
+        return TransformTestHelper.directoryBuilder(path.toFile())
+                .setContentType(QualifiedContent.DefaultContentType.CLASSES)
+                .setScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                .putChangedFiles(
+                        classes.stream()
+                                .collect(
+                                        Collectors.toMap(
+                                                e ->
+                                                        path.resolve(e + SdkConstants.DOT_CLASS)
+                                                                .toFile(),
+                                                e -> Status.ADDED)))
+                .build();
     }
 
     @NonNull
-    private JarInput getJarInput(@NonNull Path path, @NonNull Collection<String> classes)
+    private TransformInput getJarInput(@NonNull Path path, @NonNull Collection<String> classes)
             throws Exception {
         TestInputsGenerator.jarWithEmptyClasses(path, classes);
-        return new SimpleJarInput.Builder(path.toFile())
-                .setScopes(ImmutableSet.of(QualifiedContent.Scope.EXTERNAL_LIBRARIES))
-                .create();
-    }
-
-    private static final class TestDirectoryInput implements DirectoryInput {
-
-        @NonNull private final Map<File, Status> changedFiles;
-        @NonNull private final String name;
-        @NonNull private final File file;
-        @NonNull private final Set<ContentType> contentTypes;
-        @NonNull private final Set<? super Scope> scopes;
-
-        public TestDirectoryInput(
-                @NonNull Map<File, Status> changedFiles,
-                @NonNull String name,
-                @NonNull File file,
-                @NonNull Set<ContentType> contentTypes,
-                @NonNull Set<? super Scope> scopes) {
-            this.changedFiles = changedFiles;
-            this.name = name;
-            this.file = file;
-            this.contentTypes = contentTypes;
-            this.scopes = scopes;
-        }
-
-        @NonNull
-        @Override
-        public Map<File, Status> getChangedFiles() {
-            return changedFiles;
-        }
-
-        @NonNull
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @NonNull
-        @Override
-        public File getFile() {
-            return file;
-        }
-
-        @NonNull
-        @Override
-        public Set<ContentType> getContentTypes() {
-            return contentTypes;
-        }
-
-        @NonNull
-        @Override
-        public Set<? super Scope> getScopes() {
-            return scopes;
-        }
+        return TransformTestHelper.singleJarBuilder(path.toFile())
+                .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                .setStatus(Status.ADDED)
+                .build();
     }
 }

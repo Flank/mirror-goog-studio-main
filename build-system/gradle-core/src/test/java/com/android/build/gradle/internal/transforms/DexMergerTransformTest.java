@@ -27,8 +27,9 @@ import com.android.build.api.transform.Context;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
+import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
+import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.builder.dexing.ClassFileInput;
 import com.android.builder.dexing.ClassFileInputs;
 import com.android.builder.dexing.DexArchiveBuilder;
@@ -52,9 +53,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.gradle.api.file.FileCollection;
@@ -89,17 +92,19 @@ public class DexMergerTransformTest {
         Path dexArchive = tmpDir.getRoot().toPath().resolve("archive.jar");
         generateArchive(ImmutableList.of(PKG + "/A", PKG + "/B", PKG + "/C"), dexArchive);
 
-        getTransform(DexingType.MONO_DEX)
-                .transform(
-                        new TransformInvocationBuilder(context)
-                                .addInputs(
-                                        ImmutableList.of(
-                                                new SimpleJarTransformInput(
-                                                        new SimpleJarInput.Builder(
-                                                                        dexArchive.toFile())
-                                                                .create())))
-                                .addOutputProvider(outputProvider)
-                                .build());
+        TransformInput input =
+                TransformTestHelper.singleJarBuilder(dexArchive.toFile())
+                        .setStatus(Status.ADDED)
+                        .setContentTypes(ExtendedContentType.DEX_ARCHIVE)
+                        .setScopes(QualifiedContent.Scope.PROJECT)
+                        .build();
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setInputs(input)
+                        .setTransformOutputProvider(outputProvider)
+                        .build();
+
+        getTransform(DexingType.MONO_DEX).transform(invocation);
 
         Dex mainDex = new Dex(out.resolve("main/classes.dex"));
         assertThat(mainDex)
@@ -115,14 +120,14 @@ public class DexMergerTransformTest {
             expectedClasses.add("L" + PKG + "/A" + i + ";");
         }
 
-        List<TransformInput> inputs =
+        Set<TransformInput> inputs =
                 getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
 
         getTransform(DexingType.MONO_DEX)
                 .transform(
-                        new TransformInvocationBuilder(context)
-                                .addInputs(inputs)
-                                .addOutputProvider(outputProvider)
+                        TransformTestHelper.invocationBuilder()
+                                .setTransformOutputProvider(outputProvider)
+                                .setInputs(inputs)
                                 .build());
 
         Dex mainDex = new Dex(out.resolve("main/classes.dex"));
@@ -137,14 +142,14 @@ public class DexMergerTransformTest {
             expectedClasses.add("L" + PKG + "/A" + i + ";");
         }
 
-        List<TransformInput> inputs =
+        Set<TransformInput> inputs =
                 getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
 
         getTransform(DexingType.NATIVE_MULTIDEX)
                 .transform(
-                        new TransformInvocationBuilder(context)
-                                .addInputs(inputs)
-                                .addOutputProvider(outputProvider)
+                        TransformTestHelper.invocationBuilder()
+                                .setInputs(inputs)
+                                .setTransformOutputProvider(outputProvider)
                                 .build());
 
         Dex mainDex = new Dex(out.resolve("externalLibs/classes.dex"));
@@ -154,7 +159,7 @@ public class DexMergerTransformTest {
 
     @Test
     public void test_native_deletedExternalLib() throws Exception {
-        List<TransformInput> inputs =
+        Set<TransformInput> inputs =
                 getTransformInputs(
                         NUM_INPUTS,
                         QualifiedContent.Scope.EXTERNAL_LIBRARIES,
@@ -163,10 +168,10 @@ public class DexMergerTransformTest {
 
         getTransform(DexingType.NATIVE_MULTIDEX)
                 .transform(
-                        new TransformInvocationBuilder(context)
-                                .addInputs(inputs)
-                                .addOutputProvider(outputProvider)
-                                .setIncrementalMode(true)
+                        TransformTestHelper.invocationBuilder()
+                                .setInputs(inputs)
+                                .setTransformOutputProvider(outputProvider)
+                                .setIncremental(true)
                                 .build());
 
         // make sure we do not create classes.dex
@@ -175,14 +180,13 @@ public class DexMergerTransformTest {
 
     @Test
     public void test_native_nonExternalHaveDexEach() throws Exception {
-        List<TransformInput> inputs =
-                getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.PROJECT);
+        Set<TransformInput> inputs = getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.PROJECT);
 
         getTransform(DexingType.NATIVE_MULTIDEX)
                 .transform(
-                        new TransformInvocationBuilder(context)
-                                .addInputs(inputs)
-                                .addOutputProvider(outputProvider)
+                        TransformTestHelper.invocationBuilder()
+                                .setInputs(inputs)
+                                .setTransformOutputProvider(outputProvider)
                                 .build());
 
         Truth.assertThat(FileUtils.find(out.toFile(), Pattern.compile(".*\\.dex")))
@@ -191,18 +195,18 @@ public class DexMergerTransformTest {
 
     @Test
     public void test_native_changedInput() throws Exception {
-        List<TransformInput> inputs =
+        Set<TransformInput> inputs =
                 getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
-        List<TransformInput> projectInputs =
+        Set<TransformInput> projectInputs =
                 getTransformInputs(1, QualifiedContent.Scope.PROJECT, "B");
         inputs.addAll(projectInputs);
 
         getTransform(DexingType.NATIVE_MULTIDEX)
                 .transform(
-                        new TransformInvocationBuilder(context)
-                                .addInputs(inputs)
-                                .addOutputProvider(outputProvider)
-                                .setIncrementalMode(true)
+                        TransformTestHelper.invocationBuilder()
+                                .setInputs(inputs)
+                                .setTransformOutputProvider(outputProvider)
+                                .setIncremental(true)
                                 .build());
 
         File externalMerged = out.resolve("externalLibs/classes.dex").toFile();
@@ -216,22 +220,19 @@ public class DexMergerTransformTest {
 
         Path libArchive = tmpDir.getRoot().toPath().resolve("added.jar");
         generateArchive(ImmutableList.of(PKG + "/C"), libArchive);
-        List<TransformInput> updatedInputs =
-                ImmutableList.of(
-                        new SimpleJarTransformInput(
-                                new SimpleJarInput.Builder(libArchive.toFile())
-                                        .setStatus(Status.ADDED)
-                                        .setScopes(
-                                                ImmutableSet.of(
-                                                        QualifiedContent.Scope.EXTERNAL_LIBRARIES))
-                                        .create()));
+
+        TransformInput updatedInput =
+                TransformTestHelper.singleJarBuilder(libArchive.toFile())
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setStatus(Status.ADDED)
+                        .build();
 
         getTransform(DexingType.NATIVE_MULTIDEX)
                 .transform(
-                        new TransformInvocationBuilder(context)
-                                .addInputs(updatedInputs)
-                                .addOutputProvider(outputProvider)
-                                .setIncrementalMode(true)
+                        TransformTestHelper.invocationBuilder()
+                                .addInput(updatedInput)
+                                .setTransformOutputProvider(outputProvider)
+                                .setIncremental(true)
                                 .build());
 
         Truth.assertThat(externalMerged.lastModified()).isGreaterThan(lastModified);
@@ -243,13 +244,13 @@ public class DexMergerTransformTest {
     @Test(timeout = 20_000)
     public void test_native_doesNotDeadlock() throws Exception {
         int inputCnt = 3 * Runtime.getRuntime().availableProcessors();
-        List<TransformInput> inputs =
+        Set<TransformInput> inputs =
                 getTransformInputs(inputCnt, QualifiedContent.Scope.SUB_PROJECTS);
         getTransform(DexingType.NATIVE_MULTIDEX)
                 .transform(
-                        new TransformInvocationBuilder(context)
-                                .addInputs(inputs)
-                                .addOutputProvider(outputProvider)
+                        TransformTestHelper.invocationBuilder()
+                                .setInputs(inputs)
+                                .setTransformOutputProvider(outputProvider)
                                 .build());
     }
 
@@ -333,20 +334,20 @@ public class DexMergerTransformTest {
     }
 
     @NonNull
-    private List<TransformInput> getTransformInputs(int cnt, @NonNull QualifiedContent.Scope scope)
+    private Set<TransformInput> getTransformInputs(int cnt, @NonNull QualifiedContent.Scope scope)
             throws Exception {
         return getTransformInputs(cnt, scope, "A");
     }
 
     @NonNull
-    private List<TransformInput> getTransformInputs(
+    private Set<TransformInput> getTransformInputs(
             int cnt, @NonNull QualifiedContent.Scope scope, @NonNull String classPrefix)
             throws Exception {
         return getTransformInputs(cnt, scope, classPrefix, Status.ADDED);
     }
 
     @NonNull
-    private List<TransformInput> getTransformInputs(
+    private Set<TransformInput> getTransformInputs(
             int cnt,
             @NonNull QualifiedContent.Scope scope,
             @NonNull String classPrefix,
@@ -359,14 +360,13 @@ public class DexMergerTransformTest {
                     ImmutableList.of(PKG + "/" + classPrefix + i), Iterables.getLast(archives));
         }
 
-        List<TransformInput> inputs = Lists.newArrayList();
+        Set<TransformInput> inputs = new HashSet<>(archives.size());
         for (Path dexArchive : archives) {
             inputs.add(
-                    new SimpleJarTransformInput(
-                            new SimpleJarInput.Builder(dexArchive.toFile())
-                                    .setScopes(ImmutableSet.of(scope))
-                                    .setStatus(status)
-                                    .create()));
+                    TransformTestHelper.singleJarBuilder(dexArchive.toFile())
+                            .setScopes(scope)
+                            .setStatus(status)
+                            .build());
         }
         return inputs;
     }

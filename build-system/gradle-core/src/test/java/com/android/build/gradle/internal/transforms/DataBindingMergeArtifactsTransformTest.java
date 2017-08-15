@@ -23,8 +23,7 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Context;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
@@ -40,7 +39,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -293,49 +291,11 @@ public class DataBindingMergeArtifactsTransformTest {
     }
 
     private static TransformInput asJarInput(@NonNull File jarFile, @NonNull Status status) {
-        return new TransformInput() {
-            @NonNull
-            @Override
-            public Collection<JarInput> getJarInputs() {
-                return ImmutableList.of(new JarInput() {
-                    @NonNull
-                    @Override
-                    public Status getStatus() {
-                        return status;
-                    }
-
-                    @NonNull
-                    @Override
-                    public String getName() {
-                        return jarFile.getName();
-                    }
-
-                    @NonNull
-                    @Override
-                    public File getFile() {
-                        return jarFile;
-                    }
-
-                    @NonNull
-                    @Override
-                    public Set<ContentType> getContentTypes() {
-                        return ImmutableSet.of(DefaultContentType.CLASSES);
-                    }
-
-                    @NonNull
-                    @Override
-                    public Set<Scope> getScopes() {
-                        return ImmutableSet.of(Scope.SUB_PROJECTS);
-                    }
-                });
-            }
-
-            @NonNull
-            @Override
-            public Collection<DirectoryInput> getDirectoryInputs() {
-                return Collections.emptyList();
-            }
-        };
+        return TransformTestHelper.singleJarBuilder(jarFile)
+                .setScopes(QualifiedContent.Scope.SUB_PROJECTS)
+                .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                .setStatus(status)
+                .build();
     }
 
     private static TransformInput asDirectoryInput(@NonNull File folder) {
@@ -349,51 +309,8 @@ public class DataBindingMergeArtifactsTransformTest {
 
     private static TransformInput asDirectoryInput(@NonNull File folder,
             @Nullable Map<File, Status> changes) {
-        return new TransformInput() {
-
-            @NonNull
-            @Override
-            public Collection<JarInput> getJarInputs() {
-                return ImmutableList.of();
-            }
-
-            @NonNull
-            @Override
-            public Collection<DirectoryInput> getDirectoryInputs() {
-                return ImmutableList.of(
-                        new DirectoryInput() {
-                            @NonNull
-                            @Override
-                            public Map<File, Status> getChangedFiles() {
-                                return changes == null ? Maps.newHashMap() : changes;
-                            }
-
-                            @NonNull
-                            @Override
-                            public String getName() {
-                                return folder.getName();
-                            }
-
-                            @NonNull
-                            @Override
-                            public File getFile() {
-                                return folder;
-                            }
-
-                            @NonNull
-                            @Override
-                            public Set<ContentType> getContentTypes() {
-                                return ImmutableSet.of();
-                            }
-
-                            @NonNull
-                            @Override
-                            public Set<Scope> getScopes() {
-                                return ImmutableSet.of();
-                            }
-                        }
-                );
-            }
-        };
+        return TransformTestHelper.directoryBuilder(folder)
+                .putChangedFiles(changes == null ? Maps.newHashMap() : changes)
+                .build();
     }
 }

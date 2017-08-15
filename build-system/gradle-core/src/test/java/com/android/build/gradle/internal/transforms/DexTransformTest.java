@@ -29,16 +29,13 @@ import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.transform.Context;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
+import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexByteCodeConverter;
@@ -60,16 +57,14 @@ import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -97,40 +92,40 @@ public class DexTransformTest {
 
     @Test
     public void testPreDexLibraries() throws IOException, TransformException, InterruptedException {
-        // Inputs for dexing
-        JarInput nonSnapshotExternalLibraryJarInput =
-                getJarInput(
-                        testDir.newFile("nonSnapshotExtLibJar"),
-                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
-        JarInput snapshotExternalLibraryJarInput =
-                getJarInput(
-                        new File(testDir.newFolder("1.0-SNAPSHOT"), "snapshotExtLibJar"),
-                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
-        JarInput nonExternalLibraryJarInput =
-                getJarInput(
-                        testDir.newFile("nonExtLibJar"),
-                        QualifiedContent.Scope.PROJECT);
-        DirectoryInput directoryInput =
-                getDirectoryInput(
-                        testDir.newFolder("dirInput"),
-                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+        File nonSnapshotExtLibJar = testDir.newFile("nonSnapshotExtLibJar");
+        Files.write("nonSnapshotExtLibJar", nonSnapshotExtLibJar, StandardCharsets.UTF_8);
+        TransformInput nonSnapshotExternalLibraryJarInput =
+                TransformTestHelper.singleJarBuilder(nonSnapshotExtLibJar)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setStatus(Status.NOTCHANGED)
+                        .build();
 
-        Files.write(
-                "nonSnapshotExtLibJar",
-                nonSnapshotExternalLibraryJarInput.getFile(),
-                StandardCharsets.UTF_8);
-        Files.write(
-                "snapshotExtLibJar",
-                snapshotExternalLibraryJarInput.getFile(),
-                StandardCharsets.UTF_8);
-        Files.write(
-                "nonExtLibJar",
-                nonExternalLibraryJarInput.getFile(),
-                StandardCharsets.UTF_8);
-        Files.write(
-                "dirInput",
-                new File(directoryInput.getFile(), "baz"),
-                StandardCharsets.UTF_8);
+        File snapshotExtLibJar = new File(testDir.newFolder("1.0-SNAPSHOT"), "snapshotExtLibJar");
+        Files.write("snapshotExtLibJar", snapshotExtLibJar, StandardCharsets.UTF_8);
+        TransformInput snapshotExternalLibraryJarInput =
+                TransformTestHelper.singleJarBuilder(snapshotExtLibJar)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setStatus(Status.NOTCHANGED)
+                        .build();
+
+        File nonExtLibJar = testDir.newFile("nonExtLibJar");
+        Files.write("nonExtLibJar", nonExtLibJar, StandardCharsets.UTF_8);
+        TransformInput nonExternalLibraryJarInput =
+                TransformTestHelper.singleJarBuilder(nonExtLibJar)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .setScopes(QualifiedContent.Scope.PROJECT)
+                        .setStatus(Status.NOTCHANGED)
+                        .build();
+
+        File dirInput = testDir.newFolder("dirInput");
+        Files.write("dirInput", new File(dirInput, "baz"), StandardCharsets.UTF_8);
+        TransformInput directoryInput =
+                TransformTestHelper.directoryBuilder(dirInput)
+                        .setScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
 
         // Output directory of pre-dexing
         File preDexOutputDir = testDir.newFolder("pre-dex");
@@ -147,8 +142,8 @@ public class DexTransformTest {
                 ImmutableList.of(
                         nonSnapshotExternalLibraryJarInput,
                         snapshotExternalLibraryJarInput,
-                        nonExternalLibraryJarInput),
-                ImmutableList.of(directoryInput),
+                        nonExternalLibraryJarInput,
+                        directoryInput),
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
@@ -225,8 +220,8 @@ public class DexTransformTest {
                 ImmutableList.of(
                         nonSnapshotExternalLibraryJarInput,
                         snapshotExternalLibraryJarInput,
-                        nonExternalLibraryJarInput),
-                ImmutableList.of(directoryInput),
+                        nonExternalLibraryJarInput,
+                        directoryInput),
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
@@ -270,12 +265,22 @@ public class DexTransformTest {
     public void testInputsToBuildCache()
             throws IOException, TransformException, InterruptedException {
         // Inputs for dexing
-        JarInput fooInput =
-                getJarInput(testDir.newFile("foo"), QualifiedContent.Scope.EXTERNAL_LIBRARIES);
-        JarInput barInput =
-                getJarInput(testDir.newFile("bar"), QualifiedContent.Scope.EXTERNAL_LIBRARIES);
-        Files.write("Foo content", fooInput.getFile(), StandardCharsets.UTF_8);
-        Files.write("Bar content", barInput.getFile(), StandardCharsets.UTF_8);
+        File inputFoo = testDir.newFile("foo");
+        Files.write("Foo content", inputFoo, StandardCharsets.UTF_8);
+        TransformInput transformInputFoo =
+                TransformTestHelper.singleJarBuilder(inputFoo)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setStatus(Status.NOTCHANGED)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
+
+        File inputBar = testDir.newFile("bar");
+        Files.write("Bar content", inputBar, StandardCharsets.UTF_8);
+        TransformInput transformInputBar =
+                TransformTestHelper.singleJarBuilder(inputBar)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
 
         // Output directory of pre-dexing
         File preDexOutputDir = testDir.newFolder("pre-dex");
@@ -289,8 +294,7 @@ public class DexTransformTest {
 
         // Run dexing
         runDexing(
-                ImmutableList.of(fooInput, barInput),
-                ImmutableList.of(),
+                ImmutableList.of(transformInputFoo, transformInputBar),
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
@@ -301,8 +305,7 @@ public class DexTransformTest {
 
         // Re-run pre-dexing with the same input files and build tools revision
         runDexing(
-                ImmutableList.of(fooInput, barInput),
-                ImmutableList.of(),
+                ImmutableList.of(transformInputFoo, transformInputBar),
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
@@ -312,8 +315,7 @@ public class DexTransformTest {
 
         // Re-run pre-dexing with the same input files and different build tools revision
         runDexing(
-                ImmutableList.of(fooInput, barInput),
-                ImmutableList.of(),
+                ImmutableList.of(transformInputFoo, transformInputBar),
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
@@ -322,25 +324,26 @@ public class DexTransformTest {
         assertEquals(4, countCacheEntries(buildCache));
 
         // Re-run pre-dexing with the same input files, with the contents of one file changed
-        Files.write("New foo content", fooInput.getFile(), StandardCharsets.UTF_8);
+        Files.write("New foo content", inputFoo, StandardCharsets.UTF_8);
         runDexing(
-                ImmutableList.of(fooInput, barInput),
-                ImmutableList.of(),
+                ImmutableList.of(transformInputFoo, transformInputBar),
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
                 AndroidBuilder.MIN_BUILD_TOOLS_REV);
-        Files.write("Foo content", fooInput.getFile(), StandardCharsets.UTF_8);
+        Files.write("Foo content", inputFoo, StandardCharsets.UTF_8);
         // Expect the cache to contain 1 more entry
         assertEquals(5, countCacheEntries(buildCache));
 
-        // Re-run pre-dexing with a new input file with the same contents
-        JarInput bazInput =
-                getJarInput(testDir.newFile("baz"), QualifiedContent.Scope.EXTERNAL_LIBRARIES);
-        Files.write("Foo content", fooInput.getFile(), StandardCharsets.UTF_8);
+        // Re-run pre-dexing with a new empty file
+        File inputBaz = testDir.newFile("baz");
+        TransformInput transformInputBaz =
+                TransformTestHelper.singleJarBuilder(inputBaz)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
         runDexing(
-                ImmutableList.of(fooInput, barInput, bazInput),
-                ImmutableList.of(),
+                ImmutableList.of(transformInputFoo, transformInputBar, transformInputBaz),
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
@@ -361,13 +364,18 @@ public class DexTransformTest {
         Files.createParentDirs(explodedAarFile2);
         Files.write("Some content", explodedAarFile1, StandardCharsets.UTF_8);
         Files.write("Some content", explodedAarFile2, StandardCharsets.UTF_8);
-        JarInput explodedAarJar1 =
-                getJarInput(explodedAarFile1, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
-        JarInput explodedAarJar2 =
-                getJarInput(explodedAarFile2, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+        TransformInput explodedAarJar1 =
+                TransformTestHelper.singleJarBuilder(explodedAarFile1)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
+        TransformInput explodedAarJar2 =
+                TransformTestHelper.singleJarBuilder(explodedAarFile2)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .build();
         runDexing(
                 ImmutableList.of(explodedAarJar1, explodedAarJar2),
-                ImmutableList.of(),
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
@@ -380,13 +388,18 @@ public class DexTransformTest {
         File instantRunFile2 = new File(testDir.newFolder(), "instant-run.jar");
         Files.write("Some content", instantRunFile1, StandardCharsets.UTF_8);
         Files.write("Some content", instantRunFile2, StandardCharsets.UTF_8);
-        JarInput instantRunJar1 =
-                getJarInput(instantRunFile1, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
-        JarInput instantRunJar2 =
-                getJarInput(instantRunFile2, QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+        TransformInput instantRunJar1 =
+                TransformTestHelper.singleJarBuilder(instantRunFile1)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
+        TransformInput instantRunJar2 =
+                TransformTestHelper.singleJarBuilder(instantRunFile2)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
         runDexing(
                 ImmutableList.of(instantRunJar1, instantRunJar2),
-                ImmutableList.of(),
                 preDexOutputDir,
                 dexOutputDir,
                 buildCache,
@@ -398,23 +411,21 @@ public class DexTransformTest {
     @Test
     public void testBuildCacheFailure() throws Exception {
         // Inputs for dexing
-        JarInput nonSnapshotExternalLibraryJarInput =
-                getJarInput(
-                        testDir.newFile("nonSnapshotExtLibJar"),
-                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
-        DirectoryInput directoryInput =
-                getDirectoryInput(
-                        testDir.newFolder("dirInput"),
-                        QualifiedContent.Scope.EXTERNAL_LIBRARIES);
+        File nonSnapshotExtLibJar = testDir.newFile("nonSnapshotExtLibJar");
+        Files.write("nonSnapshotExtLibJar", nonSnapshotExtLibJar, StandardCharsets.UTF_8);
+        TransformInput jarTransformInput =
+                TransformTestHelper.singleJarBuilder(nonSnapshotExtLibJar)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .build();
 
-        Files.write(
-                "nonSnapshotExtLibJar",
-                nonSnapshotExternalLibraryJarInput.getFile(),
-                StandardCharsets.UTF_8);
-        Files.write(
-                "dirInput",
-                new File(directoryInput.getFile(), "baz"),
-                StandardCharsets.UTF_8);
+        File dirInput = testDir.newFolder("dirInput");
+        Files.write("dirInput", new File(dirInput, "baz"), StandardCharsets.UTF_8);
+        TransformInput directoryTransformInput =
+                TransformTestHelper.directoryBuilder(dirInput)
+                        .setContentType(QualifiedContent.DefaultContentType.CLASSES)
+                        .setScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .build();
 
         // Output directory of pre-dexing
         File preDexOutputDir = testDir.newFolder("pre-dex");
@@ -431,8 +442,7 @@ public class DexTransformTest {
         // Run dexing, expect it to fail
         try {
             runDexing(
-                    ImmutableList.of(nonSnapshotExternalLibraryJarInput),
-                    ImmutableList.of(directoryInput),
+                    ImmutableList.of(jarTransformInput, directoryTransformInput),
                     preDexOutputDir,
                     dexOutputDir,
                     buildCache,
@@ -446,14 +456,12 @@ public class DexTransformTest {
     }
 
     private void runDexing(
-            @NonNull Collection<JarInput> jarInputs,
-            @NonNull Collection<DirectoryInput> directoryInputs,
+            @NonNull Collection<TransformInput> transformInputs,
             @NonNull File preDexOutputDir,
             @NonNull File dexOutputDir,
             @NonNull FileCache buildCache,
             @NonNull Revision buildToolsRevision)
             throws TransformException, InterruptedException, IOException {
-
         TargetInfo targetInfo =
                 new TargetInfo(
                         androidTarget,
@@ -478,22 +486,19 @@ public class DexTransformTest {
         // first we need to pre-dex
         List<String> preDexNames =
                 ImmutableList.of("predex_0.jar", "predex_1.jar", "predex_2.jar", "predex_3.jar");
-        runPreDexing(
-                fakeAndroidBuilder,
-                jarInputs,
-                directoryInputs,
-                preDexOutputDir,
-                buildCache,
-                preDexNames);
-        List<JarInput> preDexedInputs =
+        runPreDexing(fakeAndroidBuilder, transformInputs, preDexOutputDir, buildCache, preDexNames);
+        Set<TransformInput> preDexedInputs =
                 preDexNames
                         .stream()
                         .map(
                                 name ->
-                                        getJarInput(
-                                                FileUtils.join(preDexOutputDir, name),
-                                                QualifiedContent.Scope.EXTERNAL_LIBRARIES))
-                        .collect(Collectors.toList());
+                                        TransformTestHelper.singleJarBuilder(
+                                                        FileUtils.join(preDexOutputDir, name))
+                                                .setScopes(
+                                                        QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                                                .setContentTypes(ExtendedContentType.DEX)
+                                                .build())
+                        .collect(Collectors.toSet());
 
         // no merge dex files
         DexTransform dexTransform =
@@ -507,14 +512,13 @@ public class DexTransformTest {
                         mock(ErrorReporter.class),
                         1);
 
-        TransformInput transformInput = getTransformInput(preDexedInputs, ImmutableList.of());
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
         when(mockTransformOutputProvider.getContentLocation(any(), any(), any(), any()))
                 .thenReturn(dexOutputDir);
         TransformInvocation transformInvocation =
-                new TransformInvocationBuilder(mock(Context.class))
-                        .addInputs(ImmutableList.of(transformInput))
-                        .addOutputProvider(mockTransformOutputProvider)
+                TransformTestHelper.invocationBuilder()
+                        .setTransformOutputProvider(mockTransformOutputProvider)
+                        .setInputs(preDexedInputs)
                         .build();
 
         dexTransform.transform(transformInvocation);
@@ -522,8 +526,7 @@ public class DexTransformTest {
 
     private static void runPreDexing(
             @NonNull AndroidBuilder fakeAndroidBuilder,
-            @NonNull Collection<JarInput> jarInputs,
-            @NonNull Collection<DirectoryInput> directoryInputs,
+            @NonNull Collection<TransformInput> transformInputs,
             @NonNull File preDexOutputDir,
             @NonNull FileCache buildCache,
             @NonNull List<String> preDexNames)
@@ -536,7 +539,6 @@ public class DexTransformTest {
                         DexingType.MONO_DEX,
                         1);
 
-        TransformInput transformInput = getTransformInput(jarInputs, directoryInputs);
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
         when(mockTransformOutputProvider.getContentLocation(any(), any(), any(), any()))
                 .thenReturn(
@@ -545,9 +547,9 @@ public class DexTransformTest {
                         FileUtils.join(preDexOutputDir, preDexNames.get(2)),
                         FileUtils.join(preDexOutputDir, preDexNames.get(3)));
         TransformInvocation transformInvocation =
-                new TransformInvocationBuilder(mock(Context.class))
-                        .addInputs(ImmutableList.of(transformInput))
-                        .addOutputProvider(mockTransformOutputProvider)
+                TransformTestHelper.invocationBuilder()
+                        .setTransformOutputProvider(mockTransformOutputProvider)
+                        .setInputs(new HashSet<>(transformInputs))
                         .build();
 
         preDexTransform.transform(transformInvocation);
@@ -629,96 +631,5 @@ public class DexTransformTest {
             Files.write(
                     "Dexed content", new File(outDexFolder, "classes.dex"), StandardCharsets.UTF_8);
         }
-    }
-
-    private static TransformInput getTransformInput(
-            @NonNull Collection<JarInput> jarInputs,
-            @NonNull Collection<DirectoryInput> directoryInputs) {
-        return new TransformInput() {
-
-            @NonNull
-            @Override
-            public Collection<JarInput> getJarInputs() {
-                return jarInputs;
-            }
-
-            @NonNull
-            @Override
-            public Collection<DirectoryInput> getDirectoryInputs() {
-                return directoryInputs;
-            }
-        };
-    }
-
-    private static JarInput getJarInput(
-            @NonNull File inputJar, @NonNull QualifiedContent.Scope scope) {
-        return new JarInput() {
-
-            @NonNull
-            @Override
-            public String getName() {
-                return inputJar.getName();
-            }
-
-            @NonNull
-            @Override
-            public File getFile() {
-                return inputJar;
-            }
-
-            @NonNull
-            @Override
-            public Set<ContentType> getContentTypes() {
-                return ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES);
-            }
-
-            @NonNull
-            @Override
-            public Set<Scope> getScopes() {
-                return ImmutableSet.of(scope);
-            }
-
-            @NonNull
-            @Override
-            public Status getStatus() {
-                return Status.NOTCHANGED;
-            }
-        };
-    }
-
-    private static DirectoryInput getDirectoryInput(
-            @NonNull File inputDir, @NonNull QualifiedContent.Scope scope) {
-        return new DirectoryInput() {
-
-            @NonNull
-            @Override
-            public String getName() {
-                return inputDir.getName();
-            }
-
-            @NonNull
-            @Override
-            public File getFile() {
-                return inputDir;
-            }
-
-            @NonNull
-            @Override
-            public Set<ContentType> getContentTypes() {
-                return ImmutableSet.of(QualifiedContent.DefaultContentType.CLASSES);
-            }
-
-            @NonNull
-            @Override
-            public Set<Scope> getScopes() {
-                return ImmutableSet.of(scope);
-            }
-
-            @NonNull
-            @Override
-            public Map<File, Status> getChangedFiles() {
-                return ImmutableMap.of();
-            }
-        };
     }
 }
