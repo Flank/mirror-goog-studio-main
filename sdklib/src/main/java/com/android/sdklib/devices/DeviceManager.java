@@ -535,8 +535,6 @@ public class DeviceManager {
                 getBooleanVal(hw.getButtonType().equals(ButtonType.HARD)));
         props.put(HardwareProperties.HW_TRACKBALL,
                 getBooleanVal(hw.getNav().equals(Navigation.TRACKBALL)));
-        props.put(HardwareProperties.HW_KEYBOARD,
-                getBooleanVal(hw.getKeyboard().equals(Keyboard.QWERTY)));
         props.put(HardwareProperties.HW_DPAD,
                 getBooleanVal(hw.getNav().equals(Navigation.DPAD)));
 

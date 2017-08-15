@@ -22,6 +22,8 @@ import com.android.prefs.AndroidLocation;
 import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.testframework.MockFileOp;
 import com.android.sdklib.FileOpFileWrapper;
+import com.android.sdklib.devices.Device;
+import com.android.sdklib.devices.DeviceManager;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.targets.SystemImage;
 import com.android.testutils.MockLog;
@@ -453,6 +455,49 @@ public class AvdManagerTest extends TestCase {
         baseProperties = AvdManager.parseIniFile(
           new FileOpFileWrapper(configIniFile, mFileOp, false), null);
         assertEquals("false", baseProperties.get("PlayStore.enabled"));
+    }
+
+    public void testUpdateDeviceChanged() throws Exception {
+        MockLog log = new MockLog();
+
+        DeviceManager devMan = DeviceManager.createInstance(mAndroidSdkHandler, log);
+        Device myDevice = devMan.getDevice("Nexus 5", "Google");
+        Map<String, String> baseHardwareProperties = DeviceManager.getHardwareProperties(myDevice);
+
+        // Modify a hardware property
+        baseHardwareProperties.put("hw.lcd.height", "960");
+        // Add a user-settable property
+        baseHardwareProperties.put("hw.keyboard", "yes");
+
+        // Create a virtual device including these properties
+        AvdInfo myDeviceInfo = mAvdManager.createAvd(
+          mAvdFolder,
+          this.getName(),
+          mSystemImageGoogle,
+          null,
+          null,
+          null,
+          baseHardwareProperties,
+          null,
+          true,
+          false,
+          true,
+          false,
+          log);
+
+        // Verify the parameter that we changed and the parameter that we added
+        Map<String, String> firstHardwareProperties = myDeviceInfo.getProperties();
+        assertEquals("960", firstHardwareProperties.get("hw.lcd.height"));
+        assertEquals("yes", firstHardwareProperties.get("hw.keyboard"));
+
+        // Update the device using the original hardware definition
+        AvdInfo updatedDeviceInfo = mAvdManager.updateDeviceChanged(myDeviceInfo, log);
+
+        // Verify that the hardware property changed, but the
+        // user-settable property did not.
+        Map<String, String> updatedHardwareProperties = updatedDeviceInfo.getProperties();
+        assertEquals("1920", updatedHardwareProperties.get("hw.lcd.height"));
+        assertEquals("yes", updatedHardwareProperties.get("hw.keyboard"));
     }
 
 
