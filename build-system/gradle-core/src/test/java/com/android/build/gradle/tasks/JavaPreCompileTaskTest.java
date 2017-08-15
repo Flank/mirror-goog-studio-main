@@ -106,6 +106,7 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
+                false,
                 false);
 
         task.preCompile();
@@ -128,6 +129,7 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
+                false,
                 false);
 
         task.preCompile();
@@ -148,6 +150,7 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
+                false,
                 false);
         try {
             task.preCompile();
@@ -169,6 +172,7 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration,
                 compileClasspath,
                 options,
+                false,
                 false);
 
         task.preCompile();
@@ -187,6 +191,7 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration,
                 compileClasspath,
                 options,
+                false,
                 false);
 
         task.preCompile();
@@ -205,6 +210,7 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration,
                 project.files(),
                 options,
+                false,
                 false);
         task.preCompile();
 
@@ -222,6 +228,7 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration,
                 compileClasspath,
                 options,
+                false,
                 false);
         task.preCompile();
 
@@ -237,6 +244,7 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration,
                 compileClasspath,
                 new AnnotationProcessorOptions(),
+                false,
                 true);
         task.preCompile();
 
@@ -256,6 +264,7 @@ public class JavaPreCompileTaskTest {
                 processorConfiguration,
                 compileClasspath,
                 options,
+                false,
                 true);
         task.preCompile();
 

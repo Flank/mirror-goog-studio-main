@@ -57,7 +57,6 @@ public class AnnotationProcessorTest {
     public static Collection<Object[]> data() {
         return Arrays.asList(
                 new Object[][] {
-                    //{false},
                     {false}, {true},
                 });
     }
