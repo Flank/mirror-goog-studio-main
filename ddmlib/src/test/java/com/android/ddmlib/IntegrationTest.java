@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.TruthJUnit.assume;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -31,19 +32,33 @@ import com.android.ddmlib.logcat.LogCatMessage;
 import com.android.ddmlib.logcat.LogCatReceiverTask;
 import com.android.fakeadbserver.DeviceState;
 import com.android.fakeadbserver.FakeAdbServer;
+import com.android.fakeadbserver.PortForwarder;
 import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
 import com.google.common.base.Charsets;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import com.google.common.util.concurrent.Uninterruptibles;
 import java.io.File;
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
 public class IntegrationTest {
+
+    private static final String LOCAL_HOST = "127.0.0.1";
+
+    private static final int MAX_PORT = 65535;
+
     private static final String SERIAL = "test_device_001";
 
     private static final String MANUFACTURER = "Google";
@@ -58,7 +73,11 @@ public class IntegrationTest {
 
     private static final String ADDITIONAL_TEST_MESSAGE = "nope! fooled you!";
 
-    /** Returns the path to the adb present in the SDK used for tests. */
+    private static final int TEST_BYTE = 0xAB;
+
+    /**
+     * Returns the path to the adb present in the SDK used for tests.
+     */
     @NonNull
     public static Path getPathToAdb() {
         return TestUtils.getSdk().toPath().resolve("platform-tools").resolve(SdkConstants.FN_ADB);
@@ -75,12 +94,12 @@ public class IntegrationTest {
         try (FakeAdbServer server = builder.build()) {
             // Connect a test device to simulate device connection before server bring-up.
             server.connectDevice(
-                            "007",
-                            "Google",
-                            "MI",
-                            "rel1",
-                            "2017",
-                            DeviceState.HostConnectionType.USB)
+                    SERIAL,
+                    MANUFACTURER,
+                    MODEL,
+                    RELEASE,
+                    SDK,
+                    DeviceState.HostConnectionType.USB)
                     .get();
 
             // Start server execution.
@@ -106,7 +125,96 @@ public class IntegrationTest {
 
             IDevice[] devices = bridge.getDevices();
             assertThat(devices.length).isEqualTo(1);
-            assertThat(devices[0].getName()).isEqualTo("007");
+            assertThat(devices[0].getName()).isEqualTo(SERIAL);
+        } finally {
+            AndroidDebugBridge.terminate();
+        }
+    }
+
+    @Test
+    public void testPortForward() throws Exception {
+        // Build the server and configure it to use the default ADB command handlers.
+        FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
+        builder.installDefaultCommandHandlers();
+
+        try (FakeAdbServer server = builder.build()) {
+            DeviceState deviceState = server.connectDevice(
+                    SERIAL,
+                    MANUFACTURER,
+                    MODEL,
+                    RELEASE,
+                    SDK,
+                    DeviceState.HostConnectionType.USB)
+                    .get();
+
+            // Start server execution.
+            server.start();
+
+            // Test that we obtain 1 device via the ddmlib APIs
+            AndroidDebugBridge.enableFakeAdbServerMode(server.getPort());
+            AndroidDebugBridge.initIfNeeded(false);
+            AndroidDebugBridge bridge =
+                    AndroidDebugBridge.createBridge(getPathToAdb().toString(), false);
+            assertNotNull("Debug bridge", bridge);
+
+            long startTime = System.currentTimeMillis();
+            while (!bridge.isConnected()
+                    && (System.currentTimeMillis() - startTime) < TimeUnit.SECONDS.toMillis(10)) {
+                Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+            }
+
+            assertThat(bridge.isConnected()).isTrue();
+
+            // should we rather be waiting for the initial device list to become available?
+            assume().that(bridge.hasInitialDeviceList()).isTrue();
+
+            IDevice[] devices = bridge.getDevices();
+            assertThat(devices.length).isEqualTo(1);
+            assertThat(devices[0].getName()).isEqualTo(SERIAL);
+
+            try (ServerSocket serverSocket = new ServerSocket(0)) {
+                serverSocket.setReuseAddress(true);
+                CountDownLatch serverConnected = new CountDownLatch(1);
+                ExecutorService serverExecutor = Executors.newSingleThreadExecutor();
+                Future<Boolean> serverResult = serverExecutor.submit(() -> {
+                    try (Socket socket = serverSocket.accept()) {
+                        serverConnected.countDown();
+                        return socket.getInputStream().read() == TEST_BYTE;
+                    } catch (IOException e) {
+                        return false;
+                    }
+                });
+
+                // Port forwarding is basically just a no-op. Run the stubbed/mocked/fake
+                // device-side service on the source port of the forward directly. That way, when
+                // the component that's attempting to connect to the device through the source port,
+                // the component will connect directly to the service.
+                int destinationPort = new Random(System.currentTimeMillis()).nextInt(MAX_PORT) + 1;
+                devices[0].createForward(serverSocket.getLocalPort(), destinationPort);
+                ImmutableMap<Integer, PortForwarder> forwarders = deviceState
+                        .getAllPortForwarders();
+                assertEquals(1, forwarders.size());
+                assertTrue(forwarders.containsKey(serverSocket.getLocalPort()));
+                assertEquals(serverSocket.getLocalPort(),
+                        forwarders.get(serverSocket.getLocalPort()).getSource().getPort());
+                assertEquals(destinationPort,
+                        forwarders.get(serverSocket.getLocalPort()).getDestination().getPort());
+                assertEquals(PortForwarder.INVALID_PORT,
+                        forwarders.get(serverSocket.getLocalPort()).getDestination().getJdwpPid());
+                assertNull(forwarders.get(serverSocket.getLocalPort()).getDestination()
+                        .getUnixDomain());
+
+                try (Socket sourceSocket = new Socket(LOCAL_HOST, serverSocket.getLocalPort())) {
+                    sourceSocket.setReuseAddress(true);
+                    sourceSocket.getOutputStream().write(TEST_BYTE);
+                }
+                serverConnected.await();
+                assertTrue(serverResult.get());
+
+                // Test removeForward.
+                devices[0].removeForward(serverSocket.getLocalPort(), 0);
+                assertEquals(0, deviceState.getAllPortForwarders().size());
+            }
         } finally {
             AndroidDebugBridge.terminate();
         }
@@ -129,12 +237,12 @@ public class IntegrationTest {
             // Pre-connect a device before server startup.
             DeviceState device =
                     server.connectDevice(
-                                    SERIAL,
-                                    MANUFACTURER,
-                                    MODEL,
-                                    RELEASE,
-                                    SDK,
-                                    DeviceState.HostConnectionType.USB)
+                            SERIAL,
+                            MANUFACTURER,
+                            MODEL,
+                            RELEASE,
+                            SDK,
+                            DeviceState.HostConnectionType.USB)
                             .get();
             device.setDeviceStatus(DeviceState.DeviceStatus.ONLINE);
 
@@ -206,12 +314,12 @@ public class IntegrationTest {
             // Pre-connect a device before server startup.
             DeviceState device =
                     server.connectDevice(
-                                    SERIAL,
-                                    MANUFACTURER,
-                                    MODEL,
-                                    RELEASE,
-                                    SDK,
-                                    DeviceState.HostConnectionType.USB)
+                            SERIAL,
+                            MANUFACTURER,
+                            MODEL,
+                            RELEASE,
+                            SDK,
+                            DeviceState.HostConnectionType.USB)
                             .get();
             device.setDeviceStatus(DeviceState.DeviceStatus.ONLINE);
 
@@ -320,10 +428,12 @@ public class IntegrationTest {
         }
 
         @Override
-        public void deviceDisconnected(@NonNull IDevice device) {}
+        public void deviceDisconnected(@NonNull IDevice device) {
+        }
 
         @Override
-        public void deviceChanged(@NonNull IDevice device, int changeMask) {}
+        public void deviceChanged(@NonNull IDevice device, int changeMask) {
+        }
 
         public boolean waitForDeviceConnection(long timeout, @NonNull TimeUnit unit) {
             try {

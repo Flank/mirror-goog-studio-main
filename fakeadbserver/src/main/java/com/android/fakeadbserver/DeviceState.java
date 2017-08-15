@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.fakeadbserver.statechangehubs.ClientStateChangeHandlerFactory;
 import com.android.fakeadbserver.statechangehubs.ClientStateChangeHub;
 import com.android.fakeadbserver.statechangehubs.StateChangeQueue;
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,25 +29,19 @@ import java.util.Map;
 
 public class DeviceState {
 
-    protected final ClientStateChangeHub mClientStateChangeHub = new ClientStateChangeHub();
-    protected final Map<String, byte[]> mPathsToFiles = new HashMap<>();
-    protected final List<String> mLogcatMessages = new ArrayList<>();
-    protected final Map<Integer, ClientState> mClients = new HashMap<>();
-    @NonNull
-    protected FakeAdbServer mServer;
-    @NonNull
-    protected HostConnectionType mHostConnectionType;
-    @NonNull
-    protected String mDeviceId;
-    @NonNull
-    protected String mManufacturer;
-    @NonNull
-    protected String mModel;
-    @NonNull
-    protected String mBuildVersionRelease;
-    @NonNull
-    protected String mBuildVersionSdk;
-    @NonNull protected DeviceStatus mDeviceStatus;
+    private final ClientStateChangeHub mClientStateChangeHub = new ClientStateChangeHub();
+    private final Map<String, byte[]> mPathsToFiles = new HashMap<>();
+    private final List<String> mLogcatMessages = new ArrayList<>();
+    private final Map<Integer, ClientState> mClients = new HashMap<>();
+    private final Map<Integer, PortForwarder> mPortForwarders = new HashMap<>();
+    private final FakeAdbServer mServer;
+    private final HostConnectionType mHostConnectionType;
+    private final String mDeviceId;
+    private final String mManufacturer;
+    private final String mModel;
+    private final String mBuildVersionRelease;
+    private final String mBuildVersionSdk;
+    private DeviceStatus mDeviceStatus;
 
     DeviceState(
             @NonNull FakeAdbServer server,
@@ -169,6 +164,50 @@ public class DeviceState {
     }
 
     @NonNull
+    public ImmutableMap<Integer, PortForwarder> getAllPortForwarders() {
+        synchronized (mPortForwarders) {
+            return ImmutableMap.copyOf(mPortForwarders);
+        }
+    }
+
+    public boolean addPortForwarder(@NonNull PortForwarder forwarder, boolean noRebind) {
+        synchronized (mPortForwarders) {
+            if (mPortForwarders.containsKey(forwarder.getSource().mPort)) {
+                if (noRebind) {
+                    return false;
+                } else {
+                    removePortForwarder(forwarder);
+                }
+            }
+
+            // Just overwrite the previous forwarder.
+            mPortForwarders.put(forwarder.getSource().mPort, forwarder);
+
+            return true;
+        }
+    }
+
+    public boolean removePortForwarder(int hostPort) {
+        return removePortForwarder(PortForwarder.createPortForwarder(hostPort, -1));
+    }
+
+    public void removeAllPortForwarders() {
+        synchronized (mPortForwarders) {
+            mPortForwarders.clear();
+        }
+    }
+
+    private boolean removePortForwarder(@NonNull PortForwarder forwarder) {
+        synchronized (mPortForwarders) {
+            if (!mPortForwarders.containsKey(forwarder.getSource().mPort)) {
+                return false;
+            }
+            mPortForwarders.remove(forwarder.getSource().mPort);
+            return true;
+        }
+    }
+
+    @NonNull
     public HostConnectionType getHostConnectionType() {
         return mHostConnectionType;
     }
@@ -178,29 +217,33 @@ public class DeviceState {
         return new ArrayList<>(mClients.values());
     }
 
-    /** The state of a device. */
+    /**
+     * The state of a device.
+     */
     public enum DeviceStatus {
         BOOTLOADER("bootloader"), //$NON-NLS-1$
         OFFLINE("offline"), //$NON-NLS-1$
         ONLINE("device"), //$NON-NLS-1$
         RECOVERY("recovery"), //$NON-NLS-1$
-        /** Device is in "sideload" state either through `adb sideload` or recovery menu */
+        /**
+         * Device is in "sideload" state either through `adb sideload` or recovery menu
+         */
         SIDELOAD("sideload"), //$NON-NLS-1$
         UNAUTHORIZED("unauthorized"), //$NON-NLS-1$
         DISCONNECTED("disconnected"), //$NON-NLS-1$
         ;
 
-        private String mState;
+        private final String mState;
 
         DeviceStatus(String state) {
             mState = state;
         }
 
         /**
-         * Returns a {@link DeviceStatus} from the string returned by <code>adb devices</code>.
+         * Returns a {DeviceStatus} from the string returned by <code>adb devices</code>.
          *
          * @param state the device state.
-         * @return a {@link DeviceStatus} object or <code>null</code> if the state is unknown.
+         * @return a {DeviceStatus} object or <code>null</code> if the state is unknown.
          */
         @Nullable
         public static DeviceStatus getState(String state) {

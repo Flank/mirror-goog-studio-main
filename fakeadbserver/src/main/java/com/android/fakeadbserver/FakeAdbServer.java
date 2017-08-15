@@ -19,8 +19,11 @@ package com.android.fakeadbserver;
 import com.android.annotations.NonNull;
 import com.android.fakeadbserver.devicecommandhandlers.DeviceCommandHandler;
 import com.android.fakeadbserver.devicecommandhandlers.TrackJdwpCommandHandler;
+import com.android.fakeadbserver.hostcommandhandlers.ForwardCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.HostCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.KillCommandHandler;
+import com.android.fakeadbserver.hostcommandhandlers.KillForwardAllCommandHandler;
+import com.android.fakeadbserver.hostcommandhandlers.KillForwardCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.ListDevicesCommandHandler;
 import com.android.fakeadbserver.hostcommandhandlers.TrackDevicesCommandHandler;
 import com.android.fakeadbserver.shellcommandhandlers.GetPropCommandHandler;
@@ -47,7 +50,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-/** See {@link FakeAdbServerTest#testInteractiveServer()} for example usage. */
+/**
+ * See {@link FakeAdbServerTest#testInteractiveServer()} for example usage.
+ */
 public final class FakeAdbServer implements AutoCloseable {
 
     private final ServerSocket mServerSocket;
@@ -117,7 +122,7 @@ public final class FakeAdbServer implements AutoCloseable {
                                                     mShellCommandHandlers));
                                 } catch (IOException ignored) {
                                     // close() is called in a separate thread, and will cause accept() to throw an
-                                    // exception.
+                                    // exception if closed here.
                                 }
                             }
                         });
@@ -191,11 +196,11 @@ public final class FakeAdbServer implements AutoCloseable {
     /**
      * Connects a device to the ADB server. Must be called on the EDT/main thread.
      *
-     * @param deviceId is the unique device ID of the device
-     * @param manufacturer is the manufacturer name of the device
-     * @param deviceModel is the model name of the device
-     * @param release is the Android OS version of the device
-     * @param sdk is the SDK version of the device
+     * @param deviceId           is the unique device ID of the device
+     * @param manufacturer       is the manufacturer name of the device
+     * @param deviceModel        is the model name of the device
+     * @param release            is the Android OS version of the device
+     * @param sdk                is the SDK version of the device
      * @param hostConnectionType is the simulated connection type to the device @return the future
      * @return a future to allow synchronization of the side effects of the call
      */
@@ -266,7 +271,7 @@ public final class FakeAdbServer implements AutoCloseable {
          * test author requires additional functionality that is not provided by the default {@link
          * CommandHandler}s.
          *
-         * @param command The ADB protocol string of the command.
+         * @param command            The ADB protocol string of the command.
          * @param handlerConstructor The constructor for the handler.
          */
         @NonNull
@@ -281,7 +286,7 @@ public final class FakeAdbServer implements AutoCloseable {
          * test author requires additional functionality that is not provided by the default {@link
          * CommandHandler}s.
          *
-         * @param command The ADB device protocol string of the command.
+         * @param command            The ADB device protocol string of the command.
          * @param handlerConstructor The constructor for the handler.
          */
         @NonNull
@@ -297,7 +302,7 @@ public final class FakeAdbServer implements AutoCloseable {
          * the test author requires additional functionality that is not provided by the default
          * {@link CommandHandler}s.
          *
-         * @param command The shell command string.
+         * @param command            The shell command string.
          * @param handlerConstructor The constructor for the handler.
          */
         @NonNull
@@ -319,6 +324,11 @@ public final class FakeAdbServer implements AutoCloseable {
                     ListDevicesCommandHandler.COMMAND, ListDevicesCommandHandler::new);
             setHostCommandHandler(
                     TrackDevicesCommandHandler.COMMAND, TrackDevicesCommandHandler::new);
+            setHostCommandHandler(ForwardCommandHandler.COMMAND, ForwardCommandHandler::new);
+            setHostCommandHandler(KillForwardCommandHandler.COMMAND,
+                    KillForwardCommandHandler::new);
+            setHostCommandHandler(
+                    KillForwardAllCommandHandler.COMMAND, KillForwardAllCommandHandler::new);
 
             setDeviceCommandHandler(TrackJdwpCommandHandler.COMMAND, TrackJdwpCommandHandler::new);
 
