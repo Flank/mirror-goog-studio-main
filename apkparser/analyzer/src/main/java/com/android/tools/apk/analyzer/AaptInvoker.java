@@ -37,9 +37,13 @@ public class AaptInvoker {
     @NonNull private final Path aapt;
     @NonNull private final DefaultProcessExecutor processExecutor;
 
-    public AaptInvoker(@NonNull AndroidSdkHandler sdkHandler, @NonNull ILogger logger) {
-        aapt = getPathToAapt(sdkHandler, logger);
+    public AaptInvoker(@NonNull Path aaptPath, @NonNull ILogger logger) {
+        aapt = aaptPath;
         processExecutor = new DefaultProcessExecutor(logger);
+    }
+
+    public AaptInvoker(@NonNull AndroidSdkHandler sdkHandler, @NonNull ILogger logger) {
+        this(getPathToAapt(sdkHandler, logger), logger);
     }
 
     @NonNull
@@ -92,7 +96,7 @@ public class AaptInvoker {
      * @param sdkHandler pass in a configured sdkHandler to locate aapt
      */
     @NonNull
-    private static Path getPathToAapt(@NonNull AndroidSdkHandler sdkHandler, ILogger logger) {
+    public static Path getPathToAapt(@NonNull AndroidSdkHandler sdkHandler, ILogger logger) {
         BuildToolInfo latestBuildTool =
                 sdkHandler.getLatestBuildTool(new LoggerProgressIndicatorWrapper(logger), true);
         if (latestBuildTool == null) {
