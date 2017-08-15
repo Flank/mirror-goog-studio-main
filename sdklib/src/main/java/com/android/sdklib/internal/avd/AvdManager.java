@@ -1443,8 +1443,8 @@ public class AvdManager {
         try (OutputStreamWriter writer = new OutputStreamWriter(mFop.newFileOutputStream(iniFile),
                 charset)){
             if (addEncoding) {
-                // Write down the charset used in case we want to use it later.
-                writer.write(String.format("%1$s=%2$s\n", AVD_INI_ENCODING, charset.name()));
+                // Write down the charset we're using in case we want to use it later.
+                values.put(AVD_INI_ENCODING, charset.name());
             }
 
             ArrayList<String> keys = new ArrayList<>(values.keySet());
