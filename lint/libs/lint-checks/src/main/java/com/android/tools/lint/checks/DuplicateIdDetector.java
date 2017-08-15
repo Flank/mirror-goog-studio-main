@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_LAYOUT;
 import static com.android.SdkConstants.DOT_XML;
@@ -57,13 +56,12 @@ import java.util.Set;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  * Checks for duplicate ids within a layout and within an included layout
  */
 public class DuplicateIdDetector extends LayoutDetector {
-    private Set<String> mIds;
+    private Map<String, Attr> mFileIds;
     private Map<File, Set<String>> mFileToIds;
     private Map<File, List<String>> mIncludes;
 
@@ -125,7 +123,7 @@ public class DuplicateIdDetector extends LayoutDetector {
     @Override
     public void beforeCheckFile(@NonNull Context context) {
         if (context.getPhase() == 1) {
-            mIds = new HashSet<>();
+            mFileIds = new HashMap<>();
         }
     }
 
@@ -133,9 +131,8 @@ public class DuplicateIdDetector extends LayoutDetector {
     public void afterCheckFile(@NonNull Context context) {
         if (context.getPhase() == 1) {
             // Store this layout's set of ids for full project analysis in afterCheckProject
-            mFileToIds.put(context.file, mIds);
-
-            mIds = null;
+            mFileToIds.put(context.file, mFileIds.keySet());
+            mFileIds = null;
         }
     }
 
@@ -280,11 +277,19 @@ public class DuplicateIdDetector extends LayoutDetector {
                     }
                 }
             }
-            if (mIds.contains(id)) {
+            if (mFileIds.containsKey(id)) {
                 Location location = context.getLocation(attribute);
 
-                Attr first = findIdAttribute(attribute.getOwnerDocument(), id);
+                Attr first = mFileIds.get(id);
                 if (first != null && first != attribute) {
+                    // Make sure they have the same parent if it's a navigation document
+                    if (context.getResourceFolderType() == ResourceFolderType.NAVIGATION
+                          && first.getOwnerElement().getParentNode() !=
+                          attribute.getOwnerElement().getParentNode()) {
+                        mFileIds.put(id, attribute);
+                        return;
+                    }
+
                     Location secondLocation = context.getLocation(first);
                     secondLocation.setMessage(String.format("Duplicate id `%1$s` originally defined here", id), true);
                     location.setSecondary(secondLocation);
@@ -299,7 +304,7 @@ public class DuplicateIdDetector extends LayoutDetector {
                     return;
                 }
 
-                mIds.add(id);
+                mFileIds.put(id, attribute);
             }
         } else {
             Collection<Multimap<String, Occurrence>> maps = mLocations.get(context.file);
@@ -324,27 +329,6 @@ public class DuplicateIdDetector extends LayoutDetector {
                 }
             }
         }
-    }
-
-    /** Find the first id attribute with the given value below the given node */
-    private static Attr findIdAttribute(Node node, String targetValue) {
-        if (node.getNodeType() == Node.ELEMENT_NODE) {
-            Attr attribute = ((Element) node).getAttributeNodeNS(ANDROID_URI, ATTR_ID);
-            if (attribute != null && attribute.getValue().equals(targetValue)) {
-                return attribute;
-            }
-        }
-
-        NodeList children = node.getChildNodes();
-        for (int i = 0, n = children.getLength(); i < n; i++) {
-            Node child = children.item(i);
-            Attr result = findIdAttribute(child, targetValue);
-            if (result != null) {
-                return result;
-            }
-        }
-
-        return null;
     }
 
     /** Include Graph Node */

@@ -87,7 +87,8 @@ public final class FolderTypeRelationship {
                     ResourceFolderType.MENU,
                     ResourceFolderType.DRAWABLE,
                     ResourceFolderType.XML,
-                    ResourceFolderType.TRANSITION);
+                    ResourceFolderType.TRANSITION,
+                    ResourceFolderType.NAVIGATION);
 
     /**
      * Returns a list of {@link ResourceType}s that can be generated from files inside a folder of
