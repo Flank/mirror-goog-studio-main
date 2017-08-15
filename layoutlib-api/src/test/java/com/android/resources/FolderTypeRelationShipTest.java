@@ -46,6 +46,8 @@ public class FolderTypeRelationShipTest extends TestCase {
         assertTrue(FolderTypeRelationship.isIdGeneratingFolderType(ResourceFolderType.LAYOUT));
         assertTrue(FolderTypeRelationship.isIdGeneratingFolderType(ResourceFolderType.MENU));
         assertTrue(FolderTypeRelationship.isIdGeneratingFolderType(ResourceFolderType.DRAWABLE));
+        assertTrue(FolderTypeRelationship.isIdGeneratingFolderType(ResourceFolderType.XML));
+        assertTrue(FolderTypeRelationship.isIdGeneratingFolderType(ResourceFolderType.NAVIGATION));
 
         assertFalse(FolderTypeRelationship.isIdGeneratingFolderType(ResourceFolderType.COLOR));
         assertFalse(FolderTypeRelationship.isIdGeneratingFolderType(ResourceFolderType.MIPMAP));
