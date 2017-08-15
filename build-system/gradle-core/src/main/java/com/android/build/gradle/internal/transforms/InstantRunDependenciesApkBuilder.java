@@ -106,22 +106,25 @@ public class InstantRunDependenciesApkBuilder extends InstantRunSplitApkBuilder 
     @Override
     public void transform(@NonNull TransformInvocation transformInvocation)
             throws TransformException, InterruptedException, IOException {
+        // we are not really an incremental transform. All we need to know is that at least
+        // one of our file has changed in any way and trigger a full rebuild of the
+        // dependencies split apk.
+        boolean anyChangeOfInterest =
+                transformInvocation
+                        .getInputs()
+                        .stream()
+                        .flatMap(t -> t.getDirectoryInputs().stream())
+                        .anyMatch(directoryInput -> !directoryInput.getChangedFiles().isEmpty());
+        // if we are in incremental mode, and not change interest us, just return.
+        if (transformInvocation.isIncremental() && !anyChangeOfInterest) {
+            return;
+        }
 
         ImmutableSet.Builder<File> dexFiles = ImmutableSet.builder();
         for (TransformInput transformInput : transformInvocation.getInputs()) {
             for (JarInput jarInput : transformInput.getJarInputs()) {
                 logger.error("InstantRunDependenciesApkBuilder received a jar file "
                         + jarInput.getFile().getAbsolutePath());
-            }
-            // we are not really an incremental transform. All we need to know is that at least
-            // one of our file has changed in any way and trigger a full rebuild of the
-            // dependencies split apk.
-            boolean anyChangeOfInterest = transformInput.getDirectoryInputs().stream().anyMatch(
-                    directoryInput -> !directoryInput.getChangedFiles().isEmpty());
-
-            // if we are in incremental mode, and not change interest us, just return.
-            if (transformInvocation.isIncremental() && !anyChangeOfInterest) {
-                return;
             }
 
             for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
