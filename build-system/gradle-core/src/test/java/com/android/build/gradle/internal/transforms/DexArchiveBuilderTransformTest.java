@@ -277,6 +277,20 @@ public class DexArchiveBuilderTransformTest {
         DexArchiveBuilderTransform minAndDebuggableChanged = getTransform(userCache, 20, false);
         minAndDebuggableChanged.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(4);
+
+        DexArchiveBuilderTransform useDifferentDexer =
+                new DexArchiveBuilderTransform(
+                        new DefaultDexOptions(),
+                        new NoOpErrorReporter(),
+                        userCache,
+                        20,
+                        dexerTool == DexerTool.DX ? DexerTool.D8 : DexerTool.DX,
+                        true,
+                        10,
+                        10,
+                        false);
+        useDifferentDexer.transform(invocation);
+        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(5);
     }
 
     @Test

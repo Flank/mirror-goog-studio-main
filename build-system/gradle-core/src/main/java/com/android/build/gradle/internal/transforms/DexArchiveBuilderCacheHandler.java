@@ -54,22 +54,25 @@ class DexArchiveBuilderCacheHandler {
     private static final LoggerWrapper logger =
             LoggerWrapper.getLogger(DexArchiveBuilderTransform.class);
 
-    private static final int CACHE_KEY_VERSION = 2;
+    private static final int CACHE_KEY_VERSION = 3;
 
     @Nullable private final FileCache userLevelCache;
     @NonNull private final DexOptions dexOptions;
     private final int minSdkVersion;
     private final boolean isDebuggable;
+    @NonNull private final DexerTool dexer;
 
     DexArchiveBuilderCacheHandler(
             @Nullable FileCache userLevelCache,
             @NonNull DexOptions dexOptions,
             int minSdkVersion,
-            boolean isDebuggable) {
+            boolean isDebuggable,
+            @NonNull DexerTool dexer) {
         this.userLevelCache = userLevelCache;
         this.dexOptions = dexOptions;
         this.minSdkVersion = minSdkVersion;
         this.isDebuggable = isDebuggable;
+        this.dexer = dexer;
     }
 
     @Nullable
@@ -84,7 +87,7 @@ class DexArchiveBuilderCacheHandler {
 
         FileCache.Inputs buildCacheInputs =
                 DexArchiveBuilderCacheHandler.getBuildCacheInputs(
-                        input.getFile(), dexOptions, DexerTool.DX, minSdkVersion, isDebuggable);
+                        input.getFile(), dexOptions, dexer, minSdkVersion, isDebuggable);
         return cache.cacheEntryExists(buildCacheInputs)
                 ? cache.getFileInCache(buildCacheInputs)
                 : null;
@@ -100,11 +103,7 @@ class DexArchiveBuilderCacheHandler {
             if (cache != null) {
                 FileCache.Inputs buildCacheInputs =
                         DexArchiveBuilderCacheHandler.getBuildCacheInputs(
-                                input.getFile(),
-                                dexOptions,
-                                DexerTool.DX,
-                                minSdkVersion,
-                                isDebuggable);
+                                input.getFile(), dexOptions, dexer, minSdkVersion, isDebuggable);
                 FileCache.QueryResult result =
                         cache.createFileInCacheIfAbsent(
                                 buildCacheInputs,

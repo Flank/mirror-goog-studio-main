@@ -126,7 +126,7 @@ public class DexArchiveBuilderTransform extends Transform {
         this.executor = WaitableExecutor.useGlobalSharedThreadPool();
         this.cacheHandler =
                 new DexArchiveBuilderCacheHandler(
-                        userLevelCache, dexOptions, minSdkVersion, isDebuggable);
+                        userLevelCache, dexOptions, minSdkVersion, isDebuggable, dexer);
         this.useGradleWorkers = useGradleWorkers;
         this.inBufferSize =
                 (inBufferSize == null ? DEFAULT_BUFFER_SIZE_IN_KB : inBufferSize) * 1024;
