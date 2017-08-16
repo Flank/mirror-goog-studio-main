@@ -2949,6 +2949,111 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testGmsHide() throws Exception {
+        lint().files(
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import test.pkg.internal.HiddenInPackage;\n" +
+                        "\n" +
+                        "public class HideTest {\n" +
+                        "    public void test() {\n" +
+                        "        HiddenInPackage.test(); // Error\n" +
+                        "        HiddenClass.test(); // Error\n" +
+                        "        PublicClass.hiddenMethod(); // Error\n" +
+                        "        PublicClass.normalMethod(); // OK!\n" +
+                        "    }\n" +
+                        "}\n"),
+                java("" +
+                        // Access from within the GMS codebase should not flag errors
+                        "package com.google.android.gms.foo.bar;\n" +
+                        "\n" +
+                        "import test.pkg.internal.HiddenInPackage;\n" +
+                        "\n" +
+                        "public class HideTest {\n" +
+                        "    public void test() {\n" +
+                        "        HiddenInPackage.test(); // Error\n" +
+                        "        HiddenClass.test(); // Error\n" +
+                        "        PublicClass.hiddenMethod(); // Error\n" +
+                        "        PublicClass.normalMethod(); // OK!\n" +
+                        "    }\n" +
+                        "}\n"),
+                java("" +
+                        "package test.pkg.internal;\n" +
+                        "\n" +
+                        "public class HiddenInPackage {\n" +
+                        "    public static void test() {\n" +
+                        "    }\n" +
+                        "}\n"),
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import com.google.android.gms.common.internal.Hide;\n" +
+                        "\n" +
+                        "@Hide\n" +
+                        "public class HiddenClass {\n" +
+                        "    public static void test() {\n" +
+                        "    }\n" +
+                        "}\n"),
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import com.google.android.gms.common.internal.Hide;\n" +
+                        "\n" +
+                        "public class PublicClass {\n" +
+                        "    public static void normalMethod() {\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    @Hide\n" +
+                        "    public static void hiddenMethod() {\n" +
+                        "    }\n" +
+                        "}\n"),
+                java("" +
+                        "package com.google.android.gms.common.internal;\n" +
+                        "\n" +
+                        "import java.lang.annotation.Documented;\n" +
+                        "import java.lang.annotation.ElementType;\n" +
+                        "import java.lang.annotation.Retention;\n" +
+                        "import java.lang.annotation.RetentionPolicy;\n" +
+                        "import java.lang.annotation.Target;\n" +
+                        "import java.lang.annotation.Target;\n" +
+                        "import static java.lang.annotation.ElementType.*;\n" +
+                        "@Target({TYPE,FIELD,METHOD,CONSTRUCTOR,PACKAGE})\n" +
+                        "@Retention(RetentionPolicy.CLASS)\n" +
+                        "public @interface Hide {}"),
+                java("src/test/pkg/package-info.java", "" +
+                        "@Hide\n" +
+                        "package test.pkg.internal;\n" +
+                        "\n" +
+                        "import com.google.android.gms.common.internal.Hide;\n"),
+                // Also register the compiled version of the above package-info jar file;
+                // without this we don't resolve package annotations
+                base64gzip("libs/packageinfoclass.jar", "" +
+                        "H4sIAAAAAAAAAAvwZmYRYeDg4GC4tYDfmwEJcDKwMPi6hjjqevq56f87xcDA" +
+                        "zBDgzc4BkmKCKgnAqVkEiOGafR39PN1cg0P0fN0++5457eOtq3eR11tX69yZ" +
+                        "85uDDK4YP3hapOflq+Ppe7F0FQtnxAvJI9KzpF6KLX22RE1suVZGxdJpFqKq" +
+                        "ac9EtUVei758mv2p6GMRI9gtbSuDVb2ANnmhuEVhPqpbVIC4JLW4RL8gO10/" +
+                        "M68ktSgvMUe/IDE5OzE9VTczLy1fLzknsbjYt9cw75CDgOt/oQOKoRmXXB6x" +
+                        "pc0qWZmhpKSoqKoe8SbRNM22+c1WfveDjBYih1RcP3X/X/q/q3znvHMM9wxO" +
+                        "T0itKKn4tW2d5g9nJesz/fssfhzY+eLetKnv9x5+Hb7cM+vflbiom65xK6M+" +
+                        "efpEt9cER/ge1HFRW5+aHBS0Ilrq3a0pLsLmr5TXLn1S3u76yOziR4F/J+qX" +
+                        "H/581+ti9oK36x4p7WXgU/6T1tI+Xy7Z6E2JQvADNlAAHM4XN1kP9N5VcAAw" +
+                        "MokwoEYHLKJAcYkKUGIWXStyuIqgaLPFEa/IJoDCH9lhKigmnCQyNgK8WdlA" +
+                        "6pmB8DyQPsUI4gEAH9csuq8CAAA="))
+                .run()
+                .expect("" +
+                        "src/test/pkg/HideTest.java:7: Error: HiddenInPackage.test is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                        "        HiddenInPackage.test(); // Error\n" +
+                        "                        ~~~~\n" +
+                        "src/test/pkg/HideTest.java:8: Error: HiddenClass is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                        "        HiddenClass.test(); // Error\n" +
+                        "        ~~~~~~~~~~~\n" +
+                        "src/test/pkg/HideTest.java:9: Error: PublicClass.hiddenMethod is marked as internal and should not be accessed from apps [RestrictedApi]\n" +
+                        "        PublicClass.hiddenMethod(); // Error\n" +
+                        "                    ~~~~~~~~~~~~\n" +
+                        "3 errors, 0 warnings\n");
+    }
+
     public void testRequiresPermissionWithinRequires() throws Exception {
         assertEquals("No warnings.",
                 lintProject(

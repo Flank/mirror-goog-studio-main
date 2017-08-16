@@ -166,8 +166,8 @@ public class TestFiles {
         }
 
         String base64 = Base64.getEncoder().encodeToString(bytes);
-        return "\"\"\n+ \""
-                + Joiner.on("\"\n+ \"").join(Splitter.fixedLength(60).split(base64)) + "\"";
+        return "\"\" +\n\""
+                + Joiner.on("\" +\n\"").join(Splitter.fixedLength(60).split(base64)) + "\"";
     }
 
     public static String toBase64(@NonNull File file) throws IOException {

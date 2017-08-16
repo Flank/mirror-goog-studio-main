@@ -336,6 +336,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
             .addMoreInfo(
                     "http://developer.android.com/guide/components/processes-and-threads.html#Threads");
 
+    public static final String GMS_HIDE_ANNOTATION = "com.google.android.gms.common.internal.Hide";
     public static final String CHECK_RESULT_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "CheckResult";
     public static final String INT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "IntRange";
     public static final String FLOAT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "FloatRange";
@@ -579,6 +580,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                     break;
 
                 case RESTRICT_TO_ANNOTATION:
+                case GMS_HIDE_ANNOTATION:
                     if (method != null) {
                         checkRestrictTo(context, call, method, annotation, allMethodAnnotations,
                                 allClassAnnotations);
@@ -963,6 +965,22 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 instanceof UBlockExpression;
     }
 
+    // Checks whether the client code is in the GMS codebase; if so, allow @Hide calls
+    // there
+    private static boolean isGmsContext(
+            @NonNull JavaContext context,
+            @NonNull UElement element) {
+        JavaEvaluator evaluator = context.getEvaluator();
+        PsiPackage pkg = evaluator.getPackage(element);
+        if (pkg == null) {
+            return false;
+        }
+
+        String qualifiedName = pkg.getQualifiedName();
+        return qualifiedName.startsWith("com.google.firebase")
+                || qualifiedName.startsWith("com.google.android.gms");
+    }
+
     private static boolean isTestContext(
             @NonNull JavaContext context,
             @NonNull UElement element) {
@@ -1204,6 +1222,13 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
             }
         }
 
+        if ((scope & RESTRICT_TO_ALL) != 0) {
+            if (!isGmsContext(context, node)) {
+                reportRestriction(null, containingClass, method, context,
+                        node, isClassAnnotation);
+            }
+        }
+
         if ((scope & RESTRICT_TO_SUBCLASSES )!= 0) {
             String qualifiedName = containingClass.getQualifiedName();
             if (qualifiedName != null) {
@@ -1233,7 +1258,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
     }
 
     private static void reportRestriction(
-            @NonNull String where,
+            @Nullable String where,
             @NonNull PsiClass containingClass,
             @NonNull PsiMethod method,
             @NonNull JavaContext context,
@@ -1268,13 +1293,18 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
         }
 
         // If this error message changes, you need to also update ResourceTypeInspection#guessLintIssue
-        String message = api + " can only be called " + where;
+        String message;
+        if (where == null) {
+            message = api + " is marked as internal and should not be accessed from apps";
+        } else {
+            message = api + " can only be called " + where;
 
-        // Most users will encounter this for the support library; let's have a clearer error message
-        // for that specific scenario
-        if (where.equals("from within the same library (groupId=com.android.support)")) {
-            // If this error message changes, you need to also update ResourceTypeInspection#guessLintIssue
-            message = "This API is marked as internal to the support library and should not be accessed from apps";
+            // Most users will encounter this for the support library; let's have a clearer error message
+            // for that specific scenario
+            if (where.equals("from within the same library (groupId=com.android.support)")) {
+                // If this error message changes, you need to also update ResourceTypeInspection#guessLintIssue
+                message = "This API is marked as internal to the support library and should not be accessed from apps";
+            }
         }
 
         Location location;
@@ -1296,11 +1326,15 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
     private static final int RESTRICT_TO_TESTS         = 1 << 2;
     /** {@code RestrictTo(RestrictTo.Scope.SUBCLASSES} */
     private static final int RESTRICT_TO_SUBCLASSES    = 1 << 3;
+    @SuppressWarnings("PointlessBitwiseExpression")
+    private static final int RESTRICT_TO_ALL           = 1 << 4;
 
     public static int getRestrictionScope(@NonNull UAnnotation annotation) {
         UExpression value = annotation.findDeclaredAttributeValue(ATTR_VALUE);
         if (value != null) {
             return getRestrictionScope(value);
+        } else if (GMS_HIDE_ANNOTATION.equals(annotation.getQualifiedName())) {
+            return RESTRICT_TO_ALL;
         }
         return 0;
     }
@@ -2478,7 +2512,8 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 continue;
             }
 
-            if (signature.startsWith(SUPPORT_ANNOTATIONS_PREFIX)) {
+            if (signature.startsWith(SUPPORT_ANNOTATIONS_PREFIX)
+                    || signature.equals(GMS_HIDE_ANNOTATION)) {
                 // Bail on the nullness annotations early since they're the most commonly
                 // defined ones. They're not analyzed in lint yet.
                 if (signature.endsWith(".Nullable") || signature.endsWith(".NonNull")) {
