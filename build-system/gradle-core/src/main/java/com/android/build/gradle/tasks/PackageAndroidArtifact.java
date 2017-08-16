@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.concurrency.GuardedBy;
 import com.android.apkzlib.utils.IOExceptionWrapper;
 import com.android.apkzlib.zip.compress.Zip64NotSupportedException;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
@@ -201,6 +202,10 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected File outputDirectory;
 
+    @GuardedBy("this")
+    @Nullable
+    private Map<ApkData, File> outputFiles;
+
     @Nullable protected OutputFileProvider outputFileProvider;
 
     @Input
@@ -349,24 +354,51 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
         return outputDirectory;
     }
 
+    /**
+     * Returns the paths to generated APKs as @Input to this task, so that when the output file name
+     * is changed (e.g., by the users), the task will be re-executed in non-incremental mode.
+     */
+    @Input
+    public Collection<File> getApkPathList() {
+        return ImmutableList.copyOf(getOutputFiles().values());
+    }
+
+    @NonNull
+    private synchronized Map<ApkData, File> getOutputFiles() {
+        if (outputFiles == null) {
+            //noinspection NonPrivateFieldAccessedInSynchronizedContext
+            outputFiles =
+                    computeOutputFiles(
+                            outputScope,
+                            BuildOutputs.load(taskInputType, resourceFiles),
+                            taskInputType,
+                            outputFileProvider,
+                            outputDirectory);
+        }
+        return outputFiles;
+    }
+
     @NonNull
     private static Map<ApkData, File> computeOutputFiles(
             @NonNull OutputScope outputScope,
-            @NonNull Collection<BuildOutput> inputs,
-            @NonNull VariantScope.OutputType inputType,
-            @NonNull File outputDirectory,
-            @Nullable OutputFileProvider outputFileProvider) {
+            @NonNull Collection<BuildOutput> buildOutputs,
+            @NonNull VariantScope.OutputType outputType,
+            @Nullable OutputFileProvider outputFileProvider,
+            @NonNull File outputDirectory) {
         Map<ApkData, File> outputFiles = Maps.newHashMap();
-        for (ApkData split : outputScope.getApkDatas()) {
-            BuildOutput buildOutput = OutputScope.getOutput(inputs, inputType, split);
+
+        for (ApkData apkData : outputScope.getApkDatas()) {
+            BuildOutput buildOutput = OutputScope.getOutput(buildOutputs, outputType, apkData);
+            //noinspection VariableNotUsedInsideIf - Only continue if a matching output is found
             if (buildOutput != null) {
                 File outputFile =
                         outputFileProvider != null
-                                ? outputFileProvider.getOutputFile(split)
-                                : new File(outputDirectory, split.getOutputFileName());
-                outputFiles.put(split, outputFile);
+                                ? outputFileProvider.getOutputFile(apkData)
+                                : new File(outputDirectory, apkData.getOutputFileName());
+                outputFiles.put(apkData, outputFile);
             }
         }
+
         return outputFiles;
     }
 
@@ -469,11 +501,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
         FileUtils.mkdirs(outputDirectory);
 
-        // TO DO : move ALL output file name calculations to Split.
-        File outputFile =
-                outputFileProvider != null
-                        ? outputFileProvider.getOutputFile(apkData)
-                        : new File(outputDirectory, apkData.getOutputFileName());
+        File outputFile = getOutputFiles().get(apkData);
 
         /*
          * Additionally, make sure we have no previous package, if it exists.
@@ -794,11 +822,7 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                         cacheByPath,
                         cacheUpdates);
 
-        // TO DO : move ALL output file name calculations to Split.
-        File outputFile =
-                outputFileProvider != null
-                        ? outputFileProvider.getOutputFile(apkData)
-                        : new File(outputDirectory, apkData.getOutputFileName());
+        File outputFile = getOutputFiles().get(apkData);
 
         Collection<BuildOutput> manifestOutputs = BuildOutputs.load(manifestType, manifests);
 

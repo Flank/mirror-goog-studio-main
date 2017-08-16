@@ -943,6 +943,22 @@ public final class GradleTestProject implements TestRule {
                                         : "-unsigned" + SdkConstants.DOT_ANDROID_PACKAGE)));
     }
 
+    /** Returns the APK given its file name. */
+    @NonNull
+    public Apk getApkByFileName(@NonNull ApkType apkType, @NonNull String apkFileName)
+            throws IOException {
+        return _getApk(
+                getOutputFile(
+                        "apk"
+                                + (apkType.getTestName() != null
+                                        ? File.separatorChar + apkType.getTestName()
+                                        : "")
+                                + File.separatorChar
+                                + apkType.getBuildType()
+                                + File.separatorChar
+                                + apkFileName));
+    }
+
     /**
      * Return the output apk File from the feature plugin for the given dimension.
      *
