@@ -2480,14 +2480,6 @@ public abstract class TaskManager {
                     .getVariantDependencies()
                     .getRuntimeClasspath()
                     .extendsFrom(agentConfiguration);
-
-            String jacocoAgentRuntimeDependency =
-                    project.getPlugins().getPlugin(JacocoPlugin.class).getAgentRuntimeDependency();
-            // we need to force the same version of Jacoco we use for instrumentation
-            variantScope
-                    .getVariantDependencies()
-                    .getRuntimeClasspath()
-                    .resolutionStrategy(r -> r.force(jacocoAgentRuntimeDependency));
         }
     }
 
