@@ -98,6 +98,7 @@ public class LinkTest {
     @Test
     public void link() throws Exception {
         Path resourceDotApUnderscore = temporaryFolder.newFile("resources.ap_").toPath();
+        Path rDotJavaDir = temporaryFolder.newFolder("r").toPath();
 
         Aapt2Result result =
                 getAapt()
@@ -111,7 +112,9 @@ public class LinkTest {
                                         "-R",
                                         compiledLenaPng.toString(),
                                         "-R",
-                                        compiledStringsXml.toString()));
+                                        compiledStringsXml.toString(),
+                                        "--java",
+                                        rDotJavaDir.toString()));
 
         assertEquals(0, result.getReturnCode());
         assertTrue(result.getMessages().isEmpty());
