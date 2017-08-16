@@ -320,14 +320,17 @@ public class AvdManagerTest extends TestCase {
 
         MockLog log = new MockLog();
         // Create an AVD
+        HashMap<String, String> origAvdConfig = new HashMap<>();
+        origAvdConfig.put("testKey1", "originalValue1");
+        origAvdConfig.put("testKey2", "originalValue2");
         AvdInfo origAvd = mAvdManager.createAvd(
           mAvdFolder,
           this.getName(),
           mSystemImagePlay,
           null,
           null,
-          null,
-          null,
+          "100M", // SD card size
+          origAvdConfig,
           null,
           false,
           false,
@@ -336,10 +339,16 @@ public class AvdManagerTest extends TestCase {
           log);
 
         assertNotNull("Could not create AVD", origAvd);
-        // Put an extra file in the AVD directory
+        // Put some extra files in the AVD directory
         mFileOp.createNewFile(new File(mAvdFolder, "foo.bar"));
+        mFileOp.recordExistingFile(mAvdFolder + "/hardware-qemu.ini",
+                                   "avd.name=" + this.getName() +
+                                   "\nhw.sdCard.path=" + mAvdFolder.getAbsolutePath() + "/sdcard.img");
 
-        // Copy this AVD to an AVD with a different name
+        // Copy this AVD to an AVD with a different name and a slightly different configuration
+        HashMap<String, String> newAvdConfig = new HashMap<>();
+        newAvdConfig.put("testKey2", "newValue2");
+
         String newName = "Copy_of_" + this.getName();
         AvdInfo duplicatedAvd = mAvdManager.createAvd(
           mAvdFolder,
@@ -347,8 +356,8 @@ public class AvdManagerTest extends TestCase {
           mSystemImagePlay,
           null,
           null,
-          null,
-          null,
+          "222M", // Different SD card size
+          newAvdConfig,
           null,
           false,
           false,
@@ -363,30 +372,43 @@ public class AvdManagerTest extends TestCase {
         String newNameIni = newName + ".ini";
         File newIniFile = new File(parentFolder, newNameIni);
         assertTrue("Expected " + newNameIni + " in " + parentFolder,
-                mFileOp.exists(newIniFile));
+                   mFileOp.exists(newIniFile));
         Map<String, String> iniProperties = AvdManager.parseIniFile(
-                new FileOpFileWrapper(newIniFile, mFileOp, false), null);
+          new FileOpFileWrapper(newIniFile, mFileOp, false), null);
         assertEquals(mFileOp.getAgnosticAbsPath(newFolder),
-                mFileOp.getAgnosticAbsPath(iniProperties.get("path")));
+                     mFileOp.getAgnosticAbsPath(iniProperties.get("path")));
 
         assertTrue(mFileOp.exists(new File(newFolder, "foo.bar")));
         assertFalse(mFileOp.exists(new File(newFolder, "boot.prop")));
+        // Check the config.ini file
         Map<String, String> configProperties = AvdManager.parseIniFile(new FileOpFileWrapper(
-                new File(newFolder, "config.ini"), mFileOp, false), null);
+          new File(newFolder, "config.ini"), mFileOp, false), null);
         assertEquals(mFileOp.getAgnosticAbsPath(
-                "system-images/android-24/google_apis_playstore/x86_64/"),
-                mFileOp.getAgnosticAbsPath(configProperties.get("image.sysdir.1")));
+          "system-images/android-24/google_apis_playstore/x86_64/"),
+                     mFileOp.getAgnosticAbsPath(configProperties.get("image.sysdir.1")));
         assertEquals(newName, configProperties.get("AvdId"));
         assertEquals(newName, configProperties.get("avd.ini.displayname"));
+        assertEquals("222M", configProperties.get("sdcard.size"));
+        assertEquals("originalValue1", configProperties.get("testKey1"));
+        assertEquals("newValue2", configProperties.get("testKey2"));
         assertTrue("Expected " + AvdManager.USERDATA_IMG + " in " + newFolder,
                    mFileOp.exists(new File(newFolder, AvdManager.USERDATA_IMG)));
         assertFalse("Expected NO " + AvdManager.USERDATA_QEMU_IMG + " in " + mAvdFolder,
-                   mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
+                    mFileOp.exists(new File(mAvdFolder, AvdManager.USERDATA_QEMU_IMG)));
+
+        // Check the hardware-qemu.ini file
+        Map<String, String> hardwareProperties = AvdManager.parseIniFile(new FileOpFileWrapper(
+          new File(newFolder, "hardware-qemu.ini"), mFileOp, false), null);
+        assertEquals(newName, hardwareProperties.get("avd.name"));
+        assertEquals(mAvdFolder.getParent() + "/" + newName + ".avd/sdcard.img",
+                     hardwareProperties.get("hw.sdCard.path"));
+
         // Quick check that the original AVD directory still exists
         assertTrue(mFileOp.exists(new File(mAvdFolder, "foo.bar")));
         assertTrue(mFileOp.exists(new File(mAvdFolder, "config.ini")));
+        assertTrue(mFileOp.exists(new File(mAvdFolder, "hardware-qemu.ini")));
         Map<String, String> baseConfigProperties = AvdManager.parseIniFile(
-                new FileOpFileWrapper(new File(mAvdFolder, "config.ini"), mFileOp, false), null);
+          new FileOpFileWrapper(new File(mAvdFolder, "config.ini"), mFileOp, false), null);
         assertThat(baseConfigProperties.get("AvdId")).isNotEqualTo(newName); // Different or null
     }
 
