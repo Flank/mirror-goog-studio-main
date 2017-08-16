@@ -52,9 +52,9 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor
  * trades precision for soundness.
  */
 class CallGraphVisitor(
-        val receiverEval: DispatchReceiverEvaluator,
-        val classHierarchy: ClassHierarchy,
-        val conservative: Boolean = false) : AbstractUastVisitor() {
+        private val receiverEval: DispatchReceiverEvaluator,
+        private val classHierarchy: ClassHierarchy,
+        private val conservative: Boolean = false) : AbstractUastVisitor() {
     private val mutableCallGraph: MutableCallGraph = MutableCallGraph()
     val callGraph: CallGraph get() = mutableCallGraph
 
@@ -81,8 +81,8 @@ class CallGraphVisitor(
                     if (constructors.isNotEmpty()) thoseWithoutExplicitSuper
                     else listOf(node)
             val callee: UElement = superClass.constructors()
-                    .filter { it.uastParameters.isEmpty() }
-                    .firstOrNull() ?: superClass
+                    .find { it.uastParameters.isEmpty() }
+                    ?: superClass
             with(mutableCallGraph) {
                 val calleeNode = getNode(callee)
                 callers.forEach { getNode(it).edges.add(Edge(calleeNode, /*call*/ null, DIRECT)) }
@@ -156,9 +156,7 @@ class CallGraphVisitor(
         val throughSuper = node.receiver is USuperExpression
         val isFunctionalCall =
                 baseCallee.psi == LambdaUtil.getFunctionalInterfaceMethod(node.receiverType)
-        val uniqueImpl = (overrides + baseCallee)
-                .filter { it.isCallable() }
-                .singleOrNull()
+        val uniqueImpl = (overrides + baseCallee).singleOrNull { it.isCallable() }
         when {
             staticallyDispatched || throughSuper -> addEdge(baseCallee, DIRECT)
             uniqueImpl != null && !isFunctionalCall -> {

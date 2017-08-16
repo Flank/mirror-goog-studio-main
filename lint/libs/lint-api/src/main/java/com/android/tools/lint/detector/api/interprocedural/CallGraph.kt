@@ -45,7 +45,6 @@ import java.util.ArrayDeque
 import java.util.ArrayList
 import java.util.HashMap
 import java.util.HashSet
-import kotlin.collections.set
 
 sealed class CallTarget(open val element: UElement) {
     data class Method(override val element: UMethod) : CallTarget(element)
@@ -247,7 +246,7 @@ data class ContextualEdge(
 
 /** Augments the non-contextual receiver evaluator with a parameter context. */
 class ContextualDispatchReceiverEvaluator(
-        val paramContext: ParamContext,
+        private val paramContext: ParamContext,
         nonContextualEval: IntraproceduralDispatchReceiverEvaluator
 ) : DispatchReceiverEvaluator(nonContextualEval) {
 
@@ -330,9 +329,8 @@ fun buildParamContextsFromCall(
     // Zip formal parameters with all possible argument receiver combinations.
     val cartesianProd = Lists.cartesianProduct(nonEmptyArgReceivers)
     val numImplicitArgs = if (implicitThisDispatchReceivers.isNotEmpty()) 1 else 0
-    val maxNumParamContexts = 1000
     val paramContexts = cartesianProd
-            .take(maxNumParamContexts) // Cap combinatorial explosions.
+            .take(graphExpansionLimit) // Cap combinatorial explosions.
             .map { receiverTuple ->
                 val zipped = paramsWithReceivers.zip(receiverTuple)
                 val dispatchReceiver = receiverTuple.take(numImplicitArgs).firstOrNull()
@@ -398,6 +396,9 @@ fun ContextualNode.computeEdges(
     }
 }
 
+// Limits the number of times a given call graph node can be specialized on a parameter context.
+const val graphExpansionLimit = 1000
+
 interface ContextualCallGraph {
     val contextualNodes: Collection<ContextualNode>
 
@@ -410,6 +411,7 @@ class MutableContextualCallGraph : ContextualCallGraph {
     override val contextualNodes = ArrayList<ContextualNode>()
     val outEdgeMap: Multimap<ContextualNode, ContextualEdge> = HashMultimap.create()
     val inEdgeMap: Multimap<ContextualNode, ContextualEdge> = HashMultimap.create()
+    val expansionMap: Multimap<Node, ContextualNode> = HashMultimap.create()
 
     override fun outEdges(n: ContextualNode): Collection<ContextualEdge> = outEdgeMap[n]
 
@@ -431,17 +433,25 @@ class MutableContextualCallGraph : ContextualCallGraph {
 fun CallGraph.buildContextualCallGraph(
         nonContextualReceiverEval: IntraproceduralDispatchReceiverEvaluator): ContextualCallGraph {
     val contextualGraph = MutableContextualCallGraph()
+    fun Node.numContextualNodes() = contextualGraph.expansionMap.get(this).size
     val allSources = nodes.map { ContextualNode(it, ParamContext.EMPTY) }
     searchForPaths(
             sources = allSources,
             isSink = { contextualGraph.contextualNodes.add(it); false },
             getNeighbors = { n ->
-                val edges = n.computeEdges(this, nonContextualReceiverEval)
-                contextualGraph.outEdgeMap.putAll(n, edges)
-                edges.forEach { (nbr, cause) ->
-                    contextualGraph.inEdgeMap.put(nbr, ContextualEdge(n, cause))
-                }
-                edges.map { it.contextualNode }
+                // Get contextual edges, pruning when necessary to combat explosions.
+                n.computeEdges(this, nonContextualReceiverEval)
+                        .asSequence()
+                        .onEach { (nbr, _) -> contextualGraph.expansionMap.put(nbr.node, nbr) }
+                        .filter { (nbr, _) -> nbr.node.numContextualNodes() <= graphExpansionLimit }
+                        .onEach { edge ->
+                            contextualGraph.outEdgeMap.put(n, edge)
+                            contextualGraph.inEdgeMap.put(
+                                    edge.contextualNode,
+                                    ContextualEdge(n, edge.cause))
+                        }
+                        .map { (nbr, _) -> nbr }
+                        .toList()
             })
     return contextualGraph
 }
@@ -463,6 +473,7 @@ fun ContextualCallGraph.searchForContextualPaths(
 }
 
 /** A context-sensitive search for paths from [sources] to [sinks]. */
+@Suppress("unused")
 fun ContextualCallGraph.searchForPaths(
         sources: Collection<Node>,
         sinks: Collection<Node>): Collection<List<ContextualEdge>> {
