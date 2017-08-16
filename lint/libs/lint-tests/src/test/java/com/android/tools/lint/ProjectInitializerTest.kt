@@ -159,8 +159,7 @@ public class Foo {
                         "--sdk-home", // since we don't extend AbstractCheckTest
                         TestUtils.getSdk().path,
                         "--project",
-                        File(root, "project.xml").path,
-                        appProjectPath), null)
+                        File(root, "project.xml").path), null)
     }
 
     @Test
@@ -191,7 +190,6 @@ public class Foo {
 
                 arrayOf("--quiet",
                         "--project",
-                        projectXml.path,
                         projectXml.path), null)
     }
 

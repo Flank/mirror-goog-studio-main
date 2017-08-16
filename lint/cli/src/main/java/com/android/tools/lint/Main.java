@@ -727,7 +727,7 @@ public class Main {
             }
         }
 
-        if (files.isEmpty()) {
+        if (files.isEmpty() && flags.getProjectDescriptorOverride() == null) {
             System.err.println("No files to analyze.");
             exit(ERRNO_INVALID_ARGS);
         } else if (files.size() > 1
