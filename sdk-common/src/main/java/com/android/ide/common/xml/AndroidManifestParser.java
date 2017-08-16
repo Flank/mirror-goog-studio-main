@@ -17,6 +17,7 @@
 package com.android.ide.common.xml;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.ide.common.xml.ManifestData.Activity;
 import com.android.ide.common.xml.ManifestData.Instrumentation;
 import com.android.ide.common.xml.ManifestData.SupportsScreens;
@@ -31,9 +32,12 @@ import com.android.resources.Navigation;
 import com.android.resources.TouchScreen;
 import com.android.utils.XmlUtils;
 import com.android.xml.AndroidManifest;
+import java.io.BufferedInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Locale;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -729,9 +733,6 @@ public class AndroidManifestParser {
      *
      * @param manifestFileStream the {@link InputStream} representing the manifest file.
      * @return A class containing the manifest info obtained during the parsing or null on error.
-     * @throws IOException
-     * @throws SAXException
-     * @throws ParserConfigurationException
      */
     public static ManifestData parse(InputStream manifestFileStream)
             throws ParserConfigurationException, SAXException, IOException {
@@ -747,5 +748,14 @@ public class AndroidManifestParser {
         }
 
         return null;
+    }
+
+    @NonNull
+    public static ManifestData parse(@NonNull Path manifestFile) throws IOException {
+        try (InputStream is = new BufferedInputStream(Files.newInputStream(manifestFile))) {
+            return parse(is);
+        } catch (SAXException | ParserConfigurationException e) {
+            throw new IOException(e);
+        }
     }
 }

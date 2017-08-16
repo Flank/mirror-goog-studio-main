@@ -54,6 +54,7 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
     @get:InputFiles lateinit var manifestFileDirectory: FileCollection
     @get:InputFiles lateinit var thisSubProjectStaticLibrary: FileCollection
     @get:InputFiles lateinit var libraryDependencies: FileCollection
+    @get:InputFiles lateinit var sharedLibraryDependencies: FileCollection
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File
     @get:OutputDirectory lateinit var rClassSource: File
@@ -82,6 +83,7 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
                         .setOptions(AaptOptions(null, false, null))
                         .setLibrarySymbolTableFiles(null)
                         .setStaticLibraryDependencies(staticLibraries.build())
+                        .setImports(sharedLibraryDependencies.files)
                         .setSourceOutputDir(rClassSource)
                         .setResourceOutputApk(resourceApUnderscore)
                         .setVariantType(VariantType.LIBRARY)
@@ -121,6 +123,11 @@ open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
                             AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
+            task.sharedLibraryDependencies =
+                    scope.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.ALL,
+                            AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
 
             task.outputScope = scope.outputScope
             task.aaptIntermediateDir =

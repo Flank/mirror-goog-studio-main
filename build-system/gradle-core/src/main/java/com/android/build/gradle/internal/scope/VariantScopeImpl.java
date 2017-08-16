@@ -26,6 +26,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTI
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_R_CLASS_JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SHARED_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
@@ -841,6 +842,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             mainCollection =
                     mainCollection.plus(
                             getArtifactFileCollection(configType, ALL, COMPILE_ONLY_R_CLASS_JAR));
+            mainCollection =
+                    mainCollection.plus(getArtifactFileCollection(configType, ALL, SHARED_CLASSES));
             BaseVariantData tested = getTestedVariantData();
             if (tested != null) {
                 mainCollection =

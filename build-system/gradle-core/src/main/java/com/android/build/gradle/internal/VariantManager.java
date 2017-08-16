@@ -60,6 +60,7 @@ import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.build.gradle.internal.variant.TestVariantFactory;
 import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SigningOptions;
 import com.android.build.gradle.options.StringOption;
@@ -624,13 +625,18 @@ public class VariantManager implements VariantModel {
                     reg.artifactTransform(ExtractAarTransform.class);
                 });
 
+        boolean sharedLibSupport =
+                globalScope
+                        .getProjectOptions()
+                        .get(BooleanOption.CONSUME_DEPENDENCIES_AS_SHARED_LIBRARIES);
         for (ArtifactType transformTarget : AarTransform.getTransformTargets()) {
             dependencies.registerTransform(
                     reg -> {
                         reg.getFrom().attribute(ARTIFACT_FORMAT, explodedAarType);
                         reg.getTo().attribute(ARTIFACT_FORMAT, transformTarget.getType());
                         reg.artifactTransform(
-                                AarTransform.class, config -> config.params(transformTarget));
+                                AarTransform.class,
+                                config -> config.params(transformTarget, sharedLibSupport));
                     });
         }
 

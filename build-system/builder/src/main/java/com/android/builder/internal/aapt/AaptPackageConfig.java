@@ -755,8 +755,8 @@ public class AaptPackageConfig implements Cloneable {
          * @return
          */
         @NonNull
-        public Builder setImports(@NonNull ImmutableList<File> imports) {
-            mConfig.mImports = imports;
+        public Builder setImports(@NonNull Collection<File> imports) {
+            mConfig.mImports = ImmutableList.copyOf(imports);
             return this;
         }
 

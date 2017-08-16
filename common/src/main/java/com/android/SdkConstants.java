@@ -78,6 +78,9 @@ public final class SdkConstants {
 
     /** An SDK Project's AndroidManifest.xml file */
     public static final String FN_ANDROID_MANIFEST_XML = "AndroidManifest.xml"; //$NON-NLS-1$
+
+    public static final String FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML =
+            "SharedLibraryAndroidManifest.xml"; // $NON-NLS-1$
     /** pre-dex jar filename. i.e. "classes.jar" */
     public static final String FN_CLASSES_JAR = "classes.jar"; //$NON-NLS-1$
     /** Dex filename inside the APK. i.e. "classes.dex" */
@@ -1763,6 +1766,8 @@ public final class SdkConstants {
     public static final String FN_PUBLIC_TXT = "public.txt";
     /** Resource static library */
     public static final String FN_RESOURCE_STATIC_LIBRARY = "res.apk";
+    /** Resource shared library */
+    public static final String FN_RESOURCE_SHARED_STATIC_LIBRARY = "shared.apk";
     /** R class jar, used for resource static library */
     public static final String FN_R_CLASS_JAR = "R.jar";
     /** Generated manifest class name */

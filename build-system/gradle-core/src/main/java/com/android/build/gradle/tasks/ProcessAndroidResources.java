@@ -140,7 +140,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     private File mainDexListProguardOutputFile;
 
     @Nullable private FileCollection dependenciesFileCollection;
-
+    @Nullable private FileCollection sharedLibraryDependencies;
     @Nullable private ArtifactCollection packageIdsFiles;
 
     private MultiOutputPolicy multiOutputPolicy;
@@ -273,6 +273,10 @@ public class ProcessAndroidResources extends IncrementalTask {
                 dependenciesFileCollection != null
                         ? dependenciesFileCollection.getFiles()
                         : Collections.emptySet();
+        Set<File> imports =
+                sharedLibraryDependencies != null
+                        ? sharedLibraryDependencies.getFiles()
+                        : Collections.emptySet();
 
         try (Aapt aapt = bypassAapt ? null : makeAapt()) {
 
@@ -289,6 +293,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                         invokeAaptForSplit(
                                 manifestsOutputs,
                                 dependencies,
+                                imports,
                                 packageIdFileSet,
                                 splitList,
                                 featureResourcePackages,
@@ -308,6 +313,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 invokeAaptForSplit(
                                         manifestsOutputs,
                                         dependencies,
+                                        imports,
                                         packageIdFileSet,
                                         splitList,
                                         featureResourcePackages,
@@ -402,6 +408,7 @@ public class ProcessAndroidResources extends IncrementalTask {
     void invokeAaptForSplit(
             Collection<BuildOutput> manifestsOutputs,
             @NonNull Set<File> dependencies,
+            Set<File> imports,
             @Nullable Set<File> packageIdFileSet,
             @NonNull SplitList splitList,
             @NonNull Set<File> featureResourcePackages,
@@ -545,6 +552,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                 .setPreferredDensity(preferredDensity)
                                 .setPackageId(packageId)
                                 .setDependentFeatures(featurePackagesBuilder.build())
+                                .setImports(imports)
                                 .setListResourceFiles(aaptGeneration == AaptGeneration.AAPT_V2);
 
                 if (isNamespaced) {
@@ -1033,6 +1041,11 @@ public class ProcessAndroidResources extends IncrementalTask {
 
             task.dependenciesFileCollection =
                     variantScope.getGlobalScope().getProject().files(dependencies);
+            task.sharedLibraryDependencies =
+                    variantScope.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.ALL,
+                            AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY);
             task.setType(config.getType());
             task.setDebuggable(config.getBuildType().isDebuggable());
             task.setAaptOptions(variantScope.getGlobalScope().getExtension().getAaptOptions());
@@ -1182,6 +1195,14 @@ public class ProcessAndroidResources extends IncrementalTask {
     @PathSensitive(PathSensitivity.NONE)
     public FileCollection getDependenciesFileCollection() {
         return dependenciesFileCollection;
+    }
+
+    @InputFiles
+    @Optional
+    @PathSensitive(PathSensitivity.NONE)
+    @Nullable
+    public FileCollection getSharedLibraryDependencies() {
+        return sharedLibraryDependencies;
     }
 
     @Input

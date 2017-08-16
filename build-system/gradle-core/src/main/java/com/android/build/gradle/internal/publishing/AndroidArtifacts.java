@@ -38,14 +38,20 @@ public class AndroidArtifacts {
 
     // types for AAR content
     private static final String TYPE_CLASSES = "android-classes";
+    private static final String TYPE_SHARED_CLASSES = "android-shared-classes";
     private static final String TYPE_JAVA_RES = "android-java-res";
+    private static final String TYPE_SHARED_JAVA_RES = "android-shared-java-res";
     private static final String TYPE_MANIFEST = "android-manifest";
     private static final String TYPE_MANIFEST_METADATA = "android-manifest-metadata";
     private static final String TYPE_ANDROID_RES = "android-res";
     private static final String TYPE_ANDROID_R_CLASS_JAR = "android-res-r-class-jar";
     private static final String TYPE_ANDROID_RES_STATIC_LIBRARY = "android-res-static-library";
+    private static final String TYPE_ANDROID_RES_SHARED_STATIC_LIBRARY =
+            "android-res-shared-static-library";
     private static final String TYPE_ASSETS = "android-assets";
+    private static final String TYPE_SHARED_ASSETS = "android-shared-assets";
     private static final String TYPE_JNI = "android-jni";
+    private static final String TYPE_SHARED_JNI = "android-shared-jni";
     private static final String TYPE_AIDL = "android-aidl";
     private static final String TYPE_RENDERSCRIPT = "android-renderscript";
     private static final String TYPE_LINT_JAR = "android-lint";
@@ -119,6 +125,7 @@ public class AndroidArtifacts {
 
     public enum ArtifactType {
         CLASSES(TYPE_CLASSES),
+        SHARED_CLASSES(TYPE_SHARED_CLASSES),
         // Jar file for annotation processor as both classes and resources are needed, and for building model
         JAR(TYPE_JAR),
 
@@ -129,6 +136,7 @@ public class AndroidArtifacts {
         // Resources static library are API (where only explicit dependencies are included) and
         // runtime
         RES_STATIC_LIBRARY(TYPE_ANDROID_RES_STATIC_LIBRARY),
+        RES_SHARED_STATIC_LIBRARY(TYPE_ANDROID_RES_SHARED_STATIC_LIBRARY),
 
         // API only elements.
         AIDL(TYPE_AIDL),
@@ -138,8 +146,10 @@ public class AndroidArtifacts {
 
         // runtime only elements
         JAVA_RES(TYPE_JAVA_RES),
+        SHARED_JAVA_RES(TYPE_SHARED_JAVA_RES),
         ANDROID_RES(TYPE_ANDROID_RES),
         ASSETS(TYPE_ASSETS),
+        SHARED_ASSETS(TYPE_SHARED_ASSETS),
         SYMBOL_LIST(TYPE_SYMBOL),
         /**
          * The symbol list with the package name as the first line. As the r.txt format in the AAR
@@ -148,6 +158,7 @@ public class AndroidArtifacts {
          */
         SYMBOL_LIST_WITH_PACKAGE_NAME(TYPE_SYMBOL_WITH_PACKAGE_NAME),
         JNI(TYPE_JNI),
+        SHARED_JNI(TYPE_SHARED_JNI),
         ANNOTATIONS(TYPE_EXT_ANNOTATIONS),
         PUBLIC_RES(TYPE_PUBLIC_RES),
         PROGUARD_RULES(TYPE_PROGUARD_RULES),

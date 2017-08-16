@@ -31,6 +31,7 @@ import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.SdkConstants.FN_RESOURCE_STATIC_LIBRARY;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.FN_R_CLASS_JAR;
+import static com.android.SdkConstants.FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.LIBS_FOLDER;
 
 import android.databinding.tool.DataBindingBuilder;
@@ -43,28 +44,36 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import org.gradle.api.artifacts.transform.ArtifactTransform;
 
 /** Transform that returns the content of an extracted AAR folder. */
 public class AarTransform extends ArtifactTransform {
     @NonNull private final ArtifactType targetType;
+    private final boolean sharedLibSupport;
 
     @Inject
-    public AarTransform(@NonNull ArtifactType targetType) {
+    public AarTransform(@NonNull ArtifactType targetType, boolean sharedLibSupport) {
         this.targetType = targetType;
+        this.sharedLibSupport = sharedLibSupport;
     }
 
     @NonNull
     public static ArtifactType[] getTransformTargets() {
         return new ArtifactType[] {
             ArtifactType.CLASSES,
+            ArtifactType.SHARED_CLASSES,
             ArtifactType.JAVA_RES,
+            ArtifactType.SHARED_JAVA_RES,
             ArtifactType.JAR,
             ArtifactType.MANIFEST,
             ArtifactType.ANDROID_RES,
             ArtifactType.ASSETS,
+            ArtifactType.SHARED_ASSETS,
             ArtifactType.JNI,
+            ArtifactType.SHARED_JNI,
             ArtifactType.AIDL,
             ArtifactType.RENDERSCRIPT,
             ArtifactType.PROGUARD_RULES,
@@ -75,14 +84,13 @@ public class AarTransform extends ArtifactTransform {
             ArtifactType.DATA_BINDING_ARTIFACT,
             ArtifactType.COMPILE_ONLY_R_CLASS_JAR,
             ArtifactType.RES_STATIC_LIBRARY,
+            ArtifactType.RES_SHARED_STATIC_LIBRARY,
         };
     }
 
     @Override
-    public List<File> transform(File input) {
-        // single file case return
-        File file;
-
+    @NonNull
+    public List<File> transform(@NonNull File input) {
         switch (targetType) {
             case CLASSES:
             case JAVA_RES:
@@ -90,58 +98,58 @@ public class AarTransform extends ArtifactTransform {
                 // even though resources are supposed to only be in the main jar of the AAR, this
                 // is not necessarily enforced by all build systems generating AAR so it's safer to
                 // read all jars from the manifest.
-                return getJars(input);
+                // For shared libraries, these are provided via SHARED_CLASSES and SHARED_JAVA_RES.
+                return isShared(input) ? Collections.emptyList() : getJars(input);
+            case SHARED_CLASSES:
+            case SHARED_JAVA_RES:
+                return isShared(input) ? getJars(input) : Collections.emptyList();
             case LINT:
-                file = FileUtils.join(input, FD_JARS, FN_LINT_JAR);
-                break;
+                return listIfExists(FileUtils.join(input, FD_JARS, FN_LINT_JAR));
             case MANIFEST:
-                file = new File(input, FN_ANDROID_MANIFEST_XML);
-                break;
+                if (isShared(input)) {
+                    // Return both the manifest and the extra snippet for the shared library.
+                    return listIfExists(
+                            Stream.of(
+                                    new File(input, FN_ANDROID_MANIFEST_XML),
+                                    new File(input, FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML)));
+                } else {
+                    return listIfExists(new File(input, FN_ANDROID_MANIFEST_XML));
+                }
             case ANDROID_RES:
-                file = new File(input, FD_RES);
-                break;
+                return listIfExists(new File(input, FD_RES));
             case ASSETS:
-                file = new File(input, FD_ASSETS);
-                break;
+                return listIfExists(new File(input, FD_ASSETS));
             case JNI:
-                file = new File(input, FD_JNI);
-                break;
+                return listIfExists(new File(input, FD_JNI));
             case AIDL:
-                file = new File(input, FD_AIDL);
-                break;
+                return listIfExists(new File(input, FD_AIDL));
             case RENDERSCRIPT:
-                file = new File(input, FD_RENDERSCRIPT);
-                break;
+                return listIfExists(new File(input, FD_RENDERSCRIPT));
             case PROGUARD_RULES:
-                file = new File(input, FN_PROGUARD_TXT);
-                break;
+                return listIfExists(new File(input, FN_PROGUARD_TXT));
             case ANNOTATIONS:
-                file = new File(input, FN_ANNOTATIONS_ZIP);
-                break;
+                return listIfExists(new File(input, FN_ANNOTATIONS_ZIP));
             case PUBLIC_RES:
-                file = new File(input, FN_PUBLIC_TXT);
-                break;
+                return listIfExists(new File(input, FN_PUBLIC_TXT));
             case SYMBOL_LIST:
-                file = new File(input, FN_RESOURCE_TEXT);
-                break;
+                return listIfExists(new File(input, FN_RESOURCE_TEXT));
             case RES_STATIC_LIBRARY:
-                file = new File(input, FN_RESOURCE_STATIC_LIBRARY);
-                break;
+                return isShared(input)
+                        ? Collections.emptyList()
+                        : listIfExists(new File(input, FN_RESOURCE_STATIC_LIBRARY));
+            case RES_SHARED_STATIC_LIBRARY:
+                return isShared(input)
+                        ? listIfExists(
+                                new File(input, SdkConstants.FN_RESOURCE_SHARED_STATIC_LIBRARY))
+                        : Collections.emptyList();
             case COMPILE_ONLY_R_CLASS_JAR:
-                file = new File(input, FN_R_CLASS_JAR);
-                break;
+                return listIfExists(new File(input, FN_R_CLASS_JAR));
             case DATA_BINDING_ARTIFACT:
-                file = new File(input, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
-                break;
+                return listIfExists(
+                        new File(input, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR));
             default:
                 throw new RuntimeException("Unsupported type in AarTransform: " + targetType);
         }
-
-        if (file.exists()) {
-            return Collections.singletonList(file);
-        }
-
-        return Collections.emptyList();
     }
 
     private static List<File> getJars(@NonNull File explodedAar) {
@@ -163,5 +171,20 @@ public class AarTransform extends ArtifactTransform {
 
         //System.out.println("\tJars: " + files);
         return files;
+    }
+
+    private boolean isShared(@NonNull File explodedAar) {
+        return sharedLibSupport
+                && new File(explodedAar, FN_SHARED_LIBRARY_ANDROID_MANIFEST_XML).exists();
+    }
+
+    @NonNull
+    private static List<File> listIfExists(@NonNull File file) {
+        return file.exists() ? Collections.singletonList(file) : Collections.emptyList();
+    }
+
+    @NonNull
+    private static List<File> listIfExists(@NonNull Stream<File> files) {
+        return files.filter(File::exists).collect(Collectors.toList());
     }
 }

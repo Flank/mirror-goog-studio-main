@@ -53,6 +53,7 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
     @get:InputFiles lateinit var manifestFileDirectory: FileCollection
     @get:InputFiles lateinit var inputResourcesDir: FileCollection
     @get:InputFiles lateinit var libraryDependencies: FileCollection
+    @get:InputFiles lateinit var sharedLibraryDependencies: FileCollection
     @get:InputFiles @get:Optional var featureDependencies: FileCollection? = null
     @get:InputFiles @get:Optional var tested: FileCollection? = null
 
@@ -77,6 +78,7 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
         val imports = ImmutableList.builder<File>()
         // Link against library dependencies
         imports.addAll(libraryDependencies.files)
+        imports.addAll(sharedLibraryDependencies.files)
 
         // Link against features
         featureDependencies?.let {
@@ -130,6 +132,11 @@ open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
                             AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.RES_STATIC_LIBRARY)
+            task.sharedLibraryDependencies =
+                    scope.getArtifactFileCollection(
+                            AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
+                            AndroidArtifacts.ArtifactScope.ALL,
+                            AndroidArtifacts.ArtifactType.RES_SHARED_STATIC_LIBRARY)
 
             if (scope.variantData.type == VariantType.FEATURE && !scope.isBaseFeature) {
                 task.featureDependencies =
