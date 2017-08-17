@@ -162,7 +162,7 @@
     <!-- 128x128 thumbnails relative to template.xml -->
     <thumbs>
         <!-- default thumbnail is required -->
-        <thumb>template_blank_activity.png</thumb>
+        <thumb>thumbnail.png</thumb>
     </thumbs>
 
     <globals file="globals.xml.ftl" />
