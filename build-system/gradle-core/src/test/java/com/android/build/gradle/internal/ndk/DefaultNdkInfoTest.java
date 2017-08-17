@@ -82,6 +82,36 @@ public class DefaultNdkInfoTest {
     }
 
     @Test
+    public void testWithDefaultSettingsInAbiListFile() throws IOException {
+        Files.write(
+                "{\n"
+                        + "    \"armeabi\": {\n"
+                        + "        \"default\" : true,\n"
+                        + "        \"deprecated\" : false\n"
+                        + "    },\n"
+                        + "    \"armeabi-v7a\": {\n"
+                        + "    },\n"
+                        + "    \"mips\": {\n"
+                        + "        \"default\" : false,\n"
+                        + "        \"deprecated\" : false\n"
+                        + "    },\n"
+                        + "    \"x86\": {\n"
+                        + "        \"default\" : true,\n"
+                        + "        \"deprecated\" : true\n"
+                        + "    }\n"
+                        + "}",
+                abiListFile,
+                Charsets.UTF_8);
+        NdkInfo info = new DefaultNdkInfo(ndkFolder);
+        assertThat(info.getSupportedAbis())
+                .containsExactly(Abi.ARMEABI, Abi.ARMEABI_V7A, Abi.MIPS, Abi.X86);
+        assertThat(info.getSupported32BitsAbis())
+                .containsExactly(Abi.ARMEABI, Abi.ARMEABI_V7A, Abi.MIPS, Abi.X86);
+        assertThat(info.getDefaultAbis()).containsExactly(Abi.ARMEABI, Abi.ARMEABI_V7A);
+        assertThat(info.getDefault32BitsAbis()).containsExactly(Abi.ARMEABI, Abi.ARMEABI_V7A);
+    }
+
+    @Test
     public void testErrorHandling() throws IOException {
         Files.write(
                 "{\n"
@@ -110,10 +140,10 @@ public class DefaultNdkInfoTest {
                         + "    },\n"
                         + "    \"x86_64\": {\n"
                         + "        \"deprecated\" : false\n"
-                        + "    }\n,"
+                        + "    },\n"
                         + "    \"mips\": {\n"
                         + "        \"deprecated\" : true\n"
-                        + "    }\n,"
+                        + "    },\n"
                         + "    \"mips64\": {\n"
                         + "        \"deprecated\" : true\n"
                         + "    }\n"

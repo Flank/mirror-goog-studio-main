@@ -18,16 +18,28 @@ package com.android.build.gradle.internal.ndk;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.Abi;
+import com.google.gson.annotations.SerializedName;
 
 /** Information about an ABI. */
 public class AbiInfo {
-    @NonNull public Abi abi;
+    public Abi abi;
 
     public boolean deprecated;
 
-    public AbiInfo(@NonNull Abi abi, boolean deprecated) {
+    @SerializedName("default")
+    public boolean defaultAbi;
+
+    // Default constructor to be used by GSON to initialize default values.
+    public AbiInfo() {
+        abi = null;
+        deprecated = false;
+        defaultAbi = true;
+    }
+
+    public AbiInfo(@NonNull Abi abi, boolean deprecated, boolean isDefault) {
         this.abi = abi;
         this.deprecated = deprecated;
+        this.defaultAbi = isDefault;
     }
 
     @NonNull
@@ -37,5 +49,9 @@ public class AbiInfo {
 
     public boolean isDeprecated() {
         return deprecated;
+    }
+
+    public boolean isDefault() {
+        return defaultAbi;
     }
 }
