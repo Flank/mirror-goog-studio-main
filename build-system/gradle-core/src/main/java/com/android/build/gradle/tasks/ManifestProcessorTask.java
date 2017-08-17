@@ -98,4 +98,20 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
                         mapToSerialize.entrySet(),
                         (input) -> keyValueJoiner.join(input.getKey(), input.getValue()))));
     }
+
+    /**
+     * Backward compatibility support. This method used to be available on AGP < 3.0 but has now
+     * been replaced with {@link #getManifestOutputDirectory()}.
+     *
+     * @return
+     * @deprecated As or release 3.0, replaced with {@link #getManifestOutputDirectory()}
+     */
+    @Deprecated
+    @Internal
+    public File getManifestOutputFile() {
+        throw new RuntimeException(
+                "Manifest Tasks does not support the manifestOutputFile property any more, please"
+                        + " use the manifestOutputDirectory instead.\nFor more information, please check "
+                        + "https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration.html");
+    }
 }
