@@ -89,7 +89,7 @@ private unsupportedFlag
     | ('-dump' NAME?) //[filename]
     | ('-flattenpackagehierarchy' ('\'' newPackage=NAME? '\'')? )
     | ('-keepattributes' {List<FilterSpecification> attribute_filter = new ArrayList<FilterSpecification>();} filter[attribute_filter, FilterSeparator.ATTRIBUTE] )
-    | ('-keepclasseswithmembernames' classSpec=classSpecification  )
+    | ('-keepclasseswithmembernames' keepModifier=keepOptionModifier classSpec=classSpecification  )
     | ('-keepclassmembernames' classSpec=classSpecification  )
     | ('-keepdirectories' {List<FilterSpecification> directory_filter = new ArrayList<FilterSpecification>();} filter[directory_filter, FilterSeparator.FILE])
     | ('-keepnames' classSpec=classSpecification )
@@ -274,7 +274,8 @@ private keepOptionModifier returns [KeepModifier modifier]
 }
   : (','
   ('allowshrinking' {modifier.setAllowShrinking();}
-  | 'allowoptimization' // Optimizations not supported
+  | 'allowoptimization' // Optimizations not supported.
+  | 'includedescriptorclasses' // Shrinker does this regardless of the flag.
   | 'allowobfuscation' {modifier.setAllowObfuscation();}))*
   ;
 
