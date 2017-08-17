@@ -30,6 +30,7 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.ide.common.process.ProcessException;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Charsets;
@@ -82,6 +83,19 @@ public class MultiDexTest {
     @Test
     public void checkBuildWithoutKeepRuntimeAnnotatedClasses() throws Exception {
         checkNormalBuild(false);
+    }
+
+    @Test
+    public void checkApplicationNameAdded()
+            throws IOException, InterruptedException, ProcessException {
+        // noinspection ResultOfMethodCallIgnored
+        FileUtils.join(project.getTestDir(), "src/ics/AndroidManifest.xml").delete();
+        project.execute("processIcsDebugManifest");
+        assertThat(
+                        FileUtils.join(
+                                project.getTestDir(),
+                                "build/intermediates/manifests/full/ics/debug/AndroidManifest.xml"))
+                .contains("android:name=\"android.support.multidex.MultiDexApplication\"");
     }
 
     private void checkNormalBuild(boolean keepRuntimeAnnotatedClasses) throws Exception {

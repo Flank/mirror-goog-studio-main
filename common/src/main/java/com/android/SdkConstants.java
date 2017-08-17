@@ -775,6 +775,8 @@ public final class SdkConstants {
             "android.support.percent.PercentRelativeLayout"; //$NON-NLS-1$
     public static final String CLASS_PERCENT_FRAME_LAYOUT =
             "android.support.percent.PercentFrameLayout"; //$NON-NLS-1$
+    public static final String SUPPORT_MULTI_DEX_APPLICATION =
+            "android.support.multidex.MultiDexApplication";
 
     /* Android ConstraintLayout Constants */
     public static final String CLASS_CONSTRAINT_LAYOUT =

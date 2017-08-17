@@ -639,6 +639,11 @@ public abstract class TaskManager {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.TEST_ONLY);
         }
 
+        if (variantScope.getVariantConfiguration().getDexingType() == DexingType.LEGACY_MULTIDEX) {
+            optionalFeatures.add(
+                    ManifestMerger2.Invoker.Feature.ADD_MULTIDEX_APPLICATION_IF_NO_NAME);
+        }
+
         if (variantScope.getVariantConfiguration().getBuildType().isDebuggable()) {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.DEBUGGABLE);
         }
