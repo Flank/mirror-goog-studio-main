@@ -22,6 +22,8 @@ import static org.junit.Assert.assertTrue;
 import com.android.build.gradle.shrinker.parser.GrammarActions;
 import com.android.build.gradle.shrinker.parser.ProguardFlags;
 import com.android.build.gradle.shrinker.parser.UnsupportedFlagsHandler;
+import com.google.common.collect.Iterables;
+import com.google.common.truth.Truth;
 import org.junit.Test;
 
 public class ProguardParserTest {
@@ -61,5 +63,32 @@ public class ProguardParserTest {
         assertFalse(flags.isDontObfuscate());
         assertTrue(flags.isDontShrink());
         assertFalse(flags.isDontOptimize());
+    }
+
+    @Test
+    public void includeDescriptorClasses() throws Exception {
+        ProguardFlags flags = new ProguardFlags();
+        GrammarActions.parse(
+                "-keepclassmembers,includedescriptorclasses class ** {\n"
+                        + "   public void onEvent*(***);\n"
+                        + "}",
+                flags,
+                UnsupportedFlagsHandler.NO_OP);
+
+        Truth.assertThat(
+                        Iterables.getOnlyElement(flags.getKeepClassMembersSpecs())
+                                .getMethodSpecifications())
+                .hasSize(1);
+    }
+
+    @Test
+    public void keepClassesWithMemberNames_modifiers() throws Exception {
+        ProguardFlags flags = new ProguardFlags();
+        GrammarActions.parse(
+                "-keepclasseswithmembernames,includedescriptorclasses class * { \n"
+                        + "    native <methods>; \n"
+                        + "} ",
+                flags,
+                UnsupportedFlagsHandler.NO_OP);
     }
 }
