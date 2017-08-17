@@ -19,6 +19,7 @@ package com.android.tools.lint
 import com.android.SdkConstants
 import com.android.SdkConstants.VALUE_FALSE
 import com.android.SdkConstants.VALUE_TRUE
+import com.android.sdklib.AndroidTargetHash
 import com.android.sdklib.SdkVersionInfo
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.client.api.IssueRegistry
@@ -28,6 +29,7 @@ import com.android.tools.lint.client.api.LintRequest
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.utils.XmlUtils.getFirstSubTag
 import com.android.utils.XmlUtils.getNextTag
@@ -48,6 +50,14 @@ private const val TAG_DEP = "dep"
 private const val TAG_ROOT = "root"
 private const val TAG_MANIFEST = "manifest"
 private const val TAG_RESOURCE = "resource"
+private const val TAG_AAR = "aar"
+private const val TAG_SDK = "sdk"
+private const val TAG_LINT_CHECKS = "lint-checks"
+private const val TAG_BASELINE = "baseline"
+private const val TAG_MERGED_MANIFEST = "merged-manifest"
+private const val TAG_CACHE = "cache"
+private const val ATTR_COMPILE_SDK_VERSION = "compile-sdk-version"
+private const val ATTR_TEST = "test"
 private const val ATTR_NAME = "name"
 private const val ATTR_FILE = "file"
 private const val ATTR_DIR = "dir"
@@ -61,11 +71,31 @@ private const val ATTR_MODULE = "module"
  * Each descriptor is considered completely separate from the other (e.g. you can't
  * have library definitions in one referenced from another descriptor.
  */
-fun computeProjects(client: LintClient, descriptor: File): List<Project> {
+fun computeMetadata(client: LintClient, descriptor: File): ProjectMetadata {
     val initializer = ProjectInitializer(client, descriptor,
             descriptor.parentFile ?: descriptor)
-    return initializer.computeProjects()
+    return initializer.computeMetadata()
 }
+
+/**
+ * Result data passed from parsing a project metadata XML file - returns the
+ * set of projects, any SDK or cache directories configured within the file, etc
+ */
+data class ProjectMetadata(
+        /** List of projects. Will be empty if there was an error in the configuration. */
+        val projects: List<Project> = emptyList(),
+        /** A baseline file to apply, if any */
+        val baseline: File? = null,
+        /** The SDK to use, if overriding the default */
+        val sdk: File? = null,
+        /** The cache directory to use, if overriding the default */
+        val cache: File? = null,
+        /** A map from module to a merged manifest for that module, if any */
+        val mergedManifests: Map<Project, File?> = emptyMap(),
+        /** A map from module to a baseline to apply to that module, if any */
+        val moduleBaselines: Map<Project, File?> = emptyMap(),
+        /** A map from module to a list of custom rule JAR files to apply, if any */
+        val lintChecks: Map<Project, List<File>> = emptyMap())
 
 /**
  * Class which handles initialization of a project hierarchy from a config XML file.
@@ -91,8 +121,17 @@ private class ProjectInitializer(val client: LintClient, val file: File,
     /** map from module instance to names of modules it depends on */
     private val dependencies: Multimap<ManualProject, String> = ArrayListMultimap.create()
 
+    /** map from module to the merged manifest to use, if any */
+    private val mergedManifests = mutableMapOf<Project, File?>()
+
+    /** map from module to a list of custom lint rules to apply for that module, if any */
+    private val lintChecks = mutableMapOf<Project, List<File>>()
+
+    /** map from module to a baseline to use for a given module, if any */
+    private val baselines = mutableMapOf<Project, File?>()
+
     /** Compute a list of lint [Project] instances from the given XML descriptor */
-    fun computeProjects(): List<Project> {
+    fun computeMetadata(): ProjectMetadata {
         assert(file.isFile) // should already have been enforced by the driver
         val document = client.xmlParser.parseXml(file)
 
@@ -100,7 +139,7 @@ private class ProjectInitializer(val client: LintClient, val file: File,
             // Lint isn't quite up and running yet, so create a dummy context
             // in order to be able to report an error
             reportError("Failed to parse project descriptor $file")
-            return emptyList()
+            return ProjectMetadata()
         }
 
         return parseModules(document.documentElement)
@@ -121,16 +160,19 @@ private class ProjectInitializer(val client: LintClient, val file: File,
                 location, message, TextFormat.RAW, null)
     }
 
-    private fun parseModules(projectElement: Element): List<Project> {
+    private fun parseModules(projectElement: Element): ProjectMetadata {
         if (projectElement.tagName != TAG_PROJECT) {
             reportError("Expected <project> as the root tag", projectElement)
-            return emptyList()
+            return ProjectMetadata()
         }
 
         // First gather modules and sources, and collect dependency information.
         // The dependency information is captured into a separate map since dependencies
         // may refer to modules we have not encountered yet.
         var child = getFirstSubTag(projectElement)
+        var sdk: File? = null
+        var cache: File? = null
+        var baseline: File? = null
         while (child != null) {
             val tag = child.tagName
             when (tag) {
@@ -139,6 +181,15 @@ private class ProjectInitializer(val client: LintClient, val file: File,
                 }
                 TAG_CLASSPATH -> {
                     globalClasspath.add(getFile(child, this.root))
+                }
+                TAG_SDK -> {
+                    sdk = getFile(child, this.root)
+                }
+                TAG_BASELINE -> {
+                    baseline = getFile(child, this.root)
+                }
+                TAG_CACHE -> {
+                    cache = getFile(child, this.root)
                 }
                 TAG_ROOT -> {
                     val dir = File(child.getAttribute(ATTR_DIR))
@@ -187,13 +238,21 @@ private class ProjectInitializer(val client: LintClient, val file: File,
             }
         }
 
-        return sortedModules
+        return ProjectMetadata(
+                projects = sortedModules,
+                sdk = sdk,
+                baseline = baseline,
+                lintChecks = lintChecks,
+                cache = cache,
+                moduleBaselines = baselines,
+                mergedManifests = mergedManifests)
     }
 
     private fun parseModule(moduleElement: Element) {
-        val name = moduleElement.getAttribute(ATTR_NAME)
+        val name: String = moduleElement.getAttribute(ATTR_NAME)
         val library = moduleElement.getAttribute(ATTR_LIBRARY) == VALUE_TRUE
         val android = moduleElement.getAttribute(ATTR_ANDROID) != VALUE_FALSE
+        val buildApi: String = moduleElement.getAttribute(ATTR_COMPILE_SDK_VERSION)
 
         // Special case: if the module is a path (with an optional :suffix),
         // use this as the module directory, otherwise fall back to the default root
@@ -207,10 +266,15 @@ private class ProjectInitializer(val client: LintClient, val file: File,
         modules.put(name, module)
 
         val sources = mutableListOf<File>()
+        val testSources = mutableListOf<File>()
         val resources = mutableListOf<File>()
         val manifests = mutableListOf<File>()
         val classes = mutableListOf<File>()
         val classpath = mutableListOf<File>()
+        val aars = mutableListOf<File>()
+        val lintChecks = mutableListOf<File>()
+        var baseline: File? = null
+        var mergedManifest: File? = null
 
         var child = getFirstSubTag(moduleElement)
         while (child != null) {
@@ -218,9 +282,15 @@ private class ProjectInitializer(val client: LintClient, val file: File,
                 TAG_MANIFEST -> {
                     manifests.add(getFile(child, dir))
                 }
+                TAG_MERGED_MANIFEST -> {
+                    mergedManifest = getFile(child, dir)
+                }
                 TAG_SRC -> {
-                    // TODO: Where are the test sources?
-                    sources.add(getFile(child, dir))
+                    val file = getFile(child, dir)
+                    when (child.getAttribute(ATTR_TEST) == VALUE_TRUE) {
+                        false -> sources.add(file)
+                        true -> testSources.add(file)
+                    }
                 }
                 TAG_RESOURCE -> {
                     resources.add(getFile(child, dir))
@@ -230,6 +300,15 @@ private class ProjectInitializer(val client: LintClient, val file: File,
                 }
                 TAG_CLASSPATH -> {
                     classpath.add(getFile(child, dir))
+                }
+                TAG_AAR -> {
+                    aars.add(getFile(child, dir))
+                }
+                TAG_BASELINE -> {
+                    baseline = getFile(child, dir)
+                }
+                TAG_LINT_CHECKS -> {
+                    lintChecks.add(getFile(child, dir))
                 }
                 TAG_DEP -> {
                     val target = child.getAttribute(ATTR_MODULE)
@@ -284,19 +363,29 @@ private class ProjectInitializer(val client: LintClient, val file: File,
 
         module.setManifests(manifests)
         module.setResources(resourceRoots, resources)
+        module.setTestSources(sourceRoots, sources)
         module.setSources(sourceRoots, sources)
         module.setClasspath(classes, true)
         module.setClasspath(classpath, false)
+
+        module.setCompileSdkVersion(buildApi)
+
+        this.lintChecks[module] = lintChecks
+        this.mergedManifests[module] = mergedManifest
+        this.baselines[module] = baseline
     }
 
     /**
-     * Given an element that is expected to have a "file" attribute, produces a full
-     * path to the file
+     * Given an element that is expected to have a "file" attribute (or "dir" or "jar"),
+     * produces a full path to the file
      */
     private fun getFile(child: Element, dir: File): File {
         var path = child.getAttribute(ATTR_FILE)
         if (path.isEmpty()) {
-            path = child.getAttribute(ATTR_JAR)
+            path = child.getAttribute(ATTR_DIR)
+            if (path.isEmpty()) {
+                path = child.getAttribute(ATTR_JAR)
+            }
         }
         var source = File(path)
         if (!source.isAbsolute && !source.exists()) {
@@ -399,6 +488,12 @@ constructor(client: LintClient, dir: File, name: String, library: Boolean,
         addFilteredFiles(sources)
     }
 
+    /** Sets the given source files and their roots for this module */
+    fun setTestSources(sourceRoots: List<File>, sources: List<File>) {
+        this.testSourceFolders = sourceRoots
+        addFilteredFiles(sources)
+    }
+
     /**
      * Adds the given files to the set of filtered files for this project. With
      * a filter applied, lint won't look at all sources in for example the source
@@ -418,4 +513,17 @@ constructor(client: LintClient, dir: File, name: String, library: Boolean,
             } else {
                 this.javaLibraries = allClasses
             }
+
+    fun setCompileSdkVersion(buildApi: String) {
+        if (!buildApi.isEmpty()) {
+            buildTargetHash = buildApi
+            val version = AndroidTargetHash.getPlatformVersion(buildApi)
+            if (version != null) {
+                buildSdk = version.featureLevel
+            } else {
+                client.log(Severity.WARNING, null,
+                        "Unexpected build target format: %1\$s", buildApi)
+            }
+        }
+    }
 }
