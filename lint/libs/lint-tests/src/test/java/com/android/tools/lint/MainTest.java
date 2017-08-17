@@ -22,9 +22,12 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_INVALID_ARGS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 
 import com.android.SdkConstants;
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
+import com.android.tools.lint.client.api.LintDriver;
+import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import java.io.ByteArrayOutputStream;
@@ -45,7 +48,8 @@ public class MainTest extends AbstractCheckTest {
 
     private void checkDriver(String expectedOutput, String expectedError, int expectedExitCode,
             String[] args) {
-        checkDriver(expectedOutput, expectedError, expectedExitCode, args, MainTest.this::cleanup);
+        checkDriver(expectedOutput, expectedError, expectedExitCode, args, MainTest.this::cleanup,
+                null);
     }
 
     public static void checkDriver(
@@ -53,7 +57,8 @@ public class MainTest extends AbstractCheckTest {
             String expectedError,
             int expectedExitCode,
             String[] args,
-            @Nullable Cleanup cleanup) {
+            @Nullable Cleanup cleanup,
+            @Nullable LintListener listener) {
 
         PrintStream previousOut = System.out;
         PrintStream previousErr = System.err;
@@ -65,7 +70,16 @@ public class MainTest extends AbstractCheckTest {
 
             int exitCode = 0;
             try {
-                new Main().run(args);
+                Main main = new Main() {
+                    @Override
+                    protected void initializeDriver(@NonNull LintDriver driver) {
+                        super.initializeDriver(driver);
+                        if (listener != null) {
+                            driver.addLintListener(listener);
+                        }
+                    }
+                };
+                main.run(args);
             } catch (Main.ExitException e) {
                 exitCode = e.getStatus();
             }
