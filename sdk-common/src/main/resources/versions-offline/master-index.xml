@@ -22,4 +22,8 @@
   <com.android.tools.internal.build.test/>
   <com.android.tools.lint/>
   <com.android.tools.external.org-jetbrains/>
+  <com.android.support.test.espresso.idling/>
+  <com.android.support.test.services/>
+  <com.google.firebase/>
+  <com.google.android.gms/>
 </metadata>

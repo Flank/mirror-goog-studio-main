@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <android.arch.lifecycle>
-  <compiler versions="1.0.0-alpha3"/>
-  <runtime versions="1.0.0-alpha3"/>
-  <extensions versions="1.0.0-alpha3"/>
-  <reactivestreams versions="1.0.0-alpha3"/>
-  <common versions="1.0.0-alpha3"/>
+  <compiler versions="1.0.0-alpha9"/>
+  <runtime versions="1.0.0-alpha9"/>
+  <extensions versions="1.0.0-alpha9"/>
+  <reactivestreams versions="1.0.0-alpha9"/>
+  <common versions="1.0.0-alpha9"/>
 </android.arch.lifecycle>
 

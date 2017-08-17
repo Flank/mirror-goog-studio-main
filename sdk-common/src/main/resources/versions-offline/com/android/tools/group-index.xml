@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <com.android.tools>
-  <dvlib versions="26.0.0-alpha4"/>
-  <sdklib versions="26.0.0-alpha4"/>
-  <repository versions="26.0.0-alpha4"/>
-  <annotations versions="26.0.0-alpha4"/>
-  <devicelib versions="26.0.0-alpha4"/>
-  <sdk-common versions="26.0.0-alpha4"/>
-  <testutils versions="26.0.0-alpha4"/>
-  <common versions="26.0.0-alpha4"/>
+  <dvlib versions="26.0.0-beta2"/>
+  <sdklib versions="26.0.0-beta2"/>
+  <repository versions="26.0.0-beta2"/>
+  <annotations versions="26.0.0-beta2"/>
+  <devicelib versions="26.0.0-beta2"/>
+  <sdk-common versions="26.0.0-beta2"/>
+  <testutils versions="26.0.0-beta2"/>
+  <common versions="26.0.0-beta2"/>
 </com.android.tools>
 

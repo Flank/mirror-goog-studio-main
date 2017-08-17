@@ -1,6 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <android.arch.core>
-  <core-testing versions="1.0.0-alpha3"/>
+  <core-testing versions="1.0.0-alpha9"/>
   <core versions="1.0.0-alpha3"/>
+  <runtime versions="1.0.0-alpha9"/>
+  <common versions="1.0.0-alpha9"/>
 </android.arch.core>
 

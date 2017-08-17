@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.google.firebase>
+  <firebase-dynamic-links versions="11.2.0,11.2.0"/>
+  <firebase-crash versions="11.2.0,11.2.0"/>
+  <firebase-ads versions="11.2.0,11.2.0"/>
+  <firebase-analytics versions="11.2.0,11.2.0"/>
+  <firebase-common versions="11.2.0,11.2.0"/>
+  <firebase-auth versions="11.2.0,11.2.0"/>
+  <firebase-appindexing versions="11.2.0,11.2.0"/>
+  <firebase-auth-common versions="9.8.0,9.8.0"/>
+  <firebase-invites versions="11.2.0,11.2.0"/>
+  <firebase-config versions="11.2.0,11.2.0"/>
+  <firebase-analytics-impl versions="11.2.0,11.2.0"/>
+  <firebase-storage versions="11.2.0,11.2.0"/>
+  <firebase-messaging versions="11.2.0,11.2.0"/>
+  <firebase-auth-module versions="9.8.0,9.8.0"/>
+  <firebase-auth-impl versions="11.0.0,11.0.0"/>
+  <firebase-database-connection versions="11.2.0,11.2.0"/>
+  <firebase-storage-common versions="11.2.0,11.2.0"/>
+  <firebase-core versions="11.2.0,11.2.0"/>
+  <firebase-database versions="11.2.0,11.2.0"/>
+  <firebase-perf versions="11.2.0,11.2.0"/>
+  <firebase-iid versions="11.2.0,11.2.0"/>
+</com.google.firebase>
+
