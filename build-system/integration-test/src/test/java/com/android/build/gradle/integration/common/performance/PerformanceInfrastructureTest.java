@@ -19,10 +19,11 @@ package com.android.build.gradle.integration.common.performance;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.build.gradle.integration.performance.ProjectScenario;
 import com.android.ide.common.util.ReferenceHolder;
+import com.android.testutils.TestUtils;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
@@ -52,7 +53,7 @@ public class PerformanceInfrastructureTest {
 
         GradleTestProject project =
                 GradleTestProject.builder()
-                        .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
+                        .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
                         .forBenchmarkRecording(
                                 new BenchmarkRecorder(
                                         Logging.Benchmark.ANTENNA_POD,
@@ -101,6 +102,7 @@ public class PerformanceInfrastructureTest {
         // Check that the variant info is populated
         GradleBuildProject aProject = benchmarkResults.get(0).getProfile().getProject(0);
         assertThat(aProject.getCompileSdk()).isEqualTo(GradleTestProject.getCompileSdkHash());
+        assertThat(aProject.getKotlinPluginVersion()).isEqualTo(TestUtils.KOTLIN_VERSION_FOR_TESTS);
         GradleBuildVariant aVariant = aProject.getVariant(0);
         assertThat(aVariant.getMinSdkVersion().getApiLevel()).isEqualTo(3);
         assertThat(aVariant.hasTargetSdkVersion()).named("has target sdk version").isFalse();
