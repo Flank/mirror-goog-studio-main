@@ -178,7 +178,7 @@ public class PermissionRequirementTest extends TestCase {
     }
 
     public void testRevocable2() {
-        assertTrue(new SetPermissionLookup(Collections.<String>emptySet(),
+        assertTrue(new SetPermissionLookup(Collections.emptySet(),
             Sets.newHashSet("my.permission1", "my.permission2")).isRevocable("my.permission2"));
     }
 
@@ -228,8 +228,8 @@ public class PermissionRequirementTest extends TestCase {
     }
 
     private static PermissionHolder getHolder(int min, int target) {
-        return new PermissionHolder.SetPermissionLookup(Collections.<String>emptySet(),
-                Collections.<String>emptySet(), new AndroidVersion(min, null),
+        return new PermissionHolder.SetPermissionLookup(Collections.emptySet(),
+                Collections.emptySet(), new AndroidVersion(min, null),
                 new AndroidVersion(target, null));
     }
 

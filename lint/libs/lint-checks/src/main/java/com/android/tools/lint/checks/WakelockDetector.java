@@ -190,7 +190,7 @@ public class WakelockDetector extends Detector implements ClassScanner, Detector
                 LdcInsnNode ldc = (LdcInsnNode) prev;
                 Object constant = ldc.cst;
                 if (constant instanceof Integer) {
-                    int flag = ((Integer) constant).intValue();
+                    int flag = (Integer) constant;
                     // Constant values are copied into the bytecode so we have to compare
                     // values; however, that means the values are part of the API
                     final int PARTIAL_WAKE_LOCK = 0x00000001;

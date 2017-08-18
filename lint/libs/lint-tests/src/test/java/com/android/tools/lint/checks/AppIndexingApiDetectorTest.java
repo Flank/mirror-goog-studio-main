@@ -17,9 +17,6 @@
 package com.android.tools.lint.checks;
 
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.Issue;
-import java.util.Arrays;
-import java.util.List;
 
 @SuppressWarnings("javadoc")
 public class AppIndexingApiDetectorTest extends AbstractCheckTest {

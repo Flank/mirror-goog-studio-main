@@ -319,7 +319,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
                 + "map.'''triple single quote'''\n"
                 + "map.\"\"\"triple double quote\"\"\"\n"
                 + "map./slashy string/\n"
-                + "map.$/dollar slashy string/$    \n"; ;
+                + "map.$/dollar slashy string/$    \n";
         int beginOffset = source.indexOf("triple double");
         int endOffset = source.indexOf('\"', beginOffset);
         boolean error = true;

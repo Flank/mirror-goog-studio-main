@@ -17,10 +17,8 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.LocaleFolderDetector.suggestBcp47Correction
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.detector.api.Detector
 import org.intellij.lang.annotations.Language
-import java.io.File
 
 class LocaleFolderDetectorTest : AbstractCheckTest() {
 
