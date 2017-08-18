@@ -1,0 +1,62 @@
+USB:
+
+    USB 3.0 Bus:
+
+      Host Controller Driver: AppleUSBXHCILPTH
+      PCI Device ID: 0x8c31 
+      PCI Revision ID: 0x0005 
+      PCI Vendor ID: 0x8086 
+
+        Card Reader:
+
+          Product ID: 0x8406
+          Vendor ID: 0x05ac  (Apple Inc.)
+          Version: 8.20
+          Serial Number: 000000000820
+          Speed: Up to 5 Gb/sec
+          Manufacturer: Apple
+          Location ID: 0x14700000 / 5
+          Current Available (mA): 900
+          Current Required (mA): 896
+          Extra Operating Current (mA): 0
+          Built-In: Yes
+
+        Apple Internal Keyboard / Trackpad:
+
+          Product ID: 0x0274
+          Vendor ID: 0x05ac  (Apple Inc.)
+          Version: 6.24
+          Serial Number: D3H62551AU1GHMFAQ4FS
+          Speed: Up to 12 Mb/sec
+          Manufacturer: Apple Inc.
+          Location ID: 0x14400000 / 3
+          Current Available (mA): 500
+          Current Required (mA): 500
+          Extra Operating Current (mA): 0
+          Built-In: Yes
+
+        Bluetooth USB Host Controller:
+
+          Product ID: 0x8290
+          Vendor ID: 0x05ac  (Apple Inc.)
+          Version: 1.46
+          Speed: Up to 12 Mb/sec
+          Manufacturer: Broadcom Corp.
+          Location ID: 0x14300000 / 2
+          Current Available (mA): 500
+          Current Required (mA): 0
+          Extra Operating Current (mA): 0
+          Built-In: Yes
+
+        Yubico WinUSB Gnubby (gnubby1):
+
+          Product ID: 0x0211
+          Vendor ID: 0x1050
+          Version: 0.34
+          Speed: Up to 12 Mb/sec
+          Manufacturer: Yubico
+          Location ID: 0x14100000 / 4
+          Current Available (mA): 500
+          Current Required (mA): 30
+          Extra Operating Current (mA): 0
+

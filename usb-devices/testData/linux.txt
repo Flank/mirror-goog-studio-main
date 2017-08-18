@@ -1,0 +1,12 @@
+Bus 002 Device 002: ID 8087:8002 Intel Corp.
+Bus 002 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 001 Device 002: ID 8087:800a Intel Corp.
+Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
+Bus 004 Device 002: ID 0451:8140 Texas Instruments, Inc.
+Bus 004 Device 001: ID 1d6b:0003 Linux Foundation 3.0 root hub
+Bus 003 Device 037: ID 18d1:4ee7 Google Inc.
+Bus 003 Device 005: ID 0451:8142 Texas Instruments, Inc. TUSB8041 4-Port Hub
+Bus 003 Device 004: ID 046d:c069 Logitech, Inc. M-U0007 [Corded Mouse M500]
+Bus 003 Device 003: ID 046d:c31c Logitech, Inc. Keyboard K120
+Bus 003 Device 002: ID 1050:0211 Yubico.com Gnubby
+Bus 003 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub

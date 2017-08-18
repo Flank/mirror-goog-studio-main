@@ -71,6 +71,7 @@
       <module fileurl="file://$PROJECT_DIR$/sdk-common/sdk-common-base.iml" filepath="$PROJECT_DIR$/sdk-common/sdk-common-base.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/sdklib/sdklib-base.iml" filepath="$PROJECT_DIR$/sdklib/sdklib-base.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/testutils/testutils.iml" filepath="$PROJECT_DIR$/testutils/testutils.iml" group="base" />
+      <module fileurl="file://$PROJECT_DIR$/usb-devices/usb-devices.iml" filepath="$PROJECT_DIR$/usb-devices/usb-devices.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/vector-drawable-tool/vector-drawable-tool.iml" filepath="$PROJECT_DIR$/vector-drawable-tool/vector-drawable-tool.iml" group="base" />
     </modules>
   </component>
