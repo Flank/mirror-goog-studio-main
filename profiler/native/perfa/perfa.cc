@@ -53,6 +53,9 @@ class JvmtiAllocator : public dex::Writer::Allocator {
   jvmtiEnv* jvmti_env_;
 };
 
+// TODO: Move the flag to the agent config to be set by Studio.
+const bool is_io_profiling_enabled = false;
+
 // Retrieve the app's data directory path
 static std::string GetAppDataPath() {
   Dl_info dl_info;
@@ -219,6 +222,17 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, bool log_live_alloc_count) {
 
   // TODO: Removed these once the auto-JNI-binding feature becomes
   // available in all published O system images.
+  if (is_io_profiling_enabled) {
+    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
+                  "trackIoCall", "(JIJZ)V");
+    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
+                  "trackNewFileSession", "(JLjava/lang/String;)V");
+    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
+                  "trackTerminatingFileSession", "(J)V");
+    BindJNIMethod(jni, "com/android/tools/profiler/support/io/IoTracker",
+                  "nextId", "()J");
+  }
+
   BindJNIMethod(jni,
                 "com/android/tools/profiler/support/network/"
                 "HttpTracker$InputStreamTracker",

@@ -21,6 +21,12 @@ option java_outer_classname = "IoProfiler";
 
 import "profiler.proto";
 
+enum IoType {
+  UNSPECIFIED_TYPE = 0;
+  READ = 1;
+  WRITE = 2;
+}
+
 service IoService {
   // Starts collecting I/O data of a running app.
   // Does nothing if the app is already being monitored.
@@ -68,10 +74,19 @@ message IoStopResponse {
 }
 
 message IoDataRequest {
+  enum Type {
+    UNSPECIFIED_TYPE = 0;
+    READ_SPEED_DATA = 1;
+    WRITE_SPEED_DATA = 2;
+    ALL_SPEED_DATA = 3;
+    FILE_DATA = 4;
+    ALL_DATA = 5;
+  }
   int32 process_id = 1;
   Session session = 2;
-  int64 start_timestamp = 3;  // exclusive
-  int64 end_timestamp = 4;    // inclusive
+  Type type = 3;
+  int64 start_timestamp = 4;  // exclusive
+  int64 end_timestamp = 5;    // inclusive
 }
 
 message IoDataResponse {
@@ -79,12 +94,6 @@ message IoDataResponse {
     UNSPECIFIED_STATUS = 0;
     SUCCESS = 1;
     FAILURE = 2;
-  }
-
-  enum Type {
-    UNSPECIFIED_TYPE = 0;
-    READ = 1;
-    WRITE = 2;
   }
 
   // Contains for each file operated on in this period, when it was
@@ -100,35 +109,37 @@ message IoDataResponse {
     }
     // A FileSession represents a session of operating on a file from
     // when it was opened until it is closed.
-    // e.g. {open, read, read, write, read, close}
+    // e.g. {open, read, read, close} or {open, write, read, write, close}
     message FileSession {
-      // Corresponds to a single write/read system call
-      message IoSystemCall {
-
-        Type type = 1;
-        // Timestamp when the system call started
-        int64 start_timestamp = 2;
-        // Timestamp when the system call ended or FUTURE if it hasn't yet
-        int64 end_timestamp = 3;
+      // Corresponds to a single write/read call
+      message IoCall {
+        // Timestamp when the call started
+        int64 start_timestamp = 1;
+        // Timestamp when the call ended
+        int64 end_timestamp = 2;
         // Amount of bytes read or written
-        int64 bytes_count = 4;
+        int32 bytes_count = 3;
+        // Either a read or write call
+        IoType type = 4;
       }
 
+      // A unique id for the session
+      int64 io_session_id = 1;
       // Timestamp of opening the file
-      int64 open_timestamp = 1;
+      int64 start_timestamp = 2;
       // Timestamp of closing the file or FUTURE if it's not closed yet
-      int64 close_timestamp = 2;
-      repeated IoSystemCall io_system_calls = 3;
+      int64 end_timestamp = 3;
+      // The path of the file
+      string file_path = 4;
+      repeated IoCall io_calls = 5;
     }
 
-    string file_path = 1;
-    repeated FileSession file_sessions = 2;
+    repeated FileSession file_sessions = 1;
   }
 
   // Contains the current overall speed of writing/reading
   message SpeedData {
-    Type type = 1;
-
+    IoType type = 1;
     // The speed of writing/reading in bytes/second
     int64 speed = 2;
   }
@@ -138,7 +149,7 @@ message IoDataResponse {
       FileData file_data = 1;
       SpeedData speed_data = 2;
     }
-    CommonData common_data = 3;
+    CommonData basic_info = 3;
   }
 
   Status status = 1;

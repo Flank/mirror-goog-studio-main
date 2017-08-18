@@ -21,6 +21,7 @@
 #include "perfd/event/event_profiler_component.h"
 #include "perfd/generic_component.h"
 #include "perfd/graphics/graphics_profiler_component.h"
+#include "perfd/io/io_profiler_component.h"
 #include "perfd/memory/memory_profiler_component.h"
 #include "perfd/network/network_profiler_component.h"
 #include "utils/config.h"
@@ -30,6 +31,9 @@
 #include "utils/fs/path.h"
 #include "utils/socket_utils.h"
 #include "utils/trace.h"
+
+// TODO: Move the flag to the agent config to be set by Studio.
+const bool is_io_profiling_enabled = false;
 
 int main(int argc, char** argv) {
   // If directed by command line argument, establish a communication channel
@@ -79,6 +83,11 @@ int main(int argc, char** argv) {
 
   profiler::NetworkProfilerComponent network_component{&daemon.utilities()};
   daemon.RegisterComponent(&network_component);
+
+  profiler::IoProfilerComponent io_component;
+  if (is_io_profiling_enabled) {
+    daemon.RegisterComponent(&io_component);
+  }
 
   profiler::GraphicsProfilerComponent graphics_component{&daemon.utilities()};
   daemon.RegisterComponent(&graphics_component);

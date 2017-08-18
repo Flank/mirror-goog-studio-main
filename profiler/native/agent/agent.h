@@ -26,6 +26,7 @@
 
 #include "proto/agent_service.grpc.pb.h"
 #include "proto/internal_event.grpc.pb.h"
+#include "proto/internal_io.grpc.pb.h"
 #include "proto/internal_network.grpc.pb.h"
 
 #include "memory_component.h"
@@ -44,6 +45,11 @@ using PerfdStatusChanged = std::function<void(bool)>;
 // |context|. Returns the status from the grpc call.
 using NetworkServiceTask = std::function<grpc::Status(
     proto::InternalNetworkService::Stub& stub, grpc::ClientContext& context)>;
+
+// Function for submitting an I/O grpc request via |stub| using the given
+// |context|. Returns the status from the grpc call.
+using IoServiceTask = std::function<grpc::Status(
+    proto::InternalIoService::Stub& stub, grpc::ClientContext& context)>;
 
 // Function for submitting an event grpc request via |stub| using the given
 // |context|. Returns the status from the grpc call.
@@ -78,6 +84,8 @@ class Agent {
 
   void SubmitNetworkTasks(const std::vector<NetworkServiceTask>& tasks);
 
+  void SubmitIoTasks(const std::vector<IoServiceTask>& tasks);
+
   void SubmitEventTasks(const std::vector<EventServiceTask>& tasks);
 
   void AddPerfdStatusChangedCallback(PerfdStatusChanged callback);
@@ -99,6 +107,7 @@ class Agent {
   proto::AgentService::Stub& agent_stub();
   proto::InternalEventService::Stub& event_stub();
   proto::InternalNetworkService::Stub& network_stub();
+  proto::InternalIoService::Stub& io_stub();
 
   /**
    * Connects/reconnects to perfd via the provided target.
@@ -123,7 +132,7 @@ class Agent {
   void RunSocketThread();
 
   // Used for |connect_cv_| and protects |agent_stub_|, |event_stub_|,
-  // |network_stub_| and |memory_component_|
+  // |io_stub_|, |network_stub_| and |memory_component_|
   std::mutex connect_mutex_;
   std::condition_variable connect_cv_;
   // The current grpc target we are currently connected to. We only
@@ -138,6 +147,7 @@ class Agent {
   std::shared_ptr<grpc::Channel> channel_;
   std::unique_ptr<proto::AgentService::Stub> agent_stub_;
   std::unique_ptr<proto::InternalEventService::Stub> event_stub_;
+  std::unique_ptr<proto::InternalIoService::Stub> io_stub_;
   std::unique_ptr<proto::InternalNetworkService::Stub> network_stub_;
   MemoryComponent* memory_component_;
 
