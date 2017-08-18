@@ -193,7 +193,7 @@ public class AnnotationProcessorTest {
                         + "    annotationProcessor project(':lib-compiler')\n"
                         + "}\n");
 
-        project.execute("assembleDebug");
+        project.executor().run("assembleDebug");
         File aptOutputFolder = project.getSubproject(":app").file("build/generated/source/apt/debug");
         assertThat(new File(aptOutputFolder, "HelloWorldStringValue.java")).exists();
 
@@ -245,7 +245,7 @@ public class AnnotationProcessorTest {
                 project.getSubproject(":app").getBuildFile(),
                 Charsets.UTF_8);
 
-        project.execute("assembleDebugAndroidTest", "testDebug");
+        project.executor().run("assembleDebugAndroidTest", "testDebug");
         File aptOutputFolder = project.getSubproject(":app").file("build/generated/source/apt");
         assertThat(
                         new File(
@@ -254,6 +254,24 @@ public class AnnotationProcessorTest {
                 .exists();
         assertThat(new File(aptOutputFolder, "test/debug/HelloWorldTestStringValue.java")).exists();
     }
+
+    @Test
+    public void precompileCheck() throws Exception {
+        Files.append(
+                "\n"
+                        + "dependencies {\n"
+                        + "    compile project(':lib-compiler')\n"
+                        + "    compile project(':lib')\n"
+                        + "}\n",
+                project.getSubproject(":app").getBuildFile(),
+                Charsets.UTF_8);
+
+        GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
+        String message = result.getFailureMessage();
+        assertThat(message).contains("Annotation processors must be explicitly declared now");
+        assertThat(message).contains("- lib-compiler.jar (project :lib-compiler)");
+    }
+
 
     /**
      * Test compile classpath is being added to processor path.
@@ -283,7 +301,7 @@ public class AnnotationProcessorTest {
                                         + "}\n")
                         .build(forComponentPlugin));
 
-        project.execute("assembleDebug");
+        project.executor().run("assembleDebug");
     }
 
     @Test

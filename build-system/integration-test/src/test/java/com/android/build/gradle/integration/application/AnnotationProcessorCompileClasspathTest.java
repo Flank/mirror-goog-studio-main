@@ -50,7 +50,8 @@ public class AnnotationProcessorCompileClasspathTest {
         GradleBuildResult result = project.executor().expectFailure().run("assembleDebug");
         assertThat(result.getFailureMessage())
                 .contains("Annotation processors must be explicitly declared now");
-        assertThat(result.getFailureMessage()).contains("butterknife-7.0.1.jar");
+        assertThat(result.getFailureMessage())
+                .contains("- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)");
     }
 
     @Test
@@ -67,13 +68,13 @@ public class AnnotationProcessorCompileClasspathTest {
         String message = result.getStdout();
         assertThat(message).contains("Annotation processors must be explicitly declared now");
         assertThat(message).contains("androidTestAnnotationProcessor");
-        assertThat(message).contains("butterknife-7.0.1.jar");
+        assertThat(message).contains("- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)");
 
         result = project.executor().run("assembleDebugUnitTest");
         message = result.getStdout();
         assertThat(message).contains("Annotation processors must be explicitly declared");
         assertThat(message).contains("testAnnotationProcessor");
-        assertThat(message).contains("butterknife-7.0.1.jar");
+        assertThat(message).contains("- butterknife-7.0.1.jar (com.jakewharton:butterknife:7.0.1)");
     }
 
     @Test
