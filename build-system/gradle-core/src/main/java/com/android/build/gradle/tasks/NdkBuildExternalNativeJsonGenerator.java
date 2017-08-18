@@ -179,13 +179,12 @@ class NdkBuildExternalNativeJsonGenerator extends ExternalNativeJsonGenerator {
 
     @NonNull
     @Override
-    String executeProcess(@NonNull ProcessInfoBuilder processBuilder)
+    String executeProcess(@NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
             throws ProcessException, IOException {
-        return ExternalNativeBuildTaskUtils
-                .executeBuildProcessAndLogError(
-                        androidBuilder,
-                        processBuilder,
-                        false /* logStdioToInfo */);
+        return ExternalNativeBuildTaskUtils.executeBuildProcessAndLogError(
+                androidBuilder,
+                getProcessBuilder(abi, abiPlatformVersion, outputJsonDir),
+                false /* logStdioToInfo */);
     }
 
     @NonNull

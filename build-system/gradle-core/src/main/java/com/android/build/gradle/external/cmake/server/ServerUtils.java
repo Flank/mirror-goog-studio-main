@@ -82,13 +82,24 @@ public class ServerUtils {
     }
 
     /**
+     * Validates the given handshake result object.
+     *
+     * @param handshakeResult - given handshake result received from Cmake server
+     * @return true if the given HandshakeResult object is valid
+     */
+    public static boolean isHandshakeResultValid(@NonNull HandshakeResult handshakeResult) {
+        return (handshakeResult.cookie != null
+                && handshakeResult.inReplyTo != null
+                && handshakeResult.type != null);
+    }
+
+    /**
      * Validates the given reponse to configure command from Cmake server
      *
      * @return true if the given ConfigureResult is valid
      */
-    public static boolean isConfigureResultValid(ConfigureResult configureResult) {
-        return (configureResult != null
-                && configureResult.type != null
+    public static boolean isConfigureResultValid(@NonNull ConfigureResult configureResult) {
+        return (configureResult.type != null
                 && configureResult.inReplyTo != null
                 && configureResult.type.equals("reply")
                 && configureResult.inReplyTo.equals("configure"));
@@ -99,9 +110,8 @@ public class ServerUtils {
      *
      * @return true if the given ComputeResult is valid
      */
-    public static boolean isComputedResultValid(ComputeResult computeResult) {
-        return (computeResult != null
-                && computeResult.inReplyTo != null
+    public static boolean isComputedResultValid(@NonNull ComputeResult computeResult) {
+        return (computeResult.inReplyTo != null
                 && computeResult.type != null
                 && computeResult.inReplyTo.equals("compute")
                 && computeResult.type.equals("reply"));
@@ -113,9 +123,8 @@ public class ServerUtils {
      * @return true if the given CodeModel has all the fields that are required by gradle to work as
      *     expected.
      */
-    public static boolean isCodeModelValid(CodeModel codeModel) {
-        return (codeModel != null
-                && codeModel.type != null
+    public static boolean isCodeModelValid(@NonNull CodeModel codeModel) {
+        return (codeModel.type != null
                 && codeModel.inReplyTo != null
                 && codeModel.inReplyTo.equals("codemodel")
                 && codeModel.type.equals("reply"));
@@ -127,8 +136,8 @@ public class ServerUtils {
      * @return true if the given Configuration has all the fields that are required by gradle to
      *     work as expected.
      */
-    private static boolean isCodeModelConfigurationsValid(Configuration configurations[]) {
-        if (configurations == null || configurations.length <= 0) {
+    private static boolean isCodeModelConfigurationsValid(@NonNull Configuration configurations[]) {
+        if (configurations.length <= 0) {
             return false;
         }
 

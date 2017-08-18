@@ -29,8 +29,11 @@ import java.io.IOException;
 import org.junit.Rule;
 import org.junit.Test;
 
-/** Test to verify that the APK is packaged correctly when there is a change in the target ABI. */
-public class AbiChangeTest {
+/**
+ * Test to verify that the APK is packaged correctly when there is a change in the APK output file
+ * name.
+ */
+public class ApkOutputFileChangeTest {
 
     @Rule
     public GradleTestProject project =
@@ -185,6 +188,31 @@ public class AbiChangeTest {
 
         assertThat(project.getApk(GradleTestProject.ApkType.DEBUG).getFile())
                 .wasModifiedAt(apkLastModifiedTime);
+    }
+
+    @Test
+    public void testOutputFileNameChange() throws Exception {
+        // Run the first build
+        GradleBuildResult result = project.executor().run("assembleDebug");
+        assertThat(result.getTask(":packageDebug")).wasNotUpToDate();
+        assertCorrectApk(project.getApk(GradleTestProject.ApkType.DEBUG));
+
+        // Modify the output file name
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "android {\n"
+                        + "    android.applicationVariants.all { variant ->\n"
+                        + "        variant.outputs.all {\n"
+                        + "            outputFileName = 'foo.apk'\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
+
+        // Run the second build, check that the new APK is generated correctly (regression test for
+        // https://issuetracker.google.com/issues/64703619)
+        result = project.executor().run("assembleDebug");
+        assertThat(result.getTask(":packageDebug")).wasNotUpToDate();
+        assertCorrectApk(project.getApkByFileName(GradleTestProject.ApkType.DEBUG, "foo.apk"));
     }
 
     private static void assertCorrectApk(@NonNull Apk apk) throws IOException {

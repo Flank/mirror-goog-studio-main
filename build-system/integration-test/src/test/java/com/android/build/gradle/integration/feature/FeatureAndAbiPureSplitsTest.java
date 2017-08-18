@@ -132,7 +132,7 @@ public class FeatureAndAbiPureSplitsTest {
                                                 + ".config."
                                                 + (Strings.isNullOrEmpty(targetABI)
                                                         ? "hdpi"
-                                                        : targetABI.replace("-", "_"));
+                                                        : targetABI);
                                 assertThat(splitName).isEqualTo(split);
                                 foundSplitNames.add(splitName);
                             }

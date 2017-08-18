@@ -205,12 +205,9 @@ public class GenerateSplitAbiRes extends BaseTask {
                         .or(CharMatcher.is('.'))
                         .negate();
 
-        String encodedSplitName =
-                (featureName != null ? featureName + "." : "")
-                        + "config."
-                        + charMatcher.replaceFrom(split, '_');
+        String abiName = charMatcher.replaceFrom(split, '_');
 
-        File tmpDirectory = new File(outputDirectory, split);
+        File tmpDirectory = new File(outputDirectory, abiName);
         FileUtils.mkdirs(tmpDirectory);
 
         File tmpFile = new File(tmpDirectory, "AndroidManifest.xml");
@@ -223,6 +220,11 @@ public class GenerateSplitAbiRes extends BaseTask {
         try (OutputStreamWriter fileWriter =
                 new OutputStreamWriter(
                         new BufferedOutputStream(new FileOutputStream(tmpFile)), "UTF-8")) {
+
+            String encodedSplitName =
+                    charMatcher.replaceFrom(
+                            (featureName != null ? featureName + "." : "") + "config." + split,
+                            '_');
 
             fileWriter.append(
                     "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -246,7 +248,7 @@ public class GenerateSplitAbiRes extends BaseTask {
                             + encodedSplitName
                             + "\"\n"
                             + "      targetABI=\""
-                            + split
+                            + abiName
                             + "\">\n"
                             + "       <uses-sdk android:minSdkVersion=\"21\"/>\n"
                             + "</manifest> ");

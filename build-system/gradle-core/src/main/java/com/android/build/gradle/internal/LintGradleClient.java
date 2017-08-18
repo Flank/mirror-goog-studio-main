@@ -330,7 +330,7 @@ public class LintGradleClient extends LintCliClient {
                 File manifest = output.getGeneratedManifest();
                 if (manifest.exists()) {
                     try {
-                        String xml = Files.toString(manifest, Charsets.UTF_8);
+                        String xml = Files.asCharSource(manifest, Charsets.UTF_8).read();
                         Document document = XmlUtils.parseDocumentSilently(xml, true);
                         if (document != null) {
                             // Note for later that we'll need to resolve locations from

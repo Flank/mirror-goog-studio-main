@@ -35,6 +35,9 @@ public class CmakeOptions implements CoreCmakeOptions {
 
     @Nullable private File buildStagingDirectory;
 
+    // CMake version to use. If it's null, it'll default to the CMake shipped with the SDK
+    @Nullable private String version;
+
     public CmakeOptions(@NonNull Project project) {
         this.project = project;
     }
@@ -79,6 +82,52 @@ public class CmakeOptions implements CoreCmakeOptions {
     @Override
     public void setBuildStagingDirectory(@NonNull File buildStagingDirectory) {
         this.buildStagingDirectory = project.file(buildStagingDirectory);
+    }
+
+    /**
+     * The version of CMake that Android Studio should use to build the native library.
+     *
+     * <p>When you specify a version of CMake, as shown below, the plugin searches for the
+     * appropriate CMake binary within your PATH environmental variable.
+     *
+     * <pre>
+     *     android {
+     *         ...
+     *         externalNativeBuild {
+     *             cmake {
+     *                 ...
+     *                 // Specifies the version of CMake the Android plugin should use. You need to
+     *                 // include the path to the CMake binary of this version to your PATH
+     *                 // environmental variable.
+     *                 version "3.7.1"
+     *             }
+     *         }
+     *     }
+     * </pre>
+     *
+     * <p>If you do not configure this property, the plugin uses the version of CMake available from
+     * the <a href="https://developer.android.com/studio/intro/update.html#sdk-manager">SDK
+     * manager</a>. (Android Studio prompts you to download this version of CMake if you haven't
+     * already done so)
+     *
+     * <p>Alternatively, you can specify a version of CMake in your project's <code>local.properties
+     * </code> file, as shown below:
+     *
+     * <pre>
+     *     // The path may be either absolute or relative to the the local.properties file you are
+     *     // editing.
+     *     cmake.dir="&ltpath-to-cmake&gt"
+     * </pre>
+     */
+    @Nullable
+    @Override
+    public String getVersion() {
+        return version;
+    }
+
+    @Override
+    public void setVersion(@NonNull String version) {
+        this.version = version;
     }
 
     public void setBuildStagingDirectory(@Nullable Object buildStagingDirectory) {

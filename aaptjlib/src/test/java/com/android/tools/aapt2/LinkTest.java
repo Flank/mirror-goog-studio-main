@@ -43,36 +43,46 @@ public class LinkTest {
     @ClassRule public static TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     private static Aapt2Jni aapt;
-    private static Path compiledLenaPng, compiledStringsXml, manifest;
+    private static Path compiledLenaPng, compiledStringsXml, compiledInvalidLayout, manifest;
 
     @BeforeClass
-    public static void compilePng() throws Exception {
+    public static void compileResources() throws Exception {
+        // directories
         Path drawable = temporaryFolder.newFolder("drawable").toPath();
+        Path values = temporaryFolder.newFolder("values").toPath();
+        Path layoutDir = temporaryFolder.newFolder("layout").toPath();
+        // files
         Path lena = drawable.resolve("lena.png");
+        Path strings = values.resolve("strings.xml");
+        Path layout = layoutDir.resolve("my_layout.xml");
+        // write resources
         Aapt2TestFiles.writeLenaPng(lena);
+        Aapt2TestFiles.writeStringsXml(strings);
+        Aapt2TestFiles.writeIncorrectLayout(layout);
+
         Path compileOut = temporaryFolder.newFolder().toPath();
         Aapt2Result result =
-                getAapt().compile(Arrays.asList("-o", compileOut.toString(), lena.toString()));
+                getAapt()
+                        .compile(
+                                Arrays.asList(
+                                        "-o",
+                                        compileOut.toString(),
+                                        lena.toString(),
+                                        strings.toString(),
+                                        layout.toString()));
+
         assertEquals(0, result.getReturnCode());
         assertTrue(result.getMessages().isEmpty());
+
         compiledLenaPng =
                 compileOut.resolve(Aapt2RenamingConventions.compilationRename(lena.toFile()));
         assertTrue(Files.exists(compiledLenaPng));
-    }
-
-    @BeforeClass
-    public static void compileXml() throws Exception {
-        Path values = temporaryFolder.newFolder("values").toPath();
-        Path strings = values.resolve("strings.xml");
-        Aapt2TestFiles.writeStringsXml(strings);
-        Path compileOut = temporaryFolder.newFolder().toPath();
-        Aapt2Result result =
-                getAapt().compile(Arrays.asList("-o", compileOut.toString(), strings.toString()));
-        assertEquals(0, result.getReturnCode());
-        assertTrue(result.getMessages().isEmpty());
         compiledStringsXml =
                 compileOut.resolve(Aapt2RenamingConventions.compilationRename(strings.toFile()));
         assertTrue(Files.isRegularFile(compiledStringsXml));
+        compiledInvalidLayout =
+                compileOut.resolve(Aapt2RenamingConventions.compilationRename(layout.toFile()));
+        assertTrue(Files.isRegularFile(compiledInvalidLayout));
     }
 
     @BeforeClass
@@ -152,7 +162,6 @@ public class LinkTest {
                 "define an <add-resource> tag or use --auto-add-overlay",
                 result.getMessages().get(1).getMessage());
         assertEquals("failed parsing overlays", result.getMessages().get(2).getMessage());
-        ;
     }
 
     @Test
@@ -162,6 +171,32 @@ public class LinkTest {
         assertEquals(1, result.getReturnCode());
         // NB: Argument parse failures are output directly to stderr.
         assertEquals(0, result.getMessages().size());
+    }
+
+    @Test
+    public void invalidLayout() throws Exception {
+        Path resourceDotApUnderscore = temporaryFolder.newFile("resources3.ap_").toPath();
+
+        Aapt2Result result =
+                getAapt()
+                        .link(
+                                Arrays.asList(
+                                        "-o",
+                                        resourceDotApUnderscore.toString(),
+                                        "--manifest",
+                                        manifest.toString(),
+                                        "-R",
+                                        compiledInvalidLayout.toString()));
+
+        // Should return 1, but due to b/64367402 returns 0.
+        //TODO(imorlowska): update once bug is fixed.
+        assertEquals(0, result.getReturnCode());
+        assertEquals(1, result.getMessages().size());
+
+        assertEquals(Aapt2Result.Message.LogLevel.ERROR, result.getMessages().get(0).getLevel());
+        assertEquals(2, result.getMessages().get(0).getLine());
+        assertEquals(
+                "attribute 'android:gravity' not found", result.getMessages().get(0).getMessage());
     }
 
     private static Aapt2Jni getAapt() throws IOException, ExecutionException {
