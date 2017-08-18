@@ -27,6 +27,8 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
@@ -62,14 +64,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
     @Before
     public void initializeProject() throws Exception {
         PerformanceTestProjects.initializeUberSkeleton(project);
-        switch (projectScenario.getFlags().getMultiDex()) {
-            case NATIVE:
-                TestFileUtils.searchAndReplace(
-                        project.file("dependencies.gradle"), "(minSdkVersion *): \\d+,", "$1: 21,");
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown project scenario" + projectScenario);
-        }
+        project.executor().run("addSources");
     }
 
     @Test
@@ -89,6 +84,28 @@ public class LargeGradleProjectPerformanceMatrixTest {
         executor().recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN).run(":phthalic:assembleDebug");
         executor().recordBenchmark(BenchmarkMode.NO_OP).run(":phthalic:assembleDebug");
 
+        String source = "outissue/carnally/src/main/java/com/studio/carnally/LoginActivity.java";
+        applyJavaChange(project.getTestDir().toPath().resolve(source), false);
+        executor()
+                .recordBenchmark(BenchmarkMode.BUILD_INC__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE)
+                .run(":phthalic:assembleDebug");
+
+        applyJavaChange(project.getTestDir().toPath().resolve(source), true);
+        executor()
+                .recordBenchmark(BenchmarkMode.BUILD_INC__SUB_PROJECT__JAVA__API_CHANGE)
+                .run(":phthalic:assembleDebug");
+
+        String stringsXml = "outissue/carnally/src/main/res/values/strings.xml";
+        changeResValue(project.getTestDir().toPath().resolve(stringsXml));
+        executor()
+                .recordBenchmark(BenchmarkMode.BUILD_INC__SUB_PROJECT__RES__EDIT)
+                .run(":phthalic:assembleDebug");
+
+        addResValue(project.getTestDir().toPath().resolve(stringsXml));
+        executor()
+                .recordBenchmark(BenchmarkMode.BUILD_INC__SUB_PROJECT__RES__ADD)
+                .run(":phthalic:assembleDebug");
+
         executor().run("clean");
         project.model().ignoreSyncIssues().recordBenchmark(BenchmarkMode.SYNC).getMulti();
 
@@ -106,5 +123,27 @@ public class LargeGradleProjectPerformanceMatrixTest {
                 .with(BooleanOption.ENABLE_AAPT2, false)
                 .with(BooleanOption.ENABLE_D8, projectScenario.useD8())
                 .withoutOfflineFlag();
+    }
+
+    private void applyJavaChange(@NonNull Path sourceFile, boolean isAbiChange) throws IOException {
+        String modifier = isAbiChange ? "public" : "private";
+        String method =
+                String.format(
+                        "%s void generated_method_for_perf_test_%d() {\n"
+                                + "    System.out.println(\"test code\");\n"
+                                + "}",
+                        modifier, System.nanoTime());
+        TestFileUtils.addMethod(sourceFile.toFile(), method);
+    }
+
+    private void changeResValue(@NonNull Path stringsXml) throws IOException {
+        TestFileUtils.searchAndReplace(stringsXml, "</string>", " added by test</string>");
+    }
+
+    private void addResValue(@NonNull Path stringsXml) throws IOException {
+        TestFileUtils.searchAndReplace(
+                stringsXml,
+                "</resources>",
+                "<string name=\"generated_by_test_for_perf\">my string</string></resources>");
     }
 }

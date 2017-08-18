@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.utils;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.PLAY_SERVICES_VERSION;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.SdkConstants;
@@ -25,17 +26,15 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.testutils.TestUtils;
+import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -385,9 +384,7 @@ public class PerformanceTestProjects {
         }
 
         TestFileUtils.searchAndReplace(
-                project.file("WordPress/build.gradle"),
-                "9.0.2",
-                GradleTestProject.PLAY_SERVICES_VERSION);
+                project.file("WordPress/build.gradle"), "9.0.2", PLAY_SERVICES_VERSION);
 
         TestFileUtils.searchAndReplace(
                 project.file("WordPress/build.gradle"),
@@ -417,16 +414,22 @@ public class PerformanceTestProjects {
                         + GradleTestProject.ANDROID_GRADLE_PLUGIN_VERSION
                         + "'");
 
+        // matches: classpath ('com.uber:okbuck:1.0.0') {\n exclude module: 'gradle'\n }
         TestFileUtils.searchAndReplace(
-                project.getBuildFile(), "(classpath 'com.uber:okbuck:[^']+')", "// $0");
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "(classpath 'com.jakewharton:butterknife-gradle-plugin:8.4.0')",
-                "// $1");
+                project.getBuildFile().toPath(),
+                "classpath\\s\\('com.uber:okbuck:\\d+.\\d+.\\d+'\\)(\\s\\{\n.*\n.*})?",
+                "");
 
-        String content = new String(Files.readAllBytes(project.getBuildFile().toPath()));
-        int pos = content.indexOf("apply plugin: 'com.uber");
-        Files.write(project.getBuildFile().toPath(), content.substring(0, pos - 1).getBytes());
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile().toPath(), "apply plugin: 'com.uber.okbuck'", "");
+
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile().toPath(), "okbuck\\s\\{\n(.*\n){3}+.*}", "");
+
+        TestFileUtils.searchAndReplace(
+                project.getBuildFile().toPath(),
+                "compile 'com.google.auto.service:auto-service:1.0-rc2'",
+                "");
 
         TestFileUtils.searchAndReplace(
                 project.file("dependencies.gradle"),
@@ -446,10 +449,6 @@ public class PerformanceTestProjects {
         TestFileUtils.searchAndReplace(
                 project.file("dependencies.gradle"), "('io.reactivex:rxjava):[^']*'", "$1:1.2.3'");
 
-        TestFileUtils.searchAndReplace(
-                project.file("dependencies.gradle"),
-                "('com.jakewharton:butterknife[^:]*):[^']*'",
-                "$1:8.4.0'");
         TestFileUtils.searchAndReplace(
                 project.file("dependencies.gradle"),
                 "('com.squareup.okio:okio):[^']*'",
@@ -477,22 +476,29 @@ public class PerformanceTestProjects {
                         + "leanback : \"com.android.support:leanback-v17:\\${versions.supportVersion}\",\n"
                         + "mediarouter : \"com.android.support:mediarouter-v7:\\${versions.supportVersion}\",\n");
 
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "playServicesVersion: '\\d+.\\d+.\\d+'",
+                "playServicesVersion: '" + PLAY_SERVICES_VERSION + "'");
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "leakCanaryVersion\\s*: '\\d+.\\d+'",
+                "leakCanaryVersion: '1.4'");
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "daggerVersion\\s*: '\\d+.\\d+'",
+                "daggerVersion: '2.7'");
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "autoCommon\\s*: 'com.google.auto:auto-common:\\d+.\\d+'",
+                "autoCommon: 'com.google.auto:auto-common:0.6'");
+
         TestFileUtils.appendToFile(
                 project.file("dependencies.gradle"),
                 "\n\n// Fixes for support lib versions.\n"
                         + "ext.deps.other.appcompat = [\n"
                         + "        ext.deps.support.appCompat,\n"
                         + "        ext.deps.other.appcompat,\n"
-                        + "]\n"
-                        + "\n"
-                        + "ext.deps.external.butterKnife = [\n"
-                        + "        ext.deps.support.annotations,\n"
-                        + "        ext.deps.external.butterKnife,\n"
-                        + "]\n"
-                        + "\n"
-                        + "ext.deps.apt.butterKnifeCompiler = [\n"
-                        + "        ext.deps.support.annotations,\n"
-                        + "        ext.deps.apt.butterKnifeCompiler,\n"
                         + "]\n"
                         + "\n"
                         + "ext.deps.other.cast = [\n"
@@ -551,216 +557,19 @@ public class PerformanceTestProjects {
                         + "\n"
                         + "\n // End support lib version fixes. \n");
 
-        // Fix project compilation.
-        TestFileUtils.searchAndReplace(
-                project.file("outissue/cyclus/build.gradle"),
-                "dependencies \\{\n",
-                "dependencies {\n"
-                        + "compile deps.support.leanback\n"
-                        + "compile deps.support.appCompat\n"
-                        + "compile deps.external.rxjava\n");
-
-        TestFileUtils.searchAndReplace(
-                project.file("outissue/embrace/build.gradle"),
-                "dependencies \\{\n",
-                "dependencies { compile deps.external.rxjava\n");
-
-        TestFileUtils.searchAndReplace(
-                project.file("outissue/nutate/build.gradle"),
-                "dependencies \\{\n",
-                "dependencies { compile deps.support.mediarouter\n");
-
-        // Remove butterknife plugin.
-        for (String path :
-                ImmutableList.of(
-                        "outissue/carnally",
-                        "outissue/airified",
-                        "Padraig/follicle",
-                        "outissue/Glumaceae",
-                        "fratry/sodden",
-                        "subvola/zelator",
-                        "subvola/doored",
-                        "subvola/transpire",
-                        "subvola/atbash",
-                        "subvola/gorgoneum/Chordata",
-                        "subvola/gorgoneum/metanilic/agaric",
-                        "subvola/gorgoneum/teerer/polytonal",
-                        "subvola/gorgoneum/teerer/Cuphea",
-                        "harvestry/Timbira")) {
-            TestFileUtils.searchAndReplace(
-                    project.file(path + "/build.gradle"),
-                    "apply plugin: 'com.jakewharton.butterknife'",
-                    "/* $0 */");
-        }
-
-        // Remove the android-apt plugin
-
-        Set<String> aptConfigurationProjects =
-                ImmutableSet.of(
-                        "Padraig/endocoele",
-                        "Padraig/follicle",
-                        "Padraig/ratafee",
-                        "Tripoline",
-                        "fratry/Cosmati",
-                        "fratry/Krapina",
-                        "fratry/cepaceous",
-                        "fratry/crankum",
-                        "fratry/crapple",
-                        "fratry/crippling",
-                        "fratry/endothys",
-                        "fratry/fortunate",
-                        "fratry/halsen",
-                        "fratry/linotype",
-                        "fratry/matchy",
-                        "fratry/passbook",
-                        "fratry/psoriasis",
-                        "fratry/savory",
-                        "fratry/sodden",
-                        "fratry/subradius",
-                        "fratry/wiredraw",
-                        "harvestry/Bokhara",
-                        "harvestry/Timbira",
-                        "harvestry/digallate",
-                        "harvestry/isocryme",
-                        "harvestry/suchness",
-                        "harvestry/thribble",
-                        "outissue/Glumaceae",
-                        "outissue/airified",
-                        "outissue/carnally",
-                        "outissue/caudate",
-                        "outissue/eyesore",
-                        "outissue/nonparty",
-                        "outissue/nursing",
-                        "outissue/situla",
-                        "outissue/worldway",
-                        "preprice",
-                        "subvola/Dipnoi",
-                        "subvola/Leporis",
-                        "subvola/absconsa",
-                        "subvola/aluminize",
-                        "subvola/atbash",
-                        "subvola/cleithral",
-                        "subvola/copsewood",
-                        "subvola/doored",
-                        "subvola/emergency",
-                        "subvola/gorgoneum/Chordata",
-                        "subvola/gorgoneum/metanilic/agaric",
-                        "subvola/gorgoneum/teerer/Cuphea",
-                        "subvola/gorgoneum/teerer/Onondaga",
-                        "subvola/gorgoneum/teerer/lucrific",
-                        "subvola/gorgoneum/teerer/perscribe",
-                        "subvola/gorgoneum/teerer/polytonal",
-                        "subvola/gorgoneum/teerer/revalenta",
-                        "subvola/gorgoneum/unwincing",
-                        "subvola/graphite",
-                        "subvola/haploidic",
-                        "subvola/inhumanly",
-                        "subvola/liming",
-                        "subvola/ocracy",
-                        "subvola/remigrate",
-                        "subvola/suborder",
-                        "subvola/tourer",
-                        "subvola/transpire",
-                        "subvola/unmilked",
-                        "subvola/wordsmith",
-                        "subvola/zealotic",
-                        "subvola/zelator");
-        for (String path : aptConfigurationProjects) {
-            File buildDotGradle = project.file(path + "/build.gradle");
-            TestFileUtils.searchAndReplace(
-                    buildDotGradle, "apply plugin: 'com\\.neenbedankt\\.android-apt'", "/* $0 */");
-            TestFileUtils.searchAndReplace(buildDotGradle, " apt ", " annotationProcessor ");
-        }
-
-        for (String path : ImmutableList.of("subvola/absconsa", "phthalic", "fratry/endothys")) {
-            TestFileUtils.searchAndReplace(
-                    project.file(path + "/build.gradle"), "estApt", "estAnnotationProcessor");
-        }
-
-        Set<String> aptPluginProjects =
-                ImmutableSet.of(
-                        "Padraig/arbitrate",
-                        "Padraig/cuminoin",
-                        "Padraig/decollete",
-                        "Padraig/emerse",
-                        "Padraig/limitary",
-                        "Padraig/paegle",
-                        "Padraig/quaestor/triduum",
-                        "Padraig/signist",
-                        "fratry/Ormond",
-                        "fratry/assumpsit",
-                        "fratry/asteep",
-                        "fratry/audience",
-                        "fratry/tentlet",
-                        "harvestry/Savannah/penumbra",
-                        "harvestry/eelgrass",
-                        "harvestry/unwormy",
-                        "outissue/aricine",
-                        "outissue/bracciale",
-                        "outissue/browntail",
-                        "outissue/caricetum/midship",
-                        "outissue/caricetum/scientist",
-                        "outissue/caricetum/skiapod",
-                        "outissue/coherence",
-                        "outissue/cyclus",
-                        "outissue/defusion",
-                        "outissue/embrace",
-                        "outissue/extended",
-                        "outissue/gliadin",
-                        "outissue/nonjurant",
-                        "outissue/nonunion",
-                        "outissue/nutate",
-                        "outissue/oleometer",
-                        "outissue/phasmatid",
-                        "outissue/shortsome",
-                        "outissue/synarchy",
-                        "outissue/tetragram",
-                        "phthalic",
-                        "subvola/Brittany",
-                        "subvola/Brittany",
-                        "subvola/papistry");
-        assertThat(aptPluginProjects).containsNoneIn(aptConfigurationProjects);
-        for (String path : aptPluginProjects) {
-            TestFileUtils.searchAndReplace(
-                    project.file(path + "/build.gradle"),
-                    "apply plugin: 'com\\.neenbedankt\\.android-apt'",
-                    "/* $0 */");
-        }
-
-        // because we are testing the source generation which will trigger the test manifest
-        // merging, minSdkVersion has to be at least 17
-        TestFileUtils.searchAndReplace(
-                project.file("dependencies.gradle"), "(minSdkVersion *): \\d+,", "$1: 17,");
-
-        Stream<Path> allBuildFiles =
+        List<Path> allBuildFiles =
                 Files.find(
-                        project.getTestDir().toPath(),
-                        Integer.MAX_VALUE,
-                        (path, attrs) -> path.getFileName().toString().equals("build.gradle"));
-        Pattern appPlugin = Pattern.compile("apply plugin:\\s*['\"]com.android.application['\"]");
-        Pattern libPlugin = Pattern.compile("apply plugin:\\s*['\"]com.android.library['\"]");
-        allBuildFiles.forEach(
-                buildGradle -> {
-                    String fileContent;
-                    try {
-                        fileContent = new String(Files.readAllBytes(buildGradle));
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                    if (appPlugin.matcher(fileContent).find()
-                            || libPlugin.matcher(fileContent).find()) {
-                        try {
-                            TestFileUtils.appendToFile(
-                                    buildGradle.toFile(),
-                                    "\n"
-                                            + "android.defaultConfig.javaCompileOptions {\n"
-                                            + "annotationProcessorOptions.includeCompileClasspath = true\n"
-                                            + "}");
-                        } catch (IOException e) {
-                            throw new UncheckedIOException(e);
-                        }
-                    }
-                });
+                                project.getTestDir().toPath(),
+                                Integer.MAX_VALUE,
+                                (path, attrs) ->
+                                        path.getFileName().toString().equals("build.gradle"))
+                        .filter(
+                                p ->
+                                        !PathUtils.toSystemIndependentPath(p)
+                                                .endsWith("gradle/SourceTemplate/app/build.gradle"))
+                        .collect(Collectors.toList());
+
+        modifyBuildFiles(allBuildFiles);
     }
 
     public static void assertNoSyncErrors(@NonNull Map<String, AndroidProject> models) {
@@ -775,5 +584,58 @@ public class PerformanceTestProjects {
                                     .collect(Collectors.toList());
                     assertThat(severeIssues).named("Issues for " + path).isEmpty();
                 });
+    }
+
+    private static void modifyBuildFiles(@NonNull List<Path> buildFiles) throws IOException {
+        Pattern appPlugin = Pattern.compile("apply plugin:\\s*['\"]com.android.application['\"]");
+        Pattern libPlugin = Pattern.compile("apply plugin:\\s*['\"]com.android.library['\"]");
+        Pattern javaPlugin = Pattern.compile("apply plugin:\\s*['\"]java['\"]");
+
+        for (Path build : buildFiles) {
+            String fileContent = new String(Files.readAllBytes(build));
+            if (appPlugin.matcher(fileContent).find() || libPlugin.matcher(fileContent).find()) {
+                TestFileUtils.appendToFile(
+                        build.toFile(),
+                        "\n"
+                                + "android.defaultConfig.javaCompileOptions {\n"
+                                + "    annotationProcessorOptions.includeCompileClasspath = false\n"
+                                + "}");
+
+                replaceIfPresent(fileContent, build, "\\s*compile\\s(.*)", "\napi $1");
+
+                replaceIfPresent(fileContent, build, "\\s*provided\\s(.*)", "\ncompileOnly $1");
+
+                replaceIfPresent(
+                        fileContent, build, "\\s*testCompile\\s(.*)", "\ntestImplementation $1");
+
+                replaceIfPresent(
+                        fileContent, build, "\\s*debugCompile\\s(.*)", "\ndebugImplementation $1");
+                replaceIfPresent(
+                        fileContent,
+                        build,
+                        "\\s*releaseCompile\\s(.*)",
+                        "\nreleaseImplementation $1");
+                replaceIfPresent(
+                        fileContent,
+                        build,
+                        "\\s*androidTestCompile\\s(.*)",
+                        "\nandroidTestImplementation $1");
+            } else if (javaPlugin.matcher(fileContent).find()) {
+                TestFileUtils.searchAndReplace(
+                        build, javaPlugin.pattern(), "apply plugin: 'java-library'");
+            }
+        }
+    }
+
+    private static void replaceIfPresent(
+            @NonNull String content,
+            @NonNull Path destination,
+            @NonNull String pattern,
+            @NonNull String replace)
+            throws IOException {
+        Pattern compiledPattern = Pattern.compile(pattern);
+        if (compiledPattern.matcher(content).find()) {
+            TestFileUtils.searchAndReplace(destination, compiledPattern.pattern(), replace);
+        }
     }
 }
