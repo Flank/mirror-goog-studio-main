@@ -290,6 +290,46 @@ public final class JvmWideVariable<T> {
                 initialValueSupplier);
     }
 
+    /**
+     * Creates a {@code JvmWideVariable} instance that can access a JVM-wide variable, similar to
+     * {@link #JvmWideVariable(String, String, String, TypeToken, Supplier)}. See the javadoc of
+     * that constructor for more details.
+     *
+     * <p>This constructor can be used when:
+     *
+     * <ul>
+     *   <li>The tag of the variable is the variable's type. This is so that if the type of the
+     *       variable has changed, it will be considered a new variable and won't conflict with the
+     *       previous variable.
+     * </ul>
+     *
+     * <p>IMPORTANT: This constructor should be used only when the value of the variable has the
+     * exact type {@code T}, not a sub-type of {@code T}; otherwise, type {@code T} alone would not
+     * be sufficient to serve as a tag to capture the "uniqueness" of the variable.
+     *
+     * @param group the group of the variable
+     * @param name the name of the variable
+     * @param typeToken the type of the variable, which must be loaded by the bootstrap class loader
+     * @param initialValueSupplier the supplier that produces the initial value of the variable. It
+     *     is called only when the variable is first created. The supplied value can be null.
+     * @see #JvmWideVariable(String, String, String, TypeToken, Supplier)
+     */
+    public JvmWideVariable(
+            @NonNull String group,
+            @NonNull String name,
+            @NonNull TypeToken<T> typeToken,
+            @NonNull Supplier<T> initialValueSupplier) {
+        this(
+                group,
+                name,
+                collectComponentClasses(typeToken.getType())
+                        .stream()
+                        .map(Class::getName)
+                        .collect(Collectors.joining("-")),
+                typeToken,
+                initialValueSupplier);
+    }
+
     /** Returns the full name of a JVM-wide variable given its group, name, and tag. */
     @VisibleForTesting
     @NonNull
@@ -365,10 +405,7 @@ public final class JvmWideVariable<T> {
         // table is no longer compatible with prior versions (e.g., if its type has changed), we
         // can update a unique tag to avoid conflicts across versions. Currently, we use the type of
         // the variable table as its tag.
-        Type type =
-                new TypeToken<
-                        ValueWrapper<
-                                ConcurrentMap<String, AtomicReference<Object>>>>() {}.getType();
+        Type type = new TypeToken<ConcurrentMap<String, AtomicReference<Object>>>() {}.getType();
         String tag =
                 collectComponentClasses(type)
                         .stream()
