@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
+import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskManager;
@@ -241,6 +242,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         // We run by default in headless mode, so the JVM doesn't steal focus.
         System.setProperty("java.awt.headless", "true");
 
+        PluginInitializer.initialize(project);
         project.getPluginManager().apply(AndroidBasePlugin.class);
         checkPluginVersion();
 
