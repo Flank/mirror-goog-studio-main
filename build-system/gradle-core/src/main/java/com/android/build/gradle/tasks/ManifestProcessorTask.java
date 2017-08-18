@@ -100,8 +100,8 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     }
 
     /**
-     * Backward compatibility support. This method used to be available on AGP < 3.0 but has now
-     * been replaced with {@link #getManifestOutputDirectory()}.
+     * Backward compatibility support. This method used to be available on AGP prior to 3.0 but has
+     * now been replaced with {@link #getManifestOutputDirectory()}.
      *
      * @return
      * @deprecated As or release 3.0, replaced with {@link #getManifestOutputDirectory()}
