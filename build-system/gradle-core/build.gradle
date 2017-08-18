@@ -3,13 +3,6 @@ apply plugin: 'kotlin'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'clone-artifacts'
 apply plugin: 'antlr'
-apply plugin: 'com.google.protobuf'
-
-protobuf {
-    protoc {
-        artifact = 'com.google.protobuf:protoc:3.0.0'
-    }
-}
 
 configurations {
     provided
@@ -58,7 +51,6 @@ dependencies {
     compile libs.jopt
     compile libs.kotlin_stdlib
     compile libs.proguard
-    compile libs.protobuf
 
     testCompile project(':base:instant-run:instant-run-annotations')
     testCompile project(':base:instant-run:instant-run-runtime')

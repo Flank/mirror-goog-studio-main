@@ -31,7 +31,6 @@ kotlin_library(
         "src/main/java",
     ],
     bundled_deps = [
-        "//tools/base/build-system/gradle-core/src/main/proto",
         "//tools/base/build-system/instant-run-instrumentation",
     ],
     exclusions = {
@@ -117,7 +116,6 @@ kotlin_test(
         "//tools/base/build-system/builder",
         "//tools/base/build-system/builder-model",
         "//tools/base/build-system/gradle-api",
-        "//tools/base/build-system/gradle-core/src/main/proto",  # TODO: move this to this package?
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
