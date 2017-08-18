@@ -86,10 +86,10 @@ internal class DefaultSdkInfo : SdkInfo() {
 
         val parent = getParent(simpleName) ?: return null
         // The map only stores class names internally; correct for full package paths
-        if (parent == VIEW || parent == VIEW_GROUP || parent == SURFACE_VIEW) {
-            return VIEW_PKG_PREFIX + parent
+        return if (parent == VIEW || parent == VIEW_GROUP || parent == SURFACE_VIEW) {
+            VIEW_PKG_PREFIX + parent
         } else {
-            return WIDGET_PKG_PREFIX + parent
+            WIDGET_PKG_PREFIX + parent
         }
     }
 

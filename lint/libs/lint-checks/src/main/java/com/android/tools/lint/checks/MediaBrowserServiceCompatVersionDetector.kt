@@ -1,12 +1,8 @@
 package com.android.tools.lint.checks
 
-import com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER
-
 import com.android.SdkConstants
-import com.android.builder.model.AndroidLibrary
-import com.android.builder.model.Dependencies
-import com.android.builder.model.MavenCoordinates
 import com.android.ide.common.repository.GradleCoordinate
+import com.android.ide.common.repository.GradleCoordinate.COMPARE_PLUS_HIGHER
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -15,9 +11,7 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
-import com.intellij.psi.PsiClass
 import org.jetbrains.uast.UClass
-import java.util.Collections
 
 /**
  * Constructs a new [MediaBrowserServiceCompatVersionDetector] check
