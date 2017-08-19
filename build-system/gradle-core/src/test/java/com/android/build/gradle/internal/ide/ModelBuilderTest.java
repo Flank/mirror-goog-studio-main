@@ -52,6 +52,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import org.gradle.api.file.FileCollection;
 import org.gradle.internal.impldep.com.google.common.base.Charsets;
@@ -336,6 +337,9 @@ public class ModelBuilderTest {
 
         FileCollection outputCollection = Mockito.mock(FileCollection.class);
         when(outputCollection.getSingleFile()).thenReturn(temporaryFolder.getRoot());
+        Iterator outputIterator = Mockito.mock(Iterator.class);
+        when(outputIterator.next()).thenReturn(temporaryFolder.getRoot());
+        when(outputCollection.iterator()).thenReturn(outputIterator);
         when(testVariantScope.getOutput(ArgumentMatchers.eq(ALL_CLASSES)))
                 .thenReturn(outputCollection);
 
