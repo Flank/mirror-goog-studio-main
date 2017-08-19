@@ -1,171 +1,171 @@
 <component name="InspectionProjectProfileManager">
   <profile version="1.0">
     <option name="myName" value="Project Default" />
-    <inspection_tool class="AndroidDomInspection" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidElementNotAllowed" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintAdapterViewChildren" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintAlwaysShowAction" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintButtonCase" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintButtonOrder" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintDisableBaselineAlignment" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintDrawAllocation" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintDuplicateIds" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintDuplicateIncludedIds" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintEnforceUTF8" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintExportedService" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintExtraText" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintExtraTranslation" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintGifUsage" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintGrantAllUris" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintGridLayout" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidLintHardcodedDebugMode" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintHardcodedText" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintIconDensities" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintIconDipSize" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintIconDuplicates" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintIconDuplicatesConfig" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintIconLocation" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintIconMissingDensityFolder" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintIconNoDpi" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintInconsistentArrays" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintInefficientWeight" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintLibraryCustomView" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidLintManifestOrder" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintMergeRootFrame" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintMissingPrefix" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintMissingTranslation" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidLintMultipleUsesSdk" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidLintNestedScrolling" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintNestedWeights" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintObsoleteLayoutParam" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintOverdraw" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintPrivateResource" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidLintProguard" enabled="false" enabled_by_default="false" level="ERROR" />
+    <inspection_tool class="AndroidDomInspection" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AndroidElementNotAllowed" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintAdapterViewChildren" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintAlwaysShowAction" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintButtonCase" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintButtonOrder" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintDisableBaselineAlignment" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintDrawAllocation" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintDuplicateIds" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintDuplicateIncludedIds" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintEnforceUTF8" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintExportedService" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintExtraText" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintExtraTranslation" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintGifUsage" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintGrantAllUris" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintGridLayout" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintHardcodedDebugMode" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintHardcodedText" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintIconDensities" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintIconDipSize" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintIconDuplicates" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintIconDuplicatesConfig" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintIconLocation" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintIconMissingDensityFolder" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintIconNoDpi" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintInconsistentArrays" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintInefficientWeight" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintLibraryCustomView" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintManifestOrder" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintMergeRootFrame" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintMissingPrefix" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintMissingTranslation" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintMultipleUsesSdk" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintNestedScrolling" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintNestedWeights" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintObsoleteLayoutParam" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintOverdraw" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintPrivateResource" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintProguard" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="AndroidLintProguardSplitConfig" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintPxUsage" enabled="false" enabled_by_default="false" level="WARNING" />
+    <inspection_tool class="AndroidLintPxUsage" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="AndroidLintResourceAsColor" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidLintScrollViewCount" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintScrollViewSize" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintSdCardPath" enabled="false" enabled_by_default="false" level="WARNING" />
+    <inspection_tool class="AndroidLintScrollViewCount" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintScrollViewSize" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintSdCardPath" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="AndroidLintSparseArray" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintStateListReachable" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintStringFormatCount" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintStringFormatInvalid" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidLintStringFormatMatches" enabled="false" enabled_by_default="false" level="ERROR" />
+    <inspection_tool class="AndroidLintStateListReachable" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintStringFormatCount" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintStringFormatInvalid" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintStringFormatMatches" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="AndroidLintStyleCycle" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidLintSuspiciousImport" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintTextFields" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintTextViewEdits" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintTooDeepLayout" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintTooManyViews" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintTypographyDashes" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintTypographyEllipsis" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintTypographyFractions" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintTypographyOther" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintUnknownId" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidLintUnknownIdInLayout" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintUnusedResources" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintUseCompoundDrawables" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintUseValueOf" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintUselessLeaf" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintUselessParent" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintUsesMinSdkAttributes" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintWorldWriteableFiles" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AndroidLintWrongViewCast" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidNonConstantResIdsInSwitch" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AndroidUnknownAttribute" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="AntDuplicateTargetsInspection" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AntMissingPropertiesFileInspection" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="AntResolveInspection" enabled="false" enabled_by_default="false" level="ERROR" />
+    <inspection_tool class="AndroidLintSuspiciousImport" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintTextFields" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintTextViewEdits" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintTooDeepLayout" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintTooManyViews" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintTypographyDashes" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintTypographyEllipsis" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintTypographyFractions" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintTypographyOther" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintUnknownId" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintUnknownIdInLayout" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintUnusedResources" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintUseCompoundDrawables" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintUseValueOf" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintUselessLeaf" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintUselessParent" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintUsesMinSdkAttributes" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintWorldWriteableFiles" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AndroidLintWrongViewCast" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AndroidNonConstantResIdsInSwitch" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AndroidUnknownAttribute" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="AntDuplicateTargetsInspection" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AntMissingPropertiesFileInspection" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="AntResolveInspection" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="ArchaicSystemPropertyAccess" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="ArrayEquality" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="ArrayEquals" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="ArrayHashCode" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="ArrayObjectsEquals" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="AssertEqualsBetweenInconvertibleTypes" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="AssertEqualsCalledOnArray" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="AssertEqualsMayBeAssertSame" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="AssignmentToLambdaParameter" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="AssignmentToMethodParameter" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="ArrayEquality" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="ArrayEquals" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="ArrayHashCode" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="ArrayObjectsEquals" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AssertEqualsBetweenInconvertibleTypes" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AssertEqualsCalledOnArray" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AssertEqualsMayBeAssertSame" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="AssignmentToLambdaParameter" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AssignmentToMethodParameter" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoreTransformationOfOriginalParameter" value="false" />
     </inspection_tool>
-    <inspection_tool class="AssignmentUsedAsCondition" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="AutoCloseableResource" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="AssignmentUsedAsCondition" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AutoCloseableResource" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoreFromMethodCall" value="true" />
     </inspection_tool>
-    <inspection_tool class="BeforeClassOrAfterClassIsPublicStaticVoidNoArg" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="BeforeOrAfterIsPublicVoidNoArg" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="BooleanMethodNameMustStartWithQuestion" enabled="false" enabled_by_default="false" level="WARNING">
+    <inspection_tool class="BeforeClassOrAfterClassIsPublicStaticVoidNoArg" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="BeforeOrAfterIsPublicVoidNoArg" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="BooleanMethodNameMustStartWithQuestion" enabled="false" level="WARNING" enabled_by_default="false">
       <option name="ignoreBooleanMethods" value="true" />
       <option name="ignoreInAnnotationInterface" value="true" />
       <option name="onlyWarnOnBaseMethods" value="true" />
       <option name="questionString" value="is,can,has,should,could,will,shall,contains,equals,add,put,remove,startsWith,endsWith" />
     </inspection_tool>
-    <inspection_tool class="CastConflictsWithInstanceof" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="CastToIncompatibleInterface" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="ChannelResource" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="CastConflictsWithInstanceof" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="CastToIncompatibleInterface" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="ChannelResource" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="insideTryAllowed" value="true" />
     </inspection_tool>
-    <inspection_tool class="CheckDtdRefs" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="CheckEmptyScriptTag" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="CheckTagEmptyBody" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="CheckValidXmlInScriptTagBody" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="CheckXmlFileWithXercesValidator" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="ClassNameDiffersFromFileName" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="CollectionAddedToSelf" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="CollectionContainsUrl" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="ComparisonOfShortAndChar" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="ComparisonToNaN" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="ConfusingOctalEscape" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="ConstantConditions" enabled="true" enabled_by_default="true" level="WARNING">
-      <scope enabled="true" level="INFO" name="Tests">
+    <inspection_tool class="CheckDtdRefs" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="CheckEmptyScriptTag" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="CheckTagEmptyBody" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="CheckValidXmlInScriptTagBody" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="CheckXmlFileWithXercesValidator" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="ClassNameDiffersFromFileName" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="CollectionAddedToSelf" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="CollectionContainsUrl" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="ComparisonOfShortAndChar" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="ComparisonToNaN" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="ConfusingOctalEscape" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="ConstantConditions" enabled="true" level="WARNING" enabled_by_default="true">
+      <scope name="Tests" level="INFO" enabled="true">
         <option name="SUGGEST_NULLABLE_ANNOTATIONS" value="false" />
         <option name="DONT_REPORT_TRUE_ASSERT_STATEMENTS" value="false" />
       </scope>
-      <scope enabled="true" level="WARNING" name="runtime.classes">
+      <scope name="runtime.classes" level="WARNING" enabled="true">
         <option name="SUGGEST_NULLABLE_ANNOTATIONS" value="true" />
         <option name="DONT_REPORT_TRUE_ASSERT_STATEMENTS" value="false" />
       </scope>
       <option name="SUGGEST_NULLABLE_ANNOTATIONS" value="false" />
       <option name="DONT_REPORT_TRUE_ASSERT_STATEMENTS" value="false" />
     </inspection_tool>
-    <inspection_tool class="Convert2streamapi" enabled="false" enabled_by_default="false" level="WEAK WARNING" />
+    <inspection_tool class="Convert2streamapi" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
     <inspection_tool class="CovariantCompareTo" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="CovariantEquals" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="DefaultNotLastCaseInSwitch" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="DeprecatedClassUsageInspection" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="DivideByZero" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="DollarSignInName" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="EnumSwitchStatementWhichMissesCases" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="CovariantEquals" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="DefaultNotLastCaseInSwitch" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="DeprecatedClassUsageInspection" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="DivideByZero" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="DollarSignInName" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="EnumSwitchStatementWhichMissesCases" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoreSwitchStatementsWithDefault" value="true" />
     </inspection_tool>
-    <inspection_tool class="EqualsBetweenInconvertibleTypes" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="EqualsHashCodeCalledOnUrl" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="EqualsWithItself" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="FallthruInSwitchStatement" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="FieldAccessNotGuarded" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="FileEqualsUsage" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="FloatingPointEquality" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="GrEqualsBetweenInconvertibleTypes" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GrUnresolvedAccess" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GroovyAccessibility" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GroovyAssignabilityCheck" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="GroovyConstructorNamedArguments" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GroovyDivideByZero" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GroovyInArgumentCheck" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GroovyInfiniteLoopStatement" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GroovyInfiniteRecursion" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GroovyLabeledStatement" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GroovyNonShortCircuitBoolean" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GroovyRangeTypeCheck" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GroovyResultOfObjectAllocationIgnored" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GroovyUntypedAccess" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="GtkPreferredJComboBoxRenderer" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="HibernateResource" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="EqualsBetweenInconvertibleTypes" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="EqualsHashCodeCalledOnUrl" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="EqualsWithItself" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="FallthruInSwitchStatement" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="FieldAccessNotGuarded" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="FileEqualsUsage" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="FloatingPointEquality" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="GrEqualsBetweenInconvertibleTypes" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GrUnresolvedAccess" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyAccessibility" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyAssignabilityCheck" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="GroovyConstructorNamedArguments" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyDivideByZero" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyInArgumentCheck" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyInfiniteLoopStatement" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyInfiniteRecursion" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyLabeledStatement" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyNonShortCircuitBoolean" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyRangeTypeCheck" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyResultOfObjectAllocationIgnored" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GroovyUntypedAccess" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="GtkPreferredJComboBoxRenderer" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="HibernateResource" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="insideTryAllowed" value="true" />
     </inspection_tool>
-    <inspection_tool class="HtmlExtraClosingTag" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="HtmlUnknownAttribute" enabled="false" enabled_by_default="false" level="WARNING">
+    <inspection_tool class="HtmlExtraClosingTag" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="HtmlUnknownAttribute" enabled="false" level="WARNING" enabled_by_default="false">
       <option name="myValues">
         <value>
           <list size="0" />
@@ -173,49 +173,49 @@
       </option>
       <option name="myCustomValuesEnabled" value="true" />
     </inspection_tool>
-    <inspection_tool class="HtmlUnknownTag" enabled="false" enabled_by_default="false" level="WARNING">
+    <inspection_tool class="HtmlUnknownTag" enabled="false" level="WARNING" enabled_by_default="false">
       <option name="myValues">
         <value>
           <list size="6">
-            <item class="java.lang.String" index="0" itemvalue="nobr" />
-            <item class="java.lang.String" index="1" itemvalue="noembed" />
-            <item class="java.lang.String" index="2" itemvalue="comment" />
-            <item class="java.lang.String" index="3" itemvalue="noscript" />
-            <item class="java.lang.String" index="4" itemvalue="embed" />
-            <item class="java.lang.String" index="5" itemvalue="script" />
+            <item index="0" class="java.lang.String" itemvalue="nobr" />
+            <item index="1" class="java.lang.String" itemvalue="noembed" />
+            <item index="2" class="java.lang.String" itemvalue="comment" />
+            <item index="3" class="java.lang.String" itemvalue="noscript" />
+            <item index="4" class="java.lang.String" itemvalue="embed" />
+            <item index="5" class="java.lang.String" itemvalue="script" />
           </list>
         </value>
       </option>
       <option name="myCustomValuesEnabled" value="true" />
     </inspection_tool>
-    <inspection_tool class="HtmlUnknownTarget" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="IOResource" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="HtmlUnknownTarget" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="IOResource" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredTypesString" value="java.io.ByteArrayOutputStream,java.io.ByteArrayInputStream,java.io.StringBufferInputStream,java.io.CharArrayWriter,java.io.CharArrayReader,java.io.StringWriter,java.io.StringReader,io.netty.buffer.ByteBufOutputStream,com.intellij.openapi.util.io.BufferExposingByteArrayOutputStream" />
       <option name="insideTryAllowed" value="true" />
     </inspection_tool>
-    <inspection_tool class="ImplicitArrayToString" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="IncompatibleMask" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="InfiniteRecursion" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="InnerClassMayBeStatic" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="InstanceVariableNamingConvention" enabled="false" enabled_by_default="false" level="WARNING">
+    <inspection_tool class="ImplicitArrayToString" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="IncompatibleMask" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="InfiniteRecursion" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="InnerClassMayBeStatic" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="InstanceVariableNamingConvention" enabled="false" level="WARNING" enabled_by_default="false">
       <option name="m_regex" value="m[A-Z][A-Za-z\d]*" />
       <option name="m_minLength" value="3" />
       <option name="m_maxLength" value="32" />
     </inspection_tool>
-    <inspection_tool class="InstanceofIncompatibleInterface" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="InstantiationOfUtilityClass" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="IntegerDivisionInFloatingPointContext" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="IteratorHasNextCallsIteratorNext" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="JDBCResource" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="InstanceofIncompatibleInterface" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="InstantiationOfUtilityClass" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="IntegerDivisionInFloatingPointContext" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="IteratorHasNextCallsIteratorNext" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="JDBCResource" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="insideTryAllowed" value="true" />
     </inspection_tool>
-    <inspection_tool class="JNDIResource" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="JNDIResource" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="insideTryAllowed" value="true" />
     </inspection_tool>
-    <inspection_tool class="JUnit3MethodNamingConvention" enabled="true" enabled_by_default="true" level="ERROR" />
+    <inspection_tool class="JUnit3MethodNamingConvention" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="Java8CollectionsApi" enabled="true" enabled_by_default="true" level="INFORMATION" />
     <inspection_tool class="Java8ReplaceMapGet" enabled="true" enabled_by_default="true" level="INFORMATION" />
-    <inspection_tool class="JavaDoc" enabled="true" enabled_by_default="true" level="ERROR">
+    <inspection_tool class="JavaDoc" enabled="true" level="ERROR" enabled_by_default="true">
       <option name="TOP_LEVEL_CLASS_OPTIONS">
         <value>
           <option name="ACCESS_JAVADOC_REQUIRED_FOR" value="none" />
@@ -247,49 +247,49 @@
       <option name="myAdditionalJavadocTags" value="" />
       <IGNORE_ACCESSORS value="true" />
     </inspection_tool>
-    <inspection_tool class="JavaLangImport" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="LengthOneStringInIndexOf" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="LoopConditionNotUpdatedInsideLoop" enabled="true" enabled_by_default="true" level="ERROR">
+    <inspection_tool class="JavaLangImport" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="LengthOneStringInIndexOf" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="LoopConditionNotUpdatedInsideLoop" enabled="true" level="ERROR" enabled_by_default="true">
       <option name="ignoreIterators" value="false" />
     </inspection_tool>
-    <inspection_tool class="LoopToCallChain" enabled="false" enabled_by_default="false" level="INFO" />
-    <inspection_tool class="MalformedFormatString" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="MalformedRegex" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="MalformedSetUpTearDown" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="MapReplaceableByEnumMap" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="MathRandomCastToInt" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="MethodMayBeStatic" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="LoopToCallChain" enabled="false" level="INFO" enabled_by_default="false" />
+    <inspection_tool class="MalformedFormatString" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="MalformedRegex" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="MalformedSetUpTearDown" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="MapReplaceableByEnumMap" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="MathRandomCastToInt" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="MethodMayBeStatic" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_onlyPrivateOrFinal" value="false" />
       <option name="m_ignoreEmptyMethods" value="true" />
     </inspection_tool>
     <inspection_tool class="MethodNamesDifferOnlyByCase" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="MissingDeprecatedAnnotation" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="MissingOverrideAnnotation" enabled="true" enabled_by_default="true" level="ERROR">
+    <inspection_tool class="MissingDeprecatedAnnotation" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="MissingOverrideAnnotation" enabled="true" level="ERROR" enabled_by_default="true">
       <option name="ignoreObjectMethods" value="true" />
       <option name="ignoreAnonymousClassMethods" value="false" />
     </inspection_tool>
-    <inspection_tool class="MissortedModifiers" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="MissortedModifiers" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="m_requireAnnotationsFirst" value="true" />
     </inspection_tool>
     <inspection_tool class="MisspelledCompareTo" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="MisspelledEquals" enabled="true" enabled_by_default="true" level="WARNING" />
+    <inspection_tool class="MisspelledEquals" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="MisspelledHashcode" enabled="true" enabled_by_default="true" level="WARNING" />
     <inspection_tool class="MisspelledSetUp" enabled="true" enabled_by_default="true" level="WARNING" />
     <inspection_tool class="MisspelledTearDown" enabled="true" enabled_by_default="true" level="WARNING" />
     <inspection_tool class="MisspelledToString" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="MultipleRepositoryUrls" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="MultipleTypedDeclaration" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="NewStringBufferWithCharArgument" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="NonBooleanMethodNameMayNotStartWithQuestion" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="MultipleRepositoryUrls" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="MultipleTypedDeclaration" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="NewStringBufferWithCharArgument" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="NonBooleanMethodNameMayNotStartWithQuestion" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="questionString" value="is,can,has,should,could,will,shall,contains,equals,startsWith,endsWith" />
       <option name="ignoreBooleanMethods" value="true" />
       <option name="onlyWarnOnBaseMethods" value="true" />
     </inspection_tool>
-    <inspection_tool class="NonExceptionNameEndsWithException" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="NonFinalFieldInImmutable" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="NullThrown" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="NullableProblems" enabled="true" enabled_by_default="true" level="WARNING">
-      <scope enabled="true" level="WARNING" name="java-decompiler-engine">
+    <inspection_tool class="NonExceptionNameEndsWithException" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="NonFinalFieldInImmutable" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="NullThrown" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="NullableProblems" enabled="true" level="WARNING" enabled_by_default="true">
+      <scope name="java-decompiler-engine" level="WARNING" enabled="true">
         <option name="REPORT_NULLABLE_METHOD_OVERRIDES_NOTNULL" value="true" />
         <option name="REPORT_NOT_ANNOTATED_METHOD_OVERRIDES_NOTNULL" value="true" />
         <option name="REPORT_NOTNULL_PARAMETER_OVERRIDES_NULLABLE" value="true" />
@@ -310,193 +310,193 @@
       <option name="REPORT_ANNOTATION_NOT_PROPAGATED_TO_OVERRIDERS" value="true" />
       <option name="REPORT_NULLS_PASSED_TO_NON_ANNOTATED_METHOD" value="true" />
     </inspection_tool>
-    <inspection_tool class="NumberEquality" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="NumericOverflow" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="OnDemandImport" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="PointlessArithmeticExpression" enabled="false" enabled_by_default="false" level="WARNING">
+    <inspection_tool class="NumberEquality" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="NumericOverflow" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="OnDemandImport" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PointlessArithmeticExpression" enabled="false" level="WARNING" enabled_by_default="false">
       <option name="m_ignoreExpressionsContainingConstants" value="false" />
     </inspection_tool>
-    <inspection_tool class="PointlessIndexOfComparison" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="PointlessNullCheck" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="ProblematicVarargsMethodOverride" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="ReplaceAllDot" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="RequiredAttributes" enabled="false" enabled_by_default="false" level="WARNING">
+    <inspection_tool class="PointlessIndexOfComparison" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="PointlessNullCheck" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="ProblematicVarargsMethodOverride" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="ReplaceAllDot" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RequiredAttributes" enabled="false" level="WARNING" enabled_by_default="false">
       <option name="myAdditionalRequiredHtmlAttributes" value="" />
     </inspection_tool>
-    <inspection_tool class="ResultOfObjectAllocationIgnored" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="SSBasedInspection" enabled="true" enabled_by_default="false" level="WARNING">
-      <searchConfiguration caseInsensitive="false" name="SwingUtilities.invokeLater" recursive="false" text="SwingUtilities.invokeLater($runnable$)" type="JAVA">
-        <constraint contains="" minCount="0" name="Instance" regexp="SwingUtilities" target="true" within="" />
-        <constraint contains="" name="MethodCall" within="" />
-        <constraint contains="" maxCount="2147483647" minCount="0" name="Parameter" within="" />
-        <constraint contains="" name="__context__" within="" />
-        <constraint contains="" name="runnable" within="" />
+    <inspection_tool class="ResultOfObjectAllocationIgnored" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SSBasedInspection" enabled="true" level="WARNING" enabled_by_default="false">
+      <searchConfiguration name="SwingUtilities.invokeLater" text="SwingUtilities.invokeLater($runnable$)" recursive="false" caseInsensitive="false" type="JAVA">
+        <constraint name="Instance" regexp="SwingUtilities" minCount="0" target="true" within="" contains="" />
+        <constraint name="MethodCall" within="" contains="" />
+        <constraint name="Parameter" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="__context__" within="" contains="" />
+        <constraint name="runnable" within="" contains="" />
       </searchConfiguration>
-      <replaceConfiguration caseInsensitive="false" name="DirectCallOfDispose" recursive="false" reformatAccordingToStyle="true" replacement="Disposer.dispose($Instance$)" shortenFQN="true" text="$Instance$.dispose()" type="JAVA">
-        <constraint contains="" exprTypeWithinHierarchy="true" minCount="0" name="Instance" nameOfExprType="Disposable" negateName="true" regexp="super" within="" withinHierarchy="true" />
-        <constraint contains="" name="MethodCall" target="true" within="" />
-        <constraint contains="" maxCount="2147483647" minCount="0" name="Parameter" within="" />
-        <constraint contains="" name="__context__" within="" />
+      <replaceConfiguration name="DirectCallOfDispose" text="$Instance$.dispose()" recursive="false" caseInsensitive="false" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="Disposer.dispose($Instance$)">
+        <constraint name="Instance" regexp="super" nameOfExprType="Disposable" withinHierarchy="true" exprTypeWithinHierarchy="true" minCount="0" negateName="true" within="" contains="" />
+        <constraint name="MethodCall" target="true" within="" contains="" />
+        <constraint name="Parameter" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="__context__" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="new Object[0]" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.util.ArrayUtil.EMPTY_OBJECT_ARRAY" shortenFQN="true" text="new Object[0]" type="JAVA" />
-      <replaceConfiguration caseInsensitive="true" name="new String[0]" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.util.ArrayUtil.EMPTY_STRING_ARRAY" shortenFQN="true" text="new String[0]" type="JAVA" />
-      <replaceConfiguration caseInsensitive="true" name="new Class[0]" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.util.ArrayUtil.EMPTY_CLASS_ARRAY" shortenFQN="true" text="new Class[0]" type="JAVA" />
-      <replaceConfiguration caseInsensitive="true" name="Log.error" recursive="false" reformatAccordingToStyle="true" replacement="$LOG$.error($e$)" shortenFQN="true" text="$LOG$.assertTrue(false, $e$)" type="JAVA">
-        <constraint contains="" name="e" within="" />
-        <constraint contains="" name="LOG" within="" />
+      <replaceConfiguration name="new Object[0]" text="new Object[0]" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.util.ArrayUtil.EMPTY_OBJECT_ARRAY" />
+      <replaceConfiguration name="new String[0]" text="new String[0]" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.util.ArrayUtil.EMPTY_STRING_ARRAY" />
+      <replaceConfiguration name="new Class[0]" text="new Class[0]" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.util.ArrayUtil.EMPTY_CLASS_ARRAY" />
+      <replaceConfiguration name="Log.error" text="$LOG$.assertTrue(false, $e$)" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="$LOG$.error($e$)">
+        <constraint name="e" within="" contains="" />
+        <constraint name="LOG" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="toStringArray" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.util.ArrayUtil.toStringArray($collection$)" shortenFQN="true" text="$collection$.toArray(new String[$collection$.size()])" type="JAVA">
-        <constraint contains="" name="collection" within="" />
+      <replaceConfiguration name="toStringArray" text="$collection$.toArray(new String[$collection$.size()])" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.util.ArrayUtil.toStringArray($collection$)">
+        <constraint name="collection" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="toObjectArray" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.util.ArrayUtil.toObjectArray($collection$)" shortenFQN="true" text="$collection$.toArray(new Object[$collection$.size()])" type="JAVA">
-        <constraint contains="" name="collection" within="" />
+      <replaceConfiguration name="toObjectArray" text="$collection$.toArray(new Object[$collection$.size()])" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.util.ArrayUtil.toObjectArray($collection$)">
+        <constraint name="collection" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="toStringArray0" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.util.ArrayUtil.toStringArray($collection$)" shortenFQN="true" text="$collection$.toArray(new String[0])" type="JAVA">
-        <constraint contains="" name="collection" within="" />
+      <replaceConfiguration name="toStringArray0" text="$collection$.toArray(new String[0])" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.util.ArrayUtil.toStringArray($collection$)">
+        <constraint name="collection" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="toObjectArray0" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.util.ArrayUtil.toObjectArray($collection$)" shortenFQN="true" text="$collection$.toArray(new Object[0])" type="JAVA">
-        <constraint contains="" name="collection" within="" />
+      <replaceConfiguration name="toObjectArray0" text="$collection$.toArray(new Object[0])" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.util.ArrayUtil.toObjectArray($collection$)">
+        <constraint name="collection" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="toStringArray00" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.util.ArrayUtil.toStringArray($collection$)" shortenFQN="true" text="$collection$.toArray(ArrayUtil.EMPTY_STRING_ARRAY)" type="JAVA">
-        <constraint contains="" name="collection" within="" />
+      <replaceConfiguration name="toStringArray00" text="$collection$.toArray(ArrayUtil.EMPTY_STRING_ARRAY)" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.util.ArrayUtil.toStringArray($collection$)">
+        <constraint name="collection" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="toObjectArray00" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.util.ArrayUtil.toObjectArray($collection$)" shortenFQN="true" text="$collection$.toArray(ArrayUtil.EMPTY_OBJECT_ARRAY)" type="JAVA">
-        <constraint contains="" name="collection" within="" />
+      <replaceConfiguration name="toObjectArray00" text="$collection$.toArray(ArrayUtil.EMPTY_OBJECT_ARRAY)" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.util.ArrayUtil.toObjectArray($collection$)">
+        <constraint name="collection" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="File.createTempFile" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.openapi.util.io.FileUtil.createTempFile($prefix$, $suffix$)" shortenFQN="true" text="java.io.File.createTempFile($prefix$, $suffix$)" type="JAVA">
-        <constraint contains="" name="prefix" within="" />
-        <constraint contains="" name="suffix" within="" />
+      <replaceConfiguration name="File.createTempFile" text="java.io.File.createTempFile($prefix$, $suffix$)" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.openapi.util.io.FileUtil.createTempFile($prefix$, $suffix$)">
+        <constraint name="prefix" within="" contains="" />
+        <constraint name="suffix" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="File.createTempFile(dir)" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.openapi.util.io.FileUtil.createTempFile($dir$, $prefix$, $suffix$, true)" shortenFQN="true" text="java.io.File.createTempFile($prefix$, $suffix$, $dir$)" type="JAVA">
-        <constraint contains="" name="prefix" within="" />
-        <constraint contains="" name="suffix" within="" />
-        <constraint contains="" name="dir" within="" />
+      <replaceConfiguration name="File.createTempFile(dir)" text="java.io.File.createTempFile($prefix$, $suffix$, $dir$)" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.openapi.util.io.FileUtil.createTempFile($dir$, $prefix$, $suffix$, true)">
+        <constraint name="prefix" within="" contains="" />
+        <constraint name="suffix" within="" contains="" />
+        <constraint name="dir" within="" contains="" />
       </replaceConfiguration>
-      <searchConfiguration caseInsensitive="false" name="Use RecursionManager?" recursive="false" text="class $Class$ { &#10;  ThreadLocal&lt;$FieldType$&gt; $FieldName$ = $Init$;&#10;}" type="JAVA">
-        <constraint contains="" name="Class" script="&quot;&quot;" within="" />
-        <constraint contains="" maxCount="2147483647" name="FieldType" regexp="Collection" script="&quot;&quot;" target="true" wholeWordsOnly="true" within="" withinHierarchy="true" />
-        <constraint contains="" maxCount="2147483647" name="FieldName" script="&quot;&quot;" within="" />
-        <constraint contains="" maxCount="2147483647" minCount="0" name="Init" script="&quot;&quot;" within="" />
-        <constraint contains="" name="__context__" script="&quot;&quot;" within="" />
+      <searchConfiguration name="Use RecursionManager?" text="class $Class$ { &#10;  ThreadLocal&lt;$FieldType$&gt; $FieldName$ = $Init$;&#10;}" recursive="false" caseInsensitive="false" type="JAVA">
+        <constraint name="Class" script="&quot;&quot;" within="" contains="" />
+        <constraint name="FieldType" script="&quot;&quot;" regexp="Collection" withinHierarchy="true" maxCount="2147483647" target="true" wholeWordsOnly="true" within="" contains="" />
+        <constraint name="FieldName" script="&quot;&quot;" maxCount="2147483647" within="" contains="" />
+        <constraint name="Init" script="&quot;&quot;" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="__context__" script="&quot;&quot;" within="" contains="" />
       </searchConfiguration>
-      <searchConfiguration caseInsensitive="false" name="use NotificationGroup.toolWindowGroup().createNotification().notify() instead" recursive="false" text="$Instance$.notifyByBalloon($Parameter$)" type="JAVA">
-        <constraint contains="" exprTypeWithinHierarchy="true" minCount="0" name="Instance" nameOfExprType="com.intellij.openapi.wm.ToolWindowManager" script="&quot;&quot;" within="" />
-        <constraint contains="" name="MethodCall" target="true" within="" />
-        <constraint contains="" maxCount="2147483647" minCount="0" name="Parameter" within="" />
+      <searchConfiguration name="use NotificationGroup.toolWindowGroup().createNotification().notify() instead" text="$Instance$.notifyByBalloon($Parameter$)" recursive="false" caseInsensitive="false" type="JAVA">
+        <constraint name="Instance" script="&quot;&quot;" nameOfExprType="com.intellij.openapi.wm.ToolWindowManager" exprTypeWithinHierarchy="true" minCount="0" within="" contains="" />
+        <constraint name="MethodCall" target="true" within="" contains="" />
+        <constraint name="Parameter" minCount="0" maxCount="2147483647" within="" contains="" />
       </searchConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="PsiManager.getInstance(psiElement.getProject())" recursive="false" reformatAccordingToStyle="true" replacement="$psiElement$.getManager()" shortenFQN="true" text="com.intellij.psi.PsiManager.getInstance($psiElement$.getProject())" type="JAVA">
-        <constraint contains="" exprTypeWithinHierarchy="true" name="psiElement" nameOfExprType="com\.intellij\.psi\.PsiElement" script="&quot;&quot;" within="" />
+      <replaceConfiguration name="PsiManager.getInstance(psiElement.getProject())" text="com.intellij.psi.PsiManager.getInstance($psiElement$.getProject())" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="$psiElement$.getManager()">
+        <constraint name="psiElement" script="&quot;&quot;" nameOfExprType="com\.intellij\.psi\.PsiElement" exprTypeWithinHierarchy="true" within="" contains="" />
       </replaceConfiguration>
-      <searchConfiguration caseInsensitive="true" name="String.getBytes() is current locale-dependant, use String.getBytes(Charset) instead" recursive="false" text="$s$.getBytes()" type="JAVA">
-        <constraint contains="" name="String" within="" />
-        <constraint contains="" name="myTexts" within="" />
-        <constraint contains="" exprTypeWithinHierarchy="true" name="s" nameOfExprType="java.lang.String" script="&quot;&quot;" within="" />
+      <searchConfiguration name="String.getBytes() is current locale-dependant, use String.getBytes(Charset) instead" text="$s$.getBytes()" recursive="false" caseInsensitive="true" type="JAVA">
+        <constraint name="String" within="" contains="" />
+        <constraint name="myTexts" within="" contains="" />
+        <constraint name="s" script="&quot;&quot;" nameOfExprType="java.lang.String" exprTypeWithinHierarchy="true" within="" contains="" />
       </searchConfiguration>
-      <searchConfiguration caseInsensitive="false" name="searchable configurable should not contain JComponent fields" recursive="false" text="class $Class$ implements SearchableConfigurable{ &#10;  @Modifier(&quot;Instance&quot;) $FieldType$ $FieldName$ = $Init$;&#10;  public void disposeUIResources(){}&#10;}" type="JAVA">
-        <constraint contains="" name="Class" script="&quot;&quot;" target="true" within="" />
-        <constraint contains="" formalTypeWithinHierarchy="true" name="FieldType" regexp="javax.swing.JComponent" script="&quot;&quot;" within="" withinHierarchy="true" />
-        <constraint contains="" maxCount="2147483647" name="FieldName" script="&quot;&quot;" within="" />
-        <constraint contains="" maxCount="2147483647" minCount="0" name="Init" script="&quot;&quot;" within="" />
-        <constraint contains="" name="__context__" script="&quot;&quot;" within="" />
+      <searchConfiguration name="searchable configurable should not contain JComponent fields" text="class $Class$ implements SearchableConfigurable{ &#10;  @Modifier(&quot;Instance&quot;) $FieldType$ $FieldName$ = $Init$;&#10;  public void disposeUIResources(){}&#10;}" recursive="false" caseInsensitive="false" type="JAVA">
+        <constraint name="Class" script="&quot;&quot;" target="true" within="" contains="" />
+        <constraint name="FieldType" script="&quot;&quot;" regexp="javax.swing.JComponent" withinHierarchy="true" formalTypeWithinHierarchy="true" within="" contains="" />
+        <constraint name="FieldName" script="&quot;&quot;" maxCount="2147483647" within="" contains="" />
+        <constraint name="Init" script="&quot;&quot;" minCount="0" maxCount="2147483647" within="" contains="" />
+        <constraint name="__context__" script="&quot;&quot;" within="" contains="" />
       </searchConfiguration>
-      <searchConfiguration caseInsensitive="false" name="Suspicious usage of PsiUtilBase#findEditor inside quick fix, probably better idea to use LocalQuickFixAndIntentionActionOnPsiElement" recursive="false" text="$Instance$.$MethodCall$($Parameter$)" type="JAVA">
-        <constraint contains="" minCount="0" name="Instance" regexp="com.intellij.psi.util.PsiUtilBase" script="&quot;&quot;" within="" />
-        <constraint contains="" name="MethodCall" regexp="findEditor" script="&quot;import com.intellij.psi.PsiClass&#10;import com.intellij.psi.util.InheritanceUtil&#10;import com.intellij.psi.util.PsiTreeUtil&#10;&#10;PsiClass aClass = PsiTreeUtil.getParentOfType(__context__, PsiClass.class)&#10;aClass != null &amp;&amp; InheritanceUtil.isInheritor(aClass, &quot;com.intellij.codeInspection.LocalQuickFix&quot;)&quot;" target="true" within="" />
-        <constraint contains="" maxCount="2147483647" minCount="0" name="Parameter" script="&quot;&quot;" within="" />
+      <searchConfiguration name="Suspicious usage of PsiUtilBase#findEditor inside quick fix, probably better idea to use LocalQuickFixAndIntentionActionOnPsiElement" text="$Instance$.$MethodCall$($Parameter$)" recursive="false" caseInsensitive="false" type="JAVA">
+        <constraint name="Instance" script="&quot;&quot;" regexp="com.intellij.psi.util.PsiUtilBase" minCount="0" within="" contains="" />
+        <constraint name="MethodCall" script="&quot;import com.intellij.psi.PsiClass&#10;import com.intellij.psi.util.InheritanceUtil&#10;import com.intellij.psi.util.PsiTreeUtil&#10;&#10;PsiClass aClass = PsiTreeUtil.getParentOfType(__context__, PsiClass.class)&#10;aClass != null &amp;&amp; InheritanceUtil.isInheritor(aClass, &quot;com.intellij.codeInspection.LocalQuickFix&quot;)&quot;" regexp="findEditor" target="true" within="" contains="" />
+        <constraint name="Parameter" script="&quot;&quot;" minCount="0" maxCount="2147483647" within="" contains="" />
       </searchConfiguration>
-      <searchConfiguration caseInsensitive="false" name="Potential memory leak: don't hold PsiElement inside quick fix, use SmartPsiElementPointer or instead of; also see LocalQuickFixOnPsiElement" recursive="false" text="class $Class$ { &#10;  $FieldType$ $FieldName$ = $Init$;&#10;}" type="JAVA">
-        <constraint contains="" name="Class" script="&quot;import com.intellij.psi.PsiClass&#10;import com.intellij.psi.util.InheritanceUtil&#10;import com.intellij.psi.util.PsiTreeUtil&#10;&#10;Object c = __context__&#10;return c instanceof PsiClass &amp;&amp; InheritanceUtil.isInheritor(c, &quot;com.intellij.codeInspection.LocalQuickFix&quot;) &#10;&quot;" within="" />
-        <constraint contains="" maxCount="2147483647" name="FieldType" script="&quot;import com.intellij.psi.PsiClass&#10;import com.intellij.psi.PsiElement&#10;import com.intellij.psi.PsiField&#10;import com.intellij.psi.util.InheritanceUtil&#10;import com.intellij.psi.util.PsiTreeUtil&#10;&#10;PsiField f = PsiTreeUtil.getParentOfType(__context__, PsiField)&#10;return f != null &amp;&amp; InheritanceUtil.isInheritor(f.getType(), &quot;com.intellij.psi.PsiElement&quot;) &#10;&quot;" within="" />
-        <constraint contains="" maxCount="2147483647" name="FieldName" target="true" within="" />
-        <constraint contains="" maxCount="2147483647" minCount="0" name="Init" within="" />
+      <searchConfiguration name="Potential memory leak: don't hold PsiElement inside quick fix, use SmartPsiElementPointer or instead of; also see LocalQuickFixOnPsiElement" text="class $Class$ { &#10;  $FieldType$ $FieldName$ = $Init$;&#10;}" recursive="false" caseInsensitive="false" type="JAVA">
+        <constraint name="Class" script="&quot;import com.intellij.psi.PsiClass&#10;import com.intellij.psi.util.InheritanceUtil&#10;import com.intellij.psi.util.PsiTreeUtil&#10;&#10;Object c = __context__&#10;return c instanceof PsiClass &amp;&amp; InheritanceUtil.isInheritor(c, &quot;com.intellij.codeInspection.LocalQuickFix&quot;) &#10;&quot;" within="" contains="" />
+        <constraint name="FieldType" script="&quot;import com.intellij.psi.PsiClass&#10;import com.intellij.psi.PsiElement&#10;import com.intellij.psi.PsiField&#10;import com.intellij.psi.util.InheritanceUtil&#10;import com.intellij.psi.util.PsiTreeUtil&#10;&#10;PsiField f = PsiTreeUtil.getParentOfType(__context__, PsiField)&#10;return f != null &amp;&amp; InheritanceUtil.isInheritor(f.getType(), &quot;com.intellij.psi.PsiElement&quot;) &#10;&quot;" maxCount="2147483647" within="" contains="" />
+        <constraint name="FieldName" maxCount="2147483647" target="true" within="" contains="" />
+        <constraint name="Init" minCount="0" maxCount="2147483647" within="" contains="" />
       </searchConfiguration>
-      <replaceConfiguration caseInsensitive="false" name="Potential non-desired escape from lambda expression" recursive="false" reformatAccordingToStyle="true" replacement="PsiTreeUtil.getParentOfType($Parameter$, PsiMethod.class, true, PsiClass.class, PsiLambdaExpression.class)" shortenFQN="true" text="PsiTreeUtil.getParentOfType($Parameter$, PsiMethod.class, true, PsiClass.class)" type="JAVA" useStaticImport="true">
-        <constraint contains="" minCount="0" name="Instance" within="" />
-        <constraint contains="" name="MethodCall" target="true" within="" />
-        <constraint contains="" maxCount="2147483647" minCount="0" name="Parameter" script="&quot;&quot;" within="" />
+      <replaceConfiguration name="Potential non-desired escape from lambda expression" text="PsiTreeUtil.getParentOfType($Parameter$, PsiMethod.class, true, PsiClass.class)" recursive="false" caseInsensitive="false" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" useStaticImport="true" replacement="PsiTreeUtil.getParentOfType($Parameter$, PsiMethod.class, true, PsiClass.class, PsiLambdaExpression.class)">
+        <constraint name="Instance" minCount="0" within="" contains="" />
+        <constraint name="MethodCall" target="true" within="" contains="" />
+        <constraint name="Parameter" script="&quot;&quot;" minCount="0" maxCount="2147483647" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="false" name="StringUtil.stripQuotesAroundValue" recursive="false" reformatAccordingToStyle="true" replacement="com.intellij.openapi.util.text.StringUtil.unquoteString($Parameter$)" shortenFQN="true" text="com.intellij.openapi.util.text.StringUtil.stripQuotesAroundValue($Parameter$)" type="JAVA">
-        <constraint contains="" name="Parameter" within="" />
+      <replaceConfiguration name="StringUtil.stripQuotesAroundValue" text="com.intellij.openapi.util.text.StringUtil.stripQuotesAroundValue($Parameter$)" recursive="false" caseInsensitive="false" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="com.intellij.openapi.util.text.StringUtil.unquoteString($Parameter$)">
+        <constraint name="Parameter" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="can use StringUtil.trimStart" recursive="false" reformatAccordingToStyle="true" replacement="$s$ = com.intellij.openapi.util.text.StringUtil.trimStart($s$, $e$);&#10;" shortenFQN="true" text="if ($s$.startsWith($e$)) {&#10;  $s$ = $s$.substring($e$.length());&#10;}" type="JAVA">
-        <constraint contains="" name="s" within="" />
-        <constraint contains="" name="e" within="" />
-        <constraint contains="" name="__context__" script="&quot;import com.intellij.psi.*&#10;import com.intellij.psi.search.GlobalSearchScope&#10;import com.intellij.psi.util.PsiUtil&#10;&#10;def stringUtil = JavaPsiFacade.getInstance(e.getProject()).findClass(&quot;com.intellij.openapi.util.text.StringUtil&quot;, GlobalSearchScope.allScope(e.getProject()));&#10;def strVirtualFile = PsiUtil.getVirtualFile(stringUtil);&#10;&#10;e.getParent().getParent().getParent() instanceof PsiIfStatement &amp;&amp;&#10;((PsiIfStatement)e.getParent().getParent().getParent()).getElseBranch() == null &amp;&amp;&#10;strVirtualFile != null &amp;&amp;  &#10;e.getContainingFile().getResolveScope().contains(strVirtualFile)&#10;&quot;" target="true" within="" />
+      <replaceConfiguration name="can use StringUtil.trimStart" text="if ($s$.startsWith($e$)) {&#10;  $s$ = $s$.substring($e$.length());&#10;}" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="$s$ = com.intellij.openapi.util.text.StringUtil.trimStart($s$, $e$);&#10;">
+        <constraint name="s" within="" contains="" />
+        <constraint name="e" within="" contains="" />
+        <constraint name="__context__" script="&quot;import com.intellij.psi.*&#10;import com.intellij.psi.search.GlobalSearchScope&#10;import com.intellij.psi.util.PsiUtil&#10;&#10;def stringUtil = JavaPsiFacade.getInstance(e.getProject()).findClass(&quot;com.intellij.openapi.util.text.StringUtil&quot;, GlobalSearchScope.allScope(e.getProject()));&#10;def strVirtualFile = PsiUtil.getVirtualFile(stringUtil);&#10;&#10;e.getParent().getParent().getParent() instanceof PsiIfStatement &amp;&amp;&#10;((PsiIfStatement)e.getParent().getParent().getParent()).getElseBranch() == null &amp;&amp;&#10;strVirtualFile != null &amp;&amp;  &#10;e.getContainingFile().getResolveScope().contains(strVirtualFile)&#10;&quot;" target="true" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="can use StringUtil.trimEnd" recursive="false" reformatAccordingToStyle="true" replacement="$s$ = com.intellij.openapi.util.text.StringUtil.trimEnd($s$, $e$);&#10;" shortenFQN="true" text="if ($s$.endsWith($e$)) {&#10;  $s$ = $s$.substring(0, $s$.length() - $e$.length());&#10;}" type="JAVA">
-        <constraint contains="" name="s" within="" />
-        <constraint contains="" name="e" within="" />
-        <constraint contains="" name="__context__" script="&quot;import com.intellij.psi.*&#10;import com.intellij.psi.search.GlobalSearchScope&#10;import com.intellij.psi.util.PsiUtil&#10;&#10;def stringUtil = JavaPsiFacade.getInstance(e.getProject()).findClass(&quot;com.intellij.openapi.util.text.StringUtil&quot;, GlobalSearchScope.allScope(e.getProject()));&#10;def strVirtualFile = PsiUtil.getVirtualFile(stringUtil);&#10;&#10;e instanceof PsiLiteralExpression &amp;&amp;&#10;e.getParent().getParent().getParent() instanceof PsiIfStatement &amp;&amp;&#10;((PsiIfStatement)e.getParent().getParent().getParent()).getElseBranch() == null &amp;&amp;&#10;strVirtualFile != null &amp;&amp;  &#10;e.getResolveScope().contains(strVirtualFile)&#10;&#10;&quot;" target="true" within="" />
+      <replaceConfiguration name="can use StringUtil.trimEnd" text="if ($s$.endsWith($e$)) {&#10;  $s$ = $s$.substring(0, $s$.length() - $e$.length());&#10;}" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="$s$ = com.intellij.openapi.util.text.StringUtil.trimEnd($s$, $e$);&#10;">
+        <constraint name="s" within="" contains="" />
+        <constraint name="e" within="" contains="" />
+        <constraint name="__context__" script="&quot;import com.intellij.psi.*&#10;import com.intellij.psi.search.GlobalSearchScope&#10;import com.intellij.psi.util.PsiUtil&#10;&#10;def stringUtil = JavaPsiFacade.getInstance(e.getProject()).findClass(&quot;com.intellij.openapi.util.text.StringUtil&quot;, GlobalSearchScope.allScope(e.getProject()));&#10;def strVirtualFile = PsiUtil.getVirtualFile(stringUtil);&#10;&#10;e instanceof PsiLiteralExpression &amp;&amp;&#10;e.getParent().getParent().getParent() instanceof PsiIfStatement &amp;&amp;&#10;((PsiIfStatement)e.getParent().getParent().getParent()).getElseBranch() == null &amp;&amp;&#10;strVirtualFile != null &amp;&amp;  &#10;e.getResolveScope().contains(strVirtualFile)&#10;&#10;&quot;" target="true" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="can use StringUtil.trimStart() with constant" recursive="false" reformatAccordingToStyle="true" replacement="$s$ = com.intellij.openapi.util.text.StringUtil.trimStart($s$, &quot;$e$&quot;);&#10;" shortenFQN="true" text="if ($s$.startsWith(&quot;$e$&quot;)) {&#10;  $s$ = $s$.substring($n$);&#10;}" type="JAVA">
-        <constraint contains="" name="s" within="" />
-        <constraint contains="" name="e" within="" />
-        <constraint contains="" name="n" within="" />
-        <constraint contains="" name="__context__" script="&quot;import com.intellij.psi.*&#10;import com.intellij.psi.search.GlobalSearchScope&#10;import com.intellij.psi.util.PsiUtil&#10;&#10;def stringUtil = JavaPsiFacade.getInstance(e.getProject()).findClass(&quot;com.intellij.openapi.util.text.StringUtil&quot;, GlobalSearchScope.allScope(e.getProject()));&#10;def strVirtualFile = PsiUtil.getVirtualFile(stringUtil);&#10;&#10;e instanceof PsiLiteralExpression &amp;&amp;&#10;n instanceof PsiLiteralExpression &amp;&amp;&#10;((PsiLiteralExpression)e).getValue() instanceof String &amp;&amp;&#10;((PsiLiteralExpression)n).getValue() instanceof Integer &amp;&amp;&#10;((String)((PsiLiteralExpression)e).getValue()).length() ==&#10;((Integer)((PsiLiteralExpression)n).getValue()).intValue() &amp;&amp;&#10;e.getParent().getParent().getParent() instanceof PsiIfStatement &amp;&amp;&#10;((PsiIfStatement)e.getParent().getParent().getParent()).getElseBranch() == null &amp;&amp;  &#10;strVirtualFile != null &amp;&amp;  &#10;e.getResolveScope().contains(strVirtualFile)&quot;" target="true" within="" />
+      <replaceConfiguration name="can use StringUtil.trimStart() with constant" text="if ($s$.startsWith(&quot;$e$&quot;)) {&#10;  $s$ = $s$.substring($n$);&#10;}" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="$s$ = com.intellij.openapi.util.text.StringUtil.trimStart($s$, &quot;$e$&quot;);&#10;">
+        <constraint name="s" within="" contains="" />
+        <constraint name="e" within="" contains="" />
+        <constraint name="n" within="" contains="" />
+        <constraint name="__context__" script="&quot;import com.intellij.psi.*&#10;import com.intellij.psi.search.GlobalSearchScope&#10;import com.intellij.psi.util.PsiUtil&#10;&#10;def stringUtil = JavaPsiFacade.getInstance(e.getProject()).findClass(&quot;com.intellij.openapi.util.text.StringUtil&quot;, GlobalSearchScope.allScope(e.getProject()));&#10;def strVirtualFile = PsiUtil.getVirtualFile(stringUtil);&#10;&#10;e instanceof PsiLiteralExpression &amp;&amp;&#10;n instanceof PsiLiteralExpression &amp;&amp;&#10;((PsiLiteralExpression)e).getValue() instanceof String &amp;&amp;&#10;((PsiLiteralExpression)n).getValue() instanceof Integer &amp;&amp;&#10;((String)((PsiLiteralExpression)e).getValue()).length() ==&#10;((Integer)((PsiLiteralExpression)n).getValue()).intValue() &amp;&amp;&#10;e.getParent().getParent().getParent() instanceof PsiIfStatement &amp;&amp;&#10;((PsiIfStatement)e.getParent().getParent().getParent()).getElseBranch() == null &amp;&amp;  &#10;strVirtualFile != null &amp;&amp;  &#10;e.getResolveScope().contains(strVirtualFile)&quot;" target="true" within="" contains="" />
       </replaceConfiguration>
-      <replaceConfiguration caseInsensitive="true" name="can use StringUtil.trimEnd() with constant" recursive="false" reformatAccordingToStyle="true" replacement="$s$ = com.intellij.openapi.util.text.StringUtil.trimEnd($s$, &quot;$e$&quot;);&#10;" shortenFQN="true" text="if ($s$.endsWith(&quot;$e$&quot;)) {&#10;  $s$ = $s$.substring(0,$s$.length()-$n$);&#10;}" type="JAVA">
-        <constraint contains="" name="s" within="" />
-        <constraint contains="" name="e" within="" />
-        <constraint contains="" name="n" within="" />
-        <constraint contains="" name="__context__" script="&quot;import com.intellij.psi.*&#10;import com.intellij.psi.search.GlobalSearchScope&#10;import com.intellij.psi.util.PsiUtil&#10;&#10;def stringUtil = JavaPsiFacade.getInstance(e.getProject()).findClass(&quot;com.intellij.openapi.util.text.StringUtil&quot;, GlobalSearchScope.allScope(e.getProject()));&#10;def strVirtualFile = PsiUtil.getVirtualFile(stringUtil);&#10;&#10;e instanceof PsiLiteralExpression &amp;&amp;&#10;n instanceof PsiLiteralExpression &amp;&amp;&#10;((PsiLiteralExpression)e).getValue() instanceof String &amp;&amp;&#10;((PsiLiteralExpression)n).getValue() instanceof Integer &amp;&amp;&#10;((String)((PsiLiteralExpression)e).getValue()).length() ==&#10;((Integer)((PsiLiteralExpression)n).getValue()).intValue() &amp;&amp;&#10;e.getParent().getParent().getParent() instanceof PsiIfStatement &amp;&amp;&#10;((PsiIfStatement)e.getParent().getParent().getParent()).getElseBranch() == null &amp;&amp;  &#10;strVirtualFile != null &amp;&amp;  &#10;e.getResolveScope().contains(strVirtualFile)&quot;" target="true" within="" />
+      <replaceConfiguration name="can use StringUtil.trimEnd() with constant" text="if ($s$.endsWith(&quot;$e$&quot;)) {&#10;  $s$ = $s$.substring(0,$s$.length()-$n$);&#10;}" recursive="false" caseInsensitive="true" type="JAVA" reformatAccordingToStyle="true" shortenFQN="true" replacement="$s$ = com.intellij.openapi.util.text.StringUtil.trimEnd($s$, &quot;$e$&quot;);&#10;">
+        <constraint name="s" within="" contains="" />
+        <constraint name="e" within="" contains="" />
+        <constraint name="n" within="" contains="" />
+        <constraint name="__context__" script="&quot;import com.intellij.psi.*&#10;import com.intellij.psi.search.GlobalSearchScope&#10;import com.intellij.psi.util.PsiUtil&#10;&#10;def stringUtil = JavaPsiFacade.getInstance(e.getProject()).findClass(&quot;com.intellij.openapi.util.text.StringUtil&quot;, GlobalSearchScope.allScope(e.getProject()));&#10;def strVirtualFile = PsiUtil.getVirtualFile(stringUtil);&#10;&#10;e instanceof PsiLiteralExpression &amp;&amp;&#10;n instanceof PsiLiteralExpression &amp;&amp;&#10;((PsiLiteralExpression)e).getValue() instanceof String &amp;&amp;&#10;((PsiLiteralExpression)n).getValue() instanceof Integer &amp;&amp;&#10;((String)((PsiLiteralExpression)e).getValue()).length() ==&#10;((Integer)((PsiLiteralExpression)n).getValue()).intValue() &amp;&amp;&#10;e.getParent().getParent().getParent() instanceof PsiIfStatement &amp;&amp;&#10;((PsiIfStatement)e.getParent().getParent().getParent()).getElseBranch() == null &amp;&amp;  &#10;strVirtualFile != null &amp;&amp;  &#10;e.getResolveScope().contains(strVirtualFile)&quot;" target="true" within="" contains="" />
       </replaceConfiguration>
-      <searchConfiguration caseInsensitive="true" name="anonymous Timer is discouraged, please supply name" recursive="false" text="new java.util.Timer()" type="JAVA">
-        <constraint contains="" name="myDir" within="" />
-        <constraint contains="" name="__context__" target="true" within="" />
-        <constraint contains="" name="t" within="" />
+      <searchConfiguration name="anonymous Timer is discouraged, please supply name" text="new java.util.Timer()" recursive="false" caseInsensitive="true" type="JAVA">
+        <constraint name="myDir" within="" contains="" />
+        <constraint name="__context__" target="true" within="" contains="" />
+        <constraint name="t" within="" contains="" />
       </searchConfiguration>
-      <searchConfiguration caseInsensitive="true" name="anonymous Timer(daemon) is discouraged, please supply name" recursive="false" text="new java.util.Timer($b$)" type="JAVA">
-        <constraint contains="" name="myDir" within="" />
-        <constraint contains="" name="__context__" target="true" within="" />
-        <constraint contains="" name="t" within="" />
-        <constraint contains="" exprTypeWithinHierarchy="true" name="b" nameOfExprType="boolean" within="" />
+      <searchConfiguration name="anonymous Timer(daemon) is discouraged, please supply name" text="new java.util.Timer($b$)" recursive="false" caseInsensitive="true" type="JAVA">
+        <constraint name="myDir" within="" contains="" />
+        <constraint name="__context__" target="true" within="" contains="" />
+        <constraint name="t" within="" contains="" />
+        <constraint name="b" nameOfExprType="boolean" exprTypeWithinHierarchy="true" within="" contains="" />
       </searchConfiguration>
     </inspection_tool>
-    <inspection_tool class="SamePackageImport" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="SecondUnsafeCall" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="SetReplaceableByEnumSet" enabled="true" enabled_by_default="true" level="WARNING" />
+    <inspection_tool class="SamePackageImport" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SecondUnsafeCall" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="SetReplaceableByEnumSet" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="SetupCallsSuperSetup" enabled="true" enabled_by_default="true" level="WARNING" />
     <inspection_tool class="SetupIsPublicVoidNoArg" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="ShiftOutOfRange" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="SillyAssignment" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="SimpleDateFormatWithoutLocale" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="SizeReplaceableByIsEmpty" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="SocketResource" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="ShiftOutOfRange" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="SillyAssignment" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="SimpleDateFormatWithoutLocale" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SizeReplaceableByIsEmpty" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SocketResource" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="insideTryAllowed" value="true" />
     </inspection_tool>
-    <inspection_tool class="StaticVariableNamingConvention" enabled="true" enabled_by_default="true" level="WARNING">
+    <inspection_tool class="StaticVariableNamingConvention" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="checkMutableFinals" value="false" />
       <option name="m_regex" value="[a-z][A-Za-z\d]*" />
       <option name="m_minLength" value="3" />
       <option name="m_maxLength" value="32" />
     </inspection_tool>
-    <inspection_tool class="StringBufferField" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="StringEqualsEmptyString" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="StringToUpperWithoutLocale" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="SuspiciousIndentAfterControlStatement" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="SuspiciousMethodCalls" enabled="true" enabled_by_default="true" level="ERROR">
+    <inspection_tool class="StringBufferField" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="StringEqualsEmptyString" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="StringToUpperWithoutLocale" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SuspiciousIndentAfterControlStatement" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="SuspiciousMethodCalls" enabled="true" level="ERROR" enabled_by_default="true">
       <option name="REPORT_CONVERTIBLE_METHOD_CALLS" value="true" />
     </inspection_tool>
-    <inspection_tool class="SuspiciousToArrayCall" enabled="true" enabled_by_default="true" level="ERROR" />
+    <inspection_tool class="SuspiciousToArrayCall" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="TeardownCallsSuperTeardown" enabled="true" enabled_by_default="true" level="WARNING" />
     <inspection_tool class="TeardownIsPublicVoidNoArg" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="TextLabelInSwitchStatement" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="ThrowableNotThrown" enabled="true" enabled_by_default="true" level="ERROR" />
-    <inspection_tool class="UndesirableClassUsage" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="UnnecessaryInheritDoc" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="UnsafeVfsRecursion" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="UpperCaseFieldNameNotConstant" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="VariableNotUsedInsideIf" enabled="true" enabled_by_default="true" level="WARNING" />
+    <inspection_tool class="TextLabelInSwitchStatement" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="ThrowableNotThrown" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="UndesirableClassUsage" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="UnnecessaryInheritDoc" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="UnsafeVfsRecursion" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="UpperCaseFieldNameNotConstant" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="VariableNotUsedInsideIf" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="WaitNotInSynchronizedContext" enabled="true" enabled_by_default="true" level="WARNING" />
-    <inspection_tool class="WeakerAccess" enabled="false" enabled_by_default="false" level="WARNING">
+    <inspection_tool class="WeakerAccess" enabled="false" level="WARNING" enabled_by_default="false">
       <option name="SUGGEST_PACKAGE_LOCAL_FOR_MEMBERS" value="false" />
       <option name="SUGGEST_PACKAGE_LOCAL_FOR_TOP_CLASSES" value="false" />
       <option name="SUGGEST_PRIVATE_FOR_INNERS" value="true" />
     </inspection_tool>
-    <inspection_tool class="XmlDuplicatedId" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="XmlPathReference" enabled="false" enabled_by_default="false" level="ERROR" />
-    <inspection_tool class="XmlUnboundNsPrefix" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="XmlUnusedNamespaceDeclaration" enabled="false" enabled_by_default="false" level="WARNING" />
-    <inspection_tool class="XmlWrongRootElement" enabled="false" enabled_by_default="false" level="ERROR" />
+    <inspection_tool class="XmlDuplicatedId" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="XmlPathReference" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="XmlUnboundNsPrefix" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="XmlUnusedNamespaceDeclaration" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="XmlWrongRootElement" enabled="false" level="ERROR" enabled_by_default="false" />
   </profile>
 </component>
