@@ -739,7 +739,12 @@ public class ModelBuilder implements ToolingModelBuilder {
                                                             .getVersionCode()),
                                             variantScope
                                                     .getOutput(testedOutputType)
-                                                    .getSingleFile()));
+                                                    // We used to call .getSingleFile() but Kotlin projects
+                                                    // currently have 2 output dirs specified for test classes.
+                                                    // This supplier is going away in beta3, so this is obsolete
+                                                    // in any case.
+                                                    .iterator()
+                                                    .next()));
                         };
             case INSTANTAPP:
             default:
