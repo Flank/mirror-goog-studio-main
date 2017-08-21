@@ -46,7 +46,8 @@ public interface DexArchiveMerger {
      *
      * @param inputs paths to the dex archives that should be merged
      * @param outputDir directory where merged dex file(s) will be written, must exist
-     * @param mainDexClasses file containing list of classes to be merged in the main dex file
+     * @param mainDexClasses file containing list of classes to be merged in the main dex file. It
+     *     is {@code null} for native and mono dex, and must be non-null for legacy dex.
      * @param dexingType specifies how to merge dex files
      */
     void mergeDexArchives(

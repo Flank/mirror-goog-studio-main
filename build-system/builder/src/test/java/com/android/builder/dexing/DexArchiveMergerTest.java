@@ -158,7 +158,7 @@ public class DexArchiveMergerTest {
             if (dexMerger == DexMergerTool.DX) {
                 exepectedMessage = "method ID not in";
             } else {
-                exepectedMessage = "Cannot fit all classes in a single dex file";
+                exepectedMessage = "Cannot fit requested classes in a single dex file";
             }
             Truth.assertThat(Throwables.getStackTraceAsString(e)).contains(exepectedMessage);
         }
@@ -181,19 +181,10 @@ public class DexArchiveMergerTest {
                 dexMerger);
 
         Dex outputDex = new Dex(output.resolve("classes.dex"));
+        assertThat(outputDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A"));
 
-        if (dexMerger == DexMergerTool.DX) {
-            assertThat(outputDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A"));
-
-            Dex secondaryDex = new Dex(output.resolve("classes2.dex"));
-            assertThat(secondaryDex)
-                    .containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("B"));
-        } else {
-            // D8 does not support minimal main dex
-            assertThat(outputDex)
-                    .containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("A", "B"));
-            assertThat(output.resolve("classes2.dex")).doesNotExist();
-        }
+        Dex secondaryDex = new Dex(output.resolve("classes2.dex"));
+        assertThat(secondaryDex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses("B"));
     }
 
     @Test

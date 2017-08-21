@@ -187,6 +187,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "com.googlecode.json-simple_json-simple",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/googlecode/json-simple/json-simple/1.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "com.googlecode.juniversalchardet_juniversalchardet",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/googlecode/juniversalchardet/juniversalchardet/1.0.3:jar",
     visibility = ["//visibility:public"],
