@@ -47,7 +47,7 @@ public class AaptProcess {
             System.getenv("SLAVE_AAPT_TIMEOUT") == null
                     ? DEFAULT_SLAVE_AAPT_TIMEOUT_IN_SECONDS
                     : Integer.parseInt(System.getenv("SLAVE_AAPT_TIMEOUT"));
-    private static final Joiner joiner = Joiner.on(' ');
+    private static final Joiner joiner = Joiner.on(File.pathSeparatorChar);
 
     private final String mAaptLocation;
     private final Process mProcess;
@@ -90,9 +90,9 @@ public class AaptProcess {
         mProcessOutputFacade.setNotifier(notifier);
         mWriter.write("s\n");
         mWriter.write(FileUtils.toExportableSystemDependentPath(in));
-        mWriter.write("\n");
+        mWriter.write('\n');
         mWriter.write(FileUtils.toExportableSystemDependentPath(out));
-        mWriter.write("\n");
+        mWriter.write('\n');
         mWriter.flush();
         processCount++;
         mLogger.verbose(
@@ -116,7 +116,8 @@ public class AaptProcess {
                 new NotifierProcessOutput(job, mProcessOutputFacade, mLogger);
 
         mProcessOutputFacade.setNotifier(notifier);
-        mWriter.write("c ");
+        mWriter.write('c');
+        mWriter.write(File.pathSeparatorChar);
         mWriter.write(joiner.join(AaptV2CommandBuilder.makeCompile(request)));
         // Finish the request
         mWriter.write('\n');
@@ -149,7 +150,8 @@ public class AaptProcess {
 
         mProcessOutputFacade.setNotifier(notifier);
         try {
-            mWriter.write("l ");
+            mWriter.write('l');
+            mWriter.write(File.pathSeparatorChar);
             mWriter.write(joiner.join(AaptV2CommandBuilder.makeLink(config, intermediateDir)));
             // Finish the request
             mWriter.write('\n');
@@ -366,7 +368,6 @@ public class AaptProcess {
                         "AAPT warning(%1$s), Job(%2$s): %3$s",
                         mOwner.getProcess().hashCode(), mJob, line);
                 mLogger.warning("AAPT: %1$s", line);
-
             }
         }
     }
