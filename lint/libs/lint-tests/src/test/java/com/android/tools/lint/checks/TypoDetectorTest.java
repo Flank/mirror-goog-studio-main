@@ -361,6 +361,20 @@ public class TypoDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testTokens() {
+        // Make sure we don't pick up tokens in the middle of a string
+        //noinspection all // Sample code
+        lint().files(
+                xml("res/values/strings.xml", "" +
+                        "<resources>\n" +
+                        "    <string name=\"simple\">\n" +
+                        "        1. Say &lt;b>\\\"&lt;xliff:g id=\"ok_google\">^1&lt;/xliff:g>,\n" +
+                        "    </string>\n" +
+                        "</resources>\n"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile typos1 = xml("res/values/strings.xml", ""
             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"

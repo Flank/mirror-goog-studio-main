@@ -204,7 +204,7 @@ public class TypoDetector extends ResourceXmlDetector {
                 if (c == '\\') {
                     index++;
                     break;
-                } else if (!Character.isLetter(c)) {
+                } else if (!Character.isLetter(c) && c != '_') {
                     break;
                 } else if (text.charAt(index) >= 0x80) {
                     // Switch to UTF-8 handling for this string
