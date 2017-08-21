@@ -16,8 +16,6 @@
 
 package com.android.builder.internal.aapt;
 
-import static com.android.builder.internal.aapt.QueuedResourceProcessor.VERBOSE_LOGGING;
-
 import com.android.annotations.NonNull;
 import com.android.builder.png.AaptProcess;
 import com.android.builder.tasks.Job;
@@ -55,17 +53,7 @@ public class AaptQueueThreadContext implements QueueThreadContext<AaptProcess> {
     public void creation(@NonNull Thread t) throws IOException {
         try {
             AaptProcess aaptProcess = new AaptProcess.Builder(aaptLocation, logger).start();
-            if (VERBOSE_LOGGING) {
-                logger.verbose(
-                        "Thread(%1$s): created AAPT slave, Process(%2$s)",
-                        Thread.currentThread().getName(), aaptProcess.hashCode());
-            }
             aaptProcess.waitForReady();
-            if (VERBOSE_LOGGING) {
-                logger.verbose(
-                        "Thread(%1$s): Slave ready, Process(%2$s)",
-                        Thread.currentThread().getName(), aaptProcess.hashCode());
-            }
             aaptProcesses.put(t.getName(), aaptProcess);
         } catch (InterruptedException e) {
             logger.error(e, "Cannot start slave process");
@@ -93,22 +81,15 @@ public class AaptQueueThreadContext implements QueueThreadContext<AaptProcess> {
         if (aaptProcess == null) {
             return;
         }
-
-        if (VERBOSE_LOGGING) {
-            logger.verbose(
-                    "Thread(%1$s): notify aapt slave shutdown, Process(%2$s)",
-                    Thread.currentThread().getName(), aaptProcess.hashCode());
-        }
         try {
             aaptProcess.shutdown();
         } finally {
             aaptProcesses.remove(t.getName());
         }
-        if (VERBOSE_LOGGING) {
-            logger.verbose(
-                    "Thread(%1$s): Process(%2$d), after shutdown queue_size=%3$d",
-                    Thread.currentThread().getName(), aaptProcess.hashCode(), aaptProcesses.size());
-        }
+        logger.verbose(
+                "Thread(%1$s): Process(%2$d), after shutdown queue_size=%3$d",
+                Thread.currentThread().getName(), aaptProcess.hashCode(), aaptProcesses.size());
+
     }
 
     @Override
