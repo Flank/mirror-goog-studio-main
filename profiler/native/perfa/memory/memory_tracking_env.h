@@ -122,7 +122,7 @@ class MemoryTrackingEnv {
   // An heap walker used for setting up an initial snapshot of live objects.
   static jint JNICALL HeapIterationCallback(jlong class_tag, jlong size,
                                             jlong* tag_ptr, jint length,
-                                            void* user_data);
+                                            void* user_data, jint heap_id);
 
   // JVMTI Callback for when a class object is ready.
   static void JNICALL ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,

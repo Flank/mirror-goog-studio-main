@@ -30,6 +30,14 @@
 
 namespace {
 
+// Method signature for IterateThroughHeap extension that includes heap id.
+// Note that the signature is almost identical to IterateThroughHeap, with the
+// heap_iteration_callback in jvmtiHeapCallbacks taking a function pointer with
+// an additional int parameter.
+using IterateThroughHeapExt = jvmtiError (*)(jvmtiEnv*, jint, jclass,
+                                             const jvmtiHeapCallbacks*,
+                                             const void*);
+
 static JavaVM* g_vm;
 static profiler::MemoryTrackingEnv* g_env;
 
@@ -53,6 +61,16 @@ constexpr int32_t kDataBatchSize = 2000;
 
 // Line numbers are 1-based in Studio.
 constexpr int32_t kInvalidLineNumber = 0;
+
+// JVMTI extension method for querying per-object heap id
+const char* kIterateHeapExtFunc =
+    "com.android.art.heap.iterate_through_heap_ext";
+static IterateThroughHeapExt g_iterate_heap_ext_func = nullptr;
+
+// Getting the heap Id of an object (extenstion method) is an expensive
+// call. We simply presumme everything allocated after the app starts
+// belongs to the app heap.
+constexpr int32_t kAppHeapId = 3;
 }
 
 namespace profiler {
@@ -118,6 +136,30 @@ MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count,
   // thread causes the map to rehash. We don't want more synchronization
   // in allocation callback, so here we just make sure we have enough space.
   class_tag_map_.reserve((1 << 16) - 1);
+
+  // Locate heap extension functions
+  jvmtiError error;
+  jvmtiExtensionFunctionInfo* func_info;
+  jint func_count = 0;
+  error = jvmti_->GetExtensionFunctions(&func_count, &func_info);
+  CheckJvmtiError(jvmti, error);
+
+  // Go through all extension functions as we need to deallocate
+  for (int i = 0; i < func_count; i++) {
+    if (strcmp(kIterateHeapExtFunc, func_info[i].id) == 0) {
+      g_iterate_heap_ext_func =
+          reinterpret_cast<IterateThroughHeapExt>(func_info[i].func);
+    }
+    Deallocate(jvmti, func_info[i].id);
+    Deallocate(jvmti, func_info[i].short_description);
+    for (int j = 0; j < func_info[i].param_count; j++) {
+      Deallocate(jvmti, func_info[i].params[j].name);
+    }
+    Deallocate(jvmti, func_info[i].params);
+    Deallocate(jvmti, func_info[i].errors);
+  }
+  Deallocate(jvmti, func_info);
+  assert(g_iterate_heap_ext_func != nullptr);
 }
 
 void MemoryTrackingEnv::Initialize() {
@@ -225,9 +267,11 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
   BatchAllocationSample snapshot_sample;
   jvmtiHeapCallbacks heap_callbacks;
   memset(&heap_callbacks, 0, sizeof(heap_callbacks));
-  heap_callbacks.heap_iteration_callback = &HeapIterationCallback;
-  error =
-      jvmti_->IterateThroughHeap(0, nullptr, &heap_callbacks, &snapshot_sample);
+  heap_callbacks.heap_iteration_callback =
+      reinterpret_cast<decltype(heap_callbacks.heap_iteration_callback)>(
+          HeapIterationCallback);
+  error = g_iterate_heap_ext_func(jvmti_, 0, nullptr, &heap_callbacks,
+                                  &snapshot_sample);
   CheckJvmtiError(jvmti_, error);
   if (snapshot_sample.events_size() > 0) {
     profiler::EnqueueAllocationEvents(snapshot_sample);
@@ -414,7 +458,7 @@ void MemoryTrackingEnv::HandleControlSignal(
 
 jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
                                               jlong* tag_ptr, jint length,
-                                              void* user_data) {
+                                              void* user_data, jint heap_id) {
   BatchAllocationSample* sample = (BatchAllocationSample*)user_data;
 
   assert(sample != nullptr);
@@ -441,6 +485,7 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
   alloc->set_class_tag(class_tag);
   alloc->set_size(size);
   alloc->set_length(length);
+  alloc->set_heap_id(heap_id);
 
   if (sample->events_size() >= kDataBatchSize) {
     profiler::EnqueueAllocationEvents(*sample);
@@ -474,6 +519,7 @@ void MemoryTrackingEnv::ClassPrepareCallback(jvmtiEnv* jvmti, JNIEnv* jni,
   jvmtiError error = jvmti->GetObjectSize(klass, &size);
   CheckJvmtiError(jvmti, error);
   alloc_data->set_size(size);
+  alloc_data->set_heap_id(kAppHeapId);
   // Fill thread + stack info.
   FillAllocEventThreadData(g_env, jvmti, jni, thread, alloc_data);
   alloc_event.set_timestamp(g_env->clock_.GetCurrentTime());
@@ -511,6 +557,7 @@ void MemoryTrackingEnv::ObjectAllocCallback(jvmtiEnv* jvmti, JNIEnv* jni,
     alloc_data->set_tag(tag);
     alloc_data->set_size(size);
     alloc_data->set_class_tag(itr->second);
+    alloc_data->set_heap_id(kAppHeapId);
     FillAllocEventThreadData(g_env, jvmti, jni, thread, alloc_data);
     event.set_timestamp(g_env->clock_.GetCurrentTime());
     g_env->event_queue_.Push(event);
