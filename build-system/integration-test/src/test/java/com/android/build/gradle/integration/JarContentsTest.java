@@ -22,9 +22,11 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.model.Version;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -52,6 +54,7 @@ public class JarContentsTest {
                     "hierarchyviewer2lib",
                     "traceview");
 
+    // TODO: remove these (b/64921827).
     private static final Set<String> IGNORED_ARTIFACTS_BAZEL =
             ImmutableSet.of(
                     "archquery",
@@ -64,10 +67,9 @@ public class JarContentsTest {
                     "protos",
                     "publisher",
                     "screenshot2",
-                    "sdk-common",
                     "swtmenubar");
 
-    // TODO: Handle NOTICE files in Bazel.
+    // TODO: Handle NOTICE files in Bazel (b/64921827).
     private static final Set<String> GLOBAL_WHITELIST =
             ImmutableSet.of("NOTICE", "NOTICE.txt", "META-INF/MANIFEST.MF");
 
@@ -876,7 +878,29 @@ public class JarContentsTest {
                 "META-INF/services/",
                 "META-INF/services/javax.annotation.processing.Processor");
 
-        EXPECTED = expected.build();
+        if (TestUtils.runningFromBazel()) {
+            // TODO: move all differences from IGNORED_ARTIFACTS_BAZEL to here (b/64921827)
+            // TODO: fix these. (b/64921827)
+            Multimap<String, String> bazelNotImplementedYet =
+                    ImmutableSetMultimap.<String, String>builder()
+                            .putAll(
+                                    "com/android/tools/sdk-common",
+                                    "wireless/",
+                                    "wireless/android/",
+                                    "wireless/android/instantapps/",
+                                    "wireless/android/instantapps/sdk/")
+                            .build();
+
+            EXPECTED =
+                    ImmutableMultimap.copyOf(
+                            Multimaps.filterEntries(
+                                    expected.build(),
+                                    entry ->
+                                            !bazelNotImplementedYet.containsEntry(
+                                                    entry.getKey(), entry.getValue())));
+        } else {
+            EXPECTED = expected.build();
+        }
     }
 
     @Test
@@ -960,13 +984,13 @@ public class JarContentsTest {
         }
 
         if (fileName.endsWith(".kotlin_module")) {
-            // TODO: Handle kotlin modules in Bazel.
+            // TODO: Handle kotlin modules in Bazel. (b/64921827)
             return false;
         }
 
         if (fileName.endsWith(".proto")) {
             // Gradle packages the proto files in jars.
-            // TODO: Can we remove these from the jars?
+            // TODO: Can we remove these from the jars? (b/64921827)
             return false;
         }
 
