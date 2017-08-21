@@ -107,21 +107,7 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
                                                 Thread.currentThread().getName());
                                         return;
                                     }
-                                    if (VERBOSE_LOGGING) {
-                                        logger.verbose(
-                                                "Thread(%1$s): submitting job %2$s to %3$d",
-                                                Thread.currentThread().getName(),
-                                                job.getJobTitle(),
-                                                aapt.hashCode());
-                                    }
                                     aapt.compile(request, job);
-
-                                    if (VERBOSE_LOGGING) {
-                                        logger.verbose(
-                                                "Thread(%1$s): submitted job %2$s",
-                                                Thread.currentThread().getName(),
-                                                job.getJobTitle());
-                                    }
                                 }
 
                                 @Override
@@ -131,12 +117,6 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
                                                     request.getOutput(),
                                                     Aapt2RenamingConventions.compilationRename(
                                                             request.getInput())));
-                                    if (VERBOSE_LOGGING) {
-                                        logger.verbose(
-                                                "Thread(%s): Finished compiling %s",
-                                                Thread.currentThread().getName(),
-                                                request.getInput());
-                                    }
                                 }
 
                                 @Override
@@ -190,21 +170,7 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
                                                 Thread.currentThread().getName());
                                         return;
                                     }
-                                    if (VERBOSE_LOGGING) {
-                                        logger.verbose(
-                                                "Thread(%1$s): submitting job %2$s to %3$d",
-                                                Thread.currentThread().getName(),
-                                                job.getJobTitle(),
-                                                aapt.hashCode());
-                                    }
                                     aapt.link(config, intermediateDir, job);
-
-                                    if (VERBOSE_LOGGING) {
-                                        logger.verbose(
-                                                "Thread(%1$s): submitted job %2$s",
-                                                Thread.currentThread().getName(),
-                                                job.getJobTitle());
-                                    }
                                 }
 
                                 @Override
