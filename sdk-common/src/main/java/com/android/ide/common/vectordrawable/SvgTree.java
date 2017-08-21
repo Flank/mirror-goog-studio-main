@@ -55,12 +55,18 @@ class SvgTree {
 
     private boolean mHasLeafNode = false;
 
+    private boolean mHasGradient = false;
+
 
     public float getWidth() { return w; }
     public float getHeight() { return h; }
     public float getScaleFactor() { return mScaleFactor; }
     public void setHasLeafNode(boolean hasLeafNode) {
         mHasLeafNode = hasLeafNode;
+    }
+
+    public void setHasGradient(boolean hasGradient) {
+        mHasGradient = hasGradient;
     }
 
     public float[] getViewBox() { return viewBox; }
@@ -71,8 +77,8 @@ class SvgTree {
     // Set of SvgGroupNodes that contain use elements.
     private final HashSet<SvgGroupNode> mUseGroupSet = new HashSet<>();
 
-    // Key is SvgNode that references a clipPath. Value is SvgGroupNode that is the referenced
-    // SvgClipPathNode
+    // Key is SvgNode that references a clipPath. Value is SvgGroupNode that is the parent of that
+    // SvgNode.
     private final HashMap<SvgNode, SvgGroupNode> mClipPathAffectedNodes = new HashMap<>();
 
     // Key is String that is the id of a style class.
@@ -82,7 +88,6 @@ class SvgTree {
     // Key is String that is the id of a style class. Value is a String that contains attribute
     // information of that style class.
     private final HashMap<String, String> mStyleClassAttributeMap = new HashMap<>();
-
 
     /** From the root, top down, pass the transformation (TODO: attributes) down the children. */
     public void flatten() {
@@ -157,6 +162,10 @@ class SvgTree {
      */
     public boolean getHasLeafNode() {
         return mHasLeafNode;
+    }
+
+    public boolean getHasGradient() {
+        return mHasGradient;
     }
 
     private static SourcePosition getPosition(Node node) {

@@ -30,9 +30,7 @@ import java.util.logging.Logger;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
-/**
- * Parent class for a SVG file's node, can be either group or leave element.
- */
+/** Parent class for a SVG file's node, can be either group or leaf element. */
 abstract class SvgNode {
     private static final Logger logger = Logger.getLogger(SvgNode.class.getSimpleName());
 
@@ -87,7 +85,7 @@ abstract class SvgNode {
         }
     }
 
-    private void parseLocalTransform(String nodeValue) {
+    protected void parseLocalTransform(String nodeValue) {
         // We separate the string into multiple parts and look like this:
         // "translate" "30" "rotate" "4.5e1  5e1  50"
         nodeValue = nodeValue.replaceAll(",", " ");
@@ -203,9 +201,14 @@ abstract class SvgNode {
         }
         logger.log(Level.FINE, ">>>> PROP " + name + " = " + value);
         if (value.startsWith("url("))  {
-            getTree().logErrorLine("Unsupported URL value: " + value, getDocumentNode(),
-                    SvgTree.SvgLogLevel.ERROR);
-            return;
+            if (!name.equals("fill") && !name.equals("stroke")) {
+                getTree()
+                        .logErrorLine(
+                                "Unsupported URL value: " + value,
+                                getDocumentNode(),
+                                SvgTree.SvgLogLevel.ERROR);
+                return;
+            }
         }
         if (name.equals(SVG_STROKE_WIDTH) && value.equals("0")) {
             mVdAttributesMap.remove(SVG_STROKE_COLOR);

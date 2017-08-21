@@ -538,6 +538,132 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_style_path_class_names");
     }
 
+    // Gradient tests start here
+    // The following gradient test files currently fail and do not have corresponding test cases:
+    // test_gradient_linear_transform_matrix
+    // test_gradient_linear_transform_matrix_2
+    // test_gradient_linear_transform_scale_rotate
+    // test_gradient_linear_transform_scale_translate_rotate
+    public void testSvgGradientLinearCoordinatesNegativePercentage() throws Exception {
+        checkSvgConversion("test_gradient_linear_coordinates_negative_percentage");
+    }
+
+    public void testSvgGradientLinearNoCoordinates() throws Exception {
+        checkSvgConversion("test_gradient_linear_no_coordinates");
+    }
+
+    public void testSvgGradientLinearNoUnits() throws Exception {
+        checkSvgConversion("test_gradient_linear_no_units");
+    }
+
+    public void testSvgGradientLinearObjectBoundingBox() throws Exception {
+        checkSvgConversion("test_gradient_linear_object_bounding_box");
+    }
+
+    public void testSvgGradientLinearOffsetDecreasing() throws Exception {
+        checkSvgConversion("test_gradient_linear_offset_decreasing");
+    }
+
+    public void testSvgGradientLinearOffsetOutOfBounds() throws Exception {
+        checkSvgConversion("test_gradient_linear_offset_out_of_bounds");
+    }
+
+    public void testSvgGradientLinearOffsetUndefined() throws Exception {
+        checkSvgConversion("test_gradient_linear_offset_undefined");
+    }
+
+    public void testSvgGradientLinearOneStop() throws Exception {
+        checkSvgConversion("test_gradient_linear_one_stop");
+    }
+
+    public void testSvgGradientLinearOverlappingStops() throws Exception {
+        checkSvgConversion("test_gradient_linear_overlapping_stops");
+    }
+
+    public void testSvgGradientLinearSpreadPad() throws Exception {
+        checkSvgConversion("test_gradient_linear_spread_pad");
+    }
+
+    public void testSvgGradientLinearSpreadReflect() throws Exception {
+        checkSvgConversion("test_gradient_linear_spread_reflect");
+    }
+
+    public void testSvgGradientLinearSpreadRepeat() throws Exception {
+        checkSvgConversion("test_gradient_linear_spread_repeat");
+    }
+
+    public void testSvgGradientLinearStopOpacity() throws Exception {
+        checkSvgConversion("test_gradient_linear_stop_opacity");
+    }
+
+    public void testSvgGradientLinearStopOpacityHalf() throws Exception {
+        checkSvgConversion("test_gradient_linear_stop_opacity_half");
+    }
+
+    public void testSvgGradientLinearStroke() throws Exception {
+        checkSvgConversion("test_gradient_linear_stroke");
+    }
+
+    public void testSvgGradientLinearThreeStops() throws Exception {
+        checkSvgConversion("test_gradient_linear_three_stops");
+    }
+
+    public void testSvgGradientLinearTransformGroupScaleTranslate() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_group_scale_translate");
+    }
+
+    public void testSvgGradientLinearTransformMatrix3() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_matrix_3");
+    }
+
+    public void testSvgGradientLinearTransformMatrixScale() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_matrix_scale");
+    }
+
+    public void testSvgGradientLinearTransformRotate() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_rotate");
+    }
+
+    public void testSvgGradientLinearTransformRotateScale() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_rotate_scale");
+    }
+
+    public void testSvgGradientLinearTransformRotateTranslateScale() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_rotate_translate_scale");
+    }
+
+    public void testSvgGradientLinearTransformScale() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_scale");
+    }
+
+    public void testSvgGradientLinearTransformTranslate() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_translate");
+    }
+
+    public void testSvgGradientLinearTransformTranslateRotate() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_translate_rotate");
+    }
+
+    public void testSvgGradientLinearTransformTranslateRotateScale() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_translate_rotate_scale");
+    }
+
+    public void testSvgGradientLinearTransformTranslateScale() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_translate_scale");
+    }
+
+    public void testSvgGradientLinearTransformTranslateScaleShapeTransform() throws Exception {
+        checkSvgConversion("test_gradient_linear_transform_translate_scale_shape_transform");
+    }
+
+    public void testSvgGradientLinearUserSpaceOnUse() throws Exception {
+        checkSvgConversion("test_gradient_linear_user_space_on_use");
+    }
+
+    public void testSvgGradientLinearXYNumbers() throws Exception {
+        checkSvgConversion("test_gradient_linear_x_y_numbers");
+    }
+
     // XML files start here.
     public void testXmlIconSizeOpacity() throws Exception {
         checkXmlConversion("ic_size_opacity");
