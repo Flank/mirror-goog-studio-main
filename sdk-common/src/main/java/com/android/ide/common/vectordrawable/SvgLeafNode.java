@@ -31,13 +31,19 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.w3c.dom.Node;
 
-/**
- * Represent a SVG file's leave element.
- */
+/** Represent a SVG file's leaf element. */
 class SvgLeafNode extends SvgNode {
     private static final Logger logger = Logger.getLogger(SvgLeafNode.class.getSimpleName());
 
     private String mPathData;
+
+    private boolean mHasFillGradient = false;
+
+    private boolean mHasStrokeGradient = false;
+
+    private SvgGradientNode mFillGradientNode;
+
+    private SvgGradientNode mStrokeGradientNode;
 
     public static final ImmutableMap<String, String> colorMap =
         ImmutableMap.<String, String>builder()
@@ -200,7 +206,6 @@ class SvgLeafNode extends SvgNode {
         SvgLeafNode newInstance = new SvgLeafNode(getTree(), getDocumentNode(), getName());
         copyTo(newInstance);
         return newInstance;
-
     }
 
     protected void copyTo(SvgLeafNode newInstance) {
@@ -208,12 +213,13 @@ class SvgLeafNode extends SvgNode {
         newInstance.setPathData(getPathData());
     }
 
+    /** Returns a string containing the VD XML of the attributes of this node. */
     private String getAttributeValues() {
         // There could be some redundant opacity information in the attributes' map,
         // like opacity Vs fill-opacity / stroke-opacity.
         parsePathOpacity();
 
-        StringBuilder sb = new StringBuilder("/>\n");
+        StringBuilder sb = new StringBuilder();
         for (String key : mVdAttributesMap.keySet()) {
             String vectorDrawableAttr = Svg2Vector.presentationMap.get(key);
             String svgValue = mVdAttributesMap.get(key);
@@ -238,6 +244,23 @@ class SvgLeafNode extends SvgNode {
                 }
             } else if (colorMap.containsKey(vdValue.toLowerCase(Locale.ENGLISH))) {
                 vdValue = colorMap.get(vdValue.toLowerCase(Locale.ENGLISH));
+            } else if (vdValue.contains("url")) {
+                // Copies gradient from tree
+                vdValue = vdValue.substring(5, vdValue.length() - 1);
+                if (key.equals("fill")) {
+                    mFillGradientNode =
+                            (SvgGradientNode) getTree().getSvgNodeFromId(vdValue).deepCopy();
+                    mFillGradientNode.setSvgLeafNode(this);
+                    mFillGradientNode.setGradientUsage(SvgGradientNode.GradientUsage.FILL);
+                    mHasFillGradient = true;
+                } else if (key.equals("stroke")) {
+                    mStrokeGradientNode =
+                            (SvgGradientNode) getTree().getSvgNodeFromId(vdValue).deepCopy();
+                    mStrokeGradientNode.setSvgLeafNode(this);
+                    mStrokeGradientNode.setGradientUsage(SvgGradientNode.GradientUsage.STROKE);
+                    mHasStrokeGradient = true;
+                }
+                continue;
             }
             String attr = "\n        " + vectorDrawableAttr + "=\"" +
                           vdValue + "\"";
@@ -295,7 +318,7 @@ class SvgLeafNode extends SvgNode {
      * @return #RRGGBB in hex format, or null, if an error is found.
      */
     @Nullable
-    private static String convertRGBToHex(String svgValue) {
+    protected static String convertRGBToHex(String svgValue) {
         // We don't support color keyword yet.
         // http://www.w3.org/TR/SVG11/types.html#ColorKeywords
         String result;
@@ -345,6 +368,10 @@ class SvgLeafNode extends SvgNode {
     @Override
     public boolean isGroupNode() {
         return false;
+    }
+
+    public boolean hasGradient() {
+        return mHasFillGradient || mHasStrokeGradient;
     }
 
     @Override
@@ -398,7 +425,8 @@ class SvgLeafNode extends SvgNode {
 
             // Second, write the color info handling the default values.
             writer.write("    <path\n");
-            if (!mVdAttributesMap.containsKey(Svg2Vector.SVG_FILL_COLOR)) {
+            if (!mVdAttributesMap.containsKey(Svg2Vector.SVG_FILL_COLOR)
+                    && !getTree().getHasGradient()) {
                 logger.log(Level.FINE, "ADDING FILL SVG_FILL_COLOR");
                 writer.write("        android:fillColor=\"#FF000000\"\n");
             }
@@ -410,6 +438,10 @@ class SvgLeafNode extends SvgNode {
             // Last, write the path data and all associated attributes.
             writer.write("        android:pathData=\"" + mPathData + "\"");
             writer.write(getAttributeValues());
+            if (!hasGradient()) {
+                writer.write("/");
+            }
+            writer.write(">\n");
         } else {
             // Writes data that is part of the clip-path data.
             writer.write(mPathData);
@@ -417,6 +449,16 @@ class SvgLeafNode extends SvgNode {
             // Need to write M 0,0 after each path. Resets pen to the origin since subsequent
             // paths might be relative.
             writer.write(" M 0,0");
+        }
+
+        if (mHasFillGradient) {
+            mFillGradientNode.writeXML(writer, inClipPath);
+        }
+        if (mHasStrokeGradient) {
+            mStrokeGradientNode.writeXML(writer, inClipPath);
+        }
+        if (hasGradient()) {
+            writer.write("</path>\n");
         }
     }
 

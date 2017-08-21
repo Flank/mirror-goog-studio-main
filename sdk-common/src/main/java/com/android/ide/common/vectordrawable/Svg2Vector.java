@@ -83,6 +83,21 @@ public class Svg2Vector {
                     .put(SVG_FILL_TYPE, "android:fillType")
                     .build();
 
+    public static final ImmutableMap<String, String> gradientMap =
+            ImmutableMap.<String, String>builder()
+                    .put("x1", "android:startX")
+                    .put("y1", "android:startY")
+                    .put("x2", "android:endX")
+                    .put("y2", "android:endY")
+                    .put("cx", "android:centerX")
+                    .put("cy", "android:centerY")
+                    .put("r", "android:gradientRadius")
+                    .put("spreadMethod", "android:tileMode")
+                    .put("gradientUnits", "")
+                    .put("gradientTransform", "")
+                    .put("gradientType", "android:type")
+                    .build();
+
     // List all the Svg nodes that we don't support. Categorized by the types.
     private static final HashSet<String> unsupportedSvgNodes =
             Sets.newHashSet(
@@ -134,7 +149,6 @@ public class Svg2Vector {
                     "hkern",
                     "vkern",
                     // Gradient elements
-                    "linearGradient",
                     "radialGradient",
                     "stop",
                     // Graphics elements
@@ -250,7 +264,6 @@ public class Svg2Vector {
                 SVG_POLYLINE.equals(nodeName) ||
                 SVG_LINE.equals(nodeName)) {
                 SvgLeafNode child = new SvgLeafNode(svgTree, currentNode, nodeName + i);
-
                 processIdName(svgTree, child);
                 currentGroup.addChild(child);
                 extractAllItemsAs(svgTree, child, currentNode, currentGroup);
@@ -274,6 +287,13 @@ public class Svg2Vector {
                 traverseSVGAndExtract(svgTree, clipPath, currentNode);
             } else if (SVG_STYLE.equals(nodeName)) {
                 extractStyleNode(svgTree, currentNode);
+            } else if ("linearGradient".equals(nodeName)) {
+                SvgGradientNode gradientNode =
+                        new SvgGradientNode(svgTree, currentNode, nodeName + i);
+                processIdName(svgTree, gradientNode);
+                extractGradientNode(svgTree, gradientNode);
+                gradientNode.fillPresentationAttributes("gradientType", "linear");
+                svgTree.setHasGradient(true);
             } else {
                 // For other fancy tags, like <switch>, they can contain children too.
                 // Report the unsupported nodes.
@@ -289,6 +309,105 @@ public class Svg2Vector {
             }
         }
 
+    }
+
+    /**
+     * Reads content from a gradient element's documentNode and fills in attributes for the
+     * SvgGradientNode.
+     */
+    private static void extractGradientNode(SvgTree svgTree, SvgGradientNode gradientNode) {
+        Node currentNode = gradientNode.getDocumentNode();
+        NamedNodeMap a = currentNode.getAttributes();
+        int len = a.getLength();
+        for (int j = 0; j < len; j++) {
+            Node n = a.item(j);
+            String name = n.getNodeName();
+            String value = n.getNodeValue();
+            if (gradientMap.containsKey(name)) {
+                gradientNode.fillPresentationAttributes(name, value);
+            }
+        }
+        NodeList gradientChildren = currentNode.getChildNodes();
+
+        // Default SVG gradient offset is the previous largest offset.
+        float greatestOffset = 0;
+        for (int i = 0; i < gradientChildren.getLength(); i++) {
+            Node node = gradientChildren.item(i);
+            String nodeName = node.getNodeName();
+            if (nodeName.equals("stop")) {
+                NamedNodeMap stopAttr = node.getAttributes();
+                // Default SVG gradient stop color is black.
+                String color = "rgb(0,0,0)";
+                // Default SVG gradient stop opacity is 1.
+                String opacity = "1";
+                for (int k = 0; k < stopAttr.getLength(); k++) {
+                    Node stopItem = stopAttr.item(k);
+                    String attrName = stopItem.getNodeName();
+                    String attrValue = stopItem.getNodeValue();
+                    switch (attrName) {
+                        case "offset":
+                            // If a gradient's value is not greater than all pervious offset values,
+                            // then the offset value is adjusted to be equal to the largest of all
+                            // previous offset values.
+                            greatestOffset = extractOffset(attrValue, greatestOffset);
+                            break;
+                        case "stop-color":
+                            color = attrValue;
+                            break;
+                        case "stop-opacity":
+                            opacity = attrValue;
+                            break;
+                        case "style":
+                            String[] parts = attrValue.split(";");
+                            for (String attr : parts) {
+                                String[] splitAttribute = attr.split(":");
+                                if (splitAttribute.length == 2) {
+                                    if (attr.startsWith("stop-color")) {
+                                        color = splitAttribute[1];
+                                    } else if (attr.startsWith("stop-opacity")) {
+                                        opacity = splitAttribute[1];
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+                String offset = String.valueOf(greatestOffset);
+                gradientNode.addGradientStop(color, offset, opacity);
+            }
+        }
+    }
+
+    /**
+     * Finds the gradient offset value given a String containing the value and greatest previous
+     * offset value.
+     *
+     * @param offset is a String that can be a value or a percentage.
+     * @param greatestOffset is the greatest offset value seen in the gradient so far.
+     * @return float that is final value of the offset between 0 and 1.
+     */
+    private static float extractOffset(String offset, float greatestOffset) {
+        float x = greatestOffset;
+        if (offset.endsWith("%")) {
+            try {
+                x = Float.parseFloat(offset.substring(0, offset.length() - 1));
+                x /= 100;
+            } catch (NumberFormatException e) {
+                logger.log(Level.FINE, "Unsupported gradient offset percentage");
+            }
+        } else {
+            try {
+                x = Float.parseFloat(offset);
+            } catch (NumberFormatException e) {
+                logger.log(Level.FINE, "Unsupported gradient offset value");
+            }
+        }
+        // Gradient offset values must be between 0 and 1 or 0% and 100%.
+        x = Math.min(1, Math.max(x, 0));
+        if (x >= greatestOffset) {
+            return x;
+        }
+        return greatestOffset;
     }
 
     /**
@@ -426,7 +545,7 @@ public class Svg2Vector {
         clip.setClipPathNodeAttributes();
     }
 
-    // Read the content from currentItem, and fill into "child"
+    /** Reads the content from currentItem and fills into the SvgLeafNode "child". */
     private static void extractAllItemsAs(
             SvgTree avg, SvgLeafNode child, Node currentItem, SvgGroupNode currentG) {
         Node currentGroup = currentItem.getParentNode();
@@ -885,6 +1004,8 @@ public class Svg2Vector {
 
     private static final String head = "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n";
 
+    private static final String aaptBound = "xmlns:aapt=\"http://schemas.android.com/aapt\"\n";
+
     private static String getSizeString(float w, float h, float scaleFactor) {
         String size = "        android:width=\"" + (int) (w * scaleFactor) + "dp\"\n" +
                       "        android:height=\"" + (int) (h * scaleFactor) + "dp\"\n";
@@ -895,6 +1016,9 @@ public class Svg2Vector {
 
         OutputStreamWriter fw = new OutputStreamWriter(outStream);
         fw.write(head);
+        if (svgTree.getHasGradient()) {
+            fw.write(aaptBound);
+        }
         float viewportWidth = svgTree.getViewportWidth();
         float viewportHeight = svgTree.getViewportHeight();
 

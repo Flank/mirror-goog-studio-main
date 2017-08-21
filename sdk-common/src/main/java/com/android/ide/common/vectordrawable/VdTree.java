@@ -128,6 +128,7 @@ class VdTree {
                     parseTree(child, newGroup);
                 } else if (SHAPE_PATH.equals(child.getNodeName())) {
                     VdPath newPath = parsePathAttributes(child.getAttributes());
+                    newPath.addGradientIfExists(child);
                     currentGroup.add(newPath);
                 } else if (SHAPE_CLIP_PATH.equals(child.getNodeName())) {
                     VdPath newClipPath = parsePathAttributes(child.getAttributes());
