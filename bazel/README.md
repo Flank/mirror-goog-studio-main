@@ -22,10 +22,6 @@ platform-specific binary and run it.
 
 ## Running all the tests
 
-*** note
-Warning: On a Mac, append `--genrule_strategy=standalone --spawn_strategy=standalone`
-***
-
 The command to run all the bazel tests run by the PSQ is:
 
 ```shell
@@ -57,7 +53,7 @@ bazel build //tools/adt/idea/...
 To run a single test:
 
 ```
-bazel test //tools/adt/idea/android/... --test_filter=AndroidLayoutDomTest
+bazel test //tools/adt/idea/android/... --test_filter=AndroidLayoutDomTest --test_output=streamed
 ```
 
 To debug a single test, which will open remote debugging:
