@@ -38,11 +38,11 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class DataBindingTest {
 
-    @Parameterized.Parameters(name = "library={0},forExperimentalPlugin={1},withoutAdapters={2}")
+    @Parameterized.Parameters(name = "library={0},withoutAdapters={1}")
     public static Collection<Object[]> getParameters() {
         List<Object[]> options = new ArrayList<>();
-        for (int i = 0; i < 8; i++) {
-            options.add(new Object[] {(i & 1) != 0, (i & 2) != 0, (i & 4) != 0});
+        for (int i = 0; i < 4; i++) {
+            options.add(new Object[] {(i & 1) != 0, (i & 2) != 0});
         }
         return options;
     }
@@ -50,8 +50,7 @@ public class DataBindingTest {
     private final boolean myLibrary;
     private final String buildFile;
 
-    public DataBindingTest(
-            boolean library, boolean forExperimentalPlugin, boolean withoutAdapters) {
+    public DataBindingTest(boolean library, boolean withoutAdapters) {
         myWithoutAdapters = withoutAdapters;
         myLibrary = library;
         List<String> options = new ArrayList<>();
@@ -61,12 +60,8 @@ public class DataBindingTest {
         if (withoutAdapters) {
             options.add("withoutadapters");
         }
-        if (forExperimentalPlugin) {
-            options.add("forexperimental");
-        }
         project = GradleTestProject.builder()
                 .fromTestProject("databinding")
-                .useExperimentalGradleVersion(forExperimentalPlugin)
                 .create();
         buildFile = options.isEmpty()
                 ? null

@@ -34,56 +34,27 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Assemble tests for ndk-build. */
-@RunWith(Parameterized.class)
 public class NdkBuildBasicProjectTest {
-
-    private boolean isModel;
 
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().build())
                     .addFile(HelloWorldJniApp.androidMkC("src/main/jni"))
-                    .useExperimentalGradleVersion(isModel)
                     .create();
-
-    @Parameterized.Parameters(name = "model = {0}")
-    public static Collection<Object[]> data() {
-        return new ArrayList<Object[]>(
-                Arrays.asList(
-                        new ArrayList<Boolean>(Arrays.asList(false)).toArray(),
-                        new ArrayList<Boolean>(Arrays.asList(true)).toArray()));
-    }
-
-    public NdkBuildBasicProjectTest(boolean isModel) {
-        this.isModel = isModel;
-    }
 
     @Before
     public void setUp() throws IOException {
-        String plugin =
-                isModel
-                        ? "apply plugin: 'com.android.model.application'"
-                        : "apply plugin: 'com.android.application'";
-        String modelBefore = isModel ? "model { " : "";
-        String modelAfter = isModel ? " }" : "";
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
-                        + plugin
-                        + "\n"
-                        + modelBefore
+                        + "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "    android {\n"
                         + "        compileSdkVersion "
@@ -105,29 +76,22 @@ public class NdkBuildBasicProjectTest {
                         + "          }\n"
                         + "        }\n"
                         + "    }\n"
-                        + modelAfter
-                        + "\n"
-                        + "\n"
-                        + modelBefore
                         + "\n"
                         + "    android.packagingOptions {\n"
                         + "        doNotStrip \"*/armeabi-v7a/libhello-jni.so\"\n"
                         + "    }\n"
-                        + modelAfter
                         + "\n");
-        if (!isModel) {
-            TestFileUtils.appendToFile(
-                    project.getBuildFile(),
-                    "\n"
-                            + "android {\n"
-                            + "    applicationVariants.all { variant ->\n"
-                            + "        assert !variant.getExternalNativeBuildTasks().isEmpty()\n"
-                            + "        for (def task : variant.getExternalNativeBuildTasks()) {\n"
-                            + "            assert task.getName() == \"externalNativeBuild\" + variant.getName().capitalize()\n"
-                            + "        }\n"
-                            + "    }\n"
-                            + "}\n");
-        }
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    applicationVariants.all { variant ->\n"
+                        + "        assert !variant.getExternalNativeBuildTasks().isEmpty()\n"
+                        + "        for (def task : variant.getExternalNativeBuildTasks()) {\n"
+                        + "            assert task.getName() == \"externalNativeBuild\" + variant.getName().capitalize()\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
     }
 
     @Test
@@ -225,18 +189,10 @@ public class NdkBuildBasicProjectTest {
         }
 
         // Change the build file to only have "x86"
-        String plugin =
-                isModel
-                        ? "apply plugin: 'com.android.model.application'"
-                        : "apply plugin: 'com.android.application'";
-        String modelBefore = isModel ? "model { " : "";
-        String modelAfter = isModel ? " }" : "";
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
-                        + plugin
-                        + "\n"
-                        + modelBefore
+                        + "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "    android {\n"
                         + "        defaultConfig {\n"
@@ -248,7 +204,6 @@ public class NdkBuildBasicProjectTest {
                         + "          }\n"
                         + "        }\n"
                         + "    }\n"
-                        + modelAfter
                         + "\n");
         project.execute("clean");
 

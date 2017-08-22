@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.integration.common.fixture.app;
 
-import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestProject;
 import com.google.common.collect.ImmutableMap;
@@ -25,15 +24,11 @@ import com.google.common.collect.ImmutableMap;
  * Simple test application with an Android library that prints "hello world!".
  */
 public class HelloWorldLibraryApp extends MultiModuleTestProject implements TestProject {
-    public static HelloWorldLibraryApp forExperimentalPlugin() {
-        return new HelloWorldLibraryApp(true);
-    }
-
     public static HelloWorldLibraryApp forStablePlugin() {
-        return new HelloWorldLibraryApp(false);
+        return new HelloWorldLibraryApp();
     }
 
-    public HelloWorldLibraryApp(boolean forExperimentalPlugin) {
+    public HelloWorldLibraryApp() {
         super(ImmutableMap.of(":app", new EmptyAndroidTestApp(), ":lib", HelloWorldApp.noBuildFile()));
 
         AndroidTestApp app = (AndroidTestApp) getSubproject(":app");
@@ -41,24 +36,20 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
                 new TestSourceFile(
                         "",
                         "build.gradle",
-                        new BuildScriptGenerator(
-                                        "apply plugin: '${application_plugin}'\n"
-                                                + "\n"
-                                                + "dependencies {\n"
-                                                + "    compile project(':lib')\n"
-                                                + "}\n"
-                                                + "\n"
-                                                + "${model_start}"
-                                                + "android {\n"
-                                                + "     compileSdkVersion "
-                                                + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                                                + "\n"
-                                                + "     buildToolsVersion '"
-                                                + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                                                + "'\n"
-                                                + "}\n"
-                                                + "${model_end}\n")
-                                .build(forExperimentalPlugin)));
+                        "apply plugin: 'com.android.application'\n"
+                                + "\n"
+                                + "dependencies {\n"
+                                + "    api project(':lib')\n"
+                                + "}\n"
+                                + "\n"
+                                + "android {\n"
+                                + "     compileSdkVersion "
+                                + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                                + "\n"
+                                + "     buildToolsVersion '"
+                                + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                                + "'\n"
+                                + "}\n"));
 
         // Create AndroidManifest.xml that uses the Activity from the library.
         app.addFile(new TestSourceFile("src/main", "AndroidManifest.xml",
@@ -86,20 +77,16 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
                 new TestSourceFile(
                         "",
                         "build.gradle",
-                        new BuildScriptGenerator(
-                                        "apply plugin: '${library_plugin}'\n"
-                                                + "\n"
-                                                + "${model_start}"
-                                                + "android {\n"
-                                                + "     compileSdkVersion "
-                                                + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                                                + "\n"
-                                                + "     buildToolsVersion '"
-                                                + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                                                + "'\n"
-                                                + "}\n"
-                                                + "${model_end}\n")
-                                .build(forExperimentalPlugin)));
+                        "apply plugin: 'com.android.library'\n"
+                                + "\n"
+                                + "android {\n"
+                                + "     compileSdkVersion "
+                                + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                                + "\n"
+                                + "     buildToolsVersion '"
+                                + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                                + "'\n"
+                                + "}\n"));
 
     }
 }

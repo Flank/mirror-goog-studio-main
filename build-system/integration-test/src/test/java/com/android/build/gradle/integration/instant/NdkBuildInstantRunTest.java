@@ -22,7 +22,6 @@ import static com.android.build.gradle.integration.instant.InstantRunTestUtils.P
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
-import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
@@ -73,24 +72,20 @@ public class NdkBuildInstantRunTest {
     public void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                new BuildScriptGenerator(
-                                "apply plugin: '${application_plugin}'\n"
-                                        + "${model_start}"
-                                        + "    android {\n"
-                                        + "        compileSdkVersion "
-                                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                                        + "\n"
-                                        + "        buildToolsVersion \""
-                                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                                        + "\"\n"
-                                        + "        externalNativeBuild {\n"
-                                        + "            ndkBuild {\n"
-                                        + "               path 'src/main/jni/Android.mk'\n"
-                                        + "            }\n"
-                                        + "        }\n"
-                                        + "    }\n"
-                                        + "${model_end}\n")
-                        .build(false));
+                "apply plugin: 'com.android.application'\n"
+                        + "    android {\n"
+                        + "        compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "        buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "        externalNativeBuild {\n"
+                        + "            ndkBuild {\n"
+                        + "               path 'src/main/jni/Android.mk'\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n");
     }
 
     @Test

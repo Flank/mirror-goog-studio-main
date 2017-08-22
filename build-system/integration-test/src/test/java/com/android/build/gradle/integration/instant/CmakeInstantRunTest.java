@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
@@ -60,19 +59,20 @@ public class CmakeInstantRunTest {
     public static void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 sProject.getBuildFile(),
-                new BuildScriptGenerator(
-                        "apply plugin: '${application_plugin}'\n"
-                                + "${model_start}"
-                                + "    android {\n"
-                                + "        compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                                + "        buildToolsVersion \"" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "\"\n"
-                                + "        externalNativeBuild {\n"
-                                + "            cmake {\n"
-                                + "               path 'CMakeLists.txt'\n"
-                                + "            }\n"
-                                + "        }\n"
-                                + "    }\n"
-                                + "${model_end}\n").build(false));
+                "apply plugin: 'com.android.application'\n"
+                        + "    android {\n"
+                        + "        compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "        buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "        externalNativeBuild {\n"
+                        + "            cmake {\n"
+                        + "               path 'CMakeLists.txt'\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n");
     }
 
     @AfterClass

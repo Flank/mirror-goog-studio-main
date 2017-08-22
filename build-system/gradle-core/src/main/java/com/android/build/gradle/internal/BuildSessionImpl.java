@@ -21,7 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.annotations.concurrency.Immutable;
-import com.android.builder.Version;
+import com.android.builder.model.Version;
 import com.android.ide.common.util.JvmWideVariable;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;

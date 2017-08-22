@@ -4,7 +4,7 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 fileset(
     name = "resources",
-    srcs = ["//tools/buildSrc/base:version.properties"] + glob(["src/main/resources/**"]),
+    srcs = glob(["src/main/resources/**"]),
     mappings = {
         "//tools/buildSrc/base:": "com/android/build/gradle/internal/",
         "src/main/resources/": "",

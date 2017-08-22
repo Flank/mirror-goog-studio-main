@@ -57,7 +57,6 @@ public class DataBindingWithDaggerTest {
 
         project = GradleTestProject.builder()
                 .fromTestProject("databindingAndDagger")
-                .useExperimentalGradleVersion(false)
                 .create();
     }
 

@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.nativebuild;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
-import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -28,23 +27,16 @@ import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Assemble tests for ndk-build with targets clause. */
-@RunWith(Parameterized.class)
 public class NdkBuildTargetsTest {
-
-    private boolean isModel;
 
     @Rule
     public GradleTestProject project =
@@ -53,71 +45,53 @@ public class NdkBuildTargetsTest {
                     .addFile(HelloWorldJniApp.androidMkMultiModule("src/main/cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library1", "library1.cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library2", "library2.cpp"))
-                    .useExperimentalGradleVersion(isModel)
                     .create();
-
-    @Parameterized.Parameters(name = "model = {0}")
-    public static Collection<Object[]> data() {
-        return ImmutableList.of(new Object[] {false}, new Object[] {true});
-    }
-
-    public NdkBuildTargetsTest(boolean isModel) {
-        this.isModel = isModel;
-    }
 
     @Before
     public void setUp() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                new BuildScriptGenerator(
-                                "apply plugin: '${application_plugin}'\n"
-                                        + "\n"
-                                        + "${model_start}\n"
-                                        + "    android {\n"
-                                        + "        compileSdkVersion "
-                                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                                        + "\n"
-                                        + "        buildToolsVersion \""
-                                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                                        + "\"\n"
-                                        + "        defaultConfig {\n"
-                                        + "          externalNativeBuild {\n"
-                                        + "            ndkBuild {\n"
-                                        + "              arguments.addAll(\"NDK_TOOLCHAIN_VERSION:=clang\")\n"
-                                        + "              cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
-                                        + "              cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
-                                        + "              abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\", \"x86_64\")\n"
-                                        + "            }\n"
-                                        + "          }\n"
-                                        + "        }\n"
-                                        + "        externalNativeBuild {\n"
-                                        + "          ndkBuild {\n"
-                                        + "            path \"src/main/cpp/Android.mk\"\n"
-                                        + "          }\n"
-                                        + "        }\n"
-                                        + "    }\n"
-                                        + "${model_end}\n"
-                                        + "\n")
-                        .build(isModel));
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "    defaultConfig {\n"
+                        + "      externalNativeBuild {\n"
+                        + "        ndkBuild {\n"
+                        + "          arguments.addAll(\"NDK_TOOLCHAIN_VERSION:=clang\")\n"
+                        + "          cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
+                        + "          cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
+                        + "          abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\", \"x86_64\")\n"
+                        + "        }\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "    externalNativeBuild {\n"
+                        + "      ndkBuild {\n"
+                        + "        path \"src/main/cpp/Android.mk\"\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n");
     }
 
     @Test
     public void checkSingleTarget() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                new BuildScriptGenerator(
-                                "${model_start}\n"
-                                        + "    android {\n"
-                                        + "        defaultConfig {\n"
-                                        + "          externalNativeBuild {\n"
-                                        + "              ndkBuild {\n"
-                                        + "                targets.addAll(\"mylibrary2\")\n"
-                                        + "              }\n"
-                                        + "          }\n"
-                                        + "        }\n"
-                                        + "    }\n"
-                                        + "${model_end}\n")
-                        .build(isModel));
+                "android {\n"
+                        + "    defaultConfig {\n"
+                        + "      externalNativeBuild {\n"
+                        + "          ndkBuild {\n"
+                        + "            targets.addAll(\"mylibrary2\")\n"
+                        + "          }\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "}\n");
 
         project.executor().run("clean", "assembleDebug");
 

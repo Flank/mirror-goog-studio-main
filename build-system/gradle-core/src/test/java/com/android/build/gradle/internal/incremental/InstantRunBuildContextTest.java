@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext.Build;
-import com.android.builder.Version;
+import com.android.builder.model.Version;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;

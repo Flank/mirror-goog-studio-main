@@ -10,12 +10,6 @@ iml_module(
     deps = ["//tools/base/annotations:studio.android-annotations[module]"],
 )
 
-fileset(
-    name = "version.properties",
-    srcs = ["//tools/buildSrc/base:version.properties"],
-    mappings = {"//tools/buildSrc/base:": "com/android/java/model/"},
-)
-
 maven_java_library(
     name = "java-lib-model",
     srcs = glob([
@@ -23,7 +17,6 @@ maven_java_library(
     ]),
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/java-lib-plugin/java-lib-model",
-    resources = [":version.properties"],
     visibility = [
         "//visibility:public",
     ],

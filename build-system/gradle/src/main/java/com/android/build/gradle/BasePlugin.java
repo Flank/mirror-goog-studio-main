@@ -69,11 +69,11 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
-import com.android.builder.Version;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Version;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.builder.profile.ThreadRecorder;
@@ -120,7 +120,6 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.StopExecutionException;
 import org.gradle.internal.reflect.Instantiator;
-import org.gradle.tooling.UnsupportedVersionException;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
@@ -244,7 +243,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
         PluginInitializer.initialize(project);
         project.getPluginManager().apply(AndroidBasePlugin.class);
-        checkPluginVersion();
 
         TaskInputHelper.enableBypass();
 
@@ -744,28 +742,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
             } else {
                 subProjectsById.put(id, subProject);
             }
-        }
-    }
-
-    /**
-     * Verify the plugin version.  If a newer version of gradle-experimental plugin is applied, then
-     * builder.jar module will be resolved to a different version than the one this gradle plugin is
-     * compiled with.  Throw an error and suggest to update this plugin.
-     */
-    private static void checkPluginVersion() {
-        String actualGradlePluginVersion = Version.ANDROID_GRADLE_PLUGIN_VERSION;
-        if(!actualGradlePluginVersion.equals(
-                com.android.build.gradle.internal.Version.ANDROID_GRADLE_PLUGIN_VERSION)) {
-            throw new UnsupportedVersionException(
-                    String.format(
-                            "Plugin version mismatch.  "
-                                    + "'com.android.tools.build:gradle-experimental:%s' was applied, and it "
-                                    + "requires 'com.android.tools.build:gradle:%s'.  Current version is '%s'.  "
-                                    + "Please update to version '%s'.",
-                            Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION,
-                            Version.ANDROID_GRADLE_PLUGIN_VERSION,
-                            com.android.build.gradle.internal.Version.ANDROID_GRADLE_PLUGIN_VERSION,
-                            Version.ANDROID_GRADLE_PLUGIN_VERSION));
         }
     }
 

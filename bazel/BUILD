@@ -324,7 +324,6 @@ maven_repo(
     artifacts = [
         "//tools/data-binding:tools.compiler",
         "//tools/base/build-system/gradle",
-        "//tools/base/build-system/gradle-experimental",
         "//tools/base/build-system/java-lib-plugin/java-lib-model-builder",
     ],
     include_sources = True,

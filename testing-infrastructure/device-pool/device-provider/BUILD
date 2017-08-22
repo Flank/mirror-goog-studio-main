@@ -12,7 +12,6 @@ maven_java_library(
         "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder",
         "//tools/base/build-system/gradle-core",
-        "//tools/base/build-system/gradle-experimental",
         "//tools/base/common:tools.common",
         "//tools/base/third_party:com.google.guava_guava",
     ],

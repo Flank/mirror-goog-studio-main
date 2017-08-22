@@ -77,8 +77,6 @@ public class CheckAll {
         this.project =
                 GradleTestProject.builder()
                         .fromTestProject(projectName)
-                        .useExperimentalGradleVersion(
-                                COMPONENT_MODEL_PROJECTS.contains(projectName))
                         .create();
     }
 
@@ -101,6 +99,10 @@ public class CheckAll {
                     "ndkRsHelloCompute",
                     "renderscriptNdk",
 
+                    // Component model is currently disabled.
+                    "ndkSanAngeles2",
+                    "ndkVariants",
+
                     // These are all right:
                     "genFolderApi", // Has a required injectable property
                     "ndkJniPureSplitLib", // Doesn't build until externalNativeBuild {} is added.
@@ -112,7 +114,4 @@ public class CheckAll {
                     "externalBuildPlugin", // Not an Android Project.
                     "lintCustomRules" // contains integ test for lint itself
                     );
-
-    private static final ImmutableSet<String> COMPONENT_MODEL_PROJECTS =
-            ImmutableSet.of("componentModel", "ndkSanAngeles2", "ndkVariants");
 }

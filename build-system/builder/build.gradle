@@ -71,12 +71,6 @@ sourceSets {
     }
 }
 
-task copyVersionProperties(type: Copy) {
-    from project.file(project.getRootProject().getProperty("versionProperties"))
-    rename({"version.properties"})
-    into project.file("$generatedResources/com/android/builder")
-}
-
 // setup annotation processor output directory
 tasks.compileJava {
     doFirst {
@@ -85,8 +79,6 @@ tasks.compileJava {
     options.compilerArgs += ['-s', generatedSources]
     outputs.dir(generatedSources)
 }
-
-tasks.compileJava.dependsOn copyVersionProperties
 
 jar.manifest.attributes("Builder-Version": version)
 

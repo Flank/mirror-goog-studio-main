@@ -31,7 +31,6 @@
     <orderEntry type="module" module-name="analytics-protos-base" scope="TEST" />
     <orderEntry type="library" name="protobuf" level="project" />
     <orderEntry type="library" name="google-api-client" level="project" />
-    <orderEntry type="module" module-name="gradle-experimental" />
     <orderEntry type="module" module-name="apkzlib" />
     <orderEntry type="module" module-name="instant-run-instrumentation" />
     <orderEntry type="module" module-name="apksig" exported="" />

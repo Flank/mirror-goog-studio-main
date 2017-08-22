@@ -32,6 +32,7 @@ import com.android.builder.model.NativeFile;
 import com.android.builder.model.NativeFolder;
 import com.android.builder.model.NativeSettings;
 import com.android.builder.model.NativeToolchain;
+import com.android.builder.model.Version;
 import com.android.utils.StringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -159,7 +160,7 @@ public class NativeModelBuilder implements ToolingModelBuilder {
             }
 
             return new NativeAndroidProjectImpl(
-                    com.android.builder.Version.ANDROID_GRADLE_PLUGIN_VERSION,
+                    Version.ANDROID_GRADLE_PLUGIN_VERSION,
                     project.getName(),
                     info.buildFiles,
                     info.artifacts,
@@ -167,7 +168,7 @@ public class NativeModelBuilder implements ToolingModelBuilder {
                     ImmutableList.copyOf(info.settingsMap.values()),
                     info.extensions,
                     buildSystems,
-                    com.android.builder.Version.BUILDER_MODEL_API_VERSION);
+                    Version.BUILDER_MODEL_API_VERSION);
         }
 
         @Nullable

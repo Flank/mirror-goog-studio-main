@@ -22,7 +22,6 @@ dependencies {
     compile project(':base:builder')
     compile project(':base:builder-model')
     compile project(':base:gradle')
-    compile project(':base:gradle-experimental')
     compile project(':base:instant-run:instant-run-client')
     compile project(':base:lint')
     compile project(':base:sdk-common')
@@ -55,9 +54,6 @@ dependencies {
         transitive = false
     }
     testCompile(project(':base:gradle')) {
-        transitive = false
-    }
-    testCompile(project(':base:gradle-experimental')) {
         transitive = false
     }
 }
@@ -289,7 +285,6 @@ performanceTest.dependsOn ':publishLocal'
 
 if (tasks.findByName("jacocoTestReport") != null) {
     jacocoTestReport {
-        sourceSets project(':base:gradle-experimental').sourceSets.main
         sourceSets project(':base:gradle').sourceSets.main
         sourceSets project(':base:gradle-core').sourceSets.main
         sourceSets project(':base:builder').sourceSets.main

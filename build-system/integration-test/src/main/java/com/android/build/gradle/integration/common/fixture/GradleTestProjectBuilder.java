@@ -74,14 +74,6 @@ public final class GradleTestProjectBuilder {
         return this;
     }
 
-    /** Use the gradle version for experimental plugin. */
-    public GradleTestProjectBuilder useExperimentalGradleVersion(boolean mode) {
-        if (mode) {
-            targetGradleVersion = GradleTestProject.GRADLE_EXP_TEST_VERSION;
-        }
-        return this;
-    }
-
     /** Create a project without setting ndk.dir in local.properties. */
     public GradleTestProjectBuilder withoutNdk() {
         this.withoutNdk = true;

@@ -18,7 +18,7 @@ package com.android.build.gradle.integration.sanity;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.model.Version;
+import com.android.builder.model.Version;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
@@ -126,29 +126,6 @@ public class JarContentsTest {
                 "com/android/build/api/variant/",
                 "META-INF/");
         expected.putAll(
-                "com/android/tools/build/gradle-experimental",
-                "com/",
-                "com/android/",
-                "com/android/build/",
-                "com/android/build/gradle/",
-                "com/android/build/gradle/internal/",
-                "com/android/build/gradle/internal/dependency/",
-                "com/android/build/gradle/internal/gson/",
-                "com/android/build/gradle/managed/",
-                "com/android/build/gradle/managed/adaptor/",
-                "com/android/build/gradle/model/",
-                "com/android/build/gradle/model/internal/",
-                "com/android/build/gradle/model/version.properties",
-                "com/android/build/gradle/ndk/",
-                "com/android/build/gradle/ndk/internal/",
-                "com/android/build/gradle/tasks/",
-                "META-INF/",
-                "META-INF/gradle-plugins/",
-                "META-INF/gradle-plugins/com.android.model.application.properties",
-                "META-INF/gradle-plugins/com.android.model.external.properties",
-                "META-INF/gradle-plugins/com.android.model.library.properties",
-                "META-INF/gradle-plugins/com.android.model.native.properties");
-        expected.putAll(
                 "com/android/tools/build/builder-test-api",
                 "com/",
                 "com/android/",
@@ -209,7 +186,6 @@ public class JarContentsTest {
                 "com/android/builder/tasks/",
                 "com/android/builder/testing/",
                 "com/android/builder/utils/",
-                "com/android/builder/version.properties",
                 "com/android/dex/",
                 "com/android/dex/util/",
                 "com/android/dx/",
@@ -344,7 +320,6 @@ public class JarContentsTest {
                 "com/android/build/gradle/",
                 "com/android/build/gradle/internal/",
                 "com/android/build/gradle/internal/dsl/",
-                "com/android/build/gradle/internal/version.properties",
                 "META-INF/",
                 "META-INF/gradle-plugins/",
                 "META-INF/gradle-plugins/android-library.properties",
@@ -898,7 +873,6 @@ public class JarContentsTest {
                 "com/android/",
                 "com/android/java/",
                 "com/android/java/model/",
-                "com/android/java/model/version.properties",
                 "META-INF/");
         expected.putAll(
                 "com/android/java/tools/build/java-lib-model-builder",
@@ -994,7 +968,6 @@ public class JarContentsTest {
 
     private static boolean isCurrentVersion(Path path) {
         return path.toString().contains(Version.ANDROID_GRADLE_PLUGIN_VERSION)
-                || path.toString().contains(Version.ANDROID_GRADLE_COMPONENT_PLUGIN_VERSION)
                 || path.toString().contains(Version.ANDROID_TOOLS_BASE_VERSION);
     }
 

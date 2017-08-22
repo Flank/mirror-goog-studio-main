@@ -21,20 +21,14 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.truth.DexClassSubject;
 import com.google.common.io.Files;
 import java.io.File;
-import java.util.Arrays;
-import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 
-@RunWith(FilterableParameterized.class)
 public class DataBindingIncrementalTest {
 
     @Rule
@@ -50,19 +44,10 @@ public class DataBindingIncrementalTest {
     private static final String ACTIVITY_MAIN_JAVA
             = "src/main/java/android/databinding/testapp/MainActivity.java";
 
-    @Parameterized.Parameters(name = "experimental_{0}")
-    public static List<Object[]> parameters() {
-        return Arrays.asList(
-                new Object[][] {
-                    {false}, {true},
-                });
-    }
-
-    public DataBindingIncrementalTest(boolean experimental) {
+    public DataBindingIncrementalTest() {
         project =
                 GradleTestProject.builder()
                         .fromTestProject("databindingIncremental")
-                        .useExperimentalGradleVersion(experimental)
                         .create();
     }
 

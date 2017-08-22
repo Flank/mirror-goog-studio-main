@@ -30,58 +30,31 @@ import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Assemble tests for Cmake. */
-@RunWith(Parameterized.class)
 public class CmakeBasicProjectTest {
-
-    private boolean isModel;
 
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").build())
                     .addFile(HelloWorldJniApp.cmakeLists("."))
-                    .useExperimentalGradleVersion(isModel)
                     .create();
-
-    @Parameterized.Parameters(name = "model = {0}")
-    public static Collection<Object[]> data() {
-        return ImmutableList.of(new Object[]{false}, new Object[]{true});
-    }
-
-    public CmakeBasicProjectTest(boolean isModel) {
-        this.isModel = isModel;
-    }
 
     @Before
     public void setUp() throws IOException {
-        String plugin =
-                isModel
-                        ? "apply plugin: 'com.android.model.application'"
-                        : "apply plugin: 'com.android.application'";
-        String modelBefore = isModel ? "model { " : "";
-        String modelAfter = isModel ? " }" : "";
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
-                        + plugin
-                        + "\n"
-                        + modelBefore
+                        + "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "    android {\n"
                         + "        compileSdkVersion "
@@ -106,21 +79,18 @@ public class CmakeBasicProjectTest {
                         + "          }\n"
                         + "        }\n"
                         + "    }\n"
-                        + modelAfter
                         + "\n");
-        if (!isModel) {
-            TestFileUtils.appendToFile(
-                    project.getBuildFile(),
-                    "\n"
-                            + "android {\n"
-                            + "    applicationVariants.all { variant ->\n"
-                            + "        assert !variant.getExternalNativeBuildTasks().isEmpty()\n"
-                            + "        for (def task : variant.getExternalNativeBuildTasks()) {\n"
-                            + "            assert task.getName() == \"externalNativeBuild\" + variant.getName().capitalize()\n"
-                            + "        }\n"
-                            + "    }\n"
-                            + "}\n");
-        }
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    applicationVariants.all { variant ->\n"
+                        + "        assert !variant.getExternalNativeBuildTasks().isEmpty()\n"
+                        + "        for (def task : variant.getExternalNativeBuildTasks()) {\n"
+                        + "            assert task.getName() == \"externalNativeBuild\" + variant.getName().capitalize()\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
     }
 
     @Test
@@ -213,18 +183,10 @@ public class CmakeBasicProjectTest {
         }
 
         // Change the build file to only have "x86"
-        String plugin =
-                isModel
-                        ? "apply plugin: 'com.android.model.application'"
-                        : "apply plugin: 'com.android.application'";
-        String modelBefore = isModel ? "model { " : "";
-        String modelAfter = isModel ? " }" : "";
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
-                        + plugin
-                        + "\n"
-                        + modelBefore
+                        + "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "    android {\n"
                         + "        defaultConfig {\n"
@@ -236,7 +198,6 @@ public class CmakeBasicProjectTest {
                         + "          }\n"
                         + "        }\n"
                         + "    }\n"
-                        + modelAfter
                         + "\n");
         project.execute("clean");
 

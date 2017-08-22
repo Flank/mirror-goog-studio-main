@@ -25,7 +25,9 @@ import java.util.Properties;
 /** Version strings for this builder-model artifact. */
 public final class Version {
     public static final String ANDROID_GRADLE_PLUGIN_VERSION;
+    public static final String ANDROID_TOOLS_BASE_VERSION;
     public static final int BUILDER_MODEL_API_VERSION;
+    public static final int BUILDER_NATIVE_MODEL_API_VERSION;
 
     static {
         Properties properties = new Properties();
@@ -34,7 +36,10 @@ public final class Version {
         try {
             properties.load(stream);
             ANDROID_GRADLE_PLUGIN_VERSION = properties.getProperty("buildVersion");
+            ANDROID_TOOLS_BASE_VERSION = properties.getProperty("baseVersion");
             BUILDER_MODEL_API_VERSION = Integer.parseInt(properties.getProperty("apiVersion"));
+            BUILDER_NATIVE_MODEL_API_VERSION =
+                    Integer.parseInt(properties.getProperty("nativeApiVersion"));
             stream.close();
         } catch (IOException e) {
             throw new UncheckedIOException(e);

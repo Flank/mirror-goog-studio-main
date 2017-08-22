@@ -19,33 +19,24 @@ package com.android.build.gradle.integration.nativebuild;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
-import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.testutils.apk.Apk;
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Assemble tests for CMake with targets clause. */
-@RunWith(FilterableParameterized.class)
 public class CmakeTargetsTest {
-
-    private boolean isModel;
 
     @Rule
     public GradleTestProject project =
@@ -54,42 +45,28 @@ public class CmakeTargetsTest {
                     .addFile(HelloWorldJniApp.cmakeListsMultiModule("."))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library1", "library1.cpp"))
                     .addFile(HelloWorldJniApp.libraryCpp("src/main/cpp/library2", "library2.cpp"))
-                    .useExperimentalGradleVersion(isModel)
                     .create();
-
-    @Parameterized.Parameters(name = "model = {0}")
-    public static Collection<Object[]> data() {
-        return ImmutableList.of(new Object[]{false}, new Object[]{true});
-    }
-
-    public CmakeTargetsTest(boolean isModel) {
-        this.isModel = isModel;
-    }
 
     @Before
     public void setUp() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                new BuildScriptGenerator(
-                                "apply plugin: '${application_plugin}'\n"
-                                        + "\n"
-                                        + "${model_start}\n"
-                                        + "    android {\n"
-                                        + "        compileSdkVersion "
-                                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                                        + "\n"
-                                        + "        buildToolsVersion \""
-                                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                                        + "\"\n"
-                                        + "        externalNativeBuild {\n"
-                                        + "          cmake {\n"
-                                        + "            path \"CMakeLists.txt\"\n"
-                                        + "          }\n"
-                                        + "        }\n"
-                                        + "    }\n"
-                                        + "${model_end}\n"
-                                        + "\n")
-                        .build(isModel));
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion \""
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "\"\n"
+                        + "    externalNativeBuild {\n"
+                        + "      cmake {\n"
+                        + "        path \"CMakeLists.txt\"\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "\n");
     }
 
     @Test
@@ -115,19 +92,15 @@ public class CmakeTargetsTest {
     public void checkSingleTarget() throws IOException, InterruptedException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                new BuildScriptGenerator(
-                                "${model_start}\n"
-                                        + "    android {\n"
-                                        + "        defaultConfig {\n"
-                                        + "          externalNativeBuild {\n"
-                                        + "              cmake {\n"
-                                        + "                targets.addAll(\"library2\")\n"
-                                        + "              }\n"
-                                        + "          }\n"
-                                        + "        }\n"
-                                        + "    }\n"
-                                        + "${model_end}\n")
-                        .build(isModel));
+                "android {\n"
+                        + "    defaultConfig {\n"
+                        + "      externalNativeBuild {\n"
+                        + "          cmake {\n"
+                        + "            targets.addAll(\"library2\")\n"
+                        + "          }\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "}\n");
 
         project.execute("clean", "assembleDebug");
 

@@ -17,7 +17,7 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
-import com.android.builder.Version;
+import com.android.builder.model.Version;
 import com.google.api.client.googleapis.auth.oauth2.GoogleCredential;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.HttpTransport;

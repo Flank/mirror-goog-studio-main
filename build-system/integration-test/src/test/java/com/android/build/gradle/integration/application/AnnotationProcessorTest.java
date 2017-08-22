@@ -21,7 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
-import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
@@ -29,7 +28,6 @@ import com.android.build.gradle.integration.common.fixture.app.AnnotationProcess
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
-import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidArtifact;
@@ -39,30 +37,15 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.File;
-import java.util.Arrays;
-import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /**
  * Tests for annotation processor.
  */
-@RunWith(FilterableParameterized.class)
 public class AnnotationProcessorTest {
-    @Parameterized.Parameters(name = "forComponentPlugin={0}")
-    public static Collection<Object[]> data() {
-        return Arrays.asList(
-                new Object[][] {
-                    {false}, {true},
-                });
-    }
-
-
-    private final boolean forComponentPlugin;
 
     @Rule
     public GradleTestProject project;
@@ -70,8 +53,7 @@ public class AnnotationProcessorTest {
     @Rule
     public Adb adb = new Adb();
 
-    public AnnotationProcessorTest(boolean forComponentPlugin) {
-        this.forComponentPlugin = forComponentPlugin;
+    public AnnotationProcessorTest() {
 
         project = GradleTestProject.builder()
                 .fromTestApp(new MultiModuleTestProject(
@@ -80,7 +62,6 @@ public class AnnotationProcessorTest {
                                 ":lib", AnnotationProcessorLib.createLibrary(),
                                 ":lib-compiler", AnnotationProcessorLib.createCompiler()
                                 )))
-                .useExperimentalGradleVersion(forComponentPlugin)
                 .create();
     }
     private static AndroidTestApp sApp = HelloWorldApp.noBuildFile();
@@ -155,32 +136,29 @@ public class AnnotationProcessorTest {
 
     @Before
     public void setUp() throws Exception {
-        String buildScript = new BuildScriptGenerator(
+        String buildScript =
                 "\n"
                         + "apply from: \"../../commonHeader.gradle\"\n"
                         + "buildscript { apply from: \"../../commonBuildScript.gradle\" }\n"
                         + "apply from: \"../../commonLocalRepo.gradle\"\n"
                         + "\n"
-                        + "apply plugin: '${application_plugin}'\n"
+                        + "apply plugin: 'com.android.application'\n"
                         + "\n"
-                        + "${model_start}"
                         + "android {\n"
-                        + "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n"
-                        + "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    buildToolsVersion '"
+                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                        + "'\n"
                         + "    defaultConfig {\n"
                         + "        javaCompileOptions {\n"
                         + "            annotationProcessorOptions {\n"
-                        + "                ${argument}\n"
+                        + "                argument \"value\", \"Hello\"\n"
                         + "            }\n"
                         + "        }\n"
                         + "    }\n"
-                        + "}\n"
-                        + "${model_end}\n")
-                .addPattern(
-                        "argument",
-                        "argument \"value\", \"Hello\"",
-                        "arguments { create(\"value\") { value \"Hello\" }\n }")
-                .build(forComponentPlugin);
+                        + "}\n";
         Files.write(buildScript, project.getSubproject(":app").file("build.gradle"), Charsets.UTF_8);
     }
 
@@ -224,16 +202,6 @@ public class AnnotationProcessorTest {
 
     @Test
     public void testBuild() throws Exception {
-        if (forComponentPlugin) {
-            Files.append(
-                    "\n"
-                            + "configurations {\n"
-                            + "    testAnnotationProcessor\n"
-                            + "    androidTestAnnotationProcessor\n"
-                            + "}\n",
-                    project.getSubproject(":app").getBuildFile(),
-                    Charsets.UTF_8);
-        }
         Files.append(
                 "\n"
                         + "dependencies {\n"
@@ -283,23 +251,19 @@ public class AnnotationProcessorTest {
 
         TestFileUtils.appendToFile(
                 project.getSubproject(":app").getBuildFile(),
-                new BuildScriptGenerator(
-                                "${model_start}\n"
-                                        + "    android {\n"
-                                        + "        defaultConfig {\n"
-                                        + "            javaCompileOptions {\n"
-                                        + "                annotationProcessorOptions {\n"
-                                        + "                    includeCompileClasspath = true\n"
-                                        + "                }\n"
-                                        + "            }\n"
-                                        + "        }\n"
-                                        + "    }\n"
-                                        + "${model_end}\n"
-                                        + "dependencies {\n"
-                                        + "    compile project(':lib-compiler')\n"
-                                        + "    annotationProcessor files('empty.jar')\n"
-                                        + "}\n")
-                        .build(forComponentPlugin));
+                "    android {\n"
+                        + "        defaultConfig {\n"
+                        + "            javaCompileOptions {\n"
+                        + "                annotationProcessorOptions {\n"
+                        + "                    includeCompileClasspath = true\n"
+                        + "                }\n"
+                        + "            }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "dependencies {\n"
+                        + "    compile project(':lib-compiler')\n"
+                        + "    annotationProcessor files('empty.jar')\n"
+                        + "}\n");
 
         project.executor().run("assembleDebug");
     }

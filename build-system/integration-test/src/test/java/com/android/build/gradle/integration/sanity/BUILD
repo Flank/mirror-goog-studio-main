@@ -3,7 +3,7 @@ java_library(
     srcs = glob(["**/*.java"]),
     deps = [
         "//tools/base/annotations",
-        "//tools/base/build-system/gradle-experimental",
+        "//tools/base/build-system/builder-model",
         "//tools/base/build-system/integration-test",
         "//tools/base/common:tools.common",
         "//tools/base/testutils:tools.testutils",

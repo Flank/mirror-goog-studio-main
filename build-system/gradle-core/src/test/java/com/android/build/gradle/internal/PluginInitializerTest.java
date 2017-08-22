@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
-import com.android.builder.Version;
+import com.android.builder.model.Version;
 import com.android.ide.common.util.JvmWideVariable;
 import com.google.common.base.Verify;
 import com.google.common.reflect.TypeToken;

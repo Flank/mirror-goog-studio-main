@@ -19,6 +19,7 @@ package com.android.build.gradle.internal;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.builder.model.Version;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;

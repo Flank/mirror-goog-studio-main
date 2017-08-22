@@ -22,7 +22,6 @@ maven_repo(
     artifacts = [
         "//tools/data-binding:tools.compiler",
         "//tools/base/build-system/gradle",
-        "//tools/base/build-system/gradle-experimental",
         "//tools/base/devicelib:tools.devicelib",
         "//tools/base/fakeadbserver:tools.fakeadbserver",
         "//tools/base/lint/libs/lint-tests",

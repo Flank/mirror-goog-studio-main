@@ -20,8 +20,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
-import com.android.builder.Version;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.Version;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Files;

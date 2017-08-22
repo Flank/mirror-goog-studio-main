@@ -50,7 +50,6 @@ public class CmakeGradleTargetsTest {
                     .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").build())
                     .addFile(HelloWorldJniApp.cmakeListsWithExecutables("."))
                     .addFile(HelloWorldJniApp.executableCpp("src/main/cxx/executable", "main.cpp"))
-                    .useExperimentalGradleVersion(false)
                     .create();
 
     @Parameterized.Parameters(name = "gradle target(s) = {0}")

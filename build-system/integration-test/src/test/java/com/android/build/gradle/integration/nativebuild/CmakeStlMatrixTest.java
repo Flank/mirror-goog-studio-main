@@ -32,9 +32,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
@@ -47,7 +44,6 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class CmakeStlMatrixTest {
 
-    private boolean isModel;
     private String stl;
 
     @Rule
@@ -55,47 +51,30 @@ public class CmakeStlMatrixTest {
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldJniApp.builder().withNativeDir("cxx").build())
                     .addFile(HelloWorldJniApp.cmakeLists("."))
-                    .useExperimentalGradleVersion(isModel)
                     .create();
 
-    @Parameterized.Parameters(name = "model = {0} stl = {1}")
+    @Parameterized.Parameters(name = "stl = {0}")
     public static Collection<Object[]> data() {
         return ImmutableList.of(
-                        new Object[]{false, "system"},
-                        new Object[]{false, "c++_shared"},
-                        new Object[]{false, "gnustl_shared"},
-                        new Object[]{false, "stlport_shared"},
-                        new Object[]{false, "c++_static"},
-                        new Object[]{false, "gnustl_static"},
-                        new Object[]{false, "stlport_static"},
-                        new Object[]{true, "system"},
-                        new Object[]{true, "c++_shared"},
-                        new Object[]{true, "gnustl_shared"},
-                        new Object[]{true, "stlport_shared"},
-                        new Object[]{true, "c++_static"},
-                        new Object[]{true, "gnustl_static"},
-                        new Object[]{true, "stlport_static"});
+                new Object[] {"system"},
+                new Object[] {"c++_shared"},
+                new Object[] {"gnustl_shared"},
+                new Object[] {"stlport_shared"},
+                new Object[] {"c++_static"},
+                new Object[] {"gnustl_static"},
+                new Object[] {"stlport_static"});
     }
 
-    public CmakeStlMatrixTest(boolean isModel, String stl) {
-        this.isModel = isModel;
+    public CmakeStlMatrixTest(String stl) {
         this.stl = stl;
     }
 
     @Before
     public void setUp() throws IOException {
-        String plugin =
-                isModel
-                        ? "apply plugin: 'com.android.model.application'"
-                        : "apply plugin: 'com.android.application'";
-        String modelBefore = isModel ? "model { " : "";
-        String modelAfter = isModel ? " }" : "";
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
-                        + plugin
-                        + "\n"
-                        + modelBefore
+                        + "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "    android {\n"
                         + "        compileSdkVersion "
@@ -123,21 +102,18 @@ public class CmakeStlMatrixTest {
                         + "          }\n"
                         + "        }\n"
                         + "    }\n"
-                        + modelAfter
                         + "\n");
-        if (!isModel) {
-            TestFileUtils.appendToFile(
-                    project.getBuildFile(),
-                    "\n"
-                            + "android {\n"
-                            + "    applicationVariants.all { variant ->\n"
-                            + "        assert !variant.getExternalNativeBuildTasks().isEmpty()\n"
-                            + "        for (def task : variant.getExternalNativeBuildTasks()) {\n"
-                            + "            assert task.getName() == \"externalNativeBuild\" + variant.getName().capitalize()\n"
-                            + "        }\n"
-                            + "    }\n"
-                            + "}\n");
-        }
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android {\n"
+                        + "    applicationVariants.all { variant ->\n"
+                        + "        assert !variant.getExternalNativeBuildTasks().isEmpty()\n"
+                        + "        for (def task : variant.getExternalNativeBuildTasks()) {\n"
+                        + "            assert task.getName() == \"externalNativeBuild\" + variant.getName().capitalize()\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n");
     }
 
     @Test
@@ -238,18 +214,10 @@ public class CmakeStlMatrixTest {
         }
 
         // Change the build file to only have "x86"
-        String plugin =
-                isModel
-                        ? "apply plugin: 'com.android.model.application'"
-                        : "apply plugin: 'com.android.application'";
-        String modelBefore = isModel ? "model { " : "";
-        String modelAfter = isModel ? " }" : "";
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
-                        + plugin
-                        + "\n"
-                        + modelBefore
+                        + "apply plugin: 'com.android.application'\n"
                         + "\n"
                         + "    android {\n"
                         + "        defaultConfig {\n"
@@ -261,7 +229,6 @@ public class CmakeStlMatrixTest {
                         + "          }\n"
                         + "        }\n"
                         + "    }\n"
-                        + modelAfter
                         + "\n");
         project.execute("clean");
 

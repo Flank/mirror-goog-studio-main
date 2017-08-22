@@ -44,7 +44,6 @@ public class ConnectedCheckTest {
     public ConnectedCheckTest() {
         project = GradleTestProject.builder()
                 .fromTestProject("appWithTests")
-                .useExperimentalGradleVersion(false)
                 .create();
     }
 

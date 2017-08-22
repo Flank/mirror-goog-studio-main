@@ -37,10 +37,6 @@ public class DevicePoolPlugin implements Plugin<Project> {
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
-        } else if (project.getPlugins().hasPlugin("com.android.model.application") ||
-                project.getPlugins().hasPlugin("com.android.model.library")) {
-            // Uses things only present in gradle-experimental, so we include it indirectly.
-            project.getPluginManager().apply(DevicePoolComponentModelPlugin.class);
 
         } else {
             throw new GradleException(

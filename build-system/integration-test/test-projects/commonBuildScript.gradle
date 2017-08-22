@@ -21,7 +21,6 @@ project.buildscript { buildscript ->
     apply from: "$commonScriptFolder/commonLocalRepo.gradle", to:buildscript
     dependencies {
         classpath "com.android.tools.build:gradle:$rootProject.buildVersion"
-        classpath "com.android.tools.build:gradle-experimental:$rootProject.experimentalVersion"
         classpath 'com.android.tools.internal.build.test:devicepool:0.1'
     }
 }
