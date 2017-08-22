@@ -261,6 +261,7 @@ public class JarContentsTest {
                 "com/android/tools/r8/naming/signature/",
                 "com/android/tools/r8/optimize/",
                 "com/android/tools/r8/shaking/",
+                "com/android/tools/r8/shaking/protolite/",
                 "com/android/tools/r8/utils/",
                 "desugar_deploy.jar",
                 "desugar_deploy.jar:com/",
