@@ -14,3 +14,19 @@ java_library(
     visibility = ["//visibility:public"],
     exports = ["//tools/base/third_party:com.google.auto.value_auto-value"],
 )
+
+load("//tools/base/bazel:maven.bzl", "maven_repo")
+
+maven_repo(
+    name = "gmaven",
+    artifacts = [
+        "//tools/data-binding:tools.compiler",
+        "//tools/base/build-system/gradle",
+        "//tools/base/build-system/gradle-experimental",
+        "//tools/base/devicelib:tools.devicelib",
+        "//tools/base/lint/libs/lint-tests",
+        "//tools/base/testutils:tools.testutils",
+    ],
+    include_sources = True,
+    visibility = ["//visibility:public"],
+)

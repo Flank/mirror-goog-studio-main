@@ -1055,9 +1055,7 @@ public class JarContentsTest {
                     Splitter.on(File.pathSeparatorChar).split(customRepo).iterator().next());
         }
         return FileSystems.newFileSystem(
-                        TestUtils.getWorkspaceFile("tools/base/bazel/offline_repo_repo.zip")
-                                .toPath(),
-                        null)
+                        TestUtils.getWorkspaceFile("tools/base/gmaven_repo.zip").toPath(), null)
                 .getPath("/");
     }
 
