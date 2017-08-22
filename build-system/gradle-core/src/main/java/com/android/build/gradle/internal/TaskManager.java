@@ -54,7 +54,6 @@ import static com.android.builder.core.VariantType.FEATURE;
 import static com.android.builder.core.VariantType.LIBRARY;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Verify.verifyNotNull;
 
 import android.databinding.tool.DataBindingBuilder;
 import android.databinding.tool.DataBindingCompilerArgs;
@@ -1046,7 +1045,8 @@ public abstract class TaskManager {
                                                     .getExternalNativeJsonGenerator()
                                                     .getObjFolder())
                                     .setDependency(
-                                            variantScope.getExternalNativeBuildTask().getName())
+                                            checkNotNull(variantScope.getExternalNativeBuildTask())
+                                                    .getName())
                                     .build());
         }
 
@@ -1683,7 +1683,7 @@ public abstract class TaskManager {
                         project.getProjectDir(),
                         project.getBuildDir(),
                         pathResolution.externalNativeBuildDir,
-                        pathResolution.buildSystem,
+                        checkNotNull(pathResolution.buildSystem),
                         pathResolution.makeFile,
                         androidBuilder,
                         sdkHandler,
@@ -1848,8 +1848,8 @@ public abstract class TaskManager {
         createDependencyStreams(tasks, variantScope);
 
         // Add a task to process the manifest
-        createProcessTestManifestTask(tasks, variantScope,
-                variantScope.getTestedVariantData().getScope());
+        createProcessTestManifestTask(
+                tasks, variantScope, checkNotNull(variantScope.getTestedVariantData()).getScope());
 
         // Add a task to create the res values
         createGenerateResValuesTask(tasks, variantScope);
@@ -2068,7 +2068,7 @@ public abstract class TaskManager {
     protected void createConnectedTestForVariant(
             @NonNull TaskFactory tasks,
             @NonNull final VariantScope variantScope) {
-        final BaseVariantData baseVariantData = variantScope.getTestedVariantData();
+        final BaseVariantData baseVariantData = checkNotNull(variantScope.getTestedVariantData());
         final TestVariantData testVariantData = (TestVariantData) variantScope.getVariantData();
 
         boolean isLibrary =
@@ -2524,7 +2524,7 @@ public abstract class TaskManager {
                             dexingType,
                             preDexEnabled,
                             project.files(variantScope.getMainDexListFile()),
-                            verifyNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
+                            checkNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
                             androidBuilder.getDexByteCodeConverter(),
                             androidBuilder.getErrorReporter(),
                             variantScope.getMinSdkVersion().getFeatureLevel());
@@ -2664,7 +2664,7 @@ public abstract class TaskManager {
         VariantType type = variantData.getType();
         boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
         if (isTest && !extension.getDataBinding().isEnabledForTests()) {
-            BaseVariantData testedVariantData = variantScope.getTestedVariantData();
+            BaseVariantData testedVariantData = checkNotNull(variantScope.getTestedVariantData());
             if (testedVariantData.getType() != LIBRARY) {
                 return;
             }
@@ -2702,7 +2702,7 @@ public abstract class TaskManager {
         VariantType type = scope.getVariantData().getType();
         boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
         if (isTest && !extension.getDataBinding().isEnabledForTests()) {
-            BaseVariantData testedVariantData = scope.getTestedVariantData();
+            BaseVariantData testedVariantData = checkNotNull(scope.getTestedVariantData());
             if (testedVariantData.getType() != LIBRARY) {
                 return;
             }
@@ -2743,7 +2743,7 @@ public abstract class TaskManager {
             final BaseVariantData artifactVariantData;
             final boolean isTest;
             if (variantData.getType() == VariantType.ANDROID_TEST) {
-                artifactVariantData = scope.getTestedVariantData();
+                artifactVariantData = checkNotNull(scope.getTestedVariantData());
                 isTest = true;
             } else {
                 artifactVariantData = variantData;
@@ -3127,7 +3127,7 @@ public abstract class TaskManager {
                 t -> {
                     variantScope.addTaskOutput(
                             TaskOutputHolder.TaskOutputType.APK_MAPPING,
-                            transform.getMappingFile(),
+                            checkNotNull(transform.getMappingFile()),
                             t.getName());
 
                     t.optionalDependsOn(taskFactory, mappingFileCollection);
