@@ -64,7 +64,6 @@ public class JarContentsTest {
     private static final Set<String> IGNORED_ARTIFACTS_BAZEL =
             ImmutableSet.of(
                     "archquery",
-                    "builder",
                     "chimpchat",
                     "fakeadbserver",
                     "inspector",
@@ -895,6 +894,9 @@ public class JarContentsTest {
                                     "wireless/android/",
                                     "wireless/android/instantapps/",
                                     "wireless/android/instantapps/sdk/")
+                            .putAll(
+                                    "com/android/tools/build/builder",
+                                    "desugar_deploy.jar:com/google/devtools/build/android/desugar/runtime/")
                             .build();
 
             EXPECTED =
@@ -993,6 +995,12 @@ public class JarContentsTest {
         if (fileName.endsWith(".proto")) {
             // Gradle packages the proto files in jars.
             // TODO: Can we remove these from the jars? (b/64921827)
+            return false;
+        }
+
+        if (fileName.equals("build-data.properties")) {
+            // Bazel packages this file in the deploy jar for desugar.
+            //TODO: Can we remove these from the jars? (b/64921827)
             return false;
         }
 
