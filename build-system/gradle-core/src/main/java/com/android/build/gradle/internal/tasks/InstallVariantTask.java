@@ -64,7 +64,7 @@ import org.gradle.api.tasks.TaskAction;
  * Task installing an app variant. It looks at connected device and install the best matching
  * variant output on each device.
  */
-public class InstallVariantTask extends BaseTask {
+public class InstallVariantTask extends AndroidBuilderTask {
 
     private Supplier<File> adbExe;
     private Supplier<File> splitSelectExe;

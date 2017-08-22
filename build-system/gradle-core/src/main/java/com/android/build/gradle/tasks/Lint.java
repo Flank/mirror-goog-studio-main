@@ -27,7 +27,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.tools.lint.LintCliFlags;
@@ -66,7 +66,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-public class Lint extends BaseTask {
+public class Lint extends AndroidBuilderTask {
     /**
      * Whether lint should attempt to do deep analysis of libraries. E.g. when
      * building up the project graph, when it encounters an AndroidLibrary or JavaLibrary

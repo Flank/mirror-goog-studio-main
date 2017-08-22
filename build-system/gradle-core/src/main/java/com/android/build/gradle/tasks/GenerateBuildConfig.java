@@ -19,7 +19,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.compiling.BuildConfigGenerator;
@@ -39,7 +39,7 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 @CacheableTask
-public class GenerateBuildConfig extends BaseTask {
+public class GenerateBuildConfig extends AndroidBuilderTask {
 
     // ----- PUBLIC TASK API -----
 

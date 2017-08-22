@@ -26,8 +26,8 @@ import com.android.build.gradle.internal.scope.InstantAppOutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.ApplicationId;
-import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,7 +45,7 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 /** Task to bundle a bundle of feature APKs. */
-public class BundleInstantApp extends DefaultAndroidTask {
+public class BundleInstantApp extends AndroidVariantTask {
 
     @TaskAction
     public void taskAction() throws IOException {

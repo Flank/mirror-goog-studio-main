@@ -20,8 +20,7 @@ import com.android.build.gradle.internal.dependency.VariantAttr
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.DefaultAndroidTask
-import com.android.builder.model.MavenCoordinates
+import com.android.build.gradle.internal.tasks.AndroidVariantTask
 import com.android.utils.FileUtils
 import com.google.common.base.Charsets
 import com.google.common.base.Joiner
@@ -36,16 +35,12 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult
 import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.CompileClasspath
-import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
-import org.gradle.api.tasks.PathSensitive
-import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier
 
 /** Task to write the list of transitive dependencies.  */
 @CacheableTask
-open class FeatureSplitTransitiveDepsWriterTask : DefaultAndroidTask() {
+open class FeatureSplitTransitiveDepsWriterTask : AndroidVariantTask() {
 
     // list of runtime classpath.
     private lateinit var runtimeJars: ArtifactCollection

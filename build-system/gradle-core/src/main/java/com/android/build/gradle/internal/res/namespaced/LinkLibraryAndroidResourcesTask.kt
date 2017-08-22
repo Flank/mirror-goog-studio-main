@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.scope.BuildOutputs
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.BaseTask
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -48,7 +48,7 @@ import java.util.function.Supplier
  * Task to link the resources in a library project into an AAPT2 static library.
  */
 @CacheableTask
-open class LinkLibraryAndroidResourcesTask : BaseTask() {
+open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
 
     @get:InputFiles lateinit var manifestFileDirectory: FileCollection
     @get:InputFiles lateinit var inputResourcesDir: FileCollection

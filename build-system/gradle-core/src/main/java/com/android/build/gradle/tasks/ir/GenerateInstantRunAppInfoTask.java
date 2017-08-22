@@ -36,7 +36,7 @@ import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.utils.XmlUtils;
 import java.io.BufferedOutputStream;
@@ -66,7 +66,7 @@ import org.xml.sax.SAXException;
  * Reads the merged manifest file and creates an AppInfo class listing the applicationId and
  * application classes (if any).
  */
-public class GenerateInstantRunAppInfoTask extends BaseTask {
+public class GenerateInstantRunAppInfoTask extends AndroidBuilderTask {
 
     private static final String SERVER_PACKAGE = "com/android/tools/ir/server";
 

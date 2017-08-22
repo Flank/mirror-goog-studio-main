@@ -36,8 +36,8 @@ import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.tasks.ApplicationId;
-import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
@@ -63,10 +63,8 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
-/**
- * Generates all metadata (like AndroidManifest.xml) necessary for a ABI dimension split APK.
- */
-public class GenerateSplitAbiRes extends BaseTask {
+/** Generates all metadata (like AndroidManifest.xml) necessary for a ABI dimension split APK. */
+public class GenerateSplitAbiRes extends AndroidBuilderTask {
 
     private String applicationId;
     private String outputBaseName;

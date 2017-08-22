@@ -19,7 +19,7 @@ package com.android.build.gradle.tasks.ir;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
@@ -39,7 +39,7 @@ import org.gradle.api.tasks.TaskAction;
  * Task to extract the FastDeploy runtime from the gradle-core jar file into a folder to be picked
  * up for co-packaging in the resulting application APK.
  */
-public class FastDeployRuntimeExtractorTask extends DefaultAndroidTask {
+public class FastDeployRuntimeExtractorTask extends AndroidVariantTask {
 
     private File outputFile;
 

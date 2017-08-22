@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import java.io.File;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
@@ -29,7 +29,7 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
 /** Task to check if Proguard needs to be enabled for test plugin. */
-public class CheckTestedAppObfuscation extends BaseTask {
+public class CheckTestedAppObfuscation extends AndroidVariantTask {
     FileCollection mappingFile;
 
     @InputFiles

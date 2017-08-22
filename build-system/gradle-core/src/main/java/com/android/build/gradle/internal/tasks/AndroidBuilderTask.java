@@ -25,7 +25,8 @@ import com.google.common.base.Preconditions;
 import org.gradle.api.tasks.Internal;
 
 
-public abstract class BaseTask extends DefaultAndroidTask {
+/** Base android task with an Android Builder task. */
+public abstract class AndroidBuilderTask extends AndroidVariantTask {
 
     @Nullable
     private AndroidBuilder androidBuilder;

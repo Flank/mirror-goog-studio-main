@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.ide.common.build.ApkData;
 import com.android.ide.common.build.ApkInfo;
 import com.google.common.base.Charsets;
@@ -47,10 +47,8 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
-/**
- * Checks that the manifest file has not changed since the last instant run build.
- */
-public class CheckManifestInInstantRunMode extends DefaultAndroidTask {
+/** Checks that the manifest file has not changed since the last instant run build. */
+public class CheckManifestInInstantRunMode extends AndroidVariantTask {
 
     private static final Logger LOG = Logging.getLogger(CheckManifestInInstantRunMode.class);
 

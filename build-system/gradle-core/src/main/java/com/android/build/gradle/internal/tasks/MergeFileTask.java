@@ -24,10 +24,8 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
-/**
- * Task to merge files. This appends all the files together into an output file.
- */
-public class MergeFileTask extends DefaultAndroidTask {
+/** Task to merge files. This appends all the files together into an output file. */
+public class MergeFileTask extends AndroidVariantTask {
 
     private Set<File> mInputFiles;
 

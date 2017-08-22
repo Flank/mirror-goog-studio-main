@@ -20,7 +20,8 @@ import com.android.annotations.Nullable;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Internal;
 
-public abstract class DefaultAndroidTask extends DefaultTask {
+/** Base Android task with a variant name for analytics. */
+public abstract class AndroidVariantTask extends DefaultTask {
 
     @Nullable
     private String variantName;

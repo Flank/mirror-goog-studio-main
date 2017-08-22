@@ -47,10 +47,8 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
-/**
- * Task to generate micro app data res file.
- */
-public class GenerateApkDataTask extends BaseTask {
+/** Task to generate micro app data res file. */
+public class GenerateApkDataTask extends AndroidBuilderTask {
 
     @Nullable private FileCollection apkDirectoryFileCollection;
 

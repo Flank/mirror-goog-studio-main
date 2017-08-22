@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.builder.model.ApiVersion;
 import com.android.ide.common.build.ApkData;
@@ -48,7 +48,7 @@ import org.gradle.api.tasks.TaskAction;
  * density and the given list of screen sizes.
  */
 @CacheableTask
-public class CompatibleScreensManifest extends DefaultAndroidTask {
+public class CompatibleScreensManifest extends AndroidVariantTask {
 
     private Set<String> screenSizes;
     private File outputFolder;

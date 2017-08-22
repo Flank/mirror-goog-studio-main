@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -31,7 +31,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.tooling.BuildException;
 
 /** Task to write the FeatureSplitPackageIds file. */
-public class FeatureSplitPackageIdsWriterTask extends BaseTask {
+public class FeatureSplitPackageIdsWriterTask extends AndroidVariantTask {
 
     FileCollection input;
     File outputDirectory;

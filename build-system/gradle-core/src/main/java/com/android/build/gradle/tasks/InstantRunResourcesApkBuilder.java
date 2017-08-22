@@ -29,7 +29,7 @@ import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.packaging.PackagerException;
 import com.android.ide.common.build.ApkData;
@@ -54,7 +54,7 @@ import org.gradle.api.tasks.TaskAction;
  * <p>Right now, there is only one packaged resources file in InstantRun mode, but we could decide
  * to slice the resources in the future.
  */
-public class InstantRunResourcesApkBuilder extends BaseTask {
+public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
 
     @VisibleForTesting public static final String APK_FILE_NAME = "resources";
 

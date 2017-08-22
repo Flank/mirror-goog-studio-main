@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.tasks.featuresplit;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import java.io.File;
 import java.io.IOException;
 import org.gradle.api.tasks.Input;
@@ -29,7 +29,7 @@ import org.gradle.api.tasks.TaskAction;
 /**
  * Task that writes the FeatureSplitDeclaration file and publish it for other modules to consume.
  */
-public class FeatureSplitDeclarationWriterTask extends BaseTask {
+public class FeatureSplitDeclarationWriterTask extends AndroidVariantTask {
 
     @Input String uniqueIdentifier;
 

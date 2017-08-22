@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.scope.OutputScope;
 import com.android.build.gradle.internal.scope.PackagingScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.utils.FileUtils;
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +38,7 @@ import org.gradle.api.tasks.TaskAction;
  * <p>This is useful when having configuration or feature splits which are located in different
  * folders since they are produced by different tasks.
  */
-public class CopyOutputs extends BaseTask {
+public class CopyOutputs extends AndroidVariantTask {
 
     FileCollection fullApks;
     FileCollection abiSplits;

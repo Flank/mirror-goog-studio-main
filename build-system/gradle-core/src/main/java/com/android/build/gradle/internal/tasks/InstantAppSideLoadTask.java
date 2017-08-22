@@ -54,7 +54,7 @@ import org.gradle.api.tasks.TaskAction;
  * Task side loading an instant app variant. It looks at connected device, checks if preO or postO
  * and either multi-install the feature APKs or upload the bundle.
  */
-public class InstantAppSideLoadTask extends BaseTask {
+public class InstantAppSideLoadTask extends AndroidBuilderTask {
 
     private Supplier<File> adbExe;
 

@@ -23,7 +23,7 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
-import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import java.io.IOException;
 import org.gradle.api.Task;
 import org.gradle.api.logging.Logger;
@@ -41,7 +41,7 @@ import org.gradle.api.tasks.TaskAction;
  * cold swap is triggered, the main APK must be rebuilt (even if the resources were changed in a
  * previous build).
  */
-public class PreColdSwapTask extends DefaultAndroidTask {
+public class PreColdSwapTask extends AndroidVariantTask {
 
     private static final Logger LOG = Logging.getLogger(PreColdSwapTask.class);
 

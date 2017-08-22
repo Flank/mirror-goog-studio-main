@@ -23,10 +23,8 @@ import java.util.Set;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 
-/**
- * Base task for tasks that require an NdkConfig
- */
-public class NdkTask extends BaseTask {
+/** Base task for tasks that require an NdkConfig */
+public class NdkTask extends AndroidBuilderTask {
 
     @Nullable
     private CoreNdkOptions ndkConfig;

@@ -21,15 +21,15 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.tasks.BaseTask;
 import com.android.builder.utils.FileCache;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.tasks.TaskAction;
 
 /** Task to clean the build cache. */
-public class CleanBuildCache extends BaseTask {
+public class CleanBuildCache extends DefaultTask {
 
     @Nullable private FileCache buildCache;
 
@@ -70,7 +70,6 @@ public class CleanBuildCache extends BaseTask {
 
             task.setDescription("Deletes the build cache directory.");
             task.setGroup(BasePlugin.BUILD_GROUP);
-            task.setVariantName("");
             task.setBuildCache(globalScope.getBuildCache());
         }
     }

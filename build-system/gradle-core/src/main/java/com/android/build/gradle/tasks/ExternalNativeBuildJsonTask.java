@@ -19,16 +19,14 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.ide.common.process.ProcessException;
 import java.io.IOException;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.TaskAction;
 
-/**
- * Task wrapper around ExternalNativeJsonGenerator.
- */
-public class ExternalNativeBuildJsonTask extends BaseTask {
+/** Task wrapper around ExternalNativeJsonGenerator. */
+public class ExternalNativeBuildJsonTask extends AndroidVariantTask {
 
     private ExternalNativeJsonGenerator generator;
 

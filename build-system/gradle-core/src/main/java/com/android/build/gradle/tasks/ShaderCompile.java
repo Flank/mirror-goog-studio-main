@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.builder.internal.compiler.ShaderProcessor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.utils.FileUtils;
@@ -42,7 +42,7 @@ import org.gradle.api.tasks.util.PatternSet;
 
 /** Task to compile Shaders */
 @CacheableTask
-public class ShaderCompile extends BaseTask {
+public class ShaderCompile extends AndroidBuilderTask {
 
     private static final PatternSet PATTERN_SET = new PatternSet()
             .include("**/*." + ShaderProcessor.EXT_VERT)

@@ -27,9 +27,9 @@ import org.gradle.api.tasks.TaskAction;
 /**
  * This is a stub task.
  *
- * TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
+ * <p>TODO - should compile src/lint/java from src/lint/java and jar it into build/lint/lint.jar
  */
-public class LintCompile extends BaseTask {
+public class LintCompile extends AndroidBuilderTask {
 
     private File outputDirectory;
 

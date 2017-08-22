@@ -56,7 +56,7 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
  *
  * }</pre>
  */
-public abstract class IncrementalTask extends BaseTask {
+public abstract class IncrementalTask extends AndroidBuilderTask {
 
     public static final String MARKER_NAME = "build_was_incremental";
 

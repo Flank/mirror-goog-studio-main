@@ -40,9 +40,9 @@ import org.gradle.tooling.BuildException;
  * A validate task that creates the debug keystore if it's missing. It only creates it if it's in
  * the default debug keystore location.
  *
- * It's linked to a given SigningConfig
+ * <p>It's linked to a given SigningConfig
  */
-public class ValidateSigningTask extends BaseTask {
+public class ValidateSigningTask extends AndroidBuilderTask {
 
     private SigningConfig signingConfig;
 

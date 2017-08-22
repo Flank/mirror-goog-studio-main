@@ -28,7 +28,7 @@ import org.gradle.api.tasks.TaskAction;
 
 /** Class that checks the presence of the manifest. */
 @CacheableTask
-public class CheckManifest extends DefaultAndroidTask {
+public class CheckManifest extends AndroidVariantTask {
 
     private File manifest;
     private Boolean isOptional;

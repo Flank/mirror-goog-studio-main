@@ -21,7 +21,7 @@ import com.android.build.gradle.internal.scope.OutputScope
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.BaseTask
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.builder.core.VariantType
 import com.android.builder.internal.aapt.AaptOptions
 import com.android.builder.internal.aapt.AaptPackageConfig
@@ -49,7 +49,7 @@ import java.io.File
  * as well as the generated R classes for this app that can be compiled against.
  */
 @CacheableTask
-open class ProcessAndroidAppResourcesTask : BaseTask() {
+open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
 
     @get:InputFiles lateinit var manifestFileDirectory: FileCollection
     @get:InputFiles lateinit var thisSubProjectStaticLibrary: FileCollection

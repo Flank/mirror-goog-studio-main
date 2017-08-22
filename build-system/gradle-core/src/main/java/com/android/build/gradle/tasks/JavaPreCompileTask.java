@@ -27,7 +27,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.tasks.factory.AbstractCompilesUtil;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -54,7 +54,7 @@ import org.gradle.api.tasks.TaskAction;
 
 /** Tasks to perform necessary action before a JavaCompile. */
 @CacheableTask
-public class JavaPreCompileTask extends BaseTask {
+public class JavaPreCompileTask extends AndroidBuilderTask {
 
     @VisibleForTesting static final String DATA_BINDING_SPEC = "android.databinding.DataBinding";
 

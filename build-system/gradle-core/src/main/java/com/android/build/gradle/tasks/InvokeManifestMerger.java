@@ -17,7 +17,7 @@
 package com.android.build.gradle.tasks;
 
 import com.android.build.gradle.internal.LoggerWrapper;
-import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.MergingReport;
 import com.android.utils.ILogger;
@@ -36,7 +36,7 @@ import org.gradle.api.tasks.TaskAction;
  * Simple task to invoke the new Manifest Merger without any injection, features, system properties
  * or overlay manifests
  */
-public class InvokeManifestMerger extends DefaultAndroidTask implements Supplier<File> {
+public class InvokeManifestMerger extends AndroidVariantTask implements Supplier<File> {
 
     private File mMainManifestFile;
 

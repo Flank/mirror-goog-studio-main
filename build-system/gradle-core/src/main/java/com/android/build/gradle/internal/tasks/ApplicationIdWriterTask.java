@@ -33,7 +33,7 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 /** Task that writes the application-id file and publishes it. */
-public class ApplicationIdWriterTask extends BaseTask {
+public class ApplicationIdWriterTask extends AndroidVariantTask {
 
     private String applicationId;
 

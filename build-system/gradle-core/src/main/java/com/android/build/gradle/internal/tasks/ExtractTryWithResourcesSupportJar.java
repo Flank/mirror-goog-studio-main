@@ -32,7 +32,7 @@ import org.gradle.api.tasks.TaskAction;
  * Extracts jar containing classes necessary for try-with-resources support that will be packages in
  * the final APK.
  */
-public class ExtractTryWithResourcesSupportJar extends DefaultAndroidTask {
+public class ExtractTryWithResourcesSupportJar extends AndroidVariantTask {
 
     public static final String TASK_NAME = "extractTryWithResourcesSupportJar";
 

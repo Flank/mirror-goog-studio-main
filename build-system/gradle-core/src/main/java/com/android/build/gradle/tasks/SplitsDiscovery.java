@@ -22,7 +22,7 @@ import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -54,7 +54,7 @@ import org.gradle.api.tasks.TaskAction;
  * builds when there is no input changes to avoid rerunning it.
  */
 @CacheableTask
-public class SplitsDiscovery extends BaseTask {
+public class SplitsDiscovery extends AndroidBuilderTask {
 
     @Nullable FileCollection mergedResourcesFolders;
     Set<String> densityFilters;

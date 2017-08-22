@@ -33,10 +33,8 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 
-/**
- * Task sending APKs out to a {@link TestServer}
- */
-public class TestServerTask extends DefaultAndroidTask {
+/** Task sending APKs out to a {@link TestServer} */
+public class TestServerTask extends AndroidVariantTask {
 
     private FileCollection testApks;
 

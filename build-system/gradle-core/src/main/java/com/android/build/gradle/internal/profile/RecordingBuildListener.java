@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.profile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.tasks.DefaultAndroidTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.ProfileRecordWriter;
 import com.android.builder.profile.Recorder;
@@ -79,10 +79,10 @@ public class RecordingBuildListener implements TaskExecutionListener {
 
     @Nullable
     private static String getVariantName(@NonNull Task task) {
-        if (!(task instanceof DefaultAndroidTask)) {
+        if (!(task instanceof AndroidVariantTask)) {
             return null;
         }
-        String variantName = ((DefaultAndroidTask) task).getVariantName();
+        String variantName = ((AndroidVariantTask) task).getVariantName();
         if (variantName == null) {
             throw new IllegalStateException("Task with type " + task.getClass().getName() +
                     " does not include a variantName");

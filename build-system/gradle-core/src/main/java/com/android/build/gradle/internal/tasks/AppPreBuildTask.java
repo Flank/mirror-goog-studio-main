@@ -45,7 +45,7 @@ import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifi
 
 /** Pre build task that does some checks for application variants */
 @CacheableTask
-public class AppPreBuildTask extends DefaultAndroidTask {
+public class AppPreBuildTask extends AndroidVariantTask {
 
     // list of Android only compile and runtime classpath.
     private ArtifactCollection compileManifests;

@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.incremental;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import com.android.builder.packaging.PackagingUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
@@ -33,9 +33,9 @@ import org.gradle.api.tasks.TaskAction;
  * Task responsible for loading past iteration build-info.xml file and backup necessary files for
  * disconnected devices to be able to "catch up" to latest bits.
  *
- * It has no explicitly declared inputs and outputs, as it needs to run every time anyway.
+ * <p>It has no explicitly declared inputs and outputs, as it needs to run every time anyway.
  */
-public class BuildInfoLoaderTask extends BaseTask {
+public class BuildInfoLoaderTask extends AndroidVariantTask {
 
     // Outputs
     File pastBuildsFolder;

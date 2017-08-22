@@ -20,7 +20,7 @@ import static java.util.stream.Stream.concat;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.tasks.BaseTask;
+import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import java.io.File;
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -32,10 +32,10 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
 /**
- * A base task with stream fields that properly use Gradle's input/output annotations to
- * return the stream's content as input/output.
+ * A base task with stream fields that properly use Gradle's input/output annotations to return the
+ * stream's content as input/output.
  */
-public class StreamBasedTask extends BaseTask {
+public class StreamBasedTask extends AndroidBuilderTask {
 
     protected Collection<TransformStream> consumedInputStreams;
     protected Collection<TransformStream> referencedInputStreams;

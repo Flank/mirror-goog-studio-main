@@ -43,7 +43,7 @@ import org.gradle.api.tasks.TaskAction;
 
 /** Pre build task that does some checks for application variants */
 @CacheableTask
-public class TestPreBuildTask extends DefaultAndroidTask {
+public class TestPreBuildTask extends AndroidVariantTask {
 
     // list of Android only compile and runtime classpath.
     private ArtifactCollection testedRuntimeClasspath;
