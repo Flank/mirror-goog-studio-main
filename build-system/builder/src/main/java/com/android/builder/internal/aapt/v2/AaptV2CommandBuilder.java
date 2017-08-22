@@ -293,7 +293,7 @@ public final class AaptV2CommandBuilder {
 
         ImmutableList<String> arguments = builder.build();
 
-        config.getLogger().info("aapt2 %s", Joiner.on(' ').join(arguments));
+        config.getLogger().verbose("aapt2 %s", Joiner.on(' ').join(arguments));
 
         return arguments;
     }
