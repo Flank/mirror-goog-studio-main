@@ -17,6 +17,7 @@ java_test(
     name = "tests",
     data = [
         "//tools/base:gmaven_repo.zip",
+        "//tools/base:java-lib-model-builder_repo.zip",
     ],
     jvm_flags = [
         "-Dtest.suite.jar=tests.jar",

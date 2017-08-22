@@ -79,6 +79,10 @@ public class JarContentsTest {
 
     private static final String EXTERNAL_DEPS = "/com/android/tools/external/";
 
+    private static final String GMAVEN_ZIP = "tools/base/gmaven_repo.zip";
+    private static final String JAVALIBMODELBUILDER_ZIP =
+            "tools/base/java-lib-model-builder_repo.zip";
+
     private static final Multimap<String, String> EXPECTED;
 
     static {
@@ -881,6 +885,25 @@ public class JarContentsTest {
                 "META-INF/",
                 "META-INF/services/",
                 "META-INF/services/javax.annotation.processing.Processor");
+        expected.putAll(
+                "com/android/java/tools/build/java-lib-model",
+                "com/",
+                "com/android/",
+                "com/android/java/",
+                "com/android/java/model/",
+                "com/android/java/model/version.properties",
+                "META-INF/");
+        expected.putAll(
+                "com/android/java/tools/build/java-lib-model-builder",
+                "com/",
+                "com/android/",
+                "com/android/java/",
+                "com/android/java/model/",
+                "com/android/java/model/builder/",
+                "com/android/java/model/impl/",
+                "META-INF/",
+                "META-INF/gradle-plugins/",
+                "META-INF/gradle-plugins/com.android.java.properties");
 
         if (TestUtils.runningFromBazel()) {
             // TODO: move all differences from IGNORED_ARTIFACTS_BAZEL to here (b/64921827)
@@ -903,18 +926,23 @@ public class JarContentsTest {
 
     @Test
     public void checkTools() throws Exception {
-        checkGroup("com/android/tools");
+        checkGroup("com/android/tools", GMAVEN_ZIP);
     }
 
     @Test
     public void checkDataBinding() throws Exception {
-        checkGroup("com/android/databinding");
+        checkGroup("com/android/databinding", GMAVEN_ZIP);
     }
 
-    private static void checkGroup(String groupPrefix) throws Exception {
+    @Test
+    public void checkJava() throws Exception {
+        checkGroup("com/android/java", JAVALIBMODELBUILDER_ZIP);
+    }
+
+    private static void checkGroup(String groupPrefix, String zipLocation) throws Exception {
         List<String> jarNames = new ArrayList<>();
 
-        Path repo = getRepo();
+        Path repo = getRepo(zipLocation);
         Path androidTools = repo.resolve(groupPrefix);
 
         List<Path> ourJars =
@@ -1048,14 +1076,13 @@ public class JarContentsTest {
         return files;
     }
 
-    private static Path getRepo() throws IOException {
+    private static Path getRepo(String zip) throws IOException {
         if (!TestUtils.runningFromBazel()) {
             String customRepo = System.getenv("CUSTOM_REPO");
             return Paths.get(
                     Splitter.on(File.pathSeparatorChar).split(customRepo).iterator().next());
         }
-        return FileSystems.newFileSystem(
-                        TestUtils.getWorkspaceFile("tools/base/gmaven_repo.zip").toPath(), null)
+        return FileSystems.newFileSystem(TestUtils.getWorkspaceFile(zip).toPath(), null)
                 .getPath("/");
     }
 
