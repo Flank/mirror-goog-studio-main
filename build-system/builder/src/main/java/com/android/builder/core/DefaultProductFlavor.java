@@ -501,7 +501,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
      * @param flavors flavors to merge
      * @return final merged product flavor
      */
-    static ProductFlavor mergeFlavors(
+    public static ProductFlavor mergeFlavors(
             @NonNull ProductFlavor lowestPriority, @NonNull List<? extends ProductFlavor> flavors) {
         DefaultProductFlavor mergedFlavor = DefaultProductFlavor.clone(lowestPriority);
         for (ProductFlavor flavor : Lists.reverse(flavors)) {
@@ -656,11 +656,10 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
      * Clone a given product flavor.
      *
      * @param productFlavor the flavor to clone.
-     *
      * @return a new instance that is a clone of the flavor.
      */
     @NonNull
-    static DefaultProductFlavor clone(@NonNull ProductFlavor productFlavor) {
+    public static DefaultProductFlavor clone(@NonNull ProductFlavor productFlavor) {
         DefaultProductFlavor flavor = new DefaultProductFlavor(productFlavor.getName());
         flavor._initWith(productFlavor);
         flavor.mDimension = productFlavor.getDimension();

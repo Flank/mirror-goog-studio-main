@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.builder.core;
+package com.android.build.gradle.internal.core;
 
+import com.android.builder.core.DefaultBuildType;
+import com.android.builder.core.DefaultProductFlavor;
+import com.android.builder.core.VariantType;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.signing.DefaultSigningConfig;
 import junit.framework.TestCase;

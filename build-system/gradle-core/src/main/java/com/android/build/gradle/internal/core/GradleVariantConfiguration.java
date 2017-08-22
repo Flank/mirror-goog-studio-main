@@ -35,7 +35,6 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.ManifestAttributeSupplier;
-import com.android.builder.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.OptionalCompilationStep;
@@ -55,8 +54,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * Version of {@link com.android.builder.core.VariantConfiguration} that uses the specific
- * types used in the Gradle plugins.
+ * Version of {@link VariantConfiguration} that uses the specific types used in the Gradle plugins.
  *
  * <p>It also adds support for Ndk support that is not ready to go in the builder library.
  */

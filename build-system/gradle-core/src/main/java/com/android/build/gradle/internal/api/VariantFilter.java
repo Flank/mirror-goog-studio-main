@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.core.VariantConfiguration;
+import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;

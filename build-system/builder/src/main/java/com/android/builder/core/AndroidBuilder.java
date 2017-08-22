@@ -113,7 +113,7 @@ import java.util.zip.ZipFile;
  *       String, Integer, String, String, String, ManifestMerger2.MergeType, Map, List, File)}
  *   <li>{@link #mergeManifestsForTestVariant(String, String, String, String, String, Boolean,
  *       Boolean, String, File, List, Map, File, File)}
- *   <li>{@link #processResources(Aapt, AaptPackageConfig.Builder, boolean)}
+ *   <li>{@link #processResources(Aapt, AaptPackageConfig.Builder)}
  *   <li>{@link #compileAllAidlFiles(Collection, File, File, Collection, Collection,
  *       DependencyFileProcessor, ProcessOutputHandler)}
  *   <li>{@link #getDexByteCodeConverter()}
@@ -582,15 +582,6 @@ public class AndroidBuilder {
      * @param manifestPlaceholders used placeholders in the manifest
      * @param outManifest the output location for the merged manifest
      * @param tmpDir temporary dir used for processing
-     *
-     * @see VariantConfiguration#getApplicationId()
-     * @see VariantConfiguration#getTestedConfig()
-     * @see VariantConfiguration#getMinSdkVersion()
-     * @see VariantConfiguration#getTestedApplicationId()
-     * @see VariantConfiguration#getInstrumentationRunner()
-     * @see VariantConfiguration#getHandleProfiling()
-     * @see VariantConfiguration#getFunctionalTest()
-     * @see VariantConfiguration#getTestLabel()
      */
     public void mergeManifestsForTestVariant(
             @NonNull String testApplicationId,

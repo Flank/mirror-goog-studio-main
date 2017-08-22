@@ -20,10 +20,10 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.core.VariantConfiguration;
 import com.android.builder.testing.TestData;
 import com.android.sdklib.AndroidVersion;
 import com.google.common.base.Joiner;

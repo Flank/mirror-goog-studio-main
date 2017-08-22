@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.tasks;
 
-import com.android.builder.core.VariantConfiguration;
+import com.android.build.gradle.internal.core.VariantConfiguration;
 import java.io.IOException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.logging.LogLevel;
