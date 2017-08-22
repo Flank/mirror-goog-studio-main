@@ -3314,10 +3314,18 @@ public abstract class TaskManager {
 
         String version = MoreObjects.firstNonNull(options.getVersion(),
                 dataBindingBuilder.getCompilerVersion());
-        project.getDependencies().add("compile", SdkConstants.DATA_BINDING_LIB_ARTIFACT + ":"
-                + dataBindingBuilder.getLibraryVersion(version));
-        project.getDependencies().add("compile", SdkConstants.DATA_BINDING_BASELIB_ARTIFACT + ":"
-                + dataBindingBuilder.getBaseLibraryVersion(version));
+        project.getDependencies()
+                .add(
+                        "api",
+                        SdkConstants.DATA_BINDING_LIB_ARTIFACT
+                                + ":"
+                                + dataBindingBuilder.getLibraryVersion(version));
+        project.getDependencies()
+                .add(
+                        "api",
+                        SdkConstants.DATA_BINDING_BASELIB_ARTIFACT
+                                + ":"
+                                + dataBindingBuilder.getBaseLibraryVersion(version));
 
         // TODO load config name from source sets
         project.getDependencies()
@@ -3332,7 +3340,7 @@ public abstract class TaskManager {
         if (options.getAddDefaultAdapters()) {
             project.getDependencies()
                     .add(
-                            "compile",
+                            "api",
                             SdkConstants.DATA_BINDING_ADAPTER_LIB_ARTIFACT
                                     + ":"
                                     + dataBindingBuilder.getBaseAdaptersVersion(version));
