@@ -17,14 +17,17 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_CONTENT_DESCRIPTION;
 import static com.android.SdkConstants.ATTR_HINT;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_LABEL_FOR;
+import static com.android.SdkConstants.ATTR_TEXT;
 import static com.android.SdkConstants.AUTO_COMPLETE_TEXT_VIEW;
 import static com.android.SdkConstants.EDIT_TEXT;
 import static com.android.SdkConstants.ID_PREFIX;
 import static com.android.SdkConstants.MULTI_AUTO_COMPLETE_TEXT_VIEW;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
+import static com.android.SdkConstants.TEXT_VIEW;
 import static com.android.tools.lint.detector.api.LintUtils.stripIdPrefix;
 
 import com.android.annotations.NonNull;
@@ -34,6 +37,7 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LayoutDetector;
+import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -52,27 +56,40 @@ import org.w3c.dom.Element;
  * Detector which finds unlabeled text fields
  */
 public class LabelForDetector extends LayoutDetector {
-    /** The main issue discovered by this detector */
+    /**
+     * The main issue discovered by this detector
+     */
     public static final Issue ISSUE = Issue.create(
             "LabelFor",
-            "Missing `labelFor` attribute",
-
-            "Text fields should be labelled with a `labelFor` attribute, " +
-            "provided your `minSdkVersion` is at least 17.\n" +
-            "\n" +
-            "If your view is labeled but by a label in a different layout which " +
-            "includes this one, just suppress this warning from lint.",
+            "Missing accessibility label",
+            "Editable text fields should provide an `android:hint` or, provided your " +
+             "`minSdkVersion` is at least 17, they may be referenced by a view " +
+             "with a `android:labelFor` attribute.\n" +
+             "\n" +
+             "When using `android:labelFor`, be sure to provide an `android:text` or an " +
+             "`android:contentDescription`.\n" +
+             "\n" +
+             "If your view is labeled but by a label in a different layout which " +
+             "includes this one, just suppress this warning from lint.",
             Category.A11Y,
             2,
             Severity.WARNING,
-            new Implementation(
-                    LabelForDetector.class,
-                    Scope.RESOURCE_FILE_SCOPE));
+            new Implementation(LabelForDetector.class, Scope.RESOURCE_FILE_SCOPE));
+
+    private static final String PREFIX = "Missing accessibility label";
+
+    private static final String PROVIDE_HINT =  "where minSdk < 17, you should provide an " +
+            "`android:hint`";
+
+    private static final String PROVIDE_LABEL_FOR_OR_HINT = "provide either a view with an " +
+            "`android:labelFor` that references this view or provide an `android:hint`";
 
     private Set<String> mLabels;
-    private List<Element> mTextFields;
+    private List<Element> mEditableTextFields;
 
-    /** Constructs a new {@link LabelForDetector} */
+    /**
+     * Constructs a new {@link LabelForDetector}
+     */
     public LabelForDetector() {
     }
 
@@ -93,48 +110,94 @@ public class LabelForDetector extends LayoutDetector {
 
     @Override
     public void afterCheckFile(@NonNull Context context) {
-        if (mTextFields != null) {
+        if (mEditableTextFields != null) {
             if (mLabels == null) {
                 mLabels = Collections.emptySet();
             }
 
-            for (Element element : mTextFields) {
-                if (element.hasAttributeNS(ANDROID_URI, ATTR_HINT)) {
-                    continue;
-                }
+            for (Element element : mEditableTextFields) {
                 String id = element.getAttributeNS(ANDROID_URI, ATTR_ID);
-                boolean missing = true;
+
+                boolean hintProvided = element.hasAttributeNS(ANDROID_URI, ATTR_HINT);
+                boolean labelForProvided = false;
+
                 if (mLabels.contains(id)) {
-                    missing = false;
+                    labelForProvided = true;
                 } else if (id.startsWith(NEW_ID_PREFIX)) {
-                    missing = !mLabels.contains(ID_PREFIX + stripIdPrefix(id));
+                    labelForProvided = mLabels.contains(ID_PREFIX + stripIdPrefix(id));
                 } else if (id.startsWith(ID_PREFIX)) {
-                    missing = !mLabels.contains(NEW_ID_PREFIX + stripIdPrefix(id));
+                    labelForProvided = mLabels.contains(NEW_ID_PREFIX + stripIdPrefix(id));
                 }
 
-                if (missing) {
-                    XmlContext xmlContext = (XmlContext) context;
-                    Location location = xmlContext.getLocation(element);
-                    String message;
-                    if (id == null || id.isEmpty()) {
-                        message = "No label views point to this text field with a " +
-                                "`labelFor` attribute";
-                    } else {
-                        message = String.format("No label views point to this text field with " +
-                                "an `android:labelFor=\"%1$s\"` attribute", id);
+                XmlContext xmlContext = (XmlContext) context;
+                String message = "";
+                Location location = xmlContext.getLocation(element);
+                int minSdk = context.getMainProject().getMinSdk();
+
+                if (hintProvided && labelForProvided) {
+                    // Note: labelFor no-ops below 17.
+                    if (minSdk >= 17) {
+                        message = PROVIDE_LABEL_FOR_OR_HINT + ", but not both";
                     }
-                    xmlContext.report(ISSUE, element, location, message);
+                } else if (!hintProvided && !labelForProvided) {
+                    if (minSdk < 17) {
+                        message = PROVIDE_HINT;
+                    } else {
+                        message = PROVIDE_LABEL_FOR_OR_HINT;
+                    }
+                } else {
+                    // Note: if only android:hint is provided, no need for a warning.
+
+                    if (labelForProvided) {
+                        if (minSdk < 17) {
+                            message = PROVIDE_HINT;
+                        }
+                    }
                 }
 
+                if (!message.isEmpty()) {
+                    xmlContext.report(ISSUE, element, location, messageWithPrefix(message));
+                }
             }
         }
 
         mLabels = null;
-        mTextFields = null;
+        mEditableTextFields = null;
     }
 
     @Override
     public void visitAttribute(@NonNull XmlContext context, @NonNull Attr attribute) {
+
+        assert (attribute.getLocalName().equals(ATTR_LABEL_FOR));
+
+        Element element = attribute.getOwnerElement();
+
+        // Unlikely this is anything other than a TextView. If it is, bail.
+        if (!element.getLocalName().equals(TEXT_VIEW)) {
+            return;
+        }
+
+        Attr textAttributeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_TEXT);
+        Attr contentDescriptionNode =
+                element.getAttributeNodeNS(ANDROID_URI, ATTR_CONTENT_DESCRIPTION);
+
+        if ((textAttributeNode == null || textAttributeNode.getValue().isEmpty())
+                && (contentDescriptionNode == null
+                || contentDescriptionNode.getValue().isEmpty())) {
+            LintFix fix = fix().group(
+                    fix().set(ANDROID_URI, ATTR_TEXT, "").caretBegin().build(),
+                    fix().set(ANDROID_URI, ATTR_CONTENT_DESCRIPTION, "").caretBegin().build());
+
+            context.report(
+                    ISSUE,
+                    element,
+                    context.getLocation(element),
+                    messageWithPrefix(
+                            "when using `android:labelFor`, you must also define an "
+                                    + "`android:text` or an `android:contentDescription`"),
+                    fix);
+        }
+
         if (mLabels == null) {
             mLabels = Sets.newHashSet();
         }
@@ -143,20 +206,23 @@ public class LabelForDetector extends LayoutDetector {
 
     @Override
     public void visitElement(@NonNull XmlContext context, @NonNull Element element) {
-        // NOTE: This should NOT be checking *minSdkVersion*, but *targetSdkVersion*
-        // or even buildTarget instead. However, there's a risk that this will flag
-        // way too much and make the rule annoying until API 17 support becomes
-        // more widespread, so for now limit the check to those projects *really*
-        // working with 17.  When API 17 reaches a certain amount of adoption, change
-        // this to flag all apps supporting 17, including those supporting earlier
-        // versions as well.
-        if (context.getMainProject().getMinSdk() < 17) {
-            return;
+        if (element.hasAttributeNS(ANDROID_URI, ATTR_HINT)) {
+            Attr hintAttributeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_HINT);
+            if (hintAttributeNode.getValue().isEmpty()) {
+                context.report(
+                        ISSUE,
+                        hintAttributeNode,
+                        context.getLocation(hintAttributeNode),
+                        "Empty `android:hint` attribute");
+            }
         }
+        if (mEditableTextFields == null) {
+            mEditableTextFields = new ArrayList<>();
+        }
+        mEditableTextFields.add(element);
+    }
 
-        if (mTextFields == null) {
-            mTextFields = new ArrayList<>();
-        }
-        mTextFields.add(element);
+    private String messageWithPrefix(String message) {
+        return PREFIX + ": " + message;
     }
 }

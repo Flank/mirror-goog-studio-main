@@ -20,175 +20,635 @@ import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
 public class LabelForDetectorTest extends AbstractCheckTest {
+
     @Override
     protected Detector getDetector() {
         return new LabelForDetector();
     }
-
-    public void test() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(""
-                + "res/layout/labelfor.xml:54: Warning: No label views point to this text field with an android:labelFor=\"@+id/editText2\" attribute [LabelFor]\n"
-                + "    <EditText\n"
-                + "    ^\n"
-                + "res/layout/labelfor.xml:61: Warning: No label views point to this text field with an android:labelFor=\"@+id/autoCompleteTextView2\" attribute [LabelFor]\n"
-                + "    <AutoCompleteTextView\n"
-                + "    ^\n"
-                + "res/layout/labelfor.xml:68: Warning: No label views point to this text field with an android:labelFor=\"@+id/multiAutoCompleteTextView2\" attribute [LabelFor]\n"
-                + "    <MultiAutoCompleteTextView\n"
-                + "    ^\n"
-                + "0 errors, 3 warnings\n",
-
-        lintProject(
-                manifest().minSdk(17),
-                mLabelfor
-        ));
+    public void testWithHint() throws Exception {
+        lint().files(withHint).run().expectClean();
     }
 
-    public void testSuppressed() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-        "No warnings.",
+    public void testWithHintBelow17() throws Exception {
+        lint().files(manifest().minSdk(16), withHint).run().expectClean();
+    }
 
-        lintProject(
-            manifest().minSdk(17),
-            xml("res/layout/labelfor_ignore.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-                            + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
-                            + "    android:layout_width=\"match_parent\"\n"
-                            + "    android:layout_height=\"match_parent\"\n"
-                            + "    android:orientation=\"vertical\" >\n"
+    public void testWithEmptyHint() throws Exception {
+        String expected =
+                "res/layout/labelfororhint_empty_hint.xml:11: Warning: Empty android:hint attribute [LabelFor]\n"
+                        + "            android:hint=\"\"\n"
+                        + "            ~~~~~~~~~~~~~~~\n"
+                        + "res/layout/labelfororhint_empty_hint.xml:21: Warning: Empty android:hint attribute [LabelFor]\n"
+                        + "            android:hint=\"\"\n"
+                        + "            ~~~~~~~~~~~~~~~\n"
+                        + "res/layout/labelfororhint_empty_hint.xml:29: Warning: Empty android:hint attribute [LabelFor]\n"
+                        + "            android:hint=\"\"\n"
+                        + "            ~~~~~~~~~~~~~~~\n"
+                        + "0 errors, 3 warnings";
+
+        lint().files(xml("res/layout/labelfororhint_empty_hint.xml",
+                "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "              android:layout_width=\"match_parent\"\n"
+                        + "              android:layout_height=\"match_parent\"\n"
+                        + "              android:orientation=\"vertical\">\n"
+                        + "\n"
+                        + "    <EditText\n"
+                        + "            android:id=\"@+id/editText1\"\n"
+                        + "            android:layout_width=\"match_parent\"\n"
+                        + "            android:layout_height=\"wrap_content\"\n"
+                        + "            android:ems=\"10\"\n"
+                        + "            android:hint=\"\"\n"
+                        + "            android:inputType=\"textPersonName\">\n"
+                        + "        <requestFocus/>\n"
+                        + "    </EditText>\n"
+                        + "\n"
+                        + "    <AutoCompleteTextView\n"
+                        + "            android:id=\"@+id/autoCompleteTextView1\"\n"
+                        + "            android:layout_width=\"match_parent\"\n"
+                        + "            android:layout_height=\"wrap_content\"\n"
+                        + "            android:ems=\"10\"\n"
+                        + "            android:hint=\"\"\n"
+                        + "            android:text=\"AutoCompleteTextView\"/>\n"
+                        + "\n"
+                        + "    <MultiAutoCompleteTextView\n"
+                        + "            android:id=\"@+id/multiAutoCompleteTextView1\"\n"
+                        + "            android:layout_width=\"match_parent\"\n"
+                        + "            android:layout_height=\"wrap_content\"\n"
+                        + "            android:ems=\"10\"\n"
+                        + "            android:hint=\"\"\n"
+                        + "            android:text=\"MultiAutoCompleteTextView\"/>\n"
+                        + "</LinearLayout>")).run().expect(expected);
+    }
+
+    public void testWithLabelFor() throws Exception {
+        lint().files(manifest().minSdk(17), withLabelFor).run().expectClean();
+    }
+
+    public void testWithLabelForBelow17() throws Exception {
+        String expected =
+                "res/layout/labelfororhint_with_labelfor.xml:14: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                        + "    <EditText\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_with_labelfor.xml:31: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                        + "    <AutoCompleteTextView\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_with_labelfor.xml:46: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                        + "    <MultiAutoCompleteTextView\n"
+                        + "    ^\n"
+                        + "0 errors, 3 warnings";
+        lint().files(manifest().minSdk(16), withLabelFor).run().expect(expected);
+    }
+
+
+    public void testWithNoHintAndNoLabelFor() throws Exception {
+        String expected =
+                "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:5: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint [LabelFor]\n"
+                        + "    <EditText\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:14: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint [LabelFor]\n"
+                        + "    <AutoCompleteTextView\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:21: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint [LabelFor]\n"
+                        + "    <MultiAutoCompleteTextView\n"
+                        + "    ^\n"
+                        + "0 errors, 3 warnings";
+
+        lint().files(manifest().minSdk(17), noHintNoLabelFor).run().expect(expected);
+    }
+
+    public void testWithNoHintAndNoLabelForBelow17() throws Exception {
+        String expected =
+                "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:5: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                        + "    <EditText\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:14: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                        + "    <AutoCompleteTextView\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:21: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
+                        + "    <MultiAutoCompleteTextView\n"
+                        + "    ^\n"
+                        + "0 errors, 3 warnings";
+
+        lint().files(manifest().minSdk(16), noHintNoLabelFor).run().expect(expected);
+    }
+
+    public void testWithHintAndLabelFor() throws Exception {
+        String expected =
+                "res/layout/labelfororhint_with_hint_and_labelfor.xml:14: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint, but not both [LabelFor]\n"
+                        + "    <EditText\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_with_hint_and_labelfor.xml:32: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint, but not both [LabelFor]\n"
+                        + "    <AutoCompleteTextView\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_with_hint_and_labelfor.xml:48: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint, but not both [LabelFor]\n"
+                        + "    <MultiAutoCompleteTextView\n"
+                        + "    ^\n"
+                        + "0 errors, 3 warnings";
+
+        lint().files(manifest().minSdk(17), hintAndLabelFor).run().expect(expected);
+    }
+
+    public void testWithHintAndLabelForBelow17() throws Exception {
+        lint().files(manifest().minSdk(16), hintAndLabelFor).run().expectClean();
+    }
+
+
+    public void testWithLabelForNoTextNoContentDescription() throws Exception {
+        String expected =
+                "res/layout/labelfororhint_no_text_no_contentdescription.xml:5: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                        + "    <TextView\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_no_text_no_contentdescription.xml:21: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                        + "    <TextView\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_no_text_no_contentdescription.xml:35: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                        + "    <TextView\n"
+                        + "    ^\n"
+                        + "0 errors, 3 warnings";
+        lint().files(manifest().minSdk(17),
+                xml("res/layout/labelfororhint_no_text_no_contentdescription.xml",
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "              android:layout_width=\"match_parent\"\n"
+                                + "              android:layout_height=\"match_parent\"\n"
+                                + "              android:orientation=\"vertical\">\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView1\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:labelFor=\"@+id/editText1\"\n"
+                                +
+                                "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <EditText\n"
+                                + "            android:id=\"@+id/editText1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:inputType=\"textPersonName\">\n"
+                                + "        <requestFocus/>\n"
+                                + "    </EditText>\n"
+                                + "\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView2\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                                +
+                                "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <AutoCompleteTextView\n"
+                                + "            android:id=\"@id/autoCompleteTextView1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:text=\"AutoCompleteTextView\"/>\n"
+                                + "\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView3\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                +
+                                "            android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                                +
+                                "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <MultiAutoCompleteTextView\n"
+                                + "            android:id=\"@id/multiAutoCompleteTextView1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:text=\"MultiAutoCompleteTextView\"/>\n"
+                                + "</LinearLayout>"))
+                .run()
+                .expect(expected)
+                .verifyFixes()
+                .window(2)
+                .expectFixDiffs(
+                        ""
+                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 4: Set text:\n"
+                                + "@@ -12 +12\n"
+                                + "          android:layout_height=\"wrap_content\"\n"
+                                + "          android:labelFor=\"@+id/editText1\"\n"
+                                + "+         android:text=\"|\"\n"
+                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+                                + "  \n"
+                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 4: Set contentDescription:\n"
+                                + "@@ -11 +11\n"
+                                + "          android:layout_width=\"wrap_content\"\n"
+                                + "          android:layout_height=\"wrap_content\"\n"
+                                + "+         android:contentDescription=\"|\"\n"
+                                + "          android:labelFor=\"@+id/editText1\"\n"
+                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 20: Set text:\n"
+                                + "@@ -29 +29\n"
+                                + "          android:layout_height=\"wrap_content\"\n"
+                                + "          android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                                + "+         android:text=\"|\"\n"
+                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+                                + "  \n"
+                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 20: Set contentDescription:\n"
+                                + "@@ -28 +28\n"
+                                + "          android:layout_width=\"wrap_content\"\n"
+                                + "          android:layout_height=\"wrap_content\"\n"
+                                + "+         android:contentDescription=\"|\"\n"
+                                + "          android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 34: Set text:\n"
+                                + "@@ -43 +43\n"
+                                + "          android:layout_height=\"wrap_content\"\n"
+                                + "          android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                                + "+         android:text=\"|\"\n"
+                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
+                                + "  \n"
+                                + "Fix for res/layout/labelfororhint_no_text_no_contentdescription.xml line 34: Set contentDescription:\n"
+                                + "@@ -42 +42\n"
+                                + "          android:layout_width=\"wrap_content\"\n"
+                                + "          android:layout_height=\"wrap_content\"\n"
+                                + "+         android:contentDescription=\"|\"\n"
+                                + "          android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                                + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n");
+    }
+
+    public void testWithLabelForEmptyText() throws Exception {
+        String expected =
+                "res/layout/labelfororhint_empty_text.xml:6: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                        + "    <TextView\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_empty_text.xml:23: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                        + "    <TextView\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_empty_text.xml:38: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                        + "    <TextView\n"
+                        + "    ^\n"
+                        + "0 errors, 3 warnings";
+
+        lint().files(manifest().minSdk(17),
+                xml("res/layout/labelfororhint_empty_text.xml",
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "              android:layout_width=\"match_parent\"\n"
+                                + "              android:layout_height=\"match_parent\"\n"
+                                + "              android:orientation=\"vertical\">\n"
+                                + "\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView1\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:labelFor=\"@+id/editText1\"\n"
+                                + "            android:text=\"\"\n"
+                                + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <EditText\n"
+                                + "            android:id=\"@+id/editText1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:inputType=\"textPersonName\">\n"
+                                + "        <requestFocus/>\n"
+                                + "    </EditText>\n"
+                                + "\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView2\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                                + "            android:text=\"\"\n"
+                                + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <AutoCompleteTextView\n"
+                                + "            android:id=\"@id/autoCompleteTextView1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:text=\"AutoCompleteTextView\"/>\n"
+                                + "\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView3\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                                + "            android:text=\"\"\n"
+                                + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <MultiAutoCompleteTextView\n"
+                                + "            android:id=\"@id/multiAutoCompleteTextView1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:text=\"MultiAutoCompleteTextView\"/>\n"
+                                + "</LinearLayout>")).run().expect(expected);
+    }
+
+    public void testWithLabelForEmptyContentDescription() throws Exception {
+        String expected =
+                "res/layout/labelfororhint_empty_contentdescription.xml:5: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                        + "    <TextView\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_empty_contentdescription.xml:22: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                        + "    <TextView\n"
+                        + "    ^\n"
+                        + "res/layout/labelfororhint_empty_contentdescription.xml:37: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
+                        + "    <TextView\n"
+                        + "    ^\n"
+                        + "0 errors, 3 warnings";
+
+        lint().files(manifest().minSdk(17),
+                xml("res/layout/labelfororhint_empty_contentdescription.xml",
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "              android:layout_width=\"match_parent\"\n"
+                                + "              android:layout_height=\"match_parent\"\n"
+                                + "              android:orientation=\"vertical\">\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView1\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:labelFor=\"@+id/editText1\"\n"
+                                + "            android:contentDescription=\"\"\n"
+                                +
+                                "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <EditText\n"
+                                + "            android:id=\"@+id/editText1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:inputType=\"textPersonName\">\n"
+                                + "        <requestFocus/>\n"
+                                + "    </EditText>\n"
+                                + "\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView2\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                                + "            android:contentDescription=\"\"\n"
+                                +
+                                "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <AutoCompleteTextView\n"
+                                + "            android:id=\"@id/autoCompleteTextView1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:text=\"AutoCompleteTextView\"/>\n"
+                                + "\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView3\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                +
+                                "            android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                                + "            android:contentDescription=\"\"\n"
+                                +
+                                "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <MultiAutoCompleteTextView\n"
+                                + "            android:id=\"@id/multiAutoCompleteTextView1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:text=\"MultiAutoCompleteTextView\"/>\n"
+                                + "</LinearLayout>")).run().expect(expected);
+    }
+
+    public void testWithLabelForNoTextWithContentDescription() throws Exception {
+        lint().files(manifest().minSdk(17),
+                xml("res/layout/labelfororhint_with_contentdescription.xml",
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "              android:layout_width=\"match_parent\"\n"
+                                + "              android:layout_height=\"match_parent\"\n"
+                                + "              android:orientation=\"vertical\">\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView1\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:labelFor=\"@+id/editText1\"\n"
+                                + "            android:contentDescription=\"Medium Text\"\n"
+                                + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <EditText\n"
+                                + "            android:id=\"@+id/editText1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:inputType=\"textPersonName\">\n"
+                                + "        <requestFocus/>\n"
+                                + "    </EditText>\n"
+                                + "\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView2\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                                + "            android:contentDescription=\"Medium Text\"\n"
+                                + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <AutoCompleteTextView\n"
+                                + "            android:id=\"@id/autoCompleteTextView1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:text=\"AutoCompleteTextView\"/>\n"
+                                + "\n"
+                                + "    <TextView\n"
+                                + "            android:id=\"@+id/textView3\"\n"
+                                + "            android:layout_width=\"wrap_content\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                                + "            android:contentDescription=\"Medium Text\"\n"
+                                + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                                + "\n"
+                                + "    <MultiAutoCompleteTextView\n"
+                                + "            android:id=\"@id/multiAutoCompleteTextView1\"\n"
+                                + "            android:layout_width=\"match_parent\"\n"
+                                + "            android:layout_height=\"wrap_content\"\n"
+                                + "            android:ems=\"10\"\n"
+                                + "            android:text=\"MultiAutoCompleteTextView\"/>\n"
+                                + "</LinearLayout>")).run().expectClean();
+    }
+
+    //noinspection all // Sample code
+    private TestFile withHint =
+            xml(
+                    "res/layout/labelfororhint_with_hint.xml",
+                    "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "              android:layout_width=\"match_parent\"\n"
+                            + "              android:layout_height=\"match_parent\"\n"
+                            + "              android:orientation=\"vertical\">\n"
                             + "\n"
                             + "    <EditText\n"
-                            + "        android:id=\"@+id/editText2\"\n"
-                            + "        android:layout_width=\"match_parent\"\n"
-                            + "        android:layout_height=\"wrap_content\"\n"
-                            + "        android:ems=\"10\"\n"
-                            + "        android:inputType=\"textPostalAddress\"\n"
-                            + "        tools:ignore=\"LabelFor\"/>\n"
+                            + "            android:id=\"@+id/editText1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:hint=\"hint\"\n"
+                            + "            android:inputType=\"textPersonName\">\n"
+                            + "        <requestFocus/>\n"
+                            + "    </EditText>\n"
                             + "\n"
-                            + "</LinearLayout>\n")
-        ));
-    }
+                            + "    <AutoCompleteTextView\n"
+                            + "            android:id=\"@+id/autoCompleteTextView1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:hint=\"hint\"\n"
+                            + "            android:text=\"AutoCompleteTextView\"/>\n"
+                            + "\n"
+                            + "    <MultiAutoCompleteTextView\n"
+                            + "            android:id=\"@+id/multiAutoCompleteTextView1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:hint=\"hint\"\n"
+                            + "            android:text=\"MultiAutoCompleteTextView\"/>\n"
+                            + "</LinearLayout>");
 
 
-    public void testOk() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-        "No warnings.",
+    //noinspection all // Sample code
+    private TestFile withLabelFor =
+            xml(
+                    "res/layout/labelfororhint_with_labelfor.xml",
+                    "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "              android:layout_width=\"match_parent\"\n"
+                            + "              android:layout_height=\"match_parent\"\n"
+                            + "              android:orientation=\"vertical\">\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "            android:id=\"@+id/textView1\"\n"
+                            + "            android:layout_width=\"wrap_content\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:labelFor=\"@+id/editText1\"\n"
+                            + "            android:text=\"Medium Text\"\n"
+                            + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                            + "\n"
+                            + "    <EditText\n"
+                            + "            android:id=\"@+id/editText1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:inputType=\"textPersonName\">\n"
+                            + "        <requestFocus/>\n"
+                            + "    </EditText>\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "            android:id=\"@+id/textView2\"\n"
+                            + "            android:layout_width=\"wrap_content\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                            + "            android:text=\"Medium Text\"\n"
+                            + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                            + "\n"
+                            + "    <AutoCompleteTextView\n"
+                            + "            android:id=\"@id/autoCompleteTextView1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:text=\"AutoCompleteTextView\"/>\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "            android:id=\"@+id/textView3\"\n"
+                            + "            android:layout_width=\"wrap_content\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                            + "            android:text=\"Medium Text\"\n"
+                            + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                            + "\n"
+                            + "    <MultiAutoCompleteTextView\n"
+                            + "            android:id=\"@id/multiAutoCompleteTextView1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:text=\"MultiAutoCompleteTextView\"/>\n"
+                            + "</LinearLayout>");
 
-        lintProject(
-                manifest().minSdk(17),
-                xml("res/layout/accessibility.xml", ""
-                            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\n"
-                            + "    <Button android:text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
-                            + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
-                            + "    <ImageButton android:importantForAccessibility=\"yes\" android:id=\"@+id/android_logo2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
-                            + "    <Button android:text=\"Button\" android:id=\"@+id/button2\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\n"
-                            + "    <Button android:id=\"@+android:id/summary\" android:contentDescription=\"@string/label\" />\n"
-                            + "    <ImageButton android:importantForAccessibility=\"no\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
-                            + "</LinearLayout>\n")
-            ));
-    }
+    //noinspection all // Sample code
+    private TestFile noHintNoLabelFor =
+            xml(
+                    "res/layout/labelfororhint_no_hint_and_no_labelfor.xml",
+                    "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "              android:layout_width=\"match_parent\"\n"
+                            + "              android:layout_height=\"match_parent\"\n"
+                            + "              android:orientation=\"vertical\">\n"
+                            + "    <EditText\n"
+                            + "            android:id=\"@+id/editText1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:inputType=\"textPersonName\">\n"
+                            + "        <requestFocus/>\n"
+                            + "    </EditText>\n"
+                            + "\n"
+                            + "    <AutoCompleteTextView\n"
+                            + "            android:id=\"@+id/autoCompleteTextView1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:text=\"AutoCompleteTextView\"/>\n"
+                            + "\n"
+                            + "    <MultiAutoCompleteTextView\n"
+                            + "            android:id=\"@+id/multiAutoCompleteTextView1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:text=\"MultiAutoCompleteTextView\"/>\n"
+                            + "</LinearLayout>");
 
-    public void testNotApplicable() throws Exception {
-        //noinspection all // Sample code
-        assertEquals(
-        "No warnings.",
-
-        lintProject(
-                manifest().minSdk(14),
-                mLabelfor
-        ));
-    }
-
-    @SuppressWarnings("all") // Sample code
-    private TestFile mLabelfor = xml("res/layout/labelfor.xml", ""
-            + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-            + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
-            + "    android:layout_width=\"match_parent\"\n"
-            + "    android:layout_height=\"match_parent\"\n"
-            + "    android:orientation=\"vertical\" >\n"
-            + "\n"
-            + "    <TextView\n"
-            + "        android:id=\"@+id/textView1\"\n"
-            + "        android:layout_width=\"wrap_content\"\n"
-            + "        android:layout_height=\"wrap_content\"\n"
-            + "        android:labelFor=\"@+id/editText1\"\n"
-            + "        android:text=\"Medium Text\"\n"
-            + "        android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n"
-            + "\n"
-            + "    <EditText\n"
-            + "        android:id=\"@+id/editText1\"\n"
-            + "        android:layout_width=\"match_parent\"\n"
-            + "        android:layout_height=\"wrap_content\"\n"
-            + "        android:ems=\"10\"\n"
-            + "        android:inputType=\"textPersonName\" >\n"
-            + "\n"
-            + "        <requestFocus />\n"
-            + "    </EditText>\n"
-            + "\n"
-            + "    <TextView\n"
-            + "        android:id=\"@+id/textView2\"\n"
-            + "        android:layout_width=\"wrap_content\"\n"
-            + "        android:layout_height=\"wrap_content\"\n"
-            + "        android:labelFor=\"@+id/autoCompleteTextView1\"\n"
-            + "        android:text=\"TextView\" />\n"
-            + "\n"
-            + "    <AutoCompleteTextView\n"
-            + "        android:id=\"@+id/autoCompleteTextView1\"\n"
-            + "        android:layout_width=\"match_parent\"\n"
-            + "        android:layout_height=\"wrap_content\"\n"
-            + "        android:ems=\"10\"\n"
-            + "        android:text=\"AutoCompleteTextView\" />\n"
-            + "\n"
-            + "    <TextView\n"
-            + "        android:id=\"@+id/textView3\"\n"
-            + "        android:layout_width=\"wrap_content\"\n"
-            + "        android:layout_height=\"wrap_content\"\n"
-            + "        android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
-            + "        android:text=\"Large Text\"\n"
-            + "        android:textAppearance=\"?android:attr/textAppearanceLarge\" />\n"
-            + "\n"
-            + "    <MultiAutoCompleteTextView\n"
-            + "        android:id=\"@+id/multiAutoCompleteTextView1\"\n"
-            + "        android:layout_width=\"match_parent\"\n"
-            + "        android:layout_height=\"wrap_content\"\n"
-            + "        android:ems=\"10\"\n"
-            + "        android:text=\"MultiAutoCompleteTextView\" />\n"
-            + "\n"
-            + "    <EditText\n"
-            + "        android:id=\"@+id/editText2\"\n"
-            + "        android:layout_width=\"match_parent\"\n"
-            + "        android:layout_height=\"wrap_content\"\n"
-            + "        android:ems=\"10\"\n"
-            + "        android:inputType=\"textPostalAddress\" />\n"
-            + "\n"
-            + "    <AutoCompleteTextView\n"
-            + "        android:id=\"@+id/autoCompleteTextView2\"\n"
-            + "        android:layout_width=\"match_parent\"\n"
-            + "        android:layout_height=\"wrap_content\"\n"
-            + "        android:ems=\"10\"\n"
-            + "        android:text=\"AutoCompleteTextView\" />\n"
-            + "\n"
-            + "    <MultiAutoCompleteTextView\n"
-            + "        android:id=\"@+id/multiAutoCompleteTextView2\"\n"
-            + "        android:layout_width=\"match_parent\"\n"
-            + "        android:layout_height=\"wrap_content\"\n"
-            + "        android:ems=\"10\"\n"
-            + "        android:text=\"MultiAutoCompleteTextView\" />\n"
-            + "\n"
-            + "    <EditText\n"
-            + "        android:id=\"@+id/editText20\"\n"
-            + "        android:hint=\"Enter your address\"\n"
-            + "        android:layout_width=\"match_parent\"\n"
-            + "        android:layout_height=\"wrap_content\"\n"
-            + "        android:ems=\"10\"\n"
-            + "        android:inputType=\"textPostalAddress\" />\n"
-            + "\n"
-            + "\n"
-            + "</LinearLayout>\n");
+    //noinspection all // Sample code
+    private TestFile hintAndLabelFor =
+            xml(
+                    "res/layout/labelfororhint_with_hint_and_labelfor.xml",
+                    "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                            + "              android:layout_width=\"match_parent\"\n"
+                            + "              android:layout_height=\"match_parent\"\n"
+                            + "              android:orientation=\"vertical\">\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "            android:id=\"@+id/textView1\"\n"
+                            + "            android:layout_width=\"wrap_content\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:labelFor=\"@+id/editText1\"\n"
+                            + "            android:text=\"Medium Text\"\n"
+                            + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                            + "\n"
+                            + "    <EditText\n"
+                            + "            android:id=\"@+id/editText1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:hint=\"hint\"\n"
+                            + "            android:inputType=\"textPersonName\">\n"
+                            + "        <requestFocus/>\n"
+                            + "    </EditText>\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "            android:id=\"@+id/textView2\"\n"
+                            + "            android:layout_width=\"wrap_content\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:labelFor=\"@+id/autoCompleteTextView1\"\n"
+                            + "            android:text=\"Medium Text\"\n"
+                            + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                            + "\n"
+                            + "    <AutoCompleteTextView\n"
+                            + "            android:id=\"@id/autoCompleteTextView1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:hint=\"hint\"\n"
+                            + "            android:text=\"AutoCompleteTextView\"/>\n"
+                            + "\n"
+                            + "    <TextView\n"
+                            + "            android:id=\"@+id/textView3\"\n"
+                            + "            android:layout_width=\"wrap_content\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:labelFor=\"@+id/multiAutoCompleteTextView1\"\n"
+                            + "            android:text=\"Medium Text\"\n"
+                            + "            android:textAppearance=\"?android:attr/textAppearanceMedium\"/>\n"
+                            + "\n"
+                            + "    <MultiAutoCompleteTextView\n"
+                            + "            android:id=\"@id/multiAutoCompleteTextView1\"\n"
+                            + "            android:layout_width=\"match_parent\"\n"
+                            + "            android:layout_height=\"wrap_content\"\n"
+                            + "            android:ems=\"10\"\n"
+                            + "            android:hint=\"hint\"\n"
+                            + "            android:text=\"MultiAutoCompleteTextView\"/>\n"
+                            + "</LinearLayout>");
 }
-

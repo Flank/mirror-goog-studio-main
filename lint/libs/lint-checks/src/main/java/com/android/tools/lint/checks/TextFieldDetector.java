@@ -51,19 +51,17 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * Checks for usability problems in text fields: omitting inputType, or omitting a hint.
+ * Checks for usability problems in text fields: for example, omitting inputType.
  */
 public class TextFieldDetector extends LayoutDetector {
     /** The main issue discovered by this detector */
     public static final Issue ISSUE = Issue.create(
             "TextFields",
-            "Missing `inputType` or `hint`",
+            "Missing `inputType`",
 
             "Providing an `inputType` attribute on a text field improves usability " +
             "because depending on the data to be input, optimized keyboards can be shown " +
-            "to the user (such as just digits and parentheses for a phone number). Similarly," +
-            "a hint attribute displays a hint to the user for what is expected in the " +
-            "text field.\n" +
+            "to the user (such as just digits and parentheses for a phone number). \n" +
             "\n" +
             "The lint detector also looks at the `id` of the view, and if the id offers a " +
             "hint of the purpose of the field (for example, the `id` contains the phrase " +
@@ -97,9 +95,7 @@ public class TextFieldDetector extends LayoutDetector {
             inputType = inputTypeNode.getNodeValue();
         }
 
-        boolean haveHint = false;
         if (inputTypeNode == null) {
-            haveHint = element.hasAttributeNS(ANDROID_URI, ATTR_HINT);
             String style = element.getAttribute(ATTR_STYLE);
             if (style != null && !style.isEmpty()) {
                 LintClient client = context.getClient();
@@ -111,12 +107,6 @@ public class TextFieldDetector extends LayoutDetector {
                         ResourceValue value = styles.get(0);
                         inputType = value.getValue();
                         inputTypeNode = element;
-                    } else if (!haveHint) {
-                        styles = LintUtils.getStyleAttributes(project, client, style,
-                                ANDROID_URI, ATTR_HINT);
-                        if (styles != null && !styles.isEmpty()) {
-                            haveHint = true;
-                        }
                     }
                 } else {
                     // The input type might be specified via a style. This will require
@@ -129,7 +119,7 @@ public class TextFieldDetector extends LayoutDetector {
             }
         }
 
-        if (inputTypeNode == null && !haveHint) {
+        if (inputTypeNode == null) {
             // Also make sure the EditText does not set an inputMethod in which case
             // an inputType might be provided from the input.
             if (element.hasAttributeNS(ANDROID_URI, ATTR_INPUT_METHOD)) {
@@ -138,11 +128,11 @@ public class TextFieldDetector extends LayoutDetector {
 
             LintFix fix = fix().set(ANDROID_URI, ATTR_INPUT_TYPE, "").caretBegin().build();
             context.report(ISSUE, element, context.getLocation(element),
-                    "This text field does not specify an `inputType` or a `hint`", fix);
+                    "This text field does not specify an `inputType`", fix);
             return;
         }
 
-        assert inputType != null; // because inputTypeNode || !haveHint check + return above
+        assert inputType != null; // because inputTypeNode check + return above
 
         Attr idNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_ID);
         if (idNode == null) {
