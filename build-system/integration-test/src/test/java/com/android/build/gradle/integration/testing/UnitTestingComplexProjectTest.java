@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.testing;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -28,18 +27,7 @@ public class UnitTestingComplexProjectTest {
             GradleTestProject.builder().fromTestProject("unitTestingComplexProject").create();
 
     @Test
-    public void appProject() throws Exception {
-        project.execute("clean", "test");
-    }
-
-    @Test
-    public void libProject() throws Exception {
-        // Make the top-level project a library. Libraries depending on libraries are an edge case
-        // when it comes to generating and using R classes.
-        TestFileUtils.searchAndReplace(
-                project.getSubproject("app").getBuildFile(),
-                "com.android.application",
-                "com.android.library");
+    public void runAllTests() throws Exception {
         project.execute("clean", "test");
     }
 }
