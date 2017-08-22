@@ -289,7 +289,6 @@ public class JarContentsTest {
                 "desugar_deploy.jar:com/google/devtools/build/",
                 "desugar_deploy.jar:com/google/devtools/build/android/",
                 "desugar_deploy.jar:com/google/devtools/build/android/desugar/",
-                "desugar_deploy.jar:com/google/devtools/build/android/desugar/runtime/",
                 "desugar_deploy.jar:com/google/devtools/common/",
                 "desugar_deploy.jar:com/google/devtools/common/options/",
                 "desugar_deploy.jar:com/google/thirdparty/",
@@ -888,9 +887,6 @@ public class JarContentsTest {
             // TODO: fix these. (b/64921827)
             Multimap<String, String> bazelNotImplementedYet =
                     ImmutableSetMultimap.<String, String>builder()
-                            .putAll(
-                                    "com/android/tools/build/builder",
-                                    "desugar_deploy.jar:com/google/devtools/build/android/desugar/runtime/")
                             .build();
 
             EXPECTED =
@@ -992,6 +988,7 @@ public class JarContentsTest {
             return false;
         }
 
+        //noinspection RedundantIfStatement
         if (fileName.equals("build-data.properties")) {
             // Bazel packages this file in the deploy jar for desugar.
             //TODO: Can we remove these from the jars? (b/64921827)
