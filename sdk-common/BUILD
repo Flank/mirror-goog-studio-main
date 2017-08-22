@@ -51,6 +51,9 @@ iml_module(
 kotlin_library(
     name = "tools.sdk-common",
     srcs = ["src/main/java"],
+    bundled_deps = [
+        "//tools/base/sdk-common/aia-manifest-jar-generator:proto",
+    ],
     plugins = [
         "//tools/base:auto-value-plugin",
     ],
@@ -66,7 +69,6 @@ kotlin_library(
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
         "//tools/base/repository:tools.repository",
-        "//tools/base/sdk-common/aia-manifest-jar-generator:proto",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",

@@ -69,7 +69,6 @@ public class JarContentsTest {
                     "inspector",
                     "jobb",
                     "ninepatch",
-                    "protos",
                     "publisher",
                     "screenshot2",
                     "swtmenubar");
@@ -888,12 +887,6 @@ public class JarContentsTest {
             // TODO: fix these. (b/64921827)
             Multimap<String, String> bazelNotImplementedYet =
                     ImmutableSetMultimap.<String, String>builder()
-                            .putAll(
-                                    "com/android/tools/sdk-common",
-                                    "wireless/",
-                                    "wireless/android/",
-                                    "wireless/android/instantapps/",
-                                    "wireless/android/instantapps/sdk/")
                             .putAll(
                                     "com/android/tools/build/builder",
                                     "desugar_deploy.jar:com/google/devtools/build/android/desugar/runtime/")
