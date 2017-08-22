@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,28 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration;
+package com.android.build.gradle.integration.sanity;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.model.Version;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,7 +44,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import org.junit.Test;
 
@@ -916,24 +922,20 @@ public class JarContentsTest {
     private static void checkGroup(String groupPrefix) throws Exception {
         List<String> jarNames = new ArrayList<>();
 
-        for (Path repo : GradleTestProject.getLocalRepositories()) {
-            Path androidTools = repo.resolve(groupPrefix);
-            if (!Files.isDirectory(androidTools)) {
-                continue;
-            }
+        Path repo = getRepo();
+        Path androidTools = repo.resolve(groupPrefix);
 
-            List<Path> ourJars =
-                    Files.walk(androidTools)
-                            .filter(path -> path.toString().endsWith(".jar"))
-                            .filter(path -> !path.toString().endsWith("-sources.jar"))
-                            .filter(path -> !isIgnored(path.toString()))
-                            .filter(JarContentsTest::isCurrentVersion)
-                            .collect(Collectors.toList());
+        List<Path> ourJars =
+                Files.walk(androidTools)
+                        .filter(path -> path.toString().endsWith(".jar"))
+                        .filter(path -> !path.toString().endsWith("-sources.jar"))
+                        .filter(path -> !isIgnored(path.toString()))
+                        .filter(JarContentsTest::isCurrentVersion)
+                        .collect(Collectors.toList());
 
-            for (Path jar : ourJars) {
-                checkJar(jar, repo);
-                jarNames.add(jarRelativePathWithoutVersion(jar, repo));
-            }
+        for (Path jar : ourJars) {
+            checkJar(jar, repo);
+            jarNames.add(jarRelativePathWithoutVersion(jar, repo));
         }
 
         List<String> expectedJars =
@@ -998,13 +1000,14 @@ public class JarContentsTest {
     }
 
     private static Set<String> getCheckableFilesFromEntry(
-            ZipEntry entry, ZipFile zipFile, String prefix) throws Exception {
+            ZipEntry entry, NonClosingInputStream entryInputStream, String prefix)
+            throws Exception {
         Set<String> files = new HashSet<>();
         if (shouldCheckFile(entry.getName())) {
             String fileName = prefix + entry.getName();
             files.add(fileName);
             if (fileName.endsWith(".jar")) {
-                files.addAll(getFilesFromInnerJar(entry, zipFile, fileName + ":"));
+                files.addAll(getFilesFromInnerJar(entryInputStream, fileName + ":"));
             }
         }
         return files;
@@ -1019,9 +1022,13 @@ public class JarContentsTest {
 
         Set<String> actual = new HashSet<>();
 
-        try (ZipFile zipFile = new ZipFile(jar.toFile())) {
-            for (ZipEntry entry : Collections.list(zipFile.entries())) {
-                actual.addAll(getCheckableFilesFromEntry(entry, zipFile, ""));
+        try (ZipInputStream zipInputStream =
+                new ZipInputStream(new BufferedInputStream(Files.newInputStream(jar)))) {
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                actual.addAll(
+                        getCheckableFilesFromEntry(
+                                entry, new NonClosingInputStream(zipInputStream), ""));
             }
 
             assertThat(actual).named(jar.toString() + " with key " + key)
@@ -1029,19 +1036,41 @@ public class JarContentsTest {
         }
     }
 
-    private static Set<String> getFilesFromInnerJar(ZipEntry jar, ZipFile zipFile, String prefix)
+    private static Set<String> getFilesFromInnerJar(InputStream entryInputStream, String prefix)
             throws Exception {
         Set<String> files = new HashSet<>();
-        ZipInputStream zis = new ZipInputStream(zipFile.getInputStream(jar));
-        try {
-            ZipEntry ze = zis.getNextEntry();
-            while (ze != null) {
-                files.addAll(getCheckableFilesFromEntry(ze, zipFile, prefix));
-                ze = zis.getNextEntry();
+        try (ZipInputStream zis = new ZipInputStream(entryInputStream)) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                files.addAll(
+                        getCheckableFilesFromEntry(entry, new NonClosingInputStream(zis), prefix));
             }
-        } finally {
-            zis.close();
         }
         return files;
+    }
+
+    private static Path getRepo() throws IOException {
+        if (!TestUtils.runningFromBazel()) {
+            String customRepo = System.getenv("CUSTOM_REPO");
+            return Paths.get(
+                    Splitter.on(File.pathSeparatorChar).split(customRepo).iterator().next());
+        }
+        return FileSystems.newFileSystem(
+                        TestUtils.getWorkspaceFile("tools/base/bazel/offline_repo_repo.zip")
+                                .toPath(),
+                        null)
+                .getPath("/");
+    }
+
+    private static class NonClosingInputStream extends FilterInputStream {
+
+        protected NonClosingInputStream(InputStream in) {
+            super(in);
+        }
+
+        @Override
+        public void close() throws IOException {
+            // Do nothing.
+        }
     }
 }

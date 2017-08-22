@@ -14,6 +14,7 @@ java_library(
 kotlin_library(
     name = "integration-test",
     srcs = ["src/main/java"],
+    visibility = ["__subpackages__"],
     deps = [
         ":protos",
         "//tools/analytics-library/protos/src/main/proto",
