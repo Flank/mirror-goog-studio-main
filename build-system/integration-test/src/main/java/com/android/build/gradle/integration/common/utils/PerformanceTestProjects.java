@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
+import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.TestUtils;
 import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableList;
@@ -445,6 +446,11 @@ public class PerformanceTestProjects {
                 project.file("build.gradle"),
                 "(force 'com.android.support:[^:]*):[^']*'",
                 "$1:" + GradleTestProject.SUPPORT_LIB_VERSION + "'");
+
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "compileSdkVersion(\\s)*:\\s\\d+,",
+                "compileSdkVersion: " + SdkVersionInfo.HIGHEST_KNOWN_STABLE_API + ",");
 
         TestFileUtils.searchAndReplace(
                 project.file("dependencies.gradle"), "('io.reactivex:rxjava):[^']*'", "$1:1.2.3'");
