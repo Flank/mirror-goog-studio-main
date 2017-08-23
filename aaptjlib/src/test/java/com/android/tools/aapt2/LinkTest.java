@@ -191,13 +191,11 @@ public class LinkTest {
                                         "-R",
                                         compiledInvalidLayout.toString()));
 
-        // Should return 1, but due to b/64367402 returns 0.
-        //TODO(imorlowska): update once bug is fixed.
-        assertEquals(0, result.getReturnCode());
-        assertEquals(1, result.getMessages().size());
+        assertEquals(1, result.getReturnCode());
+        assertEquals(2, result.getMessages().size());
 
         assertEquals(Aapt2Result.Message.LogLevel.ERROR, result.getMessages().get(0).getLevel());
-        assertEquals(2, result.getMessages().get(0).getLine());
+        assertEquals(0, result.getMessages().get(0).getLine());
         assertEquals(
                 "attribute 'android:gravity' not found", result.getMessages().get(0).getMessage());
     }

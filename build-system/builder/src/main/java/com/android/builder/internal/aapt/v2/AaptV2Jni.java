@@ -90,10 +90,9 @@ public class AaptV2Jni extends AbstractAapt {
         }
         List<String> args = AaptV2CommandBuilder.makeLink(config, intermediateDir);
         Aapt2Result aapt2Result = aapt2Jni.link(args);
-        //TODO(imorlowska): update once bug b/64367402 is fixed.
-        boolean successful = writeMessages(processOutputHandler, aapt2Result.getMessages());
+        writeMessages(processOutputHandler, aapt2Result.getMessages());
 
-        if (aapt2Result.getReturnCode() == 0 && successful) {
+        if (aapt2Result.getReturnCode() == 0) {
             return Futures.immediateFuture(null);
         } else {
             return Futures.immediateFailedFuture(buildException("link", args, aapt2Result));
@@ -107,11 +106,9 @@ public class AaptV2Jni extends AbstractAapt {
                 () -> {
                     List<String> args = AaptV2CommandBuilder.makeCompile(request);
                     Aapt2Result aapt2Result = aapt2Jni.compile(args);
-                    //TODO(imorlowska): update once bug b/64367402 is fixed.
-                    boolean successful =
-                            writeMessages(processOutputHandler, aapt2Result.getMessages());
+                    writeMessages(processOutputHandler, aapt2Result.getMessages());
 
-                    if (aapt2Result.getReturnCode() == 0 && successful) {
+                    if (aapt2Result.getReturnCode() == 0) {
                         return new File(
                                 request.getOutput(),
                                 Aapt2RenamingConventions.compilationRename(request.getInput()));
@@ -155,18 +152,15 @@ public class AaptV2Jni extends AbstractAapt {
 
     /*
      * Writes messages received from AAPT2.
-     *
-     * @return true if the operation was successful, false if at least one error occured.
      */
-    private static boolean writeMessages(
+    private static void writeMessages(
             @NonNull ProcessOutputHandler processOutputHandler,
             @NonNull List<Aapt2Result.Message> messages)
             throws AaptException {
         if (messages.isEmpty()) {
-            return true;
+            return;
         }
         ProcessOutput output;
-        boolean successful = true;
         try (Closeable ignored = output = processOutputHandler.createOutput();
                 PrintWriter err = new PrintWriter(output.getErrorOutput());
                 PrintWriter out = new PrintWriter(output.getStandardOutput())) {
@@ -176,7 +170,6 @@ public class AaptV2Jni extends AbstractAapt {
                         out.println(message.toString());
                         break;
                     case ERROR:
-                        successful = false;
                     case WARN:
                         err.println(message.toString());
                         break;
@@ -190,7 +183,6 @@ public class AaptV2Jni extends AbstractAapt {
         } catch (ProcessException e) {
             throw new AaptException(e, "Unexpected error handling AAPT output");
         }
-        return successful;
     }
 
     private static class FileCacheAapt2JniCache implements Aapt2Jni.Cache {
