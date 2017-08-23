@@ -96,7 +96,7 @@ class SdkManagerCliSettings implements SettingsController {
         if (handler == null) {
             mRepoManager = null;
         } else {
-            mRepoManager = handler.getSdkManager(new ConsoleProgressIndicator());
+            mRepoManager = handler.getSdkManager(getProgressIndicator());
         }
     }
 
@@ -111,7 +111,14 @@ class SdkManagerCliSettings implements SettingsController {
     @Nullable
     public static SdkManagerCliSettings createSettings(
             @NonNull List<String> args, @NonNull FileSystem fileSystem) {
-        ProgressIndicator progress = new ConsoleProgressIndicator();
+        ProgressIndicator progress =
+                new ConsoleProgressIndicator() {
+                    @Override
+                    public void logInfo(@NonNull String s) {}
+
+                    @Override
+                    public void logVerbose(@NonNull String s) {}
+                };
         try {
             return new SdkManagerCliSettings(args, fileSystem, progress);
         } catch (Exception e) {
@@ -132,12 +139,12 @@ class SdkManagerCliSettings implements SettingsController {
     }
 
     @Nullable
-    private static SocketAddress createAddress(@NonNull String host, int port) {
+    private SocketAddress createAddress(@NonNull String host, int port) {
         try {
             InetAddress address = InetAddress.getByName(host);
             return new InetSocketAddress(address, port);
         } catch (UnknownHostException e) {
-            new ConsoleProgressIndicator().logWarning("Failed to parse host " + host);
+            getProgressIndicator().logWarning("Failed to parse host " + host);
             return null;
         }
     }
