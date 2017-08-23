@@ -74,6 +74,7 @@ public final class AndroidManifest {
     public static final String ATTRIBUTE_GLESVERSION = "glEsVersion";
     public static final String ATTRIBUTE_PROCESS = "process";
     public static final String ATTRIBUTE_DEBUGGABLE = "debuggable";
+    public static final String ATTRIBUTE_HASCODE = "hasCode";
     public static final String ATTRIBUTE_LABEL = "label";
     public static final String ATTRIBUTE_ICON = "icon";
     public static final String ATTRIBUTE_MIN_SDK_VERSION = "minSdkVersion";
