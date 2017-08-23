@@ -17,22 +17,22 @@
 package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 
+import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
+import com.android.testutils.apk.Apk;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
@@ -68,71 +68,85 @@ public class CmakeTargetsTest {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        String plugin =
-                isModel
-                        ? "apply plugin: 'com.android.model.application'"
-                        : "apply plugin: 'com.android.application'";
-        String modelBefore = isModel ? "model { " : "";
-        String modelAfter = isModel ? " }" : "";
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "\n"
-                        + plugin
-                        + "\n"
-                        + modelBefore
-                        + "\n"
-                        + "    android {\n"
-                        + "        compileSdkVersion "
-                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                        + "\n"
-                        + "        buildToolsVersion \""
-                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                        + "\"\n"
-                        + "        defaultConfig {\n"
-                        + "          externalNativeBuild {\n"
-                        + "              cmake {\n"
-                        + "                targets.addAll(\"library2\")\n"
-                        + "              }\n"
-                        + "          }\n"
-                        + "        }\n"
-                        + "        externalNativeBuild {\n"
-                        + "          cmake {\n"
-                        + "            path \"CMakeLists.txt\"\n"
-                        + "          }\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + modelAfter
-                        + "\n");
+                new BuildScriptGenerator(
+                                "apply plugin: '${application_plugin}'\n"
+                                        + "\n"
+                                        + "${model_start}\n"
+                                        + "    android {\n"
+                                        + "        compileSdkVersion "
+                                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                                        + "\n"
+                                        + "        buildToolsVersion \""
+                                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                                        + "\"\n"
+                                        + "        externalNativeBuild {\n"
+                                        + "          cmake {\n"
+                                        + "            path \"CMakeLists.txt\"\n"
+                                        + "          }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "${model_end}\n"
+                                        + "\n")
+                        .build(isModel));
+    }
+
+    @Test
+    public void checkMultiTargets() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug");
-    }
 
-    @Test
-    public void checkApkContent() throws IOException {
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .hasVersionCode(1);
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .doesNotContain("lib/armeabi-v7a/liblibrary1.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .doesNotContain("lib/armeabi/liblibrary1.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .doesNotContain("lib/x86/liblibrary1.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .doesNotContain("lib/x86_64/liblibrary1.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .contains("lib/armeabi-v7a/liblibrary2.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .contains("lib/armeabi/liblibrary2.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .contains("lib/x86/liblibrary2.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .contains("lib/x86_64/liblibrary2.so");
-    }
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        assertThatApk(apk).hasVersionCode(1);
+        assertThatApk(apk).contains("lib/armeabi-v7a/liblibrary1.so");
+        assertThatApk(apk).contains("lib/armeabi/liblibrary1.so");
+        assertThatApk(apk).contains("lib/x86/liblibrary1.so");
+        assertThatApk(apk).contains("lib/x86_64/liblibrary1.so");
+        assertThatApk(apk).contains("lib/armeabi-v7a/liblibrary2.so");
+        assertThatApk(apk).contains("lib/armeabi/liblibrary2.so");
+        assertThatApk(apk).contains("lib/x86/liblibrary2.so");
+        assertThatApk(apk).contains("lib/x86_64/liblibrary2.so");
 
-    @Test
-    public void checkModel() throws IOException {
         project.model().getSingle(); // Make sure we can successfully get AndroidProject
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
-        assertThat(model).isNotNull();
+        assertModel(project.model().getSingle(NativeAndroidProject.class));
+    }
+
+    @Test
+    public void checkSingleTarget() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                new BuildScriptGenerator(
+                                "${model_start}\n"
+                                        + "    android {\n"
+                                        + "        defaultConfig {\n"
+                                        + "          externalNativeBuild {\n"
+                                        + "              cmake {\n"
+                                        + "                targets.addAll(\"library2\")\n"
+                                        + "              }\n"
+                                        + "          }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "${model_end}\n")
+                        .build(isModel));
+
+        project.execute("clean", "assembleDebug");
+
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        assertThatApk(apk).hasVersionCode(1);
+        assertThatApk(apk).doesNotContain("lib/armeabi-v7a/liblibrary1.so");
+        assertThatApk(apk).doesNotContain("lib/armeabi/liblibrary1.so");
+        assertThatApk(apk).doesNotContain("lib/x86/liblibrary1.so");
+        assertThatApk(apk).doesNotContain("lib/x86_64/liblibrary1.so");
+        assertThatApk(apk).contains("lib/armeabi-v7a/liblibrary2.so");
+        assertThatApk(apk).contains("lib/armeabi/liblibrary2.so");
+        assertThatApk(apk).contains("lib/x86/liblibrary2.so");
+        assertThatApk(apk).contains("lib/x86_64/liblibrary2.so");
+
+        project.model().getSingle(); // Make sure we can successfully get AndroidProject
+        assertModel(project.model().getSingle(NativeAndroidProject.class));
+    }
+
+    private static void assertModel(NativeAndroidProject model) throws IOException {
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("project");

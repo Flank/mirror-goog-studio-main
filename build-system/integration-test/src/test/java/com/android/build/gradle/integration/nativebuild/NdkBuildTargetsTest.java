@@ -16,19 +16,22 @@
 
 package com.android.build.gradle.integration.nativebuild;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
+
+import com.android.build.gradle.integration.common.fixture.BuildScriptGenerator;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
+import com.android.testutils.apk.Apk;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
@@ -55,10 +58,7 @@ public class NdkBuildTargetsTest {
 
     @Parameterized.Parameters(name = "model = {0}")
     public static Collection<Object[]> data() {
-        return new ArrayList<Object[]>(
-                Arrays.asList(
-                        new ArrayList<Boolean>(Arrays.asList(false)).toArray(),
-                        new ArrayList<Boolean>(Arrays.asList(true)).toArray()));
+        return ImmutableList.of(new Object[] {false}, new Object[] {true});
     }
 
     public NdkBuildTargetsTest(boolean isModel) {
@@ -67,100 +67,119 @@ public class NdkBuildTargetsTest {
 
     @Before
     public void setUp() throws IOException, InterruptedException {
-        String plugin =
-                isModel
-                        ? "apply plugin: 'com.android.model.application'"
-                        : "apply plugin: 'com.android.application'";
-        String modelBefore = isModel ? "model { " : "";
-        String modelAfter = isModel ? " }" : "";
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
-                "\n"
-                        + plugin
-                        + "\n"
-                        + modelBefore
-                        + "\n"
-                        + "    android {\n"
-                        + "        compileSdkVersion "
-                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
-                        + "\n"
-                        + "        buildToolsVersion \""
-                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
-                        + "\"\n"
-                        + "        defaultConfig {\n"
-                        + "          externalNativeBuild {\n"
-                        + "            ndkBuild {\n"
-                        + "              arguments.addAll(\"NDK_TOOLCHAIN_VERSION:=clang\")\n"
-                        + "              targets.addAll(\"mylibrary2\")\n"
-                        + "              cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
-                        + "              cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
-                        + "              abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\", \"x86_64\")\n"
-                        + "            }\n"
-                        + "          }\n"
-                        + "        }\n"
-                        + "        externalNativeBuild {\n"
-                        + "          ndkBuild {\n"
-                        + "            path \"src/main/cpp/Android.mk\"\n"
-                        + "          }\n"
-                        + "        }\n"
-                        + "    }\n"
-                        + modelAfter
-                        + "\n");
-        project.execute("clean", "assembleDebug");
+                new BuildScriptGenerator(
+                                "apply plugin: '${application_plugin}'\n"
+                                        + "\n"
+                                        + "${model_start}\n"
+                                        + "    android {\n"
+                                        + "        compileSdkVersion "
+                                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                                        + "\n"
+                                        + "        buildToolsVersion \""
+                                        + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION
+                                        + "\"\n"
+                                        + "        defaultConfig {\n"
+                                        + "          externalNativeBuild {\n"
+                                        + "            ndkBuild {\n"
+                                        + "              arguments.addAll(\"NDK_TOOLCHAIN_VERSION:=clang\")\n"
+                                        + "              cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
+                                        + "              cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
+                                        + "              abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\", \"x86_64\")\n"
+                                        + "            }\n"
+                                        + "          }\n"
+                                        + "        }\n"
+                                        + "        externalNativeBuild {\n"
+                                        + "          ndkBuild {\n"
+                                        + "            path \"src/main/cpp/Android.mk\"\n"
+                                        + "          }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "${model_end}\n"
+                                        + "\n")
+                        .build(isModel));
     }
 
     @Test
-    public void checkApkContent() throws IOException {
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .hasVersionCode(1);
+    public void checkSingleTarget() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                new BuildScriptGenerator(
+                                "${model_start}\n"
+                                        + "    android {\n"
+                                        + "        defaultConfig {\n"
+                                        + "          externalNativeBuild {\n"
+                                        + "              ndkBuild {\n"
+                                        + "                targets.addAll(\"mylibrary2\")\n"
+                                        + "              }\n"
+                                        + "          }\n"
+                                        + "        }\n"
+                                        + "    }\n"
+                                        + "${model_end}\n")
+                        .build(isModel));
+
+        project.executor().run("clean", "assembleDebug");
+
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        assertThatApk(apk).hasVersionCode(1);
         // These were filtered out because they weren't in ndkBuild.targets
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .doesNotContain("lib/armeabi-v7a/libmylibrary1.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .doesNotContain("lib/armeabi/libmylibrary1.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .doesNotContain("lib/x86/libmylibrary1.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .doesNotContain("lib/x86_64/libmylibrary1.so");
+        assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libmylibrary1.so");
+        assertThatApk(apk).doesNotContain("lib/armeabi/libmylibrary1.so");
+        assertThatApk(apk).doesNotContain("lib/x86/libmylibrary1.so");
+        assertThatApk(apk).doesNotContain("lib/x86_64/libmylibrary1.so");
         // These weren't filtered out because they were in ndkBuild.targets
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .contains("lib/armeabi-v7a/libmylibrary2.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .contains("lib/armeabi/libmylibrary2.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .contains("lib/x86/libmylibrary2.so");
-        TruthHelper.assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .contains("lib/x86_64/libmylibrary2.so");
+        assertThatApk(apk).contains("lib/armeabi-v7a/libmylibrary2.so");
+        assertThatApk(apk).contains("lib/armeabi/libmylibrary2.so");
+        assertThatApk(apk).contains("lib/x86/libmylibrary2.so");
+        assertThatApk(apk).contains("lib/x86_64/libmylibrary2.so");
+
+        project.model().getSingle(); // Make sure we can successfully get AndroidProject
+        assertModel(project.model().getSingle(NativeAndroidProject.class));
     }
 
     @Test
-    public void checkModel() throws IOException {
+    public void checkMultiTargets() throws IOException, InterruptedException {
+        project.executor().run("clean", "assembleDebug");
+
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
+        assertThatApk(apk).hasVersionCode(1);
+        assertThatApk(apk).contains("lib/armeabi-v7a/libmylibrary1.so");
+        assertThatApk(apk).contains("lib/armeabi/libmylibrary1.so");
+        assertThatApk(apk).contains("lib/x86/libmylibrary1.so");
+        assertThatApk(apk).contains("lib/x86_64/libmylibrary1.so");
+        assertThatApk(apk).contains("lib/armeabi-v7a/libmylibrary2.so");
+        assertThatApk(apk).contains("lib/armeabi/libmylibrary2.so");
+        assertThatApk(apk).contains("lib/x86/libmylibrary2.so");
+        assertThatApk(apk).contains("lib/x86_64/libmylibrary2.so");
+
         project.model().getSingle(); // Make sure we can successfully get AndroidProject
-        NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
-        TruthHelper.assertThat(model).isNotNull();
-        TruthHelper.assertThat(model.getBuildSystems())
-                .containsExactly(NativeBuildSystem.NDK_BUILD.getName());
-        TruthHelper.assertThat(model.getBuildFiles()).hasSize(1);
-        TruthHelper.assertThat(model.getName()).isEqualTo("project");
-        // All targets are present in the model, even those not specified in ndkBuild.targets.
-        // This is so the user can view, edit, and navigate between targets in Android Studio.
-        TruthHelper.assertThat(model.getArtifacts()).hasSize(16);
-        TruthHelper.assertThat(model.getFileExtensions()).hasSize(1);
+
+        assertModel(project.model().getSingle(NativeAndroidProject.class));
+    }
+
+    private static void assertModel(NativeAndroidProject model) throws IOException {
+        assertThat(model).isNotNull();
+        assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.NDK_BUILD.getName());
+        assertThat(model.getBuildFiles()).hasSize(1);
+        assertThat(model.getName()).isEqualTo("project");
+        assertThat(model.getArtifacts()).hasSize(16);
+        assertThat(model.getFileExtensions()).hasSize(1);
 
         for (File file : model.getBuildFiles()) {
-            TruthHelper.assertThat(file).isFile();
+            assertThat(file).isFile();
         }
 
         Multimap<String, NativeArtifact> groupToArtifacts = ArrayListMultimap.create();
 
         for (NativeArtifact artifact : model.getArtifacts()) {
             List<String> pathElements = TestFileUtils.splitPath(artifact.getOutputFile());
-            TruthHelper.assertThat(pathElements).contains("obj");
-            TruthHelper.assertThat(pathElements).doesNotContain("lib");
+            assertThat(pathElements).contains("obj");
+            assertThat(pathElements).doesNotContain("lib");
             groupToArtifacts.put(artifact.getGroupName(), artifact);
         }
 
-        TruthHelper.assertThat(model).hasArtifactGroupsNamed("debug", "release");
-        TruthHelper.assertThat(model).hasArtifactGroupsOfSize(8);
+        assertThat(model).hasArtifactGroupsNamed("debug", "release");
+        assertThat(model).hasArtifactGroupsOfSize(8);
     }
 }
