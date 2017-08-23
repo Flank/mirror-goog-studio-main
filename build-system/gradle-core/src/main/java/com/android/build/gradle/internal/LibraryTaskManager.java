@@ -78,9 +78,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCopyDetails;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -160,12 +162,11 @@ public class LibraryTaskManager extends TaskManager {
                 variantName,
                 () -> createRenderscriptTask(tasks, variantScope));
 
-        AndroidTask<MergeResources> packageRes =
-                recorder.record(
-                        ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
-                        projectPath,
-                        variantName,
-                        () -> createMergeResourcesTask(tasks, variantScope, variantBundleDir));
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
+                projectPath,
+                variantName,
+                () -> createMergeResourcesTask(tasks, variantScope));
 
         // Add a task to merge the assets folders
         recorder.record(
@@ -539,7 +540,6 @@ public class LibraryTaskManager extends TaskManager {
                 });
 
         bundle.dependsOn(
-                packageRes.getName(),
                 packageRenderscriptTask.getName(),
                 copyLintTask.getName(),
                 mergeProguardFilesTask.getName(),
@@ -560,6 +560,15 @@ public class LibraryTaskManager extends TaskManager {
                 () -> variantScope.getOutputScope().getMainSplit().getOutputFileName());
         bundle.setExtension(BuilderConstants.EXT_LIB_ARCHIVE);
         bundle.from(variantScope.getOutput(TaskOutputType.LIBRARY_MANIFEST));
+        // Resources are bundled in the AAR under the res/ directory.
+        Action<FileCopyDetails> prependRes =
+                fileCopyDetails ->
+                        fileCopyDetails.setRelativePath(
+                                fileCopyDetails.getRelativePath().prepend(SdkConstants.FD_RES));
+        bundle.from(
+                variantScope.getOutput(TaskOutputType.PACKAGED_RES),
+                copySpec -> copySpec.eachFile(prependRes));
+        bundle.from(variantScope.getOutput(TaskOutputType.PUBLIC_RES));
         if (variantScope.hasOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_JAR)) {
             bundle.from(variantScope.getOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_JAR));
         }
@@ -658,33 +667,32 @@ public class LibraryTaskManager extends TaskManager {
         return task;
     }
 
-    @NonNull
-    private AndroidTask<MergeResources> createMergeResourcesTask(
-            @NonNull TaskFactory tasks,
-            @NonNull VariantScope variantScope,
-            @NonNull File variantBundleDir) {
+    private void createMergeResourcesTask(
+            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
 
         // Create a merge task to only merge the resources from this library and not
         // the dependencies. This is what gets packaged in the aar.
         // TODO: strip namespaces for this packaging.
-        File resFolder = FileUtils.join(variantBundleDir, FD_RES);
         AndroidTask<MergeResources> mergeResourceTask =
                 basicCreateMergeResourcesTask(
-                        tasks, variantScope, MergeType.PACKAGE, resFolder, false, false, false);
+                        tasks,
+                        variantScope,
+                        MergeType.PACKAGE,
+                        variantScope.getIntermediateDir(TaskOutputType.PACKAGED_RES),
+                        false,
+                        false,
+                        false);
 
         // Add a task to merge the resource folders, including the libraries, in order to
         // generate the R.txt file with all the symbols, including the ones from
         // the dependencies.
         createMergeResourcesTask(tasks, variantScope, false /*processResources*/);
 
-        File publicTxt = new File(variantBundleDir, FN_PUBLIC_TXT);
-
+        File publicTxt =
+                new File(variantScope.getIntermediateDir(TaskOutputType.PUBLIC_RES), FN_PUBLIC_TXT);
         mergeResourceTask.configure(tasks, task -> task.setPublicFile(publicTxt));
-
-        // publish the intermediate public res file
         variantScope.addTaskOutput(
                 TaskOutputType.PUBLIC_RES, publicTxt, mergeResourceTask.getName());
-        return mergeResourceTask;
     }
 
     @Override

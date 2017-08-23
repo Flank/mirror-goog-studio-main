@@ -152,7 +152,7 @@ public abstract class AbstractZipSubject<S extends Subject<S, T>, T extends Zip>
     protected final String extractContentAsString(@NonNull String path) {
         Path entry = getSubject().getEntry(path);
         if (entry == null) {
-            failWithRawMessage("Entry " + path + " does not exist.");
+            failWithRawMessage("Entry %s does not exist in zip %s.", path, getSubject().toString());
             return null;
         }
         try {

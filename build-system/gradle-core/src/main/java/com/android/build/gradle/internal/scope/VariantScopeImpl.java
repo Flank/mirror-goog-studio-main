@@ -120,6 +120,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -1462,6 +1463,15 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope.getIntermediatesDir(),
                 "resources",
                 "instant-run",
+                getVariantConfiguration().getDirName());
+    }
+
+    @NonNull
+    @Override
+    public File getIntermediateDir(@NonNull TaskOutputType taskOutputType) {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                taskOutputType.name().toLowerCase(Locale.US),
                 getVariantConfiguration().getDirName());
     }
 
