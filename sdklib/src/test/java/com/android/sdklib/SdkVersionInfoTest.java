@@ -47,6 +47,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(18, getApiByPreviewName("JellyBeanMR2", false));
         assertEquals(21, getApiByPreviewName("Lollipop", false));
         assertEquals(21, getApiByPreviewName("L", false));
+        assertEquals(26, getApiByPreviewName("O", false));
         assertEquals(-1, getApiByPreviewName("UnknownName", false));
         assertEquals(HIGHEST_KNOWN_API + 1, getApiByPreviewName("UnknownName", true));
     }
@@ -55,6 +56,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(7, getApiByBuildCode("ECLAIR_MR1", false));
         assertEquals(16, getApiByBuildCode("JELLY_BEAN", false));
         assertEquals(24, getApiByBuildCode("N", false));
+        assertEquals(26, getApiByBuildCode("O", false));
 
         for (int api = 1; api <= HIGHEST_KNOWN_API; api++) {
             assertEquals(api, getApiByBuildCode(getBuildCode(api), false));
@@ -71,7 +73,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("KitKat", getCodeName(19));
         assertEquals("Lollipop", getCodeName(21));
         assertEquals("Nougat", getCodeName(24));
-        assertEquals("O", getCodeName(26));
+        assertEquals("Oreo", getCodeName(26));
     }
 
     public void testCamelCaseToUnderlines() {
