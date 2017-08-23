@@ -902,7 +902,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
             Method method = plugin.getClass().getMethod("getKotlinPluginVersion");
             method.setAccessible(true);
             return method.invoke(plugin).toString();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             // Defensively catch all exceptions because we don't want it to crash
             // if kotlin plugin code changes unexpectedly.
             return "unknown";
