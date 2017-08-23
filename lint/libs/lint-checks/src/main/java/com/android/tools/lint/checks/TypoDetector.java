@@ -404,6 +404,11 @@ public class TypoDetector extends ResourceXmlDetector {
             int lastWordBegin,
             int begin, int end) {
         String word = text.substring(begin, end);
+
+        if (isAllowed(word)) {
+            return;
+        }
+
         String message = String.format(
                 "Repeated word \"%1$s\" in message: possible typo",
                 word);
@@ -420,5 +425,30 @@ public class TypoDetector extends ResourceXmlDetector {
 
         Location location = context.getLocation(node, lastWordBegin, end);
         context.report(ISSUE, node, location, message, fix);
+    }
+
+    private static boolean isAllowed(@NonNull String word) {
+        // See https://en.wikipedia.org/wiki/Reduplication
+
+        // Capitalized: names or place names. There are various places
+        // with repeated words, such as Pago Pago
+        // https://en.wikipedia.org/wiki/List_of_reduplicated_place_names
+        if (Character.isUpperCase(word.charAt(0))) {
+            return true;
+        }
+
+        // Some known/common-ish exceptions:
+        switch (word) {
+            case "that": // e.g. "I know that that will not work."
+            case "yadda":
+            case "bye":
+            case "choo":
+            case "night":
+            case "dot":
+            case "tsk":
+            case "no":
+                return true;
+        }
+        return false;
     }
 }

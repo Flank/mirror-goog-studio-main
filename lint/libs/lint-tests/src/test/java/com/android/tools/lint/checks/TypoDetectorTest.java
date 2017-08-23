@@ -375,6 +375,23 @@ public class TypoDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testValidRepeatedWords() {
+        // Make sure we don't pick up tokens in the middle of a string
+        //noinspection all // Sample code
+        lint().files(
+                xml("res/values/strings.xml", "" +
+                        "<resources>\n" +
+                        "    <string name=\"simple\">\n" +
+                        "    I know that that will not work,\n" +
+                        "    yadda yadda. Let's visit Pago Pago.\n" +
+                        "    Time to say bye bye and ride the " +
+                        "    choo choo train! It's a no no, tsk tsk." +
+                        "    </string>\n" +
+                        "</resources>\n"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile typos1 = xml("res/values/strings.xml", ""
             + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
