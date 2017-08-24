@@ -44,12 +44,12 @@ class ResourceNamespaceTest {
             .appendToBuild("android.aaptOptions.namespaced = true")
             .withFile(
                     "src/main/res/values/strings.xml",
-                    """<resources><string name="mystring">Lib1 string</string></resources>""")
+                    """<resources><string name="libString">Lib1 string</string></resources>""")
             .withFile(
                     "src/main/java/com/example/lib/Example.java",
                     """package com.example.lib;
                     public class Example {
-                        public static int getLib1String() { return R.string.mystring; }
+                        public static int getLib1String() { return R.string.libString; }
                     }""")
             .withFile(
                     "src/main/res/drawable/dot.xml",
@@ -72,15 +72,15 @@ class ResourceNamespaceTest {
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
-                        <string name="mystring">Lib2 string</string>
-                        <string name="mystring_from_lib">@*com.example.lib:string/mystring</string>
+                        <string name="baseFeatureString">baseFeature String</string>
+                        <string name="libString_from_lib">@*com.example.lib:string/libString</string>
                     </resources>""")
             .withFile(
                     "src/main/java/com/example/baseFeature/Example.java",
                     """package com.example.baseFeature;
                     public class Example {
-                        public static int baseFeature() { return R.string.mystring; }
-                        public static int lib() { return com.example.lib.R.string.mystring; }
+                        public static int baseFeature() { return R.string.baseFeatureString; }
+                        public static int lib() { return com.example.lib.R.string.libString; }
                     }
                     """)
 
@@ -89,15 +89,15 @@ class ResourceNamespaceTest {
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
-                        <string name="mystring">Lib3 string</string>
-                        <string name="mystring_from_baseFeature">@*com.example.baseFeature:string/mystring</string>
+                        <string name="otherFeatureString">Other Feature String</string>
+                        <string name="baseFeatureString_from_baseFeature">@*com.example.baseFeature:string/baseFeatureString</string>
                     </resources>""")
             .withFile(
                     "src/main/java/com/example/otherFeature/Example.java",
                     """package com.example.otherFeature;
                     public class Example {
-                        public static int otherFeature() { return R.string.mystring; }
-                        public static int baseFeature() { return com.example.baseFeature.R.string.mystring; }
+                        public static int otherFeature() { return R.string.otherFeatureString; }
+                        public static int baseFeature() { return com.example.baseFeature.R.string.baseFeatureString; }
                     }
                     """)
 
@@ -106,33 +106,33 @@ class ResourceNamespaceTest {
             .withFile(
                     "src/main/res/values/strings.xml",
                     """<resources>
-                        <string name="mystring">App string</string>
-                        <string name="mystring_from_lib">@*com.example.lib:string/mystring</string>
-                        <string name="mystring_from_baseFeature_via_otherFeature">@*com.example.otherFeature:string/mystring_from_baseFeature</string>
-                        <string name="mystring_from_otherFeature">@*com.example.otherFeature:string/mystring</string>
+                        <string name="appString">App string</string>
+                        <string name="libString_from_lib">@*com.example.lib:string/libString</string>
+                        <string name="baseFeatureString_from_baseFeature_via_otherFeature">@*com.example.otherFeature:string/baseFeatureString_from_baseFeature</string>
+                        <string name="otherFeatureString_from_otherFeature">@*com.example.otherFeature:string/otherFeatureString</string>
                     </resources>""")
             .withFile(
                     "src/main/java/com/example/app/Example.java",
                     """package com.example.app;
                     public class Example {
-                        public static final int APP_STRING = R.string.mystring;
-                        public static final int LIB1_STRING = com.example.lib.R.string.mystring;
-                        public static final int LIB3_STRING = com.example.otherFeature.R.string.mystring;
+                        public static final int APP_STRING = R.string.appString;
+                        public static final int LIB1_STRING = com.example.lib.R.string.libString;
+                        public static final int LIB3_STRING = com.example.otherFeature.R.string.otherFeatureString;
                     }""")
             .withFile("src/androidTest/res/raw/text.txt", "test file")
             .withFile(
                     "src/androidTest/res/values/strings.xml",
                     """<resources>
-                        <string name="mystring">App test string</string>
+                        <string name="appTestString">App test string</string>
                     </resources>""")
             .withFile(
                     "src/androidTest/java/com/example/app/ExampleTest.java",
                     """package com.example.app.test;
                     public class ExampleTest {
-                        public static final int TEST_STRING = R.string.mystring;
-                        public static final int APP_STRING = com.example.app.R.string.mystring;
-                        public static final int LIB1_STRING = com.example.lib.R.string.mystring;
-                        public static final int LIB3_STRING = com.example.otherFeature.R.string.mystring;
+                        public static final int TEST_STRING = R.string.appTestString;
+                        public static final int APP_STRING = com.example.app.R.string.appString;
+                        public static final int LIB1_STRING = com.example.lib.R.string.libString;
+                        public static final int LIB3_STRING = com.example.otherFeature.R.string.otherFeatureString;
                     }
                     """)
 
@@ -181,27 +181,14 @@ class ResourceNamespaceTest {
         assertThat(apk).containsClass("Lcom/example/app/R\$string;")
         assertThat(apk.mainDexFile.get().getFields("Lcom/example/app/R\$string;"))
                 .containsExactly(
-                        "public static final I mystring",
-                        "public static final I mystring_from_baseFeature_via_otherFeature",
-                        "public static final I mystring_from_lib",
-                        "public static final I mystring_from_otherFeature")
+                        "public static final I appString",
+                        "public static final I baseFeatureString_from_baseFeature_via_otherFeature",
+                        "public static final I libString_from_lib",
+                        "public static final I otherFeatureString_from_otherFeature")
         //TODO: re-enable once b/64706588 is fixed.
         //assertThat(apk).containsClass("Lcom/example/lib/R\$string;")
         //assertThat(apk).containsClass("Lcom/example/baseFeature/R\$string;")
         //assertThat(apk).containsClass("Lcom/example/otherFeature/R\$string;")
-        //assertThat(apk.mainDexFile.get().getFields("Lcom/example/lib/R\$string;"))
-        //        .containsExactly(
-        //        "public static final I mystring",
-        //        "public static final I mystring_from_baseFeature_via_otherFeature",
-        //        "public static final I mystring_from_lib",
-        //        "public static final I mystring_from_otherFeature")
-        //
-        //assertThat(apk.mainDexFile.get().getFields("Lcom/example/baseFeature/R\$string;"))
-        //        .containsExactly(
-        //                "public static final I mystring",
-        //                "public static final I mystring_from_baseFeature_via_otherFeature",
-        //                "public static final I mystring_from_lib",
-        //                "public static final I mystring_from_otherFeature")
         val testApk = project.getSubproject(":app").testApk
         assertThat(testApk).exists()
         assertThat(testApk).doesNotContain(dotDrawablePath)
