@@ -82,7 +82,7 @@ import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileCopyDetails;
+import org.gradle.api.file.CopySpec;
 import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -284,27 +284,24 @@ public class LibraryTaskManager extends TaskManager {
         createMergeJniLibFoldersTasks(tasks, variantScope);
         createStripNativeLibraryTask(tasks, variantScope);
 
-        // package the renderscript header files files into the bundle folder
-        File rsFolder = new File(variantScope.getBaseBundleDir(), SdkConstants.FD_RENDERSCRIPT);
-        AndroidTask<Sync> packageRenderscriptTask =
-                recorder.record(
-                        ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK,
-                        projectPath,
-                        variantName,
-                        () -> {
-                            AndroidTask<Sync> task =
-                                    getAndroidTasks()
-                                            .create(
-                                                    tasks,
-                                                    new PackageRenderscriptConfigAction(
-                                                            variantScope, rsFolder));
+        recorder.record(
+                ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK,
+                projectPath,
+                variantName,
+                () -> {
+                    File rsFolder =
+                            variantScope.getIntermediateDir(TaskOutputType.RENDERSCRIPT_HEADERS);
+                    AndroidTask<Sync> task =
+                            getAndroidTasks()
+                                    .create(
+                                            tasks,
+                                            new PackageRenderscriptConfigAction(
+                                                    variantScope, rsFolder));
 
-                            // publish the renderscript intermediate files
-                            variantScope.addTaskOutput(
-                                    TaskOutputType.RENDERSCRIPT_HEADERS, rsFolder, task.getName());
-
-                            return task;
-                        });
+                    // publish the renderscript intermediate files
+                    variantScope.addTaskOutput(
+                            TaskOutputType.RENDERSCRIPT_HEADERS, rsFolder, task.getName());
+                });
 
         // merge consumer proguard files from different build types and flavors
         AndroidTask<MergeFileTask> mergeProguardFilesTask =
@@ -525,7 +522,9 @@ public class LibraryTaskManager extends TaskManager {
                         // now add a transform that will take all the native libs and package
                         // them into the libs folder of the bundle. This processes both the PROJECT
                         // and the LOCAL_PROJECT scopes
-                        final File jniLibsFolder = new File(variantBundleDir, FD_JNI);
+                        final File jniLibsFolder =
+                                variantScope.getIntermediateDir(
+                                        TaskOutputType.LIBRARY_AND_LOCAL_JARS_JNI);
                         LibraryJniLibsTransform jniTransform =
                                 new LibraryJniLibsTransform(
                                         "syncJniLibs",
@@ -533,14 +532,17 @@ public class LibraryTaskManager extends TaskManager {
                                         TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS);
                         Optional<AndroidTask<TransformTask>> jniPackagingTask =
                                 transformManager.addTransform(tasks, variantScope, jniTransform);
-                        jniPackagingTask.ifPresent(t -> bundle.dependsOn(t.getName()));
-
+                        jniPackagingTask.ifPresent(
+                                t ->
+                                        variantScope.addTaskOutput(
+                                                TaskOutputType.LIBRARY_AND_LOCAL_JARS_JNI,
+                                                jniLibsFolder,
+                                                t.getName()));
                         return null;
                     }
                 });
 
         bundle.dependsOn(
-                packageRenderscriptTask.getName(),
                 copyLintTask.getName(),
                 mergeProguardFilesTask.getName(),
                 // The below dependencies are redundant in a normal build as
@@ -560,14 +562,12 @@ public class LibraryTaskManager extends TaskManager {
                 () -> variantScope.getOutputScope().getMainSplit().getOutputFileName());
         bundle.setExtension(BuilderConstants.EXT_LIB_ARCHIVE);
         bundle.from(variantScope.getOutput(TaskOutputType.LIBRARY_MANIFEST));
-        // Resources are bundled in the AAR under the res/ directory.
-        Action<FileCopyDetails> prependRes =
-                fileCopyDetails ->
-                        fileCopyDetails.setRelativePath(
-                                fileCopyDetails.getRelativePath().prepend(SdkConstants.FD_RES));
         bundle.from(
                 variantScope.getOutput(TaskOutputType.PACKAGED_RES),
-                copySpec -> copySpec.eachFile(prependRes));
+                prependToCopyPath(SdkConstants.FD_RES));
+        bundle.from(
+                variantScope.getOutput(TaskOutputType.RENDERSCRIPT_HEADERS),
+                prependToCopyPath(SdkConstants.FD_RENDERSCRIPT));
         bundle.from(variantScope.getOutput(TaskOutputType.PUBLIC_RES));
         if (variantScope.hasOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_JAR)) {
             bundle.from(variantScope.getOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_JAR));
@@ -575,6 +575,9 @@ public class LibraryTaskManager extends TaskManager {
         if (variantScope.hasOutput(TaskOutputType.RES_STATIC_LIBRARY)) {
             bundle.from(variantScope.getOutput(TaskOutputType.RES_STATIC_LIBRARY));
         }
+        bundle.from(
+                variantScope.getOutput(TaskOutputType.LIBRARY_AND_LOCAL_JARS_JNI),
+                prependToCopyPath(SdkConstants.FD_JNI));
         bundle.from(variantBundleDir);
         bundle.from(
                 FileUtils.join(
@@ -616,6 +619,14 @@ public class LibraryTaskManager extends TaskManager {
                 projectPath,
                 variantName,
                 () -> createLintTasks(tasks, variantScope));
+    }
+
+    private static Action<CopySpec> prependToCopyPath(String pathSegment) {
+        return copySpec ->
+                copySpec.eachFile(
+                        fileCopyDetails ->
+                                fileCopyDetails.setRelativePath(
+                                        fileCopyDetails.getRelativePath().prepend(pathSegment)));
     }
 
     @Override

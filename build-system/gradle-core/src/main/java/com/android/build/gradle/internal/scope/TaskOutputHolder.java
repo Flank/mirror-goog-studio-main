@@ -106,8 +106,10 @@ public interface TaskOutputHolder {
         RUNTIME_R_CLASS_CLASSES,
 
         // --- JNI libs ---
-        // packaged JNI for AAR Intermediate publishing
+        // packaged JNI for inter-project intermediate publishing
         LIBRARY_JNI,
+        // packaged JNI for AAR publishing
+        LIBRARY_AND_LOCAL_JARS_JNI,
 
         MERGED_ASSETS,
         MOCKABLE_JAR,
