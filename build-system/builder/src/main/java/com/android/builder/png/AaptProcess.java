@@ -23,9 +23,9 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.v2.AaptV2CommandBuilder;
 import com.android.builder.tasks.BooleanLatch;
 import com.android.builder.tasks.Job;
-import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.sdklib.BuildToolInfo;
+import com.android.tools.aapt2.Aapt2Exception;
 import com.android.utils.FileUtils;
 import com.android.utils.GrabProcessOutput;
 import com.android.utils.ILogger;
@@ -329,24 +329,25 @@ public class AaptProcess {
         @SuppressWarnings("StringBufferField")
         @NonNull private final StringBuilder mErrorBuilder = new StringBuilder();
 
-            NotifierProcessOutput(
-                    @NonNull Job<AaptProcess> job,
-                    @NonNull ProcessOutputFacade owner,
-                    @NonNull ILogger iLogger) {
-                mOwner = owner;
-                mJob = job;
+        NotifierProcessOutput(
+                @NonNull Job<AaptProcess> job,
+                @NonNull ProcessOutputFacade owner,
+                @NonNull ILogger iLogger) {
+            mOwner = owner;
+            mJob = job;
             mLogger = iLogger;
         }
 
         @Override
         public void out(@Nullable String line) {
             if (line != null) {
+                //AAPT1 outputs "Done" and "Error" to stdout.
                 if (line.equalsIgnoreCase("Done")) {
                     mOwner.reset();
                     if (mInError.get()) {
                         mLogger.verbose(
                                 "Job is in error mode, cause : %1$s", mErrorBuilder.toString());
-                        mJob.error(new ProcessException(mErrorBuilder.toString()));
+                        mJob.error(new AaptException(mErrorBuilder.toString()));
                     } else {
                         mJob.finished();
                     }
@@ -361,7 +362,21 @@ public class AaptProcess {
         @Override
         public void err(@Nullable String line) {
             if (line != null) {
-                if (mInError.get()) {
+                //AAPT2 outputs "Done" and "Error" to stderr for better error handling.
+                if (line.equalsIgnoreCase("Done")) {
+                    mOwner.reset();
+                    if (mInError.get()) {
+                        mLogger.verbose(
+                                "Job is in error mode, cause : %1$s", mErrorBuilder.toString());
+                        mJob.error(new Aapt2Exception(mErrorBuilder.toString()));
+                    } else {
+                        mJob.finished();
+                    }
+                } else if (line.equalsIgnoreCase("Error")) {
+                    // Mark that the error actually happened.
+                    mInError.set(true);
+                } else if (mInError.get() || line.contains("error:")) {
+                    // Grab all the possible errors.
                     mErrorBuilder.append(line);
                 }
                 mLogger.verbose(
