@@ -271,7 +271,7 @@ class ManifestModel {
 
     /**
      * Definitions of the support node types in the Android Manifest file.
-     * {@link <a href=http://developer.android.com/guide/topics/manifest/manifest-intro.html/>}
+     * {@link <a href=http://developer.android.com/guide/topics/manifest/manifest-intro.html>}
      * for more details about the xml format.
      *
      * There is no DTD or schema associated with the file type so this is best effort in providing
