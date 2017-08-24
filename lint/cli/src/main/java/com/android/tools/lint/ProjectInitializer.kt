@@ -363,7 +363,7 @@ private class ProjectInitializer(val client: LintClient, val file: File,
 
         module.setManifests(manifests)
         module.setResources(resourceRoots, resources)
-        module.setTestSources(sourceRoots, sources)
+        module.setTestSources(sourceRoots, testSources)
         module.setSources(sourceRoots, sources)
         module.setClasspath(classes, true)
         module.setClasspath(classpath, false)
@@ -393,6 +393,11 @@ private class ProjectInitializer(val client: LintClient, val file: File,
             if (!source.exists()) {
                 source = File(root, path)
             }
+        }
+
+        if (!source.exists()) {
+            reportError("$path ${if (!File(path).isAbsolute) "(relative to " +
+                    "${dir.canonicalPath}) " else ""}does not exist", child)
         }
         return source
     }
