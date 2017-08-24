@@ -18,6 +18,7 @@ package com.android.tools.lint
 
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
+import com.android.testutils.TestUtils
 import com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS
 import com.android.tools.lint.checks.infrastructure.ProjectDescription
 import com.android.tools.lint.checks.infrastructure.ProjectDescription.Type.LIBRARY
@@ -247,9 +248,14 @@ public class Foo {
             }
         }
 
+        val canonicalRoot = root.canonicalPath
+
         MainTest.checkDriver(
 
 """../baseline: Information: 1 error were filtered out because they were listed in the baseline file, TESTROOT/baseline [LintBaseline]
+project.xml:5: Error: test.jar (relative to ROOT) does not exist [LintError]
+<classpath jar="test.jar" />
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 res/values/strings.xml:4: Error: string1 has already been defined in this folder [DuplicateDefinition]
     <string name="string1">String 2</string>
             ~~~~~~~~~~~~~~
@@ -258,7 +264,7 @@ res/values/strings.xml:4: Error: string1 has already been defined in this folder
     <permission android:name="bar.permission.SEND_SMS"
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     AndroidManifest.xml:9: Previous permission here
-2 errors, 1 warnings (1 error filtered by baseline baseline)
+3 errors, 1 warnings (1 error filtered by baseline baseline)
 """,
                 "",
 
@@ -272,7 +278,7 @@ res/values/strings.xml:4: Error: string1 has already been defined in this folder
                         "--project",
                         File(root, "project.xml").path),
 
-                { it.replace(baseline.parentFile.path, "TESTROOT") },
+                { it.replace(canonicalRoot, "ROOT").replace(baseline.parentFile.path, "TESTROOT") },
                 listener)
 
 
@@ -286,22 +292,24 @@ res/values/strings.xml:4: Error: string1 has already been defined in this folder
         @Language("XML")
         val descriptor = """
             <project>
-            <classpath jar="test.jar" />
             <module name="Foo:App" android="true" library="true">
               <unknown file="foo.Bar" />
               <resource file="res/values/strings.xml" />
               <dep module="NonExistent" />
             </module>
             </project>""".trimIndent()
-        val projectXml = File(temp.root, "project.xml")
+        val folder = File(temp.root, "app")
+        folder.mkdirs()
+        val projectXml = File(folder, "project.xml")
         Files.asCharSink(projectXml, Charsets.UTF_8).write(descriptor)
 
         MainTest.checkDriver(
-                "" +
-                        "project.xml:4: Error: Unexpected tag unknown [LintError]\n" +
-                        "  <unknown file=\"foo.Bar\" />\n" +
-                        "  ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                        "1 errors, 0 warnings\n",
+"""app: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
+project.xml:3: Error: Unexpected tag unknown [LintError]
+  <unknown file="foo.Bar" />
+  ~~~~~~~~~~~~~~~~~~~~~~~~~~
+2 errors, 0 warnings
+""",
                 "",
 
                 ERRNO_SUCCESS,
@@ -309,6 +317,73 @@ res/values/strings.xml:4: Error: string1 has already been defined in this folder
                 arrayOf("--quiet",
                         "--project",
                         projectXml.path), null, null)
+    }
+
+    @Test
+    fun testSimpleProject() {
+        val root = temp.newFolder()
+        val projects = lint().files(
+                java("C.java", """
+import android.app.Fragment;
+
+@SuppressWarnings({"MethodMayBeStatic", "ClassNameDiffersFromFileName"})
+public class C {
+  String path = "/sdcard/file";
+  void test(Fragment fragment) {
+    Object host = fragment.getHost(); // Requires API 23
+  }
+}"""),
+                xml("AndroidManifest.xml", """
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk
+        android:minSdkVersion="15"
+        android:targetSdkVersion="22" />
+
+</manifest>"""),
+                xml("res/values/not_in_project.xml", """
+<resources>
+    <string name="string2">String 1</string>
+    <string name="string2">String 2</string>
+</resources>
+""")).createProjects(root)
+        val projectDir = projects[0]
+
+        @Language("XML")
+        val descriptor = """
+            <project>
+            <sdk dir='${TestUtils.getSdk()}'/>
+            <root dir="$projectDir" />
+                <module name="M" android="true" library="true">
+                <manifest file="AndroidManifest.xml" />
+                <src file="C.java" />
+            </module>
+            </project>""".trimIndent()
+        val descriptorFile = File(root, "project.xml")
+        Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
+
+        MainTest.checkDriver(
+"""C.java:8: Error: Call requires API level 23 (current min is 15): android.app.Fragment#getHost [NewApi]
+    Object host = fragment.getHost(); // Requires API 23
+                           ~~~~~~~
+C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
+  String path = "/sdcard/file";
+                ~~~~~~~~~~~~~~
+1 errors, 1 warnings
+""",
+                "",
+
+                // Expected exit code
+                ERRNO_SUCCESS,
+
+                // Args
+                arrayOf("--quiet",
+                        "--project",
+                        descriptorFile.path),
+
+                null, null)
     }
 
     companion object {
