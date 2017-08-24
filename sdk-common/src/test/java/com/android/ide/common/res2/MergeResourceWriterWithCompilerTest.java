@@ -53,22 +53,23 @@ public class MergeResourceWriterWithCompilerTest {
 
     @Before
     public final void before() throws Exception {
-        mEmptyPreprocessor = new ResourcePreprocessor() {
-            @Override
-            public boolean needsPreprocessing(File file) {
-                return false;
-            }
+        mEmptyPreprocessor =
+                new ResourcePreprocessor() {
+                    @Override
+                    public boolean needsPreprocessing(@NonNull File file) {
+                        return false;
+                    }
 
-            @Override
-            public Collection<File> getFilesToBeGenerated(File original) {
-                return null;
-            }
+                    @NonNull
+                    @Override
+                    public Collection<File> getFilesToBeGenerated(@NonNull File original) {
+                        return null;
+                    }
 
-            @Override
-            public void generateFile(File toBeGenerated, File original)
-                    throws IOException {
-            }
-        };
+                    @Override
+                    public void generateFile(@NonNull File toBeGenerated, @NonNull File original)
+                            throws IOException {}
+                };
 
         mSimpleCompiler =
                 new QueueableResourceCompiler() {

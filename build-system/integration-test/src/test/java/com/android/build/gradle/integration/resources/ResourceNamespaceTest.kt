@@ -32,11 +32,12 @@ import org.objectweb.asm.Opcodes
  * Project structured as follows:
  *
  * <pre>
- *   instantApp -->
- *                   other feature  -->  base feature  -->
- *        -------->
- *   app                                                     lib
- *        ----------------------------------------------->
+ *   notNamespacedLib -->
+ *   instantApp -------->
+ *                         other feature  -->  base feature  -->
+ *        -------------->
+ *   app                                                           lib
+ *        ----------------------------------------------------->
  * </pre>
  */
 class ResourceNamespaceTest {
@@ -139,6 +140,15 @@ class ResourceNamespaceTest {
 
     private val instantApp = MinimalSubProject.instantApp()
 
+    private val notNamespacedLib = MinimalSubProject.lib("com.example.notNamespaced")
+            .withFile(
+                    "src/main/res/values/strings.xml",
+                    """<resources>
+                        <string name="myString_from_lib">@string/libString_from_lib</string>
+                    </resources>
+                    """)
+
+
     private val testApp =
             MultiModuleTestProject.builder()
                     .subproject(":lib", lib)
@@ -146,6 +156,8 @@ class ResourceNamespaceTest {
                     .subproject(":otherFeature", feature2)
                     .subproject(":app", app)
                     .subproject(":instantApp", instantApp)
+                    .subproject(":notNamespacedLib", notNamespacedLib)
+                    .dependency(notNamespacedLib, feature2)
                     .dependency(app, feature2)
                     .dependency(feature2, baseFeature)
                     .dependency(baseFeature, lib)
@@ -171,6 +183,9 @@ class ResourceNamespaceTest {
                     ":baseFeature:assembleDebugAndroidTest",
                     ":otherFeature:bundleDebug",
                     ":otherFeature:assembleDebugAndroidTest",
+                    ":notNamespacedLib:assembleDebug",
+                    ":notNamespacedLib:assembleDebugAndroidTest",
+                    ":notNamespacedLib:verifyReleaseResources",
                     // TODO: Fix resource dependencies when linking against the base feature.
                     //":otherFeature:assembleDebug",
                     ":app:assembleDebug",

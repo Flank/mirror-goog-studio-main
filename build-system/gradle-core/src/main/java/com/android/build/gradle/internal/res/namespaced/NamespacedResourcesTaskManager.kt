@@ -29,6 +29,7 @@ import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.core.VariantType
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
+import com.google.common.collect.ImmutableSet
 import java.io.File
 
 /**
@@ -211,7 +212,8 @@ class NamespacedResourcesTaskManager(
                         null,
                         false,
                         true,
-                        false))
+                        false,
+                        ImmutableSet.of()))
         compile.dependsOn(tasks, variantScope.resourceGenTask)
         variantScope.addTaskOutput(
                 TaskOutputHolder.TaskOutputType.RES_COMPILED_FLAT_FILES, compiled, compile.name)

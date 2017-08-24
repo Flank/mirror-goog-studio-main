@@ -1,0 +1,154 @@
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.build.gradle.internal.res.namespaced
+
+import com.android.SdkConstants
+import com.android.annotations.VisibleForTesting
+import com.android.ide.common.res2.CompileResourceRequest
+import com.android.ide.common.res2.QueueableResourceCompiler
+import com.android.ide.common.xml.XmlPrettyPrinter
+import com.android.utils.FileUtils
+import com.android.utils.PositionXmlParser
+import com.google.common.util.concurrent.Futures
+import java.io.BufferedInputStream
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.concurrent.Future
+import javax.xml.parsers.ParserConfigurationException
+import org.w3c.dom.Node
+import org.xml.sax.SAXException
+
+class NamespaceRemover : QueueableResourceCompiler {
+
+    @Throws(Exception::class)
+    override fun compile(request: CompileResourceRequest): Future<File> {
+        val input = request.input
+        val output = compileOutputFor(request)
+
+        if (input.name.endsWith(SdkConstants.DOT_XML)) {
+            // Remove namespace.
+            rewrite(input.toPath(), output.toPath())
+        } else {
+            // Just copy the file.
+            FileUtils.copyFile(input, output)
+        }
+
+        return Futures.immediateFuture(output)
+    }
+
+    override fun compileOutputFor(request: CompileResourceRequest): File {
+        val parentDir = File(request.output, request.folderName)
+        FileUtils.mkdirs(parentDir)
+        return File(parentDir, request.input.name)
+    }
+
+    @Throws(IOException::class)
+    override fun close() {
+        // We don't batch so no need to do anything.
+    }
+
+    /*
+     * Rewrites an XML file to be namespace free.
+     */
+    @Throws(IOException::class, ParserConfigurationException::class, SAXException::class)
+    private fun rewrite(input: Path, output: Path) {
+        BufferedInputStream(
+                Files.newInputStream(input)).use {
+            `is` -> Files.write(output, rewrite(`is`).toByteArray())
+        }
+    }
+
+    /*
+     * Rewrites an XML document to be namespace free (AAPT1 compliant).
+     */
+    @VisibleForTesting
+    @Throws(ParserConfigurationException::class, SAXException::class, IOException::class)
+    fun rewrite(input: InputStream): String {
+        val doc = PositionXmlParser.parse(input)
+        removeNamespaces(doc)
+        return XmlPrettyPrinter.prettyPrint(doc, false)
+    }
+
+    /*
+     * Removes all non-android and non-tools namespaces from a node and replaces them with the
+     * non-namespace defaults ('res-auto' for the URI and no namespaces for the references).
+     */
+    private fun removeNamespaces(node: Node) {
+        if (node.nodeType == Node.TEXT_NODE) {
+            // We could be inside a reference that could be namespaced. Remove all namespaces other
+            // than "android" and "tools".
+            val content = node.textContent
+            val nonNamespacedContent = removeNamespace(content)
+            if (content != nonNamespacedContent) {
+                node.textContent = nonNamespacedContent
+            }
+        } else if (node.nodeType == Node.ATTRIBUTE_NODE) {
+            val prefix = node.prefix
+            if (prefix != null && prefix == "xmlns") {
+                // We found a definition of a namespace. Leave "android", "tools" and "aapt" intact.
+                // We will leave the namespace unchanged, but instead change the URI to res-auto.
+                val ns = node.localName
+                if (ns != SdkConstants.ANDROID_NS_NAME
+                        && ns != SdkConstants.TOOLS_NS_NAME
+                        && ns != SdkConstants.AAPT_PREFIX) {
+                    node.textContent = SdkConstants.AUTO_URI
+                }
+            }
+        }
+
+        // First fix the attributes.
+        val attributes = node.attributes
+        run {
+            var i = 0
+            while (attributes != null && i < attributes.length) {
+                removeNamespaces(attributes.item(i))
+                ++i
+            }
+        }
+
+        // Now fix the children.
+        val children = node.childNodes
+        for (i in 0 until children.length) {
+            removeNamespaces(children.item(i))
+        }
+    }
+
+    /*
+     * Find all references to a namespace and remove them, but ignore "android" and "tools" ones.
+     * For example:
+     * "@lib:string/foo" becomes "@string/foo"
+     * "@com.foo.bar:id/beep" becomes "@id/beep"
+     * "@android:id/name" stays the same
+     * "@tools:id/setting" stays the same
+     *
+     * @returns non-namespaced content (AAPT1 compliant). Can be the same as input if there were no
+     *          namespaced references.
+     */
+    private fun removeNamespace(content: String): String {
+        if (content.startsWith("@") && content.contains(":")) {
+            val ns = content.substring(1, content.indexOf(':'))
+
+            if (ns != SdkConstants.ANDROID_NS_NAME && ns != SdkConstants.TOOLS_NS_NAME) {
+                return "@" + content.substring(content.indexOf(':') + 1)
+            }
+        }
+        return content
+    }
+}

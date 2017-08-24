@@ -16,6 +16,7 @@
 
 package com.android.ide.common.res2;
 
+import com.android.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -31,17 +32,19 @@ public final class NoOpResourcePreprocessor implements ResourcePreprocessor {
     private NoOpResourcePreprocessor() { }
 
     @Override
-    public boolean needsPreprocessing(File file) {
+    public boolean needsPreprocessing(@NonNull File file) {
         return false;
     }
 
+    @NonNull
     @Override
-    public Collection<File> getFilesToBeGenerated(File original) {
+    public Collection<File> getFilesToBeGenerated(@NonNull File original) {
         throw new IllegalStateException("Should not be called");
     }
 
     @Override
-    public void generateFile(File toBeGenerated, File original) throws IOException {
+    public void generateFile(@NonNull File toBeGenerated, @NonNull File original)
+            throws IOException {
         throw new IllegalStateException("Should not be called");
     }
 }

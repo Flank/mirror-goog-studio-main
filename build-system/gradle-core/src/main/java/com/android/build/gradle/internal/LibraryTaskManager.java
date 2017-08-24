@@ -69,6 +69,7 @@ import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
@@ -673,10 +674,16 @@ public class LibraryTaskManager extends TaskManager {
 
     private void createMergeResourcesTask(
             @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+        ImmutableSet<MergeResources.Flag> flags;
+        if (Boolean.TRUE.equals(
+                variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
+            flags = Sets.immutableEnumSet(MergeResources.Flag.REMOVE_RESOURCE_NAMESPACES);
+        } else {
+            flags = ImmutableSet.of();
+        }
 
         // Create a merge task to only merge the resources from this library and not
         // the dependencies. This is what gets packaged in the aar.
-        // TODO: strip namespaces for this packaging.
         AndroidTask<MergeResources> mergeResourceTask =
                 basicCreateMergeResourcesTask(
                         tasks,
@@ -685,7 +692,8 @@ public class LibraryTaskManager extends TaskManager {
                         variantScope.getIntermediateDir(TaskOutputType.PACKAGED_RES),
                         false,
                         false,
-                        false);
+                        false,
+                        flags);
 
         // Add a task to merge the resource folders, including the libraries, in order to
         // generate the R.txt file with all the symbols, including the ones from

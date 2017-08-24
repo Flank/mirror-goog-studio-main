@@ -16,6 +16,7 @@
 
 package com.android.ide.common.res2;
 
+import com.android.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -24,11 +25,12 @@ import java.util.Collection;
 /** Provides functionality the resource merger needs for preprocessing resources during merge. */
 public interface ResourcePreprocessor extends Serializable {
     /** Checks if the given file should be replaced by N generated files. */
-    boolean needsPreprocessing(File file);
+    boolean needsPreprocessing(@NonNull File file);
 
     /** Returns the paths that should be generated for the given file. */
-    Collection<File> getFilesToBeGenerated(File original);
+    @NonNull
+    Collection<File> getFilesToBeGenerated(@NonNull File original);
 
     /** Actually generate the file based on the original file. */
-    void generateFile(File toBeGenerated, File original) throws IOException;
+    void generateFile(@NonNull File toBeGenerated, @NonNull File original) throws IOException;
 }

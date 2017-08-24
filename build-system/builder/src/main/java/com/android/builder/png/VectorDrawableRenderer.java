@@ -65,7 +65,7 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
     }
 
     @Override
-    public boolean needsPreprocessing(File resourceFile) {
+    public boolean needsPreprocessing(@NonNull File resourceFile) {
         return mMinSdk < MIN_SDK_WITH_VECTOR_SUPPORT
                 && isXml(resourceFile)
                 && isInDrawable(resourceFile)
@@ -73,8 +73,9 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
                 && isRootVector(resourceFile);
     }
 
+    @NonNull
     @Override
-    public Collection<File> getFilesToBeGenerated(File inputXmlFile) {
+    public Collection<File> getFilesToBeGenerated(@NonNull File inputXmlFile) {
         Collection<File> filesToBeGenerated = Lists.newArrayList();
         FolderConfiguration originalConfiguration = getFolderConfiguration(inputXmlFile);
 
@@ -126,7 +127,8 @@ public class VectorDrawableRenderer implements ResourcePreprocessor {
     }
 
     @Override
-    public void generateFile(File toBeGenerated, File original) throws IOException {
+    public void generateFile(@NonNull File toBeGenerated, @NonNull File original)
+            throws IOException {
         Files.createParentDirs(toBeGenerated);
 
         if (isXml(toBeGenerated)) {

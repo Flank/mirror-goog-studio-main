@@ -890,7 +890,8 @@ public abstract class TaskManager {
                         null /*outputLocation*/,
                         true /*includeDependencies*/,
                         processResources,
-                        alsoOutputNotCompiledResources);
+                        alsoOutputNotCompiledResources,
+                        ImmutableSet.of());
 
         return task;
     }
@@ -926,7 +927,8 @@ public abstract class TaskManager {
             @Nullable File outputLocation,
             final boolean includeDependencies,
             final boolean processResources,
-            boolean alsoOutputNotCompiledResources) {
+            boolean alsoOutputNotCompiledResources,
+            @NonNull ImmutableSet<MergeResources.Flag> flags) {
 
         File mergedOutputDir = MoreObjects
                 .firstNonNull(outputLocation, scope.getDefaultMergeResourcesOutputDir());
@@ -951,7 +953,8 @@ public abstract class TaskManager {
                                 mergedNotCompiledDir,
                                 includeDependencies,
                                 processResources,
-                                true));
+                                true,
+                                flags));
 
         scope.addTaskOutput(
                 mergeType.getOutputType(), mergedOutputDir, mergeResourcesTask.getName());
