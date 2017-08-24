@@ -689,9 +689,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                                 // When refreshExternalNativeModel() is true it will also
                                 // force update all JSONs.
                                 generator.build(forceRegeneration);
-
-                                variantScope.addExternalNativeBuildConfigValues(
-                                        generator.readExistingNativeBuildConfigurations());
                             }
                         }
                     });

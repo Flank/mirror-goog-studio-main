@@ -40,7 +40,6 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.ProguardFiles;
-import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.PostprocessingFeatures;
@@ -114,7 +113,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.ArrayList;
@@ -194,10 +192,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Nullable private AndroidTask<ExternalNativeBuildTask> externalNativeBuild;
 
     @Nullable private ExternalNativeJsonGenerator externalNativeJsonGenerator;
-
-    @NonNull
-    private final List<NativeBuildConfigValue> externalNativeBuildConfigValues =
-            Lists.newArrayList();
 
     @Nullable private CodeShrinker defaultCodeShrinker;
 
@@ -1912,18 +1906,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public AndroidTask<ExternalNativeBuildTask> getExternalNativeBuildTask() {
         return externalNativeBuild;
-    }
-
-    @Override
-    @NonNull
-    public List<NativeBuildConfigValue> getExternalNativeBuildConfigValues() {
-        return externalNativeBuildConfigValues;
-    }
-
-    @Override
-    public void addExternalNativeBuildConfigValues(
-            @NonNull Collection<NativeBuildConfigValue> values) {
-        externalNativeBuildConfigValues.addAll(values);
     }
 
     @Nullable

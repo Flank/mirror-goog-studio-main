@@ -434,10 +434,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     ExternalNativeJsonGenerator getExternalNativeJsonGenerator();
     void setExternalNativeJsonGenerator(@NonNull ExternalNativeJsonGenerator generator);
 
-    @NonNull
-    Collection<NativeBuildConfigValue> getExternalNativeBuildConfigValues();
-    void addExternalNativeBuildConfigValues(@NonNull Collection<NativeBuildConfigValue> values);
-
     @Nullable
     InstantRunTaskManager getInstantRunTaskManager();
     void setInstantRunTaskManager(InstantRunTaskManager taskManager);

@@ -41,6 +41,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -97,11 +98,17 @@ public class NativeModelBuilder implements ToolingModelBuilder {
             Set<String> buildSystems = Sets.newHashSet();
             for (VariantScope scope : variantManager.getVariantScopes()) {
                 ExternalNativeJsonGenerator generator = scope.getExternalNativeJsonGenerator();
-                if (generator != null) {
-                    buildSystems.add(generator.getNativeBuildSystem().getName());
+                if (generator == null) {
+                    continue;
                 }
-                for (NativeBuildConfigValue configValue :
-                        scope.getExternalNativeBuildConfigValues()) {
+                Collection<NativeBuildConfigValue> configValues;
+                buildSystems.add(generator.getNativeBuildSystem().getName());
+                try {
+                    configValues = generator.readExistingNativeBuildConfigurations();
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to read native JSON data", e);
+                }
+                for (NativeBuildConfigValue configValue : configValues) {
 
                     // Record build files
                     if (configValue.buildFiles != null) {
