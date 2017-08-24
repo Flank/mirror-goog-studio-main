@@ -1967,6 +1967,7 @@ public final class SdkConstants {
         public static final String PREFERENCE_SCREEN = "PreferenceScreen";
         public static final String RINGTONE_PREFERENCE = "RingtonePreference";
         public static final String SWITCH_PREFERENCE = "SwitchPreference";
+        public static final String INTENT = "intent";
     }
 
     public static final class PreferenceAttributes {
