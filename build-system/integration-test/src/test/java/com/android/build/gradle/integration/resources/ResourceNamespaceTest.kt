@@ -40,7 +40,7 @@ import org.objectweb.asm.Opcodes
  */
 class ResourceNamespaceTest {
 
-    val lib = MinimalSubProject.lib("com.example.lib")
+    private val lib = MinimalSubProject.lib("com.example.lib")
             .appendToBuild("android.aaptOptions.namespaced = true")
             .withFile(
                     "src/main/res/values/strings.xml",
@@ -63,7 +63,7 @@ class ResourceNamespaceTest {
                             android:pathData="M12,12m-10,0a10,10 0,1 1,20 0a10,10 0,1 1,-20 0"/>
                     </vector>""")
 
-    val basefeature = MinimalSubProject.feature("com.example.baseFeature")
+    private val baseFeature = MinimalSubProject.feature("com.example.baseFeature")
             .appendToBuild(
                     """android {
                         aaptOptions.namespaced = true
@@ -84,7 +84,7 @@ class ResourceNamespaceTest {
                     }
                     """)
 
-    val feature2 = MinimalSubProject.feature("com.example.otherFeature")
+    private val feature2 = MinimalSubProject.feature("com.example.otherFeature")
             .appendToBuild("android.aaptOptions.namespaced = true")
             .withFile(
                     "src/main/res/values/strings.xml",
@@ -136,24 +136,24 @@ class ResourceNamespaceTest {
                     }
                     """)
 
-    val instantApp = MinimalSubProject.instantApp()
+    private val instantApp = MinimalSubProject.instantApp()
 
-    val testApp =
+    private val testApp =
             MultiModuleTestProject.builder()
                     .subproject(":lib", lib)
-                    .subproject(":baseFeature", basefeature)
+                    .subproject(":baseFeature", baseFeature)
                     .subproject(":otherFeature", feature2)
                     .subproject(":app", app)
-                    .subproject(":instantapp", instantApp)
+                    .subproject(":instantApp", instantApp)
                     .dependency(app, feature2)
-                    .dependency(feature2, basefeature)
-                    .dependency(basefeature, lib)
+                    .dependency(feature2, baseFeature)
+                    .dependency(baseFeature, lib)
                     .dependency(app, lib)
-                    .dependency(instantApp, basefeature)
+                    .dependency(instantApp, baseFeature)
                     .dependency(instantApp, feature2)
                     // Reverse dependencies for the instant app.
-                    .dependency("application", basefeature, app)
-                    .dependency("feature", basefeature, feature2)
+                    .dependency("application", baseFeature, app)
+                    .dependency("feature", baseFeature, feature2)
                     .build()
 
     @get:Rule val project = GradleTestProject.builder().fromTestApp(testApp).create()
@@ -196,11 +196,11 @@ class ResourceNamespaceTest {
 
     }
 
-    val modifierToString = mapOf(Opcodes.ACC_PUBLIC to "public",
+    private val modifierToString = mapOf(Opcodes.ACC_PUBLIC to "public",
             Opcodes.ACC_STATIC to "static",
             Opcodes.ACC_FINAL to "final")
 
-    fun modifiers(accessFlags: Int): String {
+    private fun modifiers(accessFlags: Int): String {
         val modifiers = ArrayList<String>()
         var runningFlags = accessFlags
         modifierToString.forEach {
@@ -216,7 +216,7 @@ class ResourceNamespaceTest {
         return modifiers.joinToString(" ")
     }
 
-    fun Dex.getFields(className: String): List<String> {
+    private fun Dex.getFields(className: String): List<String> {
         return classes[className]!!
                 .fields
                 .map { modifiers(it.accessFlags) + " " + it.type + " " + it.name }

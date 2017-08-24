@@ -61,6 +61,7 @@ public final class MinimalSubProject extends AbstractAndroidTestApp implements A
         return new MinimalSubProject("com.android.application", packageName);
     }
 
+    @NonNull
     public static MinimalSubProject instantApp() {
         return new MinimalSubProject("com.android.instantapp", null);
     }
