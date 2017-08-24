@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.lint;
 
 import static com.google.common.truth.Truth.assertThat;
 

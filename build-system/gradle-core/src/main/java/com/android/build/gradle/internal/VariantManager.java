@@ -444,7 +444,6 @@ public class VariantManager implements VariantModel {
         if (variantType.isForTesting()) {
             final BaseVariantData testedVariantData =
                     (BaseVariantData) ((TestVariantData) variantData).getTestedVariantData();
-            final VariantType testedVariantType = testedVariantData.getVariantConfiguration().getType();
 
             // Add the container of dependencies, the order of the libraries is important.
             // In descending order: build type (only for unit test), flavors, defaultConfig.
@@ -497,7 +496,6 @@ public class VariantManager implements VariantModel {
                             .setConsumeType(
                                     getConsumeType(
                                             testedVariantData.getVariantConfiguration().getType()))
-                            .setTestedVariantType(testedVariantType)
                             .addSourceSets(testVariantSourceSets)
                             .setFlavorSelection(getFlavorSelection(variantConfig))
                             .setBaseSplit(

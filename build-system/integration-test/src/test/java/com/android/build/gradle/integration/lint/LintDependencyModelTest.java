@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.lint;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.tasks.annotations.Extractor;
-import com.android.testutils.apk.Zip;
 import java.io.File;
 import org.junit.Before;
 import org.junit.Rule;

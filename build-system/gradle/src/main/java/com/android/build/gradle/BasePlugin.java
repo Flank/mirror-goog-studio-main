@@ -650,6 +650,9 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                     }
                 });
 
+        // create the global lint task that depends on all the variants
+        taskManager.configureGlobalLintTask(variantManager.getVariantScopes());
+
         // Create and read external native build JSON files depending on what's happening right
         // now.
         //
