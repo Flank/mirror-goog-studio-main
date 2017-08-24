@@ -83,7 +83,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   CpuUsageSampler& usage_sampler_;
   // The monitor that detects thread activities (i.e., state changes).
   ThreadMonitor& thread_monitor_;
-  SimplePerfManager simplerperf_manager_;
+  SimpleperfManager simplerperf_manager_;
   // Absolute on-device path to the trace file. Activity manager or simpleperf
   // determines the path and populate the file with trace data.
   std::string trace_path_;

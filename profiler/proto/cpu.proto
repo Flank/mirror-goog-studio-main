@@ -50,7 +50,7 @@ service CpuService {
   }
 
   // Starts recording app stacktraces of a running app.
-  // Does nothing if the app is already being profiled with SimplePerf.
+  // Does nothing if the app is already being profiled with Simpleperf.
   // Returns an error if the app is already being profiled with ART.
   rpc StartProfilingApp(CpuProfilingAppStartRequest)
       returns (CpuProfilingAppStartResponse) {
@@ -75,7 +75,7 @@ service CpuService {
 enum CpuProfilerType {
   UNSPECIFIED_PROFILER = 0;
   ART = 1;
-  SIMPLE_PERF = 2;
+  SIMPLEPERF = 2;
 }
 
 // Requests all the traces that overlap with a time range.

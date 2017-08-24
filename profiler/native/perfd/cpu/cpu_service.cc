@@ -163,10 +163,9 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
   bool success = false;
   string error;
 
-  if (request->profiler_type() == CpuProfilerType::SIMPLE_PERF) {
+  if (request->profiler_type() == CpuProfilerType::SIMPLEPERF) {
     success = simplerperf_manager_.StartProfiling(
-        app_pkg_name, request->sampling_interval_us(), &trace_path_,
-        &error);
+        app_pkg_name, request->sampling_interval_us(), &trace_path_, &error);
   } else {
     // TODO: Move the activity manager to the daemon.
     // It should be shared with everything in perfd.
@@ -182,8 +181,7 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
 
   if (success) {
     response->set_status(CpuProfilingAppStartResponse::SUCCESS);
-    last_start_profiling_timestamps_[app_pkg_name] =
-        clock_.GetCurrentTime();
+    last_start_profiling_timestamps_[app_pkg_name] = clock_.GetCurrentTime();
     last_start_profiling_requests_[app_pkg_name] = *request;
   } else {
     response->set_status(CpuProfilingAppStartResponse::FAILURE);
@@ -199,9 +197,8 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
   ProcessManager process_manager;
   string app_pkg_name = process_manager.GetCmdlineForPid(request->process_id());
   bool success = false;
-  if (request->profiler_type() == CpuProfilerType::SIMPLE_PERF) {
-    success =
-        simplerperf_manager_.StopProfiling(app_pkg_name, &error);
+  if (request->profiler_type() == CpuProfilerType::SIMPLEPERF) {
+    success = simplerperf_manager_.StopProfiling(app_pkg_name, &error);
   } else {  // Profiler is ART
     ActivityManager* manager = ActivityManager::Instance();
     success = manager->StopProfiling(app_pkg_name, &error);
@@ -232,8 +229,7 @@ grpc::Status CpuServiceImpl::CheckAppProfilingState(
     ProfilingStateResponse* response) {
   ProcessManager process_manager;
   string app_pkg_name = process_manager.GetCmdlineForPid(request->process_id());
-  const auto& last_request =
-      last_start_profiling_requests_.find(app_pkg_name);
+  const auto& last_request = last_start_profiling_requests_.find(app_pkg_name);
 
   // Whether the app is being profiled (there is a stored start profiling
   // request corresponding to the app)
