@@ -79,7 +79,6 @@ public class AndroidDebugBridgeTest {
                     AndroidDebugBridge.getAdbVersion(mAdbPath).get(5, TimeUnit.SECONDS);
             assertNotSame(version, AdbVersion.UNKNOWN);
             assertTrue(version.compareTo(AdbVersion.parseFrom("1.0.20")) > 0);
-            AndroidDebugBridge.terminate();
         } finally {
             AndroidDebugBridge.terminate();
         }
