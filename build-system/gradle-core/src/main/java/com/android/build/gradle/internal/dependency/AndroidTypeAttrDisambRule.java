@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.dependency;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -43,7 +44,9 @@ public final class AndroidTypeAttrDisambRule
         if (values.size() == 2) {
             // get the 2 names and make sure these are the names we want:
             Map<String, AndroidTypeAttr> valueMap =
-                    values.stream().collect(Collectors.toMap(Named::getName, value -> value));
+                    values.stream()
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toMap(Named::getName, value -> value));
 
             if (valueMap.keySet().equals(FEATURE_AND_AAR)) {
                 details.closestMatch(valueMap.get(AndroidTypeAttr.FEATURE));

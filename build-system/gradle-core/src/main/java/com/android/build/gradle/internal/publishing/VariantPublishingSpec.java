@@ -87,6 +87,18 @@ import java.util.Set;
  */
 public class VariantPublishingSpec {
 
+    private static final ImmutableList<PublishedConfigType> API_ELEMENTS_ONLY =
+            ImmutableList.of(API_ELEMENTS);
+    private static final ImmutableList<PublishedConfigType> RUNTIME_ELEMENTS_ONLY =
+            ImmutableList.of(RUNTIME_ELEMENTS);
+    private static final ImmutableList<PublishedConfigType> API_AND_RUNTIME_ELEMENTS =
+            ImmutableList.of(API_ELEMENTS, RUNTIME_ELEMENTS);
+    private static final ImmutableList<PublishedConfigType> METADATA_ELEMENTS_ONLY =
+            ImmutableList.of(METADATA_ELEMENTS);
+
+    private static final Map<VariantType, VariantPublishingSpec> variantMap =
+            Maps.newEnumMap(VariantType.class);
+
     @Nullable private final VariantPublishingSpec parentSpec;
     @NonNull private final VariantType variantType;
     @NonNull private final Set<OutputPublishingSpec> taskSpecs;
@@ -98,16 +110,6 @@ public class VariantPublishingSpec {
     private Map<ArtifactType, OutputPublishingSpec> artifactMap;
     private Map<OutputType, OutputPublishingSpec> outputMap;
 
-    private static final Map<VariantType, VariantPublishingSpec> variantMap = Maps.newHashMap();
-
-    private static final ImmutableList<PublishedConfigType> API_ELEMENTS_ONLY =
-            ImmutableList.of(API_ELEMENTS);
-    private static final ImmutableList<PublishedConfigType> RUNTIME_ELEMENTS_ONLY =
-            ImmutableList.of(RUNTIME_ELEMENTS);
-    private static final ImmutableList<PublishedConfigType> API_AND_RUNTIME_ELEMENTS =
-            ImmutableList.of(API_ELEMENTS, RUNTIME_ELEMENTS);
-    private static final ImmutableList<PublishedConfigType> METADATA_ELEMENTS_ONLY =
-            ImmutableList.of(METADATA_ELEMENTS);
 
     static {
         variantSpec(
@@ -180,8 +182,7 @@ public class VariantPublishingSpec {
                                 ArtifactType.PROGUARD_RULES,
                                 RUNTIME_ELEMENTS_ONLY),
                         outputSpec(LIBRARY_JNI, ArtifactType.JNI, RUNTIME_ELEMENTS_ONLY),
-                        // FIXME: we need a different publishing config with a CHECK Usage for this.
-                        outputSpec(LINT_JAR, ArtifactType.LINT, API_AND_RUNTIME_ELEMENTS))
+                        outputSpec(LINT_JAR, ArtifactType.LINT, RUNTIME_ELEMENTS_ONLY))
                 .withTestingSpec(
                         VariantType.UNIT_TEST,
                         // unit test need ALL_CLASSES instead of LIBRARY_CLASSES to get

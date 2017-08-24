@@ -80,7 +80,6 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
@@ -92,7 +91,6 @@ public class MergeManifests extends ManifestProcessorTask {
     private Supplier<String> minSdkVersion;
     private Supplier<String> targetSdkVersion;
     private Supplier<Integer> maxSdkVersion;
-    private File reportFile;
     private VariantConfiguration<CoreBuildType, CoreProductFlavor, CoreProductFlavor>
             variantConfiguration;
     private ArtifactCollection manifests;
@@ -360,16 +358,6 @@ public class MergeManifests extends ManifestProcessorTask {
         return maxSdkVersion.get();
     }
 
-    @OutputFile
-    @Optional
-    public File getReportFile() {
-        return reportFile;
-    }
-
-    public void setReportFile(File reportFile) {
-        this.reportFile = reportFile;
-    }
-
     /** Not an input, see {@link #getOptionalFeaturesString()}. */
     @Internal
     public List<Feature> getOptionalFeatures() {
@@ -457,10 +445,15 @@ public class MergeManifests extends ManifestProcessorTask {
 
         protected final VariantScope variantScope;
         protected final List<Feature> optionalFeatures;
+        @Nullable private final File reportFile;
 
-        public ConfigAction(@NonNull VariantScope scope, @NonNull List<Feature> optionalFeatures) {
+        public ConfigAction(
+                @NonNull VariantScope scope,
+                @NonNull List<Feature> optionalFeatures,
+                @Nullable File reportFile) {
             this.variantScope = scope;
             this.optionalFeatures = optionalFeatures;
+            this.reportFile = reportFile;
         }
 
         @NonNull
@@ -528,7 +521,7 @@ public class MergeManifests extends ManifestProcessorTask {
             processManifestTask.setInstantRunManifestOutputDirectory(
                     variantScope.getInstantRunManifestOutputDirectory());
 
-            processManifestTask.setReportFile(variantScope.getManifestReportFile());
+            processManifestTask.setReportFile(reportFile);
             processManifestTask.optionalFeatures = optionalFeatures;
 
             processManifestTask.supportedAbis =
@@ -588,7 +581,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
         public FeatureConfigAction(
                 @NonNull VariantScope scope, @NonNull List<Feature> optionalFeatures) {
-            super(scope, optionalFeatures);
+            super(scope, optionalFeatures, null);
         }
 
         @Override
@@ -607,7 +600,7 @@ public class MergeManifests extends ManifestProcessorTask {
 
         public BaseFeatureConfigAction(
                 @NonNull VariantScope scope, @NonNull List<Feature> optionalFeatures) {
-            super(scope, optionalFeatures);
+            super(scope, optionalFeatures, null);
         }
 
         @Override

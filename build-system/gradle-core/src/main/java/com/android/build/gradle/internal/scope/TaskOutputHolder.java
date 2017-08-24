@@ -125,6 +125,7 @@ public interface TaskOutputHolder {
         AAPT_FRIENDLY_MERGED_MANIFESTS,
         INSTANT_RUN_MERGED_MANIFESTS,
         MANIFEST_METADATA,
+        MANIFEST_MERGE_REPORT,
 
         // List of annotation processors for metrics.
         ANNOTATION_PROCESSOR_LIST,

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_AIDL;
 import static com.android.SdkConstants.FD_JNI;
-import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR;
@@ -44,7 +43,6 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.build.gradle.internal.tasks.CopyLintConfigAction;
 import com.android.build.gradle.internal.tasks.MergeConsumerProguardFilesConfigAction;
 import com.android.build.gradle.internal.tasks.MergeFileTask;
 import com.android.build.gradle.internal.tasks.PackageRenderscriptConfigAction;
@@ -83,7 +81,6 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.CopySpec;
-import org.gradle.api.tasks.Copy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.BuildException;
@@ -311,20 +308,11 @@ public class LibraryTaskManager extends TaskManager {
                         variantName,
                         () -> createMergeFileTask(tasks, variantScope));
 
-        // copy lint.jar into the bundle folder
-        AndroidTask<Copy> copyLintTask =
-                getAndroidTasks().create(tasks, new CopyLintConfigAction(variantScope));
-        copyLintTask.dependsOn(tasks, LINT_COMPILE);
-
-        // publish the lint intermediate file
-        variantScope.addTaskOutput(
-                TaskOutputType.LINT_JAR,
-                FileUtils.join(variantBundleDir, FD_RES),
-                copyLintTask.getName());
-
         final AndroidZip bundle =
                 project.getTasks().create(variantScope.getTaskName("bundle"), AndroidZip.class);
         libVariantData.addTask(TaskContainer.TaskKind.PACKAGE_ANDROID_ARTIFACT, bundle);
+
+        bundle.from(variantScope.getGlobalScope().getOutput(TaskOutputType.LINT_JAR));
 
         AndroidTask<ExtractAnnotations> extractAnnotationsTask;
         // Some versions of retrolambda remove the actions from the extract annotations task.
@@ -543,7 +531,6 @@ public class LibraryTaskManager extends TaskManager {
                 });
 
         bundle.dependsOn(
-                copyLintTask.getName(),
                 mergeProguardFilesTask.getName(),
                 // The below dependencies are redundant in a normal build as
                 // generateSources depends on them. When generateSourcesOnly is injected they are

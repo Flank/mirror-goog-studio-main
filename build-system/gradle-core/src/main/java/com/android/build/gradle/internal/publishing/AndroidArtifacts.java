@@ -152,7 +152,6 @@ public class AndroidArtifacts {
         PUBLIC_RES(TYPE_PUBLIC_RES),
         PROGUARD_RULES(TYPE_PROGUARD_RULES),
 
-        // FIXME: we need a different publishing config with a CHECK Usage for this.
         LINT(TYPE_LINT_JAR),
 
         APK_MAPPING(TYPE_MAPPING),

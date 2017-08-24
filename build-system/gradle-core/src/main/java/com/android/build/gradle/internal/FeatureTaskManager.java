@@ -314,13 +314,6 @@ public class FeatureTaskManager extends TaskManager {
                     //createInstantRunPackagingTasks(tasks, buildInfoWriterTask, variantScope);
                     createPackagingTask(tasks, variantScope, buildInfoWriterTask);
                 });
-
-        // create the lint tasks.
-        recorder.record(
-                ExecutionType.FEATURE_TASK_MANAGER_CREATE_LINT_TASK,
-                project.getPath(),
-                variantScope.getFullVariantName(),
-                () -> createLintTasks(tasks, variantScope));
     }
 
     /**

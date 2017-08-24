@@ -25,6 +25,7 @@ import java.util.Map;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.OutputFile;
 
 /**
  * A task that processes the manifest
@@ -36,6 +37,8 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
     private File aaptFriendlyManifestOutputDirectory;
 
     private File instantRunManifestOutputDirectory;
+
+    private File reportFile;
 
     /**
      * The aapt friendly processed Manifest. In case we are processing a library manifest, some
@@ -81,6 +84,16 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
 
     public void setAaptFriendlyManifestOutputDirectory(File aaptFriendlyManifestOutputDirectory) {
         this.aaptFriendlyManifestOutputDirectory = aaptFriendlyManifestOutputDirectory;
+    }
+
+    @OutputFile
+    @Optional
+    public File getReportFile() {
+        return reportFile;
+    }
+
+    public void setReportFile(File reportFile) {
+        this.reportFile = reportFile;
     }
 
 

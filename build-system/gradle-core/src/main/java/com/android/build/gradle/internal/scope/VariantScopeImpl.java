@@ -279,10 +279,15 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     e);
         }
 
-        OutputPublishingSpec taskSpec = variantPublishingSpec.getSpec(outputType);
-        if (taskSpec != null) {
-            publishIntermediateArtifact(
-                    file, taskName, taskSpec.getArtifactType(), taskSpec.getPublishedConfigTypes());
+        if (file instanceof File) {
+            OutputPublishingSpec taskSpec = variantPublishingSpec.getSpec(outputType);
+            if (taskSpec != null) {
+                publishIntermediateArtifact(
+                        (File) file,
+                        taskName,
+                        taskSpec.getArtifactType(),
+                        taskSpec.getPublishedConfigTypes());
+            }
         }
         return fileCollection;
     }
@@ -305,40 +310,46 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     private void publishIntermediateArtifact(
-            @NonNull Object file,
+            @NonNull File file,
             @NonNull String builtBy,
             @NonNull ArtifactType artifactType,
             @NonNull Collection<PublishedConfigType> configTypes) {
         Preconditions.checkState(!configTypes.isEmpty());
 
         // FIXME this needs to be parameterized based on the variant's publishing type.
-        final VariantDependencies.PublishedConfigurations publishConfiguration =
-                getVariantData().getVariantDependency().getSinglePublishConfiguration();
+        final VariantDependencies variantDependency = getVariantData().getVariantDependency();
 
-        // FIXME: figure out strategy for each ArtifactType
         if (configTypes.contains(API_ELEMENTS)) {
+            Preconditions.checkNotNull(
+                    variantDependency.getApiElements(),
+                    "Publishing to API Element with no ApiElement configuration object");
             publishArtifactToConfiguration(
-                    publishConfiguration.getApiElements(), file, builtBy, artifactType);
+                    variantDependency.getApiElements(), file, builtBy, artifactType);
         }
 
         if (configTypes.contains(RUNTIME_ELEMENTS)) {
+            Preconditions.checkNotNull(
+                    variantDependency.getRuntimeElements(),
+                    "Publishing to Runtime Element with no RuntimeElement configuration object");
             publishArtifactToConfiguration(
-                    publishConfiguration.getRuntimeElements(), file, builtBy, artifactType);
+                    variantDependency.getRuntimeElements(), file, builtBy, artifactType);
         }
 
-        if (configTypes.contains(METADATA_ELEMENTS)
-                && publishConfiguration.getMetadataElements() != null) {
+        if (configTypes.contains(METADATA_ELEMENTS)) {
+            Preconditions.checkNotNull(
+                    variantDependency.getMetadataElements(),
+                    "Publishing to Metadata Element with no MetaDataElement configuration object");
             publishArtifactToConfiguration(
-                    publishConfiguration.getMetadataElements(), file, builtBy, artifactType);
+                    variantDependency.getMetadataElements(), file, builtBy, artifactType);
         }
     }
 
     private void publishArtifactToConfiguration(
             @NonNull Configuration configuration,
-            @NonNull Object file,
+            @NonNull File file,
             @NonNull String builtBy,
             @NonNull ArtifactType artifactType) {
-        final Project project = getGlobalScope().getProject();
+        final Project project = globalScope.getProject();
         String type = artifactType.getType();
         configuration.getOutgoing().variants(
                 (NamedDomainObjectContainer<ConfigurationVariant> variants) -> {
@@ -1467,15 +1478,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope.getIntermediatesDir(),
                 taskOutputType.name().toLowerCase(Locale.US),
                 getVariantConfiguration().getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getManifestReportFile() {
-        // If you change this, please also update Lint#getManifestReportFile
-        return FileUtils.join(getGlobalScope().getOutputsDir(),
-                "logs", "manifest-merger-" + variantData.getVariantConfiguration().getBaseName()
-                        + "-report.txt");
     }
 
     @NonNull

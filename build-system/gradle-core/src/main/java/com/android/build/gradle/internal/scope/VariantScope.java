@@ -323,9 +323,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getInstantRunManifestOutputDirectory();
 
     @NonNull
-    File  getManifestReportFile();
-
-    @NonNull
     File getMicroApkManifestFile();
 
     @NonNull

@@ -19,9 +19,11 @@ package com.android.build.gradle.internal;
 import static com.android.SdkConstants.FD_ASSETS;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
+import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 import static com.android.SdkConstants.FN_SPLIT_LIST;
 import static com.android.build.gradle.internal.coverage.JacocoPlugin.AGENT_CONFIGURATION_NAME;
+import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_LINTCHECKS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.MODULE;
@@ -32,16 +34,23 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.PROGUARD_RULES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.ANNOTATION_PROCESSOR_LIST;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_MANIFEST;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINT_JAR;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MANIFEST_MERGE_REPORT;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MOCKABLE_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PLATFORM_R_TXT;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
+import static com.android.builder.core.VariantType.FEATURE;
 import static com.android.builder.core.VariantType.LIBRARY;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
@@ -62,7 +71,6 @@ import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
-import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
 import com.android.build.gradle.internal.dsl.AbiSplitOptions;
@@ -104,6 +112,7 @@ import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
 import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
+import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
 import com.android.build.gradle.internal.tasks.SourceSetsTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -159,7 +168,8 @@ import com.android.build.gradle.tasks.GenerateSplitAbiRes;
 import com.android.build.gradle.tasks.GenerateTestConfig;
 import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.build.gradle.tasks.JavaPreCompileTask;
-import com.android.build.gradle.tasks.Lint;
+import com.android.build.gradle.tasks.LintGlobalTask;
+import com.android.build.gradle.tasks.LintPerVariantTask;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeManifests;
 import com.android.build.gradle.tasks.MergeResources;
@@ -213,6 +223,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -255,7 +266,6 @@ public abstract class TaskManager {
     public static final String CONNECTED_ANDROID_TEST = CONNECTED + ANDROID_TEST.getSuffix();
     public static final String ASSEMBLE_ANDROID_TEST = "assembleAndroidTest";
     public static final String LINT = "lint";
-    public static final String LINT_COMPILE = "compileLint";
     public static final String EXTRACT_PROGUARD_FILES = "extractProguardFiles";
 
     @NonNull protected final Project project;
@@ -385,11 +395,6 @@ public abstract class TaskManager {
                     assembleAndroidTestTask.setDescription("Assembles all the Test applications.");
                 });
 
-        AndroidTask<Lint> globalLintTask = androidTasks.create(tasks,
-                new Lint.GlobalConfigAction(globalScope));
-
-        tasks.named(JavaBasePlugin.CHECK_TASK_NAME, it -> it.dependsOn(LINT));
-
         androidTasks.create(tasks, new LintCompile.ConfigAction(globalScope));
 
         if (buildCache != null) {
@@ -434,6 +439,59 @@ public abstract class TaskManager {
                 task.consumable = true;
             }
         });
+
+        configureCustomLintChecks(tasks);
+    }
+
+    // this is call before all the variants are created since they are all going to depend
+    // on the global LINT_JAR task output
+    private void configureCustomLintChecks(@NonNull TaskFactory tasks) {
+        // create a single configuration to point to a project or a local file that contains
+        // the lint.jar for this project.
+        // This is not the configuration that consumes lint.jar artifacts from normal dependencies,
+        // or publishes lint.jar to consumers. These are handled at the variant level.
+        Configuration lintChecks = project.getConfigurations().maybeCreate(CONFIG_NAME_LINTCHECKS);
+        lintChecks.setVisible(false);
+        lintChecks.setDescription("Configuration to apply external lint check jar");
+        lintChecks.setCanBeConsumed(false);
+        globalScope.setLintChecks(lintChecks);
+
+        // setup the task that reads the config and put the lint jar in the intermediate folder
+        // so that the bundle tasks can copy it, and the inter-project publishing can publish it
+        File lintJar = FileUtils.join(globalScope.getIntermediatesDir(), "lint", FN_LINT_JAR);
+
+        AndroidTask<PrepareLintJar> copyLintTask =
+                getAndroidTasks()
+                        .create(tasks, new PrepareLintJar.ConfigAction(globalScope, lintJar));
+
+        // publish the lint intermediate file to the global tasks
+        globalScope.addTaskOutput(LINT_JAR, lintJar, copyLintTask.getName());
+    }
+
+    // this is run after all the variants are created.
+    public void configureGlobalLintTask(@NonNull final Collection<VariantScope> variants) {
+        final TaskFactory tasks = new TaskContainerAdaptor(project.getTasks());
+
+        // we only care about non testing and non feature variants
+        List<VariantScope> filteredVariants =
+                variants.stream().filter(TaskManager::isLintVariant).collect(Collectors.toList());
+
+        if (filteredVariants.isEmpty()) {
+            return;
+        }
+
+        // create the global lint task.
+        androidTasks.create(
+                tasks, new LintGlobalTask.GlobalConfigAction(globalScope, filteredVariants));
+        tasks.named(JavaBasePlugin.CHECK_TASK_NAME, it -> it.dependsOn(LINT));
+
+        // publish the local lint.jar to all the variants. This is not for the task output itself
+        // but for the artifact publishing.
+        FileCollection lintJarCollection = globalScope.getOutput(LINT_JAR);
+        File lintJar = lintJarCollection.getSingleFile();
+        for (VariantScope scope : variants) {
+            scope.addTaskOutput(LINT_JAR, lintJar, PrepareLintJar.NAME);
+        }
     }
 
     // This is for config attribute debugging
@@ -660,7 +718,7 @@ public abstract class TaskManager {
                 createMergeManifestTask(tasks, variantScope, optionalFeatures);
 
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                MERGED_MANIFESTS,
                 variantScope.getManifestOutputDirectory(),
                 processManifestTask.getName());
 
@@ -688,6 +746,16 @@ public abstract class TaskManager {
         return Splitter.on(',').splitToList(string);
     }
 
+    @NonNull
+    private static File computeManifestReportFile(@NonNull VariantScope variantScope) {
+        return FileUtils.join(
+                variantScope.getGlobalScope().getOutputsDir(),
+                "logs",
+                "manifest-merger-"
+                        + variantScope.getVariantConfiguration().getBaseName()
+                        + "-report.txt");
+    }
+
     /** Creates the merge manifests task. */
     @NonNull
     protected AndroidTask<? extends ManifestProcessorTask> createMergeManifestTask(
@@ -698,15 +766,21 @@ public abstract class TaskManager {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.INSTANT_RUN_REPLACEMENT);
         }
 
+        final File reportFile = computeManifestReportFile(variantScope);
         AndroidTask<MergeManifests> mergeManifestsAndroidTask =
                 androidTasks.create(
                         tasks,
-                        new MergeManifests.ConfigAction(variantScope, optionalFeatures.build()));
+                        new MergeManifests.ConfigAction(
+                                variantScope, optionalFeatures.build(), reportFile));
+
+        final String name = mergeManifestsAndroidTask.getName();
 
         variantScope.addTaskOutput(
-                VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                INSTANT_RUN_MERGED_MANIFESTS,
                 variantScope.getInstantRunManifestOutputDirectory(),
-                mergeManifestsAndroidTask.getName());
+                name);
+
+        variantScope.addTaskOutput(MANIFEST_MERGE_REPORT, reportFile, name);
 
         return mergeManifestsAndroidTask;
     }
@@ -719,26 +793,24 @@ public abstract class TaskManager {
         File libraryProcessedManifest =
                 new File(scope.getManifestOutputDirectory(), FN_ANDROID_MANIFEST_XML);
 
+        final File reportFile = computeManifestReportFile(scope);
         AndroidTask<ProcessManifest> processManifest =
                 androidTasks.create(
-                        tasks, new ProcessManifest.ConfigAction(scope, libraryProcessedManifest));
+                        tasks,
+                        new ProcessManifest.ConfigAction(
+                                scope, libraryProcessedManifest, reportFile));
 
         final String taskName = processManifest.getName();
 
-        scope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
-                scope.getManifestOutputDirectory(),
-                taskName);
+        scope.addTaskOutput(MERGED_MANIFESTS, scope.getManifestOutputDirectory(), taskName);
 
         scope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS,
+                AAPT_FRIENDLY_MERGED_MANIFESTS,
                 scope.getAaptFriendlyManifestOutputDirectory(),
                 taskName);
 
-        scope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.LIBRARY_MANIFEST,
-                libraryProcessedManifest,
-                taskName);
+        scope.addTaskOutput(LIBRARY_MANIFEST, libraryProcessedManifest, taskName);
+        scope.addTaskOutput(MANIFEST_MERGE_REPORT, reportFile, taskName);
 
         processManifest.dependsOn(tasks, scope.getCheckManifestTask());
 
@@ -756,12 +828,10 @@ public abstract class TaskManager {
                 androidTasks.create(
                         tasks,
                         new ProcessTestManifest.ConfigAction(
-                                scope,
-                                testedScope.getOutput(
-                                        TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS)));
+                                scope, testedScope.getOutput(MERGED_MANIFESTS)));
 
         scope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.MERGED_MANIFESTS,
+                MERGED_MANIFESTS,
                 scope.getManifestOutputDirectory(),
                 processTestManifestTask.getName());
 
@@ -1832,10 +1902,10 @@ public abstract class TaskManager {
     }
 
     /** Is the given variant relevant for lint? */
-    private static boolean isLintVariant(@NonNull BaseVariantData baseVariantData) {
+    private static boolean isLintVariant(@NonNull VariantScope variantScope) {
         // Only create lint targets for variants like debug and release, not debugTest
-        VariantConfiguration config = baseVariantData.getVariantConfiguration();
-        return !config.getType().isForTesting();
+        final VariantType variantType = variantScope.getVariantConfiguration().getType();
+        return !variantType.isForTesting() && variantType != FEATURE;
     }
 
     /**
@@ -1843,17 +1913,11 @@ public abstract class TaskManager {
      * lint task earlier which runs on all variants.
      */
     public void createLintTasks(TaskFactory tasks, final VariantScope scope) {
-        final BaseVariantData baseVariantData = scope.getVariantData();
-        if (!isLintVariant(baseVariantData)) {
+        if (!isLintVariant(scope)) {
             return;
         }
 
-        // wire the main lint task dependency.
-        tasks.named(LINT, lint -> lint.dependsOn(scope.getJavacTask().getName()));
-
-        AndroidTask<Lint> variantLintCheck = androidTasks.create(
-                tasks, new Lint.ConfigAction(scope));
-        variantLintCheck.dependsOn(tasks, LINT_COMPILE, scope.getJavacTask());
+        androidTasks.create(tasks, new LintPerVariantTask.ConfigAction(scope));
     }
 
     /** Returns the full path of a task given its name. */
@@ -1865,16 +1929,21 @@ public abstract class TaskManager {
 
     private void maybeCreateLintVitalTask(
             @NonNull TaskFactory tasks, @NonNull ApkVariantData variantData) {
-        if (variantData.getVariantConfiguration().getBuildType().isDebuggable()
+        VariantScope variantScope = variantData.getScope();
+        GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
+
+        if (!isLintVariant(variantScope)
+                || variantScope.getInstantRunBuildContext().isInInstantRunMode()
+                || variantConfig.getBuildType().isDebuggable()
                 || !extension.getLintOptions().isCheckReleaseBuilds()) {
             return;
         }
 
-        AndroidTask<Lint> lintReleaseCheck =
-                androidTasks.create(tasks, new Lint.VitalConfigAction(variantData.getScope()));
+        AndroidTask<LintPerVariantTask> lintReleaseCheck =
+                androidTasks.create(tasks, new LintPerVariantTask.VitalConfigAction(variantScope));
         lintReleaseCheck.optionalDependsOn(tasks, variantData.javacTask);
 
-        variantData.getScope().getAssembleTask().dependsOn(tasks, lintReleaseCheck);
+        variantScope.getAssembleTask().dependsOn(tasks, lintReleaseCheck);
 
         // If lint is being run, we do not need to run lint vital.
         project.getGradle()
@@ -2509,7 +2578,7 @@ public abstract class TaskManager {
                         recorder);
 
         FileCollection instantRunMergedManifests =
-                variantScope.getOutput(VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS);
+                variantScope.getOutput(INSTANT_RUN_MERGED_MANIFESTS);
 
         FileCollection processedResources =
                 variantScope.getOutput(VariantScope.TaskOutputType.PROCESSED_RES);
@@ -2737,8 +2806,8 @@ public abstract class TaskManager {
 
         VariantScope.TaskOutputType manifestType =
                 variantScope.getInstantRunBuildContext().isInInstantRunMode()
-                        ? VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS
-                        : VariantScope.TaskOutputType.MERGED_MANIFESTS;
+                        ? INSTANT_RUN_MERGED_MANIFESTS
+                        : MERGED_MANIFESTS;
 
         final boolean splitsArePossible =
                 variantScope.getOutputScope().getMultiOutputPolicy() == MultiOutputPolicy.SPLITS;
@@ -2805,7 +2874,7 @@ public abstract class TaskManager {
                                         resourceFilesInputType,
                                         variantScope.getOutput(resourceFilesInputType),
                                         manifests,
-                                        VariantScope.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS,
+                                        INSTANT_RUN_MERGED_MANIFESTS,
                                         globalScope.getBuildCache(),
                                         variantScope.getOutputScope()));
             }
@@ -2883,9 +2952,7 @@ public abstract class TaskManager {
             installTask.dependsOn(tasks, variantScope.getAssembleTask());
         }
 
-        if (!variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
-            maybeCreateLintVitalTask(tasks, variantData);
-        }
+        maybeCreateLintVitalTask(tasks, variantData);
 
         // add an uninstall task
         final AndroidTask<UninstallTask> uninstallTask = androidTasks.create(

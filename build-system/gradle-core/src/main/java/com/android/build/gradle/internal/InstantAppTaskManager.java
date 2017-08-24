@@ -33,6 +33,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.File;
+import java.util.Collection;
 import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -108,6 +109,11 @@ public class InstantAppTaskManager extends TaskManager {
 
     @Override
     protected void postJavacCreation(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+        // do nothing.
+    }
+
+    @Override
+    public void configureGlobalLintTask(@NonNull Collection<VariantScope> variants) {
         // do nothing.
     }
 }
