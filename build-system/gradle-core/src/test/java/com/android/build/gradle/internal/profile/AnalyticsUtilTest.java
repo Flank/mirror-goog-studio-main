@@ -124,13 +124,24 @@ public class AnalyticsUtilTest {
                 it -> {
                     it.setEnable(true);
                     it.setAuto(true);
-                    it.include("en");
                 });
         {
             GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
             assertThat(proto.getLanguageEnabled()).isTrue();
             assertThat(proto.getLanguageAuto()).isTrue();
-            assertThat(proto.getLanguageIncludesList()).containsExactly("en");
+            assertThat(proto.getLanguageIncludesList()).isEmpty();
+        }
+
+        splits.language(
+                it -> {
+                    it.setAuto(false);
+                    it.include("en", null);
+                });
+        {
+            GradleBuildSplits proto = AnalyticsUtil.toProto(splits);
+            assertThat(proto.getLanguageEnabled()).isTrue();
+            assertThat(proto.getLanguageAuto()).isFalse();
+            assertThat(proto.getLanguageIncludesList()).containsExactly("en", "null");
         }
 
         // Check other field population is based on enable flag.

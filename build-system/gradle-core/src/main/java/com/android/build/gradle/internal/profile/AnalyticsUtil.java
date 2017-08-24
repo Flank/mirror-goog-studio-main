@@ -121,7 +121,9 @@ public class AnalyticsUtil {
         if (splits.getLanguage().isEnable()) {
             builder.setLanguageEnabled(true);
             builder.setLanguageAuto(splits.getLanguage().isAuto());
-            builder.addAllLanguageIncludes(splits.getLanguage().getInclude());
+            for (String split : splits.getLanguage().getApplicationFilters()) {
+                builder.addLanguageIncludes(split != null ? split : "null");
+            }
         }
 
         if (splits.getAbi().isEnable()) {
