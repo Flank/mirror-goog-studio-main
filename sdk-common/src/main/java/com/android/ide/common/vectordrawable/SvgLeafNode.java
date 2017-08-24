@@ -248,14 +248,20 @@ class SvgLeafNode extends SvgNode {
                 // Copies gradient from tree
                 vdValue = vdValue.substring(5, vdValue.length() - 1);
                 if (key.equals("fill")) {
-                    mFillGradientNode =
-                            (SvgGradientNode) getTree().getSvgNodeFromId(vdValue).deepCopy();
+                    SvgNode node = getTree().getSvgNodeFromId(vdValue);
+                    if (node == null) {
+                        continue;
+                    }
+                    mFillGradientNode = (SvgGradientNode) node.deepCopy();
                     mFillGradientNode.setSvgLeafNode(this);
                     mFillGradientNode.setGradientUsage(SvgGradientNode.GradientUsage.FILL);
                     mHasFillGradient = true;
                 } else if (key.equals("stroke")) {
-                    mStrokeGradientNode =
-                            (SvgGradientNode) getTree().getSvgNodeFromId(vdValue).deepCopy();
+                    SvgNode node = getTree().getSvgNodeFromId(vdValue);
+                    if (node == null) {
+                        continue;
+                    }
+                    mStrokeGradientNode = (SvgGradientNode) node.deepCopy();
                     mStrokeGradientNode.setSvgLeafNode(this);
                     mStrokeGradientNode.setGradientUsage(SvgGradientNode.GradientUsage.STROKE);
                     mHasStrokeGradient = true;
