@@ -17,26 +17,24 @@
 package com.android.build.gradle.internal.incremental;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.fail;
 
-import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.incremental.annotated.NoInnerClassFor21;
 import com.android.build.gradle.internal.incremental.annotated.NotAnnotatedClass;
 import com.android.build.gradle.internal.incremental.annotated.OuterClassFor21;
 import com.android.build.gradle.internal.incremental.annotated.SingleLevelOuterClassFor21;
 import com.android.build.gradle.internal.incremental.annotated.TestTargetApi;
 import com.android.utils.ILogger;
+import com.android.utils.NullLogger;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
 
 /**
  * tests for the {@link IncrementalVisitor}
@@ -52,20 +50,7 @@ public class IncrementalVisitorTest {
     @Test
     public void testIsClassTargetingNewerPlatform() throws IOException {
 
-        AsmUtils.ClassReaderProvider classReaderProvider = new AsmUtils.ClassReaderProvider() {
-            @Override
-            public ClassReader loadClassBytes(@NonNull String className, @NonNull ILogger logger)
-                    throws IOException {
-                try (InputStream is = this.getClass().getClassLoader().getResourceAsStream(
-                        className + ".class")) {
-                    if (is == null) {
-                        fail("Cannot load class " + className);
-                    }
-                    return new ClassReader(is);
-                }
-            }
-        };
-
+        AsmUtils.ClassNodeProvider classReaderProvider = new ClassNodeProviderForTests();
         {
             ClassNode innerInnerClassNode = AsmUtils
                     .readClass(OuterClassFor21.class.getClassLoader(),
@@ -220,5 +205,65 @@ public class IncrementalVisitorTest {
 
         File RSomethingWithInner = temporaryFolder.newFile("Rsome$dimen.class");
         assertThat(IncrementalVisitor.isClassEligibleForInstantRun(RSomethingWithInner)).isTrue();
+    }
+
+    interface NoDefault {
+        String func();
+    }
+
+    interface WithDefault {
+        default String func() {
+            return "func";
+        }
+    }
+
+    private static class ImplWithDefault implements WithDefault {
+        public void anotherFunc() {}
+    }
+
+    @Test
+    public void testHasDefaultMethods() throws IOException {
+
+        ClassNode interfaceNode =
+                AsmUtils.readClass(
+                        NoDefault.class.getClassLoader(),
+                        Type.getType(NoDefault.class).getInternalName());
+
+        assertThat(IncrementalVisitor.hasDefaultMethods(interfaceNode)).isFalse();
+
+        interfaceNode =
+                AsmUtils.readClass(
+                        WithDefault.class.getClassLoader(),
+                        Type.getType(WithDefault.class).getInternalName());
+
+        assertThat(IncrementalVisitor.hasDefaultMethods(interfaceNode)).isTrue();
+    }
+
+    @Test
+    public void testGetMethodByNameInClass() throws IOException {
+        AsmUtils.ClassNodeProvider classReaderProvider = new ClassNodeProviderForTests();
+        ILogger iLogger = new NullLogger();
+
+        IncrementalVisitor.ClassAndInterfacesNode classAndInterfacesNode =
+                AsmUtils.readParentClassAndInterfaces(
+                        classReaderProvider,
+                        Type.getType(ImplWithDefault.class).getInternalName(),
+                        "Object",
+                        21,
+                        iLogger);
+
+        MethodNode method =
+                IncrementalVisitor.getMethodByNameInClass(
+                        "func", "()Ljava/lang/String;", classAndInterfacesNode);
+
+        assertThat(method).isNotNull();
+        assertThat(method.name).isEqualTo("func");
+
+        method =
+                IncrementalVisitor.getMethodByNameInClass(
+                        "anotherFunc", "()V", classAndInterfacesNode);
+
+        assertThat(method).isNotNull();
+        assertThat(method.name).isEqualTo("anotherFunc");
     }
 }

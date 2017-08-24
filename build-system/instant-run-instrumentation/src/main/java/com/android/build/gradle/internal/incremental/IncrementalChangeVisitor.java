@@ -34,8 +34,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.GeneratorAdapter;
 import org.objectweb.asm.commons.JSRInlinerAdapter;
 import org.objectweb.asm.commons.Method;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 /**
  * Visitor for classes that have been changed since the initial push.
@@ -52,29 +50,32 @@ import org.objectweb.asm.tree.MethodNode;
  */
 public class IncrementalChangeVisitor extends IncrementalVisitor {
 
-    public static final VisitorBuilder VISITOR_BUILDER = new IncrementalVisitor.VisitorBuilder() {
-        @NonNull
-        @Override
-        public IncrementalVisitor build(@NonNull ClassNode classNode,
-                @NonNull List<ClassNode> parentNodes,
-                @NonNull ClassVisitor classVisitor,
-                @NonNull ILogger logger) {
-            return new IncrementalChangeVisitor(classNode, parentNodes, classVisitor, logger);
-        }
+    public static final VisitorBuilder VISITOR_BUILDER =
+            new IncrementalVisitor.VisitorBuilder() {
+                @NonNull
+                @Override
+                public IncrementalVisitor build(
+                        @NonNull ClassAndInterfacesNode classNode,
+                        @NonNull List<ClassAndInterfacesNode> parentNodes,
+                        @NonNull ClassVisitor classVisitor,
+                        @NonNull ILogger logger) {
+                    return new IncrementalChangeVisitor(
+                            classNode, parentNodes, classVisitor, logger);
+                }
 
-        @NonNull
-        @Override
-        public String getMangledRelativeClassFilePath(@NonNull String path) {
-            // Remove .class (length 6) and replace with $override.class
-            return path.substring(0, path.length() - 6) + OVERRIDE_SUFFIX + ".class";
-        }
+                @NonNull
+                @Override
+                public String getMangledRelativeClassFilePath(@NonNull String path) {
+                    // Remove .class (length 6) and replace with $override.class
+                    return path.substring(0, path.length() - 6) + OVERRIDE_SUFFIX + ".class";
+                }
 
-        @NonNull
-        @Override
-        public OutputType getOutputType() {
-            return OutputType.OVERRIDE;
-        }
-    };
+                @NonNull
+                @Override
+                public OutputType getOutputType() {
+                    return OutputType.OVERRIDE;
+                }
+            };
 
     // todo : find a better way to specify logging and append to a log file.
     private static final boolean DEBUG = false;
@@ -99,8 +100,8 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
     }
 
     public IncrementalChangeVisitor(
-            @NonNull ClassNode classNode,
-            @NonNull List<ClassNode> parentNodes,
+            @NonNull ClassAndInterfacesNode classNode,
+            @NonNull List<ClassAndInterfacesNode> parentNodes,
             @NonNull ClassVisitor classVisitor,
             @NonNull ILogger logger) {
         super(classNode, parentNodes, classVisitor, logger);
@@ -204,8 +205,8 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
         // Do not carry on any access flags from the original method. For example synchronized
         // on the original method would translate into a static synchronized method here.
         access = Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC;
-        MethodNode method = getMethodByNameInClass(name, desc, classNode);
         if (name.equals(ByteCodeUtils.CONSTRUCTOR)) {
+            MethodNode method = getMethodByNameInClass(name, desc, classAndInterfaceNode);
             Constructor constructor = ConstructorBuilder.build(visitedClassName, method);
 
             MethodVisitor mv = createMethodAdapter(access, constructor.args.name,
@@ -316,13 +317,11 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
                 accessRight = AccessRight.PUBLIC;
             } else {
                 // check the field access bits.
-                FieldNode fieldNode = getFieldByName(name);
-                if (fieldNode == null) {
+                accessRight = getFieldAccessRightByName(name);
+                if (accessRight == null) {
                     // If this is an inherited field, we might not have had access to the parent
                     // bytecode. In such a case, treat it as private.
                     accessRight = AccessRight.PACKAGE_PRIVATE;
-                } else {
-                    accessRight = AccessRight.fromNodeAccess(fieldNode.access);
                 }
             }
 
@@ -641,7 +640,8 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
                 // if the target lambda captured "this", it is not a static method,
                 // therefore, we need to change the method signature.
                 MethodNode lambdaMethod =
-                        getMethodByNameInClass(handle.getName(), handle.getDesc(), classNode);
+                        getMethodByNameInClass(
+                                handle.getName(), handle.getDesc(), classAndInterfaceNode);
                 if (lambdaMethod == null) {
                     throw new RuntimeException(
                             String.format(
@@ -699,7 +699,11 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
                             "Super Method : " + name + ":" + desc + ":" + itf + ":" + isStatic);
                 }
                 int arr = boxParametersToNewLocalArray(Type.getArgumentTypes(desc));
-                push(name + "." + desc);
+                if (itf) {
+                    push(owner + "." + name + "." + desc);
+                } else {
+                    push(name + "." + desc);
+                }
                 loadLocal(arr);
                 mv.visitMethodInsn(Opcodes.INVOKESTATIC, visitedClassName, "access$super",
                         instanceToStaticDescPrefix
@@ -910,43 +914,40 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
          * @return the {@link AccessRight} for that method.
          */
         private AccessRight getMethodAccessRight(String owner, String name, String desc) {
-            AccessRight accessRight;
             if (owner.equals(visitedClassName)) {
-                MethodNode methodByName = getMethodByName(name, desc);
-                if (methodByName == null) {
+                AccessRight accessRight = getMethodAccessRightByName(name, desc);
+                if (accessRight == null) {
                     // we did not find the method invoked on ourselves, which mean that it really
                     // is a parent class method invocation and we just don't have access to it.
                     // the most restrictive access right in that case is protected.
                     return AccessRight.PROTECTED;
                 }
-                accessRight = AccessRight.fromNodeAccess(methodByName.access);
+                return accessRight;
             } else {
                 // we are accessing another class method, and since we make all protected and
                 // package-private methods public, we can safely assume it is public.
-                accessRight = AccessRight.PUBLIC;
+                return AccessRight.PUBLIC;
             }
-            return accessRight;
         }
 
         /**
          * Push arguments necessary to invoke one of the method redirect function :
-         * <ul>{@link GenericInstantRuntime#invokeProtectedMethod(Object, Object[], Class[], String)}</ul>
-         * <ul>{@link GenericInstantRuntime#invokeProtectedStaticMethod(Object[], Class[], String, Class)}</ul>
          *
-         * This function will only push on the stack the three common arguments :
-         *      Object[] the boxed parameter values
-         *      Class[] the parameter types
-         *      String the original method name
+         * <ul>
+         *   GenericInstantRuntime#invokeProtectedMethod(Object, Object[], Class[], String)
+         * </ul>
          *
-         * Stack before :
-         *          <param1>
-         *          <param2>
-         *          ...
-         *          <paramN>
-         * Stack After :
-         *          <array of parameters>
-         *          <array of parameter types>
-         *          <method name>
+         * <ul>
+         *   GenericInstantRuntime#invokeProtectedStaticMethod(Object[], Class[], String, Class)
+         * </ul>
+         *
+         * This function will only push on the stack the three common arguments : Object[] the boxed
+         * parameter values Class[] the parameter types String the original method name
+         *
+         * <p>Stack before : /param1/ /param2/ ... /paramN/
+         *
+         * <p>Stack After : /array of parameters/ <array of parameter types> <method name>
+         *
          * @param name the original method name.
          * @param desc the original method signature.
          */
@@ -966,14 +967,13 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
 
         /**
          * Creates an array of {@link Class} objects with the same size of the array of the passed
-         * parameter types. For each parameter type, stores its {@link Class} object into the
-         * result array. For intrinsic types which are not present in the class constant pool, just
-         * push the actual {@link Type} object on the stack and let ASM do the rest. For non
-         * intrinsic type use a {@link MethodVisitor#visitLdcInsn(Object)} to ensure the
-         * referenced class's presence in this class constant pool.
+         * parameter types. For each parameter type, stores its {@link Class} object into the result
+         * array. For intrinsic types which are not present in the class constant pool, just push
+         * the actual {@link Type} object on the stack and let ASM do the rest. For non intrinsic
+         * type use a {@link MethodVisitor#visitLdcInsn(Object)} to ensure the referenced class's
+         * presence in this class constant pool.
          *
-         * Stack Before : nothing of interest
-         * Stack After : <array of {@link Class}>
+         * <p>Stack Before : nothing of interest Stack After : /array of {@link Class}/
          *
          * @param parameterTypes a method list of parameters.
          */
@@ -1091,7 +1091,7 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
         // if invoked which should never happen.
         if (!instantRunDisabled) {
             //noinspection unchecked
-            allMethods.addAll(classNode.methods);
+            allMethods.addAll(classAndInterfaceNode.classNode.methods);
             allMethods.addAll(addedMethods);
         }
 
@@ -1176,21 +1176,6 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
     private String getPackage(@NonNull String className) {
         int i = className.lastIndexOf('/');
         return i == -1 ? className : className.substring(0, i);
-    }
-
-    /**
-     * Returns true if the passed class name is an ancestor of the visited class.
-     *
-     * @param className a / separated class name
-     * @return true if it is an ancestor, false otherwise.
-     */
-    private boolean isAnAncestor(@NonNull String className) {
-        for (ClassNode parentNode : parentNodes) {
-            if (parentNode.name.equals(className)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

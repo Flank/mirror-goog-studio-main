@@ -19,6 +19,12 @@ package com.android.build.gradle.internal.incremental;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.internal.incremental.annotated.OuterClassFor21;
+import com.android.build.gradle.internal.incremental.annotated.SomeClassImplementingInterfaces;
+import com.android.build.gradle.internal.incremental.annotated.SomeInterface;
+import com.android.build.gradle.internal.incremental.annotated.SomeInterfaceWithDefaultMethods;
+import com.android.utils.ILogger;
+import com.android.utils.NullLogger;
+import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import org.junit.Test;
 import org.objectweb.asm.Type;
@@ -28,6 +34,10 @@ import org.objectweb.asm.tree.ClassNode;
  * Tests for the {@link AsmUtils} class
  */
 public class AsmUtilsTest {
+
+    static final AsmUtils.ClassNodeProvider classReaderProvider = new ClassNodeProviderForTests();
+
+    ILogger iLogger = new NullLogger();
 
     @Test
     public void testGetOuterClassName() throws IOException {
@@ -56,6 +66,51 @@ public class AsmUtilsTest {
                                     .getInternalName());
 
             assertThat(AsmUtils.getOuterClassName(classNode)).isNull();
+        }
+    }
+
+    @Test
+    public void testReadInterfaces() throws IOException {
+        ClassNode classNode =
+                AsmUtils.loadClass(
+                        classReaderProvider,
+                        Type.getType(SomeClassImplementingInterfaces.class).getInternalName(),
+                        iLogger);
+
+        ImmutableList.Builder<ClassNode> listBuilder = ImmutableList.builder();
+        assertThat(AsmUtils.readInterfaces(classNode, classReaderProvider, listBuilder, iLogger))
+                .isTrue();
+
+        ImmutableList<ClassNode> interfaceNodes = listBuilder.build();
+        assertThat(interfaceNodes).hasSize(2);
+        for (ClassNode interfaceNode : interfaceNodes) {
+            assertThat(interfaceNode.name)
+                    .isAnyOf(
+                            Type.getType(SomeInterface.class).getInternalName(),
+                            Type.getType(SomeInterfaceWithDefaultMethods.class).getInternalName());
+        }
+    }
+
+    @Test
+    public void testReadClassAndInterfaces() throws IOException {
+
+        IncrementalVisitor.ClassAndInterfacesNode classNodeAndInterfaces =
+                AsmUtils.readParentClassAndInterfaces(
+                        classReaderProvider,
+                        Type.getType(SomeClassImplementingInterfaces.class).getInternalName(),
+                        "Object",
+                        21,
+                        iLogger);
+
+        assertThat(classNodeAndInterfaces).isNotNull();
+        assertThat(classNodeAndInterfaces.classNode.name)
+                .isEqualTo(Type.getType(SomeClassImplementingInterfaces.class).getInternalName());
+        assertThat(classNodeAndInterfaces.implementedInterfaces).hasSize(2);
+        for (ClassNode implementedInterface : classNodeAndInterfaces.implementedInterfaces) {
+            assertThat(implementedInterface.name)
+                    .isAnyOf(
+                            Type.getType(SomeInterface.class).getInternalName(),
+                            Type.getType(SomeInterfaceWithDefaultMethods.class).getInternalName());
         }
     }
 }

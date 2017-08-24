@@ -47,7 +47,6 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.FieldNode;
 
@@ -119,13 +118,8 @@ public class GenerateInstantRunAppInfoTaskTest {
         MoreTruth.assertThat(task.getOutputFile()).exists();
         AsmUtils.JarBasedClassReader reader =
                 new AsmUtils.JarBasedClassReader(task.getOutputFile());
-        ClassReader classReader =
-                reader.loadClassBytes("com.android.tools.ir.server.AppInfo", logger);
-        assertThat(classReader).isNotNull();
-        assertThat(classReader.getClassName()).isEqualTo("com/android/tools/ir/server/AppInfo");
+        ClassNode classNode = reader.loadClassNode("com.android.tools.ir.server.AppInfo", logger);
 
-        ClassNode classNode = new ClassNode();
-        classReader.accept(classNode, 0);
         List<FieldNode> fieldNodes = (List<FieldNode>) classNode.fields;
         assertThat(fieldNodes).hasSize(2);
         assertThat(hasField(fieldNodes, "applicationId")).isTrue();

@@ -20,9 +20,19 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.internal.incremental.fixture.ClassEnhancement;
 import com.java8.BaseClassWithLambda;
+import com.java8.ClassImplementingInterfacesWithDefaults;
+import com.java8.ClassImplementingSeveralInterfacesWithDefaults;
+import com.java8.ClassNotOverridingAnyDefaultMethod;
+import com.java8.ClassOverridingDefaultMethods;
+import com.java8.ClassOverridingSomeDefaultMethods;
 import com.java8.ExtendClassWithLambda;
 import com.java8.ExtendWithFunctionalInterface;
+import com.java8.FinalClassNotOverridingAnyDefaultMethod;
+import com.java8.InterfaceWithDefaultMethodsAndStaticInitImpl;
 import com.java8.Java8FeaturesUser;
+import com.java8.OtherClassOverridingDefaultMethods;
+import com.java8.SimilarInterfaceWithDefault;
+import com.java8.sub.SubAccessingParentPackagePrivate;
 import java.io.IOException;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -223,4 +233,154 @@ public class Java8Test {
         assertThat(base.fooAndBar()).containsExactly(20, 40, 60, 30, 60, 90);
         assertThat(extension.fooAndBar()).containsExactly(35, 100, 200, 300, 70, 140, 210);
     }
+
+    @Test
+    public void testDefaultMethodsInInterfaces()
+            throws ClassNotFoundException, IOException, NoSuchFieldException,
+                    InstantiationException, IllegalAccessException {
+
+        harness.reset();
+        ClassImplementingInterfacesWithDefaults classImplementingInterfacesWithDefaults =
+                new ClassImplementingInterfacesWithDefaults();
+        assertThat(classImplementingInterfacesWithDefaults.someMethod())
+                .isEqualTo(
+                        "some default"
+                                + classImplementingInterfacesWithDefaults.getClass().getName());
+
+        ClassNotOverridingAnyDefaultMethod classNotOverridingAnyDefaultMethod =
+                new ClassNotOverridingAnyDefaultMethod();
+        assertThat(classNotOverridingAnyDefaultMethod.someMethod())
+                .isEqualTo("notOverriding-final value");
+        assertThat(classNotOverridingAnyDefaultMethod.finalMethod()).isEqualTo("final value");
+
+        FinalClassNotOverridingAnyDefaultMethod finalClassNotOverridingAnyDefaultMethod =
+                new FinalClassNotOverridingAnyDefaultMethod();
+        assertThat(finalClassNotOverridingAnyDefaultMethod.someMethod())
+                .isEqualTo("final some-some default");
+        assertThat(finalClassNotOverridingAnyDefaultMethod.defaultedMethod())
+                .isEqualTo("some default");
+
+        ClassOverridingDefaultMethods classOverridingDefaultMethods =
+                new ClassOverridingDefaultMethods();
+        assertThat(classOverridingDefaultMethods.someMethod())
+                .isEqualTo(
+                        ""
+                                + "overriden default"
+                                + classOverridingDefaultMethods.getClass().getName());
+        assertThat(classOverridingDefaultMethods.finalMethod()).isEqualTo("never changes");
+
+        OtherClassOverridingDefaultMethods otherClassOverridingDefaultMethods =
+                new OtherClassOverridingDefaultMethods();
+        assertThat(otherClassOverridingDefaultMethods.someMethod())
+                .isEqualTo("someOther" + OtherClassOverridingDefaultMethods.class.getName());
+        assertThat(otherClassOverridingDefaultMethods.defaultedMethod())
+                .isEqualTo("otherDefault" + OtherClassOverridingDefaultMethods.class.getName());
+        assertThat(otherClassOverridingDefaultMethods.otherMethod())
+                .isEqualTo(
+                        "otherDefault" + OtherClassOverridingDefaultMethods.class.getName() + "X");
+
+        SubAccessingParentPackagePrivate subAccessingParentPackagePrivate =
+                new SubAccessingParentPackagePrivate();
+        assertThat(subAccessingParentPackagePrivate.getString()).isEqualTo("packagePrivate");
+
+        InterfaceWithDefaultMethodsAndStaticInitImpl interfaceWithDefaultMethodsAndStaticInitImpl =
+                new InterfaceWithDefaultMethodsAndStaticInitImpl();
+        assertThat(interfaceWithDefaultMethodsAndStaticInitImpl.defaultMethod())
+                .isEqualTo("VALUE+com.java8.InterfaceWithDefaultMethodsAndStaticInitImpl");
+
+        harness.applyPatch("java8");
+        assertThat(classImplementingInterfacesWithDefaults.defaultedMethod())
+                .isEqualTo("new default");
+        assertThat(classImplementingInterfacesWithDefaults.someMethod())
+                .isEqualTo(
+                        "new default"
+                                + classImplementingInterfacesWithDefaults.getClass().getName());
+
+        assertThat(classNotOverridingAnyDefaultMethod.someMethod())
+                .isEqualTo("newOverriding-final value");
+        assertThat(classNotOverridingAnyDefaultMethod.finalMethod()).isEqualTo("final value");
+
+        assertThat(finalClassNotOverridingAnyDefaultMethod.someMethod())
+                .isEqualTo("final some-new default");
+        assertThat(finalClassNotOverridingAnyDefaultMethod.defaultedMethod())
+                .isEqualTo("new default");
+
+        assertThat(subAccessingParentPackagePrivate.getString()).isEqualTo("NewpackagePrivate");
+
+        assertThat(interfaceWithDefaultMethodsAndStaticInitImpl.defaultMethod())
+                .isEqualTo("com.java8.InterfaceWithDefaultMethodsAndStaticInitImplVALUE+");
+
+        assertThat(classOverridingDefaultMethods.someMethod())
+                .isEqualTo(
+                        ""
+                                + classOverridingDefaultMethods.getClass().getName()
+                                + "new overriden default");
+        assertThat(classOverridingDefaultMethods.finalMethod()).isEqualTo("never changes");
+
+        assertThat(otherClassOverridingDefaultMethods.someMethod())
+                .isEqualTo("someOther" + OtherClassOverridingDefaultMethods.class.getName());
+        assertThat(otherClassOverridingDefaultMethods.defaultedMethod())
+                .isEqualTo("newOtherDefault" + OtherClassOverridingDefaultMethods.class.getName());
+        assertThat(otherClassOverridingDefaultMethods.otherMethod())
+                .isEqualTo(
+                        "newOtherDefault"
+                                + OtherClassOverridingDefaultMethods.class.getName()
+                                + "Y");
+    }
+
+    @Test
+    public void testClassImplementingSimilarInterfacesWithDefautls()
+            throws ClassNotFoundException, IOException, NoSuchFieldException,
+                    InstantiationException, IllegalAccessException {
+
+        harness.reset();
+        ClassImplementingSeveralInterfacesWithDefaults subject =
+                new ClassImplementingSeveralInterfacesWithDefaults();
+        assertThat(subject.someMethod())
+                .isEqualTo(new SimilarInterfaceWithDefault() {}.someMethod());
+
+        assertThat(subject.defaultedMethod()).isEqualTo("similar defaultsome default");
+
+        harness.applyPatch("java8");
+        assertThat(subject.someMethod())
+                .isEqualTo("Updated" + new SimilarInterfaceWithDefault() {}.someMethod());
+
+        assertThat(subject.defaultedMethod()).isEqualTo("new defaultsimilar default");
+    }
+
+    @Test
+    public void testClassUsingSimilarInterfacesWithDefautls()
+            throws ClassNotFoundException, IOException, NoSuchFieldException,
+                    InstantiationException, IllegalAccessException {
+
+        harness.reset();
+        String defaultMethodValue = new SimilarInterfaceWithDefault() {}.defaultedMethod();
+        ClassOverridingSomeDefaultMethods subject = new ClassOverridingSomeDefaultMethods();
+        assertThat(subject.defaultedMethod()).isEqualTo(defaultMethodValue + "overriden default");
+
+        assertThat(subject.someOtherMethod()).isEqualTo("some");
+        assertThat(subject.yetAnotherMethod()).isEqualTo("another");
+
+        harness.applyPatch("java8");
+        assertThat(subject.defaultedMethod())
+                .isEqualTo("New new overriden default similar default");
+
+        assertThat(subject.someOtherMethod()).isEqualTo("some new overriden default");
+        assertThat(subject.yetAnotherMethod()).isEqualTo("another " + defaultMethodValue);
+    }
+
+    // TODO uncomment once we support grand parents methods.
+    //@Test
+    //public void testClassUsingGrandParentInterfaceMethods()
+    //        throws ClassNotFoundException, IOException, NoSuchFieldException,
+    //        InstantiationException, IllegalAccessException {
+    //    harness.reset();
+    //    OtherClassOverridingDefaultMethods other = new OtherClassOverridingDefaultMethods();
+    //    assertThat(other.someMethod()).isEqualTo(
+    //            "someOthercom.java8.OtherClassOverridingDefaultMethodsnever changes");
+    //
+    //    harness.applyPatch("java8");
+    //    assertThat(other.someMethod()).isEqualTo(
+    //            "someNewOthercom.java8.OtherClassOverridingDefaultMethodsnever changes");
+    //}
 }

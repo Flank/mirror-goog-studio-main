@@ -185,6 +185,73 @@ public class IncrementalSupportVisitorTest {
                 .isEqualTo("com/package_private_eight/a/B");
     }
 
+    /**
+     * All test classes located in package_private_nine
+     *
+     * <p>public interface A defines some default methods. public class B implements A and do not
+     * override defaultMethod() public class C extends B and do not override anything.
+     */
+    @Test
+    public void testAccessSuperWithPublicDefaultMethod_nine() throws IOException {
+        assertThat(
+                        getOwnerForAccessSuperMethodDispatch(
+                                com.package_private_nine.a.C.class, "publicMethod", "()V"))
+                .isEqualTo("com/package_private_nine/a/B");
+        assertThat(
+                        getOwnerForAccessSuperMethodDispatch(
+                                com.package_private_nine.a.C.class, "defaultPublicMethod", "()V"))
+                .isEqualTo("com/package_private_nine/a/A");
+    }
+
+    /**
+     * All test classes located in package_private_nine
+     *
+     * <p>public interface A defines some default methods. public class B implements A and overrides
+     * anotherDefaultMethod() public class C extends B and do not override anything.
+     */
+    @Test
+    public void testAccessSuperWithOverridenPublicDefaultMethod_nine() throws IOException {
+        assertThat(
+                        getOwnerForAccessSuperMethodDispatch(
+                                com.package_private_nine.a.C.class,
+                                "anotherDefaultPublicMethod",
+                                "()V"))
+                .isEqualTo("com/package_private_nine/a/B");
+    }
+
+    /**
+     * All test classes located in package_private_nine
+     *
+     * <p>package private b/A interface defines 3 default methods. public class b/B implements b/A
+     * and overrides one method public class c/C extends b/B and overrides another method. public
+     * class c/D extends c/C and does nothing.
+     */
+    @Test
+    public void testAccessSuperWithProtectedDefaultMethod_nine() throws IOException {
+        // test method overriden in c/C
+        assertThat(
+                        getOwnerForAccessSuperMethodDispatch(
+                                com.package_private_nine.c.D.class, "protectedMethod", "()V"))
+                .isEqualTo("com/package_private_nine/c/C");
+
+        // test method overriden in b/B
+        assertThat(
+                        getOwnerForAccessSuperMethodDispatch(
+                                com.package_private_nine.c.D.class,
+                                "anotherProtectedMethod",
+                                "()V"))
+                .isEqualTo("com/package_private_nine/b/B");
+
+        // method is not overriden anywhere, but defined in a package private interface so
+        // in theory inaccessible, the immediate parent should have been selected.
+        assertThat(
+                        getOwnerForAccessSuperMethodDispatch(
+                                com.package_private_nine.c.D.class,
+                                "yetAnotherProtectedMethod",
+                                "()V"))
+                .isEqualTo("com/package_private_nine/c/C");
+    }
+
     @Nullable
     static String getOwnerForAccessSuperMethodDispatch(Class<?> clazz) throws IOException {
         return getOwnerForAccessSuperMethodDispatch(clazz, "publicMethod", null);

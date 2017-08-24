@@ -33,6 +33,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -40,6 +42,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -143,36 +146,51 @@ public class ClassEnhancement implements TestRule {
     private void patchClass(@NonNull String name, @Nullable String patch)
             throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 
-        Class<?> originalEnhancedClass = getClass().getClassLoader().loadClass(name);
-        if (originalEnhancedClass.isInterface()) {
-            // we don't patch interfaces.
-            return;
-        }
-        Field newImplementationField = null;
+        // force class initialization.
+        Class<?> originalEnhancedClass = Class.forName(name, true, getClass().getClassLoader());
+
+        Field changeField;
         try {
-            newImplementationField = originalEnhancedClass.getField("$change");
+            changeField = originalEnhancedClass.getField("$change");
         } catch (NoSuchFieldException e) {
             // the original class does not contain the $change field which mean that InstantRun
             // was disabled for it, we should ignore and not try to patch it.
             return;
         }
         // class might not be accessible from there
-        newImplementationField.setAccessible(true);
+        changeField.setAccessible(true);
 
-        if (patch == null) {
-            // Revert to original implementation.
-            newImplementationField.set(null, null);
-            return;
-        }
-
-        Object change;
         try {
-            change = enhancedClassloaders.get(patch).loadClass(name + "$override").newInstance();
+            Object changeValue =
+                    patch != null
+                            ? enhancedClassloaders
+                                    .get(patch)
+                                    .loadClass(name + "$override")
+                                    .newInstance()
+                            : null; // revert to original implementation.
+
+            resetTheChangeField(originalEnhancedClass.isInterface(), changeField, changeValue);
         } catch (ExecutionException e) {
             throw new IllegalStateException(e);
         }
+    }
 
-        newImplementationField.set(null, change);
+    private static void resetTheChangeField(
+            boolean isInterface, Field newImplementationField, Object newChangeValue)
+            throws IllegalAccessException {
+
+        if (isInterface) {
+            // reset the holder.
+            try {
+                Object atomicReference = newImplementationField.get(null);
+                Method set = AtomicReference.class.getMethod("set", Object.class);
+                set.invoke(atomicReference, newChangeValue);
+            } catch (NoSuchMethodException | InvocationTargetException e) {
+                throw new IllegalStateException(e);
+            }
+        } else {
+            newImplementationField.set(null, newChangeValue);
+        }
     }
 
     private static class IncrementalChangeClassLoader extends URLClassLoader {

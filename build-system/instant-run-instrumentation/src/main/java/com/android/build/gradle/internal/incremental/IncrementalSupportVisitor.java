@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.objectweb.asm.AnnotationVisitor;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -59,6 +60,8 @@ import org.objectweb.asm.tree.MethodNode;
 public class IncrementalSupportVisitor extends IncrementalVisitor {
 
     private boolean disableRedirectionForClass = false;
+    private boolean isInterface = false;
+    private boolean classInitializerAdded = false;
 
     private static final class VisitorBuilder implements IncrementalVisitor.VisitorBuilder {
 
@@ -68,8 +71,8 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         @NonNull
         @Override
         public IncrementalVisitor build(
-                @NonNull ClassNode classNode,
-                @NonNull List<ClassNode> parentNodes,
+                @NonNull ClassAndInterfacesNode classNode,
+                @NonNull List<ClassAndInterfacesNode> parentNodes,
                 @NonNull ClassVisitor classVisitor,
                 @NonNull ILogger logger) {
             return new IncrementalSupportVisitor(classNode, parentNodes, classVisitor, logger);
@@ -92,8 +95,8 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
     public static final IncrementalVisitor.VisitorBuilder VISITOR_BUILDER = new VisitorBuilder();
 
     public IncrementalSupportVisitor(
-            @NonNull ClassNode classNode,
-            @NonNull List<ClassNode> parentNodes,
+            @NonNull ClassAndInterfacesNode classNode,
+            @NonNull List<ClassAndInterfacesNode> parentNodes,
             @NonNull ClassVisitor classVisitor,
             @NonNull ILogger logger) {
         super(classNode, parentNodes, classVisitor, logger);
@@ -111,10 +114,30 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
             String[] interfaces) {
         visitedClassName = name;
         visitedSuperName = superName;
-
-        super.visitField(Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC
-                | Opcodes.ACC_VOLATILE | Opcodes.ACC_SYNTHETIC | Opcodes.ACC_TRANSIENT,
-            "$change", getRuntimeTypeName(CHANGE_TYPE), null, null);
+        isInterface = (access & Opcodes.ACC_INTERFACE) != 0;
+        int fieldAccess =
+                isInterface
+                        ? Opcodes.ACC_PUBLIC
+                                | Opcodes.ACC_STATIC
+                                | Opcodes.ACC_SYNTHETIC
+                                | Opcodes.ACC_FINAL
+                        : Opcodes.ACC_PUBLIC
+                                | Opcodes.ACC_STATIC
+                                | Opcodes.ACC_VOLATILE
+                                | Opcodes.ACC_SYNTHETIC
+                                | Opcodes.ACC_TRANSIENT;
+        // when dealing with interfaces, the $change field is an AtomicReference to the CHANGE_TYPE
+        // since fields in interface must be final. For classes, it's the CHANGE_TYPE directly.
+        if (isInterface) {
+            super.visitField(
+                    fieldAccess,
+                    "$change",
+                    getRuntimeTypeName(Type.getType(AtomicReference.class)),
+                    null,
+                    null);
+        } else {
+            super.visitField(fieldAccess, "$change", getRuntimeTypeName(CHANGE_TYPE), null, null);
+        }
         access = transformClassAccessForInstantRun(access);
         super.visit(version, access, name, signature, superName, interfaces);
     }
@@ -157,63 +180,70 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         MethodVisitor defaultVisitor = super.visitMethod(access, name, desc, signature, exceptions);
         MethodNode method =
                 checkNotNull(
-                        getMethodByNameInClass(name, desc, classNode),
+                        getMethodByNameInClass(name, desc, classAndInterfaceNode),
                         "Method found by visitor but not in the pre-parsed class node.");
 
         // does the method use blacklisted APIs.
         boolean hasIncompatibleChange = InstantRunMethodVerifier.verifyMethod(method)
                 != InstantRunVerifierStatus.COMPATIBLE;
 
-        if (hasIncompatibleChange || disableRedirectionForClass
-                || !isAccessCompatibleWithInstantRun(access)
-                || name.equals(ByteCodeUtils.CLASS_INITIALIZER)) {
+        if (hasIncompatibleChange
+                || disableRedirectionForClass
+                || !isAccessCompatibleWithInstantRun(access)) {
             return defaultVisitor;
-        } else {
-            ArrayList<Type> args = new ArrayList<>(Arrays.asList(Type.getArgumentTypes(desc)));
-            boolean isStatic = (access & Opcodes.ACC_STATIC) != 0;
-            if (!isStatic) {
-                args.add(0, Type.getType(Object.class));
-            }
-
-            // Install the Jsr/Ret inliner adapter, we have had reports of code still using the
-            // Jsr/Ret deprecated byte codes.
-            // see https://code.google.com/p/android/issues/detail?id=220019
-            JSRInlinerAdapter jsrInlinerAdapter = new JSRInlinerAdapter(
-                    defaultVisitor, access, name, desc, signature, exceptions);
-
-            ISMethodVisitor mv = new ISMethodVisitor(jsrInlinerAdapter, access, name, desc);
-            if (name.equals(ByteCodeUtils.CONSTRUCTOR)) {
-                Constructor constructor = ConstructorBuilder.build(visitedClassName, method);
-                LabelNode start = new LabelNode();
-                method.instructions.insert(constructor.loadThis, start);
-                if (constructor.lineForLoad != -1) {
-                    // Record the line number from the start of LOAD_0 for uninitialized 'this'.
-                    // This allows a breakpoint to be set at the line with this(...) or super(...)
-                    // call in the constructor.
-                    method.instructions.insert(constructor.loadThis,
-                        new LineNumberNode(constructor.lineForLoad, start));
-                }
-                mv.addRedirection(new ConstructorRedirection(start, constructor, args));
-            } else {
-                mv.addRedirection(new MethodRedirection(
-                        new LabelNode(mv.getStartLabel()),
-                        name + "." + desc,
-                        args,
-                        Type.getReturnType(desc)));
-            }
-            method.accept(mv);
-            return null;
         }
+        if (name.equals(ByteCodeUtils.CLASS_INITIALIZER)) {
+            classInitializerAdded = true;
+            return isInterface
+                    ? new ISInterfaceStaticInitializerMethodVisitor(
+                            defaultVisitor, access, name, desc)
+                    : defaultVisitor;
+        }
+
+        ArrayList<Type> args = new ArrayList<>(Arrays.asList(Type.getArgumentTypes(desc)));
+        boolean isStatic = (access & Opcodes.ACC_STATIC) != 0;
+        if (!isStatic) {
+            args.add(0, Type.getType(Object.class));
+        }
+
+        // Install the Jsr/Ret inliner adapter, we have had reports of code still using the
+        // Jsr/Ret deprecated byte codes.
+        // see https://code.google.com/p/android/issues/detail?id=220019
+        JSRInlinerAdapter jsrInlinerAdapter =
+                new JSRInlinerAdapter(defaultVisitor, access, name, desc, signature, exceptions);
+
+        ISAbstractMethodVisitor mv =
+                isInterface
+                        ? new ISDefaultMethodVisitor(jsrInlinerAdapter, access, name, desc)
+                        : new ISMethodVisitor(jsrInlinerAdapter, access, name, desc);
+
+        if (name.equals(ByteCodeUtils.CONSTRUCTOR)) {
+            Constructor constructor = ConstructorBuilder.build(visitedClassName, method);
+            LabelNode start = new LabelNode();
+            method.instructions.insert(constructor.loadThis, start);
+            if (constructor.lineForLoad != -1) {
+                // Record the line number from the start of LOAD_0 for uninitialized 'this'.
+                // This allows a breakpoint to be set at the line with this(...) or super(...)
+                // call in the constructor.
+                method.instructions.insert(
+                        constructor.loadThis, new LineNumberNode(constructor.lineForLoad, start));
+            }
+            mv.addRedirection(new ConstructorRedirection(start, constructor, args));
+        } else {
+            mv.addRedirection(
+                    new MethodRedirection(
+                            new LabelNode(mv.getStartLabel()),
+                            name + "." + desc,
+                            args,
+                            Type.getReturnType(desc)));
+        }
+        method.accept(mv);
+        return null;
     }
 
     /**
      * If a class is package private, make it public so instrumented code living in a different
      * class loader can instantiate them.
-     *
-     * <p>We also set the {@code ACC_SUPER} flag on every class, since otherwise the
-     * {@code invokespecial} bytecodes in access$super get compiled to invoke-direct, which fails
-     * at runtime (on KitKat). See the VM spec (4.1) for the whole story of {@code ACC_SUPER}. It
-     * is only missing in classes generated by third-party tools, e.g. AspectJ.
      *
      * @param access the original class/method/field access.
      * @return the new access or the same one depending on the original access rights.
@@ -224,20 +254,19 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
                 ? access | Opcodes.ACC_PUBLIC
                 : access;
 
-        // TODO: only do this on KitKat?
-        return fixedVisibility | Opcodes.ACC_SUPER;
+        return fixedVisibility;
     }
 
     /**
      * If a method/field is not private, make it public. This is to workaround the fact
-     * <ul>Our restart.dex files are loaded with a different class loader than the main dex file
-     * class loader on restart. so we need methods/fields to be public</ul>
-     * <ul>Our reload.dex are loaded from a different class loader as well but methods/fields
-     * are accessed through reflection, yet you need class visibility.</ul>
      *
-     * remember that in Java, protected methods or fields can be acessed by classes in the same
-     * package :
-     * {@see https://docs.oracle.com/javase/tutorial/java/javaOO/accesscontrol.html}
+     * <ul>
+     *   reload.dex are loaded from a different class loader but private methods/fields are accessed
+     *   through reflection, therefore you need visibility.
+     * </ul>
+     *
+     * remember that in Java, protected methods or fields can be accessed by classes in the same
+     * package : {@see https://docs.oracle.com/javase/tutorial/java/javaOO/accesscontrol.html}
      *
      * @param access the original class/method/field access.
      * @return the new access or the same one depending on the original access rights.
@@ -252,16 +281,16 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         return access;
     }
 
-    private class ISMethodVisitor extends GeneratorAdapter {
+    private abstract class ISAbstractMethodVisitor extends GeneratorAdapter {
 
-        private boolean disableRedirection = false;
-        private int change;
-        private final List<Type> args;
-        private final List<Redirection> redirections;
-        private final Map<Label, Redirection> resolvedRedirections;
-        private final Label start;
+        protected boolean disableRedirection = false;
+        protected int change;
+        protected final List<Type> args;
+        protected final List<Redirection> redirections;
+        protected final Map<Label, Redirection> resolvedRedirections;
+        protected final Label start;
 
-        public ISMethodVisitor(MethodVisitor mv, int access,  String name, String desc) {
+        public ISAbstractMethodVisitor(MethodVisitor mv, int access, String name, String desc) {
             super(Opcodes.ASM5, mv, access, name, desc);
             this.change = -1;
             this.redirections = new ArrayList<>();
@@ -304,8 +333,7 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
 
                 super.visitLabel(start);
                 change = newLocal(CHANGE_TYPE);
-                visitFieldInsn(Opcodes.GETSTATIC, visitedClassName, "$change",
-                        getRuntimeTypeName(CHANGE_TYPE));
+                visitChangeField();
                 storeLocal(change);
 
                 redirectAt(start);
@@ -313,14 +341,18 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
             super.visitCode();
         }
 
+        protected abstract void visitChangeField();
+
         @Override
         public void visitLabel(Label label) {
             super.visitLabel(label);
             redirectAt(label);
         }
 
-        private void redirectAt(Label label) {
-            if (disableRedirection) return;
+        protected void redirectAt(Label label) {
+            if (disableRedirection) {
+                return;
+            }
             Redirection redirection = resolvedRedirections.get(label);
             if (redirection != null) {
                 // A special line number to mark this area of code.
@@ -333,10 +365,9 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
             redirections.add(redirection);
         }
 
-
         @Override
-        public void visitLocalVariable(String name, String desc, String signature, Label start,
-                Label end, int index) {
+        public void visitLocalVariable(
+                String name, String desc, String signature, Label start, Label end, int index) {
             // In dex format, the argument names are separated from the local variable names. It
             // seems to be needed to declare the local argument variables from the beginning of
             // the methods for dex to pick that up. By inserting code before the first label we
@@ -350,6 +381,57 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
 
         public Label getStartLabel() {
             return start;
+        }
+    }
+
+    private class ISMethodVisitor extends ISAbstractMethodVisitor {
+
+        public ISMethodVisitor(MethodVisitor mv, int access, String name, String desc) {
+            super(mv, access, name, desc);
+        }
+
+        @Override
+        protected void visitChangeField() {
+            visitFieldInsn(
+                    Opcodes.GETSTATIC,
+                    visitedClassName,
+                    "$change",
+                    getRuntimeTypeName(CHANGE_TYPE));
+        }
+    }
+
+    private class ISDefaultMethodVisitor extends ISAbstractMethodVisitor {
+
+        public ISDefaultMethodVisitor(MethodVisitor mv, int access, String name, String desc) {
+            super(mv, access, name, desc);
+        }
+
+        @Override
+        protected void visitChangeField() {
+            visitFieldInsn(
+                    Opcodes.GETSTATIC,
+                    visitedClassName,
+                    "$change",
+                    getRuntimeTypeName(Type.getType(AtomicReference.class)));
+            mv.visitMethodInsn(
+                    Opcodes.INVOKEVIRTUAL,
+                    "java/util/concurrent/atomic/AtomicReference",
+                    "get",
+                    "()Ljava/lang/Object;",
+                    false);
+        }
+    }
+
+    private class ISInterfaceStaticInitializerMethodVisitor extends GeneratorAdapter {
+        public ISInterfaceStaticInitializerMethodVisitor(
+                MethodVisitor mv, int access, String name, String desc) {
+            super(Opcodes.ASM5, mv, access, name, desc);
+        }
+
+        @Override
+        public void visitCode() {
+            addInterfaceClassInitializerCode(this);
+            super.visitCode();
         }
     }
 
@@ -406,12 +488,17 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         if (parentNodes.isEmpty()) {
             // if we cannot determine the parents for this class, let's blindly add all the
             // method of the current class as a gateway to a possible parent version.
-            addAllNewMethods(classNode, classNode, uniqueMethods);
+            addAllNewMethods(classAndInterfaceNode.classNode, classAndInterfaceNode, uniqueMethods);
         } else {
             // otherwise, use the parent list.
-            for (ClassNode parentNode : parentNodes) {
-                addAllNewMethods(classNode, parentNode, uniqueMethods);
+            for (ClassAndInterfacesNode parentNode : parentNodes) {
+                addAllNewMethods(classAndInterfaceNode.classNode, parentNode, uniqueMethods);
             }
+        }
+
+        // and gather all default methods of all directly implemented interfaces.
+        for (ClassNode implementedInterface : classAndInterfaceNode.implementedInterfaces) {
+            addAllNewMethods(implementedInterface, implementedInterface, uniqueMethods);
         }
 
         new StringSwitch() {
@@ -505,9 +592,11 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         // This will work fine as long as we don't support adding constructors to classes.
         final Map<String, MethodNode> uniqueMethods = new HashMap<>();
 
-        addAllNewConstructors(uniqueMethods, classNode, true /*keepPrivateConstructors*/);
-        for (ClassNode parentNode : parentNodes) {
-            addAllNewConstructors(uniqueMethods, parentNode, false /*keepPrivateConstructors*/);
+        addAllNewConstructors(
+                uniqueMethods, classAndInterfaceNode.classNode, true /*keepPrivateConstructors*/);
+        for (ClassAndInterfacesNode parentNode : parentNodes) {
+            addAllNewConstructors(
+                    uniqueMethods, parentNode.classNode, false /*keepPrivateConstructors*/);
         }
 
         int access = Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC;
@@ -570,10 +659,47 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         mv.visitEnd();
     }
 
+    /**
+     * add a static initializer to java8 interfaces (this visitor will only be called when default
+     * methods are present).
+     */
+    private void addInterfaceClassInitializer() {
+        if (classInitializerAdded) {
+            return;
+        }
+        MethodVisitor mv = super.visitMethod(Opcodes.ACC_STATIC, "<clinit>", "()V", null, null);
+        mv.visitCode();
+        addInterfaceClassInitializerCode(mv);
+        mv.visitInsn(Opcodes.RETURN);
+        mv.visitMaxs(3, 0);
+        mv.visitEnd();
+    }
+
+    private void addInterfaceClassInitializerCode(MethodVisitor mv) {
+        mv.visitTypeInsn(Opcodes.NEW, "java/util/concurrent/atomic/AtomicReference");
+        mv.visitInsn(Opcodes.DUP);
+        mv.visitInsn(Opcodes.ACONST_NULL);
+        mv.visitMethodInsn(
+                Opcodes.INVOKESPECIAL,
+                "java/util/concurrent/atomic/AtomicReference",
+                "<init>",
+                "(Ljava/lang/Object;)V",
+                false);
+        mv.visitFieldInsn(
+                Opcodes.PUTSTATIC,
+                visitedClassName,
+                "$change",
+                "Ljava/util/concurrent/atomic/AtomicReference;");
+    }
+
     @Override
     public void visitEnd() {
         createAccessSuper();
-        createDispatchingThis();
+        if (isInterface) {
+            addInterfaceClassInitializer();
+        } else {
+            createDispatchingThis();
+        }
         super.visitEnd();
     }
 
@@ -636,22 +762,22 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
                 methodReference.method.name, methodReference.method.access,
                 methodReference.owner.name, methodReference.owner.access);
         // if the method owner class is accessible from the visited class, just use that.
-        if (isParentClassVisible(methodReference.owner, classNode)) {
+        if (isParentClassVisible(methodReference.owner, classAndInterfaceNode.classNode)) {
             return methodReference.owner.name;
         }
         logger.verbose("Found an inaccessible methodReference %1$s", methodReference.method.name);
         // walk up the hierarchy, starting at the method reference owner.
-        Iterator<ClassNode> parentIterator = parentNodes.iterator();
-        ClassNode parent = parentIterator.next();
+        Iterator<ClassAndInterfacesNode> parentIterator = parentNodes.iterator();
+        ClassNode parent = parentIterator.next().classNode;
         while(!parent.name.equals(methodReference.owner.name)
             && parentIterator.hasNext()) {
-            parent = parentIterator.next();
+            parent = parentIterator.next().classNode;
         }
         while (parentIterator.hasNext()) {
-            ClassNode node = parentIterator.next();
+            ClassNode node = parentIterator.next().classNode;
             // check that this parent is visible, there might be several layers of package
             // private classes.
-            if (isParentClassVisible(node, classNode)) {
+            if (isParentClassVisible(node, classAndInterfaceNode.classNode)) {
                 //noinspection unchecked: ASM API
                 for (MethodNode methodNode : (List<MethodNode>) node.methods) {
                     // do not reference bridge methods, they might not be translated into dex, or
@@ -671,7 +797,7 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
             }
         }
         logger.verbose("Using immediate parent for dispatching %1$s", methodReference.method.desc);
-        return classNode.superName;
+        return classAndInterfaceNode.classNode.superName;
     }
 
     private static boolean isParentClassVisible(@NonNull ClassNode parent,
@@ -680,6 +806,27 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         return ((parent.access & (Opcodes.ACC_PUBLIC | Opcodes.ACC_PROTECTED)) != 0 ||
                 Objects.equal(ByteCodeUtils.getPackageName(parent.name),
                         ByteCodeUtils.getPackageName(child.name)));
+    }
+
+    /**
+     * Add all unseen method from the passed ClassNode's methods and implemented interfaces.
+     *
+     * @see ClassNode#methods
+     * @param instrumentedClass class that is being visited
+     * @param superClass the class to save all directly implemented methods as well as default
+     *     methods from implemented interfaces from
+     * @param methods the methods already encountered in the ClassNode hierarchy
+     */
+    private static void addAllNewMethods(
+            ClassNode instrumentedClass,
+            ClassAndInterfacesNode superClass,
+            Map<String, MethodReference> methods) {
+
+        addAllNewMethods(instrumentedClass, superClass.classNode, methods);
+        // add all default methods from interfaces implemented by parents.
+        for (ClassNode implementedInterface : superClass.implementedInterfaces) {
+            addAllNewMethods(instrumentedClass, implementedInterface, methods);
+        }
     }
 
     /**
@@ -696,16 +843,49 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
             Map<String, MethodReference> methods) {
         //noinspection unchecked
         for (MethodNode method : (List<MethodNode>) superClass.methods) {
-            if (method.name.equals(ByteCodeUtils.CONSTRUCTOR) || method.name.equals("<clinit>")) {
-                continue;
-            }
-            String name = method.name + "." + method.desc;
-            if (isAccessCompatibleWithInstantRun(method.access)
-                    && !methods.containsKey(name)
-                    && (method.access & Opcodes.ACC_STATIC) == 0
-                    && isCallableFromSubclass(method, superClass, instrumentedClass)) {
-                methods.put(name, new MethodReference(method, superClass));
-            }
+            addNewMethod(instrumentedClass, superClass, method, methods);
+        }
+    }
+
+    /**
+     * Add a new method in the list of unseen methods in the instrumentedClass hierarchy.
+     *
+     * @param instrumentedClass class that is being visited
+     * @param superClass the class or interface defining the passed method.
+     * @param method the method to study
+     * @param methods the methods arlready encountered in the ClassNode hierarchy
+     */
+    private static void addNewMethod(
+            ClassNode instrumentedClass,
+            ClassNode superClass,
+            MethodNode method,
+            Map<String, MethodReference> methods) {
+
+        if (method.name.equals(ByteCodeUtils.CONSTRUCTOR)
+                || method.name.equals(ByteCodeUtils.CLASS_INITIALIZER)) {
+            return;
+        }
+
+        String name = method.name + "." + method.desc;
+
+        // if we are dealing with an interface default method we should always provide a
+        // way to invoke it through the access$super. It is possible that this default method
+        // is overriden by a super class but since several interfaces can implement the same
+        // method name, you can easily end up with a partial override (overriding some of the
+        // implemented interfaces methods but not all of them).
+        if ((superClass.access & Opcodes.ACC_INTERFACE) != 0
+                && isParentClassVisible(superClass, instrumentedClass)) {
+            // all default methods name will use the defining interface name for the hascode
+            // to avoid name collision when dealing with 2 methods with the same names coming
+            // from 2 distinct interfaces.
+            name = superClass.name + "." + name;
+        }
+
+        if (isAccessCompatibleWithInstantRun(method.access)
+                && !methods.containsKey(name)
+                && (method.access & Opcodes.ACC_STATIC) == 0
+                && isCallableFromSubclass(method, superClass, instrumentedClass)) {
+            methods.put(name, new MethodReference(method, superClass));
         }
     }
 
