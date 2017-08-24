@@ -17,6 +17,7 @@
     <global id="themeExistsAppBarOverlay" type="boolean" value="${(theme.existsAppBarOverlay!false)?string}" />
     <global id="themeNamePopupOverlay" type="string" value="${theme.namePopupOverlay!'AppTheme.PopupOverlay'}" />
     <global id="themeExistsPopupOverlay" type="boolean" value="${(theme.existsPopupOverlay!false)?string}" />
+    <global id="hasApplicationTheme" type="boolean" value="${(hasApplicationTheme!true)?string}" />
 
     <global id="appCompat" type="boolean" value="${appCompat?string}" />
     <global id="appCompatActivity" type="boolean" value="${appCompatActivity?string}" />
