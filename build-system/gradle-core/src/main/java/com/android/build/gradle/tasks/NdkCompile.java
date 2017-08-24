@@ -79,10 +79,10 @@ public class NdkCompile extends NdkTask {
 
         return String.format(
                 "Consider using CMake or ndk-build integration. For more information, go to:\n"
-                        + " http://d.android.com/r/studio-ui/add-native-code.html%s\n"
+                        + " https://d.android.com/r/studio-ui/add-native-code.html%s\n"
                         + "%s"
                         + "Alternatively, you can use the experimental plugin:\n"
-                        + " https://developer.android.com/studio/build/experimental-plugin.html.\n",
+                        + " https://developer.android.com/r/tools/experimental-plugin.html\n",
                 urlSuffix, generatedAndridMk);
     }
 
