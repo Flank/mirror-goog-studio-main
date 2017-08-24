@@ -24,13 +24,33 @@ Check out the latest published source code using the following commands in a she
 $ mkdir studio-master-dev
 $ cd studio-master-dev
 $ repo init -u https://android.googlesource.com/platform/manifest -b studio-master-dev
-$ repo sync
+$ repo sync -c -j4 -q
 ```
 You can call the top level directory whatever you want.
 Those of us who check out multiple branches prefer to name the directories after the branches.
 
 During the `repo init` command, it will ask you for your name and e-mail address which
 will be used by git if you commit changes and will be shown if you upload them for review.
+
+To fetch the latest changes re-run the `repo sync -c -j4 -q` command.
+
+* `-j`, The number of parallel sync threads to start.
+
+    For your first sync, during which your client will be pulling down everything,
+    we recommend a low value such as  `-j4`.
+    For incremental syncs you can increase it as
+    most fetch operations will be no-ops.
+    However, specifying too high a number may decrease performance on machines with slow disks
+    or slow internet connections.
+
+* `-c`, Syncs only the current branch to reduce sync time and disk space.
+
+   This means you will not be able to cherry-pick changes from branches you didn't sync.
+
+* `-q`, Quiet.  The normal output is fairly verbose.
+
+
+See https://source.android.com/source/using-repo for more information about how to use repo.
 
 ## Building
 
