@@ -337,6 +337,25 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "0 errors, 1 warnings\n");
     }
 
+    public void testWindowsCRLF() throws Exception {
+        // Ensure that offsets are correct on Windows when using CRLF instead of just LF as
+        // line separators.
+
+        //noinspection all // Sample code
+        lint().files(
+                java("src/test/pkg/MyTest.java", ""
+                        + "package test.pkg;\r\n"
+                        + "\r\n"
+                        + "public class MyTest {\r\n"
+                        + "    String s = \"/sdcard/mydir\";\r\n"
+                        + "}\r\n"))
+                .run()
+                .expect("src/test/pkg/MyTest.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+                        "    String s = \"/sdcard/mydir\";\n" +
+                        "               ~~~~~~~~~~~~~~~\n" +
+                        "0 errors, 1 warnings\n");
+    }
+
     public void testKotlin() throws Exception {
         if (skipKotlinTests()) {
             return;

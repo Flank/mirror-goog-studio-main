@@ -16,6 +16,8 @@
 
 package com.android.tools.lint;
 
+import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_KT;
 import static com.android.manifmerger.MergingReport.MergedManifestKind.MERGED;
 import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
@@ -73,7 +75,11 @@ import com.intellij.codeInsight.ExternalAnnotationsManager;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.roots.LanguageLevelProjectExtension;
 import com.intellij.openapi.util.Disposer;
+import com.intellij.openapi.vfs.StandardFileSystems;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.java.LanguageLevel;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.util.lang.UrlClassLoader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -451,6 +457,8 @@ public class LintCliClient extends LintClient {
         int end = indexOf(contents, '\n', offset);
         if (end == -1) {
             end = indexOf(contents, '\r', offset);
+        } else if (end > 0 && contents.charAt(end - 1) == '\r') {
+            end--;
         }
         return contents.subSequence(offset, end != -1 ? end : contents.length()).toString();
     }
@@ -473,11 +481,32 @@ public class LintCliClient extends LintClient {
     @NonNull
     @Override
     public CharSequence readFile(@NonNull File file) {
+        CharSequence contents;
         try {
-            return LintUtils.getEncodedString(this, file, false);
+            contents = LintUtils.getEncodedString(this, file, false);
         } catch (IOException e) {
-            return "";
+            contents = "";
         }
+
+        if ((file.getPath().endsWith(DOT_JAVA) || file.getPath().endsWith(DOT_KT)) &&
+                CharSequences.indexOf(contents, '\r') != -1) {
+            // Offsets in these files will be relative to PSI's text offsets (which may
+            // have converted line offsets); make sure we use the same offsets.
+            // (Can't just do this on Windows; what matters is whether the file contains
+            // CRLF's.)
+            VirtualFile vFile = StandardFileSystems.local().findFileByPath(file.getPath());
+            if (vFile != null) {
+                com.intellij.openapi.project.Project project = getIdeaProject();
+                if (project != null) {
+                    PsiFile psiFile = PsiManager.getInstance(project).findFile(vFile);
+                    if (psiFile != null) {
+                        contents = psiFile.getText();
+                    }
+                }
+            }
+        }
+
+        return contents;
     }
 
     boolean isCheckingSpecificIssues() {

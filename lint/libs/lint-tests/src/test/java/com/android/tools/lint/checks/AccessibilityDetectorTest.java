@@ -20,7 +20,7 @@ import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("javadoc")
 public class AccessibilityDetectorTest extends AbstractCheckTest {
-    public void testAccessibility() throws Exception {
+    public void testAccessibility() {
         String expected = ""
                 + "res/layout/accessibility.xml:4: Warning: Missing contentDescription attribute on image [ContentDescription]\n"
                 + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n"
@@ -90,6 +90,24 @@ public class AccessibilityDetectorTest extends AbstractCheckTest {
                 + "-         android:contentDescription=\"TODO\" />\n"
                 + "+         android:contentDescription=\"[TODO]|\" />\n"
                 + "  \n");
+    }
+
+    public void testCrLf() {
+        String expected = "" +
+                "res/layout/accessibility.xml:4: Warning: Missing contentDescription attribute on image [ContentDescription]\n" +
+                "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\n" +
+                "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 1 warnings\n";
+
+        lint().files(
+                xml("res/layout/accessibility.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n"
+                        + "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" xmlns:tools=\"http://schemas.android.com/tools\" android:id=\"@+id/newlinear\" android:orientation=\"vertical\" android:layout_width=\"match_parent\" android:layout_height=\"match_parent\">\r\n"
+                        + "    <Button android:text=\"Button\" android:id=\"@+id/button1\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\"></Button>\r\n"
+                        + "    <ImageView android:id=\"@+id/android_logo\" android:layout_width=\"wrap_content\" android:layout_height=\"wrap_content\" android:src=\"@drawable/android_button\" android:focusable=\"false\" android:clickable=\"false\" android:layout_weight=\"1.0\" />\r\n"
+                        + "</LinearLayout>\n"))
+                .run()
+                .expect(expected);
     }
 
     @Override

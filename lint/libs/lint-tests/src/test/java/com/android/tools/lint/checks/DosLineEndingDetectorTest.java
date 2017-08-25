@@ -29,7 +29,7 @@ public class DosLineEndingDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         assertEquals(""
                 + "res/layout/crcrlf.xml:4: Error: Incorrect line ending: found carriage return (\\r) without corresponding newline (\\n) [MangledCRLF]\n"
-                + "    android:layout_height=\"match_parent\" >\r\n"
+                + "    android:layout_height=\"match_parent\" >\n"
                 + "^\n"
                 + "1 errors, 0 warnings\n",
             lintProject(base64gzip("res/layout/crcrlf.xml", ""
