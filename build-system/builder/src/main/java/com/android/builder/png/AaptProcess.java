@@ -47,7 +47,7 @@ public class AaptProcess {
             System.getenv("SLAVE_AAPT_TIMEOUT") == null
                     ? DEFAULT_SLAVE_AAPT_TIMEOUT_IN_SECONDS
                     : Integer.parseInt(System.getenv("SLAVE_AAPT_TIMEOUT"));
-    private static final Joiner joiner = Joiner.on(File.pathSeparatorChar);
+    private static final Joiner joiner = Joiner.on('\n');
 
     private final String mAaptLocation;
     private final Process mProcess;
@@ -117,9 +117,10 @@ public class AaptProcess {
 
         mProcessOutputFacade.setNotifier(notifier);
         mWriter.write('c');
-        mWriter.write(File.pathSeparatorChar);
+        mWriter.write('\n');
         mWriter.write(joiner.join(AaptV2CommandBuilder.makeCompile(request)));
         // Finish the request
+        mWriter.write('\n');
         mWriter.write('\n');
         mWriter.flush();
         processCount++;
@@ -151,9 +152,10 @@ public class AaptProcess {
         mProcessOutputFacade.setNotifier(notifier);
         try {
             mWriter.write('l');
-            mWriter.write(File.pathSeparatorChar);
+            mWriter.write('\n');
             mWriter.write(joiner.join(AaptV2CommandBuilder.makeLink(config, intermediateDir)));
             // Finish the request
+            mWriter.write('\n');
             mWriter.write('\n');
             mWriter.flush();
         } catch (AaptException e) {
@@ -199,6 +201,7 @@ public class AaptProcess {
 
         mReady.set(false);
         mWriter.write("quit\n");
+        mWriter.write('\n');
         mWriter.flush();
         mProcess.waitFor();
         mLogger.verbose("Process (%1$s) processed %2$s files", hashCode(), processCount);
@@ -382,7 +385,6 @@ public class AaptProcess {
                 mLogger.verbose(
                         "AAPT warning(%1$s), Job(%2$s): %3$s",
                         mOwner.getProcess().hashCode(), mJob, line);
-                mLogger.warning("AAPT: %1$s", line);
             }
         }
     }
