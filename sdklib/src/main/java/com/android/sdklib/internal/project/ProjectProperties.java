@@ -26,7 +26,6 @@ import com.android.io.StreamException;
 import com.android.utils.ILogger;
 import com.android.utils.SdkUtils;
 import com.google.common.io.Closeables;
-
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -78,6 +77,8 @@ public class ProjectProperties implements IPropertySource {
 
     public static final String PROPERTY_SDK = "sdk.dir";
     public static final String PROPERTY_NDK = "ndk.dir";
+    public static final String PROPERTY_CMAKE = "cmake.dir";
+    
     // LEGACY - Kept so that we can actually remove it from local.properties.
     private static final String PROPERTY_SDK_LEGACY = "sdk-location";
 

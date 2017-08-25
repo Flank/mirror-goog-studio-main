@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
+import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -40,6 +41,7 @@ import com.android.builder.model.ApiVersion;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
+import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
@@ -694,51 +696,43 @@ public abstract class ExternalNativeJsonGenerator {
             List<File> expectedJsons) {
         final GradleVariantConfiguration variantConfig = variantData.getVariantConfiguration();
 
+        AndroidConfig extension = variantData.getScope().getGlobalScope().getExtension();
+        CoreExternalNativeBuild externalNativeBuild = extension.getExternalNativeBuild();
+        File cmakeFolder =
+                ExternalNativeBuildTaskUtils.findCmakeExecutableFolder(
+                        externalNativeBuild.getCmake().getVersion(), sdkHandler);
+
         CoreExternalNativeCmakeOptions options =
                 variantConfig.getExternalNativeBuildOptions().getExternalNativeCmakeOptions();
         checkNotNull(options, "CMake options not found");
-        // Install Cmake if it's not there.
-        ProgressIndicator progress = new ConsoleProgressIndicator();
-        AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkHandler.getSdkFolder());
-        LocalPackage cmakePackage =
-                sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, null, true, progress);
-        if (cmakePackage == null) {
-            sdkHandler.installCMake();
-        }
-        File cmakeExecutable = getSdkCmakeExecutable(sdkHandler.getSdkFolder());
-        if (!cmakeExecutable.exists()) {
-            // throw InvalidUserDataException directly for "Failed to find CMake" error. Android
-            // Studio doesn't doesn't currently produce Quick Fix UI for SyncIssues.
-            throw new InvalidUserDataException(
-                    String.format(
-                            "Failed to find CMake.\n"
-                                    + "Install from Android Studio under File/Settings/"
-                                    + "Appearance & Behavior/System Settings/Android SDK/SDK Tools/CMake.\n"
-                                    + "Expected CMake executable at %s.",
-                            cmakeExecutable));
-        }
+
+        Revision cmakeVersion = null;
         try {
-            return CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
-                    CmakeUtils.getVersion(getCmakeBinFolder(sdkHandler.getSdkFolder())),
-                    ndkHandler,
-                    minSdkVersionApiLevel,
-                    variantData.getName(),
-                    validAbis,
-                    androidBuilder,
-                    sdkHandler.getSdkFolder(),
-                    sdkHandler.getNdkFolder(),
-                    soFolder,
-                    objFolder,
-                    externalNativeBuildFolder,
-                    makefile,
-                    variantConfig.getBuildType().isDebuggable(),
-                    options.getArguments(),
-                    options.getcFlags(),
-                    options.getCppFlags(),
-                    expectedJsons);
+            cmakeVersion = CmakeUtils.getVersion(new File(cmakeFolder, "bin"));
         } catch (IOException e) {
-            throw new RuntimeException("Unable to create the Cmake strategy");
+            throw new RuntimeException(
+                    "Unable to get the CMake version located at: "
+                            + (new File(cmakeFolder, "bin")).getAbsolutePath());
         }
+        return CmakeExternalNativeJsonGeneratorFactory.createCmakeStrategy(
+                cmakeVersion,
+                ndkHandler,
+                minSdkVersionApiLevel,
+                variantData.getName(),
+                validAbis,
+                androidBuilder,
+                sdkHandler.getSdkFolder(),
+                sdkHandler.getNdkFolder(),
+                soFolder,
+                objFolder,
+                externalNativeBuildFolder,
+                makefile,
+                cmakeFolder,
+                variantConfig.getBuildType().isDebuggable(),
+                options.getArguments(),
+                options.getcFlags(),
+                options.getCppFlags(),
+                expectedJsons);
     }
 
     private static File findExternalNativeBuildFolder(
@@ -856,6 +850,12 @@ public abstract class ExternalNativeJsonGenerator {
         return sdkFolder;
     }
 
+    @NonNull
+    protected NdkHandler getNdkHandler() {
+        return ndkHandler;
+    }
+
+
     @Input
     @NonNull
     Collection<Abi> getAbis() {
@@ -865,18 +865,18 @@ public abstract class ExternalNativeJsonGenerator {
     @NonNull
     protected static File getSdkCmakeExecutable(@NonNull File sdkFolder) {
         if (isWindows()) {
-            return new File(getCmakeBinFolder(sdkFolder), "cmake.exe");
+            return new File(getSdkCmakeBinFolder(sdkFolder), "cmake.exe");
         }
-        return new File(getCmakeBinFolder(sdkFolder), "cmake");
+        return new File(getSdkCmakeBinFolder(sdkFolder), "cmake");
     }
 
     @NonNull
-    protected static File getCmakeBinFolder(@NonNull File sdkFolder) {
-        return new File(getCmakeFolder(sdkFolder), "bin");
+    protected static File getSdkCmakeBinFolder(@NonNull File sdkFolder) {
+        return new File(getCmakeFolderFromSdkFolder(sdkFolder), "bin");
     }
 
     @NonNull
-    protected static File getCmakeFolder(@NonNull File sdkFolder) {
+    protected static File getCmakeFolderFromSdkFolder(@NonNull File sdkFolder) {
         ProgressIndicator progress = new ConsoleProgressIndicator();
         AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkFolder);
         LocalPackage cmakePackage =

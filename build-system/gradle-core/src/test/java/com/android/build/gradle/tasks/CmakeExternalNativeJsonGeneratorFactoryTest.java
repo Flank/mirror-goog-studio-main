@@ -43,6 +43,8 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
     File objFolder;
     File jsonFolder;
     File makeFile;
+    File cmakeFolder;
+    File ninjaFolder;
     boolean debuggable;
     List<String> buildArguments;
     List<String> cFlags;
@@ -63,6 +65,8 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
         objFolder = Mockito.mock(File.class);
         jsonFolder = Mockito.mock(File.class);
         makeFile = Mockito.mock(File.class);
+        cmakeFolder = Mockito.mock(File.class);
+        ninjaFolder = Mockito.mock(File.class);
         debuggable = true;
         buildArguments = Mockito.mock(List.class);
         cFlags = Mockito.mock(List.class);
@@ -112,6 +116,7 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
                 objFolder,
                 jsonFolder,
                 makeFile,
+                cmakeFolder,
                 debuggable,
                 buildArguments,
                 cFlags,
