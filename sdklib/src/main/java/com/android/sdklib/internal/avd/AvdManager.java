@@ -2070,7 +2070,6 @@ public class AvdManager {
 
             if (imageHardwardConfig != null) {
                 finalHardwareValues.putAll(imageHardwardConfig);
-                values.putAll(imageHardwardConfig);
             }
         }
 
@@ -2084,15 +2083,20 @@ public class AvdManager {
 
                 if (skinHardwareConfig != null) {
                     finalHardwareValues.putAll(skinHardwareConfig);
-                    values.putAll(skinHardwareConfig);
                 }
             }
         }
 
-        // finally put the hardware provided by the user.
+        // put the hardware provided by the user.
         if (hardwareConfig != null) {
             finalHardwareValues.putAll(hardwareConfig);
-            values.putAll(hardwareConfig);
+        }
+
+        // finally add hardware properties but do not override existing values
+        for (String key : finalHardwareValues.keySet()) {
+            if (!values.containsKey(key)) {
+                values.put(key, finalHardwareValues.get(key));
+            }
         }
 
         File configIniFile = new File(avdFolder, CONFIG_INI);
