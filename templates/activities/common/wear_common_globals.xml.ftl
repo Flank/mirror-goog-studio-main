@@ -7,11 +7,11 @@
     <global id="resOut" value="${resDir}" />
 
     <#if Mobileincluded!false>
-        <global id="appManifestOut" value="${topOut}/${MobileprojectName}/${manifestDir}" />
+        <global id="appManifestOut" value="${escapeXmlAttribute(topOut)}/${MobileprojectName}/${manifestDir}" />
     <#else>
         <#assign appManifestDir=getAppManifestDir()!"">
         <#if appManifestDir?length gt 0>
-            <global id="appManifestOut" value="${appManifestDir}" />
+            <global id="appManifestOut" value="${escapeXmlAttribute(appManifestDir)}" />
         </#if>
     </#if>
     <#include "root://activities/common/kotlin_globals.xml.ftl" />
