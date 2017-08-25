@@ -889,6 +889,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
 
     public void testReferenceFromDataBinding() throws Exception {
         // Regression test for https://issuetracker.google.com/38213600
+        //noinspection all // Sample code
         lint().files(
                 // Data binding layout
                 xml("res/layout/added_view.xml", ""
@@ -959,6 +960,54 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         + "package android.databinding;\n"
                         + "public abstract class ViewDataBinding {\n"
                         + "}"))
+                .run()
+                .expectClean();
+    }
+
+    @SuppressWarnings("SpellCheckingInspection")
+    public void testButterknife() throws Exception {
+        // Regression test for https://issuetracker.google.com/62640956
+        //noinspection all // Sample code
+        lint().files(
+                // Data binding layout
+                xml("res/values/colors.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<resources>\n" +
+                        "    <color name=\"bgColor\">#FF4444</color>\n" +
+                        "</resources>\n"),
+                java("" +
+                        "package my.pkg;\n" +
+                        "import butterknife.BindColor;\n" +
+                        "\n" +
+                        "public class Reference {\n" +
+                        "    @BindColor(R2.color.bgColor)\n" +
+                        "    int bgColor;\n" +
+                        "}\n"),
+                java("" +
+                        "package butterknife;\n" +
+                        "import java.lang.annotation.*;\n" +
+                        "import static java.lang.annotation.ElementType.FIELD;\n" +
+                        "import static java.lang.annotation.RetentionPolicy.CLASS;\n" +
+                        "@Retention(CLASS) @Target(FIELD)\n" +
+                        "public @interface BindColor {\n" +
+                        "  int value();\n" +
+                        "}\n"),
+                java("" +
+                        "package my.pkg;\n" +
+                        "\n" +
+                        "public final class R {\n" +
+                        "    public static final class color {\n" +
+                        "        public static final int bgColor=0x7f05001f;" +
+                        "    }\n" +
+                        "}\n"),
+                java("" +
+                        "package my.pkg;\n" +
+                        "\n" +
+                        "public final class R2 {\n" +
+                        "    public static final class color {\n" +
+                        "        public static final int bgColor=0x7f05001f;" +
+                        "    }\n" +
+                        "}\n"))
                 .run()
                 .expectClean();
     }
