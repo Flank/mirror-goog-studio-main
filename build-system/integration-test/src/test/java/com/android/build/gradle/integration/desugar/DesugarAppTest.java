@@ -37,6 +37,7 @@ import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
+import com.android.testutils.apk.Dex;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.ir.client.InstantRunArtifactType;
 import com.android.tools.ir.client.InstantRunBuildInfo;
@@ -53,6 +54,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -280,7 +282,7 @@ public class DesugarAppTest {
                 String.format(
                         "\n" + "android.defaultConfig.minSdkVersion %d\n",
                         MIN_SUPPORTED_API_TRY_WITH_RESOURCES - 1));
-        project.executor().run("assembleDebug");
+        getProjectExecutor().run("assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         for (String klass : TRY_WITH_RESOURCES_RUNTIME) {
             assertThat(apk).containsClass(klass);
@@ -300,7 +302,7 @@ public class DesugarAppTest {
                 InstantRunTestUtils.getInstantRunModel(
                         Iterables.getOnlyElement(
                                 project.model().getSingle().getModelMap().values()));
-        project.executor()
+        getProjectExecutor()
                 .withInstantRun(new AndroidVersion(24, null), OptionalCompilationStep.FULL_APK)
                 .run("assembleDebug");
         InstantRunBuildInfo initialContext = InstantRunTestUtils.loadContext(instantRunModel);
@@ -334,10 +336,24 @@ public class DesugarAppTest {
                 String.format(
                         "\n" + "android.defaultConfig.minSdkVersion %d\n",
                         MIN_SUPPORTED_API_TRY_WITH_RESOURCES));
-        project.executor().run("assembleDebug");
+        getProjectExecutor().run("assembleDebug");
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         for (String klass : TRY_WITH_RESOURCES_RUNTIME) {
             assertThat(apk).doesNotContainClass(klass);
+        }
+
+        // also make sure we do not reference ThrowableExtension classes
+        Dex mainDex = apk.getMainDexFile().orElseThrow(AssertionError::new);
+        DexBackedClassDef classDef = mainDex.getClasses().get("Lcom/example/helloworld/Data;");
+        List<String> allTypesInDex =
+                classDef.dexFile
+                        .getTypes()
+                        .stream()
+                        .map(d -> d.getType())
+                        .collect(Collectors.toList());
+
+        for (String klass : TRY_WITH_RESOURCES_RUNTIME) {
+            assertThat(allTypesInDex).doesNotContain(klass);
         }
     }
 
@@ -356,7 +372,7 @@ public class DesugarAppTest {
                         + "android.dexOptions.dexInProcess false\n"
                         + "android.defaultConfig.minSdkVersion 24");
         GradleBuildResult result =
-                project.executor().expectFailure().withUseDexArchive(false).run("assembleDebug");
+                getProjectExecutor().expectFailure().withUseDexArchive(false).run("assembleDebug");
         assertThat(result.getStderr())
                 .contains("Execution failed for task ':transformClassesWithPreDexForDebug'");
     }
@@ -364,12 +380,12 @@ public class DesugarAppTest {
     @Test
     public void testUpToDateForIncCompileTasks() throws IOException, InterruptedException {
         enableDesugar();
-        project.execute("assembleDebug");
+        getProjectExecutor().run("assembleDebug");
 
         Path newSource = project.getMainSrcDir().toPath().resolve("test").resolve("Data.java");
         Files.createDirectories(newSource.getParent());
         Files.write(newSource, ImmutableList.of("package test;", "public class Data {}"));
-        GradleBuildResult result = project.executor().run("assembleDebug");
+        GradleBuildResult result = getProjectExecutor().run("assembleDebug");
 
         assertThat(result.getUpToDateTasks())
                 .containsAllIn(ImmutableList.of(":extractTryWithResourcesSupportJarDebug"));
@@ -395,7 +411,7 @@ public class DesugarAppTest {
                         "    public void onServiceConnected(ComponentName var1, IBinder var2) {}",
                         "    public void onServiceDisconnected(ComponentName var1) {}",
                         "}"));
-        project.executor().run("assembleDebug");
+        getProjectExecutor().run("assembleDebug");
         assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
                 .hasClass("Ltest/MyService;")
                 .that()
