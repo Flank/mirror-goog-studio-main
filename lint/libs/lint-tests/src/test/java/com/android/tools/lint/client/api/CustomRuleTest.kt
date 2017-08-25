@@ -56,6 +56,7 @@ class CustomRuleTest {
                 manifest().minSdk(1),
                 appCompatTestSource,
                 appCompatTestClass)
+                .allowObsoleteLintChecks(false)
                 .client(object : TestLintClient() {
                     override fun findGlobalRuleJars(): List<File> = emptyList()
 
@@ -99,6 +100,7 @@ class CustomRuleTest {
                 .incremental("bin/classes/test/pkg/AppCompatTest.class")
                 .allowDelayedIssueRegistration()
                 .issueIds("AppCompatMethod")
+                .allowObsoleteLintChecks(false)
                 .modifyGradleMocks { _, variant ->
                     val dependencies = variant.mainArtifact.dependencies
                     val library = dependencies.libraries.iterator().next()
@@ -126,6 +128,7 @@ class CustomRuleTest {
                 "        setProgressBarIndeterminateVisibility(true);\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" + "0 errors, 6 warnings\n"
         lint()
+                .allowObsoleteLintChecks(false)
                 .files(classpath(), manifest().minSdk(1), appCompatTestSource, appCompatTestClass)
                 .client(object : TestLintClient() {
                     override fun findGlobalRuleJars(): List<File> = listOf(lintJar)
@@ -136,11 +139,13 @@ class CustomRuleTest {
 
     @Test
     fun testLegacyLombokJavaLintRule() {
-        val expected = "" +
-                "src/test/pkg/Test.java:5: Warning: Did you mean bar? [MyId]\n" +
-                "        foo(5);\n" +
-                "        ~~~~~~\n" +
-                "0 errors, 1 warnings\n"
+        val expected = """
+project0: Warning: Lint found one or more custom checks using its older Java API; these checks are still run in compatibility mode, but this causes duplicated parsing, and in the next version lint will no longer include this legacy mode. Make sure the following lint detectors are upgraded to the new API: googleio.demo.MyDetector [ObsoleteLintCustomCheck]
+src/test/pkg/Test.java:5: Warning: Did you mean bar? [MyId]
+        foo(5);
+        ~~~~~~
+0 errors, 2 warnings
+"""
 
         //noinspection all // Sample code
         lint().files(
@@ -158,16 +163,23 @@ class CustomRuleTest {
                     override fun findGlobalRuleJars(): List<File> = listOf(oldLintJar)
 
                     override fun findRuleJars(project: Project): List<File> = emptyList()
-                }).issueIds("MyId").allowMissingSdk().allowCompilationErrors().run().expect(expected)
+                })
+                .issueIds("MyId")
+                .allowMissingSdk()
+                .allowObsoleteLintChecks(false)
+                .allowCompilationErrors()
+                .run()
+                .expect(expected)
     }
 
     @Test
     fun testLegacyPsiJavaLintRule() {
         val expected = """
+project0: Warning: Lint found one or more custom checks using its older Java API; these checks are still run in compatibility mode, but this causes duplicated parsing, and in the next version lint will no longer include this legacy mode. Make sure the following lint detectors are upgraded to the new API: com.example.google.lint.MainActivityDetector [ObsoleteLintCustomCheck]
 src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetector]
         foo(5);
         ~~~~~~
-1 errors, 0 warnings
+1 errors, 1 warnings
          """
 
         lint().files(
@@ -185,7 +197,13 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
                     override fun findGlobalRuleJars(): List<File> = listOf(psiLintJar)
 
                     override fun findRuleJars(project: Project): List<File> = emptyList()
-                }).issueIds("MainActivityDetector").allowMissingSdk().allowCompilationErrors().run().expect(expected)
+                })
+                .issueIds("MainActivityDetector")
+                .allowMissingSdk()
+                .allowCompilationErrors()
+                .allowObsoleteLintChecks(false)
+                .run()
+                .expect(expected)
     }
 
     private // Sample code

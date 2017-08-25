@@ -172,6 +172,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         return false;
     }
 
+    protected boolean allowObsoleteCustomRules() {
+        return true;
+    }
+
     /**
      * Returns whether the test task should allow the SDK to be missing. Normally false.
      */
@@ -698,6 +702,8 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             return !ignoreSystemErrors();
         } else if (issue == IssueRegistry.PARSER_ERROR) {
             return !allowCompilationErrors();
+        } else if (issue == IssueRegistry.OBSOLETE_LINT_CHECK) {
+            return !allowObsoleteCustomRules();
         } else {
             return getIssues().contains(issue);
         }

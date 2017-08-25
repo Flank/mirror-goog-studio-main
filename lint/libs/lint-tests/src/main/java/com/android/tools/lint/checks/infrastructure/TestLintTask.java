@@ -80,6 +80,7 @@ public class TestLintTask {
 
     protected ProjectDescription[] projects;
     boolean allowCompilationErrors;
+    boolean allowObsoleteLintChecks = true;
     boolean allowSystemErrors = true;
     String incrementalFileName;
     Issue[] issues;
@@ -165,6 +166,18 @@ public class TestLintTask {
     public TestLintTask allowCompilationErrors(boolean allow) {
         ensurePreRun();
         this.allowCompilationErrors = allow;
+        return this;
+    }
+
+    /**
+     * Sets whether the test task should allow lint custom checks; if not, these
+     * will be flagged with an extra warning ({@link IssueRegistry#OBSOLETE_LINT_CHECK}).
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask allowObsoleteLintChecks(boolean allow) {
+        ensurePreRun();
+        this.allowObsoleteLintChecks = allow;
         return this;
     }
 

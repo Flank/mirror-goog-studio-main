@@ -43,6 +43,7 @@ import com.android.sdklib.BuildToolInfo
 import com.android.sdklib.IAndroidTarget
 import com.android.sdklib.repository.AndroidSdkHandler
 import com.android.tools.lint.client.api.LintListener.EventType
+import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
@@ -1552,6 +1553,18 @@ class LintDriver
         }
 
         if (runPsiCompatChecks) {
+            // Warn about these obsolete custom checks
+            val filtered = Lists.newArrayListWithCapacity<Detector>(checks.size)
+            for (detector in checks) {
+                @Suppress("DEPRECATION")
+                if (detector is com.android.tools.lint.detector.api.Detector.JavaPsiScanner) {
+                    filtered.add(detector)
+                }
+            }
+            if (!filtered.isEmpty()) {
+                warnObsoleteCustomChecks(filtered, srcContexts[0])
+            }
+
             val parser = client.getJavaParser(project)
             if (parser == null) {
                 client.log(null, "No java parser provided to lint: not running Java checks")
@@ -1623,27 +1636,7 @@ class LintDriver
                 }
 
                 if (!filtered.isEmpty()) {
-                    /* Let's not complain quite yet
-                    List<String> detectorNames = Lists.newArrayListWithCapacity(filtered.size());
-                    for (Detector detector : filtered) {
-                        detectorNames.add(detector.getClass().getName());
-                    }
-                    Collections.sort(detectorNames);
-
-                    String message = String.format("Lint found one or more custom checks using its "
-                            + "older Java API; these checks are still run in compatibility mode, "
-                            + "but this causes duplicated parsing, and in the next version lint "
-                            + "will no longer include this legacy mode. Make sure the following "
-                            + "lint detectors are upgraded to the new API: %1$s",
-                            Joiner.on(", ").join(detectorNames));
-                    JavaContext first = srcContexts.get(0);
-                    Project project = first.getProject();
-                    Location location = Location.create(project.getDir());
-                    client.report(first,
-                            IssueRegistry.LINT_ERROR,
-                            project.getConfiguration(this).getSeverity(IssueRegistry.LINT_ERROR),
-                            location, message, TextFormat.RAW);
-                    */
+                    warnObsoleteCustomChecks(filtered, srcContexts[0])
 
                     val oldVisitor = JavaVisitor(parser, filtered)
 
@@ -1686,6 +1679,28 @@ class LintDriver
             // the lombok compat support requires the psi compat checks too
             assert(!runLombokCompatChecks)
         }
+    }
+
+    /** Warns about obsolete detector classes */
+    private fun warnObsoleteCustomChecks(
+            detectors: List<Detector>,
+            first: JavaContext) {
+        val detectorNames = detectors.asSequence().
+                map { detector -> detector::class.java.name.replace('$','.') }.
+                sortedBy { it }.
+                joinToString(separator = ", ") { it }
+        val message = "Lint found one or more custom checks using its " +
+                "older Java API; these checks are still run in compatibility mode, " +
+                "but this causes duplicated parsing, and in the next version lint " +
+                "will no longer include this legacy mode. Make sure the following " +
+                "lint detectors are upgraded to the new API: $detectorNames"
+        val location = Location.create(first.project.dir)
+        val project = first.project
+        val configuration = project.getConfiguration(this)
+        client.report(first,
+                IssueRegistry.OBSOLETE_LINT_CHECK,
+                configuration.getSeverity(IssueRegistry.OBSOLETE_LINT_CHECK),
+                location, message, TextFormat.RAW, null)
     }
 
     private fun filterTestScanners(scanners: List<Detector>): List<Detector> {
@@ -2041,8 +2056,7 @@ class LintDriver
 
             val configuration = context.configuration
             if (!configuration.isEnabled(issue)) {
-                if (issue !== IssueRegistry.PARSER_ERROR && issue !== IssueRegistry.LINT_ERROR &&
-                        issue !== IssueRegistry.BASELINE) {
+                if (issue.category !== Category.LINT) {
                     delegate.log(null, "Incorrect detector reported disabled issue %1\$s",
                             issue.toString())
                 }
@@ -2724,12 +2738,11 @@ class LintDriver
                 }
             }
             sb.append("`")
-            sb.append("\n\nYou can set environment variable `LINT_PRINT_STACKTRACE=true` to dump a " +
-                "full stacktrace to stdout.")
+            sb.append("\n\nYou can set environment variable `LINT_PRINT_STACKTRACE=true` to " +
+                    "dump a full stacktrace to stdout.")
 
             val message = sb.toString()
-            context.report(IssueRegistry.LINT_ERROR, Location.create(context.file),
-                message)
+            context.report(IssueRegistry.LINT_ERROR, Location.create(context.file), message)
 
             if (VALUE_TRUE == System.getenv("LINT_PRINT_STACKTRACE")) {
                 e.printStackTrace()

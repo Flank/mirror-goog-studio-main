@@ -50,6 +50,8 @@ class TestConfiguration(
             return !task.allowCompilationErrors
         } else if (issue == IssueRegistry.PARSER_ERROR) {
             return !task.allowSystemErrors
+        } else if (issue == IssueRegistry.OBSOLETE_LINT_CHECK) {
+            return !task.allowObsoleteLintChecks
         }
 
         if (task.issueIds != null) {
