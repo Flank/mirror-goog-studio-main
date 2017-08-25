@@ -20,14 +20,11 @@ import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.api.transform.DirectoryInput;
-import com.android.build.api.transform.JarInput;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.ContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.SecondaryFile;
 import com.android.build.api.transform.TransformException;
-import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.dsl.DexOptions;
 import com.android.build.gradle.internal.pipeline.TransformManager;
@@ -42,13 +39,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -125,7 +122,12 @@ public class MultiDexTransform extends BaseProguardAction {
     @NonNull
     @Override
     public Set<Scope> getReferencedScopes() {
-        return TransformManager.SCOPE_FULL_PROJECT;
+        return Sets.immutableEnumSet(
+                Scope.PROJECT,
+                Scope.SUB_PROJECTS,
+                Scope.EXTERNAL_LIBRARIES,
+                Scope.PROVIDED_ONLY,
+                Scope.TESTED_CODE);
     }
 
     @NonNull
@@ -178,32 +180,20 @@ public class MultiDexTransform extends BaseProguardAction {
         loggingManager.captureStandardError(LogLevel.WARN);
 
         try {
-            File input = verifyInputs(invocation.getReferencedInputs());
-            shrinkWithProguard(input);
+            Map<MainDexListTransform.ProguardInput, Set<File>> inputs =
+                    MainDexListTransform.getByInputType(invocation);
+            File input =
+                    Iterables.getOnlyElement(
+                            inputs.get(MainDexListTransform.ProguardInput.INPUT_JAR));
+            shrinkWithProguard(input, inputs.get(MainDexListTransform.ProguardInput.LIBRARY_JAR));
             computeList(input);
         } catch (ParseException | ProcessException e) {
             throw new TransformException(e);
         }
     }
 
-    private static File verifyInputs(@NonNull Collection<TransformInput> inputs) {
-        // Collect the inputs. There should be only one.
-        List<File> inputFiles = Lists.newArrayList();
-
-        for (TransformInput transformInput : inputs) {
-            for (JarInput jarInput : transformInput.getJarInputs()) {
-                inputFiles.add(jarInput.getFile());
-            }
-
-            for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
-                inputFiles.add(directoryInput.getFile());
-            }
-        }
-
-        return Iterables.getOnlyElement(inputFiles);
-    }
-
-    private void shrinkWithProguard(@NonNull File input) throws IOException, ParseException {
+    private void shrinkWithProguard(@NonNull File input, @NonNull Set<File> libraryJars)
+            throws IOException, ParseException {
         configuration.obfuscate = false;
         configuration.optimize = false;
         configuration.preverify = false;
@@ -216,18 +206,11 @@ public class MultiDexTransform extends BaseProguardAction {
             applyConfigurationFile(userMainDexKeepProguard);
         }
 
-        // add a couple of rules that cannot be easily parsed from the manifest.
-        keep("public class * extends android.app.Instrumentation { <init>(); }");
-        keep("public class * extends android.app.Application { "
-                + "  <init>(); "
-                + "  void attachBaseContext(android.content.Context);"
-                + "}");
-        keep("public class * extends android.app.backup.BackupAgent { <init>(); }");
-        keep("public class * extends java.lang.annotation.Annotation { *;}");
-        keep("class com.android.tools.ir.** {*;}"); // Instant run.
+        MainDexListTransform.getPlatformRules().forEach(this::keep);
 
         // handle inputs
         libraryJar(findShrinkedAndroidJar());
+        libraryJars.forEach(this::libraryJar);
         inJar(input, null);
 
         // outputs.

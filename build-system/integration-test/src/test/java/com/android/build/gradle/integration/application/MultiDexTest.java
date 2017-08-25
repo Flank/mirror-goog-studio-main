@@ -18,6 +18,7 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static com.android.sdklib.BuildToolInfo.SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.category.DeviceTests;
@@ -29,8 +30,8 @@ import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.ide.common.process.ProcessException;
+import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.base.Charsets;
@@ -44,7 +45,9 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.gradle.api.JavaVersion;
+import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -205,7 +208,6 @@ public class MultiDexTest {
 
     @Test
     public void checkAdditionalParameters() throws Exception {
-
         FileUtils.deletePath(
                 FileUtils.join(
                         project.getTestDir(),
@@ -222,8 +224,7 @@ public class MultiDexTest {
                 project.getBuildFile(),
                 "\nandroid.dexOptions.additionalParameters = ['--minimal-main-dex']\n");
 
-        // D8 does not support minimal main dex
-        RunGradleTasks executor = project.executor().with(BooleanOption.ENABLE_D8, false);
+        RunGradleTasks executor = project.executor().withUseDexArchive(false);
 
         executor.run("assembleIcsDebug", "assembleIcsDebugAndroidTest");
 
@@ -242,8 +243,7 @@ public class MultiDexTest {
                 "\nandroid.dexOptions.additionalParameters '--set-max-idx-number=10'\n");
 
         // dexing with dex archives does not support additional parameters
-        GradleBuildResult result =
-                executor.expectFailure().withUseDexArchive(false).run("assembleIcsDebug");
+        GradleBuildResult result = executor.expectFailure().run("assembleIcsDebug");
 
         assertThat(result.getStderr()).contains("main dex capacity exceeded");
     }
@@ -262,6 +262,25 @@ public class MultiDexTest {
         // it should contain 2 dex files, one for sources, one for the external lib
         assertThat(project.getTestApk("lollipop")).contains("classes.dex");
         assertThat(project.getTestApk("lollipop")).contains("classes2.dex");
+    }
+
+    @Test
+    @Ignore("b/62286076 Need to check in build tools 27.0.1")
+    public void checkLegacyMultiDexAndroidTest()
+            throws IOException, InterruptedException, ProcessException {
+        // we use dex archives for this test, and we always run in-process
+        Assume.assumeTrue(dexInProcess);
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                String.format(
+                        "\nandroid.buildToolsVersion \'%s\'",
+                        SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS.toString()));
+        project.executor().run("assembleIcsDebugAndroidTest");
+
+        Apk testApk = project.getTestApk("ics");
+        assertThat(testApk).contains("classes.dex");
+        assertThat(testApk).contains("classes2.dex");
+        assertThat(testApk).containsMainClass("Lcom/android/tests/basic/OtherActivityTest;");
     }
 
     private void commonApkChecks(String buildType) throws Exception {
