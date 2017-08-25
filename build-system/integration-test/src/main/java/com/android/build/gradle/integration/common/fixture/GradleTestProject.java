@@ -227,6 +227,10 @@ public final class GradleTestProject implements TestRule {
     private File localProp;
     private final boolean withoutNdk;
     private final boolean withDependencyChecker;
+    // Indicates if CMake's directory information needs to be saved in local.properties
+    private final boolean withCmakeDirInLocalProp;
+    // CMake's version to be used
+    @NonNull private final String cmakeVersion;
 
     private final Collection<String> gradleProperties;
 
@@ -256,7 +260,9 @@ public final class GradleTestProject implements TestRule {
             @Nullable String heapSize,
             @Nullable String buildToolsVersion,
             @Nullable BenchmarkRecorder benchmarkRecorder,
-            @NonNull Path relativeProfileDirectory) {
+            @NonNull Path relativeProfileDirectory,
+            @NonNull String cmakeVersion,
+            boolean withCmake) {
         this.testDir = null;
         this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
@@ -271,6 +277,8 @@ public final class GradleTestProject implements TestRule {
         this.openConnections = Lists.newArrayList();
         this.rootProject = this;
         this.relativeProfileDirectory = relativeProfileDirectory;
+        this.cmakeVersion = cmakeVersion;
+        this.withCmakeDirInLocalProp = withCmake;
     }
 
     /**
@@ -297,6 +305,8 @@ public final class GradleTestProject implements TestRule {
         benchmarkRecorder = rootProject.benchmarkRecorder;
         this.rootProject = rootProject;
         this.relativeProfileDirectory = rootProject.relativeProfileDirectory;
+        this.cmakeVersion = rootProject.cmakeVersion;
+        this.withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp;
     }
 
     private static Path getGradleUserHome(File buildDir) {
@@ -1248,8 +1258,32 @@ public final class GradleTestProject implements TestRule {
                     ProjectProperties.PROPERTY_NDK, ANDROID_NDK_HOME.getAbsolutePath());
         }
 
+        if (withCmakeDirInLocalProp && cmakeVersion != null && !cmakeVersion.isEmpty()) {
+            localProp.setProperty(
+                    ProjectProperties.PROPERTY_CMAKE,
+                    getCmakeVersionFolder(cmakeVersion).getAbsolutePath());
+        }
+
         localProp.save();
         return (File) localProp.getFile();
+    }
+
+    /**
+     * Returns the prebuilts CMake folder for the requested version of CMake. Note: This returns the
+     * temporary CMake folder found within prebuilts/cmake/OS, ideally, CMake would reside
+     * withinMinimum supported Gradle version the prebuilts/studio/sdk/OS/cmake/, until we make the
+     * move, this is considered a hack/temp solution, hence this function is not in TestUtils.
+     */
+    @NonNull
+    public static File getCmakeVersionFolder(@NonNull String cmakeVersion) {
+        OsType osType = OsType.getHostOs();
+        File cmakeVersionFolder =
+                new File(
+                        TestUtils.getWorkspaceRoot(),
+                        String.format(
+                                "prebuilts/tools/common/cmake/%s/%s",
+                                osType.getFolderName(), cmakeVersion));
+        return cmakeVersionFolder;
     }
 
     private void createGradleProp() throws IOException {

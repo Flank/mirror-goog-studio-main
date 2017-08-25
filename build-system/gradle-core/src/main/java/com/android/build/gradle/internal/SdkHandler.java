@@ -78,6 +78,7 @@ public class SdkHandler {
     private SdkLoader sdkLoader;
     private File sdkFolder;
     private File ndkFolder;
+    private File cmakePathInLocalProp = null;
     private SdkLibData sdkLibData = SdkLibData.dontDownload();
     private boolean isRegularSdk = true;
 
@@ -198,6 +199,12 @@ public class SdkHandler {
     @Nullable
     public File getSdkFolder() {
         return sdkFolder;
+    }
+
+    // Returns the Cmake folder set in local.properties.
+    @Nullable
+    public File getCmakePathInLocalProp() {
+        return cmakePathInLocalProp;
     }
 
     @Nullable
@@ -329,6 +336,13 @@ public class SdkHandler {
         sdkFolder = sdkLocation.getFirst();
         isRegularSdk = sdkLocation.getSecond();
         ndkFolder = NdkHandler.findNdkDirectory(properties, rootDir);
+
+        // Check if the user has specified a cmake directory in local properties and assign the
+        // cmake folder.
+        String cmakeProperty = properties.getProperty("cmake.dir");
+        if (cmakeProperty != null) {
+            cmakePathInLocalProp = new File(cmakeProperty);
+        }
     }
 
     public void setSdkLibData(SdkLibData sdkLibData) {

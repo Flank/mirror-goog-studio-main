@@ -44,6 +44,9 @@ public final class GradleTestProjectBuilder {
     @Nullable private BenchmarkRecorder benchmarkRecorder;
     @NonNull private Path relativeProfileDirectory = Paths.get("build", "android-profile");
     private boolean withDependencyChecker = true;
+    // Indicates if we need to create a project without setting cmake.dir in local.properties.
+    private boolean withCmakeDirInLocalProp = false;
+    @NonNull String cmakeVersion;
 
     /** Create a GradleTestProject. */
     @NonNull
@@ -61,7 +64,9 @@ public final class GradleTestProjectBuilder {
                 heapSize,
                 buildToolsVersion,
                 benchmarkRecorder,
-                relativeProfileDirectory);
+                relativeProfileDirectory,
+                cmakeVersion,
+                withCmakeDirInLocalProp);
     }
 
     /**
@@ -184,6 +189,18 @@ public final class GradleTestProjectBuilder {
     public GradleTestProjectBuilder withRelativeProfileDirectory(
             @NonNull Path relativeProfileDirectory) {
         this.relativeProfileDirectory = relativeProfileDirectory;
+        return this;
+    }
+
+    /** Enables setting cmake.dir in local.properties */
+    public GradleTestProjectBuilder setWithCmakeDirInLocalProp(boolean withCmakeDirInLocalProp) {
+        this.withCmakeDirInLocalProp = withCmakeDirInLocalProp;
+        return this;
+    }
+
+    /** Sets the cmake version to use */
+    public GradleTestProjectBuilder setCmakeVersion(@NonNull String cmakeVersion) {
+        this.cmakeVersion = cmakeVersion;
         return this;
     }
 

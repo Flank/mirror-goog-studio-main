@@ -18,7 +18,6 @@ package com.android.build.gradle.tasks;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -26,10 +25,6 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessInfoBuilder;
-import com.android.repository.api.ConsoleProgressIndicator;
-import com.android.repository.api.LocalPackage;
-import com.android.repository.api.ProgressIndicator;
-import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
@@ -52,6 +47,8 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     private static final Pattern cmakeFileFinder =
             Pattern.compile("^(.*CMake (Error|Warning).* at\\s+)([^:]+)(:.*)$", Pattern.DOTALL);
 
+    @NonNull final File cmakeInstallFolder;
+
     CmakeExternalNativeJsonGenerator(
             @NonNull NdkHandler ndkHandler,
             int minSdkVersion,
@@ -64,6 +61,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
             @NonNull File objFolder,
             @NonNull File jsonFolder,
             @NonNull File makeFile,
+            @NonNull File cmakeInstallFolder,
             boolean debuggable,
             @Nullable List<String> buildArguments,
             @Nullable List<String> cFlags,
@@ -72,6 +70,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         super(ndkHandler, minSdkVersion, variantName, abis, androidBuilder, sdkFolder, ndkFolder,
                 soFolder, objFolder, jsonFolder, makeFile, debuggable,
                 buildArguments, cFlags, cppFlags, nativeBuildConfigurationsJsons);
+        this.cmakeInstallFolder = cmakeInstallFolder;
     }
 
     /**
@@ -125,8 +124,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
                         "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=%s", new File(getObjFolder(), abi)));
         cacheArguments.add(
                 String.format("-DCMAKE_BUILD_TYPE=%s", isDebuggable() ? "Debug" : "Release"));
-        cacheArguments.add(
-                String.format("-DCMAKE_MAKE_PROGRAM=%s", getNinjaExecutable().getAbsolutePath()));
+        cacheArguments.add(String.format("-DANDROID_NDK=%s", getNdkFolder()));
         if (!getcFlags().isEmpty()) {
             cacheArguments.add(
                     String.format("-DCMAKE_C_FLAGS=%s", Joiner.on(" ").join(getcFlags())));
@@ -237,47 +235,27 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
         if (!toolchainFile.exists()) {
             // Toolchain file for NDK r12 is in the SDK.
             // TODO: remove this when we stop caring about r12.
-            toolchainFile = new File(getCmakeFolder(), toolchainFileName);
+            toolchainFile = new File(getCmakeInstallFolder(), toolchainFileName);
         }
         return toolchainFile;
     }
 
     @NonNull
     protected File getSdkCmakeFolder() {
-        return getCmakeFolder(getSdkFolder());
+        return getCmakeFolderFromSdkFolder(getSdkFolder());
     }
 
     @NonNull
-    private File getCmakeFolder() {
-        ProgressIndicator progress = new ConsoleProgressIndicator();
-        AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(getSdkFolder());
-        LocalPackage cmakePackage =
-                sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, null, true, progress);
-        if (cmakePackage != null) {
-            return cmakePackage.getLocation();
-        }
-        return new File(getSdkFolder(), SdkConstants.FD_CMAKE);
+    protected File getCmakeBinFolder() {
+        return new File(getCmakeInstallFolder(), "bin");
     }
 
     @NonNull
-    private File getCmakeBinFolder() {
-        return new File(getCmakeFolder(), "bin");
-    }
-
-    @NonNull
-    private File getCmakeExecutable() {
+    protected File getCmakeExecutable() {
         if (isWindows()) {
             return new File(getCmakeBinFolder(), "cmake.exe");
         }
         return new File(getCmakeBinFolder(), "cmake");
-    }
-
-    @NonNull
-    private File getNinjaExecutable() {
-        if (isWindows()) {
-            return new File(getSdkCmakeBinFolder(), "ninja.exe");
-        }
-        return new File(getSdkCmakeBinFolder(), "ninja");
     }
 
     /**
@@ -324,12 +302,17 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
     }
 
     @NonNull
+    private File getCmakeInstallFolder() {
+        return cmakeInstallFolder;
+    }
+
+    @NonNull
     protected File getSdkCmakeExecutable() {
         return getSdkCmakeExecutable(getSdkFolder());
     }
 
     @NonNull
     protected File getSdkCmakeBinFolder() {
-        return getCmakeBinFolder(getSdkFolder());
+        return getSdkCmakeBinFolder(getSdkFolder());
     }
 }

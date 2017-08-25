@@ -23,6 +23,7 @@ import static com.android.build.gradle.integration.common.fixture.app.HelloWorld
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.cmakeLists;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.external.gson.NativeLibraryValue;
 import com.android.build.gradle.external.gson.NativeSourceFileValue;
@@ -36,6 +37,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
 import com.google.common.collect.ImmutableList;
@@ -67,6 +69,12 @@ public class NativeModelTest {
         GCC,
         CLANG,
         IRRELEVANT  // indicates if the compiler being used is irrelevant to the test
+    }
+
+    // Indicates if we need to add cmake.dir in local.properties
+    private enum CmakeInLocalProperties {
+        ADD_CMAKE_DIR,
+        NO_CMAKE_DIR
     }
 
     private enum Config {
@@ -401,7 +409,41 @@ public class NativeModelTest {
                 Compiler.IRRELEVANT,
                 NativeBuildSystem.CMAKE,
                 14,
-                ".externalNativeBuild");
+                ".externalNativeBuild"),
+        CMAKELISTS_ARGUMENTS_WITH_CMAKE_VERSION(
+                "apply plugin: 'com.android.application'\n"
+                        + "\n"
+                        + "android {\n"
+                        + "    compileSdkVersion "
+                        + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                        + "\n"
+                        + "    externalNativeBuild {\n"
+                        + "        cmake {\n"
+                        + "            path \"CMakeLists.txt\"\n"
+                        + "            buildStagingDirectory \"relative/path\"\n"
+                        + "            version \"CMAKE_VERSION\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    defaultConfig {\n"
+                        + "        externalNativeBuild {\n"
+                        + "          cmake {\n"
+                        + "            arguments \"-DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG\", \"-DCMAKE_ANDROID_NDK=TEST_NDK_PATH\", \"-DCMAKE_PROGRAM_PATH=TEST_PATH_TO_SEARCH\", \"-DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=clang\"\n"
+                        + "            cFlags \"-DTEST_C_FLAG\"\n"
+                        + "            abiFilters \"armeabi-v7a\", \"armeabi\"\n"
+                        + "          }\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}",
+                ImmutableList.of(cmakeLists(".")),
+                true,
+                1,
+                2,
+                2,
+                Compiler.IRRELEVANT,
+                NativeBuildSystem.CMAKE,
+                4,
+                "relative/path"),
+        ;
 
         public String buildGradle;
         private final List<TestSourceFile> extraFiles;
@@ -429,14 +471,34 @@ public class NativeModelTest {
             this.nativeBuildOutputPath = nativeBuildOutputPath;
         }
 
-        public GradleTestProject create() {
-            GradleTestProject project = GradleTestProject.builder()
-                    .fromTestApp(HelloWorldJniApp.builder()
-                        .withNativeDir("cpp")
-                        .useCppSource(isCpp)
-                        .build())
-                    .addFiles(extraFiles)
-                    .create();
+        public GradleTestProject create(
+                @NonNull String cmakeVersion, boolean withCmakeDirInLocalProp) {
+            if (!cmakeVersion.isEmpty()) {
+                this.buildGradle = this.buildGradle.replace("CMAKE_VERSION", cmakeVersion);
+            }
+
+            this.buildGradle =
+                    this.buildGradle.replace("TEST_NDK_PATH", TestUtils.getNdk().getAbsolutePath());
+            // Set the correct CMAKE_PROGRAM_PATH so CMake can look for ninja at the right path.
+            if (buildGradle.contains("TEST_PATH_TO_SEARCH")) {
+                File cmakeBinFolder =
+                        new File(GradleTestProject.getCmakeVersionFolder(cmakeVersion), "bin");
+                this.buildGradle =
+                        this.buildGradle.replace(
+                                "TEST_PATH_TO_SEARCH", cmakeBinFolder.getAbsolutePath());
+            }
+
+            GradleTestProject project =
+                    GradleTestProject.builder()
+                            .fromTestApp(
+                                    HelloWorldJniApp.builder()
+                                            .withNativeDir("cpp")
+                                            .useCppSource(isCpp)
+                                            .build())
+                            .addFiles(extraFiles)
+                            .setCmakeVersion(cmakeVersion)
+                            .setWithCmakeDirInLocalProp(withCmakeDirInLocalProp)
+                            .create();
 
             return project;
         }
@@ -449,25 +511,37 @@ public class NativeModelTest {
     @Parameterized.Parameters(name = "model = {0}")
     public static Object[][] data() {
         return new Object[][] {
-            {Config.NDK_BUILD_JOBS_FLAG},
-            {Config.ANDROID_MK_FILE_C_CLANG},
-            {Config.ANDROID_MK_FILE_CPP_CLANG},
-            {Config.ANDROID_MK_GOOGLE_TEST},
-            {Config.ANDROID_MK_FILE_CPP_GCC},
+            {Config.NDK_BUILD_JOBS_FLAG, "", CmakeInLocalProperties.NO_CMAKE_DIR},
+            {Config.ANDROID_MK_FILE_C_CLANG, "", CmakeInLocalProperties.NO_CMAKE_DIR},
+            {Config.ANDROID_MK_FILE_CPP_CLANG, "", CmakeInLocalProperties.NO_CMAKE_DIR},
+            {Config.ANDROID_MK_GOOGLE_TEST, "", CmakeInLocalProperties.NO_CMAKE_DIR},
+            {Config.ANDROID_MK_FILE_CPP_GCC, "", CmakeInLocalProperties.NO_CMAKE_DIR},
             // disabled due to http://b.android.com/230228
             // {Config.ANDROID_MK_FILE_CPP_GCC_VIA_APPLICATION_MK},
-            {Config.ANDROID_MK_CUSTOM_BUILD_TYPE},
-            {Config.CMAKELISTS_FILE_C},
-            {Config.CMAKELISTS_FILE_CPP},
-            {Config.CMAKELISTS_ARGUMENTS},
+            {Config.ANDROID_MK_CUSTOM_BUILD_TYPE, "", CmakeInLocalProperties.NO_CMAKE_DIR},
+            {Config.CMAKELISTS_FILE_C, "", CmakeInLocalProperties.NO_CMAKE_DIR},
+            {Config.CMAKELISTS_FILE_CPP, "", CmakeInLocalProperties.NO_CMAKE_DIR},
+            {Config.CMAKELISTS_ARGUMENTS, "", CmakeInLocalProperties.NO_CMAKE_DIR},
+            {
+                Config.CMAKELISTS_ARGUMENTS_WITH_CMAKE_VERSION,
+                // TODO(kravindran) update this to 3.10 once that is released and checked in.
+                "3.8.2",
+                CmakeInLocalProperties.ADD_CMAKE_DIR
+            },
         };
     }
 
     private final Config config;
 
-    public NativeModelTest(Config config) {
+    public NativeModelTest(
+            Config config,
+            @NonNull String cmakeVersion,
+            CmakeInLocalProperties cmakeInLocalProperties) {
         this.config = config;
-        this.project = config.create();
+        this.project =
+                config.create(
+                        cmakeVersion,
+                        cmakeInLocalProperties == CmakeInLocalProperties.ADD_CMAKE_DIR);
     }
 
     @Before
