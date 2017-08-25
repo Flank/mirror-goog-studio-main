@@ -20,9 +20,6 @@ import static com.android.manifmerger.MergingReport.MergedManifestKind.MERGED;
 import static com.android.tools.lint.LintCliFlags.ERRNO_CREATED_BASELINE;
 import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
-import static com.android.tools.lint.client.api.IssueRegistry.BASELINE;
-import static com.android.tools.lint.client.api.IssueRegistry.LINT_ERROR;
-import static com.android.tools.lint.client.api.IssueRegistry.PARSER_ERROR;
 import static com.android.utils.CharSequences.indexOf;
 
 import com.android.SdkConstants;
@@ -53,6 +50,7 @@ import com.android.tools.lint.client.api.LintListener;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.client.api.XmlParser;
+import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
@@ -347,7 +345,7 @@ public class LintCliClient extends LintClient {
             @NonNull String message,
             @NonNull TextFormat format,
             @Nullable LintFix fix) {
-        assert context.isEnabled(issue) || issue == LINT_ERROR;
+        assert context.isEnabled(issue) || issue.getCategory() == Category.LINT;
 
         if (severity.isError()) {
             hasErrors = true;
@@ -650,8 +648,7 @@ public class LintCliClient extends LintClient {
                 return severity;
             }
 
-            if (check != null && issue != LINT_ERROR && issue != PARSER_ERROR &&
-                    issue != BASELINE) {
+            if (check != null && issue.getCategory() != Category.LINT) {
                 return Severity.IGNORE;
             }
 

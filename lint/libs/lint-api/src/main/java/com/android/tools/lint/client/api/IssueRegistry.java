@@ -66,7 +66,7 @@ public abstract class IssueRegistry {
             "Parser Errors",
             "Lint will ignore any files that contain fatal parsing errors. These may contain " +
             "other errors, or contain code which affects issues in other files.",
-            Category.CORRECTNESS,
+            Category.LINT,
             10,
             Severity.ERROR,
             DUMMY_IMPLEMENTATION);
@@ -132,6 +132,30 @@ public abstract class IssueRegistry {
             Category.LINT,
             10,
             Severity.INFORMATIONAL,
+            DUMMY_IMPLEMENTATION);
+
+    /**
+     * Issue reported by lint when it encounters old lint checks that haven't been
+     * updated to the latest APIs.
+     */
+    @NonNull
+    public static final Issue OBSOLETE_LINT_CHECK = Issue.create(
+            "ObsoleteLintCustomCheck",
+            "Obsolete custom lint check",
+
+            "Lint can be extended with \"custom checks\": additional checks implemented by " +
+            "developers and libraries to for example enforce specific API usages required " +
+            "by a library or a company coding style guideline.\n" +
+            "\n" +
+            "The Lint APIs are not yet stable, so these checks may either cause a performance, " +
+            "degradation, or stop working, or provide wrong results.\n" +
+            "\n" +
+            "This warning flags custom lint checks that are found to be using obsolete APIs and " +
+            "will need to be updated to run in the current lint environment.",
+
+            Category.LINT,
+            10,
+            Severity.WARNING,
             DUMMY_IMPLEMENTATION);
 
     /**
@@ -361,6 +385,7 @@ public abstract class IssueRegistry {
         map.put(PARSER_ERROR.getId(), PARSER_ERROR);
         map.put(LINT_ERROR.getId(), LINT_ERROR);
         map.put(BASELINE.getId(), BASELINE);
+        map.put(OBSOLETE_LINT_CHECK.getId(), OBSOLETE_LINT_CHECK);
         return map;
     }
 
