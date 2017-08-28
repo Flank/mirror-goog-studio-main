@@ -183,9 +183,9 @@ public class TestFile {
 
     public static class JavaTestFile extends LintDetectorTest.TestFile {
         private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(.*)\\s*;");
-        private static final Pattern CLASS_PATTERN = Pattern
-                .compile("(class|interface|enum)\\s*(\\S+)\\s*(extends.*)?\\s*(implements.*)?\\{",
-                        Pattern.MULTILINE);
+        private static final Pattern CLASS_PATTERN = Pattern.compile(
+                "(class|interface|@interface|enum)\\s*(\\S+)\\s*(<.+>)?\\s*(extends.*)?\\s*(implements.*)?\\{",
+                Pattern.MULTILINE);
 
         public JavaTestFile() {
         }
@@ -199,13 +199,18 @@ public class TestFile {
             String pkg = matcher.group(1).trim();
             matcher = CLASS_PATTERN.matcher(source);
             boolean foundClass = matcher.find();
-            assert foundClass : "Couldn't find class declaration in source";
-            String cls = matcher.group(2).trim();
-            if (cls.contains("<")) {
-                // Remove type variables
-                cls = cls.substring(0, cls.indexOf('<'));
+            String to;
+            if (!foundClass) {
+                assert !source.contains("{") : "Couldn't find class declaration in source";
+                to = pkg.replace('.', '/') + '/' + "package-info.java";
+            } else {
+                String cls = matcher.group(2).trim();
+                if (cls.contains("<")) {
+                    // Remove type variables
+                    cls = cls.substring(0, cls.indexOf('<'));
+                }
+                to = pkg.replace('.', '/') + '/' + cls + DOT_JAVA;
             }
-            String to = pkg.replace('.', '/') + '/' + cls + DOT_JAVA;
 
             return new JavaTestFile().to(to).within("src").withSource(source);
         }

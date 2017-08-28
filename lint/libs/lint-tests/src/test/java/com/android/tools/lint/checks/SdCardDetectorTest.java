@@ -387,4 +387,25 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "                     ^\n"
                         + "0 errors, 1 warnings\n");
     }
+
+    public void testGenericsInSignatures() throws Exception {
+        //noinspection all // Sample code
+        lint().files(
+                java("" +
+                        "\n" +
+                        "package test.pkg;\n" +
+                        "import java.util.Map;\n" +
+                        // The main purpose of this test is to ensure that the lint test
+                        // infrastructure is able to compute the correct class name (and
+                        // target file path) for this interface and package declaration
+                        "public interface MyMap<P extends Number, T extends Map<P, ?>>\n" +
+                        "                            extends InteractorBaseComponent<T> {\n" +
+                        "    public String foo = \"/sdcard/foo\"; " +
+                        "}\n"))
+                .run()
+                .expect("src/test/pkg/MyMap.java:6: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n" +
+                        "    public String foo = \"/sdcard/foo\"; }\n" +
+                        "                        ~~~~~~~~~~~~~\n" +
+                        "0 errors, 1 warnings\n");
+    }
 }
