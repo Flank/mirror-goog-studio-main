@@ -65,10 +65,16 @@ public class ProductFlavor extends BaseFlavor {
         return matchingFallbacks;
     }
 
-    @NonNull
     @Override
-    protected String getRequestedValueFromList(@NonNull List<String> requestedValues) {
-        return VariantManager.getModifiedName(getName());
+    @NonNull
+    protected DimensionRequest computeRequestedAndFallBacks(@NonNull List<String> requestedValues) {
+        // in order to have different fallbacks per variant for missing dimensions, we are
+        // going to actually have the flavor request itself (in the other dimension), with
+        // a modified name (in order to not have collision in case 2 dimensions have the same
+        // flavor names). So we will always fail to find the actual request and try for
+        // the fallbacks.
+        return new DimensionRequest(
+                VariantManager.getModifiedName(getName()), ImmutableList.copyOf(requestedValues));
     }
 
     @Override

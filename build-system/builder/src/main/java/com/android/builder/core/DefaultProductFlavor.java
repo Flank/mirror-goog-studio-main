@@ -490,8 +490,30 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         return mResourceConfiguration;
     }
 
-    private Map<String, List<String>> missingDimensionStrategies;
-    private Map<String, String> requestedDimensionValueMap;
+    /** Class representing a request with fallbacks. */
+    public static class DimensionRequest {
+        @NonNull private final String requested;
+        @NonNull private final ImmutableList<String> fallbacks;
+
+        public DimensionRequest(
+                @NonNull String requested, @NonNull ImmutableList<String> fallbacks) {
+            this.requested = requested;
+            this.fallbacks = fallbacks;
+        }
+
+        @NonNull
+        public String getRequested() {
+            return requested;
+        }
+
+        @NonNull
+        public List<String> getFallbacks() {
+            return fallbacks;
+        }
+    }
+
+    /** map of dimension -> request */
+    private Map<String, DimensionRequest> missingDimensionSelections;
 
     public void missingDimensionStrategy(String dimension, String requestedValue) {
         missingDimensionStrategy(dimension, ImmutableList.of(requestedValue));
@@ -502,49 +524,41 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     }
 
     public void missingDimensionStrategy(String dimension, List<String> requestedValues) {
-        //noinspection AssignmentToMethodParameter
-        requestedValues = ImmutableList.copyOf(requestedValues);
-
-        if (missingDimensionStrategies == null) {
-            missingDimensionStrategies = Maps.newHashMap();
+        if (requestedValues.isEmpty()) {
+            throw new RuntimeException("List of requested values cannot be empty");
         }
 
-        missingDimensionStrategies.put(dimension, requestedValues);
+        final DimensionRequest selection = computeRequestedAndFallBacks(requestedValues);
 
-        if (requestedDimensionValueMap == null) {
-            requestedDimensionValueMap = Maps.newHashMap();
+        if (missingDimensionSelections == null) {
+            missingDimensionSelections = Maps.newHashMap();
         }
 
-        requestedDimensionValueMap.put(dimension, getRequestedValueFromList(requestedValues));
+        missingDimensionSelections.put(dimension, selection);
     }
 
     /**
-     * Returns the main requested value from the list.
+     * Computes the requested value and the fallback list from the list of values provided in the
+     * DSL
      *
-     * @param requestedValues the list of values that are requested.
-     * @return the main value
+     * @param requestedValues the values provided in the DSL
+     * @return a DimensionRequest with the main requested value and the fallbacks.
      */
     @NonNull
-    protected String getRequestedValueFromList(@NonNull List<String> requestedValues) {
-        return requestedValues.get(0);
+    protected DimensionRequest computeRequestedAndFallBacks(@NonNull List<String> requestedValues) {
+        // default implementation is that the fallback's first item is the requested item.
+        return new DimensionRequest(
+                requestedValues.get(0),
+                ImmutableList.copyOf(requestedValues.subList(1, requestedValues.size())));
     }
 
-    public Map<String, List<String>> getMissingDimensionStrategies() {
-        if (missingDimensionStrategies == null) {
+    public Map<String, DimensionRequest> getMissingDimensionStrategies() {
+        if (missingDimensionSelections == null) {
             return ImmutableMap.of();
         }
 
-        return missingDimensionStrategies;
+        return missingDimensionSelections;
     }
-
-    @NonNull
-    public Map<String, String> getRequestedDimensionValueMap() {
-        if (requestedDimensionValueMap == null) {
-            return ImmutableMap.of();
-        }
-        return requestedDimensionValueMap;
-    }
-
 
     /**
      * Merges the flavors by analyzing the specified one and the list. Flavors whose position in the
@@ -704,14 +718,14 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
                         overlay.getVectorDrawables().getUseSupportLibrary(),
                         base.getVectorDrawables().getUseSupportLibrary()));
 
-        flavor.requestedDimensionValueMap = Maps.newHashMap();
+        flavor.missingDimensionSelections = Maps.newHashMap();
         if (base instanceof DefaultProductFlavor) {
-            flavor.requestedDimensionValueMap.putAll(
-                    ((DefaultProductFlavor) base).getRequestedDimensionValueMap());
+            flavor.missingDimensionSelections.putAll(
+                    ((DefaultProductFlavor) base).getMissingDimensionStrategies());
         }
         if (overlay instanceof DefaultProductFlavor) {
-            flavor.requestedDimensionValueMap.putAll(
-                    ((DefaultProductFlavor) overlay).getRequestedDimensionValueMap());
+            flavor.missingDimensionSelections.putAll(
+                    ((DefaultProductFlavor) overlay).getMissingDimensionStrategies());
         }
 
         // no need to merge missingDimensionStrategies, it's not queried from the merged flavor.
@@ -771,9 +785,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
 
         if (productFlavor instanceof DefaultProductFlavor) {
             final DefaultProductFlavor defaultProductFlavor = (DefaultProductFlavor) productFlavor;
-            flavor.requestedDimensionValueMap =
-                    Maps.newHashMap(defaultProductFlavor.getRequestedDimensionValueMap());
-            flavor.missingDimensionStrategies =
+            flavor.missingDimensionSelections =
                     Maps.newHashMap(defaultProductFlavor.getMissingDimensionStrategies());
         }
 
@@ -789,12 +801,9 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         super._initWith(that);
         if (that instanceof DefaultProductFlavor) {
             DefaultProductFlavor from = (DefaultProductFlavor) that;
-            if (from.missingDimensionStrategies != null) {
-                // the lists inside the map are ImmutableList, so it's fine to keep it.
-                missingDimensionStrategies = Maps.newHashMap(from.missingDimensionStrategies);
-            }
-            if (from.requestedDimensionValueMap != null) {
-                requestedDimensionValueMap = Maps.newHashMap(from.requestedDimensionValueMap);
+            if (from.missingDimensionSelections != null) {
+                // the objects inside the map are immutable, so it's fine to keep them.
+                missingDimensionSelections = Maps.newHashMap(from.missingDimensionSelections);
             }
         }
     }
