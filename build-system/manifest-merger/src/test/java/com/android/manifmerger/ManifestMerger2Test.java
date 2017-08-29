@@ -121,6 +121,7 @@ public class ManifestMerger2Test {
                 "87_delimiter_separated_values_errors",
                 "88_multi_app_elements_strange_order.xml",
                 "89_remove_uses_permission_sdk_23.xml",
+                "90_main_and_library_placeholder_replacement.xml",
             };
 
 

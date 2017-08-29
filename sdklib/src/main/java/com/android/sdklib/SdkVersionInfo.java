@@ -178,7 +178,7 @@ public class SdkVersionInfo {
             case 25:
                 return "Nougat";
             case 26:
-                return "O";
+                return "Oreo";
 
             // If you add more versions here, also update #getBuildCodes and
             // #HIGHEST_KNOWN_API

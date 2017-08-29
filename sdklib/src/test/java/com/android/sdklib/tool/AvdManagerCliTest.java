@@ -255,7 +255,7 @@ public class AvdManagerCliTest {
                         + new File("/avd/test2").getAbsolutePath()
                         + "\n"
                         + "P   Target: Google APIs\n"
-                        + "P           Based on: Android 8.0 (O)"
+                        + "P           Based on: Android 8.0 (Oreo)"
                         + "P  Tag/ABI: android-wear/armeabi-v7a\n",
                 Joiner.on("").join(mLogger.getMessages()));
     }

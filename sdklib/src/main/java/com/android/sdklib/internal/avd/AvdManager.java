@@ -252,6 +252,7 @@ public class AvdManager {
      * AVD/config.ini key name representing whether to boot from a snapshot
      */
     public static final String AVD_INI_FORCE_COLD_BOOT_MODE = "fastboot.forceColdBoot";
+    public static final String AVD_INI_COLD_BOOT_ONCE = "once"; // Key value in addition to "yes" and "no"
 
     /**
      * AVD/config.ini key name representing how to emulate the front facing camera
@@ -1443,8 +1444,8 @@ public class AvdManager {
         try (OutputStreamWriter writer = new OutputStreamWriter(mFop.newFileOutputStream(iniFile),
                 charset)){
             if (addEncoding) {
-                // Write down the charset used in case we want to use it later.
-                writer.write(String.format("%1$s=%2$s\n", AVD_INI_ENCODING, charset.name()));
+                // Write down the charset we're using in case we want to use it later.
+                values.put(AVD_INI_ENCODING, charset.name());
             }
 
             ArrayList<String> keys = new ArrayList<>(values.keySet());

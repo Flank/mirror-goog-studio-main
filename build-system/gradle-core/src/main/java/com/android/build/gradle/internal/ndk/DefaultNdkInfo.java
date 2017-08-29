@@ -95,7 +95,11 @@ public class DefaultNdkInfo implements NdkInfo {
                                             + "'.");
                     continue;
                 }
-                builder.add(new AbiInfo(abi, entry.getValue().isDeprecated()));
+                builder.add(
+                        new AbiInfo(
+                                abi,
+                                entry.getValue().isDeprecated(),
+                                entry.getValue().isDefault()));
             }
             abiInfoList = builder.build();
         } else {
@@ -105,7 +109,7 @@ public class DefaultNdkInfo implements NdkInfo {
 
     private static List<AbiInfo> getDefaultAbiInfoList() {
         return Arrays.stream(Abi.values())
-                .map(abi -> new AbiInfo(abi, false))
+                .map(abi -> new AbiInfo(abi, false, true))
                 .collect(ImmutableCollectors.toImmutableList());
     }
 
@@ -488,7 +492,7 @@ public class DefaultNdkInfo implements NdkInfo {
     public Collection<Abi> getDefault32BitsAbis() {
         return abiInfoList
                 .stream()
-                .filter(abiInfo -> !abiInfo.isDeprecated())
+                .filter(abiInfo -> abiInfo.isDefault() && !abiInfo.isDeprecated())
                 .map(AbiInfo::getAbi)
                 .filter(abi -> !abi.supports64Bits())
                 .collect(Collectors.toList());
@@ -499,7 +503,7 @@ public class DefaultNdkInfo implements NdkInfo {
     public Collection<Abi> getDefaultAbis() {
         return abiInfoList
                 .stream()
-                .filter(abiInfo -> !abiInfo.isDeprecated())
+                .filter(abiInfo -> abiInfo.isDefault() && !abiInfo.isDeprecated())
                 .map(AbiInfo::getAbi)
                 .collect(Collectors.toList());
     }

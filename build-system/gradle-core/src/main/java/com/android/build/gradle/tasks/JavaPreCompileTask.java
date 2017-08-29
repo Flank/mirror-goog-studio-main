@@ -44,6 +44,8 @@ import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
+import org.gradle.api.artifacts.ArtifactCollection;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
@@ -63,11 +65,13 @@ public class JavaPreCompileTask extends BaseTask {
 
     private String annotationProcessorConfigurationName;
 
-    private FileCollection annotationProcessorConfiguration;
+    private ArtifactCollection annotationProcessorConfiguration;
 
-    private FileCollection compileClasspaths;
+    private ArtifactCollection compileClasspaths;
 
     private AnnotationProcessorOptions annotationProcessorOptions;
+
+    private boolean isForTesting;
 
     private boolean dataBindingEnabled;
 
@@ -75,15 +79,17 @@ public class JavaPreCompileTask extends BaseTask {
     void init(
             @NonNull File processorListFile,
             @NonNull String annotationProcessorConfigurationName,
-            @NonNull FileCollection annotationProcessorConfiguration,
-            @NonNull FileCollection compileClasspaths,
+            @NonNull ArtifactCollection annotationProcessorConfiguration,
+            @NonNull ArtifactCollection compileClasspaths,
             @NonNull AnnotationProcessorOptions annotationProcessorOptions,
+            boolean isForTesting,
             boolean dataBindingEnabled) {
         this.processorListFile = processorListFile;
         this.annotationProcessorConfigurationName = annotationProcessorConfigurationName;
         this.annotationProcessorConfiguration = annotationProcessorConfiguration;
         this.compileClasspaths = compileClasspaths;
         this.annotationProcessorOptions = annotationProcessorOptions;
+        this.isForTesting = isForTesting;
         this.dataBindingEnabled = dataBindingEnabled;
     }
 
@@ -94,12 +100,12 @@ public class JavaPreCompileTask extends BaseTask {
 
     @Classpath
     public FileCollection getAnnotationProcessorConfiguration() {
-        return annotationProcessorConfiguration;
+        return annotationProcessorConfiguration.getArtifactFiles();
     }
 
     @Classpath
     public FileCollection getCompileClasspaths() {
-        return compileClasspaths;
+        return compileClasspaths.getArtifactFiles();
     }
 
     @TaskAction
@@ -107,12 +113,37 @@ public class JavaPreCompileTask extends BaseTask {
         boolean grandfathered =
                 annotationProcessorOptions.getIncludeCompileClasspath() != null
                         || hasOldAptPlugin();
-        Collection<File> compileProcessors = null;
+        Collection<ResolvedArtifactResult> compileProcessors = null;
         if (!grandfathered) {
             compileProcessors = collectAnnotationProcessors(compileClasspaths);
-            compileProcessors.removeAll(annotationProcessorConfiguration.getFiles());
+            FileCollection annotationProcessors =
+                    annotationProcessorConfiguration.getArtifactFiles();
+            compileProcessors =
+                    compileProcessors
+                            .stream()
+                            .filter(artifact -> !annotationProcessors.contains(artifact.getFile()))
+                            .collect(Collectors.toList());
             if (!compileProcessors.isEmpty()) {
-                throwException(convertFilesToNames(compileProcessors));
+                String message =
+                        "Annotation processors must be explicitly declared now.  The following "
+                                + "dependencies on the compile classpath are found to contain "
+                                + "annotation processor.  Please add them to the "
+                                + annotationProcessorConfigurationName
+                                + " configuration.\n  - "
+                                + Joiner.on("\n  - ")
+                                        .join(convertArtifactsToNames(compileProcessors))
+                                + "\nAlternatively, set "
+                                + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true "
+                                + "to continue with previous behavior.  Note that this option "
+                                + "is deprecated and will be removed in the future.\n"
+                                + "See "
+                                + "https://developer.android.com/r/tools/annotation-processor-error-message.html "
+                                + "for more details.";
+                if (isForTesting) {
+                    getLogger().warn(message);
+                } else {
+                    throw new RuntimeException(message);
+                }
             }
         }
 
@@ -124,12 +155,13 @@ public class JavaPreCompileTask extends BaseTask {
             if (compileProcessors == null) {
                 compileProcessors = collectAnnotationProcessors(compileClasspaths);
             }
-            classNames.addAll(convertFilesToNames(compileProcessors));
+            classNames.addAll(convertArtifactsToNames(compileProcessors));
         }
 
         // Add all annotation processors on the annotation processor configuration.
         classNames.addAll(
-                convertFilesToNames(collectAnnotationProcessors(annotationProcessorConfiguration)));
+                convertArtifactsToNames(
+                        collectAnnotationProcessors(annotationProcessorConfiguration)));
 
         // Add the explicitly declared processors.
         // For metrics purposes, we don't care how they include the processor in their build.
@@ -153,56 +185,43 @@ public class JavaPreCompileTask extends BaseTask {
      * <p>We assume a package has an annotation processor if it contains the
      * META-INF/services/javax.annotation.processing.Processor file.
      */
-    private static List<File> collectAnnotationProcessors(FileCollection configuration)
-            throws IOException {
-        List<File> processors = Lists.newArrayList();
-        for (File file : configuration.getFiles()) {
+    private static List<ResolvedArtifactResult> collectAnnotationProcessors(
+            ArtifactCollection configuration) {
+        List<ResolvedArtifactResult> processors = Lists.newArrayList();
+        for (ResolvedArtifactResult artifact : configuration) {
+            File file = artifact.getFile();
             if (!file.exists()) {
                 continue;
             }
             if (file.isDirectory()) {
                 if (new File(file, PROCESSOR_SERVICES).exists()) {
-                    processors.add(file);
+                    processors.add(artifact);
                 }
             } else {
                 try (JarFile jarFile = new JarFile(file)) {
                     JarEntry entry = jarFile.getJarEntry(PROCESSOR_SERVICES);
                     //noinspection VariableNotUsedInsideIf
                     if (entry != null) {
-                        processors.add(file);
+                        processors.add(artifact);
                     }
                 } catch (IOException iox) {
-                    // Can happen when we encounter a folder instead of a jar; for instance, in sub-modules.
-                    // We're just displaying a warning, so there's no need to stop the build here.
+                    // Can happen when we encounter a folder instead of a jar; for instance, in
+                    // sub-modules. We're just displaying a warning, so there's no need to stop the
+                    // build here.
                 }
             }
         }
         return processors;
     }
 
-    private static List<String> convertFilesToNames(Collection<File> files) {
-        return files.stream().map(File::getName).collect(Collectors.toList());
+    private static List<String> convertArtifactsToNames(Collection<ResolvedArtifactResult> files) {
+        return files.stream()
+                .map(artifact -> artifact.getId().getDisplayName())
+                .collect(Collectors.toList());
     }
 
     private boolean hasOldAptPlugin() {
         return getProject().getPlugins().hasPlugin(AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME);
-    }
-
-    private void throwException(List<String> processors) throws RuntimeException {
-        throw new RuntimeException(
-                "Annotation processors must be explicitly declared now.  The following "
-                        + "dependencies on the compile classpath are found to contain "
-                        + "annotation processor.  Please add them to the "
-                        + annotationProcessorConfigurationName
-                        + " configuration.\n  - "
-                        + Joiner.on("\n  - ").join(processors)
-                        + "\nAlternatively, set "
-                        + "android.defaultConfig.javaCompileOptions.annotationProcessorOptions.includeCompileClasspath = true "
-                        + "to continue with previous behavior.  Note that this option "
-                        + "is deprecated and will be removed in the future.\n"
-                        + "See "
-                        + "https://developer.android.com/r/tools/annotation-processor-error-message.html "
-                        + "for more details.");
     }
 
     public static class ConfigAction implements TaskConfigAction<JavaPreCompileTask> {
@@ -234,11 +253,12 @@ public class JavaPreCompileTask extends BaseTask {
                     scope.getVariantData().getType().isForTesting()
                             ? scope.getVariantData().getType().getPrefix() + "AnnotationProcessor"
                             : "annotationProcessor",
-                    scope.getArtifactFileCollection(ANNOTATION_PROCESSOR, ALL, JAR),
-                    scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES),
+                    scope.getArtifactCollection(ANNOTATION_PROCESSOR, ALL, JAR),
+                    scope.getJavaClasspathArtifacts(COMPILE_CLASSPATH, CLASSES, null),
                     scope.getVariantConfiguration()
                             .getJavaCompileOptions()
                             .getAnnotationProcessorOptions(),
+                    scope.getVariantData().getType().isForTesting(),
                     false);
             task.setVariantName(scope.getFullVariantName());
         }

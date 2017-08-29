@@ -12,6 +12,7 @@
             <tr><td>javaCompileOptions</td></tr>
             <tr><td>jniDebuggable</td></tr>
             <tr><td>minifyEnabled</td></tr>
+            <tr><td>matchingFallbacks</td></tr>
             <tr><td>multiDexEnabled</td></tr>
             <tr><td>name</td></tr>
             <tr><td>pseudoLocalesEnabled</td></tr>

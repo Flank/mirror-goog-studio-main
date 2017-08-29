@@ -37,6 +37,7 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
+import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskManager;
@@ -95,6 +96,7 @@ import com.google.common.base.CharMatcher;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import java.io.File;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
@@ -108,6 +110,7 @@ import org.gradle.BuildResult;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.initialization.Settings;
@@ -239,6 +242,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         // We run by default in headless mode, so the JVM doesn't steal focus.
         System.setProperty("java.awt.headless", "true");
 
+        PluginInitializer.initialize(project);
         project.getPluginManager().apply(AndroidBasePlugin.class);
         checkPluginVersion();
 
@@ -617,6 +621,12 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 .setBuildToolsVersion(extension.getBuildToolsRevision().toString())
                 .setSplits(AnalyticsUtil.toProto(extension.getSplits()));
 
+        String kotlinPluginVersion = getKotlinPluginVersion();
+        if (kotlinPluginVersion != null) {
+            ProcessProfileWriter.getProject(project.getPath())
+                    .setKotlinPluginVersion(kotlinPluginVersion);
+        }
+
         // setup SDK repositories.
         sdkHandler.addLocalRepositories(project);
 
@@ -877,5 +887,27 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     private Downloader getDownloader() {
         return new LocalFileAwareDownloader(
                 new LegacyDownloader(FileOpUtils.create(), getSettingsController()));
+    }
+
+    /**
+     * returns the kotlin plugin version, or null if plugin is not applied to this project, or
+     * "unknown" if plugin is applied but version can't be determined.
+     */
+    @Nullable
+    private String getKotlinPluginVersion() {
+        Plugin plugin = project.getPlugins().findPlugin("kotlin-android");
+        if (plugin == null) {
+            return null;
+        }
+        try {
+            // No null checks below because we're catching all exceptions.
+            Method method = plugin.getClass().getMethod("getKotlinPluginVersion");
+            method.setAccessible(true);
+            return method.invoke(plugin).toString();
+        } catch (Throwable e) {
+            // Defensively catch all exceptions because we don't want it to crash
+            // if kotlin plugin code changes unexpectedly.
+            return "unknown";
+        }
     }
 }

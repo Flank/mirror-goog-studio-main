@@ -31,6 +31,7 @@ dependencies {
     compile libs.asm_util
     compile libs.fastutil
     compile libs.jopt
+    compile libs.json_simple
 
     testCompile libs.junit
     testCompile libs.mockito_core

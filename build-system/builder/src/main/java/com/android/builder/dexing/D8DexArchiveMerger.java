@@ -66,10 +66,10 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
             }
         }
         try {
-            builder.setMainDexListFile(mainDexClasses)
-                    .setMinApiLevel(minSdkVersion)
-                    .setMode(compilationMode)
-                    .setOutputPath(outputDir);
+            if (mainDexClasses != null) {
+                builder.addMainDexListFiles(mainDexClasses);
+            }
+            builder.setMinApiLevel(minSdkVersion).setMode(compilationMode).setOutputPath(outputDir);
             D8.run(builder.build());
         } catch (CompilationException | IOException | CompilationError e) {
             DexArchiveMergerException exception = new DexArchiveMergerException(e);

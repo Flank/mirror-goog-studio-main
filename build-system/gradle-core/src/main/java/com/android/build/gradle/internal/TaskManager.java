@@ -117,7 +117,9 @@ import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.DesugarTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.internal.transforms.DexMergerTransform;
+import com.android.build.gradle.internal.transforms.DexMergerTransformCallable;
 import com.android.build.gradle.internal.transforms.DexTransform;
+import com.android.build.gradle.internal.transforms.ExternalLibsMergerTransform;
 import com.android.build.gradle.internal.transforms.ExtractJarsTransform;
 import com.android.build.gradle.internal.transforms.JacocoTransform;
 import com.android.build.gradle.internal.transforms.JarMergingTransform;
@@ -2259,6 +2261,21 @@ public abstract class TaskManager {
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
 
+        if (dexingType != DexingType.LEGACY_MULTIDEX
+                && variantScope.getCodeShrinker() == null
+                && extension.getTransforms().isEmpty()) {
+            ExternalLibsMergerTransform externalLibsMergerTransform =
+                    new ExternalLibsMergerTransform(
+                            dexingType,
+                            variantScope.getDexMerger(),
+                            variantScope.getMinSdkVersion().getFeatureLevel(),
+                            variantScope.getVariantConfiguration().getBuildType().isDebuggable(),
+                            variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
+                            DexMergerTransformCallable::new);
+
+            transformManager.addTransform(tasks, variantScope, externalLibsMergerTransform);
+        }
+
         DexMergerTransform dexTransform =
                 new DexMergerTransform(
                         dexingType,
@@ -3222,10 +3239,18 @@ public abstract class TaskManager {
 
         String version = MoreObjects.firstNonNull(options.getVersion(),
                 dataBindingBuilder.getCompilerVersion());
-        project.getDependencies().add("compile", SdkConstants.DATA_BINDING_LIB_ARTIFACT + ":"
-                + dataBindingBuilder.getLibraryVersion(version));
-        project.getDependencies().add("compile", SdkConstants.DATA_BINDING_BASELIB_ARTIFACT + ":"
-                + dataBindingBuilder.getBaseLibraryVersion(version));
+        project.getDependencies()
+                .add(
+                        "api",
+                        SdkConstants.DATA_BINDING_LIB_ARTIFACT
+                                + ":"
+                                + dataBindingBuilder.getLibraryVersion(version));
+        project.getDependencies()
+                .add(
+                        "api",
+                        SdkConstants.DATA_BINDING_BASELIB_ARTIFACT
+                                + ":"
+                                + dataBindingBuilder.getBaseLibraryVersion(version));
 
         // TODO load config name from source sets
         project.getDependencies()
@@ -3240,7 +3265,7 @@ public abstract class TaskManager {
         if (options.getAddDefaultAdapters()) {
             project.getDependencies()
                     .add(
-                            "compile",
+                            "api",
                             SdkConstants.DATA_BINDING_ADAPTER_LIB_ARTIFACT
                                     + ":"
                                     + dataBindingBuilder.getBaseAdaptersVersion(version));

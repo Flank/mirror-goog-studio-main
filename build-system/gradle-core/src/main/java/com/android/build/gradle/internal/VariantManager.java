@@ -43,6 +43,8 @@ import com.android.build.gradle.internal.dependency.ExtractAarTransform;
 import com.android.build.gradle.internal.dependency.JarTransform;
 import com.android.build.gradle.internal.dependency.LibrarySymbolTableTransform;
 import com.android.build.gradle.internal.dependency.VariantDependencies;
+import com.android.build.gradle.internal.dsl.BaseFlavor;
+import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import com.android.build.gradle.internal.dsl.CoreSigningConfig;
@@ -75,6 +77,7 @@ import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -86,6 +89,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -473,7 +477,7 @@ public class VariantManager implements VariantModel {
             }
 
             // 4. the flavors.
-            for (ProductFlavor productFlavor : testProductFlavors) {
+            for (CoreProductFlavor productFlavor : testProductFlavors) {
                 testVariantSourceSets.add(
                         this.productFlavors
                                 .get(productFlavor.getName())
@@ -527,14 +531,23 @@ public class VariantManager implements VariantModel {
     @NonNull
     private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> getFlavorSelection(
             @NonNull GradleVariantConfiguration config) {
-        ObjectFactory factory = project.getObjects();
-        return config.getFlavorSelections()
-                .entrySet()
-                .stream()
-                .collect(
-                        Collectors.toMap(
-                                entry -> Attribute.of(entry.getKey(), ProductFlavorAttr.class),
-                                entry -> factory.named(ProductFlavorAttr.class, entry.getValue())));
+        ProductFlavor mergedFlavors = config.getMergedFlavor();
+        if (mergedFlavors instanceof DefaultProductFlavor) {
+            ObjectFactory factory = project.getObjects();
+
+            return ((DefaultProductFlavor) mergedFlavors)
+                    .getRequestedDimensionValueMap()
+                    .entrySet()
+                    .stream()
+                    .collect(
+                            Collectors.toMap(
+                                    entry -> Attribute.of(entry.getKey(), ProductFlavorAttr.class),
+                                    entry ->
+                                            factory.named(
+                                                    ProductFlavorAttr.class, entry.getValue())));
+        }
+
+        return ImmutableMap.of();
     }
 
     @NonNull
@@ -628,51 +641,170 @@ public class VariantManager implements VariantModel {
         androidTypeAttrStrategy.getDisambiguationRules().add(AndroidTypeAttrDisambRule.class);
 
         // custom strategy for build-type and product-flavor.
-        Map<String, List<String>> buildTypeAttrMap = extension.getBuildTypeAttrMap();
-        if (!buildTypeAttrMap.isEmpty()) {
+        setBuildTypeStrategy(schema);
+
+        setupFlavorStrategy(schema);
+    }
+
+    private static <F, T> List<T> convert(
+            @NonNull Collection<F> values,
+            @NonNull Function<F, ?> function,
+            @NonNull Class<T> convertedType) {
+        return values.stream()
+                .map(function)
+                .filter(convertedType::isInstance)
+                .map(convertedType::cast)
+                .collect(Collectors.toList());
+    }
+
+    private void setBuildTypeStrategy(@NonNull AttributesSchema schema) {
+        // this is ugly but because the getter returns a very base class we have no choices.
+        // In the case of the experimental plugin, we don't support matching.
+        List<BuildType> dslBuildTypes =
+                convert(buildTypes.values(), BuildTypeData::getBuildType, BuildType.class);
+
+        if (dslBuildTypes.isEmpty()) {
+            return;
+        }
+
+        Map<String, List<String>> alternateMap = Maps.newHashMap();
+
+        for (BuildType buildType : dslBuildTypes) {
+            if (!buildType.getMatchingFallbacks().isEmpty()) {
+                alternateMap.put(buildType.getName(), buildType.getMatchingFallbacks());
+            }
+        }
+
+        if (!alternateMap.isEmpty()) {
             AttributeMatchingStrategy<BuildTypeAttr> buildTypeStrategy =
                     schema.attribute(BuildTypeAttr.ATTRIBUTE);
+
             buildTypeStrategy
                     .getCompatibilityRules()
                     .add(
                             AlternateCompatibilityRule.BuildTypeRule.class,
-                            config -> config.setParams(buildTypeAttrMap));
+                            config -> config.setParams(alternateMap));
             buildTypeStrategy
                     .getDisambiguationRules()
                     .add(
                             AlternateDisambiguationRule.BuildTypeRule.class,
-                            config -> config.setParams(buildTypeAttrMap));
+                            config -> config.setParams(alternateMap));
+        }
+    }
+
+    private void setupFlavorStrategy(AttributesSchema schema) {
+        // this is ugly but because the getter returns a very base class we have no choices.
+        // In the case of the experimental plugin, we don't support matching.
+        List<com.android.build.gradle.internal.dsl.ProductFlavor> flavors =
+                convert(
+                        productFlavors.values(),
+                        ProductFlavorData::getProductFlavor,
+                        com.android.build.gradle.internal.dsl.ProductFlavor.class);
+
+        if (flavors.isEmpty()) {
+            return;
         }
 
-        Map<String, Map<String, List<String>>> flavorAttrMap = extension.getFlavorAttrMap();
-        for (Map.Entry<String, Map<String, List<String>>> entry : flavorAttrMap.entrySet()) {
-            String dimension = entry.getKey();
-            Attribute<ProductFlavorAttr> attr = Attribute.of(dimension, ProductFlavorAttr.class);
-            AttributeMatchingStrategy<ProductFlavorAttr> flavorStrategy = schema.attribute(attr);
+        // first loop through all the flavors and collect for each dimension, and each value, its
+        // fallbacks
 
-            Map<String, List<String>> map = entry.getValue();
+        // map of (dimension > (requested > fallbacks))
+        Map<String, Map<String, List<String>>> alternateMap = Maps.newHashMap();
+        for (com.android.build.gradle.internal.dsl.ProductFlavor flavor : flavors) {
+            if (!flavor.getMatchingFallbacks().isEmpty()) {
+                String name = flavor.getName();
+                String dimension = flavor.getDimension();
 
-            flavorStrategy
-                    .getCompatibilityRules()
-                    .add(
-                            AlternateCompatibilityRule.ProductFlavorRule.class,
-                            config -> config.setParams(map));
-            flavorStrategy
-                    .getDisambiguationRules()
-                    .add(
-                            AlternateDisambiguationRule.ProductFlavorRule.class,
-                            config -> config.setParams(map));
+                Map<String, List<String>> dimensionMap =
+                        alternateMap.computeIfAbsent(dimension, s -> Maps.newHashMap());
+
+                dimensionMap.put(name, flavor.getMatchingFallbacks());
+            }
+
+            handleMissingDimensions(alternateMap, flavor, true);
         }
+
+        // also handle missing dimensions on the default config.
+        if (defaultConfigData.getProductFlavor() instanceof BaseFlavor) {
+            handleMissingDimensions(
+                    alternateMap, (BaseFlavor) defaultConfigData.getProductFlavor(), false);
+        }
+
+        // now that we know we have all the fallbacks for each dimensions, we can create the
+        // rule instances.
+        for (Map.Entry<String, Map<String, List<String>>> entry : alternateMap.entrySet()) {
+            addFlavorStrategy(schema, entry.getKey(), entry.getValue());
+        }
+    }
+
+    public static void addFlavorStrategy(
+            @NonNull AttributesSchema schema,
+            @NonNull String dimension,
+            @NonNull Map<String, List<String>> alternateMap) {
+        Attribute<ProductFlavorAttr> attr = Attribute.of(dimension, ProductFlavorAttr.class);
+        AttributeMatchingStrategy<ProductFlavorAttr> flavorStrategy = schema.attribute(attr);
+
+        flavorStrategy
+                .getCompatibilityRules()
+                .add(
+                        AlternateCompatibilityRule.ProductFlavorRule.class,
+                        config -> config.setParams(alternateMap));
+        flavorStrategy
+                .getDisambiguationRules()
+                .add(
+                        AlternateDisambiguationRule.ProductFlavorRule.class,
+                        config -> config.setParams(alternateMap));
+    }
+
+    private static void handleMissingDimensions(
+            @NonNull Map<String, Map<String, List<String>>> alternateMap,
+            @NonNull BaseFlavor flavor,
+            boolean modifyName) {
+        // in order to have different fallbacks per variant for missing dimensions, we are
+        // going to actually have the flavor request itself (in the other dimension), with
+        // a modified name (in order to not have collision in case 2 dimensions have the same
+        // flavor names). So we will always fail to find the actual request and try for
+        // the fallbacks.
+        String name = flavor.getName();
+        if (modifyName) {
+            name = getModifiedName(name);
+        }
+
+        Map<String, List<String>> missingStrategies = flavor.getMissingDimensionStrategies();
+        if (!missingStrategies.isEmpty()) {
+            for (Map.Entry<String, List<String>> entry : missingStrategies.entrySet()) {
+                String dimension = entry.getKey();
+
+                Map<String, List<String>> dimensionMap =
+                        alternateMap.computeIfAbsent(dimension, s -> Maps.newHashMap());
+
+                dimensionMap.put(getModifiedName(name), entry.getValue());
+            }
+        }
+    }
+
+    /**
+     * Returns a modified name.
+     *
+     * <p>This name is used to request a missing dimension. It is the same name as the flavor that
+     * sets up the request, which means it's not going to be matched, and instead it'll go to a
+     * custom fallbacks provided by the flavor.
+     *
+     * <p>We are just modifying the name to avoid collision in case the same name exists in
+     * different dimensions
+     */
+    public static String getModifiedName(@NonNull String name) {
+        return "____" + name;
     }
 
     /**
      * Create all variants.
      */
     public void populateVariantDataList() {
-        configureDependencies();
         List<String> flavorDimensionList = extension.getFlavorDimensionList();
 
         if (productFlavors.isEmpty()) {
+            configureDependencies();
             createVariantDataForProductFlavors(Collections.emptyList());
         } else {
             // ensure that there is always a dimension
@@ -695,6 +827,9 @@ public class VariantManager implements VariantModel {
                     }
                 }
             }
+
+            // can only call this after we ensure all flavors have a dimension.
+            configureDependencies();
 
             // Create iterable to get GradleProductFlavor from ProductFlavorData.
             Iterable<CoreProductFlavor> flavorDsl =

@@ -46,6 +46,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
 import com.android.utils.SdkUtils;
+import com.android.utils.XmlUtils;
 import com.google.common.annotations.Beta;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -62,6 +63,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import javax.xml.parsers.ParserConfigurationException;
+import org.jetbrains.annotations.NotNull;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 /**
  * Command line driver for the lint framework
@@ -128,6 +133,10 @@ public class Main {
         }
     }
 
+    /** Hook intended for tests */
+    protected void initializeDriver(@NonNull LintDriver driver) {
+    }
+
     /**
      * Runs the static analysis command line driver
      *
@@ -173,6 +182,8 @@ public class Main {
                                 TextFormat.RAW, null);
                     }
                 }
+
+                initializeDriver(driver);
 
                 return driver;
             }
@@ -243,6 +254,8 @@ public class Main {
                 }
             }
 
+            private ProjectMetadata metadata;
+
             /** Creates a lint request */
             @Override
             @NonNull
@@ -250,14 +263,77 @@ public class Main {
                 LintRequest request = super.createLintRequest(files);
                 File descriptor = flags.getProjectDescriptorOverride();
                 if (descriptor != null) {
-                    List<Project> projects = ProjectInitializerKt.computeProjects(this,
-                            descriptor);
+                    metadata = ProjectInitializerKt.computeMetadata(this, descriptor);
+                    List<Project> projects = metadata.getProjects();
                     if (!projects.isEmpty()) {
                         request.setProjects(projects);
+
+                        if (metadata.getSdk() != null) {
+                            sdkHome = metadata.getSdk();
+                        }
+
+                        if (metadata.getBaseline() != null) {
+                            flags.setBaselineFile(metadata.getBaseline());
+                        }
                     }
                 }
 
                 return request;
+            }
+
+            @NonNull
+            @Override
+            public List<File> findRuleJars(@NotNull Project project) {
+                if (metadata != null) {
+                    List<File> jars = metadata.getLintChecks().get(project);
+                    if (jars != null) {
+                        return jars;
+                    }
+                }
+
+                return super.findRuleJars(project);
+            }
+
+            @Nullable
+            @Override
+            public File getCacheDir(@Nullable String name, boolean create) {
+                if (metadata != null) {
+                    File dir = metadata.getCache();
+                    if (dir != null) {
+                        if (name != null) {
+                            dir = new File(dir, name);
+                        }
+
+                        if (create && !dir.exists()) {
+                            if (!dir.mkdirs()) {
+                                return null;
+                            }
+                        }
+                        return dir;
+                    }
+                }
+
+                return super.getCacheDir(name, create);
+            }
+
+            @Nullable
+            @Override
+            public Document getMergedManifest(@NonNull Project project) {
+                if (metadata != null) {
+                    File manifest = metadata.getMergedManifests().get(project);
+                    if (manifest != null && manifest.exists()) {
+                        try {
+                            // We can't call
+                            //   resolveMergeManifestSources(document, manifestReportFile)
+                            // here since we don't have the merging log.
+                            return XmlUtils.parseUtfXmlFile(manifest, true);
+                        } catch (IOException | SAXException | ParserConfigurationException e) {
+                            log(e, "Could not read/parse %1$s", manifest);
+                        }
+                    }
+                }
+
+                return super.getMergedManifest(project);
             }
 
             @Nullable

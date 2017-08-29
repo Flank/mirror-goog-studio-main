@@ -502,26 +502,32 @@ message AllocationEvent {
     // Valid id starts at 1 as 0 is used as a default no-value.
     int32 stack_id = 6;
 
+    // Which heap an object was allocated from.
+    // The id's are manually mapped to their corresponding names
+    // in Studio (e.g. Zygote vs App).
+    int32 heap_id = 7;
+
     // Entire list of methods corresponding to the allocation stack.
     // Note that this is only used for temporary storage in perfa.
     // When the data is sent from perfa->perfd, the list is encoded
     // as |stack_id| above, and the encoded data is stored/sent
     // separately using EncodedAllocationStack.
     // First entry is top of stack.
-    repeated int64 method_ids = 7;
+    repeated int64 method_ids = 8;
     // Similar to |method_ids| above, this is only for temporary
     // storage. The actual converted line numbers are stored/sent to
     // studio via EncodedAllocationStack.
-    repeated int64 location_ids = 8;
+    repeated int64 location_ids = 9;
     // Temporary storage in perfa only. The thread info will be
     // encoded into |thread_id| before transfer from perfa->perfd.
     // The thread id -> name mapping is sent separately via ThreadInfo
     // messages.
-    string thread_name = 9;
+    string thread_name = 10;
   }
 
   message Deallocation {
     int32 tag = 1;
+
     // The following are host/client-side only (e.g. Studio-only).
     int32 class_tag = 2;
     int64 alloc_time = 3;
@@ -532,6 +538,8 @@ message AllocationEvent {
     // Thread + Stack Id of the allocation of the same object.
     int32 thread_id = 6;
     int32 stack_id = 7;
+
+    int32 heap_id = 8;
   }
 
   // If it is an allocation event, this marks the exact time

@@ -48,7 +48,6 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
     private final Map<String, ClassField> mBuildConfigFields;
     @NonNull
     private final Map<String, ClassField> mResValues;
-    @NonNull private final Map<String, String> flavorSelections;
     @Nullable
     private final Boolean mMultiDexEnabled;
     @Nullable
@@ -64,7 +63,6 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
         mManifestPlaceholders = ImmutableMap.copyOf(baseConfig.getManifestPlaceholders());
         mBuildConfigFields = ImmutableMap.copyOf(baseConfig.getBuildConfigFields());
         mResValues = ImmutableMap.copyOf(baseConfig.getResValues());
-        flavorSelections = ImmutableMap.copyOf(baseConfig.getFlavorSelections());
         mMultiDexEnabled = baseConfig.getMultiDexEnabled();
         mMultiDexKeepFile = baseConfig.getMultiDexKeepFile();
         mMultiDexKeepProguard = baseConfig.getMultiDexKeepProguard();
@@ -93,12 +91,6 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
     @Override
     public Map<String, ClassField> getResValues() {
         return mResValues;
-    }
-
-    @NonNull
-    @Override
-    public Map<String, String> getFlavorSelections() {
-        return flavorSelections;
     }
 
     @NonNull
@@ -167,8 +159,6 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
                 + mBuildConfigFields
                 + ", mResValues="
                 + mResValues
-                + ", flavorSelections="
-                + flavorSelections
                 + ", mMultiDexEnabled="
                 + mMultiDexEnabled
                 + ", mJarJarRuleFiles="
@@ -190,7 +180,6 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
                 && Objects.equals(mManifestPlaceholders, that.mManifestPlaceholders)
                 && Objects.equals(mBuildConfigFields, that.mBuildConfigFields)
                 && Objects.equals(mResValues, that.mResValues)
-                && Objects.equals(flavorSelections, that.flavorSelections)
                 && Objects.equals(mMultiDexEnabled, that.mMultiDexEnabled)
                 && Objects.equals(mMultiDexKeepFile, that.mMultiDexKeepFile)
                 && Objects.equals(mMultiDexKeepProguard, that.mMultiDexKeepProguard)
@@ -205,7 +194,6 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
                 mManifestPlaceholders,
                 mBuildConfigFields,
                 mResValues,
-                flavorSelections,
                 mMultiDexEnabled,
                 mMultiDexKeepFile,
                 mMultiDexKeepProguard,

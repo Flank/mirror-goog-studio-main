@@ -3,11 +3,30 @@
 
 <#if integrateGps>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="com.google.android.things.permission.MANAGE_GPS_DRIVERS" />
+</#if>
+<#if integrateAccelerometer || integrateTemperaturePressureSensor>
+    <uses-permission android:name="com.google.android.things.permission.MANAGE_SENSOR_DRIVERS" />
+</#if>
+<#if integrateCapacitiveTouchButton>
+    <uses-permission android:name="com.google.android.things.permission.MANAGE_INPUT_DRIVERS" />
 </#if>
 
     <application>
 
         <uses-library android:name="com.google.android.things"/>
+<#if integrateAccelerometer>
+        <service android:name="${packageName}.${accelerometerServiceClass}">
+        </service>
+</#if>
+<#if integrateGps>
+        <service android:name="${packageName}.${gpsServiceClass}">
+        </service>
+</#if>
+<#if integrateTemperaturePressureSensor>
+        <service android:name="${packageName}.${temperaturePressureServiceClass}">
+        </service>
+</#if>
 
         <activity android:name="${packageName}.${activityClass}"
             <#if generateActivityTitle!true>
