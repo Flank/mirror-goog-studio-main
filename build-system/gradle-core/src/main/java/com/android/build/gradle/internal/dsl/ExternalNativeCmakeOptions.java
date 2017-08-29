@@ -24,7 +24,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * DSL object for per-variant CMake configurations.
+ * DSL object for per-variant CMake options, such as CMake arguments and compiler flags.
+ *
+ * <p>To learn more about including CMake builds to your Android Studio projects, read <a
+ * href="https://developer.android.com/studio/projects/add-native-code.html">Add C and C++ Code to
+ * Your Project</a>. You can also read more documentation about <a
+ * href="https://developer.android.com/ndk/guides/cmake.html">the Android CMake toolchain</a>.
  */
 public class ExternalNativeCmakeOptions implements CoreExternalNativeCmakeOptions {
 
@@ -39,15 +44,7 @@ public class ExternalNativeCmakeOptions implements CoreExternalNativeCmakeOption
     @NonNull
     private final Set<String> targets = Sets.newHashSet();
 
-    /**
-     * Per-variant arguments for CMake.
-     * <p>For example:</p>
-     * <p><code>arguments "-DCMAKE_VERBOSE_MAKEFILE=TRUE"</code></p>
-     *
-     * <p>For a list of properties you can configure, see
-     * <a href="https://developer.android.com/ndk/guides/cmake.html#variables">
-     * CMake Variables List</a>.</p>
-     */
+    /** {@inheritDoc} */
     @NonNull
     @Override
     public List<String> getArguments() {
@@ -62,11 +59,7 @@ public class ExternalNativeCmakeOptions implements CoreExternalNativeCmakeOption
         Collections.addAll(this.arguments, arguments);
     }
 
-    /**
-     * Per-variant flags for the C compiler.
-     * <p>For example:</p>
-     * <p><code>cFlags "-D_EXAMPLE_C_FLAG1", "-D_EXAMPLE_C_FLAG2"</code></p>
-     */
+    /** {@inheritDoc} */
     @NonNull
     @Override
     public List<String> getcFlags() {
@@ -81,11 +74,7 @@ public class ExternalNativeCmakeOptions implements CoreExternalNativeCmakeOption
         Collections.addAll(this.cFlags, flags);
     }
 
-    /**
-     * Per-variant flags for the C++ compiler.
-     * <p>For example:</p>
-     * <p><code>cppFlags "-D__STDC_FORMAT_MACROS"</code></p>
-     */
+    /** {@inheritDoc} */
     @NonNull
     @Override
     public List<String> getCppFlags() {
@@ -100,12 +89,7 @@ public class ExternalNativeCmakeOptions implements CoreExternalNativeCmakeOption
         Collections.addAll(this.cppFlags, flags);
     }
 
-    /**
-     * Per-variant ABIs Gradle should build, independently of the ones
-     * it packages into your APK. In most cases, you only need to specify your desired ABIs using
-     * {@link com.android.build.gradle.internal.dsl.NdkOptions#abiFilter android.defaultConfig.ndk.abiFilter},
-     * which controls which ABIs Gradle builds and packages into your APK.
-     */
+    /** {@inheritDoc} */
     @NonNull
     @Override
     public Set<String> getAbiFilters() {
@@ -120,19 +104,7 @@ public class ExternalNativeCmakeOptions implements CoreExternalNativeCmakeOption
         Collections.addAll(this.abiFilters, abiFilters);
     }
 
-    /**
-     * Per-variant target libraries from your CMake project that Gradle
-     * should build and package into your APK.
-     *
-     * <p>For example, if your CMake project defines two
-     * libraries, <code>libexample-one.so</code> and <code>libexample-two.so</code>, you can tell
-     * Gradle to only build and package <code>libexample-one.so</code> as follows:</p>
-     *
-     * <p><code>targets "example-one"</code></p>
-     *
-     * <p>When this property is not configured, Gradle builds and packages all available
-     * shared object targets.</p>
-     */
+    /** {@inheritDoc} */
     @NonNull
     @Override
     public Set<String> getTargets() {

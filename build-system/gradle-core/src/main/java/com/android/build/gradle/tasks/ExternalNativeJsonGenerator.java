@@ -770,9 +770,11 @@ public abstract class ExternalNativeJsonGenerator {
                             SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
                             String.format(
                                     Locale.getDefault(),
-                                    "The selected build staging directory '%s'"
-                                            + " is a subdirectory of the build directory of the build directory '%s'. "
-                                            + "Defaulting to '%s' instead.",
+                                    "The build staging directory you specified ('%s')"
+                                            + " is a subdirectory of your project's temporary build directory ('%s')."
+                                            + "Files in this directory do not persist through clean builds.\n"
+                                            + "Either use the default build staging directory ('%s'),"
+                                            + "or specify a path outside the temporary build directory.",
                                     invalidPath.getAbsolutePath(),
                                     buildDir.getAbsolutePath(),
                                     externalNativeBuildPath.getAbsolutePath()));
