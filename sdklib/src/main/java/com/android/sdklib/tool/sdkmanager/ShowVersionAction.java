@@ -37,7 +37,9 @@ class ShowVersionAction extends SdkAction {
     @Override
     public void execute(@NonNull ProgressIndicator progress)
             throws SdkManagerCli.CommandFailedException {
-        getRepoManager().loadSynchronously(0, progress, getDownloader(), mSettings);
+        // only show warnings and errors
+        getRepoManager()
+                .loadSynchronously(0, new QuietProgressIndicator(progress), null, mSettings);
         LocalPackage tools =
                 getRepoManager().getPackages().getLocalPackages().get(SdkConstants.FD_TOOLS);
         if (tools != null) {

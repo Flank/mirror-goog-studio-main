@@ -79,7 +79,6 @@ public class SdkManagerCli {
                         handler)
                 .run(settings.getProgressIndicator());
         System.out.println();
-        System.out.println("done");
     }
 
     public SdkManagerCli(
@@ -89,11 +88,11 @@ public class SdkManagerCli {
             @Nullable Downloader downloader,
             @NonNull AndroidSdkHandler handler) {
         mSettings = settings;
+        mSettings.setInputStream(in);
+        mSettings.setOutputStream(out);
         // TODO: this should probably be done when setting up the settings in the first place
         mSettings.setDownloader(downloader);
         mSettings.setSdkHandler(handler);
-        mSettings.setInputStream(in);
-        mSettings.setOutputStream(out);
     }
 
     void run(@NonNull ProgressIndicator progress) throws CommandFailedException {

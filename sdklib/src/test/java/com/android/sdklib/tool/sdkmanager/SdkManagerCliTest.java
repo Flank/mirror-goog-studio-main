@@ -31,13 +31,11 @@ import com.android.repository.api.RepoManager;
 import com.android.repository.impl.manager.RemoteRepoLoader;
 import com.android.repository.impl.manager.RepoManagerImpl;
 import com.android.repository.impl.meta.CommonFactory;
-import com.android.repository.impl.meta.RepositoryPackages;
 import com.android.repository.testframework.FakeDependency;
 import com.android.repository.testframework.FakeDownloader;
 import com.android.repository.testframework.FakeLoader;
 import com.android.repository.testframework.FakePackage;
 import com.android.repository.testframework.FakeProgressIndicator;
-import com.android.repository.testframework.FakeRepoManager;
 import com.android.repository.testframework.FakeRepositorySourceProvider;
 import com.android.repository.testframework.FakeSettingsController;
 import com.android.repository.testframework.MockFileOp;
@@ -843,18 +841,23 @@ public class SdkManagerCliTest {
 
     @Test
     public void printVersion() throws Exception {
-        FakePackage.FakeLocalPackage tools = new FakePackage.FakeLocalPackage("tools");
+        FakePackage.FakeRemotePackage tools = new FakePackage.FakeRemotePackage("tools");
         tools.setRevision(Revision.parseRevision("1.2.3"));
+        File toolsDir = new File(SDK_LOCATION, "tools");
+        mFileOp.mkdirs(toolsDir);
+        InstallerUtil.writePackageXml(
+                tools,
+                toolsDir,
+                new RepoManagerImpl(mFileOp),
+                mFileOp,
+                new FakeProgressIndicator());
 
         SdkManagerCliSettings settings =
                 SdkManagerCliSettings.createSettings(
                         ImmutableList.of("--sdk_root=/sdk", "--version"), mFileOp.getFileSystem());
+        AndroidSdkHandler handler = new AndroidSdkHandler(new File(SDK_LOCATION), null, mFileOp);
+
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        RepositoryPackages pkgs =
-                new RepositoryPackages(ImmutableList.of(tools), ImmutableList.of());
-        FakeRepoManager mgr = new FakeRepoManager(new File(SDK_LOCATION), pkgs);
-        AndroidSdkHandler handler =
-                new AndroidSdkHandler(new File(SDK_LOCATION), null, mFileOp, mgr);
         SdkManagerCli sdkmanager =
                 new SdkManagerCli(
                         settings,

@@ -96,7 +96,9 @@ class SdkManagerCliSettings implements SettingsController {
         if (handler == null) {
             mRepoManager = null;
         } else {
-            mRepoManager = handler.getSdkManager(getProgressIndicator());
+            // This is just loading the local repo, so no need to show progress here.
+            mRepoManager =
+                    handler.getSdkManager(new QuietProgressIndicator(getProgressIndicator()));
         }
     }
 
@@ -185,7 +187,11 @@ class SdkManagerCliSettings implements SettingsController {
 
     @NonNull
     public ProgressIndicator getProgressIndicator() {
-        return new ConsoleProgressIndicator() {
+        PrintStream out = getOutputStream();
+        if (out == null) {
+            out = System.out;
+        }
+        return new ConsoleProgressIndicator(out, System.err) {
             @Override
             public void logWarning(@NonNull String s, @Nullable Throwable e) {
                 if (mVerbose) {

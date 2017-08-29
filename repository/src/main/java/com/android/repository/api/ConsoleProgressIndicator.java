@@ -32,8 +32,8 @@ public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
     private String mSecondaryText = "";
     private double mProgress = 0;
 
-    private final PrintStream mOut;
-    private final PrintStream mErr;
+    private PrintStream mOut;
+    private PrintStream mErr;
 
     private static final String SPACES =
             "                                                                                ";
@@ -44,6 +44,14 @@ public class ConsoleProgressIndicator extends ProgressIndicatorAdapter {
 
     public ConsoleProgressIndicator(@NonNull PrintStream out, @NonNull PrintStream err) {
         mOut = out;
+        mErr = err;
+    }
+
+    public void setOut(@NonNull PrintStream out) {
+        mOut = out;
+    }
+
+    public void setErr(@NonNull PrintStream err) {
         mErr = err;
     }
 
