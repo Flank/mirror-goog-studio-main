@@ -253,22 +253,31 @@ public class FullRunShrinker<T> extends AbstractShrinker<T> {
 
                         @Override
                         public Void call() throws Exception {
-                            if (!isProgramClass(mGraph.getSuperclass(klass))) {
-                                // All the superclass methods are kept anyway.
+                            T superclass;
+                            try {
+                                superclass = mGraph.getSuperclass(klass);
+
+                                if (superclass == null || !isProgramClass(superclass)) {
+                                    // All the superclass methods are kept anyway.
+                                    return null;
+                                }
+
+                                Iterable<T> interfaces =
+                                        TypeHierarchyTraverser.interfaces(mGraph, mShrinkerLogger)
+                                                .preOrderTraversal(klass)
+                                                .skip(1); // Skip the class itself.
+
+                                for (T iface : interfaces) {
+                                    for (T method : mGraph.getMethods(iface)) {
+                                        handleMethod(method);
+                                    }
+                                }
+                                return null;
+                            } catch (ClassLookupException e) {
+                                mShrinkerLogger.invalidClassReference(
+                                        mGraph.getClassName(klass), e.getClassName());
                                 return null;
                             }
-
-                            Iterable<T> interfaces =
-                                    TypeHierarchyTraverser.interfaces(mGraph, mShrinkerLogger)
-                                            .preOrderTraversal(klass)
-                                            .skip(1); // Skip the class itself.
-
-                            for (T iface : interfaces) {
-                                for (T method : mGraph.getMethods(iface)) {
-                                    handleMethod(method);
-                                }
-                            }
-                            return null;
                         }
 
                         private void handleMethod(T method) {

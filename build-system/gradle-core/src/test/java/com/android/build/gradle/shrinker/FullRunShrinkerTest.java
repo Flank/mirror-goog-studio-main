@@ -27,6 +27,7 @@ import com.android.testutils.TestClassesGenerator;
 import com.android.utils.FileUtils;
 import com.android.utils.Pair;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import java.io.DataInputStream;
 import java.io.File;
@@ -1564,6 +1565,26 @@ public class FullRunShrinkerTest extends AbstractShrinkerTest {
                 "transform:(Ljava/lang/ClassLoader;Ljava/lang/String;Ljava/lang/Class;Ljava/security/ProtectionDomain;[B)[B");
         assertImplements("Main", "java/lang/instrument/ClassFileTransformer");
         mExpectedWarnings = 1;
+    }
+
+    @Test
+    public void invalidReferences_suprerclasses() throws Exception {
+        // Given:
+        Files.write(
+                TestClasses.InvalidReferences.main_madeUpSuperclass(),
+                new File(mTestPackageDir, "Main.class"));
+
+        // When:
+        fullRun("Main", "main:()V");
+
+        // Then:
+        assertMembersLeft("Main", "<init>:()V", "main:()V");
+        mExpectedWarnings = 1;
+
+        Pair<String, String> warning =
+                Iterables.getOnlyElement(mShrinkerLogger.getWarningsEmitted());
+        assertThat(warning.getFirst()).isEqualTo("test/Main");
+        assertThat(warning.getSecond()).isEqualTo("com/madeup/Superclass");
     }
 
     @Test

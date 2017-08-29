@@ -3186,6 +3186,42 @@ class TestClasses implements Opcodes {
 
             return cw.toByteArray();
         }
+
+        static byte[] main_madeUpSuperclass() throws Exception {
+
+            ClassWriter cw = new ClassWriter(0);
+            MethodVisitor mv;
+
+            cw.visit(
+                    V1_6,
+                    ACC_PUBLIC + ACC_SUPER,
+                    "test/Main",
+                    null,
+                    "com/madeup/Superclass",
+                    new String[] {"java/io/Serializable"});
+
+            cw.visitSource("Main.java", null);
+
+            {
+                mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()V", null, null);
+                mv.visitCode();
+                mv.visitVarInsn(ALOAD, 0);
+                mv.visitMethodInsn(INVOKESPECIAL, "java/lang/Object", "<init>", "()V", false);
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(1, 1);
+                mv.visitEnd();
+            }
+            {
+                mv = cw.visitMethod(0, "main", "()V", null, null);
+                mv.visitCode();
+                mv.visitInsn(RETURN);
+                mv.visitMaxs(1, 2);
+                mv.visitEnd();
+            }
+            cw.visitEnd();
+
+            return cw.toByteArray();
+        }
     }
 
     static class Modifiers {
