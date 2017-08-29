@@ -25,6 +25,15 @@ import org.gradle.api.Project;
 /**
  * DSL object for per-module CMake configurations, such as the path to your <code>CMakeLists.txt
  * </code> build script and external native build output directory.
+ *
+ * <p>To include CMake projects in your Gradle build, you need to use Android Studio 2.2 and higher
+ * with Android plugin for Gradle 2.2.0 and higher. To learn more about Android Studio's support for
+ * external native builds, read <a
+ * href="https://developer.android.com/studio/projects/add-native-code.html">Add C and C++ Code to
+ * Your Project</a>.
+ *
+ * <p>If you want to instead build your native libraries using ndk-build, see {@link
+ * com.android.build.gradle.internal.dsl.NdkBuildOptions}.
  */
 public class CmakeOptions implements CoreCmakeOptions {
     @NonNull
@@ -43,13 +52,28 @@ public class CmakeOptions implements CoreCmakeOptions {
     }
 
     /**
-     * The relative path to your <code>CMakeLists.txt</code> build script.
-     * <p>For example, if your
-     * CMake build script is in the same folder as your module-level <code>build.gradle</code> file,
-     * you simply pass the following:</p>
-     * <p><code>path "CMakeLists.txt"</code></p>
-     * <p>Gradle requires this build script to add your CMake project as a build dependency and pull
-     * your native sources into your Android project.</p>
+     * Specifies the relative path to your <code>CMakeLists.txt</code> build script.
+     *
+     * <p>For example, if your CMake build script is in the same folder as your module-level <code>
+     * build.gradle</code> file, you simply pass the following:
+     *
+     * <pre>
+     * android {
+     *     ...
+     *     externalNativeBuild {
+     *         cmake {
+     *             ...
+     *             // Tells Gradle to find the root CMake build script in the same
+     *             // directory as the module's build.gradle file. Gradle requires this
+     *             // build script to add your CMake project as a build dependency and
+     *             // pull your native sources into your Android project.
+     *             path "CMakeLists.txt"
+     *         }
+     *     }
+     * }
+     * </pre>
+     *
+     * @since 2.2.0
      */
     @Nullable
     @Override
@@ -67,11 +91,37 @@ public class CmakeOptions implements CoreCmakeOptions {
     }
 
     /**
-     * The path to use for the external native build output directory. If the path does not exist,
-     * the plugin creates it for you. Relative paths are relative to the <code>build.gradle</code>
-     * file. If you do not specify this property, or you specify a path that is a subdirectory of
-     * your project's <code>build</code> directory, the plugin uses the <code>
-     * &lt;project_dir&gt;/app/.externalNativeBuild</code> directory as the default.
+     * Specifies the path to your external native build output directory.
+     *
+     * <p>This directory also includes other build system files that should persist when performing
+     * clean builds, such as <a href="https://ninja-build.org/">Ninja build files</a>. If you do not
+     * specify a value for this property, the Android plugin uses the <code>
+     * &lt;project_dir&gt;/&lt;module&gt;/.externalNativeBuild/</code> directory by default.
+     *
+     * <p>If you specify a path that does not exist, the Android plugin creates it for you. Relative
+     * paths are relative to the <code>build.gradle</code> file, as shown below:
+     *
+     * <pre>
+     * android {
+     *     ...
+     *     externalNativeBuild {
+     *         cmake {
+     *             ...
+     *             // Tells Gradle to put outputs from external native
+     *             // builds in the path specified below.
+     *             buildStagingDirectory "./outputs/cmake"
+     *         }
+     *     }
+     * }
+     * </pre>
+     *
+     * <p>If you specify a path that's a subdirectory of your project's temporary <code>build/
+     * </code> directory, you get a build error. That's because files in this directory do not
+     * persist through clean builds. So, you should either keep using the default <code>
+     * &lt;project_dir&gt;/&lt;module&gt;/.externalNativeBuild/</code> directory or specify a path
+     * outside the temporary build directory.
+     *
+     * @since 3.0.0
      */
     @Nullable
     @Override
@@ -85,39 +135,42 @@ public class CmakeOptions implements CoreCmakeOptions {
     }
 
     /**
-     * The version of CMake that Android Studio should use to build the native library.
+     * The version of CMake that the Android plugin should use when building your CMake project.
      *
      * <p>When you specify a version of CMake, as shown below, the plugin searches for the
-     * appropriate CMake binary within your PATH environmental variable.
+     * appropriate CMake binary within your PATH environmental variable. So, make sure you add the
+     * path to the target CMake binary to your PATH environmental variable.
      *
      * <pre>
-     *     android {
-     *         ...
-     *         externalNativeBuild {
-     *             cmake {
-     *                 ...
-     *                 // Specifies the version of CMake the Android plugin should use. You need to
-     *                 // include the path to the CMake binary of this version to your PATH
-     *                 // environmental variable.
-     *                 version "3.7.1"
-     *             }
+     * android {
+     *     ...
+     *     externalNativeBuild {
+     *         cmake {
+     *             ...
+     *             // Specifies the version of CMake the Android plugin should use. You need to
+     *             // include the path to the CMake binary of this version to your PATH
+     *             // environmental variable.
+     *             version "3.7.1"
      *         }
      *     }
+     * }
      * </pre>
      *
      * <p>If you do not configure this property, the plugin uses the version of CMake available from
      * the <a href="https://developer.android.com/studio/intro/update.html#sdk-manager">SDK
      * manager</a>. (Android Studio prompts you to download this version of CMake if you haven't
-     * already done so)
+     * already done so).
      *
      * <p>Alternatively, you can specify a version of CMake in your project's <code>local.properties
      * </code> file, as shown below:
      *
      * <pre>
-     *     // The path may be either absolute or relative to the the local.properties file you are
-     *     // editing.
-     *     cmake.dir="&ltpath-to-cmake&gt"
+     * // The path may be either absolute or relative to the the local.properties file
+     * // you are editing.
+     * cmake.dir="&lt;path-to-cmake&gt;"
      * </pre>
+     *
+     * @since 3.0.0
      */
     @Nullable
     @Override
