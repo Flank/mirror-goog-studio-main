@@ -66,6 +66,7 @@ import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultManifestParser;
 import com.android.builder.core.DefaultProductFlavor;
+import com.android.builder.core.DefaultProductFlavor.DimensionRequest;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.InstantRun;
@@ -536,7 +537,7 @@ public class VariantManager implements VariantModel {
             ObjectFactory factory = project.getObjects();
 
             return ((DefaultProductFlavor) mergedFlavors)
-                    .getRequestedDimensionValueMap()
+                    .getMissingDimensionStrategies()
                     .entrySet()
                     .stream()
                     .collect(
@@ -544,7 +545,8 @@ public class VariantManager implements VariantModel {
                                     entry -> Attribute.of(entry.getKey(), ProductFlavorAttr.class),
                                     entry ->
                                             factory.named(
-                                                    ProductFlavorAttr.class, entry.getValue())));
+                                                    ProductFlavorAttr.class,
+                                                    entry.getValue().getRequested())));
         }
 
         return ImmutableMap.of();
@@ -701,10 +703,6 @@ public class VariantManager implements VariantModel {
                         ProductFlavorData::getProductFlavor,
                         com.android.build.gradle.internal.dsl.ProductFlavor.class);
 
-        if (flavors.isEmpty()) {
-            return;
-        }
-
         // first loop through all the flavors and collect for each dimension, and each value, its
         // fallbacks
 
@@ -721,13 +719,13 @@ public class VariantManager implements VariantModel {
                 dimensionMap.put(name, flavor.getMatchingFallbacks());
             }
 
-            handleMissingDimensions(alternateMap, flavor, true);
+            handleMissingDimensions(alternateMap, flavor);
         }
 
         // also handle missing dimensions on the default config.
         if (defaultConfigData.getProductFlavor() instanceof BaseFlavor) {
             handleMissingDimensions(
-                    alternateMap, (BaseFlavor) defaultConfigData.getProductFlavor(), false);
+                    alternateMap, (BaseFlavor) defaultConfigData.getProductFlavor());
         }
 
         // now that we know we have all the fallbacks for each dimensions, we can create the
@@ -758,27 +756,16 @@ public class VariantManager implements VariantModel {
 
     private static void handleMissingDimensions(
             @NonNull Map<String, Map<String, List<String>>> alternateMap,
-            @NonNull BaseFlavor flavor,
-            boolean modifyName) {
-        // in order to have different fallbacks per variant for missing dimensions, we are
-        // going to actually have the flavor request itself (in the other dimension), with
-        // a modified name (in order to not have collision in case 2 dimensions have the same
-        // flavor names). So we will always fail to find the actual request and try for
-        // the fallbacks.
-        String name = flavor.getName();
-        if (modifyName) {
-            name = getModifiedName(name);
-        }
-
-        Map<String, List<String>> missingStrategies = flavor.getMissingDimensionStrategies();
+            @NonNull BaseFlavor flavor) {
+        Map<String, DimensionRequest> missingStrategies = flavor.getMissingDimensionStrategies();
         if (!missingStrategies.isEmpty()) {
-            for (Map.Entry<String, List<String>> entry : missingStrategies.entrySet()) {
+            for (Map.Entry<String, DimensionRequest> entry : missingStrategies.entrySet()) {
                 String dimension = entry.getKey();
 
                 Map<String, List<String>> dimensionMap =
                         alternateMap.computeIfAbsent(dimension, s -> Maps.newHashMap());
 
-                dimensionMap.put(getModifiedName(name), entry.getValue());
+                dimensionMap.put(entry.getValue().getRequested(), entry.getValue().getFallbacks());
             }
         }
     }

@@ -41,7 +41,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-public class AttributeMatchingTest {
+public class MatchingFallbackTest {
 
     @Rule
     public GradleTestProject project =
