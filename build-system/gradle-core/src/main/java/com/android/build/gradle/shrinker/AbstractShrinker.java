@@ -258,7 +258,7 @@ public abstract class AbstractShrinker<T> {
         }
     }
 
-    protected boolean isProgramClass(T klass) {
+    protected boolean isProgramClass(@NonNull T klass) {
         return mGraph.isProgramClass(klass);
     }
 

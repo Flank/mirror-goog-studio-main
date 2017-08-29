@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.shrinker;
 
+import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.incremental.ByteCodeUtils;
 import com.android.build.gradle.shrinker.parser.FilterSpecification;
 import com.android.utils.Pair;
@@ -78,10 +79,11 @@ public class ShrinkerLogger {
     }
 
     public int getWarningsCount() {
-        return mWarningsEmitted.size();
+        return getWarningsEmitted().size();
     }
 
-    synchronized void warn(String message, Object... args) {
-        mLogger.warn(message, args);
+    @VisibleForTesting
+    Set<Pair<String, String>> getWarningsEmitted() {
+        return mWarningsEmitted;
     }
 }
