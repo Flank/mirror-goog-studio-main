@@ -14,22 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.api;
+package com.android.build.gradle.internal;
 
-import com.android.build.gradle.internal.BuildSessionHelper;
-import org.gradle.api.Plugin;
-import org.gradle.api.Project;
+import com.android.annotations.NonNull;
 
 /**
- * Common plugin applied by all plugins.
- *
- * <p>The purpose of this no-op plugin is to allow other plugin authors to determine if an Android
- * plugin was applied.
+ * Interface for the {@link BuildSessionSingleton} object. This is part of the pattern to create a
+ * "true" singleton (object that is unique across class loaders).
  */
-public class AndroidBasePlugin implements Plugin<Project> {
+interface BuildSessionInterface {
 
-    @Override
-    public void apply(Project project) {
-        BuildSessionHelper.startOnce(project);
-    }
+    void executeLastWhenBuildFinished(@NonNull Runnable action);
 }

@@ -202,13 +202,8 @@ public class ResourceReference {
         }
 
         PsiClass rClass = resTypeClass.getContainingClass();
-        if (rClass == null || rClass.getContainingClass() != null) {
+        if (rClass == null || rClass.getContainingClass() != null || !"R".equals(rClass.getName())) {
             return null;
-        } else {
-            String className = rClass.getName();
-            if (!("R".equals(className) || "R2".equals(className))) { // R2: butterknife library
-                return null;
-            }
         }
 
         String packageName = ((PsiJavaFile) rClass.getContainingFile()).getPackageName();
