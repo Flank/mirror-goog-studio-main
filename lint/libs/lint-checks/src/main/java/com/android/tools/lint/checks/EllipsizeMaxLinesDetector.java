@@ -17,7 +17,9 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.ATTR_SINGLE_LINE;
 import static com.android.SdkConstants.VALUE_1;
+import static com.android.SdkConstants.VALUE_TRUE;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceFolderType;
@@ -98,9 +100,9 @@ public class EllipsizeMaxLinesDetector extends LayoutDetector {
             Location location = context.getLocation(other);
             location.setSecondary(context.getLocation(attribute));
 
-            LintFix fix = fix().replace()
-                    .pattern(other.getLocalName() + ".+1\"")
-                    .with("singleLine=\"true\"").build();
+            LintFix fix = fix().name("Replace with singleLine=\"true\"").composite(
+                    fix().set(ANDROID_URI, ATTR_SINGLE_LINE, VALUE_TRUE).build(),
+                    fix().unset(ANDROID_URI, other.getLocalName()).build());
 
             context.report(ISSUE, attribute, location,
                     String.format("Combining `ellipsize=%1$s` and `%2$s=%3$s` can lead to "

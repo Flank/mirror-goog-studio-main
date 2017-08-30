@@ -19,7 +19,7 @@ package com.android.tools.lint.checks;
 import com.android.tools.lint.detector.api.Detector;
 
 public class EllipsizeMaxLinesDetectorTest extends AbstractCheckTest {
-    public void test() {
+    public void testSimple() {
         lint().files(
                 xml("res/layout/sample.xml", ""
                         + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -61,11 +61,11 @@ public class EllipsizeMaxLinesDetectorTest extends AbstractCheckTest {
                         + "2 errors, 0 warnings\n")
                 .expectFixDiffs(""
                         + "Fix for res/layout/sample.xml line 8: Replace with singleLine=\"true\":\n"
-                        + "@@ -9 +9\n"
+                        + "@@ -10 +10\n"
                         + "-         android:lines=\"1\"\n"
                         + "+         android:singleLine=\"true\"\n"
                         + "Fix for res/layout/sample.xml line 15: Replace with singleLine=\"true\":\n"
-                        + "@@ -16 +16\n"
+                        + "@@ -17 +17\n"
                         + "-         android:maxLines=\"1\"\n"
                         + "+         android:singleLine=\"true\"\n");
     }
