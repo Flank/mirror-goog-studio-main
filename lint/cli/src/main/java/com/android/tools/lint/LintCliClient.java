@@ -656,6 +656,19 @@ public class LintCliClient extends LintClient {
         }
     }
 
+    @NonNull
+    @Override
+    protected Project createProject(@NonNull File dir, @NonNull File referenceDir) {
+        Project project = super.createProject(dir, referenceDir);
+
+        String compileSdkVersion = flags.getCompileSdkVersionOverride();
+        if (compileSdkVersion != null) {
+            project.setBuildTargetHash(compileSdkVersion);
+        }
+
+        return project;
+    }
+
     /**
      * Checks that any id's specified by id refer to valid, known, issues. This
      * typically can't be done right away (in for example the Gradle code which

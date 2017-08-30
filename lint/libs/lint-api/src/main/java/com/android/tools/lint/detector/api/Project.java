@@ -111,7 +111,7 @@ public class Project {
     protected boolean library;
     protected String name;
     protected String proguardPath;
-    protected boolean mergeManifests;
+    protected boolean mergeManifests = true;
 
     /** The SDK info, if any */
     protected SdkInfo sdkInfo;
@@ -288,14 +288,7 @@ public class Project {
                             "manifestmerger.enabled"));
                     String target = properties.getProperty("target");
                     if (target != null) {
-                        buildTargetHash = target;
-                        AndroidVersion version = AndroidTargetHash.getPlatformVersion(target);
-                        if (version != null) {
-                            buildSdk = version.getFeatureLevel();
-                        } else {
-                            client.log(Severity.WARNING, null,
-                                    "Unexpected build target format: %1$s", target);
-                        }
+                        setBuildTargetHash(target);
                     }
 
                     for (int i = 1; i < 1000; i++) {
@@ -766,6 +759,25 @@ public class Project {
     @Nullable
     public String getBuildTargetHash() {
         return buildTargetHash;
+    }
+
+
+    /**
+     * Sets the build target hash to be used for this project. This is only
+     * intended for lint internal usage.
+     *
+     * @param buildTargetHash the target hash
+     */
+    public void setBuildTargetHash(String buildTargetHash) {
+        this.buildTargetHash = buildTargetHash;
+
+        AndroidVersion version = AndroidTargetHash.getPlatformVersion(buildTargetHash);
+        if (version != null) {
+            buildSdk = version.getFeatureLevel();
+        } else {
+            client.log(Severity.WARNING, null,
+                    "Unexpected build target format: %1$s", target);
+        }
     }
 
     /**

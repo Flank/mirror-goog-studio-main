@@ -123,6 +123,19 @@ public class LintBaseline {
         readBaselineFile();
     }
 
+    public static String describeBaselineFilter(int errors, int warnings,
+            String baselineDisplayPath) {
+        String counts = LintUtils.describeCounts(errors, warnings, false, true);
+        // Keep in sync with isFilteredMessage() below
+        if (errors + warnings == 1) {
+            return String.format("%1$s was filtered out because it is listed in the " +
+                    "baseline file, %2$s\n", counts, baselineDisplayPath);
+        } else {
+            return String.format("%1$s were filtered out because they are listed in the " +
+                            "baseline file, %2$s\n", counts, baselineDisplayPath);
+        }
+    }
+
     /**
      * Checks if we should report baseline activity (filtered out issues, found fixed issues etc
      * and if so reports them
@@ -131,11 +144,8 @@ public class LintBaseline {
         if (foundErrorCount > 0 || foundWarningCount > 0) {
             LintClient client = driver.getClient();
             File baselineFile = getFile();
-            // Keep in sync with isFilteredMessage() below
-            String message = String.format("%1$s were filtered out because "
-                            + "they were listed in the baseline file, %2$s",
-                    LintUtils.describeCounts(foundErrorCount, foundWarningCount, false, true),
-                    getDisplayPath(project, baselineFile));
+            String message = describeBaselineFilter(foundErrorCount,
+                    foundWarningCount, getDisplayPath(project, baselineFile));
             client.report(new Context(driver, project, project, baselineFile, null),
                     IssueRegistry.BASELINE,
                     client.getConfiguration(project, driver).getSeverity(IssueRegistry.BASELINE),
@@ -200,9 +210,7 @@ public class LintBaseline {
     @SuppressWarnings("unused") // Used from the IDE
     public static boolean isFilteredMessage(@NonNull String errorMessage,
             @NonNull TextFormat format) {
-        errorMessage = format.toText(errorMessage);
-
-        return errorMessage.contains("were filtered out");
+        return format.toText(errorMessage).contains("filtered out because");
     }
 
     /**
