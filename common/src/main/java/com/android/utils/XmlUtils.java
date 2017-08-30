@@ -52,7 +52,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -372,15 +371,16 @@ public class XmlUtils {
     }
 
     /**
-     * Appends text to the given {@link StringBuilder} and escapes it as required for a
-     * DOM text node.
+     * Appends text to the given {@link StringBuilder} and escapes it as required for a DOM text
+     * node.
      *
-     * @param sb        the string builder
-     * @param start     the starting offset in the text string
-     * @param end       the ending offset in the text string
+     * @param sb the string builder
+     * @param start the starting offset in the text string
+     * @param end the ending offset in the text string
      * @param textValue the text value to be appended and escaped
      */
-    public static void appendXmlTextValue(@NonNull StringBuilder sb, @NonNull String textValue, int start, int end) {
+    public static void appendXmlTextValue(
+            @NonNull StringBuilder sb, @NonNull String textValue, int start, int end) {
         for (int i = start, n = Math.min(textValue.length(), end); i < n; i++) {
             char c = textValue.charAt(i);
             if (c == '<') {
@@ -505,15 +505,8 @@ public class XmlUtils {
     @NonNull
     public static Document parseDocument(@NonNull Reader xml, boolean namespaceAware)
             throws ParserConfigurationException, IOException, SAXException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         InputSource is = new InputSource(xml);
-        factory.setNamespaceAware(namespaceAware);
-        factory.setValidating(false);
-        factory.setFeature(EXTERNAL_GENERAL_ENTITIES, false);
-        factory.setFeature(EXTERNAL_PARAMETER_ENTITIES, false);
-        factory.setFeature(LOAD_EXTERNAL_DTD, false);
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        return builder.parse(is);
+        return createDocumentBuilder(namespaceAware).parse(is);
     }
 
     /**
@@ -527,19 +520,30 @@ public class XmlUtils {
     @NonNull
     public static Document parseUtfXmlFile(@NonNull File file, boolean namespaceAware)
             throws ParserConfigurationException, IOException, SAXException {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        Reader reader = getUtfReader(file);
+        try (Reader reader = getUtfReader(file)) {
+            return parseDocument(reader, namespaceAware);
+        }
+    }
+
+    /** Creates and returns a new empty document. */
+    @NonNull
+    public static Document createDocument(boolean namespaceAware) {
+        return createDocumentBuilder(namespaceAware).newDocument();
+    }
+
+    /** Creates a preconfigured document builder. */
+    @NonNull
+    private static DocumentBuilder createDocumentBuilder(boolean namespaceAware) {
         try {
-            InputSource is = new InputSource(reader);
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(namespaceAware);
             factory.setValidating(false);
             factory.setFeature(EXTERNAL_GENERAL_ENTITIES, false);
             factory.setFeature(EXTERNAL_PARAMETER_ENTITIES, false);
             factory.setFeature(LOAD_EXTERNAL_DTD, false);
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            return builder.parse(is);
-        } finally {
-            reader.close();
+            return factory.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            throw new Error(e); // Impossible in the current context.
         }
     }
 
@@ -784,20 +788,30 @@ public class XmlUtils {
     }
 
     /**
-     * Format the given floating value into an XML string, omitting decimals if
-     * 0
+     * Formats the number and removes trailing zeros after the decimal dot and also the dot itself
+     * if there were non-zero digits after it.
      *
      * @param value the value to be formatted
      * @return the corresponding XML string for the value
      */
     public static String formatFloatAttribute(double value) {
-        if (value != (int) value) {
-            // Run String.format without a locale, because we don't want locale-specific
-            // conversions here like separating the decimal part with a comma instead of a dot!
-            return String.format((Locale) null, "%.2f", value); //$NON-NLS-1$
-        } else {
-            return Integer.toString((int) value);
+        // Use locale-independent conversion to make sure that the decimal separator is always dot.
+        // We use Float.toString as opposed to Double.toString to avoid writing too many
+        // insignificant digits.
+        String result = Float.toString((float) value);
+        int pos = result.lastIndexOf('.');
+        if (pos < 0) {
+            return result;
         }
+        if (pos == 0) {
+            pos = 2;
+        }
+
+        int i = result.length();
+        while (--i > pos && result.charAt(i) == '0') {
+            // Skip trailing zeros.
+        }
+        return result.substring(0, i == pos ? i : i + 1);
     }
 
     /**
@@ -808,8 +822,7 @@ public class XmlUtils {
     public static String getRootTagName(@NonNull File xmlFile) {
         try (InputStream stream = new BufferedInputStream(new FileInputStream(xmlFile))) {
             XMLInputFactory factory = XMLInputFactory.newFactory();
-            XMLStreamReader xmlStreamReader =
-                    factory.createXMLStreamReader(stream);
+            XMLStreamReader xmlStreamReader = factory.createXMLStreamReader(stream);
 
             while (xmlStreamReader.hasNext()) {
                 int event = xmlStreamReader.next();
@@ -821,6 +834,28 @@ public class XmlUtils {
             // Ignored.
         }
 
+        return null;
+    }
+
+    /**
+     * Returns the name of the root element tag stored in the given file, or null if it can't be
+     * determined.
+     */
+    @Nullable
+    public static String getRootTagName(@NonNull String xmlText) {
+        XMLInputFactory factory = XMLInputFactory.newFactory();
+        try (Reader reader = new StringReader(xmlText)) {
+            XMLStreamReader xmlStreamReader = factory.createXMLStreamReader(reader);
+
+            while (xmlStreamReader.hasNext()) {
+                int event = xmlStreamReader.next();
+                if (event == XMLStreamReader.START_ELEMENT) {
+                    return xmlStreamReader.getLocalName();
+                }
+            }
+        } catch (IOException | XMLStreamException e) {
+            // Ignore.
+        }
         return null;
     }
 

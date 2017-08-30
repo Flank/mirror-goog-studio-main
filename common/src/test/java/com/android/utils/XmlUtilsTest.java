@@ -377,11 +377,11 @@ public class XmlUtilsTest extends TestCase {
     public void testFormatFloatValue() throws Exception {
         assertEquals("1", XmlUtils.formatFloatAttribute(1.0f));
         assertEquals("2", XmlUtils.formatFloatAttribute(2.0f));
-        assertEquals("1.50", XmlUtils.formatFloatAttribute(1.5f));
-        assertEquals("1.50", XmlUtils.formatFloatAttribute(1.50f));
+        assertEquals("1.5", XmlUtils.formatFloatAttribute(1.5f));
+        assertEquals("1.5", XmlUtils.formatFloatAttribute(1.50f));
         assertEquals("1.51", XmlUtils.formatFloatAttribute(1.51f));
-        assertEquals("1.51", XmlUtils.formatFloatAttribute(1.514542f));
-        assertEquals("1.52", XmlUtils.formatFloatAttribute(1.516542f));
+        assertEquals("1.514542", XmlUtils.formatFloatAttribute(1.514542f));
+        assertEquals("1.516542", XmlUtils.formatFloatAttribute(1.516542f));
         assertEquals("-1.51", XmlUtils.formatFloatAttribute(-1.51f));
         assertEquals("-1", XmlUtils.formatFloatAttribute(-1f));
     }
@@ -395,10 +395,10 @@ public class XmlUtilsTest extends TestCase {
             Locale.setDefault(Locale.FRENCH);
 
             // Ensure that this is a locale which uses a comma instead of a period:
-            assertEquals("5,24", String.format("%.2f", 5.236f));
+            assertEquals("1,50", String.format("%.2f", 1.5f));
 
             // Ensure that the formatFloatAttribute is immune
-            assertEquals("1.50", XmlUtils.formatFloatAttribute(1.5f));
+            assertEquals("1.5", XmlUtils.formatFloatAttribute(1.5f));
         } finally {
             Locale.setDefault(originalDefaultLocale);
         }
@@ -408,14 +408,11 @@ public class XmlUtilsTest extends TestCase {
         File file = File.createTempFile(getName(), SdkConstants.DOT_XML);
 
         BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(file));
-        OutputStreamWriter writer = new OutputStreamWriter(stream, Charsets.UTF_8);
-        try {
+        try (OutputStreamWriter writer = new OutputStreamWriter(stream, Charsets.UTF_8)) {
             stream.write(0xef);
             stream.write(0xbb);
             stream.write(0xbf);
             writer.write("OK");
-        } finally {
-            writer.close();
         }
 
         Reader reader = XmlUtils.getUtfReader(file);
@@ -508,14 +505,11 @@ public class XmlUtilsTest extends TestCase {
                 "</LinearLayout>\n";
 
         BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(file));
-        OutputStreamWriter writer = new OutputStreamWriter(stream, Charsets.UTF_8);
-        try {
+        try (OutputStreamWriter writer = new OutputStreamWriter(stream, Charsets.UTF_8)) {
             stream.write(0xef);
             stream.write(0xbb);
             stream.write(0xbf);
             writer.write(xml);
-        } finally {
-            writer.close();
         }
 
         Document document = XmlUtils.parseUtfXmlFile(file, true);
