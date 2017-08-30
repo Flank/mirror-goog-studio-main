@@ -21,6 +21,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.TestVariantData;
@@ -71,8 +72,8 @@ public class JacocoReportTask extends DefaultTask {
     private FileCollection jacocoClasspath;
 
     private Supplier<File> coverageDirectory;
-    private Supplier<File> classDir;
-    private Supplier<Collection<File>> sourceDir;
+    private FileCollection classFileCollection;
+    private Supplier<Collection<File>> sourceFolders;
 
     private File coverageFile;
     private File reportDir;
@@ -108,14 +109,14 @@ public class JacocoReportTask extends DefaultTask {
         this.reportDir = reportDir;
     }
 
-    @InputDirectory
-    public File getClassDir() {
-        return classDir.get();
+    @InputFiles
+    public FileCollection getClassFileCollection() {
+        return classFileCollection;
     }
 
     @InputFiles
-    public Collection<File> getSourceDir() {
-        return sourceDir.get();
+    public Collection<File> getSourceFolders() {
+        return sourceFolders.get();
     }
 
     public String getReportName() {
@@ -172,8 +173,8 @@ public class JacocoReportTask extends DefaultTask {
         generateReport(
                 coverageFiles,
                 getReportDir(),
-                classDir.get(),
-                sourceDir.get(),
+                getClassFileCollection().getFiles(),
+                getSourceFolders(),
                 getTabWidth(),
                 getReportName(),
                 getLogger());
@@ -183,11 +184,12 @@ public class JacocoReportTask extends DefaultTask {
     static void generateReport(
             @NonNull List<File> coverageFiles,
             @NonNull File reportDir,
-            @NonNull File classDir,
-            @NonNull Collection<File> sourceDir,
+            @NonNull Collection<File> classFolders,
+            @NonNull Collection<File> sourceFolders,
             int tabWidth,
             @NonNull String reportName,
-            @NonNull Logger logger) throws IOException {
+            @NonNull Logger logger)
+            throws IOException {
         // Load data
         final ExecFileLoader loader = new ExecFileLoader();
         for (File coverageFile: coverageFiles) {
@@ -222,11 +224,11 @@ public class JacocoReportTask extends DefaultTask {
             final CoverageBuilder builder = new CoverageBuilder();
             final Analyzer analyzer = new Analyzer(executionDataStore, builder);
 
-            analyzeAll(analyzer, classDir);
+            analyzeAll(analyzer, classFolders);
 
             MultiSourceFileLocator locator = new MultiSourceFileLocator(0);
-            for (File file : sourceDir) {
-                locator.add(new DirectorySourceFileLocator(file, "UTF-8", tabWidth));
+            for (File folder : sourceFolders) {
+                locator.add(new DirectorySourceFileLocator(folder, "UTF-8", tabWidth));
             }
 
             final IBundleCoverage bundle = builder.getBundle(reportName);
@@ -241,13 +243,37 @@ public class JacocoReportTask extends DefaultTask {
         }
     }
 
-    private static void analyzeAll(@NonNull Analyzer analyzer, @NonNull File file)
+    private static void analyzeAll(
+            @NonNull Analyzer analyzer, @NonNull Collection<File> classFolders) throws IOException {
+        for (final File folder : classFolders) {
+            analyze(analyzer, folder, classFolders);
+        }
+    }
+
+    /**
+     * Analyzes code coverage on file if it's a class file, or recursively analyzes descendants if
+     * file is a folder.
+     *
+     * @param analyzer Jacoco Analyzer
+     * @param file a file or folder
+     * @param originalClassFolders the original collection of class folders to be analyzed; e.g.,
+     *     this.classFileCollection.getFiles(). This parameter is included to avoid redundant
+     *     computation in the case when one of the original class folders is a descendant of
+     *     another.
+     */
+    private static void analyze(
+            @NonNull Analyzer analyzer,
+            @NonNull File file,
+            @NonNull Collection<File> originalClassFolders)
             throws IOException {
         if (file.isDirectory()) {
             final File[] files = file.listFiles();
             if (files != null) {
                 for (final File f : files) {
-                    analyzeAll(analyzer, f);
+                    // check that f is not in originalClassFolders to avoid redundant computation
+                    if (!originalClassFolders.contains(f)) {
+                        analyze(analyzer, f, originalClassFolders);
+                    }
                 }
             }
         } else {
@@ -307,10 +333,13 @@ public class JacocoReportTask extends DefaultTask {
             task.coverageDirectory = TaskInputHelper.memoize(
                     () -> ((TestVariantData) scope.getVariantData()).connectedTestTask
                                     .getCoverageDir());
-            task.classDir = TaskInputHelper.memoize(
-                    () -> testedScope.getVariantData().javacTask.getDestinationDir());
-            task.sourceDir = TaskInputHelper.bypassFileSupplier(
-                    () -> testedScope.getVariantData().getJavaSourceFoldersForCoverage());
+
+            task.classFileCollection =
+                    testedScope.getOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
+
+            task.sourceFolders =
+                    TaskInputHelper.bypassFileSupplier(
+                            () -> testedScope.getVariantData().getJavaSourceFoldersForCoverage());
 
             task.setReportDir(testedScope.getCoverageReportDir());
         }
