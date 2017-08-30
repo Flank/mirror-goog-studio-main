@@ -1726,6 +1726,7 @@ class LintDriver
             files: List<File>) {
 
         val contexts = Lists.newArrayListWithExpectedSize<JavaContext>(files.size)
+        val testContexts = Lists.newArrayListWithExpectedSize<JavaContext>(files.size)
         val testFolders = project.testSourceFolders
         for (file in files) {
             if (file.isFile) {
@@ -1734,19 +1735,17 @@ class LintDriver
                     val context = JavaContext(this, project, main, file)
 
                     // Figure out if this file is a test context
-                    for (testFolder in testFolders) {
-                        if (FileUtil.isAncestor(testFolder, file, false)) {
-                            context.isTestSource = true
-                            break
-                        }
+                    if (testFolders.asSequence().any { FileUtil.isAncestor(it, file, false) }) {
+                        context.isTestSource = true
+                        testContexts.add(context)
+                    } else {
+                        contexts.add(context)
                     }
-
-                    contexts.add(context)
                 }
             }
         }
 
-        if (contexts.isEmpty()) {
+        if (contexts.isEmpty() && testContexts.isEmpty()) {
             return
         }
 
@@ -1754,7 +1753,7 @@ class LintDriver
         // as non-tests now. This gives you warnings if you're editing an individual
         // test file for example.
 
-        visitJavaFiles(checks, project, contexts, emptyList())
+        visitJavaFiles(checks, project, contexts, testContexts)
     }
 
     private var currentFolderType: ResourceFolderType? = null

@@ -890,7 +890,10 @@ abstract class LintClient {
             }
         }
 
-        return null
+        // Pick the highest compilation target we can find; the build API level
+        // is not known or not found, but having *any* SDK is better than not (without
+        // it, most symbol resolution will fail.)
+        return targets.findLast { it.isPlatform }
     }
 
     /**

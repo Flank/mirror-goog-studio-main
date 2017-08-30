@@ -20,6 +20,7 @@ import com.android.SdkConstants
 import com.android.SdkConstants.VALUE_FALSE
 import com.android.SdkConstants.VALUE_TRUE
 import com.android.sdklib.AndroidTargetHash
+import com.android.sdklib.AndroidTargetHash.PLATFORM_HASH_PREFIX
 import com.android.sdklib.SdkVersionInfo
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.client.api.IssueRegistry
@@ -37,6 +38,7 @@ import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Multimap
 import org.w3c.dom.Element
 import java.io.File
+import java.util.HashSet
 import java.util.regex.Pattern
 
 /** Regular expression used to match package statements with [ProjectInitializer.findPackage] */
@@ -147,7 +149,14 @@ private class ProjectInitializer(val client: LintClient, val file: File,
 
     /** Reports the given error message as an error to lint, with an optional element location */
     private fun reportError(message: String, element: Element? = null) {
-        val dir = file.parentFile
+        // To report an error using the lint infrastructure, we have to have
+        // an associated "project", but there isn't an actual project yet
+        // (that's what this whole class is attempting to compute and initialize).
+        // Therefore, we'll make a dummy project. A project has to have an
+        // associated directory, so we'll just randomly pick the folder containing
+        // the project.xml folder itself. (In case it's not a full path, e.g.
+        // just "project.xml", get the current directory instead.)
+        val dir = file.parentFile ?: File("").absoluteFile
         val project = Project.create(client, dir, dir)
         val location = if (element != null)
             client.xmlParser.getLocation(file, element)
@@ -218,7 +227,16 @@ private class ProjectInitializer(val client: LintClient, val file: File,
             }
         }
 
-        val sortedModules = modules.values.toMutableList()
+        val allModules = modules.values
+
+        // Partition the projects up such that we only return projects that aren't
+        // included by other projects (e.g. because they are library projects)
+        val roots = HashSet(allModules)
+        for (project in allModules) {
+            roots.removeAll(project.allLibraries)
+        }
+
+        val sortedModules = roots.toMutableList()
         sortedModules.sortBy { it.name }
 
         // Initialize the classpath. We have a single massive jar for all
@@ -327,26 +345,8 @@ private class ProjectInitializer(val client: LintClient, val file: File,
         }
 
         // Compute source roots
-        val sourceRoots = mutableListOf<File>()
-        if (!sources.isEmpty()) {
-            // Cache for each directory since computing root for a source file is
-            // expensive
-            val dirToRootCache = mutableMapOf<String, File>()
-            for (file in sources) {
-                val parent = file.parentFile ?: continue
-                val found = dirToRootCache[parent.path]
-                if (found != null) {
-                    continue
-                }
-
-                val root = findRoot(file) ?: continue
-                dirToRootCache.put(parent.path, root)
-
-                if (!sourceRoots.contains(root)) {
-                    sourceRoots.add(root)
-                }
-            }
-        }
+        val sourceRoots = computeSourceRoots(sources)
+        val testSourceRoots = computeTestSourceRoots(testSources, sourceRoots)
 
         val resourceRoots = mutableListOf<File>()
         if (!resources.isEmpty()) {
@@ -363,7 +363,7 @@ private class ProjectInitializer(val client: LintClient, val file: File,
 
         module.setManifests(manifests)
         module.setResources(resourceRoots, resources)
-        module.setTestSources(sourceRoots, testSources)
+        module.setTestSources(testSourceRoots, testSources)
         module.setSources(sourceRoots, sources)
         module.setClasspath(classes, true)
         module.setClasspath(classpath, false)
@@ -373,6 +373,65 @@ private class ProjectInitializer(val client: LintClient, val file: File,
         this.lintChecks[module] = lintChecks
         this.mergedManifests[module] = mergedManifest
         this.baselines[module] = baseline
+    }
+
+    private fun computeTestSourceRoots(testSources: MutableList<File>,
+            sourceRoots: MutableList<File>): List<File> {
+        when {
+            !testSources.isNotEmpty() -> return emptyList()
+            else -> {
+                val testSourceRoots = computeSourceRoots(testSources)
+
+                // We don't allow the test sources and product sources to overlap
+                for (root in testSourceRoots) {
+                    if (sourceRoots.contains(root)) {
+                        reportError("Tests cannot be in the same source root as production files; " +
+                                "source root $root is also a test root")
+                        break
+                    }
+                }
+
+                testSourceRoots.removeAll(sourceRoots)
+                return testSourceRoots
+            }
+        }
+    }
+
+    private fun computeSourceRoots(sources: List<File>): MutableList<File> {
+        val sourceRoots = mutableListOf<File>()
+        if (!sources.isEmpty()) {
+            // Cache for each directory since computing root for a source file is
+            // expensive
+            val dirToRootCache = mutableMapOf<String, File>()
+            for (file in sources) {
+                val parent = file.parentFile ?: continue
+                val found = dirToRootCache[parent.path]
+                if (found != null) {
+                    continue
+                }
+
+                // Find the source root for a file. There are several scenarios.
+                // Let's say the original file path is "/a/b/c/d", and findRoot
+                // returns "/a/b" - in that case, great, we'll use it.
+                //
+                // But let's say the file is in the default package; in that case
+                // findRoot returns null. Let's say the file we passed in was
+                // "src/Foo.java". In that case, we can just take its parent
+                // file, "src", as the source root.
+                // But what if the source file itself was just passed as "Foo.java" ?
+                // In that case it is relative to the pwd, so we get the *absolute*
+                // path of the file instead, and take its parent path.
+                val root = findRoot(file) ?: file.parentFile ?: file.absoluteFile.parentFile ?:
+                        continue
+
+                dirToRootCache.put(parent.path, root)
+
+                if (!sourceRoots.contains(root)) {
+                    sourceRoots.add(root)
+                }
+            }
+        }
+        return sourceRoots
     }
 
     /**
@@ -444,6 +503,7 @@ constructor(client: LintClient, dir: File, name: String, library: Boolean,
         this.library = library
         // We don't have this info yet; add support to the XML to specify it
         this.buildSdk = SdkVersionInfo.HIGHEST_KNOWN_STABLE_API
+        this.mergeManifests = true
     }
 
     /** Adds the given project as a dependency from this project */
@@ -452,6 +512,8 @@ constructor(client: LintClient, dir: File, name: String, library: Boolean,
     }
 
     override fun isAndroidProject(): Boolean = android
+
+    override fun isGradleProject(): Boolean = false
 
     override fun toString(): String = "Project [name=$name]"
 
@@ -521,7 +583,10 @@ constructor(client: LintClient, dir: File, name: String, library: Boolean,
 
     fun setCompileSdkVersion(buildApi: String) {
         if (!buildApi.isEmpty()) {
-            buildTargetHash = buildApi
+            buildTargetHash = if (Character.isDigit(buildApi[0]))
+                PLATFORM_HASH_PREFIX + buildApi
+            else
+                buildApi
             val version = AndroidTargetHash.getPlatformVersion(buildApi)
             if (version != null) {
                 buildSdk = version.featureLevel

@@ -60,6 +60,7 @@ public class LintCliFlags {
     private List<File> classes;
     private List<File> libraries;
     private List<File> resources;
+    private String compileSdkVersion;
     private File baselineFile;
 
     private File defaultConfiguration;
@@ -426,6 +427,37 @@ public class LintCliFlags {
      */
     public void setProjectDescriptorOverride(@Nullable File projectDescriptor) {
         this.projectDescriptor = projectDescriptor;
+    }
+
+    /**
+     * Gets the optional compileSdkVersion override. Normally null.
+     * <p>
+     * Normally, the compileSdkVersion (e.g. the build target version) is known by lint
+     * from the build system (it's specified explicitly in build.gradle, and in older
+     * Eclipse-based projects, in the project.properties file). However, when using
+     * third party / unsupported build systems, there's a fallback mechanism you can use
+     * specifying the set of manifests, resources and sources via dedicated flags. In those
+     * cases the compileSdkVersion is unknown. This flag lets you provide a specific
+     * dedicated version to use.
+     */
+    @Nullable
+    public String getCompileSdkVersionOverride() {
+        return compileSdkVersion;
+    }
+
+    /**
+     * Sets the optional compileSdkVersion override. Normally null.
+     * <p>
+     * Normally, the compileSdkVersion (e.g. the build target version) is known by lint
+     * from the build system (it's specified explicitly in build.gradle, and in older
+     * Eclipse-based projects, in the project.properties file). However, when using
+     * third party / unsupported build systems, there's a fallback mechanism you can use
+     * specifying the set of manifests, resources and sources via dedicated flags. In those
+     * cases the compileSdkVersion is unknown. This flag lets you provide a specific
+     * dedicated version to use.
+     */
+    public void setCompileSdkVersionOverride(@Nullable String compileSdkVersion) {
+        this.compileSdkVersion = compileSdkVersion;
     }
 
     /**

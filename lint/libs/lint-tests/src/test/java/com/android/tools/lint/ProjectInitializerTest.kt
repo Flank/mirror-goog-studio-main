@@ -123,13 +123,20 @@ public class Foo {
     <string name="string2">String 1</string>
     <string name="string2">String 2</string>
 </resources>
-""")
+"""),
+               java("test/Test.java", """
+@SuppressWarnings({"MethodMayBeStatic", "ClassNameDiffersFromFileName"})
+public class Test {
+  String path = "/sdcard/file";
+}""")
+
         ).name("App").dependsOn(library)
 
         val root = temp.newFolder()
 
         val projects = lint().projects(main, library).createProjects(root)
-        val appProjectPath = projects[0].path
+        val appProjectDir = projects[0]
+        val appProjectPath = appProjectDir.path
 
         val sdk = temp.newFolder("fake-sdk")
         val cacheDir = temp.newFolder("cache")
@@ -179,7 +186,7 @@ public class Foo {
             column="13"/>
     </issue>
 </issues>"""
-        val baseline = temp.newFile("baseline")
+        val baseline = File(appProjectDir, "baseline.xml")
         Files.asCharSink(baseline, Charsets.UTF_8).write(baselineXml)
 
         @Language("XML")
@@ -193,6 +200,7 @@ public class Foo {
             <module name="$appProjectPath:App" android="true" library="false" compile-sdk-version='18'>
               <manifest file="AndroidManifest.xml" />
               <resource file="res/values/strings.xml" />
+              <src file="test/Test.java" test="true" />
               <dep module="Library" />
             </module>
             <module name="Library" android="true" library="true" compile-sdk-version='android-M'>
@@ -215,25 +223,26 @@ public class Foo {
                     REGISTERED_PROJECT -> {
                         assertThat(project).isNotNull()
                         project!!
-                        if (project.name == "Library") {
-                            assertThat(project).isNotNull()
-                            val manifest = client.getMergedManifest(project)
-                            assertThat(manifest).isNotNull()
-                            manifest!!
-                            val permission = getFirstSubTagByName(manifest.documentElement,
-                                    "permission")!!
-                            assertThat(permission.getAttributeNS(ANDROID_URI,
-                                    ATTR_NAME)).isEqualTo("foo.permission.SEND_SMS")
-                            assertionsChecked++
+                        assertThat(project.name == "App")
+                        assertThat(project.buildSdk).isEqualTo(18)
+                        assertionsChecked++
 
-                            // compileSdkVersion=android-M -> build API=23
-                            assertThat(project.buildSdk).isEqualTo(23)
-                            assertionsChecked++
-                        } else {
-                            // App project
-                            assertThat(project.buildSdk).isEqualTo(18)
-                            assertionsChecked++
-                        }
+                        // Lib project
+                        val libProject = project.directLibraries[0]
+                        assertThat(libProject.name == "Library")
+
+                        val manifest = client.getMergedManifest(libProject)
+                        assertThat(manifest).isNotNull()
+                        manifest!!
+                        val permission = getFirstSubTagByName(manifest.documentElement,
+                                "permission")!!
+                        assertThat(permission.getAttributeNS(ANDROID_URI,
+                                ATTR_NAME)).isEqualTo("foo.permission.SEND_SMS")
+                        assertionsChecked++
+
+                        // compileSdkVersion=android-M -> build API=23
+                        assertThat(libProject.buildSdk).isEqualTo(23)
+                        assertionsChecked++
                     }
                     STARTING -> {
                         // Check extra metadata is handled right
@@ -251,8 +260,9 @@ public class Foo {
         val canonicalRoot = root.canonicalPath
 
         MainTest.checkDriver(
-
-"""../baseline: Information: 1 error were filtered out because they were listed in the baseline file, TESTROOT/baseline [LintBaseline]
+"""
+baseline.xml: Information: 1 error was filtered out because it is listed in the baseline file, baseline.xml
+ [LintBaseline]
 project.xml:5: Error: test.jar (relative to ROOT) does not exist [LintError]
 <classpath jar="test.jar" />
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -264,7 +274,8 @@ res/values/strings.xml:4: Error: string1 has already been defined in this folder
     <permission android:name="bar.permission.SEND_SMS"
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     AndroidManifest.xml:9: Previous permission here
-3 errors, 1 warnings (1 error filtered by baseline baseline)
+3 errors, 1 warnings (1 error filtered by baseline baseline.xml)
+
 """,
                 "",
 
@@ -303,8 +314,8 @@ res/values/strings.xml:4: Error: string1 has already been defined in this folder
         val projectXml = File(folder, "project.xml")
         Files.asCharSink(projectXml, Charsets.UTF_8).write(descriptor)
 
-        MainTest.checkDriver(
-"""app: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
+        MainTest.checkDriver("""
+app: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
 project.xml:3: Error: Unexpected tag unknown [LintError]
   <unknown file="foo.Bar" />
   ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -364,14 +375,17 @@ public class C {
         val descriptorFile = File(root, "project.xml")
         Files.asCharSink(descriptorFile, Charsets.UTF_8).write(descriptor)
 
-        MainTest.checkDriver(
-"""C.java:8: Error: Call requires API level 23 (current min is 15): android.app.Fragment#getHost [NewApi]
+        MainTest.checkDriver("""
+C.java:8: Error: Call requires API level 23 (current min is 15): android.app.Fragment#getHost [NewApi]
     Object host = fragment.getHost(); // Requires API 23
                            ~~~~~~~
+AndroidManifest.xml:8: Warning: Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the android.os.Build.VERSION_CODES javadoc for details. [OldTargetApi]
+        android:targetSdkVersion="22" />
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]
   String path = "/sdcard/file";
                 ~~~~~~~~~~~~~~
-1 errors, 1 warnings
+1 errors, 2 warnings
 """,
                 "",
 
