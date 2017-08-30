@@ -43,18 +43,21 @@
     <global id="Support" value="" />
     <global id="actionBarClassFqcn" type = "string" value="android.app.ActionBar" />
     <global id="kotlinActionBar" type="string" value="actionBar" />
+    <global id="kotlinFragmentManager" type="string" value="fragmentManager" />
 <#elseif appCompatActivity>
     <global id="superClass" type="string" value="AppCompatActivity"/>
     <global id="superClassFqcn" type="string" value="android.support.v7.app.AppCompatActivity"/>
     <global id="Support" value="Support" />
     <global id="actionBarClassFqcn" type = "string" value="android.support.v7.app.ActionBar" />
     <global id="kotlinActionBar" type="string" value="supportActionBar" />
+    <global id="kotlinFragmentManager" type="string" value="supportFragmentManager" />
 <#else>
     <global id="superClass" type="string" value="ActionBarActivity"/>
     <global id="superClassFqcn" type="string" value="android.support.v7.app.ActionBarActivity"/>
     <global id="Support" value="Support" />
     <global id="actionBarClassFqcn" type = "string" value="android.support.v7.app.ActionBar" />
     <global id="kotlinActionBar" type="string" value="supportActionBar" />
+    <global id="kotlinFragmentManager" type="string" value="supportFragmentManager" />
 </#if>
 
     <global id="srcOut" value="${srcDir}/${slashedPackageName(packageName)}" />
