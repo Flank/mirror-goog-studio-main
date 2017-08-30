@@ -89,7 +89,7 @@ public class JacocoReportTaskTest {
         JacocoReportTask.generateReport(
                 ImmutableList.of(coverageFile),
                 reportDir,
-                classDir,
+                ImmutableList.of(classDir),
                 ImmutableList.of(sourceRoot),
                 4,
                 "debug",
