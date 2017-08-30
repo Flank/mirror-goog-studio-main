@@ -179,6 +179,12 @@ public class LibraryTaskManager extends TaskManager {
                 variantName,
                 () -> createBuildConfigTask(tasks, variantScope));
 
+        final MergeType mergeType =
+                projectOptions.get(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING)
+                                && projectOptions.get(BooleanOption.DISABLE_RES_MERGE_IN_LIBRARY)
+                        ? MergeType.PACKAGE
+                        : MergeType.MERGE;
+
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
                 projectPath,
@@ -194,11 +200,7 @@ public class LibraryTaskManager extends TaskManager {
                             null,
                             // Switch to package where possible so we stop merging resources in
                             // libraries
-                            projectOptions.get(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING)
-                                            && projectOptions.get(
-                                                    BooleanOption.DISABLE_RES_MERGE_IN_LIBRARY)
-                                    ? MergeType.PACKAGE
-                                    : MergeType.MERGE,
+                            mergeType,
                             globalScope.getProjectBaseName());
 
                     // Only verify resources if in Release and not namespaced.
@@ -248,7 +250,7 @@ public class LibraryTaskManager extends TaskManager {
                     createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
 
                     // Add data binding tasks if enabled
-                    createDataBindingTasksIfNecessary(tasks, variantScope);
+                    createDataBindingTasksIfNecessary(tasks, variantScope, mergeType);
 
                     AndroidTask<? extends JavaCompile> javacTask =
                             createJavacTask(tasks, variantScope);
@@ -750,7 +752,6 @@ public class LibraryTaskManager extends TaskManager {
                 androidTasks.create(
                         tasks, new VerifyLibraryResourcesTask.ConfigAction(scope, mergeType));
 
-        verifyLibraryResources.dependsOn(tasks, scope.getMergeResourcesTask());
         scope.getAssembleTask().dependsOn(tasks, verifyLibraryResources);
     }
 }

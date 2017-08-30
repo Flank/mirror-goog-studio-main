@@ -964,10 +964,14 @@ public abstract class TaskManager {
         mergeResourcesTask.dependsOn(
                 tasks,
                 scope.getResourceGenTask());
-        scope.setMergeResourcesTask(mergeResourcesTask);
+
+        if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
+            scope.getCompileTask().dependsOn(tasks, mergeResourcesTask);
+        }
+
         scope.setResourceOutputDir(mergedOutputDir);
         scope.setMergeResourceOutputDir(outputLocation);
-        return scope.getMergeResourcesTask();
+        return mergeResourcesTask;
     }
 
     public AndroidTask<MergeSourceSetFolders> createMergeAssetsTask(
@@ -1810,7 +1814,6 @@ public abstract class TaskManager {
                 variantScope.getProcessJavaResourcesTask(),
                 testedVariantScope.getProcessJavaResourcesTask());
         if (extension.getTestOptions().getUnitTests().isIncludeAndroidResources()) {
-            compileTask.dependsOn(tasks, testedVariantScope.getMergeResourcesTask());
             compileTask.dependsOn(tasks, testedVariantScope.getMergeAssetsTask());
             compileTask.dependsOn(tasks, testedVariantScope.getManifestProcessorTask());
         }
@@ -1890,7 +1893,7 @@ public abstract class TaskManager {
         createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
 
         // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(tasks, variantScope);
+        createDataBindingTasksIfNecessary(tasks, variantScope, MergeType.MERGE);
 
         // Add a task to compile the test application
         AndroidTask<? extends JavaCompile> javacTask = createJavacTask(tasks, variantScope);
@@ -2694,8 +2697,8 @@ public abstract class TaskManager {
                                 task.getName()));
     }
 
-    protected void createDataBindingTasksIfNecessary(@NonNull TaskFactory tasks,
-            @NonNull VariantScope scope) {
+    protected void createDataBindingTasksIfNecessary(
+            @NonNull TaskFactory tasks, @NonNull VariantScope scope, @NonNull MergeType mergeType) {
         if (!extension.getDataBinding().isEnabled()) {
             return;
         }
@@ -2710,10 +2713,10 @@ public abstract class TaskManager {
 
         dataBindingBuilder.setDebugLogEnabled(getLogger().isDebugEnabled());
 
-        AndroidTask<DataBindingExportBuildInfoTask> exportBuildInfo = androidTasks
-                .create(tasks, new DataBindingExportBuildInfoTask.ConfigAction(scope));
+        AndroidTask<DataBindingExportBuildInfoTask> exportBuildInfo =
+                androidTasks.create(
+                        tasks, new DataBindingExportBuildInfoTask.ConfigAction(scope, mergeType));
 
-        exportBuildInfo.dependsOn(tasks, scope.getMergeResourcesTask());
         exportBuildInfo.dependsOn(tasks, scope.getSourceGenTask());
 
         scope.setDataBindingExportBuildInfoTask(exportBuildInfo);

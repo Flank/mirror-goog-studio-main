@@ -213,7 +213,7 @@ public class ApplicationTaskManager extends TaskManager {
                 () -> createMergeJniLibFoldersTasks(tasks, variantScope));
 
         // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(tasks, variantScope);
+        createDataBindingTasksIfNecessary(tasks, variantScope, MergeType.MERGE);
 
         // Add a compile task
         recorder.record(

@@ -23,6 +23,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import android.databinding.tool.LayoutXmlProcessor;
 import android.databinding.tool.processing.Scope;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -39,6 +40,8 @@ import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
@@ -60,6 +63,14 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
 
     private Supplier<FileCollection> compilerClasspath;
     private Supplier<Collection<ConfigurableFileTree>> compilerSources;
+    private FileCollection mergedResources;
+
+    @NonNull
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public FileCollection getMergedResources() {
+        return mergedResources;
+    }
 
     @TaskAction
     public void exportInfo(IncrementalTaskInputs inputs) {
@@ -124,10 +135,13 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
 
     public static class ConfigAction implements TaskConfigAction<DataBindingExportBuildInfoTask> {
 
-        private final VariantScope variantScope;
+        @NonNull private final VariantScope variantScope;
+        @NonNull private final TaskManager.MergeType mergeType;
 
-        public ConfigAction(VariantScope variantScope) {
+        public ConfigAction(
+                @NonNull VariantScope variantScope, @NonNull TaskManager.MergeType mergeType) {
             this.variantScope = variantScope;
+            this.mergeType = mergeType;
         }
 
         @NonNull
@@ -162,6 +176,7 @@ public class DataBindingExportBuildInfoTask extends DefaultTask {
                                                     .equals(input.getDir()))
                                     .collect(Collectors.toList());
 
+            task.mergedResources = variantScope.getOutput(mergeType.getOutputType());
             task.setExportClassListTo(variantData.getType().isExportDataBindingClassList() ?
                     variantScope.getGeneratedClassListOutputFileForDataBinding() : null);
             task.setDataBindingClassOutput(variantScope.getClassOutputForDataBinding());

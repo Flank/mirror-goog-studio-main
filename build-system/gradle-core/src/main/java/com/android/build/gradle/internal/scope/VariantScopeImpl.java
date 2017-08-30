@@ -1698,18 +1698,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Override
     @Nullable
-    public AndroidTask<MergeResources> getMergeResourcesTask() {
-        return mergeResourcesTask;
-    }
-
-    @Override
-    public void setMergeResourcesTask(
-            @Nullable AndroidTask<MergeResources> mergeResourcesTask) {
-        this.mergeResourcesTask = mergeResourcesTask;
-    }
-
-    @Override
-    @Nullable
     public AndroidTask<MergeSourceSetFolders> getMergeAssetsTask() {
         return mergeAssetsTask;
     }

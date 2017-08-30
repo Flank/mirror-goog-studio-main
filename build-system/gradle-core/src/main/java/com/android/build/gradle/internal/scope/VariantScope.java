@@ -387,11 +387,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     void setAidlCompileTask(AndroidTask<AidlCompile> aidlCompileTask);
 
     @Nullable
-    AndroidTask<MergeResources> getMergeResourcesTask();
-
-    void setMergeResourcesTask(@Nullable AndroidTask<MergeResources> mergeResourcesTask);
-
-    @Nullable
     AndroidTask<MergeSourceSetFolders> getMergeAssetsTask();
 
     void setMergeAssetsTask(@Nullable AndroidTask<MergeSourceSetFolders> mergeAssetsTask);

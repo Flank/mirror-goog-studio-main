@@ -212,9 +212,12 @@ public class MergeResources extends IncrementalTask {
     protected void doFullTaskAction() throws IOException, ExecutionException, JAXBException {
         ResourcePreprocessor preprocessor = getPreprocessor();
 
-        // this is full run, clean the previous output
+        // this is full run, clean the previous outputs
         File destinationDir = getOutputDir();
         FileUtils.cleanOutputDir(destinationDir);
+        if (dataBindingLayoutInfoOutFolder != null) {
+            FileUtils.deleteDirectoryContents(dataBindingLayoutInfoOutFolder);
+        }
 
         List<ResourceSet> resourceSets = getConfiguredResourceSets(preprocessor);
 
