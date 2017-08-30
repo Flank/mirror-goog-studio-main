@@ -75,21 +75,16 @@ public final class PathUtils {
 
     @NonNull
     public static Path createTmpToRemoveOnShutdown(@NonNull String prefix) throws IOException {
-        Path tmp = Files.createTempFile(prefix, "");
-        Runtime.getRuntime()
-                .addShutdownHook(
-                        new Thread() {
-                            @Override
-                            public void run() {
-                                try {
-                                    Files.deleteIfExists(tmp);
-                                } catch (IOException e) {
-                                    Logger.getLogger(PathUtils.class.getName())
-                                            .log(Level.WARNING, "Unable to delete " + tmp, e);
-                                }
-                            }
-                        });
-        return tmp;
+        Path tmpFile = Files.createTempFile(prefix, "");
+        addRemovePathHook(tmpFile);
+        return tmpFile;
+    }
+
+    @NonNull
+    public static Path createTmpDirToRemoveOnShutdown(@NonNull String prefix) throws IOException {
+        Path tmpDir = Files.createTempDirectory(prefix);
+        addRemovePathHook(tmpDir);
+        return tmpDir;
     }
 
     @NonNull
@@ -119,5 +114,19 @@ public final class PathUtils {
         }
 
         return classPathJars;
+    }
+
+    private static void addRemovePathHook(@NonNull Path path) {
+        Runtime.getRuntime()
+                .addShutdownHook(
+                        new Thread(
+                                () -> {
+                                    try {
+                                        PathUtils.deleteIfExists(path);
+                                    } catch (IOException e) {
+                                        Logger.getLogger(PathUtils.class.getName())
+                                                .log(Level.WARNING, "Unable to delete " + path, e);
+                                    }
+                                }));
     }
 }
