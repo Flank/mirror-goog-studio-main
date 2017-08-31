@@ -55,7 +55,6 @@ import com.android.utils.XmlUtils
 import com.google.common.annotations.Beta
 import com.google.common.base.Charsets.UTF_8
 import com.google.common.base.Splitter
-import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import com.google.common.io.Files
@@ -1102,7 +1101,7 @@ abstract class LintClient {
                 // rules applicable to the file
                 val variant = project.currentVariant
                 if (variant != null) {
-                    val rules = Lists.newArrayListWithExpectedSize<File>(4)
+                    val rules = ArrayList<File>(4)
                     addLintJarsFromDependencies(rules, variant.mainArtifact.dependencies.libraries,
                             mutableSetOf())
                     if (!rules.isEmpty()) {
@@ -1228,19 +1227,11 @@ abstract class LintClient {
     open fun addCustomLintRules(registry: IssueRegistry): IssueRegistry {
         val jarFiles = findGlobalRuleJars()
 
-        if (!jarFiles.isEmpty()) {
-            val registries = Lists.newArrayListWithExpectedSize<IssueRegistry>(jarFiles.size)
-            registries.add(registry)
-            for (jarFile in jarFiles) {
-                try {
-                    registries.add(JarFileIssueRegistry.get(this, jarFile))
-                } catch (e: Throwable) {
-                    log(e, "Could not load custom rule jar file %1\$s", jarFile)
-                }
 
-            }
-            if (registries.size > 1) { // the first item is the passed in registry itself
-                return CompositeIssueRegistry(registries)
+        if (!jarFiles.isEmpty()) {
+            val extraRegistries = JarFileIssueRegistry.get(this, jarFiles)
+            if (extraRegistries.isNotEmpty()) {
+                return JarFileIssueRegistry.join(registry, *extraRegistries.toTypedArray())
             }
         }
 

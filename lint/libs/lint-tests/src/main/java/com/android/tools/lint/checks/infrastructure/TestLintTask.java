@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -851,16 +852,11 @@ public class TestLintTask {
 
             if (customRules != null) {
                 TestLintClient client = createClient();
-                for (File jar : customRules) {
-                    if (jar.isFile() && SdkUtils.endsWithIgnoreCase(jar.getPath(), DOT_JAR)) {
-                        try {
-                            JarFileIssueRegistry registry = JarFileIssueRegistry.get(client, jar);
-                            return checkedIssues = registry.getIssues();
-                        } catch (Throwable t) {
-                            client.log(t, null);
-                        }
-                    }
-                }
+                List<JarFileIssueRegistry> registries =
+                        JarFileIssueRegistry.Factory.get(client, Arrays.asList(customRules));
+                IssueRegistry[] array = registries.toArray(new IssueRegistry[0]);
+                IssueRegistry all = JarFileIssueRegistry.Factory.join(array);
+                return checkedIssues = all.getIssues();
             }
 
             if (detector != null){
