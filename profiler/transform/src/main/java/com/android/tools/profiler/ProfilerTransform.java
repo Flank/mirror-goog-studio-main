@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler;
 
+import com.android.tools.profiler.io.IoAdapter;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -40,7 +41,9 @@ public final class ProfilerTransform implements BiConsumer<InputStream, OutputSt
 
     private static final Properties PROPERTIES = loadTransformProperties();
     private static final boolean OKHTTP_PROFILING_ENABLED =
-            "true".equals(PROPERTIES.getProperty("android.profiler.okhttp.enabled"));
+        "true".equals(PROPERTIES.getProperty("android.profiler.okhttp.enabled"));
+    private static final boolean IO_PROFILING_ENABLED = "true"
+        .equals(PROPERTIES.getProperty("android.profiler.io.enabled"));
 
     private static Logger getLog() {
         return Logger.getLogger(ProfilerTransform.class.getName());
@@ -54,6 +57,9 @@ public final class ProfilerTransform implements BiConsumer<InputStream, OutputSt
         visitor = new HttpURLAdapter(visitor);
         if (OKHTTP_PROFILING_ENABLED) {
             visitor = new OkHttpAdapter(visitor);
+        }
+        if (IO_PROFILING_ENABLED) {
+            visitor = IoAdapter.addIoAdapters(visitor);
         }
 
         try {
