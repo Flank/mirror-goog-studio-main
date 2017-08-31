@@ -1995,9 +1995,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             // This applies only to the package scope since we do want these in the compile
             // scope in order to compile.
             // We only do this for the AndroidTest.
+            // We do have to however keep the Android resources.
             if (tested instanceof ApplicationVariantData
                     && configType == RUNTIME_CLASSPATH
-                    && variantType == VariantType.ANDROID_TEST) {
+                    && variantType == VariantType.ANDROID_TEST
+                    && artifactType != ArtifactType.ANDROID_RES) {
                 result =
                         minusFunction.apply(
                                 result,
