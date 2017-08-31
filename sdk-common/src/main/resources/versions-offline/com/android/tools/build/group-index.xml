@@ -1,14 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <com.android.tools.build>
-  <gradle-experimental versions="0.11.0-beta3"/>
-  <manifest-merger versions="26.0.0-beta3"/>
-  <gradle-api versions="3.0.0-beta3"/>
+  <gradle-experimental versions="0.11.0-beta2"/>
+  <manifest-merger versions="26.0.0-beta2"/>
+  <gradle-api versions="3.0.0-beta2"/>
   <transform-api versions="2.0.0-deprecated-use-gradle-api,2.0.0-deprecated-use-gradle-api"/>
-  <apksig versions="3.0.0-beta3"/>
-  <builder-test-api versions="3.0.0-beta3"/>
-  <gradle versions="3.0.0-beta3"/>
-  <builder versions="3.0.0-beta3"/>
-  <builder-model versions="3.0.0-beta3"/>
-  <gradle-core versions="3.0.0-beta3"/>
+  <apksig versions="3.0.0-beta2"/>
+  <builder-test-api versions="3.0.0-beta2"/>
+  <gradle versions="3.0.0-beta2"/>
+  <builder versions="3.0.0-beta2"/>
+  <builder-model versions="3.0.0-beta2"/>
+  <gradle-core versions="3.0.0-beta2"/>
 </com.android.tools.build>
 

@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <com.android.tools.lint>
-  <lint-tests versions="26.0.0-beta3"/>
-  <lint-api versions="26.0.0-beta3"/>
-  <lint-checks versions="26.0.0-beta3"/>
-  <lint versions="26.0.0-beta3"/>
+  <lint-tests versions="26.0.0-beta2"/>
+  <lint-api versions="26.0.0-beta2"/>
+  <lint-checks versions="26.0.0-beta2"/>
+  <lint versions="26.0.0-beta2"/>
 </com.android.tools.lint>
 
