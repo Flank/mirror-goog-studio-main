@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.helpers
 
+import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.UastParser
 import com.android.tools.lint.detector.api.JavaContext
@@ -23,6 +24,7 @@ import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.util.TextRange
+import com.intellij.openapi.util.io.FileUtilRt
 import com.intellij.openapi.vfs.StandardFileSystems
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.psi.PsiCompiledElement
@@ -30,6 +32,8 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiNameIdentifierOwner
+import com.intellij.psi.PsiPlainText
+import com.intellij.psi.PsiPlainTextFile
 import com.intellij.psi.impl.light.LightElement
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
@@ -103,6 +107,24 @@ open class DefaultUastParser(
                 .findFileByPath(context.file.absolutePath) ?: return null
 
         val psiFile = PsiManager.getInstance(ideaProject).findFile(virtualFile) ?: return null
+
+        if (psiFile is PsiPlainTextFile) { // plain text: file too large to process with PSI
+            if (!warnedAboutLargeFiles) {
+                warnedAboutLargeFiles = true
+                val max = FileUtilRt.getUserFileSizeLimit()
+                val size = context.file.length() / 1024
+                val sizeRoundedUp = Math.pow(2.0,
+                        Math.ceil(Math.log10(size.toDouble()) / Math.log10(2.0) + 0.2)).toInt()
+                context.report(
+                        issue = IssueRegistry.LINT_ERROR,
+                        location = Location.create(context.file),
+                        message = "Source file too large for lint to process (${size}KB); the " +
+                                "current max size is ${max}KB. You can increase the limit by " +
+                                "setting this system property: " +
+                                "`idea.max.intellisense.filesize=${sizeRoundedUp}` (or even higher)")
+            }
+            return null
+        }
 
         return uastContext.convertElementWithParent(psiFile, UFile::class.java) as? UFile ?:
                 // No need to log this; the parser should be reporting
@@ -447,5 +469,9 @@ open class DefaultUastParser(
         }
 
         return getLocation(context, namedElement)
+    }
+
+    companion object {
+        var warnedAboutLargeFiles = false
     }
 }
