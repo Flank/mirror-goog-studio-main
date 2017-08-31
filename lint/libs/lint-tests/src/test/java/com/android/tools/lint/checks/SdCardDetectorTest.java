@@ -28,11 +28,14 @@ import com.android.tools.lint.helpers.DefaultUastParser;
 import com.intellij.lang.java.JavaLanguage;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiFileFactory;
+import org.intellij.lang.annotations.Language;
 import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UastContext;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class SdCardDetectorTest extends AbstractCheckTest {
+    private static final String IDEA_MAX_INTELLISENSE_FILESIZE = "idea.max.intellisense.filesize";
+
     @Override
     protected Detector getDetector() {
         return new SdCardDetector();
@@ -388,7 +391,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "0 errors, 1 warnings\n");
     }
 
-    public void testGenericsInSignatures() throws Exception {
+    public void testGenericsInSignatures() {
         //noinspection all // Sample code
         lint().files(
                 java("" +
@@ -407,5 +410,51 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         "    public String foo = \"/sdcard/foo\"; }\n" +
                         "                        ~~~~~~~~~~~~~\n" +
                         "0 errors, 1 warnings\n");
+    }
+
+    public void testLargeFiles() {
+        int max = 2600 * 1024;
+        StringBuilder large = new StringBuilder(max + 100); // default is 2500
+        large.append("" +
+                "package test.pkg;\n" +
+                "class VeryLarge {\n");
+        for (int i = 0; i < max; i++) {
+            large.append(' ');
+        }
+        large.append("\n}");
+
+        @Language("JAVA")
+        String javaSource = large.toString();
+
+        lint()
+                .files(java("src/test/pkg/VeryLarge.java", javaSource),
+                        // Make sure we only report the error once!
+                        java("src/test/pkg/VeryLarge2.java", javaSource))
+                .allowSystemErrors(true)
+                .allowCompilationErrors()
+                .run()
+                .expect("src/test/pkg/VeryLarge.java: Error: Source file too large for lint to " +
+                        "process (2600KB); the current max size is 2560000KB. You can increase " +
+                        "the limit by setting this system property: " +
+                        "idea.max.intellisense.filesize=4096 (or even higher) [LintError]\n" +
+                        "1 errors, 0 warnings\n");
+
+        // Bump up the file limit and make sure it no longer complains!
+        String prev = System.getProperty("idea.max.intellisense.filesize");
+        try {
+            System.setProperty(IDEA_MAX_INTELLISENSE_FILESIZE, "4096");
+            lint()
+                    .files(java("src/test/pkg/VeryLarge.java", javaSource))
+                    .allowSystemErrors(true)
+                    .allowCompilationErrors()
+                    .run()
+                    .expectClean();
+        } finally {
+            if (prev != null) {
+                System.setProperty(IDEA_MAX_INTELLISENSE_FILESIZE, prev);
+            } else {
+                System.clearProperty(IDEA_MAX_INTELLISENSE_FILESIZE);
+            }
+        }
     }
 }
