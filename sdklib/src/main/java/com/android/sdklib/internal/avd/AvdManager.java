@@ -45,6 +45,7 @@ import com.android.sdklib.internal.project.ProjectProperties;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.IdDisplay;
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
+import com.android.sdklib.repository.targets.SystemImage;
 import com.android.utils.GrabProcessOutput;
 import com.android.utils.GrabProcessOutput.IProcessOutput;
 import com.android.utils.GrabProcessOutput.Wait;
@@ -166,6 +167,9 @@ public class AvdManager {
      * AVD/config.ini key name representing the name of the device this avd was based on.
      */
     public static final String AVD_INI_DEVICE_NAME = "hw.device.name"; //$NON-NLS-1$
+
+    /** AVD/config.ini key name representing if it's Chrome OS (App Runtime for Chrome). */
+    public static final String AVD_INI_ARC = "hw.arc";
 
     /**
      * AVD/config.ini key name representing the display name of the AVD
@@ -829,6 +833,7 @@ public class AvdManager {
             configValues.put(AVD_INI_TAG_DISPLAY, tag.getDisplay());
             configValues.put(AVD_INI_ABI_TYPE, systemImage.getAbiType());
             configValues.put(AVD_INI_PLAYSTORE_ENABLED, Boolean.toString(deviceHasPlayStore && systemImage.hasPlayStore()));
+            configValues.put(AVD_INI_ARC, Boolean.toString(SystemImage.CHROMEOS_TAG.equals(tag)));
 
             writeCpuArch(systemImage, configValues, log);
 
@@ -1856,7 +1861,16 @@ public class AvdManager {
         String abiType = systemImage.getAbiType();
         Abi abi = Abi.getEnum(abiType);
         if (abi != null) {
-            values.put(AVD_INI_CPU_ARCH, abi.getCpuArch());
+            String arch = abi.getCpuArch();
+            // Chrome OS image is a speical case: the system image
+            // is actually x86_64 while the android container inside
+            // it is x86. We have to set it x86_64 to let it boot
+            // under android emulator.
+            if (arch.equals(SdkConstants.CPU_ARCH_INTEL_ATOM)
+                    && SystemImage.CHROMEOS_TAG.equals(systemImage.getTag())) {
+                arch = SdkConstants.CPU_ARCH_INTEL_ATOM64;
+            }
+            values.put(AVD_INI_CPU_ARCH, arch);
 
             String model = abi.getCpuModel();
             if (model != null) {
