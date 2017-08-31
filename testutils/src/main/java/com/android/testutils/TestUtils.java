@@ -141,27 +141,35 @@ public class TestUtils {
         // root they provide us.
         String workspace = System.getenv("TEST_WORKSPACE");
         String workspaceParent = System.getenv("TEST_SRCDIR");
+        File currDir = new File("");
+        File lastCandidate = null;
         if (workspace != null && workspaceParent != null) {
-            return new File(workspaceParent, workspace);
+            currDir = new File(workspaceParent, workspace);
+            lastCandidate = currDir;
         }
+        File initialDir = currDir;
 
-        // If here, we're using a non-Bazel build system. At this point, assume our working
+        // If we're using a non-Bazel build system. At this point, assume our working
         // directory is located underneath our codebase's root folder, so keep navigating up until
-        // we find it.
-        File pwd = new File("");
-        File currDir = pwd;
-        while (!new File(currDir, "WORKSPACE").exists()) {
-            currDir = currDir.getAbsoluteFile().getParentFile();
-
-            if (currDir == null) {
-                throw new IllegalStateException(
-                        "Could not find WORKSPACE root. Is the original working directory a " +
-                                "subdirectory of the Android Studio codebase?\n\n" +
-                                "pwd = " + pwd.getAbsolutePath());
+        // we find it. If we're using Bazel, we should still look to see if there's a larger
+        // outermost workspace since we might be within a nested workspace.
+        while (currDir != null) {
+            currDir = currDir.getAbsoluteFile();
+            if (new File(currDir, "WORKSPACE").exists()) {
+                lastCandidate = currDir;
             }
+            currDir = currDir.getParentFile();
         }
 
-        return currDir;
+        if (lastCandidate == null) {
+            throw new IllegalStateException(
+                    "Could not find WORKSPACE root. Is the original working directory a "
+                            + "subdirectory of the Android Studio codebase?\n\n"
+                            + "pwd = "
+                            + initialDir.getAbsolutePath());
+        }
+
+        return lastCandidate;
     }
 
     /**
