@@ -66,8 +66,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                         + "-     <font\n"
                         + "-         android:fontStyle=\"normal\"\n"
                         + "-         android:fontWeight=\"400\"\n"
-                        + "-         android:font=\"@font/monserrat\" />\n"
-                        + "+    \n";
+                        + "-         android:font=\"@font/monserrat\" />\n";
         //noinspection all // Sample code
         lint().files(
                         xml(
