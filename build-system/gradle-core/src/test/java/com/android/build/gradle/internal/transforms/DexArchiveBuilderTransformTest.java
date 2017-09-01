@@ -29,7 +29,6 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
@@ -336,6 +335,70 @@ public class DexArchiveBuilderTransformTest {
         Truth.assertThat(FileUtils.getAllFiles(out.toFile())).isEmpty();
     }
 
+    /** Regression test for b/65241720. */
+    @Test
+    public void testIncrementalWithSharding() throws Exception {
+        File cacheDir = FileUtils.join(tmpDir.getRoot(), "cache");
+        FileCache userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
+        Path input = tmpDir.getRoot().toPath().resolve("classes.jar");
+        TestInputsGenerator.jarWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"));
+
+        TransformInput jarInput =
+                TransformTestHelper.singleJarBuilder(input.toFile())
+                        .setStatus(Status.ADDED)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
+
+        TransformInvocation noCacheInvocation =
+                TransformTestHelper.invocationBuilder()
+                        .setInputs(jarInput)
+                        .setIncremental(false)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .build();
+
+        DexArchiveBuilderTransform noCacheTransform = getTransform(userCache);
+        noCacheTransform.transform(noCacheInvocation);
+        MoreTruth.assertThat(out.resolve("classes.jar.jar")).doesNotExist();
+
+        // clean the output of the previous transform
+        FileUtils.cleanOutputDir(out.toFile());
+
+        TransformInvocation fromCacheInvocation =
+                TransformTestHelper.invocationBuilder()
+                        .setInputs(jarInput)
+                        .setIncremental(true)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .build();
+        DexArchiveBuilderTransform fromCacheTransform = getTransform(userCache);
+        fromCacheTransform.transform(fromCacheInvocation);
+        assertThat(FileUtils.getAllFiles(out.toFile())).hasSize(1);
+        MoreTruth.assertThat(out.resolve("classes.jar.jar")).exists();
+
+        // modify the file so it is not a build cache hit any more
+        Files.deleteIfExists(input);
+        TestInputsGenerator.jarWithEmptyClasses(input, ImmutableList.of("test/C"));
+
+        TransformInput changedInput =
+                TransformTestHelper.singleJarBuilder(input.toFile())
+                        .setStatus(Status.CHANGED)
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .setContentTypes(QualifiedContent.DefaultContentType.CLASSES)
+                        .build();
+        TransformInvocation changedInputInvocation =
+                TransformTestHelper.invocationBuilder()
+                        .setInputs(changedInput)
+                        .setIncremental(true)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .build();
+        DexArchiveBuilderTransform changedInputTransform = getTransform(userCache);
+        changedInputTransform.transform(changedInputInvocation);
+        MoreTruth.assertThat(out.resolve("classes.jar.jar")).doesNotExist();
+    }
+
     @NonNull
     private DexArchiveBuilderTransform getTransform(
             @Nullable FileCache userCache, int minSdkVersion, boolean isDebuggable) {
@@ -361,17 +424,6 @@ public class DexArchiveBuilderTransformTest {
         assertThat(files).isNotNull();
         return files.length;
 
-    }
-
-    @NonNull
-    private TransformInvocation getInvocation(
-            @NonNull Collection<TransformInput> inputs,
-            @NonNull TransformOutputProvider outputProvider) {
-        return new TransformInvocationBuilder(context)
-                .addInputs(inputs)
-                .addOutputProvider(outputProvider)
-                .setIncrementalMode(true)
-                .build();
     }
 
     @NonNull
