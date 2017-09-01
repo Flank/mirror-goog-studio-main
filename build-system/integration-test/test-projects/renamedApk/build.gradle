@@ -15,7 +15,13 @@ android {
 }
 
 android.applicationVariants.all { variant ->
-    variant.outputs.all {
+    variant.outputs.all { output ->
+        try {
+            outputFileName = new File(output.outputFile.parent, "foo")
+            throw new RuntimeException("setting an absolute path to outputFileName not caught")
+        } catch (GradleException e) {
+            // expected
+        }
         outputFileName = "${variant.name}.apk"
     }
 }
