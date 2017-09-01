@@ -342,7 +342,8 @@ public class LintFix {
         /** Constructs a {@link LintFix} for this string replacement */
         @NonNull
         public LintFix build() {
-            return new ReplaceString(displayName, oldText, oldPattern, newText, shortenNames,
+            return new ReplaceString(displayName, oldText, oldPattern,
+                    newText != null ? newText : "", shortenNames,
                     reformat);
         }
     }

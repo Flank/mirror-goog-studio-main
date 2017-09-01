@@ -24,6 +24,7 @@ import static com.android.tools.lint.checks.GradleDetector.COMPATIBILITY;
 import static com.android.tools.lint.checks.GradleDetector.DEPENDENCY;
 import static com.android.tools.lint.checks.GradleDetector.DEPRECATED;
 import static com.android.tools.lint.checks.GradleDetector.DEV_MODE_OBSOLETE;
+import static com.android.tools.lint.checks.GradleDetector.DUPLICATE_CLASSES;
 import static com.android.tools.lint.checks.GradleDetector.GRADLE_GETTER;
 import static com.android.tools.lint.checks.GradleDetector.GRADLE_PLUGIN_COMPATIBILITY;
 import static com.android.tools.lint.checks.GradleDetector.HIGH_APP_VERSION_CODE;
@@ -68,7 +69,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Predicate;
 import org.codehaus.groovy.ast.ASTNode;
 import org.codehaus.groovy.ast.CodeVisitorSupport;
@@ -258,7 +258,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
         }
     }
 
-    public void test() throws Exception {
+    public void testBasic() throws Exception {
         String expected = ""
                 + "build.gradle:25: Error: This support library should not use a different version (13) than the compileSdkVersion (19) [GradleCompatible]\n"
                 + "    compile 'com.android.support:appcompat-v7:13.0.0'\n"
@@ -1988,6 +1988,97 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testDuplicateWarnings() {
+        lint().projects(
+                project(
+                        gradle("dependencies {\n" +
+                                "    implementation 'my.indirect.dependency:myname:1.2.3'\n" +
+                                "    implementation 'xpp3:xpp3:1.1.4c'\n" +
+                                "    implementation 'commons-logging:commons-logging:1.2'\n" +
+                                "    implementation 'xerces:xmlParserAPIs:2.6.2'\n" +
+                                "    implementation 'org.json:json:20170516'\n" +
+                                "    implementation 'org.khronos:opengl-api:gl1.1-android-2.1_r1'\n" +
+                                "    implementation 'com.google.android:android:4.1.1.4'\n" +
+                                // Multi-line scenario:
+                                "    compile group: 'org.apache.httpcomponents',\n" +
+                                "        name: 'httpclient',\n" +
+                                "        version: '4.5.3'\n" +
+                                "}\n"))
+                        .withDependencyGraph("" +
+                                "+--- my.indirect.dependency:myname:1.2.3\n" +
+                                "|    \\--- org.json:json:20170516\n" +
+                                "+--- commons-logging:commons-logging:1.2\n" +
+                                "+--- org.apache.httpcomponents:httpclient:4.5.3\n" +
+                                "|    +--- org.apache.httpcomponents:httpcore:4.4.6\n" +
+                                "|    +--- commons-logging:commons-logging:1.2\n" +
+                                "|    \\--- commons-codec:commons-codec:1.9\n" +
+                                "+--- xpp3:xpp3:1.1.4c\n" +
+                                "+--- xerces:xmlParserAPIs:2.6.2\n" +
+                                "+--- org.json:json:20170516\n" +
+                                "+--- org.khronos:opengl-api:gl1.1-android-2.1_r1\n" +
+                                "\\--- com.google.android:android:4.1.1.4\n" +
+                                "     +--- commons-logging:commons-logging:1.1.1 -> 1.2\n" +
+                                "     +--- org.apache.httpcomponents:httpclient:4.0.1 -> 4.5.3 (*)\n" +
+                                "     +--- org.khronos:opengl-api:gl1.1-android-2.1_r1\n" +
+                                "     +--- xerces:xmlParserAPIs:2.6.2\n" +
+                                "     +--- xpp3:xpp3:1.1.4c\n" +
+                                "     \\--- org.json:json:20080701 -> 20170516"))
+                .issues(DUPLICATE_CLASSES)
+                .run()
+                .expect("build.gradle:2: Error: myname depends on a library (json) which defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. Dependency chain: my.indirect.dependency:myname → org.json:json)  [DuplicatePlatformClasses]\n" +
+                        "    implementation 'my.indirect.dependency:myname:1.2.3'\n" +
+                        "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "build.gradle:3: Error: xpp3 defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. [DuplicatePlatformClasses]\n" +
+                        "    implementation 'xpp3:xpp3:1.1.4c'\n" +
+                        "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "build.gradle:4: Error: commons-logging defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. [DuplicatePlatformClasses]\n" +
+                        "    implementation 'commons-logging:commons-logging:1.2'\n" +
+                        "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "build.gradle:5: Error: xmlParserAPIs defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. [DuplicatePlatformClasses]\n" +
+                        "    implementation 'xerces:xmlParserAPIs:2.6.2'\n" +
+                        "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "build.gradle:6: Error: json defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. [DuplicatePlatformClasses]\n" +
+                        "    implementation 'org.json:json:20170516'\n" +
+                        "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "build.gradle:7: Error: opengl-api defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. [DuplicatePlatformClasses]\n" +
+                        "    implementation 'org.khronos:opengl-api:gl1.1-android-2.1_r1'\n" +
+                        "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "build.gradle:8: Error: android depends on a library (json) which defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. Dependency chain: com.google.android:android → org.json:json)  [DuplicatePlatformClasses]\n" +
+                        "    implementation 'com.google.android:android:4.1.1.4'\n" +
+                        "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "build.gradle:9: Error: httpclient depends on a library (commons-logging) which defines classes that conflict with classes now provided by Android. Solutions include finding newer versions or alternative libraries that don't have the same problem (for example, for httpclient use HttpUrlConnection or okhttp instead), or repackaging the library using something like jarjar. Dependency chain: org.apache.httpcomponents:httpclient → commons-logging:commons-logging)  [DuplicatePlatformClasses]\n" +
+                        "    compile group: 'org.apache.httpcomponents',\n" +
+                        "    ^\n" +
+                        "8 errors, 0 warnings\n")
+                .expectFixDiffs("" +
+                        "Fix for build.gradle line 1: Delete dependency:\n" +
+                        "@@ -2 +2\n" +
+                        "-     implementation 'my.indirect.dependency:myname:1.2.3'\n" +
+                        "Fix for build.gradle line 2: Delete dependency:\n" +
+                        "@@ -3 +3\n" +
+                        "-     implementation 'xpp3:xpp3:1.1.4c'\n" +
+                        "Fix for build.gradle line 3: Delete dependency:\n" +
+                        "@@ -4 +4\n" +
+                        "-     implementation 'commons-logging:commons-logging:1.2'\n" +
+                        "Fix for build.gradle line 4: Delete dependency:\n" +
+                        "@@ -5 +5\n" +
+                        "-     implementation 'xerces:xmlParserAPIs:2.6.2'\n" +
+                        "Fix for build.gradle line 5: Delete dependency:\n" +
+                        "@@ -6 +6\n" +
+                        "-     implementation 'org.json:json:20170516'\n" +
+                        "Fix for build.gradle line 6: Delete dependency:\n" +
+                        "@@ -7 +7\n" +
+                        "-     implementation 'org.khronos:opengl-api:gl1.1-android-2.1_r1'\n" +
+                        "Fix for build.gradle line 7: Delete dependency:\n" +
+                        "@@ -8 +8\n" +
+                        "-     implementation 'com.google.android:android:4.1.1.4'\n" +
+                        "Fix for build.gradle line 8: Delete dependency:\n" +
+                        "@@ -9 +9\n" +
+                        "-     compile group: 'org.apache.httpcomponents',\n" +
+                        "-         name: 'httpclient',\n" +
+                        "-         version: '4.5.3'\n");
+    }
+
     // -------------------------------------------------------------------------------------------
     // Test infrastructure below here
     // -------------------------------------------------------------------------------------------
@@ -2006,13 +2097,6 @@ public class GradleDetectorTest extends AbstractCheckTest {
     @Override
     protected Detector getDetector() {
         return new GroovyGradleDetector();
-    }
-
-    private Set<Issue> mEnabled;
-
-    @Override
-    protected boolean isEnabled(Issue issue) {
-        return super.isEnabled(issue) && (mEnabled == null || mEnabled.contains(issue));
     }
 
     // Copy of com.android.build.gradle.tasks.GroovyGradleDetector (with "static" added as
@@ -2059,6 +2143,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 // handle. This happens for example when running lint in build-system/tests/api/.
                 // This is a lint limitation rather than a user error, so don't complain
                 // about these. Consider reporting a Issue#LINT_ERROR.
+                //noinspection resource
                 StringWriter writer = new StringWriter();
                 t.printStackTrace(new PrintWriter(writer));
                 fail(writer.toString());

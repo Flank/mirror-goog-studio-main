@@ -32,8 +32,10 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
+import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
+import com.android.builder.model.Library;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.Variant;
 import com.android.ide.common.repository.GoogleMavenRepository;
@@ -71,6 +73,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -326,6 +329,25 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             Category.PERFORMANCE,
             2,
             Severity.WARNING,
+            IMPLEMENTATION);
+
+    /** Duplicate HTTP classes */
+    public static final Issue DUPLICATE_CLASSES = Issue.create(
+            "DuplicatePlatformClasses",
+            "Duplicate Platform Classes",
+            "There are a number of libraries that duplicate not just functionality of the " +
+            "Android platform but using the exact same class names as the ones provided " +
+            "in Android -- for example the apache http classes. This can lead to unexpected " +
+            "crashes.\n" +
+            "\n" +
+            "To solve this, you need to either find a newer version of the library which " +
+            "no longer has this problem, or to repackage the library (and all of its " +
+            "dependencies) using something like the `jarjar` tool, or finally, rewriting " +
+            "the code to use different APIs (for example, for http code, consider using " +
+            "`HttpUrlConnection` or a library like `okhttp`.)",
+            Category.CORRECTNESS,
+            8,
+            Severity.FATAL,
             IMPLEMENTATION);
 
     /** The Gradle plugin ID for Android applications */
@@ -613,7 +635,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
                             report(context, valueCookie, PLUS, message, fix);
                         }
 
-                        checkDependency(context, gc, isResolved, valueCookie);
+                        checkDependency(context, gc, isResolved, valueCookie, statementCookie);
                     }
                 }
             }
@@ -925,10 +947,11 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     }
 
     private void checkDependency(
-            @NonNull Context context,
-            @NonNull GradleCoordinate dependency,
-            boolean isResolved,
-            @NonNull Object cookie) {
+        @NonNull Context context,
+        @NonNull GradleCoordinate dependency,
+        boolean isResolved,
+        @NonNull Object cookie,
+        @NonNull Object statementCookie) {
         GradleVersion version = dependency.getVersion();
         String groupId = dependency.getGroupId();
         String artifactId = dependency.getArtifactId();
@@ -1058,6 +1081,16 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             }
         }
 
+        BlacklistedDeps blacklistedDeps = blacklisted.get(context.getProject());
+        List<Library> path = blacklistedDeps.checkDependency(groupId, artifactId, true);
+        if (path != null) {
+            String message = getBlacklistedDependencyMessage(context, path);
+            if (message != null) {
+                LintFix fix = fix().name("Delete dependency").replace().all().build();
+                report(context, statementCookie, DUPLICATE_CLASSES, message, fix);
+            }
+        }
+
         // Network check for really up to date libraries? Only done in batch mode.
         Issue issue = DEPENDENCY;
         if (context.getScope().size() > 1 && context.isEnabled(REMOTE_VERSION)) {
@@ -1090,6 +1123,21 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             LintFix fix = !isResolved ? getUpdateDependencyFix(revision, versionString) : null;
             report(context, cookie, issue, message, fix);
         }
+    }
+
+    /** True if the given project uses the legacy http library */
+    private static boolean usesLegacyHttpLibrary(@NonNull Project project) {
+        AndroidProject model = project.getGradleProjectModel();
+        if (model == null) {
+            return false;
+        }
+        for (String path : model.getBootClasspath()) {
+            if (path.endsWith("org.apache.http.legacy.jar")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -1432,7 +1480,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
      * Checks if the library with the given {@code groupId} and {@code artifactId} has to match
      * compileSdkVersion.
      */
-    private boolean isSupportLibraryDependentOnCompileSdk(String groupId, String artifactId) {
+    private static boolean isSupportLibraryDependentOnCompileSdk(
+            @NonNull String groupId,
+            @NonNull String artifactId) {
         return SUPPORT_LIB_GROUP_ID.equals(groupId)
                 && !artifactId.startsWith("multidex")
                 && !artifactId.startsWith("renderscript")
@@ -1835,15 +1885,104 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         }
     }
 
+    private Map<Project, BlacklistedDeps> blacklisted = new HashMap<>();
+    @Override
+    public void beforeCheckProject(@NonNull Context context) {
+        Project project = context.getProject();
+        blacklisted.put(project, new BlacklistedDeps(project));
+    }
+
     @Override
     public void afterCheckProject(@NonNull Context context) {
-        if (context.getProject() == context.getMainProject() &&
+        Project project = context.getProject();
+        if (project == context.getMainProject() &&
                 // Full analysis? Don't tie check to any specific Gradle DSL element
                 context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
             checkConsistentPlayServices(context, null);
             checkConsistentSupportLibraries(context, null);
             checkConsistentWearableLibraries(context, null);
         }
+
+        // Check for blacklisted dependencies
+        checkBlacklistedDependencies(context, project);
+    }
+
+    /**
+     * Report any blacklisted dependencies that weren't found in the build.gradle
+     * source file during processing (we don't have accurate position info at this point)
+     */
+    private void checkBlacklistedDependencies(@NonNull Context context, Project project) {
+        BlacklistedDeps blacklistedDeps = blacklisted.get(project);
+        List<List<Library>> dependencies = blacklistedDeps.getBlacklistedDependencies();
+        if (!dependencies.isEmpty()) {
+            for (List<Library> path : dependencies) {
+                String message = getBlacklistedDependencyMessage(context, path);
+                if (message == null) {
+                    continue;
+                }
+                File projectDir = context.getProject().getDir();
+                MavenCoordinates coordinates = path.get(0).getRequestedCoordinates();
+                if (coordinates == null) {
+                    coordinates = path.get(0).getResolvedCoordinates();
+                }
+                Location location = guessGradleLocation(context.getClient(), projectDir,
+                        coordinates.getGroupId() + ":" + coordinates.getArtifactId());
+                if (location.getStart() == null) {
+                    location = guessGradleLocation(context.getClient(), projectDir,
+                            coordinates.getArtifactId());
+                }
+                context.report(DUPLICATE_CLASSES, location, message);
+            }
+        }
+        blacklisted.remove(project);
+    }
+
+    @Nullable
+    private static String getBlacklistedDependencyMessage(
+            @NonNull Context context, @NonNull List<Library> path) {
+        if (context.getMainProject().getMinSdkVersion().getApiLevel() >= 23
+                && !usesLegacyHttpLibrary(context.getMainProject())) {
+            return null;
+        }
+
+        boolean direct = path.size() == 1;
+        String message;
+        String resolution = "Solutions include " +
+                "finding newer versions or alternative libraries that don't have the " +
+                "same problem (for example, for `httpclient` use `HttpUrlConnection` or " +
+                "`okhttp` instead), or repackaging the library using something like " +
+                "`jarjar`.";
+        if (direct) {
+            message = String.format("" +
+                            "`%1$s` defines classes that conflict with classes now " +
+                            "provided by Android. %2$s",
+                    path.get(0).getResolvedCoordinates().getArtifactId(), resolution);
+        } else {
+            StringBuilder sb = new StringBuilder();
+            boolean first = true;
+            for (Library library : path) {
+                if (first) {
+                    first = false;
+                } else {
+                    sb.append(" \u2192 "); // right arrow
+                }
+                MavenCoordinates coordinates = library.getResolvedCoordinates();
+                sb.append(coordinates.getGroupId());
+                sb.append(':');
+                sb.append(coordinates.getArtifactId());
+            }
+            sb.append(") ");
+            String chain = sb.toString();
+            message = String.format("" +
+                            "`%1$s` depends on a library (%2$s) which defines classes that " +
+                            "conflict with classes now provided by Android. %3$s " +
+                            "Dependency chain: %4$s",
+                    path.get(0).getResolvedCoordinates().getArtifactId(),
+                    path.get(path.size() - 1).getResolvedCoordinates().getArtifactId(),
+                    resolution,
+                    chain);
+        }
+        return message;
     }
 
     @Nullable

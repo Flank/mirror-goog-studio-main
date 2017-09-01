@@ -536,6 +536,19 @@ public class GradleModelMocker {
         return line.replaceAll("\\s+", " ").replace('"', '\'').replace(" = ", " ");
     }
 
+    private static char findNonSpaceCharacterBackwards(@NonNull String s, int index) {
+        int curr = index;
+        while (curr > 0) {
+            char c = s.charAt(curr);
+            if (!Character.isWhitespace(c)) {
+                return c;
+            }
+            curr--;
+        }
+
+        return 0;
+    }
+
     private void scan(@Language("Groovy") String gradle, @NonNull String context) {
         int start = 0;
         int end = gradle.length();
@@ -543,8 +556,17 @@ public class GradleModelMocker {
             // Iterate line by line, but as soon as a line has an imbalance of {}'s
             // then report the block instead
             int lineEnd = gradle.indexOf('\n', start);
-            if (lineEnd == -1) {
-                lineEnd = end;
+
+            // Join comma statements
+            while (true) {
+                if (findNonSpaceCharacterBackwards(gradle, lineEnd) == ',') {
+                    lineEnd = gradle.indexOf('\n', lineEnd + 1);
+                } else {
+                    if (lineEnd == -1) {
+                        lineEnd = end;
+                    }
+                    break;
+                }
             }
 
             int balance = 0;
@@ -645,7 +667,8 @@ public class GradleModelMocker {
         }
 
         String key = context.isEmpty() ? line : context + "." + line;
-        if (key.startsWith("dependencies.compile ")) {
+        if (key.startsWith("dependencies.compile ") ||
+                key.startsWith("dependencies.implementation ")) {
             String declaration = getUnquotedValue(key);
             if (GradleCoordinate.parseCoordinateString(declaration) != null) {
                 addDependency(declaration, null, false);
@@ -658,7 +681,7 @@ public class GradleModelMocker {
                     String artifact = null;
                     String version = null;
                     for (String part : Splitter.on(',').trimResults().omitEmptyStrings().split(
-                            line.substring("compile ".length()))) {
+                            line.substring(line.indexOf(' ') + 1))) {
                         if (part.startsWith("group:")) {
                             group = getUnquotedValue(part);
                         } else if (part.startsWith("name:")) {

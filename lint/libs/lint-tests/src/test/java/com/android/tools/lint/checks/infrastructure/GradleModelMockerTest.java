@@ -270,7 +270,8 @@ public class GradleModelMockerTest {
                 + "apply plugin: 'android'\n"
                 + "\n"
                 + "dependencies {\n"
-                + "    compile group: 'com.android.support', name: \"support-v4\", version: '19.0'\n"
+                + "    implementation group: 'com.android.support', \n"
+                + "            name: \"support-v4\", version: '19.0'\n"
                 + "}\n");
 
         Variant variant = mocker.getVariant();
