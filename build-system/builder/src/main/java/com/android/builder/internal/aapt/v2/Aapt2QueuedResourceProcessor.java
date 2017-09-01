@@ -17,6 +17,7 @@
 package com.android.builder.internal.aapt.v2;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AaptQueueThreadContext;
 import com.android.builder.internal.aapt.QueuedResourceProcessor;
@@ -26,6 +27,7 @@ import com.android.builder.tasks.JobContext;
 import com.android.builder.tasks.Task;
 import com.android.ide.common.internal.ResourceCompilationException;
 import com.android.ide.common.internal.ResourceProcessor;
+import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.tools.aapt2.Aapt2RenamingConventions;
 import com.android.utils.ILogger;
@@ -84,8 +86,12 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
     }
 
     @Override
-    public ListenableFuture<File> compile(int key, @NonNull CompileResourceRequest request)
+    public ListenableFuture<File> compile(
+            int key,
+            @NonNull CompileResourceRequest request,
+            @Nullable ProcessOutputHandler processOutputHandler)
             throws ResourceCompilationException {
+
         SettableFuture<File> result = SettableFuture.create();
 
         try {
@@ -107,7 +113,7 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
                                                 Thread.currentThread().getName());
                                         return;
                                     }
-                                    aapt.compile(request, job);
+                                    aapt.compile(request, job, processOutputHandler);
                                 }
 
                                 @Override
@@ -147,7 +153,10 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
     }
 
     public ListenableFuture<File> link(
-            int key, @NonNull AaptPackageConfig config, @NonNull File intermediateDir)
+            int key,
+            @NonNull AaptPackageConfig config,
+            @NonNull File intermediateDir,
+            @Nullable ProcessOutputHandler processOutputHandler)
             throws ResourceCompilationException {
         SettableFuture<File> result = SettableFuture.create();
 
@@ -170,7 +179,7 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
                                                 Thread.currentThread().getName());
                                         return;
                                     }
-                                    aapt.link(config, intermediateDir, job);
+                                    aapt.link(config, intermediateDir, job, processOutputHandler);
                                 }
 
                                 @Override

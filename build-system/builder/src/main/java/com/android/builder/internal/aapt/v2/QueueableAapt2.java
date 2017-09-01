@@ -17,6 +17,7 @@
 package com.android.builder.internal.aapt.v2;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AbstractAapt;
@@ -54,6 +55,7 @@ public class QueueableAapt2 extends AbstractAapt {
     @NonNull private final Executor executor;
     @NonNull private final File intermediateDir;
     @NonNull private final Integer requestKey;
+    @Nullable private final ProcessOutputHandler processOutputHandler;
 
     /**
      * Creates a new entry point to the original {@code aapt2}.
@@ -66,7 +68,7 @@ public class QueueableAapt2 extends AbstractAapt {
      */
     public QueueableAapt2(
             @NonNull ProcessExecutor processExecutor,
-            @NonNull ProcessOutputHandler processOutputHandler,
+            @Nullable ProcessOutputHandler processOutputHandler,
             @NonNull BuildToolInfo buildToolInfo,
             @NonNull File intermediateDir,
             @NonNull ILogger logger,
@@ -86,6 +88,7 @@ public class QueueableAapt2 extends AbstractAapt {
 
         this.buildToolInfo = buildToolInfo;
         this.intermediateDir = intermediateDir;
+        this.processOutputHandler = processOutputHandler;
 
         this.executor =
                 new ThreadPoolExecutor(
@@ -131,7 +134,7 @@ public class QueueableAapt2 extends AbstractAapt {
         ListenableFuture<File> futureResult;
 
         try {
-            futureResult = aapt.compile(requestKey, request);
+            futureResult = aapt.compile(requestKey, request, processOutputHandler);
         } catch (ResourceCompilationException e) {
             throw new Aapt2Exception(
                     String.format("Failed to compile file %s", request.getInput()), e);
@@ -161,7 +164,7 @@ public class QueueableAapt2 extends AbstractAapt {
         ListenableFuture<File> futureResult;
 
         try {
-            futureResult = aapt.link(requestKey, config, intermediateDir);
+            futureResult = aapt.link(requestKey, config, intermediateDir, processOutputHandler);
         } catch (Exception e) {
             throw new AaptException("Failed to link", e);
         }
