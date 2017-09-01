@@ -969,9 +969,6 @@ public abstract class Detector {
         @Nullable
         List<Class<? extends UElement>> getApplicableUastTypes();
 
-        @Nullable
-        List<Class<? extends PsiElement>> getApplicablePsiTypes();
-
         /**
          * Return the list of method names this detector is interested in, or
          * null. If this method returns non-null, then any AST nodes that match

@@ -427,9 +427,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
         String javaSource = large.toString();
 
         lint()
-                .files(java("src/test/pkg/VeryLarge.java", javaSource),
-                        // Make sure we only report the error once!
-                        java("src/test/pkg/VeryLarge2.java", javaSource))
+                .files(java("src/test/pkg/VeryLarge.java", javaSource))
                 .allowSystemErrors(true)
                 .allowCompilationErrors()
                 .run()
