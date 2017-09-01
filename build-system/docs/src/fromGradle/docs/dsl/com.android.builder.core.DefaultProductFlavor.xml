@@ -29,6 +29,7 @@
             <thead>
                 <tr><td>Name</td></tr>
             </thead>
+            <tr><td>missingDimensionStrategy</td></tr>
         </table>
     </section>
 </section>
