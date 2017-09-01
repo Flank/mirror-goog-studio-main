@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<android.support.wear.widget.BoxInsetLayout
+<android.support.wearable.view.BoxInsetLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -15,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:padding="@dimen/inner_frame_layout_padding"
-        app:boxedEdges="all">
+        app:layout_box="all">
 
         <TextView
             android:id="@+id/text"
@@ -24,5 +23,4 @@
             android:text="@string/hello_world" />
 
     </FrameLayout>
-</android.support.wear.widget.BoxInsetLayout>
-
+</android.support.wearable.view.BoxInsetLayout>

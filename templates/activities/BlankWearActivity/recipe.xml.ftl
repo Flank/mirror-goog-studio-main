@@ -23,13 +23,8 @@
     <merge from="root/res/values-round/strings.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values-round/strings.xml" />
 
-<#if buildApi gte 26>
     <instantiate from="root/res/layout/blank_activity.xml.ftl"
             to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
-<#else>
-    <instantiate from="root/res/layout/blank_activity_prev.xml.ftl"
-            to="${escapeXmlAttribute(resOut)}/layout/${layoutName}.xml" />
-</#if>
 
 <#if generateKotlin>
     <instantiate from="root/src/app_package/BlankActivity.kt.ftl"
