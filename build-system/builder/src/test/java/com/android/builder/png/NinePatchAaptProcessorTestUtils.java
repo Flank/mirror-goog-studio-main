@@ -140,7 +140,7 @@ public class NinePatchAaptProcessorTestUtils {
         try {
             CompileResourceRequest request =
                     new CompileResourceRequest(file, outFile, "test", false, true);
-            aaptCruncher.compile(crunchKey, request);
+            aaptCruncher.compile(crunchKey, request, null);
         } catch (ResourceCompilationException e) {
             e.printStackTrace();
             throw e;

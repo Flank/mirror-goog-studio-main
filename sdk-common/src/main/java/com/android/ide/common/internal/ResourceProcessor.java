@@ -17,6 +17,8 @@
 package com.android.ide.common.internal;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
+import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.File;
@@ -27,7 +29,7 @@ public interface ResourceProcessor {
     /**
      * Initiates a series of compile requests. The call to this method must be followed by a call to
      * {@link #end(int)} that will allow to wait for all requests made with the {@link #compile(int,
-     * CompileResourceRequest)} method.
+     * CompileResourceRequest, ProcessOutputHandler)} method.
      *
      * @return the key for this set of requests.
      */
@@ -42,9 +44,13 @@ public interface ResourceProcessor {
      *
      * @param key obtained from the {@link #start()}
      * @param request the compilation request containing the input, output and compilation flags
+     * @param processOutputHandler the handler for the output of the compilation
      * @return a {@link ListenableFuture} instance calling code can listen to for completion.
      */
-    ListenableFuture<File> compile(int key, @NonNull CompileResourceRequest request)
+    ListenableFuture<File> compile(
+            int key,
+            @NonNull CompileResourceRequest request,
+            @Nullable ProcessOutputHandler processOutputHandler)
             throws ResourceCompilationException;
 
     /**

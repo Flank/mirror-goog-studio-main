@@ -393,7 +393,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
 
         ListenableFuture<File> futureResult;
         try {
-            futureResult = cruncher.compile(cruncherKey, request);
+            futureResult = cruncher.compile(cruncherKey, request, null);
         } catch (ResourceCompilationException e) {
             throw new AaptException(
                     e,

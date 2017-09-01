@@ -23,6 +23,9 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.v2.AaptV2CommandBuilder;
 import com.android.builder.tasks.BooleanLatch;
 import com.android.builder.tasks.Job;
+import com.android.ide.common.process.ProcessException;
+import com.android.ide.common.process.ProcessOutput;
+import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.sdklib.BuildToolInfo;
 import com.android.tools.aapt2.Aapt2Exception;
@@ -32,9 +35,12 @@ import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
+import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -85,7 +91,7 @@ public class AaptProcess {
             throw new RuntimeException("AAPT process not ready to receive commands");
         }
         NotifierProcessOutput notifier =
-                new NotifierProcessOutput(job, mProcessOutputFacade, mLogger);
+                new NotifierProcessOutput(job, mProcessOutputFacade, mLogger, null);
 
         mProcessOutputFacade.setNotifier(notifier);
         mWriter.write("s\n");
@@ -107,13 +113,17 @@ public class AaptProcess {
      * @param request the compile request containing the the input, output and compilation flags
      * @param job the job to notify when the compiling is finished successfully or not.
      */
-    public void compile(@NonNull CompileResourceRequest request, @NonNull Job<AaptProcess> job)
+    public void compile(
+            @NonNull CompileResourceRequest request,
+            @NonNull Job<AaptProcess> job,
+            @Nullable ProcessOutputHandler processOutputHandler)
             throws IOException {
+
         if (!mReady.get()) {
             throw new RuntimeException("AAPT2 process not ready to receive commands");
         }
         NotifierProcessOutput notifier =
-                new NotifierProcessOutput(job, mProcessOutputFacade, mLogger);
+                new NotifierProcessOutput(job, mProcessOutputFacade, mLogger, processOutputHandler);
 
         mProcessOutputFacade.setNotifier(notifier);
         mWriter.write('c');
@@ -141,13 +151,14 @@ public class AaptProcess {
     public void link(
             @NonNull AaptPackageConfig config,
             @NonNull File intermediateDir,
-            @NonNull Job<AaptProcess> job)
+            @NonNull Job<AaptProcess> job,
+            @Nullable ProcessOutputHandler processOutputHandler)
             throws IOException {
         if (!mReady.get()) {
             throw new RuntimeException("AAPT2 process not ready to receive commands");
         }
         NotifierProcessOutput notifier =
-                new NotifierProcessOutput(job, mProcessOutputFacade, mLogger);
+                new NotifierProcessOutput(job, mProcessOutputFacade, mLogger, processOutputHandler);
 
         mProcessOutputFacade.setNotifier(notifier);
         try {
@@ -210,6 +221,7 @@ public class AaptProcess {
     public static class Builder {
         private final String mAaptLocation;
         private final ILogger mLogger;
+
         public Builder(@NonNull String aaptPath, @NonNull ILogger iLogger) {
             mAaptLocation = aaptPath;
             mLogger = iLogger;
@@ -329,16 +341,18 @@ public class AaptProcess {
         @NonNull private final ProcessOutputFacade mOwner;
         @NonNull private final ILogger mLogger;
         @NonNull private final AtomicBoolean mInError = new AtomicBoolean(false);
-        @SuppressWarnings("StringBufferField")
-        @NonNull private final StringBuilder mErrorBuilder = new StringBuilder();
+        @NonNull private final ArrayList<String> errors = new ArrayList<>();
+        @Nullable private final ProcessOutputHandler processOutputHandler;
 
         NotifierProcessOutput(
                 @NonNull Job<AaptProcess> job,
                 @NonNull ProcessOutputFacade owner,
-                @NonNull ILogger iLogger) {
+                @NonNull ILogger iLogger,
+                @Nullable ProcessOutputHandler processOutputHandler) {
             mOwner = owner;
             mJob = job;
             mLogger = iLogger;
+            this.processOutputHandler = processOutputHandler;
         }
 
         @Override
@@ -348,9 +362,7 @@ public class AaptProcess {
                 if (line.equalsIgnoreCase("Done")) {
                     mOwner.reset();
                     if (mInError.get()) {
-                        mLogger.verbose(
-                                "Job is in error mode, cause : %1$s", mErrorBuilder.toString());
-                        mJob.error(new AaptException(mErrorBuilder.toString()));
+                        mJob.error(new AaptException(AaptProcess.joiner.join(errors)));
                     } else {
                         mJob.finished();
                     }
@@ -369,9 +381,10 @@ public class AaptProcess {
                 if (line.equalsIgnoreCase("Done")) {
                     mOwner.reset();
                     if (mInError.get()) {
-                        mLogger.verbose(
-                                "Job is in error mode, cause : %1$s", mErrorBuilder.toString());
-                        mJob.error(new Aapt2Exception(mErrorBuilder.toString()));
+                        if (!handleOutput()) {
+                            // If processing the output failed, just print the errors.
+                            mJob.error(new Aapt2Exception(AaptProcess.joiner.join(errors)));
+                        }
                     } else {
                         mJob.finished();
                     }
@@ -380,12 +393,39 @@ public class AaptProcess {
                     mInError.set(true);
                 } else if (mInError.get() || line.contains("error:")) {
                     // Grab all the possible errors.
-                    mErrorBuilder.append(line);
+                    errors.add(line);
                 }
                 mLogger.verbose(
                         "AAPT warning(%1$s), Job(%2$s): %3$s",
                         mOwner.getProcess().hashCode(), mJob, line);
             }
+        }
+
+        private boolean handleOutput() {
+            if (processOutputHandler == null) {
+                return false;
+            }
+
+            ProcessOutput output;
+            try (Closeable ignored = output = processOutputHandler.createOutput();
+                    PrintWriter err = new PrintWriter(output.getErrorOutput())) {
+                for (String error : errors) {
+                    err.println(error);
+                }
+            } catch (IOException e) {
+                mJob.error(new Aapt2Exception("Unexpected error parsing AAPT2 error output"));
+                return false;
+            }
+
+            try {
+                processOutputHandler.handleOutput(output);
+            } catch (ProcessException e) {
+                mJob.error(new Aapt2Exception("Unexpected error parsing AAPT2 error output"));
+                return false;
+            }
+
+            mJob.error(new Aapt2Exception("AAPT2 error: check logs for details"));
+            return true;
         }
     }
 }

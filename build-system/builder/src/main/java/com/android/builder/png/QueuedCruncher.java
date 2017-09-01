@@ -17,6 +17,7 @@
 package com.android.builder.png;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.builder.internal.aapt.AaptQueueThreadContext;
 import com.android.builder.internal.aapt.QueuedResourceProcessor;
 import com.android.builder.tasks.Job;
@@ -24,6 +25,7 @@ import com.android.builder.tasks.JobContext;
 import com.android.builder.tasks.Task;
 import com.android.ide.common.internal.ResourceCompilationException;
 import com.android.ide.common.internal.ResourceProcessor;
+import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
@@ -81,7 +83,10 @@ public class QueuedCruncher extends QueuedResourceProcessor {
     }
 
     @Override
-    public ListenableFuture<File> compile(int key, @NonNull final CompileResourceRequest request)
+    public ListenableFuture<File> compile(
+            int key,
+            @NonNull final CompileResourceRequest request,
+            @Nullable ProcessOutputHandler processOutputHandler)
             throws ResourceCompilationException {
 
         final File outputFile = compileOutputFor(request);
