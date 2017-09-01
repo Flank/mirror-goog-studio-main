@@ -272,7 +272,7 @@ public class JavaVisitor {
             // Work around ECJ bugs; see https://code.google.com/p/android/issues/detail?id=172268
             // Don't allow lint bugs to take down the whole build. TRY to log this as a
             // lint error instead!
-            LintDriver.handleDetectorError(context, e);
+            LintDriver.handleDetectorError(context, context.getDriver(), e);
         } finally {
             if (compilationUnit != null) {
                 mParser.dispose(context, compilationUnit);

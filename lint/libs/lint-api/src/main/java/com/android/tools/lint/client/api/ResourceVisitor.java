@@ -142,7 +142,7 @@ class ResourceVisitor {
                 check.afterCheckFile(context);
             }
         } catch (RuntimeException e) {
-            LintDriver.handleDetectorError(context, e);
+            LintDriver.handleDetectorError(context, context.getDriver(), e);
         }
     }
 
