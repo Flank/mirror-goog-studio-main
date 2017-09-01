@@ -33,6 +33,15 @@ public interface CoreBuildType extends BuildType {
     @Nullable
     CoreExternalNativeBuildOptions getExternalNativeBuildOptions();
 
+    /**
+     * The Jack toolchain is deprecated.
+     *
+     * <p>If you want to use Java 8 language features, use the improved support included in the
+     * default toolchain. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
+     */
+    @Deprecated
     @NonNull
     CoreJackOptions getJackOptions();
 
@@ -49,7 +58,15 @@ public interface CoreBuildType extends BuildType {
     /** @deprecated Use {@link VariantScope#getCodeShrinker()} instead. */
     @Deprecated
     Boolean isUseProguard();
-
+    /**
+     * Whether to crunch PNGs.
+     *
+     * <p>Setting this property to <code>true</code> reduces of PNG resources that are not already
+     * optimally compressed. However, this process increases build times.
+     *
+     * <p>PNG crunching is enabled by default in the release build type and disabled by default in
+     * the debug build type.
+     */
     @Nullable
     Boolean isCrunchPngs();
 

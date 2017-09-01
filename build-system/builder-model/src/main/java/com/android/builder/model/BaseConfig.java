@@ -67,9 +67,19 @@ public interface BaseConfig {
     Map<String, ClassField> getResValues();
 
     /**
-     * Returns the collection of proguard rule files.
+     * Specifies the ProGuard configuration files that the plugin should use.
      *
-     * <p>These files are only applied to the production code.
+     * <p>There are two ProGuard rules files that ship with the Android plugin and are used by
+     * default:
+     *
+     * <ul>
+     *   <li>proguard-android.txt
+     *   <li>proguard-android-optimize.txt
+     * </ul>
+     *
+     * <p><code>proguard-android-optimize.txt</code> is identical to <code>proguard-android.txt
+     * </code>, exccept with optimizations enabled. You can use <code>
+     * getDefaultProguardFile(String filename)</code> to return the full path of the files.
      *
      * @return a non-null collection of files.
      * @see #getTestProguardFiles()
@@ -117,12 +127,14 @@ public interface BaseConfig {
     File getMultiDexKeepProguard();
 
     /**
-     * Returns the optional jarjar rule files, or empty if jarjar should be skipped.
-     * If more than one file is provided, the rule files will be merged in order with last one
-     * win in case of rule redefinition.
-     * Can only be used with Jack toolchain.
-     * @return the optional jarjar rule file.
+     * This property can only be used with the Jack toolchain, which is deprecated.
+     *
+     * <p>If you are currently using Jack, you should migrate to using the default toolchain, which
+     * includes improved support for Java 8 language features. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
      */
+    @Deprecated
     @NonNull
     List<File> getJarJarRuleFiles();
 }
