@@ -334,7 +334,7 @@ public class JavaPsiVisitor {
         } catch (RuntimeException e) {
             // Don't allow lint bugs to take down the whole build. TRY to log this as a
             // lint error instead!
-            LintDriver.handleDetectorError(context, e);
+            LintDriver.handleDetectorError(context, context.getDriver(), e);
         }
     }
 

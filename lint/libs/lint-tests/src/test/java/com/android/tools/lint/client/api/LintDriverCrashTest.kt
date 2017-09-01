@@ -22,15 +22,19 @@ import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.LayoutDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.XmlContext
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
+import org.w3c.dom.Element
 
 class LintDriverCrashTest : AbstractCheckTest() {
     fun testLintDriverError() {
         // Regression test for 34248502
         lint().files(
+                xml("res/layout/foo.xml", "<LinearLayout/>"),
                 java("""
 package test.pkg;
 @SuppressWarnings("ALL") class Foo {
@@ -51,7 +55,8 @@ package test.pkg;
         LintDriver.clearCrashCount()
     }
 
-    override fun getIssues(): List<Issue> = listOf(CrashingDetector.CRASHING_ISSUE)
+    override fun getIssues(): List<Issue> = listOf(CrashingDetector.CRASHING_ISSUE,
+            DisposedThrowingDetector.DISPOSED_ISSUE)
 
     override fun getDetector(): Detector = CrashingDetector()
 
@@ -73,6 +78,24 @@ package test.pkg;
             val CRASHING_ISSUE = Issue
                     .create("_TestCrash", "test", "test", Category.LINT, 10, Severity.FATAL,
                             Implementation(CrashingDetector::class.java, Scope.JAVA_FILE_SCOPE))
+        }
+    }
+
+    class DisposedThrowingDetector : LayoutDetector(), Detector.XmlScanner {
+
+        override fun getApplicableElements(): Collection<String> {
+            return arrayListOf("LinearLayout")
+        }
+
+        override fun visitElement(context: XmlContext, element: Element) {
+            throw AssertionError("Already disposed: " + this)
+        }
+
+        companion object {
+            val DISPOSED_ISSUE = Issue.create("_TestDisposed", "test", "test", Category.LINT,
+                    10, Severity.FATAL,
+                    Implementation(DisposedThrowingDetector::class.java,
+                            Scope.RESOURCE_FILE_SCOPE))
         }
     }
 }

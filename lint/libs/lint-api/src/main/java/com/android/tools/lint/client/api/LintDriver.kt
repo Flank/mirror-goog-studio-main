@@ -70,6 +70,7 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import com.intellij.openapi.progress.ProcessCanceledException
+import com.intellij.openapi.project.IndexNotReadyException
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.psi.PsiAnnotationMemberValue
 import com.intellij.psi.PsiArrayInitializerExpression
@@ -367,29 +368,36 @@ class LintDriver
 
         fireEvent(EventType.STARTING, null)
 
-        for (project in projects) {
-            phase = 1
+        try {
+            for (project in projects) {
+                phase = 1
 
-            val main = request.getMainProject(project)
+                val main = request.getMainProject(project)
 
-            // The set of available detectors varies between projects
-            computeDetectors(project)
+                // The set of available detectors varies between projects
+                computeDetectors(project)
 
-            if (applicableDetectors.isEmpty()) {
-                // No detectors enabled in this project: skip it
-                continue
+                if (applicableDetectors.isEmpty()) {
+                    // No detectors enabled in this project: skip it
+                    continue
+                }
+
+                checkProject(project, main)
+                if (isCanceled) {
+                    break
+                }
+
+                runExtraPhases(project, main)
             }
-
-            checkProject(project, main)
-            if (isCanceled) {
-                break
+        } catch (throwable: Throwable) {
+            // Process canceled etc
+            if (!handleDetectorError(null, this, throwable)) {
+                cancel()
             }
-
-            runExtraPhases(project, main)
         }
 
         val baseline = this.baseline
-        if (baseline != null) {
+        if (baseline != null && !isCanceled) {
             val lastProject = Iterables.getLast(projects)
             val main = request.getMainProject(lastProject)
             baseline.reportBaselineIssues(this, main)
@@ -2689,35 +2697,53 @@ class LintDriver
         /** Max number of logs to include  */
         private val MAX_REPORTED_CRASHES = 20
 
-        /** Logs the given error produced by the various lint detectors  */
+        /**
+         * Handles an exception and returns whether the lint analysis can continue (true means
+         * continue, false means abort)
+         */
         @JvmStatic
-        fun handleDetectorError(context: Context, e: RuntimeException) {
-            val simpleClassName = e.javaClass.simpleName
-            if (simpleClassName == "IndexNotReadyException") {
-                // Attempting to access PSI during startup before indices are ready; ignore these.
-                // See http://b.android.com/176644 for an example.
-                return
-            } else if (e is ProcessCanceledException ||
-                    simpleClassName == "ProcessCanceledException") {
-                // Cancelling inspections in the IDE
-                context.driver.cancel()
-                return
+        fun handleDetectorError(
+                context: Context?,
+                driver: LintDriver,
+                throwable: Throwable): Boolean {
+            when {
+                throwable is IndexNotReadyException -> {
+                    // Attempting to access PSI during startup before indices are ready;
+                    // ignore these (because once indexing is over highlighting will be
+                    // retriggered.)
+                    //
+                    // See http://b.android.com/176644 for an example.
+                    return true
+                }
+                throwable is ProcessCanceledException -> {
+                    // Cancelling inspections in the IDE
+                    driver.cancel()
+                    return false
+                }
+                throwable is AssertionError &&
+                        throwable.message?.startsWith("Already disposed: ") == true -> {
+                    // Editor is in the middle of analysis when project
+                    // is created. This isn't common, but is often triggered by Studio UI
+                    // testsuite which rapidly opens, edits and closes projects.
+                    // Silently abort the analysis.
+                    return false
+                }
             }
 
             if (crashCount++ > MAX_REPORTED_CRASHES) {
                 // No need to keep spamming the user that a lot of the files
                 // are tripping up ECJ, they get the picture.
-                return
+                return true
             }
 
             val sb = StringBuilder(100)
-            sb.append("Unexpected failure during lint analysis of ")
-            sb.append(context.file.name)
+            sb.append("Unexpected failure during lint analysis")
+            context?.file?.name.let { sb.append(" of ").append(it) }
             sb.append(" (this is a bug in lint or one of the libraries it depends on)\n\n")
             sb.append("`")
-            sb.append(simpleClassName)
+            sb.append(throwable.javaClass.simpleName)
             sb.append(':')
-            val stackTrace = e.stackTrace
+            val stackTrace = throwable.stackTrace
             var count = 0
             for (frame in stackTrace) {
                 if (count > 0) {
@@ -2741,11 +2767,17 @@ class LintDriver
                     "dump a full stacktrace to stdout.")
 
             val message = sb.toString()
-            context.report(IssueRegistry.LINT_ERROR, Location.create(context.file), message)
+            if (context != null) {
+                context.report(IssueRegistry.LINT_ERROR, Location.create(context.file), message)
+            } else {
+                driver.client.log(throwable, message)
+            }
 
             if (VALUE_TRUE == System.getenv("LINT_PRINT_STACKTRACE")) {
-                e.printStackTrace()
+                throwable.printStackTrace()
             }
+
+            return true
         }
 
         /**
