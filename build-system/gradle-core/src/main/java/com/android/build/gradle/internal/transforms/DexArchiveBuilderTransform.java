@@ -291,20 +291,27 @@ public class DexArchiveBuilderTransform extends Transform {
             TransformOutputProvider transformOutputProvider)
             throws Exception {
         if (!isIncremental) {
-            if (jarInput.getFile().exists()) {
+            Preconditions.checkState(
+                    jarInput.getFile().exists(),
+                    "File %s does not exist, yet it is reported as input. Try \n"
+                            + "cleaning the build directory.",
+                    jarInput.getFile().toString());
                 return convertJarToDexArchive(context, jarInput, transformOutputProvider);
-            } else {
-                FileUtils.deleteIfExists(jarInput.getFile());
-            }
         } else if (jarInput.getStatus() != Status.NOTCHANGED) {
             // delete all preDex jars if they exists.
             for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
-                File contentLocation = getPreDexJar(transformOutputProvider, jarInput, bucketId);
-                FileUtils.deleteIfExists(contentLocation);
+                File shardedOutput = getPreDexJar(transformOutputProvider, jarInput, bucketId);
+                FileUtils.deleteIfExists(shardedOutput);
                 if (jarInput.getStatus() != Status.REMOVED) {
-                    FileUtils.mkdirs(contentLocation.getParentFile());
+                    FileUtils.mkdirs(shardedOutput.getParentFile());
                 }
             }
+            File nonShardedOutput = getPreDexJar(transformOutputProvider, jarInput, null);
+            FileUtils.deleteIfExists(nonShardedOutput);
+            if (jarInput.getStatus() != Status.REMOVED) {
+                FileUtils.mkdirs(nonShardedOutput.getParentFile());
+            }
+
             // and perform dexing if necessary.
             if (jarInput.getStatus() == Status.ADDED || jarInput.getStatus() == Status.CHANGED) {
                 return convertJarToDexArchive(context, jarInput, transformOutputProvider);
