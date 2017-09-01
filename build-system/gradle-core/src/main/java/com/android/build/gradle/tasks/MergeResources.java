@@ -220,8 +220,11 @@ public class MergeResources extends IncrementalTask {
 
         // create a new merger and populate it with the sets.
         ResourceMerger merger = new ResourceMerger(minSdk);
-        MergingLog mergingLog =
-                getBlameLogFolder() != null ? new MergingLog(getBlameLogFolder()) : null;
+        MergingLog mergingLog = null;
+        if (blameLogFolder != null) {
+            FileUtils.cleanOutputDir(blameLogFolder);
+            mergingLog = new MergingLog(blameLogFolder);
+        }
 
         try (QueueableResourceCompiler resourceCompiler =
                 processResources
