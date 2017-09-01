@@ -316,6 +316,7 @@ public class AvdManager {
     public static final Pattern NUMERIC_SKIN_SIZE = Pattern.compile("([0-9]{2,})x([0-9]{2,})"); //$NON-NLS-1$
     public static final String USERDATA_IMG = "userdata.img";
     public static final String USERDATA_QEMU_IMG = "userdata-qemu.img";
+    public static final String SNAPSHOTS_DIRECTORY = "snapshots";
 
     private static final String BOOT_PROP = "boot.prop"; //$NON-NLS-1$
     static final String CONFIG_INI = "config.ini"; //$NON-NLS-1$
