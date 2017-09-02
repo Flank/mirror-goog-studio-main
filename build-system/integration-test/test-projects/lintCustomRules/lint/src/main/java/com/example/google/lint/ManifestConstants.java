@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal;
-
-import com.android.annotations.NonNull;
+package com.example.google.lint;
 
 /**
- * Interface for the {@link BuildSessionSingleton} object. This is part of the pattern to create a
- * "true" singleton (object that is unique across class loaders).
+ * Manifest Constant definition class. Amends constants not found in {@link
+ * com.android.SdkConstants}.
  */
-interface BuildSessionInterface {
-
-    void executeLastWhenBuildFinished(@NonNull Runnable action);
+public final class ManifestConstants {
+    public static final String CATEGORY_NAME_LAUNCHER = "android.intent.category.LAUNCHER";
+    public static final String ACTION_NAME_MAIN = "android.intent.action.MAIN";
 }

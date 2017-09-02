@@ -17,6 +17,7 @@
     <global id="themeExistsAppBarOverlay" type="boolean" value="${(theme.existsAppBarOverlay!false)?string}" />
     <global id="themeNamePopupOverlay" type="string" value="${theme.namePopupOverlay!'AppTheme.PopupOverlay'}" />
     <global id="themeExistsPopupOverlay" type="boolean" value="${(theme.existsPopupOverlay!false)?string}" />
+    <global id="hasApplicationTheme" type="boolean" value="${(hasApplicationTheme!true)?string}" />
 
     <global id="appCompat" type="boolean" value="${appCompat?string}" />
     <global id="appCompatActivity" type="boolean" value="${appCompatActivity?string}" />
@@ -42,18 +43,21 @@
     <global id="Support" value="" />
     <global id="actionBarClassFqcn" type = "string" value="android.app.ActionBar" />
     <global id="kotlinActionBar" type="string" value="actionBar" />
+    <global id="kotlinFragmentManager" type="string" value="fragmentManager" />
 <#elseif appCompatActivity>
     <global id="superClass" type="string" value="AppCompatActivity"/>
     <global id="superClassFqcn" type="string" value="android.support.v7.app.AppCompatActivity"/>
     <global id="Support" value="Support" />
     <global id="actionBarClassFqcn" type = "string" value="android.support.v7.app.ActionBar" />
     <global id="kotlinActionBar" type="string" value="supportActionBar" />
+    <global id="kotlinFragmentManager" type="string" value="supportFragmentManager" />
 <#else>
     <global id="superClass" type="string" value="ActionBarActivity"/>
     <global id="superClassFqcn" type="string" value="android.support.v7.app.ActionBarActivity"/>
     <global id="Support" value="Support" />
     <global id="actionBarClassFqcn" type = "string" value="android.support.v7.app.ActionBar" />
     <global id="kotlinActionBar" type="string" value="supportActionBar" />
+    <global id="kotlinFragmentManager" type="string" value="supportFragmentManager" />
 </#if>
 
     <global id="srcOut" value="${srcDir}/${slashedPackageName(packageName)}" />

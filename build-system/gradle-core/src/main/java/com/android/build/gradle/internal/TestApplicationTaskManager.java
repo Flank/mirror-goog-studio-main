@@ -43,6 +43,7 @@ import com.android.builder.testing.ConnectedDeviceProvider;
 import com.android.manifmerger.ManifestMerger2;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import java.util.Collection;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -150,6 +151,16 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     protected void postJavacCreation(
             @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
         // do nothing.
+    }
+
+    @Override
+    public void createLintTasks(TaskFactory tasks, VariantScope scope) {
+        // do nothing
+    }
+
+    @Override
+    public void configureGlobalLintTask(@NonNull Collection<VariantScope> variants) {
+        // do nothing
     }
 
     @Override

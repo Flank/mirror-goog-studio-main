@@ -205,7 +205,12 @@ public class UElementVisitor {
 
     void visitFile(@NonNull final JavaContext context) {
         try {
-            UFile uFile = context.getUastParser().parse(context);
+            UastParser uastParser = context.getUastParser();
+            if (uastParser == null) {
+                return;
+            }
+
+            UFile uFile = uastParser.parse(context);
             if (uFile == null) {
                 // No need to log this; the parser should be reporting
                 // a full warning (such as IssueRegistry#PARSER_ERROR)

@@ -7,6 +7,10 @@ apply plugin: 'idea'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'license-report'
 
+licenseReport {
+    whiteList = ['org.jetbrains.trove4j:trove4j:20160824']
+}
+
 dependencies {
     compile project(':base:gradle-core')
     compile gradleApi()

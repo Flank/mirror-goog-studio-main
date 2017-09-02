@@ -563,7 +563,7 @@ public class PluralsDatabaseTest extends TestCase {
             mMultiValueSetNames = Maps.newEnumMap(Quantity.class);
             Quantity[] quantities = new Quantity[] { Quantity.zero, Quantity.one, Quantity.two };
             for (Quantity quantity : quantities) {
-                mMultiValueSetNames.put(quantity, Sets.<String>newHashSet());
+                mMultiValueSetNames.put(quantity, Sets.newHashSet());
                 for (String language : LocaleManager.getLanguageCodes()) {
                     String examples = findIntegerExamples(language, quantity);
                     if (examples != null && examples.indexOf(',') != -1) {

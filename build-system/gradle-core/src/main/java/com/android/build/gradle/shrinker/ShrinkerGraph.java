@@ -181,7 +181,7 @@ public interface ShrinkerGraph<T> {
     /**
      * Returns the superclass of the given class.
      *
-     * @throws ClassLookupException if the node for the superclass has not been created (yet)
+     * @throws ClassLookupException if the node for the superclass has not been created (yet?).
      */
     @Nullable
     T getSuperclass(@NonNull T klass) throws ClassLookupException;

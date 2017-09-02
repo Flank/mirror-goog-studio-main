@@ -1,4 +1,6 @@
 <recipe folder="root://activities/common">
-    <instantiate from="root/src/app_package/dummy/DummyContent.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/dummy/DummyContent.java" />
+    <#assign ext=(generateKotlin!false)?string('kt', 'java')>
+
+    <instantiate from="root/src/app_package/dummy/DummyContent.${ext}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/dummy/DummyContent.${ext}" />
 </recipe>

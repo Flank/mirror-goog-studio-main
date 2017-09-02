@@ -133,9 +133,7 @@ public class BuiltinIssueRegistryTest extends TestCase {
                                     + "until timeout");
                         } catch (InterruptedException e) {
                             fail(e.getMessage());
-                        } catch (BrokenBarrierException ignore) {
-                            // This is expected; see above
-                        } catch (TimeoutException ignore) {
+                        } catch (BrokenBarrierException | TimeoutException ignore) {
                             // This is expected; see above
                         }
                         return superList.listIterator();

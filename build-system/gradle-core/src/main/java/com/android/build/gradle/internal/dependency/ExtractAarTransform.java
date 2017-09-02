@@ -16,10 +16,13 @@
 
 package com.android.build.gradle.internal.dependency;
 
+import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FD_JARS;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
+import static com.android.SdkConstants.FN_LINT_JAR;
 import static com.android.utils.FileUtils.mkdirs;
 
+import com.android.SdkConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
@@ -42,6 +45,10 @@ import org.gradle.api.artifacts.transform.ArtifactTransform;
 /** Transform that extracts an AAR file into a folder. */
 public class ExtractAarTransform extends ArtifactTransform {
 
+    private static final String LIBS_PREFIX = SdkConstants.LIBS_FOLDER + '/';
+    private static final int LIBS_PREFIX_LENGTH = LIBS_PREFIX.length();
+    private static final int JARS_PREFIX_LENGTH = FD_JARS.length() + 1; // for jars/
+
     @Inject
     public ExtractAarTransform() {}
 
@@ -50,6 +57,9 @@ public class ExtractAarTransform extends ArtifactTransform {
         File outputDir = getOutputDirectory();
 
         mkdirs(outputDir);
+
+        StringBuilder sb = new StringBuilder(20); // enough for libs/classes.jar at least.
+        sb.append(FD_JARS).append(File.separatorChar);
 
         try (InputStream fis = new BufferedInputStream(new FileInputStream(input));
                 ZipInputStream zis = new ZipInputStream(fis)) {
@@ -66,11 +76,27 @@ public class ExtractAarTransform extends ArtifactTransform {
 
                     String path = name;
 
-                    // relocate Jar files.
-                    if (path.equals("classes.jar")
-                            || path.equals("lint.jar")
-                            || path.startsWith("libs/")) {
-                        path = FD_JARS + File.separatorChar + path;
+                    // relocate root Jar files.
+                    if (path.equals(FN_CLASSES_JAR) || path.equals(FN_LINT_JAR)) {
+                        sb.setLength(JARS_PREFIX_LENGTH);
+                        sb.append(path);
+                        path = sb.toString();
+
+                    } else if (path.startsWith(LIBS_PREFIX)) {
+                        sb.setLength(JARS_PREFIX_LENGTH);
+
+                        // in case we have libs/classes.jar we are going to rename them, due an
+                        // issue in Gradle
+                        // FIXME stop doing this once this is fixed in gradle. b/65298222
+                        String path2 = path.substring(LIBS_PREFIX_LENGTH);
+                        if (FN_CLASSES_JAR.equals(path2)) {
+                            sb.append(LIBS_PREFIX).append("classes-2" + DOT_JAR);
+                        } else if (FN_LINT_JAR.equals(path2)) {
+                            sb.append(LIBS_PREFIX).append("lint-2" + DOT_JAR);
+                        } else {
+                            sb.append(LIBS_PREFIX).append(path2);
+                        }
+                        path = sb.toString();
                     }
 
                     File outputFile = new File(outputDir, path.replace('/', File.separatorChar));

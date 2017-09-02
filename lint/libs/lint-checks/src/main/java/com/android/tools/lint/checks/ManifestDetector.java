@@ -957,7 +957,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
         Project mainProject = context.getMainProject();
         Document merge = mainProject.getMergedManifest();
         if (merge == null) {
-            // This only happens when there is a parse errors, for example if user
+            // This only happens when there is a parse error, for example if user
             // is editing the manifest in the IDE and it's currently invalid
             return;
         }

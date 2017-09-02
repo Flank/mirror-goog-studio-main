@@ -64,7 +64,6 @@ public class ProcessManifest extends ManifestProcessorTask {
             variantConfiguration;
     private OutputScope outputScope;
 
-    private File reportFile;
     private File manifestOutputFile;
 
     @Override
@@ -162,16 +161,6 @@ public class ProcessManifest extends ManifestProcessorTask {
         this.variantConfiguration = variantConfiguration;
     }
 
-    @Input
-    @Optional
-    public File getReportFile() {
-        return reportFile;
-    }
-
-    public void setReportFile(File reportFile) {
-        this.reportFile = reportFile;
-    }
-
     @InputFile
     @PathSensitive(PathSensitivity.RELATIVE)
     public File getMainManifest() {
@@ -217,6 +206,7 @@ public class ProcessManifest extends ManifestProcessorTask {
 
         private final VariantScope scope;
         private final File libraryProcessedManifest;
+        private final File reportFile;
 
         /**
          * {@code TaskConfigAction} for the library process manifest task.
@@ -225,9 +215,10 @@ public class ProcessManifest extends ManifestProcessorTask {
          * @param libraryProcessedManifest The library manifest output file. This must be a file
          *     inside {@link VariantScope#getManifestOutputDirectory()}.
          */
-        public ConfigAction(VariantScope scope, File libraryProcessedManifest) {
+        public ConfigAction(VariantScope scope, File libraryProcessedManifest, File reportFile) {
             this.scope = scope;
             this.libraryProcessedManifest = libraryProcessedManifest;
+            this.reportFile = reportFile;
         }
 
         @NonNull
@@ -283,6 +274,8 @@ public class ProcessManifest extends ManifestProcessorTask {
             processManifest.setAaptFriendlyManifestOutputDirectory(
                     scope.getAaptFriendlyManifestOutputDirectory());
             processManifest.outputScope = scope.getOutputScope();
+
+            processManifest.setReportFile(reportFile);
 
             scope.getVariantData()
                     .addTask(TaskContainer.TaskKind.PROCESS_MANIFEST, processManifest);

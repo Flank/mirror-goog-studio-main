@@ -102,6 +102,7 @@ public class Main {
     private static final String ARG_SOURCES    = "--sources";
     private static final String ARG_RESOURCES  = "--resources";
     private static final String ARG_LIBRARIES  = "--libraries";
+    private static final String ARG_BUILD_API  = "--compile-sdk-version";
     private static final String ARG_BASELINE   = "--baseline";
     private static final String ARG_REMOVE_FIXED = "--remove-fixed";
 
@@ -747,6 +748,13 @@ public class Main {
                     }
                     libraries.add(input);
                 }
+            } else if (arg.equals(ARG_BUILD_API)) {
+                if (index == args.length - 1) {
+                    System.err.println("Missing compileSdkVersion");
+                    exit(ERRNO_INVALID_ARGS);
+                }
+                String version = args[++index];
+                flags.setCompileSdkVersionOverride(version);
             } else if (arg.equals(ARG_PROJECT)) {
                 if (index == args.length - 1) {
                     System.err.println("Missing project description file");
@@ -1214,7 +1222,9 @@ public class Main {
             ARG_CLASSES + " <dir>", "Add the given folder (or jar file, or path) as a class " +
                 "directory for the project. Only valid when running lint on a single project.",
             ARG_LIBRARIES + " <dir>", "Add the given folder (or jar file, or path) as a class " +
-                    "library for the project. Only valid when running lint on a single project.",
+                "library for the project. Only valid when running lint on a single project.",
+            ARG_BUILD_API + " <version>", "Use the given compileSdkVersion to pick an SDK " +
+                "target to resolve Android API call to",
             ARG_SDK_HOME + " <dir>", "Use the given SDK instead of attempting to find it " +
                 "relative to the lint installation or via $ANDROID_HOME",
 

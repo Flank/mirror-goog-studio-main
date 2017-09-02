@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.scope;
 
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.builder.core.BuilderConstants.FD_REPORTS;
 import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
@@ -27,6 +28,7 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
@@ -35,8 +37,12 @@ import com.android.builder.utils.FileCache;
 import com.google.common.base.CharMatcher;
 import java.io.File;
 import java.util.Set;
+import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.attributes.AttributeContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /**
@@ -54,6 +60,8 @@ public class GlobalScope extends TaskOutputHolderImpl
     @NonNull private final Set<OptionalCompilationStep> optionalCompilationSteps;
     @NonNull private final ProjectOptions projectOptions;
     @Nullable private final FileCache buildCache;
+
+    @NonNull private Configuration lintChecks;
 
     // TODO: Remove mutable state from this class.
     @Nullable private File mockableAndroidJarFile;
@@ -223,5 +231,38 @@ public class GlobalScope extends TaskOutputHolderImpl
     @Override
     public FileCache getBuildCache() {
         return buildCache;
+    }
+
+    public void setLintChecks(@NonNull Configuration lintChecks) {
+        this.lintChecks = lintChecks;
+    }
+
+    @NonNull
+    public FileCollection getLocalCustomLintChecks() {
+        Action<AttributeContainer> attributes =
+                container ->
+                        container.attribute(
+                                ARTIFACT_TYPE, AndroidArtifacts.ArtifactType.JAR.getType());
+
+        return lintChecks
+                .getIncoming()
+                .artifactView(config -> config.attributes(attributes))
+                .getArtifacts()
+                .getArtifactFiles();
+    }
+
+    @Override
+    public ConfigurableFileCollection addTaskOutput(
+            @NonNull TaskOutputType outputType, @NonNull Object file, @Nullable String taskName)
+            throws TaskOutputAlreadyRegisteredException {
+        try {
+            return super.addTaskOutput(outputType, file, taskName);
+        } catch (TaskOutputAlreadyRegisteredException e) {
+            throw new RuntimeException(
+                    String.format(
+                            "OutputType '%s' already registered in global scope",
+                            e.getOutputType()),
+                    e);
+        }
     }
 }

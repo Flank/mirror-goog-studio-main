@@ -22,9 +22,8 @@ import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.tasks.Lint;
+import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.Version;
-import com.android.builder.model.AndroidArtifactOutput;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.Variant;
@@ -54,7 +53,6 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -70,13 +68,8 @@ public class LintGradleClient extends LintCliClient {
     @NonNull private final Variant variant;
 
     private final org.gradle.api.Project gradleProject;
-    private final File manifestReportFile;
-    /**
-     * Note that as soon as we disable {@link Lint#MODEL_LIBRARIES} this is
-     * unused and we can delete it and all the callers passing it recursively
-     */
-    private List<File> customRules = Lists.newArrayList();
     private File sdkHome;
+    @NonNull private final LintBaseTask.VariantInputs variantInputs;
     private final BuildToolInfo buildToolInfo;
 
     public LintGradleClient(
@@ -86,26 +79,22 @@ public class LintGradleClient extends LintCliClient {
             @NonNull AndroidProject modelProject,
             @Nullable File sdkHome,
             @NonNull Variant variant,
-            @Nullable BuildToolInfo buildToolInfo,
-            @Nullable File reportFile) {
+            @NonNull LintBaseTask.VariantInputs variantInputs,
+            @Nullable BuildToolInfo buildToolInfo) {
         super(flags, CLIENT_GRADLE);
         this.gradleProject = gradleProject;
         this.modelProject = modelProject;
         this.sdkHome = sdkHome;
+        this.variantInputs = variantInputs;
         this.registry = registry;
         this.buildToolInfo = buildToolInfo;
         this.variant = variant;
-        this.manifestReportFile = reportFile;
     }
 
     @Nullable
     @Override
     public String getClientRevision() {
         return Version.ANDROID_GRADLE_PLUGIN_VERSION;
-    }
-
-    public void setCustomRules(List<File> customRules) {
-        this.customRules = customRules;
     }
 
     @NonNull
@@ -151,7 +140,7 @@ public class LintGradleClient extends LintCliClient {
     @NonNull
     @Override
     public List<File> findRuleJars(@NonNull Project project) {
-        return customRules;
+        return variantInputs.getRuleJars();
     }
 
     @NonNull
@@ -192,7 +181,6 @@ public class LintGradleClient extends LintCliClient {
         LintGradleProject.ProjectSearch search = new LintGradleProject.ProjectSearch();
         Project project = search.getProject(this, gradleProject, variant.getName());
         lintRequest.setProjects(Collections.singletonList(project));
-        setCustomRules(search.customViewRuleJars);
 
         return lintRequest;
     }
@@ -323,27 +311,19 @@ public class LintGradleClient extends LintCliClient {
     @Nullable
     @Override
     public Document getMergedManifest(@NonNull Project project) {
-        Variant variant = project.getCurrentVariant();
-        if (variant != null) {
-            Collection<AndroidArtifactOutput> outputs = variant.getMainArtifact().getOutputs();
-            for (AndroidArtifactOutput output : outputs) {
-                File manifest = output.getGeneratedManifest();
-                if (manifest.exists()) {
-                    try {
-                        String xml = Files.asCharSource(manifest, Charsets.UTF_8).read();
-                        Document document = XmlUtils.parseDocumentSilently(xml, true);
-                        if (document != null) {
-                            // Note for later that we'll need to resolve locations from
-                            // the merged manifest
-                            resolveMergeManifestSources(document, manifestReportFile);
+        File manifest = variantInputs.getMergedManifest();
+        try {
+            String xml = Files.asCharSource(manifest, Charsets.UTF_8).read();
+            Document document = XmlUtils.parseDocumentSilently(xml, true);
+            if (document != null) {
+                // Note for later that we'll need to resolve locations from
+                // the merged manifest
+                resolveMergeManifestSources(document, variantInputs.getManifestMergeReport());
 
-                            return document;
-                        }
-                    } catch (IOException ioe) {
-                        log(ioe, "Could not read %1$s", manifest);
-                    }
-                }
+                return document;
             }
+        } catch (IOException ioe) {
+            log(ioe, "Could not read %1$s", manifest);
         }
 
         return super.getMergedManifest(project);

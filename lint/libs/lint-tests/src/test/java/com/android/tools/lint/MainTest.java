@@ -88,13 +88,17 @@ public class MainTest extends AbstractCheckTest {
             if (cleanup != null) {
                 stderr = cleanup.cleanup(stderr);
             }
-            assertEquals(expectedError, stderr);
+            if (!expectedError.trim().equals(stderr.trim())) {
+                assertEquals(expectedError, stderr); // instead of fail: get difference in output
+            }
             if (expectedOutput != null) {
                 String stdout = output.toString();
                 if (cleanup != null) {
                     stdout = cleanup.cleanup(stdout);
                 }
-                assertEquals(expectedOutput, stdout);
+                if (!expectedOutput.trim().equals(stdout.trim())) {
+                    assertEquals(expectedOutput, stdout);
+                }
             }
             assertEquals(expectedExitCode, exitCode);
         } finally {
@@ -292,6 +296,8 @@ public class MainTest extends AbstractCheckTest {
                         new File(project, "myres1").getPath(),
                         "--resources",
                         new File(project, "myres2").getPath(),
+                        "--compile-sdk-version",
+                        "15",
                         project.getPath(),
                 });
     }

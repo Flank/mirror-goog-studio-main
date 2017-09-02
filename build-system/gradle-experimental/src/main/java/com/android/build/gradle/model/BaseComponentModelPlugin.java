@@ -611,7 +611,7 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                     });
         }
 
-        @Mutate
+        @Defaults
         public static void createLifeCycleTasks(ModelMap<Task> tasks, TaskManager taskManager) {
             taskManager.createTasksBeforeEvaluate(new TaskModelMapAdaptor(tasks));
         }
@@ -761,7 +761,10 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
             });
         }
 
-        /** Create tasks that must be created after other tasks for variants are created. */
+        /**
+         * Create tasks that must be created after other tasks for variants are created. NOTE: This
+         * is not actually created after the variants due to the @Default on it. See method below.
+         */
         @Defaults
         public static void createRemainingTasks(
                 ModelMap<Task> tasks,
@@ -773,6 +776,19 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
             // create the test tasks.
             taskManager.createTopLevelTestTasks(new TaskModelMapAdaptor(tasks),
                     !variantManager.getProductFlavors().isEmpty());
+        }
+
+        /** Create tasks that must be created after other tasks for variants are created. */
+        @Mutate
+        public static void createRemainingTasksForReal(
+                ModelMap<Task> tasks,
+                TaskManager taskManager,
+                ModelMap<AndroidComponentSpec> spec) {
+            VariantManager variantManager =
+                    ((AndroidComponentSpecInternal) spec.get(COMPONENT_NAME)).getVariantManager();
+
+            // create the global lint task that depends on all the variants
+            taskManager.configureGlobalLintTask(variantManager.getVariantScopes());
         }
 
         @Mutate

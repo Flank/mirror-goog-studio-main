@@ -948,8 +948,8 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
                     squareWidthSum += (size.width - meanWidth) * (size.width - meanWidth);
                     squareHeightSum += (size.height - meanHeight) * (size.height - meanHeight);
                 }
-                double widthStdDev = Math.sqrt(squareWidthSum / count);
-                double heightStdDev = Math.sqrt(squareHeightSum / count);
+                double widthStdDev = Math.sqrt(squareWidthSum / (double) count);
+                double heightStdDev = Math.sqrt(squareHeightSum / (double) count);
 
                 if (widthStdDev > meanWidth / 10 || heightStdDev > meanHeight) {
                     StringBuilder sb = new StringBuilder(100);

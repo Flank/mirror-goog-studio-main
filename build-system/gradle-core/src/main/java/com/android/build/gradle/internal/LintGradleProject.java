@@ -716,7 +716,6 @@ public class LintGradleProject extends Project {
         public final Map<JavaLibrary,Project> javaLibraryProjects = Maps.newHashMap();
         public final Map<MavenCoordinates,Project> javaLibraryProjectsByCoordinate = Maps.newHashMap();
         public final Map<org.gradle.api.Project,AndroidProject> gradleProjects = Maps.newHashMap();
-        public final List<File> customViewRuleJars = Lists.newArrayList();
         private final Set<Object> mSeen = Sets.newHashSet();
 
         public ProjectSearch() {
@@ -950,12 +949,6 @@ public class LintGradleProject extends Project {
             }
             appProjects.put(project, lintProject);
 
-            File appLintJar = new File(gradleProject.getBuildDir(),
-                    "lint" + separatorChar + "lint.jar");
-            if (appLintJar.exists()) {
-                customViewRuleJars.add(appLintJar);
-            }
-
             // DELIBERATELY calling getDependencies here (and Dependencies#getProjects() below) :
             // the new hierarchical model is not working yet.
             //noinspection deprecation
@@ -963,14 +956,6 @@ public class LintGradleProject extends Project {
             for (AndroidLibrary library : dependencies.getLibraries()) {
                 if (library.getProject() != null) {
                     // Handled below
-
-                    // ...except in that case we don't find custom rule jars (since those are
-                    // tied to the AndroidLibrary); include those here.
-                    File ruleJar = library.getLintJar();
-                    if (ruleJar.exists()) {
-                        customViewRuleJars.add(ruleJar);
-                    }
-
                     continue;
                 }
                 lintProject.addDirectLibrary(getLibrary(client, library, gradleProject, variant));
@@ -1078,11 +1063,6 @@ public class LintGradleProject extends Project {
             LibraryProject project = new LibraryProject(client, dir, dir, library);
             libraryProjects.put(library, project);
             libraryProjectsByCoordinate.put(coordinates, project);
-
-            File ruleJar = library.getLintJar();
-            if (ruleJar.exists()) {
-                customViewRuleJars.add(ruleJar);
-            }
 
             for (AndroidLibrary dependent : library.getLibraryDependencies()) {
                 project.addDirectLibrary(getLibrary(client, dependent, gradleProject, variant));
