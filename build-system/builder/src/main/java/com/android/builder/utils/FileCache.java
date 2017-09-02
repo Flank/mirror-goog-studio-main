@@ -444,10 +444,8 @@ public class FileCache {
 
                     // Write the inputs to the inputs file for diagnostic purposes. We also use it
                     // to check whether a cache entry is corrupted or not.
-                    Files.write(
-                            inputs.toString(),
-                            getInputsFile(cacheEntryDir),
-                            StandardCharsets.UTF_8);
+                    Files.asCharSink(getInputsFile(cacheEntryDir), StandardCharsets.UTF_8)
+                            .write(inputs.toString());
 
                     return result;
                 });
@@ -543,7 +541,7 @@ public class FileCache {
         // the same key). In either case, we also report it as a corrupted cache entry.
         String inputsInCacheEntry;
         try {
-            inputsInCacheEntry = Files.toString(inputsFile, StandardCharsets.UTF_8);
+            inputsInCacheEntry = Files.asCharSource(inputsFile, StandardCharsets.UTF_8).read();
         } catch (IOException e) {
             return new QueryResult(QueryEvent.CORRUPTED, e);
         }
@@ -817,7 +815,7 @@ public class FileCache {
                     throws IOException {
                 Preconditions.checkArgument(file.isFile(), file + " is not a file.");
 
-                parameters.put(name, Files.hash(file, Hashing.sha1()).toString());
+                parameters.put(name, Files.asByteSource(file).hash(Hashing.sha256()).toString());
                 return this;
             }
 
@@ -894,7 +892,7 @@ public class FileCache {
          */
         @NonNull
         public String getKey() {
-            return Hashing.sha1().hashString(toString(), StandardCharsets.UTF_8).toString();
+            return Hashing.sha256().hashString(toString(), StandardCharsets.UTF_8).toString();
         }
     }
 
