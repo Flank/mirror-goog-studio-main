@@ -39,7 +39,10 @@ public class MainActivityDetector extends ResourceXmlDetector implements Detecto
                     Category.CORRECTNESS,
                     8,
                     Severity.ERROR,
-                    new Implementation(MainActivityDetector.class, Scope.MANIFEST_SCOPE));
+                    new Implementation(MainActivityDetector.class, Scope.MANIFEST_SCOPE)).
+                    // Make sure other integration tests don't pick this up.
+                    // The unit test will turn it on with android.lintOptions.check <id>
+                    setEnabledByDefault(false);
 
     /** No-args constructor used by the lint framework to instantiate the detector. */
     public MainActivityDetector() {}

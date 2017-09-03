@@ -49,6 +49,7 @@ public class TextReporter extends Reporter {
     private final boolean close;
     private final LintCliFlags flags;
     private boolean forwardSlashPaths;
+    private boolean writeStats = true;
 
     /**
      * Constructs a new {@link TextReporter}
@@ -86,7 +87,7 @@ public class TextReporter extends Reporter {
 
         StringBuilder output = new StringBuilder(issues.size() * 200);
         if (issues.isEmpty()) {
-            if (displayEmpty) {
+            if (displayEmpty && writeStats) {
                 writer.write("No issues found");
                 if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
                     File baselineFile = flags.getBaselineFile();
@@ -232,16 +233,19 @@ public class TextReporter extends Reporter {
 
             writer.write(output.toString());
 
-            // TODO: Update to using describeCounts
-            writer.write(String.format("%1$d errors, %2$d warnings",
-                    stats.errorCount, stats.warningCount));
-            if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
-                File baselineFile = flags.getBaselineFile();
-                assert baselineFile != null;
-                writer.write(String.format(" (%1$s filtered by baseline %2$s)",
-                        describeCounts(stats.baselineErrorCount, stats.baselineWarningCount, true,
-                                true),
-                        baselineFile.getName()));
+            if (writeStats) {
+                // TODO: Update to using describeCounts
+                writer.write(String.format("%1$d errors, %2$d warnings",
+                        stats.errorCount, stats.warningCount));
+                if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
+                    File baselineFile = flags.getBaselineFile();
+                    assert baselineFile != null;
+                    writer.write(String.format(" (%1$s filtered by baseline %2$s)",
+                            describeCounts(stats.baselineErrorCount, stats.baselineWarningCount,
+                                    true,
+                                    true),
+                            baselineFile.getName()));
+                }
             }
             writer.write('\n');
             writer.flush();
@@ -327,5 +331,10 @@ public class TextReporter extends Reporter {
      */
     public void setForwardSlashPaths(boolean forwardSlashPaths) {
         this.forwardSlashPaths = forwardSlashPaths;
+    }
+
+    /** Whether the report should include stats. Default is true. */
+    public void setWriteStats(boolean writeStats) {
+        this.writeStats = writeStats;
     }
 }

@@ -147,7 +147,7 @@ public abstract class Reporter {
      * @param close whether the writer should be closed when done
      */
     @NonNull
-    public static Reporter createTextReporter(
+    public static TextReporter createTextReporter(
             @NonNull LintCliClient client,
             @NonNull LintCliFlags flags,
             @Nullable File file,

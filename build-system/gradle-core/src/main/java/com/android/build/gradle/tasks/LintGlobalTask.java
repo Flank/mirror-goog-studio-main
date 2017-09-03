@@ -252,7 +252,7 @@ public class LintGlobalTask extends LintBaseTask {
             }
 
             if (flags.isSetExitCode() && errorCount > 0) {
-                abort();
+                abort(client, mergedWarnings);
             }
         }
     }

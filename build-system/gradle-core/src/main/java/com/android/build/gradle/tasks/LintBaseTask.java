@@ -43,6 +43,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Reporter;
+import com.android.tools.lint.TextReporter;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.GradleDetector;
@@ -54,6 +55,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -70,19 +73,6 @@ import org.gradle.tooling.provider.model.ToolingModelBuilder;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 public abstract class LintBaseTask extends AndroidBuilderTask {
-    /**
-     * Whether lint should attempt to do deep analysis of libraries. E.g. when building up the
-     * project graph, when it encounters an AndroidLibrary or JavaLibrary dependency, it should
-     * check if it's a local project, and if so recursively initialize the project with the local
-     * source paths etc of the library (in the past, this was not the case: it would naively just
-     * point to the library's resources and class files, which were the compiled outputs.
-     *
-     * <p>The new behavior is clearly the correct behavior (see issue #194092), but since this is a
-     * risky fix, we're putting it behind a flag now and as soon as we get some real user testing,
-     * we should enable this by default and remove the old code.
-     */
-    public static final boolean MODEL_LIBRARIES = true;
-
     protected static final Logger LOG = Logging.getLogger(LintBaseTask.class);
 
     @Nullable protected LintOptions lintOptions;
@@ -119,6 +109,12 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
     }
 
     protected void abort() {
+        abort(null, null);
+    }
+
+    protected void abort(
+            @Nullable LintGradleClient client,
+            @Nullable List<Warning> warnings) {
         String message;
         if (fatalOnly) {
             message =
@@ -150,6 +146,34 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
                             + "}\n"
                             + "...";
         }
+
+        if (warnings != null && client != null &&
+                // See if there's at least one text reporter
+                client.getFlags().getReporters().stream().
+                        noneMatch(reporter -> reporter instanceof TextReporter)) {
+            List<Warning> errors = warnings.stream().filter(
+                    warning -> warning.severity.isError()).collect(Collectors.toList());
+            if (!errors.isEmpty()) {
+                String prefix = "Errors found:\n\n";
+                if (errors.size() > 3) {
+                    // Truncate
+                    prefix = "The first 3 errors (out of " + errors.size() + ") were:\n";
+                    errors = Arrays.asList(errors.get(0), errors.get(1), errors.get(2));
+                }
+                StringWriter writer = new StringWriter();
+                LintCliFlags flags = client.getFlags();
+                flags.setExplainIssues(false);
+                TextReporter reporter = Reporter.createTextReporter(client, flags, null, writer, false);
+                try {
+                    Reporter.Stats stats = new Reporter.Stats(errors.size(), 0);
+                    reporter.setWriteStats(false);
+                    reporter.write(stats, errors);
+                    message += "\n\n" + prefix + writer.toString();
+                } catch (IOException ignore) {
+                }
+            }
+        }
+
         throw new GradleException(message);
     }
 
@@ -202,7 +226,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
         }
 
         if (report && client.haveErrors() && flags.isSetExitCode()) {
-            abort();
+            abort(client, warnings.getFirst());
         }
 
         return warnings;
