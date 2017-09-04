@@ -48,10 +48,12 @@ public class AppCompatResourceDetector extends ResourceXmlDetector {
             "Menu namespace",
 
             "When using the appcompat library, menu resources should refer to the " +
-            "`showAsAction` in the `app:` namespace, not the `android:` namespace.\n" +
+            "`showAsAction` (or `actionViewClass`, or `actionProviderClass`) in the " +
+            "`app:` namespace, not the `android:` namespace.\n" +
             "\n" +
             "Similarly, when **not** using the appcompat library, you should be using " +
-            "the `android:showAsAction` attribute.",
+            "the `android:showAsAction` (or `actionViewClass`, or `actionProviderClass`) " +
+            "attribute.",
 
             Category.CORRECTNESS,
             5,
