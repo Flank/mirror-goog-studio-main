@@ -387,7 +387,8 @@ public class DexArchiveBuilderTest {
             Dex dex = new Dex(dexClass, entry.getRelativePathInArchive().toString());
 
             String className =
-                    getClassNameWithoutPackage(entry.getRelativePathInArchive().toString());
+                    getClassNameWithoutPackage(
+                            PathUtils.toSystemIndependentPath(entry.getRelativePathInArchive()));
             assertThat(dex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses(className));
         }
     }
