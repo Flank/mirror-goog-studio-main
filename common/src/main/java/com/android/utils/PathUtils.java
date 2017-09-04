@@ -75,59 +75,21 @@ public final class PathUtils {
 
     @NonNull
     public static Path createTmpToRemoveOnShutdown(@NonNull String prefix) throws IOException {
-        Path tmpFile = Files.createTempFile(prefix, "");
-        addRemovePathHook(tmpFile);
-        return tmpFile;
-    }
-
-    @NonNull
-    public static Path createTmpDirToRemoveOnShutdown(@NonNull String prefix) throws IOException {
-        Path tmpDir = Files.createTempDirectory(prefix);
-        addRemovePathHook(tmpDir);
-        return tmpDir;
-    }
-
-    @NonNull
-    public static List<Path> getClassPathItems(@NonNull String classPath) {
-        Iterable<String> components = Splitter.on(File.pathSeparator).split(classPath);
-
-        List<Path> classPathJars = Lists.newArrayList();
-        PathMatcher zipOrJar =
-                FileSystems.getDefault()
-                        .getPathMatcher(
-                                String.format(
-                                        "glob:**{%s,%s}",
-                                        SdkConstants.EXT_ZIP, SdkConstants.EXT_JAR));
-
-        for (String component : components) {
-            Path componentPath = Paths.get(component);
-            if (Files.isRegularFile(componentPath)) {
-                classPathJars.add(componentPath);
-            } else {
-                // this is a directory containing zips or jars, get them all
-                try {
-                    Files.walk(componentPath).filter(zipOrJar::matches).forEach(classPathJars::add);
-                } catch (IOException ignored) {
-                    // just ignore, users can specify non-existing dirs as class path
-                }
-            }
-        }
-
-        return classPathJars;
-    }
-
-    private static void addRemovePathHook(@NonNull Path path) {
+        Path tmp = Files.createTempFile(prefix, "");
         Runtime.getRuntime()
                 .addShutdownHook(
-                        new Thread(
-                                () -> {
-                                    try {
-                                        PathUtils.deleteIfExists(path);
-                                    } catch (IOException e) {
-                                        Logger.getLogger(PathUtils.class.getName())
-                                                .log(Level.WARNING, "Unable to delete " + path, e);
-                                    }
-                                }));
+                        new Thread() {
+                            @Override
+                            public void run() {
+                                try {
+                                    Files.deleteIfExists(tmp);
+                                } catch (IOException e) {
+                                    Logger.getLogger(PathUtils.class.getName())
+                                            .log(Level.WARNING, "Unable to delete " + tmp, e);
+                                }
+                            }
+                        });
+        return tmp;
     }
 
     @NonNull

@@ -148,7 +148,6 @@ public class DesugarTransform extends Transform {
     @Nullable private final FileCache userCache;
     private final int minSdk;
     @NonNull private final JavaProcessExecutor executor;
-    @NonNull private final Path tmpDir;
     @NonNull private final WaitableExecutor waitableExecutor;
     private boolean verbose;
     private final boolean enableGradleWorkers;
@@ -162,8 +161,7 @@ public class DesugarTransform extends Transform {
             int minSdk,
             @NonNull JavaProcessExecutor executor,
             boolean verbose,
-            boolean enableGradleWorkers,
-            @NonNull Path tmpDir) {
+            boolean enableGradleWorkers) {
         this.androidJarClasspath = androidJarClasspath;
         this.compilationBootclasspath = PathUtils.getClassPathItems(compilationBootclasspath);
         this.userCache = userCache;
@@ -172,7 +170,6 @@ public class DesugarTransform extends Transform {
         this.waitableExecutor = WaitableExecutor.useGlobalSharedThreadPool();
         this.verbose = verbose;
         this.enableGradleWorkers = enableGradleWorkers;
-        this.tmpDir = tmpDir;
     }
 
     @NonNull
@@ -314,12 +311,9 @@ public class DesugarTransform extends Transform {
                                         inToOut,
                                         classpath,
                                         desugarBootclasspath,
-                                        minSdk,
-                                        tmpDir);
-                        boolean isWindows =
-                                SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS;
+                                        minSdk);
                         executor.execute(
-                                        processBuilder.build(isWindows),
+                                        processBuilder.build(),
                                         new LoggedProcessOutputHandler(logger))
                                 .rethrowFailure()
                                 .assertNormalExitValue();
@@ -348,7 +342,7 @@ public class DesugarTransform extends Transform {
             DesugarWorkerItem workerItem =
                     new DesugarWorkerItem(
                             desugarJar.get(),
-                            PathUtils.createTmpDirToRemoveOnShutdown("gradle_lambdas"),
+                            Files.createTempDirectory("gradle_lambdas"),
                             true,
                             pathPathEntry.getInputPath(),
                             pathPathEntry.getOutputPath(),

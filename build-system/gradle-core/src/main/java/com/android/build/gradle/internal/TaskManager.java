@@ -2271,8 +2271,7 @@ public abstract class TaskManager {
                             project.getLogger().isEnabled(LogLevel.INFO),
                             globalScope
                                     .getProjectOptions()
-                                    .get(BooleanOption.ENABLE_GRADLE_WORKERS),
-                            variantScope.getGlobalScope().getTmpFolder().toPath());
+                                    .get(BooleanOption.ENABLE_GRADLE_WORKERS));
             transformManager.addTransform(tasks, variantScope, desugarTransform);
 
             if (minSdk.getFeatureLevel()

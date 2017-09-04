@@ -156,11 +156,6 @@ public class GlobalScope extends TaskOutputHolderImpl
     }
 
     @NonNull
-    public File getTmpFolder() {
-        return new File(getIntermediatesDir(), "tmp");
-    }
-
-    @NonNull
     public File getMockableAndroidJarFile() {
         if (mockableAndroidJarFile == null) {
             // Since the file ends up in $rootProject.buildDir, it will survive clean
