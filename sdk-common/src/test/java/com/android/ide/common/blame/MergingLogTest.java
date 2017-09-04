@@ -18,13 +18,13 @@ package com.android.ide.common.blame;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.utils.FileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
@@ -164,7 +164,7 @@ public class MergingLogTest {
                         + "]";
 
         File multi = mTemporaryFolder.newFolder("multi");
-        Files.write(versionOneLog, new File(multi, "values.json"), Charsets.UTF_8);
+        FileUtils.createFile(new File(multi, "values.json"), versionOneLog);
 
         Map<SourceFile, Map<SourcePosition, SourceFilePosition>> values =
                 MergingLogPersistUtil.loadFromMultiFileVersion2(
@@ -174,20 +174,17 @@ public class MergingLogTest {
         Map.Entry<SourceFile, Map<SourcePosition, SourceFilePosition>> onlyElement =
                 Iterators.getOnlyElement(values.entrySet().iterator());
         assertThat(onlyElement.getKey().getSourceFile().getPath())
-                .contains("merged/values/values.xml");
+                .contains(FileUtils.join("merged", "values", "values.xml"));
         Map<SourcePosition, SourceFilePosition> mappings = onlyElement.getValue();
         assertThat(mappings).hasSize(2);
-        Iterator<Map.Entry<SourcePosition, SourceFilePosition>> iterator =
-                mappings.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<SourcePosition, SourceFilePosition> mapping = iterator.next();
+        for (Map.Entry<SourcePosition, SourceFilePosition> mapping : mappings.entrySet()) {
             if (mapping.getKey().getStartLine() == 1) {
                 assertThat(mapping.getValue().getFile().getSourceFile().getPath())
-                        .contains("exploded/a/values/values.xml");
+                        .contains(FileUtils.join("exploded", "a", "values", "values.xml"));
                 assertThat(mapping.getValue().getPosition().getStartLine()).isEqualTo(7);
             } else if (mapping.getKey().getStartLine() == 4) {
                 assertThat(mapping.getValue().getFile().getSourceFile().getPath())
-                        .contains("exploded/b/values/values.xml");
+                        .contains(FileUtils.join("exploded", "b", "values", "values.xml"));
                 assertThat(mapping.getValue().getPosition().getStartLine()).isEqualTo(2);
             }
         }
