@@ -17,6 +17,7 @@
 package com.android.ide.common.rendering.api;
 
 import com.android.annotations.concurrency.Immutable;
+import java.io.Serializable;
 
 /**
  * A resource reference. This contains the String ID of the resource and whether this is a framework
@@ -25,7 +26,7 @@ import com.android.annotations.concurrency.Immutable;
  * <p>This is an immutable class.
  */
 @Immutable
-public class ResourceReference {
+public class ResourceReference implements Serializable {
     private final String mName;
     private final boolean mIsFramework;
 

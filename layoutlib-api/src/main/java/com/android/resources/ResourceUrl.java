@@ -23,6 +23,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
@@ -30,7 +31,7 @@ import java.util.Objects;
  * ?android:attr/bar}
  */
 @Immutable
-public class ResourceUrl {
+public class ResourceUrl implements Serializable {
     /** Type of resource */
     @NonNull public final ResourceType type;
 

@@ -17,17 +17,16 @@
 package com.android.ide.common.rendering.api;
 
 import com.google.common.base.MoreObjects;
+import java.io.Serializable;
 
 /**
  * Scene result class. This is an immutable class.
- * <p>
- * This cannot be allocated directly, instead use
- * {@link Status#createResult()},
- * {@link Status#createResult(String, Throwable)},
- * {@link Status#createResult(String)}
- * {@link Status#createResult(Object)}
+ *
+ * <p>This cannot be allocated directly, instead use {@link Status#createResult()}, {@link
+ * Status#createResult(String, Throwable)}, {@link Status#createResult(String)} {@link
+ * Status#createResult(Object)}
  */
-public class Result {
+public class Result implements Serializable {
 
     private final Status mStatus;
     private final String mErrorMessage;
