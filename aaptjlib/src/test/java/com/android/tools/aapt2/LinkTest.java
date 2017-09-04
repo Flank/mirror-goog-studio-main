@@ -195,9 +195,9 @@ public class LinkTest {
         assertEquals(2, result.getMessages().size());
 
         assertEquals(Aapt2Result.Message.LogLevel.ERROR, result.getMessages().get(0).getLevel());
-        assertEquals(0, result.getMessages().get(0).getLine());
+        assertEquals(2, result.getMessages().get(0).getLine());
         assertEquals(
-                "attribute 'android:gravity' not found", result.getMessages().get(0).getMessage());
+                "attribute android:gravity not found", result.getMessages().get(0).getMessage());
     }
 
     private static Aapt2Jni getAapt() throws IOException, ExecutionException {
