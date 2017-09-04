@@ -185,10 +185,9 @@ class ResourceNamespaceTest {
                         "public static final I baseFeatureString_from_baseFeature_via_otherFeature",
                         "public static final I libString_from_lib",
                         "public static final I otherFeatureString_from_otherFeature")
-        //TODO: re-enable once b/64706588 is fixed.
-        //assertThat(apk).containsClass("Lcom/example/lib/R\$string;")
-        //assertThat(apk).containsClass("Lcom/example/baseFeature/R\$string;")
-        //assertThat(apk).containsClass("Lcom/example/otherFeature/R\$string;")
+        assertThat(apk).containsClass("Lcom/example/lib/R\$string;")
+        assertThat(apk).containsClass("Lcom/example/baseFeature/R\$string;")
+        assertThat(apk).containsClass("Lcom/example/otherFeature/R\$string;")
         val testApk = project.getSubproject(":app").testApk
         assertThat(testApk).exists()
         assertThat(testApk).doesNotContain(dotDrawablePath)
