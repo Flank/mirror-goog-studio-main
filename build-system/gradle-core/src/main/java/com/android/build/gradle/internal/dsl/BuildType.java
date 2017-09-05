@@ -540,10 +540,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Deprecated
     @Nullable
     public Boolean getUseJack() {
-        deprecationReporter.reportDeprecatedUsage(
-                JackOptions.DEPRECATION_WARNING,
-                "BuildType.useJack",
-                DeprecationTarget.VERSION_4_0);
+        deprecationReporter.reportObsoleteUsage(
+                "BuildType.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.VERSION_4_0);
         return null;
     }
 
@@ -554,10 +552,8 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
      */
     @Deprecated
     public void setUseJack(@Nullable Boolean useJack) {
-        deprecationReporter.reportDeprecatedUsage(
-                JackOptions.DEPRECATION_WARNING,
-                "BuildType.useJack",
-                DeprecationTarget.VERSION_4_0);
+        deprecationReporter.reportObsoleteUsage(
+                "BuildType.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.VERSION_4_0);
     }
 
     /**

@@ -20,10 +20,34 @@ import com.android.annotations.NonNull;
 import com.android.builder.errors.DeprecationReporter;
 
 public class NoOpDeprecationReporter implements DeprecationReporter {
+
     @Override
     public void reportDeprecatedUsage(
-            @NonNull String message,
-            @NonNull String dslElementName,
+            @NonNull String newDslElement,
+            @NonNull String oldDslElement,
+            @NonNull DeprecationTarget deprecationTarget) {
+        // do nothing
+    }
+
+    @Override
+    public void reportObsoleteUsage(
+            @NonNull String oldDslElement, @NonNull DeprecationTarget deprecationTarget) {
+        // do nothing
+    }
+
+    @Override
+    public void reportDeprecatedUsage(
+            @NonNull String newDslElement,
+            @NonNull String oldDslElement,
+            @NonNull String url,
+            @NonNull DeprecationTarget deprecationTarget) {
+        // do nothing
+    }
+
+    @Override
+    public void reportObsoleteUsage(
+            @NonNull String oldDslElement,
+            @NonNull String url,
             @NonNull DeprecationTarget deprecationTarget) {
         // do nothing
     }

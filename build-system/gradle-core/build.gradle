@@ -51,7 +51,6 @@ dependencies {
       exclude group: 'org.ow2.asm', module: 'asm-debug-all'
     }
     compile libs.jopt
-    compile libs.kotlin_stdlib
     compile libs.proguard
 
     testCompile project(':base:instant-run:instant-run-annotations')

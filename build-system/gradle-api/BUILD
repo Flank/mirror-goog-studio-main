@@ -1,17 +1,20 @@
 load("//tools/base/bazel:maven.bzl", "maven_java_library", "maven_pom")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
-maven_java_library(
+kotlin_library(
     name = "gradle-api",
-    srcs = glob([
-        "src/main/java/**/*.java",
-    ]),
+    srcs = [
+        "src/main/java",
+    ],
     pom = ":pom",
     visibility = ["//visibility:public"],
     deps = [
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system/builder-model",
+        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     ],
 )
 
@@ -22,10 +25,10 @@ maven_pom(
     source = "//tools/buildSrc/base:build_version",
 )
 
-java_test(
+kotlin_test(
     name = "tests",
     size = "small",
-    srcs = glob(["src/test/java/**"]),
+    srcs = ["src/test/java"],
     jvm_flags = ["-Dtest.suite.jar=tests.jar"],
     resources = glob(["src/test/resources/**"]),
     test_class = "com.android.testutils.JarTestSuite",
@@ -39,5 +42,6 @@ java_test(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     ],
 )

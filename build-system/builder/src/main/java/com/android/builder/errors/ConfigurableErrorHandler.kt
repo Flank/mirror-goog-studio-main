@@ -40,15 +40,50 @@ abstract class ConfigurableErrorHandler protected constructor(val mode: Evaluati
     abstract fun hasSyncIssue(type: Int): Boolean
 
     override fun reportDeprecatedUsage(
-            message: String,
-            dslElementName: String,
+            newDslElement: String,
+            oldDslElement: String,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
         reportIssue(
                 SyncIssue.TYPE_DEPRECATED_DSL,
                 SyncIssue.SEVERITY_WARNING,
-                String.format(
-                        "%s\nDSL element '%s' will be removed in version %s",
-                        message, dslElementName, deprecationTarget.version),
-                dslElementName + "::" + deprecationTarget.version)
+                "DSL element '$oldDslElement' is obsolete and has been replaced with '$newDslElement'.\n" +
+                        "It will be removed in version ${deprecationTarget.version}",
+                "$oldDslElement::$newDslElement::${deprecationTarget.version}")
     }
+
+    override fun reportDeprecatedUsage(
+            newDslElement: String,
+            oldDslElement: String,
+            url: String,
+            deprecationTarget: DeprecationReporter.DeprecationTarget) {
+        reportIssue(
+                SyncIssue.TYPE_DEPRECATED_DSL,
+                SyncIssue.SEVERITY_WARNING,
+                "DSL element '$oldDslElement' is obsolete and has been replaced with '$newDslElement'.\n" +
+                        "It will be removed in version ${deprecationTarget.version}\n" +
+                        "For more information, see $url",
+                "$oldDslElement::$newDslElement::${deprecationTarget.version}")
+    }
+
+    override fun reportObsoleteUsage(oldDslElement: String,
+            deprecationTarget: DeprecationReporter.DeprecationTarget) {
+        reportIssue(
+                SyncIssue.TYPE_DEPRECATED_DSL,
+                SyncIssue.SEVERITY_WARNING,
+                "DSL element '$oldDslElement' is obsolete and will be removed in version ${deprecationTarget.version}",
+                "$oldDslElement::::${deprecationTarget.version}")
+    }
+
+    override fun reportObsoleteUsage(
+            oldDslElement: String,
+            url: String,
+            deprecationTarget: DeprecationReporter.DeprecationTarget) {
+        reportIssue(
+                SyncIssue.TYPE_DEPRECATED_DSL,
+                SyncIssue.SEVERITY_WARNING,
+                "DSL element '$oldDslElement' is obsolete and will be removed in version ${deprecationTarget.version}\n" +
+                        "For more information, see $url",
+                "$oldDslElement::::${deprecationTarget.version}")
+    }
+
 }

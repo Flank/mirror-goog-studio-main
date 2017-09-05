@@ -34,7 +34,7 @@ iml_module(
         "//tools/base/testutils:studio.testutils[module, test]",
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:gson",
-        "//tools/base/build-system:studio.builder-test-api[module]",
+        "//tools/base/build-system/builder-test-api:studio.builder-test-api[module]",
         "//tools/idea/.idea/libraries:easymock-tools[test]",
         "//tools/idea/.idea/libraries:bouncy-castle",
         "//tools/idea/.idea/libraries:truth[test]",
@@ -64,8 +64,8 @@ kotlin_library(
     deps = [
         "//tools/base:com.google.auto.value_auto-value_neverlink",
         "//tools/base/annotations",
-        "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder-model",
+        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",
@@ -107,8 +107,8 @@ kotlin_test(
     deps = [
         ":tools.sdk-common",
         "//tools/base/annotations",
-        "//tools/base/build-system:tools.builder-test-api",
         "//tools/base/build-system/builder-model",
+        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
         "//tools/base/common:tools.common",
         "//tools/base/ddmlib:tools.ddmlib",
         "//tools/base/layoutlib-api:tools.layoutlib-api",

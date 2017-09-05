@@ -16,15 +16,38 @@
 
 package com.android.build.gradle.internal.transforms;
 
-import com.android.annotations.NonNull;
 import com.android.builder.errors.DeprecationReporter;
+import org.jetbrains.annotations.NotNull;
 
 public class NoOpDeprecationReporter implements DeprecationReporter {
     @Override
     public void reportDeprecatedUsage(
-            @NonNull String message,
-            @NonNull String dslElementName,
-            @NonNull DeprecationTarget deprecationTarget) {
+            @NotNull String newDslElement,
+            @NotNull String oldDslElement,
+            @NotNull DeprecationTarget deprecationTarget) {
+        // do nothing
+    }
+
+    @Override
+    public void reportObsoleteUsage(
+            @NotNull String oldDslElement, @NotNull DeprecationTarget deprecationTarget) {
+        // do nothing
+    }
+
+    @Override
+    public void reportDeprecatedUsage(
+            @NotNull String newDslElement,
+            @NotNull String oldDslElement,
+            @NotNull String url,
+            @NotNull DeprecationTarget deprecationTarget) {
+        // do nothing
+    }
+
+    @Override
+    public void reportObsoleteUsage(
+            @NotNull String oldDslElement,
+            @NotNull String url,
+            @NotNull DeprecationTarget deprecationTarget) {
         // do nothing
     }
 }

@@ -7,23 +7,6 @@ load(
 )
 
 iml_module(
-    name = "studio.builder-test-api",
-    srcs = ["builder-test-api/src/main/java"],
-    iml_files = ["builder-test-api/builder-test-api.iml"],
-    tags = ["managed"],
-    test_srcs = ["builder-test-api/src/test/java"],
-    visibility = ["//visibility:public"],
-    # do not sort: must match IML order
-    exports = ["//tools/base/ddmlib:studio.ddmlib"],
-    # do not sort: must match IML order
-    deps = [
-        "//tools/base/ddmlib:studio.ddmlib[module]",
-        "//tools/idea/.idea/libraries:Guava",
-        "//tools/idea/.idea/libraries:JUnit4[test]",
-    ],
-)
-
-iml_module(
     name = "studio.manifest-merger",
     srcs = ["manifest-merger/src/main/java"],
     iml_files = ["manifest-merger/manifest-merger.iml"],
@@ -61,40 +44,6 @@ java_import(
     name = "gradle-api",
     jars = ["//tools/external/gradle:gradle-api-4.1-jar"],
     visibility = ["//visibility:public"],
-)
-
-# TODO(bendowski): Move this to the right directory.
-maven_java_library(
-    name = "tools.builder-test-api",
-    srcs = glob(["builder-test-api/src/main/java/**"]),
-    pom = ":builder-test-api.pom",
-    visibility = ["//visibility:public"],
-    deps = [
-        "//tools/base/annotations",
-        "//tools/base/common:tools.common",
-        "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/third_party:com.google.guava_guava",
-    ],
-)
-
-maven_pom(
-    name = "builder-test-api.pom",
-    artifact = "builder-test-api",
-    group = "com.android.tools.build",
-    source = "//tools/buildSrc/base:build_version",
-)
-
-java_test(
-    name = "tools.builder-test-api_tests",
-    srcs = glob(["builder-test-api/src/test/java/**"]),
-    jvm_flags = ["-Dtest.suite.jar=tools.builder-test-api_tests.jar"],
-    test_class = "com.android.testutils.JarTestSuite",
-    runtime_deps = ["//tools/base/testutils:tools.testutils"],
-    deps = [
-        ":tools.builder-test-api",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:junit_junit",
-    ],
 )
 
 maven_java_library(

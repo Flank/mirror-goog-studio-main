@@ -1,6 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'clone-artifacts'
+apply plugin: 'kotlin'
 
 configurations {
     provided
@@ -8,7 +9,9 @@ configurations {
 
 dependencies {
     compile project(':base:builder-model')
+    compile project(':base:builder-test-api')
     compile libs.guava
+    compile libs.kotlin_stdlib
 
     provided gradleApi()
 

@@ -34,14 +34,55 @@ interface DeprecationReporter {
     /**
      * Reports a deprecation usage in the DSL/API.
      *
-     * @param message the message.
-     * @param dslElementName the name of the deprecated element, preferably with the name of the
-     * class owning it.
+     * @param newDslElement the DSL element to use instead, with the name of the class owning it
+     * @param oldDslElement the name of the deprecated element, with the name of the class
+     * owning it.
      * @param deprecationTarget when the deprecated element is going to be removed. A line about the
      * timing is added to the message.
      */
     fun reportDeprecatedUsage(
-            message: String,
-            dslElementName: String,
+            newDslElement: String,
+            oldDslElement: String,
             deprecationTarget: DeprecationTarget)
+
+    /**
+     * Reports a deprecation usage in the DSL/API.
+     *
+     * @param newDslElement the DSL element to use instead, with the name of the class owning it
+     * @param oldDslElement the name of the deprecated element, with the name of the class
+     * owning it.
+     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * timing is added to the message.
+     */
+    fun reportDeprecatedUsage(
+            newDslElement: String,
+            oldDslElement: String,
+            url: String,
+            deprecationTarget: DeprecationTarget)
+
+    /**
+     * Reports a deprecation usage in the DSL/API.
+     *
+     * @param oldDslElement the name of the deprecated element, with the name of the class
+     * owning it.
+     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * timing is added to the message.
+     */
+    fun reportObsoleteUsage(
+            oldDslElement: String,
+            deprecationTarget: DeprecationTarget)
+
+    /**
+     * Reports a deprecation usage in the DSL/API.
+     *
+     * @param oldDslElement the name of the deprecated element, with the name of the class
+     * owning it.
+     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * timing is added to the message.
+     */
+    fun reportObsoleteUsage(
+            oldDslElement: String,
+            url: String,
+            deprecationTarget: DeprecationTarget)
+
 }

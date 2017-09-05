@@ -37,31 +37,19 @@ public final class ClassFieldImpl implements ClassField, Serializable {
     private final String name;
     @NonNull
     private final String value;
-    @NonNull
-    private final Set<String> annotations;
-    @NonNull
-    private final String documentation;
 
     public ClassFieldImpl(@NonNull String type, @NonNull String name, @NonNull String value) {
-        this(type, name, value, ImmutableSet.<String>of(), "");
-    }
-
-    public ClassFieldImpl(@NonNull String type, @NonNull String name, @NonNull String value,
-            @NonNull Set<String> annotations, @NonNull String documentation) {
         //noinspection ConstantConditions
-        if (type == null || name == null || value == null || annotations == null || documentation == null) {
+        if (type == null || name == null || value == null) {
             throw new NullPointerException("Build Config field cannot have a null parameter");
         }
         this.type = type;
         this.name = name;
         this.value = value;
-        this.annotations = ImmutableSet.copyOf(annotations);
-        this.documentation = documentation;
     }
 
     public ClassFieldImpl(@NonNull ClassField classField) {
-        this(classField.getType(), classField.getName(), classField.getValue(),
-                classField.getAnnotations(), classField.getDocumentation());
+        this(classField.getType(), classField.getName(), classField.getValue());
     }
 
     @Override
@@ -85,13 +73,13 @@ public final class ClassFieldImpl implements ClassField, Serializable {
     @NonNull
     @Override
     public String getDocumentation() {
-        return documentation;
+        return "";
     }
 
     @NonNull
     @Override
     public Set<String> getAnnotations() {
-        return annotations;
+        return ImmutableSet.of();
     }
 
     @Override
@@ -104,8 +92,6 @@ public final class ClassFieldImpl implements ClassField, Serializable {
         if (!name.equals(that.name)) return false;
         if (!type.equals(that.type)) return false;
         if (!value.equals(that.value)) return false;
-        if (!annotations.equals(that.annotations)) return false;
-        if (!documentation.equals(that.documentation)) return false;
 
         return true;
     }
@@ -115,8 +101,6 @@ public final class ClassFieldImpl implements ClassField, Serializable {
         int result = type.hashCode();
         result = 31 * result + name.hashCode();
         result = 31 * result + value.hashCode();
-        result = 31 * result + annotations.hashCode();
-        result = 31 * result + documentation.hashCode();
         return result;
     }
 }

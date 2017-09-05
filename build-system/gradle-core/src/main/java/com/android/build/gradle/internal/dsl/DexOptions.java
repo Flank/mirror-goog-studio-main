@@ -27,14 +27,6 @@ import java.util.Arrays;
 @SuppressWarnings("unused") // Exposed in the DSL.
 public class DexOptions extends DefaultDexOptions {
 
-    private static final String INCREMENTAL_IGNORED =
-            "The `android.dexOptions.incremental` property"
-                    + " is deprecated and it has no effect on the build process.";
-
-    private static final String OPTIMIZE_IGNORED =
-            "The `android.dexOptions.optimize` property is deprecated. Dex will"
-                    + " always be optimized.";
-
     private final DeprecationReporter deprecationReporter;
 
     public DexOptions(DeprecationReporter deprecationReporter) {
@@ -44,14 +36,14 @@ public class DexOptions extends DefaultDexOptions {
     /** @deprecated ignored */
     @Deprecated
     public boolean getIncremental() {
-        deprecationReporter.reportDeprecatedUsage(
-                INCREMENTAL_IGNORED, "DexOptions.incremental", DeprecationTarget.VERSION_4_0);
+        deprecationReporter.reportObsoleteUsage(
+                "DexOptions.incremental", DeprecationTarget.VERSION_4_0);
         return false;
     }
 
     public void setIncremental(boolean ignored) {
-        deprecationReporter.reportDeprecatedUsage(
-                INCREMENTAL_IGNORED, "DexOptions.incremental", DeprecationTarget.VERSION_4_0);
+        deprecationReporter.reportObsoleteUsage(
+                "DexOptions.incremental", DeprecationTarget.VERSION_4_0);
     }
 
     public void additionalParameters(String... parameters) {
@@ -63,9 +55,7 @@ public class DexOptions extends DefaultDexOptions {
      */
     @Deprecated
     public void setOptimize(@SuppressWarnings("UnusedParameters") Boolean optimize) {
-        deprecationReporter.reportDeprecatedUsage(
-                OPTIMIZE_IGNORED + "\n" + OPTIMIZE_WARNING,
-                "DexOptions.optimize",
-                DeprecationTarget.VERSION_4_0);
+        deprecationReporter.reportObsoleteUsage(
+                "DexOptions.optimize", DeprecationTarget.VERSION_4_0);
     }
 }

@@ -16,5 +16,7 @@
     <orderEntry type="module" module-name="testutils" scope="TEST" />
     <orderEntry type="library" name="gradle-api" level="project" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
+    <orderEntry type="module" module-name="builder-test-api" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

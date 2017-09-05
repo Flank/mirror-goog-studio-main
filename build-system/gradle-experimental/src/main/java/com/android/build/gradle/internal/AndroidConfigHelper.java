@@ -20,8 +20,8 @@ import static com.android.build.gradle.AndroidConfig.CONFIG_DESC;
 import static com.android.build.gradle.AndroidConfig.CONFIG_DESC_OLD;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.dsl.sourceSets.AndroidSourceSet;
 import com.android.build.gradle.AndroidConfig.DeprecatedConfigurationAction;
-import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.coverage.JacocoOptions;
 import com.android.build.gradle.internal.dsl.AaptOptions;
 import com.android.build.gradle.internal.dsl.AdbOptions;
@@ -36,7 +36,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
-import java.util.HashMap;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
