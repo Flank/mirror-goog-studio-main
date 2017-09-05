@@ -114,7 +114,7 @@ public class Main {
 
     private static final String PROP_WORK_DIR = "com.android.tools.lint.workdir";
     private final LintCliFlags flags = new LintCliFlags();
-    private IssueRegistry mGg;
+    private IssueRegistry globalIssueRegistry;
     @Nullable private File sdkHome;
 
     /** Creates a CLI driver */
@@ -868,7 +868,7 @@ public class Main {
         }
 
         try {
-            // Not using mGg; LintClient will do its own registry merging
+            // Not using globalIssueRegistry; LintClient will do its own registry merging
             // also including project rules.
             int exitCode = client.run(new BuiltinIssueRegistry(), files);
             exit(exitCode);
@@ -879,11 +879,11 @@ public class Main {
     }
 
     private IssueRegistry getGlobalRegistry(LintCliClient client) {
-        if (mGg == null) {
-            mGg = client.addCustomLintRules(new BuiltinIssueRegistry());
+        if (globalIssueRegistry == null) {
+            globalIssueRegistry = client.addCustomLintRules(new BuiltinIssueRegistry());
         }
 
-        return mGg;
+        return globalIssueRegistry;
     }
 
     /**
