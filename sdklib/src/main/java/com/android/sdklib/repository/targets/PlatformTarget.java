@@ -40,8 +40,8 @@ import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.Collection;
@@ -174,8 +174,10 @@ public class PlatformTarget implements IAndroidTarget {
         try {
             Type collectionType = new TypeToken<Collection<Library>>() {
             }.getType();
-            Collection<Library> libs = gson
-                    .fromJson(Files.newReader(jsonFile, Charsets.UTF_8), collectionType);
+            Collection<Library> libs;
+            try (BufferedReader reader = Files.newReader(jsonFile, Charsets.UTF_8)) {
+                libs = gson.fromJson(reader, collectionType);
+            }
 
             // convert into the right format.
             List<OptionalLibrary> optionalLibraries = Lists.newArrayListWithCapacity(libs.size());
@@ -190,7 +192,7 @@ public class PlatformTarget implements IAndroidTarget {
             }
 
             return optionalLibraries;
-        } catch (FileNotFoundException e) {
+        } catch (IOException e) {
             // shouldn't happen since we've checked the file is here, but can happen in
             // some cases (too many files open).
             return Collections.emptyList();
