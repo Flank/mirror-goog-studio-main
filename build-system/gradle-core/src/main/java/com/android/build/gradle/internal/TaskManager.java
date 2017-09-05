@@ -2113,6 +2113,8 @@ public abstract class TaskManager {
 
         connectedTask.dependsOn(tasks, artifactsTasks.toArray());
 
+        variantScope.setConnectedTask(connectedTask);
+
         tasks.named(CONNECTED_ANDROID_TEST,
                 connectedAndroidTest -> connectedAndroidTest.dependsOn(connectedTask.getName()));
 

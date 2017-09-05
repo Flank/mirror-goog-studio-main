@@ -283,6 +283,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                                                                 outputLocation,
                                                                 baseName + SdkConstants.DOT_ZIP))),
                         new BuildOutputsSupplier(ImmutableList.of(), ImmutableList.of()),
+                        null,
                         null);
 
         return new VariantImpl(

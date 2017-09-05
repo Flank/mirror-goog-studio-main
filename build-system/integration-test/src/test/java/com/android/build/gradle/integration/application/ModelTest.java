@@ -17,6 +17,7 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -115,4 +116,13 @@ public class ModelTest {
         assertThat(unitTestArtifact.getGeneratedSourceFolders())
                 .containsExactly(project.file("build/generated/source/apt/test/debug"));
     }
+
+    @Test
+    public void returnsInstrumentedTestTaskName() throws Exception {
+        AndroidProject model = project.model().getSingle().getOnlyModel();
+        assertEquals(
+                ModelHelper.getAndroidTestArtifact(model).getInstrumentedTestTaskName(),
+                "connectedDebugAndroidTest");
+    }
+
 }

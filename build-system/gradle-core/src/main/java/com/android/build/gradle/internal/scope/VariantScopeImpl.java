@@ -186,6 +186,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     // empty anchor compile task to set all compilations tasks as dependents.
     private AndroidTask<Task> compileTask;
 
+    @Nullable private AndroidTask<? extends DefaultTask> connectedTask;
+
     private AndroidTask<GenerateApkDataTask> microApkTask;
 
     @Nullable private AndroidTask<ExternalNativeBuildTask> externalNativeBuild;
@@ -1771,6 +1773,17 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public void setCompileTask(
             AndroidTask<Task> compileTask) {
         this.compileTask = compileTask;
+    }
+
+    @Override
+    @Nullable
+    public AndroidTask<? extends DefaultTask> getConnectedTask() {
+        return this.connectedTask;
+    }
+
+    @Override
+    public void setConnectedTask(AndroidTask<? extends DefaultTask> connectedTask) {
+        this.connectedTask = connectedTask;
     }
 
     @Override

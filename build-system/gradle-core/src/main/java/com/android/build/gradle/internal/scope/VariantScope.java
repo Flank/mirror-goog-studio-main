@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.InstantRunTaskManager;
 import com.android.build.gradle.internal.PostprocessingFeatures;
 import com.android.build.gradle.internal.core.Abi;
@@ -39,7 +38,6 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTask;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.GenerateBuildConfig;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
-import com.android.build.gradle.tasks.MergeResources;
 import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.build.gradle.tasks.RenderscriptCompile;
@@ -410,6 +408,11 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     AndroidTask<Task> getCompileTask();
     void setCompileTask(AndroidTask<Task> compileTask);
+
+    @Nullable
+    AndroidTask<? extends DefaultTask> getConnectedTask();
+
+    void setConnectedTask(AndroidTask<? extends DefaultTask> compileTask);
 
     AndroidTask<GenerateApkDataTask> getMicroApkTask();
     void setMicroApkTask(AndroidTask<GenerateApkDataTask> microApkTask);

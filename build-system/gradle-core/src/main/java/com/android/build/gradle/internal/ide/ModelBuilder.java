@@ -674,7 +674,8 @@ public class ModelBuilder implements ToolingModelBuilder {
                 instantRun,
                 splitOutputsProxy,
                 manifestsProxy,
-                testOptions);
+                testOptions,
+                scope.getConnectedTask() == null ? null : scope.getConnectedTask().getName());
     }
 
     private static BuildOutputSupplier<Collection<BuildOutput>> getBuildOutputSupplier(

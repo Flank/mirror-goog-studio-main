@@ -70,6 +70,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     @Nullable private final String signingConfigName;
     @Nullable private final Set<String> abiFilters;
     @Nullable private final TestOptions testOptions;
+    @Nullable private final String instrumentedTestTaskName;
 
     AndroidArtifactImpl(
             @NonNull String name,
@@ -97,7 +98,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
             @NonNull InstantRun instantRun,
             @NonNull BuildOutputSupplier<Collection<BuildOutput>> splitOutputsSupplier,
             @NonNull BuildOutputSupplier<Collection<BuildOutput>> manifestSupplier,
-            @Nullable TestOptions testOptions) {
+            @Nullable TestOptions testOptions,
+            @Nullable String instrumentedTestTaskName) {
         super(
                 name,
                 assembleTaskName,
@@ -126,6 +128,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
         this.splitOutputsSupplier = splitOutputsSupplier;
         this.manifestSupplier = manifestSupplier;
         this.testOptions = testOptions;
+        this.instrumentedTestTaskName = instrumentedTestTaskName;
     }
 
     @NonNull
@@ -328,7 +331,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 && Objects.equals(instantRun, that.instantRun)
                 && Objects.equals(additionalRuntimeApks, that.additionalRuntimeApks)
                 && Objects.equals(baseName, that.baseName)
-                && Objects.equals(testOptions, that.testOptions);
+                && Objects.equals(testOptions, that.testOptions)
+                && Objects.equals(instrumentedTestTaskName, that.instrumentedTestTaskName);
     }
 
     @Override
@@ -349,7 +353,8 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 instantRun,
                 additionalRuntimeApks,
                 baseName,
-                testOptions);
+                testOptions,
+                instrumentedTestTaskName);
     }
 
     @Override
@@ -368,6 +373,7 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
                 .add("resValues", resValues)
                 .add("instantRun", instantRun)
                 .add("testOptions", testOptions)
+                .add("instrumentedTestTaskName", instrumentedTestTaskName)
                 .toString();
     }
 
@@ -376,4 +382,11 @@ final class AndroidArtifactImpl extends BaseArtifactImpl implements AndroidArtif
     public TestOptions getTestOptions() {
         return testOptions;
     }
+
+    @Nullable
+    @Override
+    public String getInstrumentedTestTaskName() {
+        return instrumentedTestTaskName;
+    }
+
 }
