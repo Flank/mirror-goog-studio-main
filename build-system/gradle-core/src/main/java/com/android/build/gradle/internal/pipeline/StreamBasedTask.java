@@ -16,19 +16,14 @@
 
 package com.android.build.gradle.internal.pipeline;
 
-import static java.util.stream.Stream.concat;
-
-import com.android.annotations.NonNull;
+import android.databinding.tool.util.Preconditions;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.Collection;
-import java.util.stream.Collectors;
-import org.gradle.api.file.FileTree;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
-import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 
 /**
@@ -37,26 +32,12 @@ import org.gradle.api.tasks.PathSensitivity;
  */
 public class StreamBasedTask extends AndroidBuilderTask {
 
+    /** Registered as task input in {@link #registerConsumedAndReferencedStreamInputs()}. */
     protected Collection<TransformStream> consumedInputStreams;
+    /** Registered as task input in {@link #registerConsumedAndReferencedStreamInputs()}. */
     protected Collection<TransformStream> referencedInputStreams;
+
     protected IntermediateStream outputStream;
-
-    private Iterable<FileTree> allInputs;
-
-    @NonNull
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public Iterable<FileTree> getStreamInputs() {
-        if (allInputs == null) {
-            allInputs =
-                    concat(consumedInputStreams.stream(), referencedInputStreams.stream())
-                            .map(TransformStream::getAsFileTree)
-                            .collect(Collectors.toList());
-
-        }
-
-        return allInputs;
-    }
 
     @Nullable
     @Optional
@@ -67,5 +48,26 @@ public class StreamBasedTask extends AndroidBuilderTask {
         }
 
         return null;
+    }
+
+    /**
+     * We register each of the streams as a separate input in order to get incremental updates per
+     * stream. Relative path sensitivity is used in the context of a single stream, and all
+     * incremental input updates will be provided per stream.
+     *
+     * <p>DO NOT change this to a method annotated with {@link org.gradle.api.tasks.InputFiles} that
+     * returns {@link Iterables<org.gradle.api.file.FileTree>} which would consider all streams as a
+     * single input. In that case, file change is processed relative to all file tree roots.
+     * Removing a file {@code test/A.class} from stream X, and adding a new {@code test/A.class} to
+     * stream Y would yield only a single CHANGE update for file {@code test/A.class}, although we
+     * would expect to get DELETED and ADDED file incremental update.
+     */
+    protected void registerConsumedAndReferencedStreamInputs() {
+        Preconditions.checkNotNull(consumedInputStreams, "Consumed input streams not set.");
+        Preconditions.checkNotNull(referencedInputStreams, "Referenced input streams not set.");
+        for (TransformStream stream :
+                Iterables.concat(consumedInputStreams, referencedInputStreams)) {
+            getInputs().files(stream.getAsFileTree()).withPathSensitivity(PathSensitivity.RELATIVE);
+        }
     }
 }
