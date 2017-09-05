@@ -49,6 +49,8 @@ public class LintVitalTest {
                         + "    compileSdkVersion "
                         + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
                         + "\n"
+                        // Make sure lint task is created on plugin apply, not afterEvaluate.
+                        + "task(\"myCheck\").dependsOn(lint)"
                         + "}");
 
         File manifest = project.file("src/main/AndroidManifest.xml");

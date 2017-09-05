@@ -159,6 +159,11 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
+    public void createGlobalLintTask(@NonNull TaskFactory tasks) {
+        // do nothing
+    }
+
+    @Override
     public void configureGlobalLintTask(@NonNull Collection<VariantScope> variants) {
         // do nothing
     }
