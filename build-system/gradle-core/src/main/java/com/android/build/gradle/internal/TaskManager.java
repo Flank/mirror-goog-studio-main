@@ -397,6 +397,10 @@ public abstract class TaskManager {
 
         androidTasks.create(tasks, new LintCompile.ConfigAction(globalScope));
 
+        // Lint task is configured in afterEvaluate, but created upfront as it is used as an
+        // anchor task.
+        createGlobalLintTask(tasks);
+
         if (buildCache != null) {
             androidTasks.create(tasks, new CleanBuildCache.ConfigAction(globalScope));
         }
@@ -468,6 +472,11 @@ public abstract class TaskManager {
         globalScope.addTaskOutput(LINT_JAR, lintJar, copyLintTask.getName());
     }
 
+    public void createGlobalLintTask(@NonNull TaskFactory tasks) {
+        androidTasks.create(tasks, LINT, LintGlobalTask.class, task -> {});
+        tasks.named(JavaBasePlugin.CHECK_TASK_NAME, it -> it.dependsOn(LINT));
+    }
+
     // this is run after all the variants are created.
     public void configureGlobalLintTask(@NonNull final Collection<VariantScope> variants) {
         final TaskFactory tasks = new TaskContainerAdaptor(project.getTasks());
@@ -480,10 +489,9 @@ public abstract class TaskManager {
             return;
         }
 
-        // create the global lint task.
-        androidTasks.create(
+        // configure the global lint task.
+        androidTasks.configure(
                 tasks, new LintGlobalTask.GlobalConfigAction(globalScope, filteredVariants));
-        tasks.named(JavaBasePlugin.CHECK_TASK_NAME, it -> it.dependsOn(LINT));
 
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
