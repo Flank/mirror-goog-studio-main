@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import static com.android.build.gradle.internal.transforms.DexMergerTransform.ANDROID_L_MAX_DEX_FILES;
+import static com.android.build.gradle.internal.transforms.DexMergerTransform.EXTERNAL_DEPS_DEX_FILES;
 import static com.android.testutils.truth.MoreTruth.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -55,7 +57,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -255,23 +256,22 @@ public class DexMergerTransformTest {
     }
 
     @Test
-    public void test_native_dirsMergedForWhenNeeded() throws Exception {
+    public void test_native_inputsMergedForWhenNeeded() throws Exception {
         TransformTestHelper.InvocationBuilder invocationBuilder =
                 TransformTestHelper.invocationBuilder();
-        int NUM_DIR_INPUTS = 51;
-        for (int i = 0; i < NUM_DIR_INPUTS; i++) {
+        int NUM_INPUTS = (ANDROID_L_MAX_DEX_FILES - EXTERNAL_DEPS_DEX_FILES) / 2 + 1;
+        for (int i = 0; i < NUM_INPUTS; i++) {
             Path dirArchive = tmpDir.getRoot().toPath().resolve("dir_input_" + i);
             generateArchive(ImmutableList.of(PKG + "/C" + i), dirArchive);
-            Map<File, Status> files =
-                    Files.walk(dirArchive)
-                            .filter(Files::isRegularFile)
-                            .collect(Collectors.toMap(p -> p.toFile(), p -> Status.ADDED));
-            TransformInput input =
-                    TransformTestHelper.directoryBuilder(dirArchive.toFile())
-                            .putChangedFiles(files)
-                            .build();
+            invocationBuilder.addInput(
+                    TransformTestHelper.directoryBuilder(dirArchive.toFile()).build());
 
-            invocationBuilder.addInput(input);
+            Path nonExternalJar = tmpDir.getRoot().toPath().resolve("non_external_" + i + ".jar");
+            generateArchive(ImmutableList.of(PKG + "/A" + i), nonExternalJar);
+            invocationBuilder.addInput(
+                    TransformTestHelper.singleJarBuilder(nonExternalJar.toFile())
+                            .setScopes(QualifiedContent.Scope.SUB_PROJECTS)
+                            .build());
         }
 
         DexMergerTransform androidLDexMerger =
@@ -288,7 +288,7 @@ public class DexMergerTransformTest {
                         Files.walk(out)
                                 .filter(p -> p.toString().endsWith(SdkConstants.DOT_DEX))
                                 .collect(Collectors.toList()))
-                .hasSize(1);
+                .hasSize(2);
 
         DexMergerTransform postLDexMerger =
                 new DexMergerTransform(
@@ -304,7 +304,7 @@ public class DexMergerTransformTest {
                         Files.walk(out)
                                 .filter(p -> p.toString().endsWith(SdkConstants.DOT_DEX))
                                 .collect(Collectors.toList()))
-                .hasSize(NUM_DIR_INPUTS);
+                .hasSize(2 * NUM_INPUTS);
     }
 
     private DexMergerTransform getTransform(@NonNull DexingType dexingType) throws IOException {
