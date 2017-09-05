@@ -18,7 +18,9 @@ package com.android.build.gradle.internal.api;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import groovy.lang.Closure;
 import java.io.File;
@@ -26,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileTree;
@@ -96,17 +97,20 @@ public class DefaultAndroidSourceDirectorySet implements AndroidSourceDirectoryS
     @NonNull
     public List<ConfigurableFileTree> getSourceDirectoryTrees() {
         return source.stream()
-                .map(sourceDir -> project.fileTree(ImmutableMap.of(
-                        "dir", sourceDir,
-                        "includes", getIncludes(),
-                        "excludes", getExcludes())))
-                .collect(Collectors.toList());
+                .map(
+                        sourceDir ->
+                                project.fileTree(
+                                        ImmutableMap.of(
+                                                "dir", sourceDir,
+                                                "includes", getIncludes(),
+                                                "excludes", getExcludes())))
+                .collect(ImmutableList.toImmutableList());
     }
 
     @Override
     @NonNull
     public Set<File> getSrcDirs() {
-        return project.files(source.toArray()).getFiles();
+        return ImmutableSet.copyOf(project.files(source.toArray()).getFiles());
     }
 
     @Override
