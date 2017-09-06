@@ -24,32 +24,28 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
-import com.android.ide.common.blame.parser.aapt.AbstractAaptOutputParser;
 import com.android.testutils.TestResources;
+import com.android.utils.FileUtils;
 import com.android.utils.StdLogger;
 import com.android.utils.StringHelper;
 import com.google.common.base.Charsets;
-import com.google.common.io.Closeables;
+import com.google.common.base.Preconditions;
 import com.google.common.io.Files;
-
-import org.junit.After;
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.List;
-import java.util.Locale;
 
 /**
  * Tests for {@link ToolOutputParser}.
@@ -64,11 +60,6 @@ public class AaptOutputParserTest {
     private String sourceFilePath;
 
     private ToolOutputParser parser;
-
-    private static boolean setupSdkHome() {
-        AbstractAaptOutputParser.ourRootDir = new File(".");
-        return true;
-    }
 
     @NonNull
     private static String toString(@NonNull List<Message> messages) {
@@ -99,13 +90,7 @@ public class AaptOutputParserTest {
                 new StdLogger(StdLogger.Level.VERBOSE));
     }
 
-    @After
-    public void tearDown() throws Exception {
-        if (sourceFile != null) {
-            sourceFile.delete();
-        }
-    }
-
+    @Test
     public void testParseDisplayingUnhandledMessages() {
         String output = " **--- HELLO WORLD ---**";
         List<Message> gradleMessages = parser.parseToolOutput(output);
@@ -115,6 +100,7 @@ public class AaptOutputParserTest {
         assertEquals(Message.Kind.SIMPLE, message.getKind());
     }
 
+    @Test
     public void testParseAaptOutputWithRange1() throws IOException {
         createTempXmlFile();
         writeToFile("<manifest xmlns:android='http://schemas.android.com/apk/res/android'",
@@ -128,6 +114,7 @@ public class AaptOutputParserTest {
         assertHasCorrectErrorMessage(messages, messageText, 4, 61);
     }
 
+    @Test
     public void testParseAaptOutputWithRange2() throws IOException {
         // Check that when the actual aapt error occurs on a line later than the original error line,
         // the forward search which looks for a value match does not stop on an earlier line that
@@ -145,6 +132,7 @@ public class AaptOutputParserTest {
         assertHasCorrectErrorMessage(messages, messageText, 5, 8);
     }
 
+    @Test
     public void testParseAaptOutputWithRange3() throws IOException {
         // Check that when we have a duplicate resource error, we highlight both the original property
         // and the original definition.
@@ -162,6 +150,7 @@ public class AaptOutputParserTest {
         assertHasCorrectErrorMessage(messages, messageText, 6, 17);
     }
 
+    @Test
     public void testParseAaptOutputWithRange4() throws IOException {
         // Check that when we have a duplicate resource error, we highlight both the original property
         // and the original definition.
@@ -177,6 +166,7 @@ public class AaptOutputParserTest {
         assertHasCorrectErrorMessage(messages, messageText, 3, 5);
     }
 
+    @Test
     public void testParseAaptOutputWithRange5() throws IOException {
         // Check for aapt error which occurs when the attribute name in an item style declaration is
         // non-existent.
@@ -190,6 +180,7 @@ public class AaptOutputParserTest {
         assertHasCorrectErrorMessage(messages, messageText, 3, 17);
     }
 
+    @Test
     public void testParseAaptOutputWithRange6() throws IOException {
         // Test missing resource name.
         createTempXmlFile();
@@ -201,6 +192,7 @@ public class AaptOutputParserTest {
         assertHasCorrectErrorMessage(messages, messageText, 2, 3);
     }
 
+    @Test
     public void testParseAaptOutputWithRange7() throws IOException {
         createTempXmlFile();
         writeToFile("<resources xmlns:android='http://schemas.android.com/apk/res/android'>",
@@ -211,6 +203,7 @@ public class AaptOutputParserTest {
         assertHasCorrectErrorMessage(messages, messageText, 2, 3);
     }
 
+    @Test
     public void testParseAaptOutputWithRange8() throws IOException {
         createTempXmlFile();
         writeToFile("<resources xmlns:android='http://schemas.android.com/apk/res/android'>",
@@ -221,6 +214,7 @@ public class AaptOutputParserTest {
         assertHasCorrectErrorMessage(messages, messageText, 2, 3);
     }
 
+    @Test
     public void testParseAaptOutputWithRange9() throws IOException {
         createTempXmlFile();
         writeToFile("<resources xmlns:android='http://schemas.android.com/apk/res/android'>",
@@ -232,6 +226,7 @@ public class AaptOutputParserTest {
         assertHasCorrectErrorMessage(messages, messageText, 3, 21);
     }
 
+    @Test
     public void testParseAaptOutputWithRange10() throws IOException {
         createTempXmlFile();
         writeToFile("<FrameLayout",
@@ -249,6 +244,7 @@ public class AaptOutputParserTest {
         assertHasCorrectErrorMessage(messages, messageText, 8, 34);
     }
 
+    @Test
     public void testParseAaptOutputWithRange11() throws IOException {
         createTempXmlFile();
         writeToFile("<FrameLayout",
@@ -266,6 +262,7 @@ public class AaptOutputParserTest {
         assertHasCorrectErrorMessage(messages, messageText, 9, 35);
     }
 
+    @Test
     public void testParseAaptOutputWithRange12() throws IOException {
         createTempXmlFile();
         writeToFile("<FrameLayout",
@@ -281,26 +278,13 @@ public class AaptOutputParserTest {
     }
 
     private void createTempXmlFile() throws IOException {
-        createTempFile(DOT_XML);
-    }
-
-    private void createTempFile(@NonNull String fileExtension) throws IOException {
-        sourceFile = File.createTempFile(AaptOutputParserTest.class.getName(), fileExtension);
+        sourceFile = temporaryFolder.newFile("file" + DOT_XML);
         sourceFilePath = sourceFile.getAbsolutePath();
     }
 
-    @SuppressWarnings("IOResourceOpenedButNotSafelyClosed")
     private void writeToFile(@NonNull String... lines) throws IOException {
-        BufferedWriter out = null;
-        try {
-            out = new BufferedWriter(new FileWriter(sourceFile));
-            for (String line : lines) {
-                out.write(line);
-                out.newLine();
-            }
-        } finally {
-            Closeables.close(out, true /* swallowIOException */);
-        }
+        java.nio.file.Files.write(
+                sourceFile.toPath(), Arrays.asList(lines), StandardCharsets.UTF_8);
     }
 
     /**
@@ -328,16 +312,10 @@ public class AaptOutputParserTest {
 
     @Test
     public void testRedirectValueLinksOutput() throws Exception {
-        if (!setupSdkHome()) {
-            System.out.println(
-                    "Skipping testRedirectValueLinksOutput because sdk-common was not found");
-            return;
-        }
-
         // Need file to be named (exactly) values.xml
         File tempDir = temporaryFolder.newFolder();
         File valueDir = new File(tempDir, "values-en");
-        valueDir.mkdirs();
+        FileUtils.mkdirs(valueDir);
         sourceFile = new File(valueDir,
                 "values.xml"); // Keep in sync with MergedResourceWriter.FN_VALUES_XML
         sourceFilePath = sourceFile.getAbsolutePath();
@@ -447,8 +425,10 @@ public class AaptOutputParserTest {
         assertNotNull(message);
 
         // NOT sourceFilePath; should be translated back from source comment
-        assertEquals(new File ("src/test/resources/testData/resources/baseSet/values/values.xml").getAbsoluteFile(),
-                     new File(message.getSourcePath()));
+        assertEquals(
+                new File("src/test/resources/testData/resources/baseSet/values/values.xml")
+                        .getAbsoluteFile(),
+                new File(Preconditions.checkNotNull(message.getSourcePath())));
 
         assertEquals("[message severity]", Message.Kind.ERROR, message.getKind());
         assertEquals("[message text]", messageText, message.getText());
@@ -460,16 +440,10 @@ public class AaptOutputParserTest {
 
     @Test
     public void testRedirectFileLinksOutput() throws Exception {
-        if (!setupSdkHome()) {
-            System.out.println(
-                    "Skipping testRedirectFileLinksOutput because sdk-common was not found");
-            return;
-        }
-
         // Need file to be named (exactly) values.xml
         File tempDir = temporaryFolder.newFolder();
         File layoutDir = new File(tempDir, "layout-land");
-        layoutDir.mkdirs();
+        FileUtils.mkdirs(layoutDir);
         sourceFile = new File(layoutDir, "main.xml");
         sourceFilePath = sourceFile.getAbsolutePath();
 
@@ -504,7 +478,10 @@ public class AaptOutputParserTest {
         // NOT sourceFilePath; should be translated back from source comment
         File expected = new File("src/test/resources/testData/resources/incMergeData/filesVsValues/main/layout/main.xml")
           .getAbsoluteFile();
-        assertEquals("[file path]", expected, new File(message.getSourcePath()));
+        assertEquals(
+                "[file path]",
+                expected,
+                new File(Preconditions.checkNotNull(message.getSourcePath())));
         assertEquals("[message severity]", Message.Kind.ERROR, message.getKind());
         assertEquals("[message text]", messageText, message.getText());
         assertEquals("[position line]", 4, message.getSourceFilePositions().get(0).getPosition().getStartLine() + 1);
@@ -513,36 +490,40 @@ public class AaptOutputParserTest {
         // TODO: Test encoding issues (e.g. & in path where the XML source comment would be &amp; instead)
     }
 
-    public void test() throws Exception {
+    @Test
+    public void simpleTest() throws Exception {
         File tempDir = temporaryFolder.newFolder();
         sourceFile = new File(tempDir, "values.xml"); // Name matters for position search
         sourceFilePath = sourceFile.getAbsolutePath();
         File source = new File(tempDir, "dimens.xml");
-        Files.write("<resources>\n" +
-                "    <!-- Default screen margins, per the Android Design guidelines. -->\n" +
-                "    <dimen name=\"activity_horizontal_margin\">16dp</dimen>\n" +
-                "    <dimen name=\"activity_vertical_margin\">16dp</dimen>\n" +
-                "    <dimen name=\"new_name\">50</dimen>\n" +
-                "</resources>", source, Charsets.UTF_8);
-        source.deleteOnExit();
-        Files.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<resources>\n" +
-                "    <!-- From: file:/Users/unittest/AndroidStudioProjects/BlankProject1Project/BlankProject1/build/exploded-bundles/ComAndroidSupportAppcompatV71800.aar/res/values/values.xml -->\n"
-                +
-                "    <dimen name=\"abc_action_bar_default_height\">48dip</dimen>\n" +
-                "    <dimen name=\"abc_action_bar_icon_vertical_padding\">8dip</dimen>\n" +
-                "    <!-- From: file:" + source.getPath() + " -->\n" +
-                "    <dimen name=\"activity_horizontal_margin\">16dp</dimen>\n" +
-                "    <dimen name=\"activity_vertical_margin\">16dp</dimen>\n" +
-                "    <dimen name=\"ok\">50dp</dimen>\n" +
-                "    <dimen name=\"new_name\">50</dimen>\n" +
-                "    <!-- From: file:/Users/unittest/AndroidStudioProjects/BlankProject1Project/BlankProject1/build/exploded-bundles/ComAndroidSupportAppcompatV71800.aar/res/values/values.xml -->\n"
-                +
-                "    <item name=\"action_bar_activity_content\" type=\"id\"/>\n" +
-                "    <item name=\"action_menu_divider\" type=\"id\"/>\n" +
-                "    <item name=\"action_menu_presenter\" type=\"id\"/>\n" +
-                "    <item name=\"home\" type=\"id\"/>\n" +
-                "</resources>\n", sourceFile, Charsets.UTF_8);
+        Files.asCharSink(source, Charsets.UTF_8)
+                .write(
+                        "<resources>\n"
+                                + "    <!-- Default screen margins, per the Android Design guidelines. -->\n"
+                                + "    <dimen name=\"activity_horizontal_margin\">16dp</dimen>\n"
+                                + "    <dimen name=\"activity_vertical_margin\">16dp</dimen>\n"
+                                + "    <dimen name=\"new_name\">50</dimen>\n"
+                                + "</resources>");
+        Files.asCharSink(sourceFile, Charsets.UTF_8)
+                .write(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<resources>\n"
+                                + "    <!-- From: file:/Users/unittest/AndroidStudioProjects/BlankProject1Project/BlankProject1/build/exploded-bundles/ComAndroidSupportAppcompatV71800.aar/res/values/values.xml -->\n"
+                                + "    <dimen name=\"abc_action_bar_default_height\">48dip</dimen>\n"
+                                + "    <dimen name=\"abc_action_bar_icon_vertical_padding\">8dip</dimen>\n"
+                                + "    <!-- From: file:"
+                                + source.getPath()
+                                + " -->\n"
+                                + "    <dimen name=\"activity_horizontal_margin\">16dp</dimen>\n"
+                                + "    <dimen name=\"activity_vertical_margin\">16dp</dimen>\n"
+                                + "    <dimen name=\"ok\">50dp</dimen>\n"
+                                + "    <dimen name=\"new_name\">50</dimen>\n"
+                                + "    <!-- From: file:/Users/unittest/AndroidStudioProjects/BlankProject1Project/BlankProject1/build/exploded-bundles/ComAndroidSupportAppcompatV71800.aar/res/values/values.xml -->\n"
+                                + "    <item name=\"action_bar_activity_content\" type=\"id\"/>\n"
+                                + "    <item name=\"action_menu_divider\" type=\"id\"/>\n"
+                                + "    <item name=\"action_menu_presenter\" type=\"id\"/>\n"
+                                + "    <item name=\"home\" type=\"id\"/>\n"
+                                + "</resources>\n");
 
         String output =
                 ":BlankProject1:prepareComAndroidSupportAppcompatV71800Library UP-TO-DATE\n"
@@ -603,10 +584,6 @@ public class AaptOutputParserTest {
         String actual =
                 toString(parser.parseToolOutput(output));
         assertEquals(expected, actual);
-
-        sourceFile.delete();
-        source.delete();
-        tempDir.delete();
     }
 
     @Test
@@ -615,35 +592,38 @@ public class AaptOutputParserTest {
         String dirName = currentPlatform() == PLATFORM_WINDOWS ? "My -- Q&A Dir" : "My -- Q&A< Dir";
         File dir = new File(tempDir,
                 dirName); // path which should force encoding of path chars, see for example issue 60050
-        dir.mkdirs();
+        FileUtils.mkdirs(dir);
         sourceFile = new File(dir, "values.xml"); // Name matters for position search
         sourceFilePath = sourceFile.getAbsolutePath();
         File source = new File(dir, "dimens.xml");
-        Files.write("<resources>\n" +
-                "    <!-- Default screen margins, per the Android Design guidelines. -->\n" +
-                "    <dimen name=\"activity_horizontal_margin\">16dp</dimen>\n" +
-                "    <dimen name=\"activity_vertical_margin\">16dp</dimen>\n" +
-                "    <dimen name=\"new_name\">50</dimen>\n" +
-                "</resources>", source, Charsets.UTF_8);
-        source.deleteOnExit();
-        Files.write("<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-                "<resources>\n" +
-                "    <!-- From: file:/Users/unittest/AndroidStudioProjects/BlankProject1Project/BlankProject1/build/exploded-bundles/ComAndroidSupportAppcompatV71800.aar/res/values/values.xml -->\n"
-                +
-                "    <dimen name=\"abc_action_bar_default_height\">48dip</dimen>\n" +
-                "    <dimen name=\"abc_action_bar_icon_vertical_padding\">8dip</dimen>\n" +
-                "    <!-- " + createPathComment(source, false) + " -->\n" +
-                "    <dimen name=\"activity_horizontal_margin\">16dp</dimen>\n" +
-                "    <dimen name=\"activity_vertical_margin\">16dp</dimen>\n" +
-                "    <dimen name=\"ok\">50dp</dimen>\n" +
-                "    <dimen name=\"new_name\">50</dimen>\n" +
-                "    <!-- From: file:/Users/unittest/AndroidStudioProjects/BlankProject1Project/BlankProject1/build/exploded-bundles/ComAndroidSupportAppcompatV71800.aar/res/values/values.xml -->\n"
-                +
-                "    <item name=\"action_bar_activity_content\" type=\"id\"/>\n" +
-                "    <item name=\"action_menu_divider\" type=\"id\"/>\n" +
-                "    <item name=\"action_menu_presenter\" type=\"id\"/>\n" +
-                "    <item name=\"home\" type=\"id\"/>\n" +
-                "</resources>\n", sourceFile, Charsets.UTF_8);
+        Files.asCharSink(source, Charsets.UTF_8)
+                .write(
+                        "<resources>\n"
+                                + "    <!-- Default screen margins, per the Android Design guidelines. -->\n"
+                                + "    <dimen name=\"activity_horizontal_margin\">16dp</dimen>\n"
+                                + "    <dimen name=\"activity_vertical_margin\">16dp</dimen>\n"
+                                + "    <dimen name=\"new_name\">50</dimen>\n"
+                                + "</resources>");
+        Files.asCharSink(sourceFile, Charsets.UTF_8)
+                .write(
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                + "<resources>\n"
+                                + "    <!-- From: file:/Users/unittest/AndroidStudioProjects/BlankProject1Project/BlankProject1/build/exploded-bundles/ComAndroidSupportAppcompatV71800.aar/res/values/values.xml -->\n"
+                                + "    <dimen name=\"abc_action_bar_default_height\">48dip</dimen>\n"
+                                + "    <dimen name=\"abc_action_bar_icon_vertical_padding\">8dip</dimen>\n"
+                                + "    <!-- "
+                                + createPathComment(source, false)
+                                + " -->\n"
+                                + "    <dimen name=\"activity_horizontal_margin\">16dp</dimen>\n"
+                                + "    <dimen name=\"activity_vertical_margin\">16dp</dimen>\n"
+                                + "    <dimen name=\"ok\">50dp</dimen>\n"
+                                + "    <dimen name=\"new_name\">50</dimen>\n"
+                                + "    <!-- From: file:/Users/unittest/AndroidStudioProjects/BlankProject1Project/BlankProject1/build/exploded-bundles/ComAndroidSupportAppcompatV71800.aar/res/values/values.xml -->\n"
+                                + "    <item name=\"action_bar_activity_content\" type=\"id\"/>\n"
+                                + "    <item name=\"action_menu_divider\" type=\"id\"/>\n"
+                                + "    <item name=\"action_menu_presenter\" type=\"id\"/>\n"
+                                + "    <item name=\"home\" type=\"id\"/>\n"
+                                + "</resources>\n");
 
         // TODO: Test layout too
 
@@ -676,10 +656,6 @@ public class AaptOutputParserTest {
         String actual = toString(parser.parseToolOutput(output));
 
         assertEquals(expected, actual);
-        sourceFile.delete();
-        source.delete();
-        dir.delete();
-        tempDir.delete();
     }
 
     @Test
@@ -688,51 +664,53 @@ public class AaptOutputParserTest {
         sourceFile = new File(tempDir, "layout.xml");
         sourceFilePath = sourceFile.getAbsolutePath();
         File source = new File(tempDir, "real-layout.xml");
-        Files.write(
-                "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
-                        "    android:layout_width=\"match_parent\"\n" +
-                        "    android:layout_height=\"match_parent\"\n" +
-                        "    android:paddingLeft=\"@dimen/activity_horizontal_margin\"\n" +
-                        "    android:paddingRight=\"@dimen/activity_horizontal_margin\"\n" +
-                        "    android:paddingTop=\"@dimen/activity_vertical_margin\"\n" +
-                        "    android:paddingBottom=\"@dimen/activity_vertical_margin\"\n" +
-                        "    tools:context=\".MainActivity\">\n" +
-                        "\n" +
-                        "\n" +
-                        "    <Button\n" +
-                        "        android:layout_width=\"wrap_content\"\n" +
-                        "        android:layout_height=\"wrap_content\"\n" +
-                        "        android:hint=\"fy faen\"\n" +
-                        "        android:text=\"@string/hello_world\"\n" +
-                        "        android:slayout_alignParentTop=\"true\"\n" +
-                        "        android:layout_alignParentLeft=\"true\" />\n" +
-                        "\n" +
-                        "</RelativeLayout>\n", source, Charsets.UTF_8);
-        source.deleteOnExit();
-        Files.write(
-                "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
-                        "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
-                        "    android:layout_width=\"match_parent\"\n" +
-                        "    android:layout_height=\"match_parent\"\n" +
-                        "    android:paddingLeft=\"@dimen/activity_horizontal_margin\"\n" +
-                        "    android:paddingRight=\"@dimen/activity_horizontal_margin\"\n" +
-                        "    android:paddingTop=\"@dimen/activity_vertical_margin\"\n" +
-                        "    android:paddingBottom=\"@dimen/activity_vertical_margin\"\n" +
-                        "    tools:context=\".MainActivity\">\n" +
-                        "\n" +
-                        "    <!--style=\"@style/Buttons\"-->\n" +
-                        "    <Button\n" +
-                        "        android:layout_width=\"wrap_content\"\n" +
-                        "        android:layout_height=\"wrap_content\"\n" +
-                        "        android:hint=\"fy faen\"\n" +
-                        "        android:text=\"@string/hello_world\"\n" +
-                        "        android:slayout_alignParentTop=\"true\"\n" +
-                        "        android:layout_alignParentLeft=\"true\" />\n" +
-                        "\n" +
-                        "</RelativeLayout>\n" +
-                        "<!-- " + createPathComment(source, false) + " -->", sourceFile,
-                Charsets.UTF_8);
+        Files.asCharSink(source, Charsets.UTF_8)
+                .write(
+                        "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                + "    android:layout_width=\"match_parent\"\n"
+                                + "    android:layout_height=\"match_parent\"\n"
+                                + "    android:paddingLeft=\"@dimen/activity_horizontal_margin\"\n"
+                                + "    android:paddingRight=\"@dimen/activity_horizontal_margin\"\n"
+                                + "    android:paddingTop=\"@dimen/activity_vertical_margin\"\n"
+                                + "    android:paddingBottom=\"@dimen/activity_vertical_margin\"\n"
+                                + "    tools:context=\".MainActivity\">\n"
+                                + "\n"
+                                + "\n"
+                                + "    <Button\n"
+                                + "        android:layout_width=\"wrap_content\"\n"
+                                + "        android:layout_height=\"wrap_content\"\n"
+                                + "        android:hint=\"fy faen\"\n"
+                                + "        android:text=\"@string/hello_world\"\n"
+                                + "        android:slayout_alignParentTop=\"true\"\n"
+                                + "        android:layout_alignParentLeft=\"true\" />\n"
+                                + "\n"
+                                + "</RelativeLayout>\n");
+        Files.asCharSink(sourceFile, Charsets.UTF_8)
+                .write(
+                        "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                                + "    android:layout_width=\"match_parent\"\n"
+                                + "    android:layout_height=\"match_parent\"\n"
+                                + "    android:paddingLeft=\"@dimen/activity_horizontal_margin\"\n"
+                                + "    android:paddingRight=\"@dimen/activity_horizontal_margin\"\n"
+                                + "    android:paddingTop=\"@dimen/activity_vertical_margin\"\n"
+                                + "    android:paddingBottom=\"@dimen/activity_vertical_margin\"\n"
+                                + "    tools:context=\".MainActivity\">\n"
+                                + "\n"
+                                + "    <!--style=\"@style/Buttons\"-->\n"
+                                + "    <Button\n"
+                                + "        android:layout_width=\"wrap_content\"\n"
+                                + "        android:layout_height=\"wrap_content\"\n"
+                                + "        android:hint=\"fy faen\"\n"
+                                + "        android:text=\"@string/hello_world\"\n"
+                                + "        android:slayout_alignParentTop=\"true\"\n"
+                                + "        android:layout_alignParentLeft=\"true\" />\n"
+                                + "\n"
+                                + "</RelativeLayout>\n"
+                                + "<!-- "
+                                + createPathComment(source, false)
+                                + " -->");
 
         String output =
                 ":BlankProject1:preBuild UP-TO-DATE\n" +
@@ -771,10 +749,6 @@ public class AaptOutputParserTest {
                         "\t" + source.getPath() + ":12\n" +
                         "13: Simple::BlankProject1:processDebugResources FAILED\n",
                 toString(parser.parseToolOutput(output)));
-
-        sourceFile.delete();
-        source.delete();
-        tempDir.delete();
     }
 
     @Test
@@ -805,6 +779,5 @@ public class AaptOutputParserTest {
                         "\t" + sourceFilePath + ":101\n" +
                         "9: Simple::AudioPlayer:processDebugResources FAILED\n",
                 toString(parser.parseToolOutput(output)));
-        sourceFile.delete();
     }
 }
