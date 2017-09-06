@@ -18,6 +18,7 @@ package com.android.tools.profiler.support.profilers;
 
 import android.app.Activity;
 import android.app.Application;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.Display;
 import android.view.Window;
@@ -26,13 +27,14 @@ import android.view.inputmethod.InputMethodManager;
 import com.android.tools.profiler.support.event.InputConnectionWrapper;
 import com.android.tools.profiler.support.event.WindowProfilerCallback;
 import com.android.tools.profiler.support.util.StudioLog;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.concurrent.CountDownLatch;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * EventProfiler class captures and reports all events that we track on an app. These events are
@@ -231,7 +233,9 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
     /**
      * Input connection handler is a threaded class that polls for an Inputconnection. An
      * InputConnection is only established if an editable (editorview) control is active, and the
-     * softkeyboard is active.
+     * softkeyboard is active. This means the thread cannot be torn down because the soft
+     * uplokeyboard state is transient and each time it is torndown the imm stops accepting text and
+     * can clean up internal state.
      */
     private class InputConnectionHandler implements Runnable {
         private static final int SLEEP_TIME = 100;
@@ -244,6 +248,7 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
                 Method instance = clazz.getMethod("getInstance");
                 instance.setAccessible(true);
                 InputMethodManager imm = (InputMethodManager) instance.invoke(null);
+                InputConnectionWrapper inputConnectionWrapper = null;
                 while (true) {
                     Thread.sleep(SLEEP_TIME);
                     // If we are accepting text that means we have an input connection
@@ -256,23 +261,43 @@ public class EventProfiler implements ProfilerComponent, Application.ActivityLif
 
                         // Grab the lock and the input connection object
                         Class connectionWrapper = connection.getClass().getSuperclass();
-                        Field lock = connectionWrapper.getDeclaredField("mLock");
-                        lock.setAccessible(true);
-                        Object lockObject = lock.get(connection);
+                        Object lockObject = new Object();
+
+                        // For the marshmallow OS and before they don't have a lock field.
+                        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+                            Field lock = connectionWrapper.getDeclaredField("mLock");
+                            lock.setAccessible(true);
+                            lockObject = lock.get(connection);
+                        }
+
                         synchronized (lockObject) {
                             Field ic = connectionWrapper.getDeclaredField("mInputConnection");
                             ic.setAccessible(true);
                             //Replace the object with a wrapper
                             Object input = ic.get(connection);
                             if (!InputConnectionWrapper.class.isInstance(input)) {
-                                ic.set(
-                                        connection,
-                                        new InputConnectionWrapper((InputConnection) input));
+                                if (input.getClass().isAssignableFrom(WeakReference.class)) {
+                                    InputConnection inputConnection =
+                                            ((WeakReference<InputConnection>) input).get();
+                                    // Store this instance of the wrapper on a thread local variable
+                                    // this prevents the wrapper from getting cleaned while still
+                                    // potentially in use. This thread does not get terminated until
+                                    // the application is terminated.
+                                    inputConnectionWrapper =
+                                            new InputConnectionWrapper(inputConnection);
+                                    ic.set(
+                                            connection,
+                                            new WeakReference<InputConnection>(
+                                                    inputConnectionWrapper));
+                                } else {
+                                    inputConnectionWrapper =
+                                            new InputConnectionWrapper((InputConnection) input);
+                                    ic.set(connection, inputConnectionWrapper);
+                                }
                             }
                             //Clean up and set state so we don't do this more than once.
                             ic.setAccessible(false);
                         }
-                        lock.setAccessible(false);
                     }
                 }
             } catch (InterruptedException ex) {
