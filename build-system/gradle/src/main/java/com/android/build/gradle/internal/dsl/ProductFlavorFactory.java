@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.builder.core.ErrorReporter;
+import com.android.builder.errors.ConfigurableErrorHandler;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
@@ -35,14 +35,13 @@ public class ProductFlavorFactory implements NamedDomainObjectFactory<ProductFla
     private final Project project;
     @NonNull
     private final Logger logger;
-    @NonNull
-    private final ErrorReporter errorReporter;
+    @NonNull private final ConfigurableErrorHandler errorReporter;
 
     public ProductFlavorFactory(
             @NonNull Instantiator instantiator,
             @NonNull Project project,
             @NonNull Logger logger,
-            @NonNull ErrorReporter errorReporter) {
+            @NonNull ConfigurableErrorHandler errorReporter) {
         this.instantiator = instantiator;
         this.project = project;
         this.logger = logger;

@@ -293,8 +293,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
             if (version.startsWith("4.1") || version.startsWith("4.2")) {
                 // Putting a warning because it might actually work if the included build is using
                 // plugin 2.3 or just java plugins.
-                extraModelInfo.handleSyncWarning(
-                        null,
+                extraModelInfo.reportWarning(
                         SyncIssue.TYPE_GENERIC,
                         "A composite "
                                 + project.getName()
@@ -311,14 +310,16 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
             sdkHandler.setSdkLibData(sdkLibData);
         }
 
-        androidBuilder = new AndroidBuilder(
-                project == project.getRootProject() ? project.getName() : project.getPath(),
-                creator,
-                new GradleProcessExecutor(project),
-                new GradleJavaProcessExecutor(project),
-                extraModelInfo,
-                getLogger(),
-                isVerbose());
+        androidBuilder =
+                new AndroidBuilder(
+                        project == project.getRootProject() ? project.getName() : project.getPath(),
+                        creator,
+                        new GradleProcessExecutor(project),
+                        new GradleJavaProcessExecutor(project),
+                        extraModelInfo,
+                        extraModelInfo,
+                        getLogger(),
+                        isVerbose());
         dataBindingBuilder = new DataBindingBuilder();
         dataBindingBuilder.setPrintMachineReadableOutput(
                 extraModelInfo.getErrorFormatMode() ==
@@ -407,7 +408,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         final NamedDomainObjectContainer<BuildType> buildTypeContainer =
                 project.container(
                         BuildType.class,
-                        new BuildTypeFactory(instantiator, project, extraModelInfo));
+                        new BuildTypeFactory(
+                                instantiator, project, extraModelInfo, extraModelInfo));
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
                 project.container(
                         ProductFlavor.class,

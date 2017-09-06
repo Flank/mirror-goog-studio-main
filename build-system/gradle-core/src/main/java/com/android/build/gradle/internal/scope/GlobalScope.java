@@ -31,9 +31,11 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.errors.ConfigurableErrorHandler;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.utils.FileCache;
+import com.android.ide.common.blame.MessageReceiver;
 import com.google.common.base.CharMatcher;
 import java.io.File;
 import java.util.Set;
@@ -237,6 +239,20 @@ public class GlobalScope extends TaskOutputHolderImpl
 
     public void setLintChecks(@NonNull Configuration lintChecks) {
         this.lintChecks = lintChecks;
+    }
+
+    @NonNull
+    public ConfigurableErrorHandler getErrorHandler() {
+        // This is ugly but this allow us to make it work for the component model.
+        // FIXME: once we clear out internal data structure and remove the component model, we can make this better.
+        return (ConfigurableErrorHandler) androidBuilder.getIssueReporter();
+    }
+
+    @NonNull
+    public MessageReceiver getMessageReceiver() {
+        // This is ugly but this allow us to make it work for the component model.
+        // FIXME: once we clear out internal data structure and remove the component model, we can make this better.
+        return (MessageReceiver) androidBuilder.getIssueReporter();
     }
 
     @NonNull

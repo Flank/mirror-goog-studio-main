@@ -21,7 +21,6 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.Maps;
@@ -45,9 +44,8 @@ public class FeatureVariantData extends ApkVariantData implements TestedVariantD
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
-            @NonNull ErrorReporter errorReporter,
             @NonNull Recorder recorder) {
-        super(globalScope, androidConfig, taskManager, config, errorReporter, recorder);
+        super(globalScope, androidConfig, taskManager, config, recorder);
         testVariants = Maps.newEnumMap(VariantType.class);
 
         // Compute the split value name for the manifest.

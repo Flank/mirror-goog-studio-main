@@ -21,7 +21,6 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.profile.Recorder;
 
 /** Data about a variant that produces an instantApp bundle. */
@@ -32,9 +31,8 @@ public class InstantAppVariantData extends BaseVariantData {
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
-            @NonNull ErrorReporter errorReporter,
             @NonNull Recorder recorder) {
-        super(globalScope, androidConfig, taskManager, config, errorReporter, recorder);
+        super(globalScope, androidConfig, taskManager, config, recorder);
     }
 
     @NonNull

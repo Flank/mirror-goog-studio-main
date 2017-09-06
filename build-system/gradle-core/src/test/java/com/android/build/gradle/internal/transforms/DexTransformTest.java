@@ -40,11 +40,12 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.errors.ConfigurableErrorHandler;
 import com.android.builder.internal.FakeAndroidTarget;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.process.JavaProcessExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessExecutor;
@@ -474,7 +475,8 @@ public class DexTransformTest {
                         "createdBy",
                         mock(ProcessExecutor.class),
                         mock(JavaProcessExecutor.class),
-                        mock(ErrorReporter.class),
+                        mock(ConfigurableErrorHandler.class),
+                        mock(MessageReceiver.class),
                         mock(ILogger.class),
                         false /* verboseExec */);
         fakeAndroidBuilder.setTargetInfo(targetInfo);
@@ -509,7 +511,7 @@ public class DexTransformTest {
                         null, // mainDexListFile
                         targetInfo,
                         byteCodeConverter,
-                        mock(ErrorReporter.class),
+                        mock(MessageReceiver.class),
                         1);
 
         TransformOutputProvider mockTransformOutputProvider = mock(TransformOutputProvider.class);
@@ -577,7 +579,8 @@ public class DexTransformTest {
                 @Nullable String createdBy,
                 @NonNull ProcessExecutor processExecutor,
                 @NonNull JavaProcessExecutor javaProcessExecutor,
-                @NonNull ErrorReporter errorReporter,
+                @NonNull ConfigurableErrorHandler configurableErrorHandler,
+                @NonNull MessageReceiver messageReceiver,
                 @NonNull ILogger logger,
                 boolean verboseExec) {
             super(
@@ -585,7 +588,8 @@ public class DexTransformTest {
                     createdBy,
                     processExecutor,
                     javaProcessExecutor,
-                    errorReporter,
+                    configurableErrorHandler,
+                    messageReceiver,
                     logger,
                     verboseExec);
         }
@@ -615,7 +619,7 @@ public class DexTransformTest {
                 TargetInfo targetInfo,
                 JavaProcessExecutor javaProcessExecutor,
                 boolean verboseExec) {
-            super(logger, targetInfo, javaProcessExecutor, verboseExec, new NoOpErrorReporter());
+            super(logger, targetInfo, javaProcessExecutor, verboseExec);
         }
 
         @Override

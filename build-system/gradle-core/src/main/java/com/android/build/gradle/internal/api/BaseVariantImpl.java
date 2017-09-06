@@ -170,11 +170,9 @@ public abstract class BaseVariantImpl implements BaseVariant {
                 return getVariantData().getJavaSources();
             default:
                 androidBuilder
-                        .getErrorReporter()
-                        .handleSyncError(
-                                null,
-                                SyncIssue.TYPE_GENERIC,
-                                "Unknown SourceKind value: " + folderType);
+                        .getIssueReporter()
+                        .reportError(
+                                SyncIssue.TYPE_GENERIC, "Unknown SourceKind value: " + folderType);
         }
 
         return ImmutableList.of();

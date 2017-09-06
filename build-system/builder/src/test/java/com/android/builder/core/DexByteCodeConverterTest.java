@@ -57,8 +57,7 @@ public class DexByteCodeConverterTest {
                         logger,
                         null /* targetInfo */,
                         mock(JavaProcessExecutor.class),
-                        false /* verboseExec */,
-                        new ThrowingErrorReporter());
+                        false /* verboseExec */);
     }
 
     @Test

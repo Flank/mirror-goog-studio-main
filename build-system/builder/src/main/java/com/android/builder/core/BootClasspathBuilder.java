@@ -17,6 +17,7 @@
 package com.android.builder.core;
 
 import com.android.annotations.NonNull;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SyncIssue;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.base.Preconditions;
@@ -73,7 +74,7 @@ public class BootClasspathBuilder {
     public static ImmutableList<File> computeFilteredClasspath(
             @NonNull IAndroidTarget target,
             @NonNull List<LibraryRequest> libraryRequestsArg,
-            @NonNull ErrorReporter errorReporter,
+            @NonNull EvalIssueReporter issueReporter,
             @NonNull File annotationsJar) {
         List<File> classpath = Lists.newArrayList();
 
@@ -112,10 +113,10 @@ public class BootClasspathBuilder {
 
         // look for not found requested libraries.
         for (LibraryRequest library : requestedLibs) {
-            errorReporter.handleSyncError(
-                    library.getName(),
+            issueReporter.reportError(
                     SyncIssue.TYPE_OPTIONAL_LIB_NOT_FOUND,
-                    "Unable to find optional library: " + library.getName());
+                    "Unable to find optional library: " + library.getName(),
+                    library.getName());
         }
 
         // add annotations.jar if needed.

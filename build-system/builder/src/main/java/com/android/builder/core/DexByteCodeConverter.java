@@ -79,19 +79,16 @@ public class DexByteCodeConverter {
     private final TargetInfo mTargetInfo;
     private final ILogger mLogger;
     private Boolean mIsDexInProcess = null;
-    @NonNull private ErrorReporter errorReporter;
 
     public DexByteCodeConverter(
             ILogger logger,
             TargetInfo targetInfo,
             JavaProcessExecutor javaProcessExecutor,
-            boolean verboseExec,
-            @NonNull ErrorReporter errorReporter) {
+            boolean verboseExec) {
         mLogger = logger;
         mTargetInfo = targetInfo;
         mJavaProcessExecutor = javaProcessExecutor;
         mVerboseExec = verboseExec;
-        this.errorReporter = errorReporter;
     }
 
     /**

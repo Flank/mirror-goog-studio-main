@@ -18,28 +18,23 @@ package com.android.builder.core;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.errors.ConfigurableErrorHandler;
 import com.android.builder.model.SyncIssue;
-import com.android.ide.common.blame.Message;
 
-public class ThrowingErrorReporter extends ErrorReporter {
-    public ThrowingErrorReporter() {
+public class ThrowingConfigurableErrorReporter extends ConfigurableErrorHandler {
+    public ThrowingConfigurableErrorReporter() {
         super(EvaluationMode.IDE);
     }
 
     @NonNull
     @Override
-    public SyncIssue handleIssue(
-            @Nullable String data, int type, int severity, @NonNull String msg) {
+    public SyncIssue reportIssue(
+            int type, int severity, @NonNull String msg, @Nullable String data) {
         throw new RuntimeException("fake");
     }
 
     @Override
     public boolean hasSyncIssue(int type) {
-        throw new RuntimeException("fake");
-    }
-
-    @Override
-    public void receiveMessage(@NonNull Message message) {
         throw new RuntimeException("fake");
     }
 }

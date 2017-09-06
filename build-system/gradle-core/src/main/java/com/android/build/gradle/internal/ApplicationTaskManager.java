@@ -284,9 +284,7 @@ public class ApplicationTaskManager extends TaskManager {
                                     + "tools/java-8-support-message.html\n",
                             pluginName);
 
-            androidBuilder
-                    .getErrorReporter()
-                    .handleSyncWarning(null, SyncIssue.TYPE_GENERIC, warningMsg);
+            androidBuilder.getIssueReporter().reportWarning(SyncIssue.TYPE_GENERIC, warningMsg);
         }
 
         addJavacClassesStream(variantScope);

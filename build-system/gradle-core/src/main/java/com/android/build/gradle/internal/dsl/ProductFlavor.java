@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.builder.core.ErrorReporter;
+import com.android.builder.errors.ConfigurableErrorHandler;
 import com.android.builder.model.BaseConfig;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -64,7 +64,7 @@ public class ProductFlavor extends BaseFlavor {
             @NonNull Project project,
             @NonNull Instantiator instantiator,
             @NonNull Logger logger,
-            @NonNull ErrorReporter errorReporter) {
+            @NonNull ConfigurableErrorHandler errorReporter) {
         super(name, project, instantiator, logger, errorReporter);
     }
 

@@ -92,7 +92,6 @@ import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BootClasspathBuilder;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
@@ -154,7 +153,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull private final GlobalScope globalScope;
     @NonNull private final BaseVariantData variantData;
-    @NonNull private final ErrorReporter errorReporter;
     @NonNull private final TransformManager transformManager;
     @Nullable private Collection<Object> ndkBuildable;
     @Nullable private Collection<File> ndkSoFolder;
@@ -211,11 +209,9 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
-            @NonNull ErrorReporter errorReporter,
             @NonNull TransformManager transformManager,
             @NonNull BaseVariantData variantData) {
         this.globalScope = globalScope;
-        this.errorReporter = errorReporter;
         this.transformManager = transformManager;
         this.variantData = variantData;
         this.variantPublishingSpec = VariantPublishingSpec.getVariantSpec(variantData.getType());
@@ -240,17 +236,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         if (postprocessingOptions.getCodeShrinkerEnum() == ANDROID_GRADLE) {
             if (postprocessingOptions.isObfuscate()) {
-                errorReporter.handleSyncError(
-                        null,
-                        SyncIssue.TYPE_GENERIC,
-                        "The 'android-gradle' code shrinker does not support obfuscating.");
+                globalScope
+                        .getErrorHandler()
+                        .reportError(
+                                SyncIssue.TYPE_GENERIC,
+                                "The 'android-gradle' code shrinker does not support obfuscating.");
             }
 
             if (postprocessingOptions.isOptimizeCode()) {
-                errorReporter.handleSyncError(
-                        null,
-                        SyncIssue.TYPE_GENERIC,
-                        "The 'android-gradle' code shrinker does not support optimizing code.");
+                globalScope
+                        .getErrorHandler()
+                        .reportError(
+                                SyncIssue.TYPE_GENERIC,
+                                "The 'android-gradle' code shrinker does not support optimizing code.");
             }
         }
     }
@@ -424,20 +422,22 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         if (variantData.getType() == VariantType.LIBRARY) {
-            errorReporter.handleSyncError(
-                    null,
-                    SyncIssue.TYPE_GENERIC,
-                    "Resource shrinker cannot be used for libraries.");
+            globalScope
+                    .getErrorHandler()
+                    .reportError(
+                            SyncIssue.TYPE_GENERIC,
+                            "Resource shrinker cannot be used for libraries.");
             return false;
         }
 
         if (getCodeShrinker() == null) {
-            errorReporter.handleSyncError(
-                    null,
-                    SyncIssue.TYPE_GENERIC,
-                    "Removing unused resources requires unused code shrinking to be turned on. See "
-                            + "http://d.android.com/r/tools/shrink-resources.html "
-                            + "for more information.");
+            globalScope
+                    .getErrorHandler()
+                    .reportError(
+                            SyncIssue.TYPE_GENERIC,
+                            "Removing unused resources requires unused code shrinking to be turned on. See "
+                                    + "http://d.android.com/r/tools/shrink-resources.html "
+                                    + "for more information.");
 
             return false;
         }
@@ -2092,12 +2092,14 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return Java8LangSupport.DESUGAR;
         }
 
-        errorReporter.handleSyncError(
-                getVariantConfiguration().getFullName(),
-                SyncIssue.TYPE_GENERIC,
-                "Please add 'android.enableDesugar=true' to your "
-                        + "gradle.properties file to enable Java 8 "
-                        + "language support.");
+        globalScope
+                .getErrorHandler()
+                .reportError(
+                        SyncIssue.TYPE_GENERIC,
+                        "Please add 'android.enableDesugar=true' to your "
+                                + "gradle.properties file to enable Java 8 "
+                                + "language support.",
+                        getVariantConfiguration().getFullName());
         return Java8LangSupport.INVALID;
     }
 

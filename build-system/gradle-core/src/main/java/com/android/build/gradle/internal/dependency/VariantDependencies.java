@@ -23,21 +23,18 @@ import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.ConfigurableErrorHandler;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.ComponentSelectionRules;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ResolutionStrategy;
@@ -107,7 +104,7 @@ public class VariantDependencies {
 
     public static final class Builder {
         @NonNull private final Project project;
-        @NonNull private final ErrorReporter errorReporter;
+        @NonNull private final ConfigurableErrorHandler errorReporter;
         @NonNull private final GradleVariantConfiguration variantConfiguration;
         private boolean baseSplit = false;
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
@@ -128,7 +125,7 @@ public class VariantDependencies {
 
         protected Builder(
                 @NonNull Project project,
-                @NonNull ErrorReporter errorReporter,
+                @NonNull ConfigurableErrorHandler errorReporter,
                 @NonNull GradleVariantConfiguration variantConfiguration) {
             this.project = project;
             this.errorReporter = errorReporter;
@@ -428,7 +425,7 @@ public class VariantDependencies {
 
     public static Builder builder(
             @NonNull Project project,
-            @NonNull ErrorReporter errorReporter,
+            @NonNull ConfigurableErrorHandler errorReporter,
             @NonNull GradleVariantConfiguration variantConfiguration) {
         return new Builder(project, errorReporter, variantConfiguration);
     }

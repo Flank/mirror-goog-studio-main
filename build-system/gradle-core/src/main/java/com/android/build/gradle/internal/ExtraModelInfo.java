@@ -31,7 +31,7 @@ import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.variant.DefaultSourceProviderContainer;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
-import com.android.builder.core.ErrorReporter;
+import com.android.builder.errors.ConfigurableErrorHandler;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.JavaArtifact;
@@ -40,6 +40,7 @@ import com.android.builder.model.SourceProviderContainer;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.blame.Message;
 import com.android.ide.common.blame.MessageJsonSerializer;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.blame.SourceFilePosition;
 import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
@@ -60,10 +61,8 @@ import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.logging.Logger;
 
-/**
- * For storing additional model information.
- */
-public class ExtraModelInfo extends ErrorReporter {
+/** For storing additional model information. */
+public class ExtraModelInfo extends ConfigurableErrorHandler implements MessageReceiver {
 
     @NonNull private final Logger logger;
 
@@ -95,8 +94,7 @@ public class ExtraModelInfo extends ErrorReporter {
             mGson = null;
         }
         if (projectOptions.hasDeprecatedOptions()) {
-            handleSyncError(
-                    "", SyncIssue.TYPE_GENERIC, projectOptions.getDeprecatedOptionsErrorMessage());
+            reportError(SyncIssue.TYPE_GENERIC, projectOptions.getDeprecatedOptionsErrorMessage());
         }
     }
 
@@ -106,11 +104,8 @@ public class ExtraModelInfo extends ErrorReporter {
 
     @Override
     @NonNull
-    public SyncIssue handleIssue(
-            @Nullable String data,
-            int type,
-            int severity,
-            @NonNull String msg) {
+    public SyncIssue reportIssue(
+            int type, int severity, @NonNull String msg, @Nullable String data) {
         SyncIssue issue;
         switch (getMode()) {
             case STANDARD:

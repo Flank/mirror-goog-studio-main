@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,11 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.core.ErrorReporter;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SyncIssue;
-import com.android.ide.common.blame.Message;
 import java.util.List;
 
-/** Error reporter that does not processes the messages. Also, it ignores handling the issues. */
-public class NoOpErrorReporter extends ErrorReporter {
+public class NoOpIssueReporter implements EvalIssueReporter {
 
     private static final SyncIssue FAKE_ISSUE =
             new SyncIssue() {
@@ -57,24 +55,40 @@ public class NoOpErrorReporter extends ErrorReporter {
                 }
             };
 
-    public NoOpErrorReporter() {
-        super(EvaluationMode.IDE);
-    }
-
+    @NonNull
     @Override
-    public void receiveMessage(@NonNull Message message) {
-        // do nothing
+    public SyncIssue reportIssue(
+            int type, int severity, @NonNull String msg, @Nullable String data) {
+        return FAKE_ISSUE;
     }
 
     @NonNull
     @Override
-    public SyncIssue handleIssue(
-            @Nullable String data, int type, int severity, @NonNull String msg) {
+    public SyncIssue reportIssue(int type, int severity, @NonNull String msg) {
         return FAKE_ISSUE;
     }
 
+    @NonNull
     @Override
-    public boolean hasSyncIssue(int type) {
-        return false;
+    public SyncIssue reportError(int type, @NonNull String msg, @Nullable String data) {
+        return FAKE_ISSUE;
+    }
+
+    @NonNull
+    @Override
+    public SyncIssue reportError(int type, @NonNull String msg) {
+        return FAKE_ISSUE;
+    }
+
+    @NonNull
+    @Override
+    public SyncIssue reportWarning(int type, @NonNull String msg, @Nullable String data) {
+        return FAKE_ISSUE;
+    }
+
+    @NonNull
+    @Override
+    public SyncIssue reportWarning(int type, @NonNull String msg) {
+        return FAKE_ISSUE;
     }
 }

@@ -664,8 +664,9 @@ public class PluginDslTest {
         plugin.createAndroidTasks(false);
         assertThat(plugin.getAndroidBuilder().getBuildToolInfo().getRevision())
                 .isEqualTo(AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION);
+        // FIXME once we get rid of the component model, we can make this better.
         Collection<SyncIssue> syncIssues =
-                ((ExtraModelInfo) plugin.getAndroidBuilder().getErrorReporter())
+                ((ExtraModelInfo) plugin.getAndroidBuilder().getIssueReporter())
                         .getSyncIssues()
                         .values();
         assertThat(syncIssues).hasSize(1);

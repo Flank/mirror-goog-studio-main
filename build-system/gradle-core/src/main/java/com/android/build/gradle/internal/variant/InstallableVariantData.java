@@ -21,7 +21,6 @@ import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.GlobalScope;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.profile.Recorder;
 import org.gradle.api.DefaultTask;
 
@@ -36,8 +35,7 @@ public abstract class InstallableVariantData extends AndroidArtifactVariantData 
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration config,
-            @NonNull ErrorReporter errorReporter,
             @NonNull Recorder recorder) {
-        super(globalScope, androidConfig, taskManager, config, errorReporter, recorder);
+        super(globalScope, androidConfig, taskManager, config, recorder);
     }
 }

@@ -34,10 +34,10 @@ import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.ide.common.blame.Message;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.DexParser;
 import com.android.ide.common.blame.parser.ToolOutputParser;
@@ -109,13 +109,13 @@ public class DexMergerTransform extends Transform {
     @NonNull private final DexMergerTool dexMerger;
     private final int minSdkVersion;
     private final boolean isDebuggable;
-    @NonNull private final ErrorReporter errorReporter;
+    @NonNull private final MessageReceiver messageReceiver;
     @NonNull private final ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
 
     public DexMergerTransform(
             @NonNull DexingType dexingType,
             @Nullable FileCollection mainDexListFile,
-            @NonNull ErrorReporter errorReporter,
+            @NonNull MessageReceiver messageReceiver,
             @NonNull DexMergerTool dexMerger,
             int minSdkVersion,
             boolean isDebuggable) {
@@ -127,7 +127,7 @@ public class DexMergerTransform extends Transform {
         Preconditions.checkState(
                 (dexingType == DexingType.LEGACY_MULTIDEX) == (mainDexListFile != null),
                 "Main dex list must only be set when in legacy multidex");
-        this.errorReporter = errorReporter;
+        this.messageReceiver = messageReceiver;
     }
 
     @NonNull
@@ -199,7 +199,7 @@ public class DexMergerTransform extends Transform {
                 new ParsingProcessOutputHandler(
                         new ToolOutputParser(new DexParser(), Message.Kind.ERROR, logger),
                         new ToolOutputParser(new DexParser(), logger),
-                        errorReporter);
+                        messageReceiver);
 
         if (!transformInvocation.isIncremental()) {
             outputProvider.deleteAll();

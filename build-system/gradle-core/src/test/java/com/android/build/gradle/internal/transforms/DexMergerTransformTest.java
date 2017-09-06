@@ -327,7 +327,7 @@ public class DexMergerTransformTest {
                 new DexMergerTransform(
                         DexingType.NATIVE_MULTIDEX,
                         null,
-                        new NoOpErrorReporter(),
+                        new NoOpMessageReceiver(),
                         DexMergerTool.DX,
                         21,
                         true);
@@ -343,7 +343,7 @@ public class DexMergerTransformTest {
                 new DexMergerTransform(
                         DexingType.NATIVE_MULTIDEX,
                         null,
-                        new NoOpErrorReporter(),
+                        new NoOpMessageReceiver(),
                         DexMergerTool.DX,
                         23,
                         true);
@@ -379,7 +379,7 @@ public class DexMergerTransformTest {
             collection = null;
         }
         return new DexMergerTransform(
-                dexingType, collection, new NoOpErrorReporter(), DexMergerTool.DX, 1, true);
+                dexingType, collection, new NoOpMessageReceiver(), DexMergerTool.DX, 1, true);
     }
 
     @NonNull

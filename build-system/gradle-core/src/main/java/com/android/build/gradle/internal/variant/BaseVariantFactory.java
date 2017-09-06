@@ -50,13 +50,13 @@ public abstract class BaseVariantFactory implements VariantFactory {
         if (project.getPluginManager().hasPlugin(ANDROID_APT_PLUGIN_NAME)) {
             globalScope
                     .getAndroidBuilder()
-                    .getErrorReporter()
-                    .handleSyncError(
-                            "android-apt",
+                    .getIssueReporter()
+                    .reportError(
                             SyncIssue.TYPE_INCOMPATIBLE_PLUGIN,
                             "android-apt plugin is incompatible with the Android Gradle plugin.  "
                                     + "Please use 'annotationProcessor' configuration "
-                                    + "instead.");
+                                    + "instead.",
+                            "android-apt");
         }
     }
 }

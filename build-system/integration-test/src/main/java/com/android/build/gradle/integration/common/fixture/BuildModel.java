@@ -251,10 +251,12 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     }
 
     private void assertNoSyncIssues(@NonNull String name, @NonNull AndroidProject project) {
+        // ignore the issue below the level we care about and all the deprecation warning.
         List<SyncIssue> filteredIssues =
                 project.getSyncIssues()
                         .stream()
                         .filter(syncIssue -> syncIssue.getSeverity() > maxSyncIssueSeverityLevel)
+                        .filter(syncIssue -> syncIssue.getType() != SyncIssue.TYPE_DEPRECATED_DSL)
                         .collect(Collectors.toList());
 
         if (!filteredIssues.isEmpty()) {

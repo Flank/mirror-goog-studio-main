@@ -20,7 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.ProguardFiles;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.core.ErrorReporter;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SyncIssue;
 import java.io.File;
 import java.util.HashMap;
@@ -33,17 +33,14 @@ public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<
     @NonNull private final Project project;
     @NonNull private final VariantScope variantScope;
     @NonNull private final File outputFile;
-    @NonNull private final ErrorReporter errorReporter;
 
     public MergeConsumerProguardFilesConfigAction(
             @NonNull Project project,
-            @NonNull ErrorReporter errorReporter,
             @NonNull VariantScope variantScope,
             @NonNull File outputFile) {
         this.project = project;
         this.variantScope = variantScope;
         this.outputFile = outputFile;
-        this.errorReporter = errorReporter;
     }
 
     @NonNull
@@ -72,10 +69,11 @@ public class MergeConsumerProguardFilesConfigAction implements TaskConfigAction<
                     ProguardFiles.getDefaultProguardFile(knownFileName, project), knownFileName);
         }
 
+        EvalIssueReporter issueReporter = variantScope.getGlobalScope().getErrorHandler();
+
         for (File consumerFile : mergeProguardFiles.getInputFiles()) {
             if (defaultFiles.containsKey(consumerFile)) {
-                errorReporter.handleSyncError(
-                        null,
+                issueReporter.reportError(
                         SyncIssue.TYPE_GENERIC,
                         String.format(
                                 "Default file %s should not be used as a consumer configuration file.",

@@ -181,7 +181,7 @@ public class PreDexTransform extends Transform {
                 new ParsingProcessOutputHandler(
                         new ToolOutputParser(new DexParser(), Message.Kind.ERROR, logger),
                         new ToolOutputParser(new DexParser(), logger),
-                        androidBuilder.getErrorReporter());
+                        androidBuilder.getMessageReceiver());
 
         if (!transformInvocation.isIncremental()) {
             outputProvider.deleteAll();

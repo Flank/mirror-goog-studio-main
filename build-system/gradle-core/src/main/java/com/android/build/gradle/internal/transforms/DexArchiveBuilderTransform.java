@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexOptions;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.dexing.ClassFileEntry;
 import com.android.builder.dexing.ClassFileInput;
 import com.android.builder.dexing.ClassFileInputs;
@@ -50,6 +49,7 @@ import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
 import com.android.dx.command.dexer.DxContext;
 import com.android.ide.common.blame.Message;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.DexParser;
 import com.android.ide.common.blame.parser.ToolOutputParser;
@@ -103,7 +103,7 @@ public class DexArchiveBuilderTransform extends Transform {
     public static final int NUMBER_OF_BUCKETS = 5;
 
     @NonNull private final DexOptions dexOptions;
-    @NonNull private final ErrorReporter errorReporter;
+    @NonNull private final MessageReceiver messageReceiver;
     @VisibleForTesting @NonNull final WaitableExecutor executor;
     private final int minSdkVersion;
     @NonNull private final DexerTool dexer;
@@ -115,7 +115,7 @@ public class DexArchiveBuilderTransform extends Transform {
 
     public DexArchiveBuilderTransform(
             @NonNull DexOptions dexOptions,
-            @NonNull ErrorReporter errorReporter,
+            @NonNull MessageReceiver messageReceiver,
             @Nullable FileCache userLevelCache,
             int minSdkVersion,
             @NonNull DexerTool dexer,
@@ -124,7 +124,7 @@ public class DexArchiveBuilderTransform extends Transform {
             @Nullable Integer outBufferSize,
             boolean isDebuggable) {
         this.dexOptions = dexOptions;
-        this.errorReporter = errorReporter;
+        this.messageReceiver = messageReceiver;
         this.minSdkVersion = minSdkVersion;
         this.dexer = dexer;
         this.executor = WaitableExecutor.useGlobalSharedThreadPool();
@@ -477,7 +477,7 @@ public class DexArchiveBuilderTransform extends Transform {
                                             new ToolOutputParser(
                                                     new DexParser(), Message.Kind.ERROR, logger),
                                             new ToolOutputParser(new DexParser(), logger),
-                                            errorReporter);
+                                            messageReceiver);
                             ProcessOutput output = null;
                             try (Closeable ignored = output = outputHandler.createOutput()) {
                                 launchProcessing(

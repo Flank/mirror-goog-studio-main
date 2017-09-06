@@ -70,7 +70,6 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                         extension,
                         variantConfiguration,
                         taskManager,
-                        androidBuilder.getErrorReporter(),
                         recorder);
 
         variant.calculateFilters(extension.getSplits());

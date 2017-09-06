@@ -17,8 +17,8 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.builder.core.DefaultDexOptions;
-import com.android.builder.core.ErrorReporter;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.errors.DeprecationReporter;
+import com.android.builder.errors.DeprecationReporter.DeprecationTarget;
 import java.util.Arrays;
 
 /**
@@ -35,27 +35,23 @@ public class DexOptions extends DefaultDexOptions {
             "The `android.dexOptions.optimize` property is deprecated. Dex will"
                     + " always be optimized.";
 
-    private final ErrorReporter mErrorReporter;
+    private final DeprecationReporter deprecationReporter;
 
-    public DexOptions(ErrorReporter errorReporter) {
-        this.mErrorReporter = errorReporter;
+    public DexOptions(DeprecationReporter deprecationReporter) {
+        this.deprecationReporter = deprecationReporter;
     }
 
     /** @deprecated ignored */
     @Deprecated
     public boolean getIncremental() {
-        mErrorReporter.handleSyncWarning(
-                null,
-                SyncIssue.TYPE_GENERIC,
-                INCREMENTAL_IGNORED);
+        deprecationReporter.reportDeprecatedUsage(
+                INCREMENTAL_IGNORED, "DexOptions.incremental", DeprecationTarget.VERSION_4_0);
         return false;
     }
 
     public void setIncremental(boolean ignored) {
-        mErrorReporter.handleSyncWarning(
-                null,
-                SyncIssue.TYPE_GENERIC,
-                INCREMENTAL_IGNORED);
+        deprecationReporter.reportDeprecatedUsage(
+                INCREMENTAL_IGNORED, "DexOptions.incremental", DeprecationTarget.VERSION_4_0);
     }
 
     public void additionalParameters(String... parameters) {
@@ -67,9 +63,9 @@ public class DexOptions extends DefaultDexOptions {
      */
     @Deprecated
     public void setOptimize(@SuppressWarnings("UnusedParameters") Boolean optimize) {
-        mErrorReporter.handleSyncWarning(
-                null,
-                SyncIssue.TYPE_GENERIC,
-                OPTIMIZE_IGNORED + "\n" + OPTIMIZE_WARNING);
+        deprecationReporter.reportDeprecatedUsage(
+                OPTIMIZE_IGNORED + "\n" + OPTIMIZE_WARNING,
+                "DexOptions.optimize",
+                DeprecationTarget.VERSION_4_0);
     }
 }

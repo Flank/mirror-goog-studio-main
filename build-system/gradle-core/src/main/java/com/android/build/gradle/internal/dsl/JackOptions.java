@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.core.ErrorReporter;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.errors.DeprecationReporter;
+import com.android.builder.errors.DeprecationReporter.DeprecationTarget;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -64,10 +64,10 @@ public class JackOptions implements CoreJackOptions {
     @NonNull
     private List<String> pluginNames = Lists.newArrayList();
 
-    @NonNull private final ErrorReporter errorReporter;
+    @NonNull private final DeprecationReporter deprecationReporter;
 
-    public JackOptions(@NonNull ErrorReporter errorReporter) {
-        this.errorReporter = errorReporter;
+    public JackOptions(@NonNull DeprecationReporter deprecationReporter) {
+        this.deprecationReporter = deprecationReporter;
     }
 
     void _initWith(CoreJackOptions that) {
@@ -82,12 +82,15 @@ public class JackOptions implements CoreJackOptions {
     @Override
     @Nullable
     public Boolean isEnabled() {
+        deprecationReporter.reportDeprecatedUsage(
+                DEPRECATION_WARNING, "JackOptions.enabled", DeprecationTarget.VERSION_4_0);
         // Jack toolchain has been deprecated
         return null;
     }
 
     public void setEnabled(@Nullable Boolean enabled) {
-        errorReporter.handleSyncWarning(null, SyncIssue.TYPE_GENERIC, DEPRECATION_WARNING);
+        deprecationReporter.reportDeprecatedUsage(
+                DEPRECATION_WARNING, "JackOptions.enabled", DeprecationTarget.VERSION_4_0);
     }
 
     /** {@inheritDoc} */
@@ -95,10 +98,14 @@ public class JackOptions implements CoreJackOptions {
     @Override
     @Nullable
     public Boolean isJackInProcess() {
+        deprecationReporter.reportDeprecatedUsage(
+                DEPRECATION_WARNING, "JackOptions.jackInProcess", DeprecationTarget.VERSION_4_0);
         return isJackInProcessFlag;
     }
 
     public void setJackInProcess(@Nullable Boolean jackInProcess) {
+        deprecationReporter.reportDeprecatedUsage(
+                DEPRECATION_WARNING, "JackOptions.jackInProcess", DeprecationTarget.VERSION_4_0);
         isJackInProcessFlag = jackInProcess;
     }
 

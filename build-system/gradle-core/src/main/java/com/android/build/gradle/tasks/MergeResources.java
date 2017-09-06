@@ -174,7 +174,8 @@ public class MergeResources extends IncrementalTask {
                                                 ? new AaptOutputParser()
                                                 : new Aapt2OutputParser(),
                                         builder.getLogger()),
-                                new MergingLogRewriter(blameLog::find, builder.getErrorReporter()))
+                                new MergingLogRewriter(
+                                        blameLog::find, builder.getMessageReceiver()))
                         : new LoggedProcessOutputHandler(
                                 new AaptGradleFactory.FilteringLogger(builder.getLogger())),
                 fileCache,

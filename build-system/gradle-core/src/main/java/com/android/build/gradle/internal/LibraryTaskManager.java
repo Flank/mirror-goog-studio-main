@@ -375,9 +375,8 @@ public class LibraryTaskManager extends TaskManager {
                             if (!difference.isEmpty()) {
                                 String scopes = difference.toString();
                                 androidBuilder
-                                        .getErrorReporter()
-                                        .handleSyncError(
-                                                "",
+                                        .getIssueReporter()
+                                        .reportError(
                                                 SyncIssue.TYPE_GENERIC,
                                                 String.format(
                                                         "Transforms with scopes '%s' cannot be applied to library projects.",
@@ -659,7 +658,6 @@ public class LibraryTaskManager extends TaskManager {
                                 tasks,
                                 new MergeConsumerProguardFilesConfigAction(
                                         project,
-                                        androidBuilder.getErrorReporter(),
                                         variantScope,
                                         outputFile));
 

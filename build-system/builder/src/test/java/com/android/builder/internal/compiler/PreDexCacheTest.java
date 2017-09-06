@@ -32,7 +32,8 @@ import com.android.annotations.NonNull;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexOptions;
-import com.android.builder.core.ThrowingErrorReporter;
+import com.android.builder.core.NoOpMessageReceiver;
+import com.android.builder.core.ThrowingConfigurableErrorReporter;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.process.JavaProcessExecutor;
@@ -234,7 +235,8 @@ public class PreDexCacheTest {
                         getClass().getName(),
                         new FakeProcessExecutor(),
                         new FakeJavaProcessExecutor(),
-                        new ThrowingErrorReporter(),
+                        new ThrowingConfigurableErrorReporter(),
+                        new NoOpMessageReceiver(),
                         new NullLogger(),
                         true);
 
@@ -361,7 +363,8 @@ public class PreDexCacheTest {
                                                 ii == 0
                                                         ? javaProcessExecutorWithError
                                                         : javaProcessExecutor,
-                                                new ThrowingErrorReporter(),
+                                                new ThrowingConfigurableErrorReporter(),
+                                                new NoOpMessageReceiver(),
                                                 new NullLogger(),
                                                 true);
 

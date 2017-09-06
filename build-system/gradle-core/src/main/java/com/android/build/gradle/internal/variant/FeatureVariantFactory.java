@@ -59,7 +59,6 @@ public class FeatureVariantFactory extends BaseVariantFactory {
                 extension,
                 taskManager,
                 variantConfiguration,
-                androidBuilder.getErrorReporter(),
                 recorder);
     }
 

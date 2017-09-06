@@ -34,7 +34,7 @@ import com.android.build.gradle.internal.TaskFactory;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
-import com.android.builder.core.ErrorReporter;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
@@ -96,10 +96,8 @@ public class TransformManager extends FilterableStreamCollection {
     private final Project project;
     @NonNull
     private final AndroidTaskRegistry taskRegistry;
-    @NonNull
-    private final ErrorReporter errorReporter;
-    @NonNull
-    private final Logger logger;
+    @NonNull private final EvalIssueReporter issueReporter;
+    @NonNull private final Logger logger;
     @NonNull
     private final Recorder recorder;
 
@@ -121,11 +119,11 @@ public class TransformManager extends FilterableStreamCollection {
     public TransformManager(
             @NonNull Project project,
             @NonNull AndroidTaskRegistry taskRegistry,
-            @NonNull ErrorReporter errorReporter,
+            @NonNull EvalIssueReporter issueReporter,
             @NonNull Recorder recorder) {
         this.project = project;
         this.taskRegistry = taskRegistry;
-        this.errorReporter = errorReporter;
+        this.issueReporter = issueReporter;
         this.recorder = recorder;
         this.logger = Logging.getLogger(TransformManager.class);
     }
@@ -214,13 +212,14 @@ public class TransformManager extends FilterableStreamCollection {
 
         if (inputStreams.isEmpty() && referencedStreams.isEmpty()) {
             // didn't find any match. Means there is a broken order somewhere in the streams.
-            errorReporter.handleSyncError(
-                    null,
+            issueReporter.reportError(
                     SyncIssue.TYPE_GENERIC,
                     String.format(
                             "Unable to add Transform '%s' on variant '%s': requested streams not available: %s+%s / %s",
-                            transform.getName(), scope.getFullVariantName(),
-                            transform.getScopes(), transform.getReferencedScopes(),
+                            transform.getName(),
+                            scope.getFullVariantName(),
+                            transform.getScopes(),
+                            transform.getReferencedScopes(),
                             transform.getInputTypes()));
             return Optional.empty();
         }
@@ -437,14 +436,18 @@ public class TransformManager extends FilterableStreamCollection {
         // check some scopes are not consumed.
         Set<? super Scope> scopes = transform.getScopes();
         if (scopes.contains(Scope.PROVIDED_ONLY)) {
-            errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC,
-                    String.format("PROVIDED_ONLY scope cannot be consumed by Transform '%1$s'",
+            issueReporter.reportError(
+                    SyncIssue.TYPE_GENERIC,
+                    String.format(
+                            "PROVIDED_ONLY scope cannot be consumed by Transform '%1$s'",
                             transform.getName()));
             return false;
         }
         if (scopes.contains(Scope.TESTED_CODE)) {
-            errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC,
-                    String.format("TESTED_CODE scope cannot be consumed by Transform '%1$s'",
+            issueReporter.reportError(
+                    SyncIssue.TYPE_GENERIC,
+                    String.format(
+                            "TESTED_CODE scope cannot be consumed by Transform '%1$s'",
                             transform.getName()));
             return false;
 
@@ -472,7 +475,7 @@ public class TransformManager extends FilterableStreamCollection {
                             Scope.PROJECT_LOCAL_DEPS.name(),
                             Scope.EXTERNAL_LIBRARIES.name());
             if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
-                errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
+                issueReporter.reportError(SyncIssue.TYPE_GENERIC, message);
             }
         }
 
@@ -484,7 +487,7 @@ public class TransformManager extends FilterableStreamCollection {
                             Scope.SUB_PROJECTS_LOCAL_DEPS.name(),
                             Scope.EXTERNAL_LIBRARIES.name());
             if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
-                errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
+                issueReporter.reportError(SyncIssue.TYPE_GENERIC, message);
             }
         }
     }
@@ -495,8 +498,10 @@ public class TransformManager extends FilterableStreamCollection {
         for (ContentType contentType : contentTypes) {
             if (!(contentType instanceof QualifiedContent.DefaultContentType
                     || contentType instanceof ExtendedContentType)) {
-                errorReporter.handleSyncError(null, SyncIssue.TYPE_GENERIC,
-                        String.format("Custom content types (%1$s) are not supported in transforms (%2$s)",
+                issueReporter.reportError(
+                        SyncIssue.TYPE_GENERIC,
+                        String.format(
+                                "Custom content types (%1$s) are not supported in transforms (%2$s)",
                                 contentType.getClass().getName(), transform.getName()));
                 return false;
             }

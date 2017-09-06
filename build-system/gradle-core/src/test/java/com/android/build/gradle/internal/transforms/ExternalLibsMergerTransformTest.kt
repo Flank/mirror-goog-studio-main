@@ -21,7 +21,6 @@ import com.android.build.api.transform.Status
 import com.android.build.api.transform.TransformInput
 import com.android.build.api.transform.TransformInvocation
 import com.android.build.gradle.internal.pipeline.TransformInvocationBuilder
-import com.android.builder.core.ErrorReporter
 import com.android.builder.dexing.DexMergerTool
 import com.android.builder.dexing.DexingType
 import com.android.ide.common.process.ProcessOutput
@@ -45,7 +44,7 @@ open class ExternalLibsMergerTransformTest {
     @Mock lateinit var callable : DexMergerTransformCallable
     @Mock lateinit var factory : DexMergerTransformCallable.Factory
     @Rule @JvmField val folder : TemporaryFolder = TemporaryFolder()
-    val errorReporter = NoOpErrorReporter()
+    val messageReceiver = NoOpMessageReceiver()
 
     @Before
     fun setUp() = MockitoAnnotations.initMocks(this)
@@ -56,7 +55,7 @@ open class ExternalLibsMergerTransformTest {
                 DexMergerTool.DX,
                 21,
                 true,
-                errorReporter,
+                messageReceiver,
                 factory)
 
         Truth.assertThat(transform.parameterInputs).containsExactly(
@@ -110,7 +109,7 @@ open class ExternalLibsMergerTransformTest {
                 .build()
 
         val transform = ExternalLibsMergerTransform(DexingType.MONO_DEX,
-                DexMergerTool.D8, 21, true, errorReporter, factory)
+                DexMergerTool.D8, 21, true, messageReceiver, factory)
 
         transform.transform(transformInvocation)
 
@@ -120,7 +119,7 @@ open class ExternalLibsMergerTransformTest {
     internal fun testTransformCall(transformInvocation : TransformInvocation) : List<Path> {
 
         val transform = ExternalLibsMergerTransform(DexingType.MONO_DEX,
-                DexMergerTool.D8, 21, true, errorReporter, factory)
+                DexMergerTool.D8, 21, true, messageReceiver, factory)
         
         Mockito.`when`(factory.create(
                 Mockito.eq(DexingType.MONO_DEX),

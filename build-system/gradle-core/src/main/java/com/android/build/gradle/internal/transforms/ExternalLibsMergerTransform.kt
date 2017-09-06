@@ -24,10 +24,10 @@ import com.android.build.api.transform.Transform
 import com.android.build.api.transform.TransformInvocation
 import com.android.build.gradle.internal.LoggerWrapper
 import com.android.build.gradle.internal.pipeline.ExtendedContentType
-import com.android.builder.core.ErrorReporter
 import com.android.builder.dexing.DexMergerTool
 import com.android.builder.dexing.DexingType
 import com.android.ide.common.blame.Message
+import com.android.ide.common.blame.MessageReceiver
 import com.android.ide.common.blame.ParsingProcessOutputHandler
 import com.android.ide.common.blame.parser.DexParser
 import com.android.ide.common.blame.parser.ToolOutputParser
@@ -47,7 +47,7 @@ class ExternalLibsMergerTransform(
         private val dexMergerTool: DexMergerTool,
         private val minSdkVersion: Int,
         private val isDebuggable: Boolean,
-        private val errorReporter: ErrorReporter,
+        private val messageReceiver: MessageReceiver,
         private val callableFactory : DexMergerTransformCallable.Factory) : Transform() {
 
     private val logger = LoggerWrapper.getLogger(ExternalLibsMergerTransform::class.java)
@@ -93,7 +93,7 @@ class ExternalLibsMergerTransform(
         val outputHandler = ParsingProcessOutputHandler(
                 ToolOutputParser(DexParser(), Message.Kind.ERROR, logger),
                 ToolOutputParser(DexParser(), logger),
-                errorReporter)
+                messageReceiver)
 
         val outputDir = transformInvocation.outputProvider!!.getContentLocation("main",
                 outputTypes,

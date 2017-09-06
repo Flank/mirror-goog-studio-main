@@ -1081,8 +1081,7 @@ public abstract class BaseExtension implements AndroidConfig {
 
     public File getDefaultProguardFile(String name) {
         if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
-            extraModelInfo.handleSyncError(
-                    null, TYPE_GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE);
+            extraModelInfo.reportError(TYPE_GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE);
         }
         return ProguardFiles.getDefaultProguardFile(name, project);
     }

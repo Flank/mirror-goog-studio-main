@@ -118,7 +118,7 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
         MergingLog mergingLog = new MergingLog(mergeBlameLogFolder);
 
         MergingLogRewriter mergingLogRewriter =
-                new MergingLogRewriter(mergingLog::find, builder.getErrorReporter());
+                new MergingLogRewriter(mergingLog::find, builder.getMessageReceiver());
         ProcessOutputHandler processOutputHandler =
                 new ParsingProcessOutputHandler(
                         new ToolOutputParser(new AaptOutputParser(), getILogger()),

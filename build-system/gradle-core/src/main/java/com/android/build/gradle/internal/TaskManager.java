@@ -1671,10 +1671,12 @@ public abstract class TaskManager {
         ExternalNativeBuildTaskUtils.ExternalNativeBuildProjectPathResolution pathResolution =
                 ExternalNativeBuildTaskUtils.getProjectPath(externalNativeBuild);
         if (pathResolution.errorText != null) {
-            androidBuilder.getErrorReporter().handleSyncError(
-                    scope.getVariantConfiguration().getFullName(),
-                    SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                    pathResolution.errorText);
+            androidBuilder
+                    .getIssueReporter()
+                    .reportError(
+                            SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                            pathResolution.errorText,
+                            scope.getVariantConfiguration().getFullName());
             return;
         }
 
@@ -2397,7 +2399,7 @@ public abstract class TaskManager {
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransform(
                         dexOptions,
-                        variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
+                        variantScope.getGlobalScope().getMessageReceiver(),
                         userLevelCache,
                         variantScope.getMinSdkVersion().getFeatureLevel(),
                         variantScope.getDexer(),
@@ -2418,7 +2420,7 @@ public abstract class TaskManager {
                             variantScope.getDexMerger(),
                             variantScope.getMinSdkVersion().getFeatureLevel(),
                             variantScope.getVariantConfiguration().getBuildType().isDebuggable(),
-                            variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
+                            variantScope.getGlobalScope().getMessageReceiver(),
                             DexMergerTransformCallable::new);
 
             transformManager.addTransform(tasks, variantScope, externalLibsMergerTransform);
@@ -2430,7 +2432,7 @@ public abstract class TaskManager {
                         dexingType == DexingType.LEGACY_MULTIDEX
                                 ? project.files(variantScope.getMainDexListFile())
                                 : null,
-                        variantScope.getGlobalScope().getAndroidBuilder().getErrorReporter(),
+                        variantScope.getGlobalScope().getMessageReceiver(),
                         variantScope.getDexMerger(),
                         variantScope.getMinSdkVersion().getFeatureLevel(),
                         variantScope.getVariantConfiguration().getBuildType().isDebuggable());
@@ -2532,7 +2534,7 @@ public abstract class TaskManager {
                             project.files(variantScope.getMainDexListFile()),
                             checkNotNull(androidBuilder.getTargetInfo(), "Target Info not set."),
                             androidBuilder.getDexByteCodeConverter(),
-                            androidBuilder.getErrorReporter(),
+                            variantScope.getGlobalScope().getMessageReceiver(),
                             variantScope.getMinSdkVersion().getFeatureLevel());
             Optional<AndroidTask<TransformTask>> dexTask =
                     transformManager.addTransform(tasks, variantScope, dexTransform);
@@ -3195,9 +3197,8 @@ public abstract class TaskManager {
                     shrinkTask.get().getName());
         } else {
             androidBuilder
-                    .getErrorReporter()
-                    .handleSyncError(
-                            null,
+                    .getIssueReporter()
+                    .reportError(
                             SyncIssue.TYPE_GENERIC,
                             "Internal error, could not add the ShrinkResourcesTransform");
         }

@@ -20,15 +20,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.AppPlugin;
-import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.ErrorReporter;
-import com.android.builder.model.SyncIssue;
-import com.android.ide.common.blame.Message;
+import com.android.builder.errors.DeprecationReporter;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.testutils.internal.CopyOfTester;
 import com.google.common.collect.ImmutableMap;
@@ -42,28 +38,14 @@ public class BuildTypeTest {
 
     private Project project;
 
-    private ErrorReporter errorReporter;
+    private EvalIssueReporter issueReporter;
+    private DeprecationReporter deprecationReporter;
 
     @Before
     public void setUp() throws Exception {
         project = ProjectBuilder.builder().build();
-        errorReporter =
-                new ErrorReporter(ErrorReporter.EvaluationMode.IDE) {
-                    @NonNull
-                    @Override
-                    public SyncIssue handleIssue(
-                            @Nullable String data, int type, int severity, @NonNull String msg) {
-                        return new SyncIssueImpl(type, severity, data, msg);
-                    }
-
-                    @Override
-                    public void receiveMessage(@NonNull Message message) {}
-
-                    @Override
-                    public boolean hasSyncIssue(int type) {
-                        return false;
-                    }
-                };
+        issueReporter = new NoOpIssueReporter();
+        deprecationReporter = new NoOpDeprecationReporter();
     }
 
     @Test
@@ -92,9 +74,14 @@ public class BuildTypeTest {
     public void testInitWith() {
         CopyOfTester.assertAllGettersCalled(
                 BuildType.class,
-                new BuildType("original", project, errorReporter),
+                new BuildType("original", project, issueReporter, deprecationReporter),
                 original -> {
-                    BuildType copy = new BuildType(original.getName(), project, errorReporter);
+                    BuildType copy =
+                            new BuildType(
+                                    original.getName(),
+                                    project,
+                                    issueReporter,
+                                    deprecationReporter);
                     copy.initWith(original);
 
                     // Manually call getters that don't need to be copied.

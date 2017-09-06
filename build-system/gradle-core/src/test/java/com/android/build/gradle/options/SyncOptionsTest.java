@@ -19,7 +19,7 @@ package com.android.build.gradle.options;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.builder.core.ErrorReporter;
+import com.android.builder.errors.ConfigurableErrorHandler;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
@@ -28,7 +28,7 @@ public class SyncOptionsTest {
     public void getModelQueryMode() throws Exception {
         ProjectOptions noOptions = new ProjectOptions(ImmutableMap.of());
         assertThat(SyncOptions.getModelQueryMode(noOptions))
-                .isEqualTo(ErrorReporter.EvaluationMode.STANDARD);
+                .isEqualTo(ConfigurableErrorHandler.EvaluationMode.STANDARD);
 
         ProjectOptions advancedOptions =
                 new ProjectOptions(
@@ -38,12 +38,12 @@ public class SyncOptionsTest {
                                 "android.injected.build.model.only",
                                 "true"));
         assertThat(SyncOptions.getModelQueryMode(advancedOptions))
-                .isEqualTo(ErrorReporter.EvaluationMode.IDE);
+                .isEqualTo(ConfigurableErrorHandler.EvaluationMode.IDE);
 
         ProjectOptions legacyOptions =
                 new ProjectOptions(ImmutableMap.of("android.injected.build.model.only", "true"));
         assertThat(SyncOptions.getModelQueryMode(legacyOptions))
-                .isEqualTo(ErrorReporter.EvaluationMode.IDE_LEGACY);
+                .isEqualTo(ConfigurableErrorHandler.EvaluationMode.IDE_LEGACY);
     }
 
     @Test

@@ -31,10 +31,9 @@ import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
-import com.android.builder.core.ErrorReporter;
+import com.android.builder.errors.ConfigurableErrorHandler;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
-import com.android.ide.common.blame.Message;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -82,16 +81,16 @@ public class TaskTestUtils {
     protected TaskFactory taskFactory;
     protected TransformVariantScope scope;
     protected TransformManager transformManager;
-    protected FakeErrorReporter errorReporter;
+    protected FakeConfigurableErrorReporter errorReporter;
 
     protected Supplier<RuntimeException> mTransformTaskFailed;
     protected Project project;
 
-    static class FakeErrorReporter extends ErrorReporter {
+    static class FakeConfigurableErrorReporter extends ConfigurableErrorHandler {
 
         private SyncIssue syncIssue = null;
 
-        protected FakeErrorReporter(@NonNull EvaluationMode mode) {
+        protected FakeConfigurableErrorReporter(@NonNull EvaluationMode mode) {
             super(mode);
         }
 
@@ -101,17 +100,12 @@ public class TaskTestUtils {
 
         @NonNull
         @Override
-        public SyncIssue handleIssue(
-                @Nullable String data, int type, int severity, @NonNull String msg) {
+        public SyncIssue reportIssue(
+                int type, int severity, @NonNull String msg, @Nullable String data) {
             // always create a sync issue, no matter what the mode is. This can be used to validate
             // what error is thrown anyway.
             syncIssue = new SyncIssueImpl(type, severity, data, msg);
             return syncIssue;
-        }
-
-        @Override
-        public void receiveMessage(@NonNull Message message) {
-            // do nothing
         }
 
         @Override
@@ -168,7 +162,8 @@ public class TaskTestUtils {
         FileUtils.mkdirs(projectDirectory);
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
         scope = getScope();
-        errorReporter = new FakeErrorReporter(ErrorReporter.EvaluationMode.IDE);
+        errorReporter =
+                new FakeConfigurableErrorReporter(ConfigurableErrorHandler.EvaluationMode.IDE);
         transformManager = new TransformManager(
                 project, new AndroidTaskRegistry(), errorReporter, new FakeRecorder());
         taskFactory = new TaskContainerAdaptor(project.getTasks());

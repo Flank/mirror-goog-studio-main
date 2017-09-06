@@ -26,8 +26,9 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.LibraryRequest;
+import com.android.builder.errors.ConfigurableErrorHandler;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.OptionalCompilationStep;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Version;
@@ -97,7 +98,7 @@ public class SdkHandler {
                         .getOptionalCompilationSteps()
                         .contains(OptionalCompilationStep.INSTANT_DEV)
                 && SyncOptions.getModelQueryMode(projectOptions)
-                        == ErrorReporter.EvaluationMode.STANDARD;
+                        == ConfigurableErrorHandler.EvaluationMode.STANDARD;
     }
 
     public SdkHandler(@NonNull Project project,
@@ -137,9 +138,8 @@ public class SdkHandler {
 
         if (buildToolRevision.compareTo(AndroidBuilder.MIN_BUILD_TOOLS_REV) < 0) {
             androidBuilder
-                    .getErrorReporter()
-                    .handleSyncWarning(
-                            AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION.toString(),
+                    .getIssueReporter()
+                    .reportWarning(
                             SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW,
                             String.format(
                                     "The specified Android SDK Build Tools version (%1$s) is "
@@ -154,7 +154,8 @@ public class SdkHandler {
                                     buildToolRevision,
                                     AndroidBuilder.MIN_BUILD_TOOLS_REV,
                                     Version.ANDROID_GRADLE_PLUGIN_VERSION,
-                                    AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION));
+                                    AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION),
+                            AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION.toString());
             buildToolRevision = AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION;
         }
 
@@ -176,7 +177,7 @@ public class SdkHandler {
         logger.verbose("SDK initialized in %1$d ms", stopwatch.elapsed(TimeUnit.MILLISECONDS));
     }
 
-    public void ensurePlatformToolsIsInstalled(ErrorReporter errorReporter) {
+    public void ensurePlatformToolsIsInstalled(@NonNull EvalIssueReporter issueReporter) {
         // Check if platform-tools are installed. We check here because realistically, all projects
         // should have platform-tools in order to build.
         ProgressIndicator progress = new ConsoleProgressIndicator();
@@ -188,10 +189,10 @@ public class SdkHandler {
             if (sdkLibData.useSdkDownload()) {
                 sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
             } else {
-                errorReporter.handleSyncWarning(
-                        SdkConstants.FD_PLATFORM_TOOLS,
+                issueReporter.reportWarning(
                         SyncIssue.TYPE_MISSING_SDK_PACKAGE,
-                        SdkConstants.FD_PLATFORM_TOOLS + " package is not installed.");
+                        SdkConstants.FD_PLATFORM_TOOLS + " package is not installed.",
+                        SdkConstants.FD_PLATFORM_TOOLS);
             }
         }
     }

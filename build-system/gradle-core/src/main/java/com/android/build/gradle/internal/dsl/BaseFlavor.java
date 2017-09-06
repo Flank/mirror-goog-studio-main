@@ -21,11 +21,11 @@ import com.android.annotations.Nullable;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultProductFlavor;
-import com.android.builder.core.ErrorReporter;
+import com.android.builder.errors.DeprecationReporter;
+import com.android.builder.errors.DeprecationReporter.DeprecationTarget;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ClassField;
-import com.android.builder.model.SyncIssue;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
 import java.util.Collection;
@@ -47,7 +47,7 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
 
     @NonNull private final ExternalNativeBuildOptions externalNativeBuildOptions;
 
-    @NonNull private final ErrorReporter errorReporter;
+    @NonNull private final DeprecationReporter deprecationReporter;
 
     @NonNull private final JackOptions jackOptions;
 
@@ -60,15 +60,15 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
             @NonNull Project project,
             @NonNull Instantiator instantiator,
             @NonNull Logger logger,
-            @NonNull ErrorReporter errorReporter) {
+            @NonNull DeprecationReporter deprecationReporter) {
         super(name, instantiator.newInstance(VectorDrawablesOptions.class));
         this.project = project;
         this.logger = logger;
-        this.errorReporter = errorReporter;
+        this.deprecationReporter = deprecationReporter;
         ndkConfig = instantiator.newInstance(NdkOptions.class);
         externalNativeBuildOptions =
                 instantiator.newInstance(ExternalNativeBuildOptions.class, instantiator);
-        jackOptions = instantiator.newInstance(JackOptions.class, errorReporter);
+        jackOptions = instantiator.newInstance(JackOptions.class, deprecationReporter);
         javaCompileOptions = instantiator.newInstance(JavaCompileOptions.class, instantiator);
         shaderOptions = instantiator.newInstance(ShaderOptions.class);
     }
@@ -546,8 +546,10 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
     @Deprecated
     @Nullable
     public Boolean getUseJack() {
-        errorReporter.handleSyncWarning(
-                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
+        deprecationReporter.reportDeprecatedUsage(
+                JackOptions.DEPRECATION_WARNING,
+                "ProductFlavor.useJack",
+                DeprecationTarget.VERSION_4_0);
         return null;
     }
 
@@ -561,8 +563,10 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
      */
     @Deprecated
     public void setUseJack(Boolean useJack) {
-        errorReporter.handleSyncWarning(
-                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
+        deprecationReporter.reportDeprecatedUsage(
+                JackOptions.DEPRECATION_WARNING,
+                "ProductFlavor.useJack",
+                DeprecationTarget.VERSION_4_0);
     }
 
     /**
@@ -575,8 +579,10 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
      */
     @Deprecated
     public void useJack(Boolean useJack) {
-        errorReporter.handleSyncWarning(
-                null, SyncIssue.TYPE_GENERIC, JackOptions.DEPRECATION_WARNING);
+        deprecationReporter.reportDeprecatedUsage(
+                JackOptions.DEPRECATION_WARNING,
+                "ProductFlavor.useJack",
+                DeprecationTarget.VERSION_4_0);
     }
 
     /** Options for configuration Java compilation. */

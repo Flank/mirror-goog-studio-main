@@ -33,8 +33,8 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
@@ -63,7 +63,6 @@ public class LibraryVariantFactory extends BaseVariantFactory {
                 extension,
                 taskManager,
                 variantConfiguration,
-                androidBuilder.getErrorReporter(),
                 recorder);
     }
 
@@ -90,58 +89,71 @@ public class LibraryVariantFactory extends BaseVariantFactory {
      */
     @Override
     public void validateModel(@NonNull VariantModel model) {
-        ErrorReporter errorReporter = androidBuilder.getErrorReporter();
+        EvalIssueReporter issueReporter = androidBuilder.getIssueReporter();
 
         if (model.getDefaultConfig().getProductFlavor().getApplicationId() != null) {
             String applicationId = model.getDefaultConfig().getProductFlavor().getApplicationId();
-            errorReporter.handleSyncError(
-                    applicationId,
+            issueReporter.reportError(
                     SyncIssue.TYPE_GENERIC,
-                    "Library projects cannot set applicationId. " +
-                    "applicationId is set to '" + applicationId + "' in default config.");
+                    "Library projects cannot set applicationId. "
+                            + "applicationId is set to '"
+                            + applicationId
+                            + "' in default config.",
+                    applicationId);
         }
 
         if (model.getDefaultConfig().getProductFlavor().getApplicationIdSuffix() != null) {
             String applicationIdSuffix =
                     model.getDefaultConfig().getProductFlavor().getApplicationIdSuffix();
-            errorReporter.handleSyncError(
-                    applicationIdSuffix,
+            issueReporter.reportError(
                     SyncIssue.TYPE_GENERIC,
-                    "Library projects cannot set applicationIdSuffix. " +
-                    "applicationIdSuffix is set to '" + applicationIdSuffix + "' in default config.");
+                    "Library projects cannot set applicationIdSuffix. "
+                            + "applicationIdSuffix is set to '"
+                            + applicationIdSuffix
+                            + "' in default config.",
+                    applicationIdSuffix);
         }
 
         for (BuildTypeData buildType : model.getBuildTypes().values()) {
             if (buildType.getBuildType().getApplicationIdSuffix() != null) {
                 String applicationIdSuffix = buildType.getBuildType().getApplicationIdSuffix();
-                errorReporter.handleSyncError(
-                        applicationIdSuffix,
+                issueReporter.reportError(
                         SyncIssue.TYPE_GENERIC,
-                        "Library projects cannot set applicationIdSuffix. " +
-                        "applicationIdSuffix is set to '" + applicationIdSuffix +
-                        "' in build type '" + buildType.getBuildType().getName() + "'.");
+                        "Library projects cannot set applicationIdSuffix. "
+                                + "applicationIdSuffix is set to '"
+                                + applicationIdSuffix
+                                + "' in build type '"
+                                + buildType.getBuildType().getName()
+                                + "'.",
+                        applicationIdSuffix);
             }
         }
         for (ProductFlavorData productFlavor : model.getProductFlavors().values()) {
             if (productFlavor.getProductFlavor().getApplicationId() != null) {
                 String applicationId = productFlavor.getProductFlavor().getApplicationId();
-                errorReporter.handleSyncError(
-                        applicationId,
+                issueReporter.reportError(
                         SyncIssue.TYPE_GENERIC,
-                        "Library projects cannot set applicationId. " +
-                        "applicationId is set to '" + applicationId + "' in flavor '" +
-                        productFlavor.getProductFlavor().getName() + "'.");
+                        "Library projects cannot set applicationId. "
+                                + "applicationId is set to '"
+                                + applicationId
+                                + "' in flavor '"
+                                + productFlavor.getProductFlavor().getName()
+                                + "'.",
+                        applicationId);
             }
 
             if (productFlavor.getProductFlavor().getApplicationIdSuffix() != null) {
                 String applicationIdSuffix =
                         productFlavor.getProductFlavor().getApplicationIdSuffix();
-                errorReporter.handleSyncError(
-                        applicationIdSuffix,
+                issueReporter.reportError(
                         SyncIssue.TYPE_GENERIC,
-                        "Library projects cannot set applicationIdSuffix. " +
-                        "applicationIdSuffix is set to '" + applicationIdSuffix +
-                        "' in flavor '" + productFlavor.getProductFlavor().getName() + "'.");
+                        "Library projects cannot set applicationIdSuffix. "
+                                + "applicationIdSuffix is set to '"
+                                + applicationIdSuffix
+                                + "' in flavor '"
+                                + productFlavor.getProductFlavor().getName()
+                                + "'.",
+                        applicationIdSuffix);
             }
         }
     }

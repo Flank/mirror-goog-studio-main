@@ -409,15 +409,22 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
                 expectedJson.retainAll(generator.getNativeBuildConfigurationsJsons());
                 // If no JSONs remain then issue a warning and proceed with no-op build.
                 if (expectedJson.isEmpty()) {
-                    androidBuilder.getErrorReporter().handleSyncWarning(
-                            scope.getFullVariantName(),
-                            SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                            String.format("Targeted device ABI or comma-delimited ABIs [%s] is not"
-                                    + " one of [%s]. Nothing to build.",
-                                    buildTargetAbi,
-                                    Joiner.on(", ").join(generator.getAbis().stream()
-                                            .map(Abi::getName)
-                                            .collect(Collectors.toList()))));
+                    androidBuilder
+                            .getIssueReporter()
+                            .reportWarning(
+                                    SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                                    String.format(
+                                            "Targeted device ABI or comma-delimited ABIs [%s] is not"
+                                                    + " one of [%s]. Nothing to build.",
+                                            buildTargetAbi,
+                                            Joiner.on(", ")
+                                                    .join(
+                                                            generator
+                                                                    .getAbis()
+                                                                    .stream()
+                                                                    .map(Abi::getName)
+                                                                    .collect(Collectors.toList()))),
+                                    scope.getFullVariantName());
                     task.setNativeBuildConfigurationsJsons(ImmutableList.of());
                 } else {
                     // Take the first JSON that matched the build configuration

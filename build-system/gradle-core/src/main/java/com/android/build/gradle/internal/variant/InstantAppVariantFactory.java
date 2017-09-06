@@ -61,7 +61,6 @@ public class InstantAppVariantFactory extends BaseVariantFactory {
                         extension,
                         taskManager,
                         variantConfiguration,
-                        androidBuilder.getErrorReporter(),
                         recorder);
         variant.getOutputFactory().addMainApk();
         return variant;

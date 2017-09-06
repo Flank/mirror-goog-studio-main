@@ -101,18 +101,15 @@ public class FeatureTaskManager extends TaskManager {
             if (androidVersion != null) {
                 message += " compileSdkVersion is set to " + androidVersion.getApiString();
             }
-            androidBuilder
-                    .getErrorReporter()
-                    .handleSyncError(null, SyncIssue.TYPE_GENERIC, message);
+            androidBuilder.getIssueReporter().reportError(SyncIssue.TYPE_GENERIC, message);
         }
 
         // Ensure we're not using aapt1.
         if (AaptGeneration.fromProjectOptions(projectOptions) == AaptGeneration.AAPT_V1
                 && !extension.getBaseFeature()) {
             androidBuilder
-                    .getErrorReporter()
-                    .handleSyncError(
-                            null,
+                    .getIssueReporter()
+                    .reportError(
                             SyncIssue.TYPE_GENERIC,
                             "Non-base feature modules require AAPTv2 to build.");
         }
@@ -478,9 +475,7 @@ public class FeatureTaskManager extends TaskManager {
                                     + "tools/java-8-support-message.html\n",
                             pluginName);
 
-            androidBuilder
-                    .getErrorReporter()
-                    .handleSyncWarning(null, SyncIssue.TYPE_GENERIC, warningMsg);
+            androidBuilder.getIssueReporter().reportWarning(SyncIssue.TYPE_GENERIC, warningMsg);
         }
 
         addJavacClassesStream(variantScope);

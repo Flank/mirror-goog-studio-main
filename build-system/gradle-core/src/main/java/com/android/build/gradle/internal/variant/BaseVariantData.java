@@ -48,7 +48,6 @@ import com.android.build.gradle.tasks.PackageSplitAbi;
 import com.android.build.gradle.tasks.PackageSplitRes;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.build.gradle.tasks.ShaderCompile;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.core.VariantType;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.profile.Recorder;
@@ -167,7 +166,6 @@ public abstract class BaseVariantData implements TaskContainer {
             @NonNull AndroidConfig androidConfig,
             @NonNull TaskManager taskManager,
             @NonNull GradleVariantConfiguration variantConfiguration,
-            @NonNull ErrorReporter errorReporter,
             @NonNull Recorder recorder) {
         this.variantConfiguration = variantConfiguration;
         this.taskManager = taskManager;
@@ -193,11 +191,10 @@ public abstract class BaseVariantData implements TaskContainer {
         scope =
                 new VariantScopeImpl(
                         globalScope,
-                        errorReporter,
                         new TransformManager(
                                 globalScope.getProject(),
                                 taskManager.getAndroidTasks(),
-                                errorReporter,
+                                globalScope.getErrorHandler(),
                                 recorder),
                         this);
         outputScope = new OutputScope(multiOutputPolicy);

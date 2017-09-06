@@ -19,23 +19,24 @@ package com.android.build.gradle.options;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.builder.core.ErrorReporter;
+import com.android.builder.errors.ConfigurableErrorHandler;
 import com.android.builder.model.AndroidProject;
 
 public final class SyncOptions {
 
     private SyncOptions() {}
 
-    public static ErrorReporter.EvaluationMode getModelQueryMode(@NonNull ProjectOptions options) {
+    public static ConfigurableErrorHandler.EvaluationMode getModelQueryMode(
+            @NonNull ProjectOptions options) {
         if (options.get(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED)) {
-            return ErrorReporter.EvaluationMode.IDE;
+            return ConfigurableErrorHandler.EvaluationMode.IDE;
         }
 
         if (options.get(BooleanOption.IDE_BUILD_MODEL_ONLY)) {
-            return ErrorReporter.EvaluationMode.IDE_LEGACY;
+            return ConfigurableErrorHandler.EvaluationMode.IDE_LEGACY;
         }
 
-        return ErrorReporter.EvaluationMode.STANDARD;
+        return ConfigurableErrorHandler.EvaluationMode.STANDARD;
     }
 
     public static ExtraModelInfo.ErrorFormatMode getErrorFormatMode(

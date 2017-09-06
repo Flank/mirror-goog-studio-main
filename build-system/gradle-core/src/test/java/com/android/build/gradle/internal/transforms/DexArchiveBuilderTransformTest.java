@@ -303,7 +303,7 @@ public class DexArchiveBuilderTransformTest {
         DexArchiveBuilderTransform useDifferentDexerTransform =
                 new DexArchiveBuilderTransform(
                         new DefaultDexOptions(),
-                        new NoOpErrorReporter(),
+                        new NoOpMessageReceiver(),
                         userCache,
                         20,
                         dexerTool == DexerTool.DX ? DexerTool.D8 : DexerTool.DX,
@@ -404,7 +404,7 @@ public class DexArchiveBuilderTransformTest {
             @Nullable FileCache userCache, int minSdkVersion, boolean isDebuggable) {
         return new DexArchiveBuilderTransform(
                 new DefaultDexOptions(),
-                new NoOpErrorReporter(),
+                new NoOpMessageReceiver(),
                 userCache,
                 minSdkVersion,
                 dexerTool,

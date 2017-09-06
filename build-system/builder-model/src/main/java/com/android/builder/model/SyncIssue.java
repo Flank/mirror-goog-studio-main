@@ -135,8 +135,15 @@ public interface SyncIssue {
     /** An incompatible plugin is used. */
     int TYPE_INCOMPATIBLE_PLUGIN = 27;
 
+    /**
+     * Indicates that the project uses a deprecated DSL. The data paylod is dslElement::removeTarget
+     * where removal target is the version of the plugin where the dsl element is targeted to be
+     * removed.
+     */
+    int TYPE_DEPRECATED_DSL = 28;
+
     /** Highest number assigned to types of {@link SyncIssue}s. */
-    int TYPE_MAX = 27; // increment when adding new types.
+    int TYPE_MAX = 28; // increment when adding new types.
 
     /** Returns the severity of the issue. */
     int getSeverity();

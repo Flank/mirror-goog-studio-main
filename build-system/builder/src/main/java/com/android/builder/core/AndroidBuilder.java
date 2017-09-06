@@ -31,6 +31,7 @@ import com.android.annotations.Nullable;
 import com.android.apkzlib.zfile.ApkCreatorFactory;
 import com.android.apkzlib.zfile.NativeLibrariesPackagingMode;
 import com.android.builder.compiling.DependencyFileProcessor;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.files.IncrementalRelativeFileSets;
 import com.android.builder.files.RelativeFile;
 import com.android.builder.internal.TestManifestGenerator;
@@ -51,6 +52,7 @@ import com.android.builder.symbols.RGeneration;
 import com.android.builder.symbols.SymbolIo;
 import com.android.builder.symbols.SymbolTable;
 import com.android.builder.symbols.SymbolUtils;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.CachedProcessOutputHandler;
 import com.android.ide.common.process.JavaProcessExecutor;
@@ -104,7 +106,7 @@ import java.util.zip.ZipFile;
  * specific build steps.
  *
  * <p>To use: create a builder with {@link #AndroidBuilder(String, String, ProcessExecutor,
- * JavaProcessExecutor, ErrorReporter, ILogger, boolean)}
+ * JavaProcessExecutor, EvalIssueReporter, MessageReceiver, ILogger, boolean)}
  *
  * <p>then build steps can be done with:
  *
@@ -146,8 +148,8 @@ public class AndroidBuilder {
     private final ProcessExecutor mProcessExecutor;
     @NonNull
     private final JavaProcessExecutor mJavaProcessExecutor;
-    @NonNull
-    private final ErrorReporter mErrorReporter;
+    @NonNull private final EvalIssueReporter issueReporter;
+    @NonNull private final MessageReceiver messageReceiver;
 
     private final boolean mVerboseExec;
 
@@ -166,8 +168,8 @@ public class AndroidBuilder {
 
     /**
      * Creates an AndroidBuilder.
-     * <p>
-     * <var>verboseExec</var> is needed on top of the ILogger due to remote exec tools not being
+     *
+     * <p><var>verboseExec</var> is needed on top of the ILogger due to remote exec tools not being
      * able to output info and verbose messages separately.
      *
      * @param createdBy the createdBy String for the apk manifest.
@@ -179,14 +181,16 @@ public class AndroidBuilder {
             @Nullable String createdBy,
             @NonNull ProcessExecutor processExecutor,
             @NonNull JavaProcessExecutor javaProcessExecutor,
-            @NonNull ErrorReporter errorReporter,
+            @NonNull EvalIssueReporter issueReporter,
+            @NonNull MessageReceiver messageReceiver,
             @NonNull ILogger logger,
             boolean verboseExec) {
         mProjectId = checkNotNull(projectId);
         mCreatedBy = createdBy;
         mProcessExecutor = checkNotNull(processExecutor);
         mJavaProcessExecutor = checkNotNull(javaProcessExecutor);
-        mErrorReporter = checkNotNull(errorReporter);
+        this.issueReporter = checkNotNull(issueReporter);
+        this.messageReceiver = messageReceiver;
         mLogger = checkNotNull(logger);
         mVerboseExec = verboseExec;
     }
@@ -201,22 +205,18 @@ public class AndroidBuilder {
         mTargetInfo = targetInfo;
         mDexByteCodeConverter =
                 new DexByteCodeConverter(
-                        getLogger(),
-                        mTargetInfo,
-                        mJavaProcessExecutor,
-                        mVerboseExec,
-                        getErrorReporter());
+                        getLogger(), mTargetInfo, mJavaProcessExecutor, mVerboseExec);
 
         if (mTargetInfo.getBuildTools().getRevision().compareTo(MIN_BUILD_TOOLS_REV) < 0) {
-            mErrorReporter.handleSyncError(
-                    MIN_BUILD_TOOLS_REV.toString(),
+            issueReporter.reportError(
                     SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW,
                     String.format(
                             "The SDK Build Tools revision (%1$s) is too low for project '%2$s'. "
                                     + "Minimum required is %3$s",
                             mTargetInfo.getBuildTools().getRevision(),
                             mProjectId,
-                            MIN_BUILD_TOOLS_REV));
+                            MIN_BUILD_TOOLS_REV),
+                    MIN_BUILD_TOOLS_REV.toString());
         }
     }
 
@@ -258,8 +258,13 @@ public class AndroidBuilder {
     }
 
     @NonNull
-    public ErrorReporter getErrorReporter() {
-        return mErrorReporter;
+    public EvalIssueReporter getIssueReporter() {
+        return issueReporter;
+    }
+
+    @NonNull
+    public MessageReceiver getMessageReceiver() {
+        return messageReceiver;
     }
 
     /** Returns the compilation target, if set. */
@@ -308,11 +313,12 @@ public class AndroidBuilder {
             checkState(mTargetInfo != null,
                     "Cannot call getBootClasspath() before setTargetInfo() is called.");
 
-            mBootClasspathFiltered = BootClasspathBuilder.computeFilteredClasspath(
-                    mTargetInfo.getTarget(),
-                    mLibraryRequests,
-                    mErrorReporter,
-                    mSdkInfo.getAnnotationsJar());
+            mBootClasspathFiltered =
+                    BootClasspathBuilder.computeFilteredClasspath(
+                            mTargetInfo.getTarget(),
+                            mLibraryRequests,
+                            issueReporter,
+                            mSdkInfo.getAnnotationsJar());
         }
 
         return mBootClasspathFiltered;

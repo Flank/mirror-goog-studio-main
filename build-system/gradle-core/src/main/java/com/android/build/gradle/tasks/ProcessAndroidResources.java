@@ -619,7 +619,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                                         ? new AaptOutputParser()
                                         : new Aapt2OutputParser(),
                                 getILogger()),
-                        new MergingLogRewriter(mergingLog::find, builder.getErrorReporter()));
+                        new MergingLogRewriter(mergingLog::find, builder.getMessageReceiver()));
 
         return AaptGradleFactory.make(
                 aaptGeneration,

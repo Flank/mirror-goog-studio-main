@@ -30,10 +30,10 @@ import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.builder.core.DexByteCodeConverter;
 import com.android.builder.core.DexOptions;
-import com.android.builder.core.ErrorReporter;
 import com.android.builder.dexing.DexingType;
 import com.android.builder.sdk.TargetInfo;
 import com.android.ide.common.blame.Message;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.DexParser;
 import com.android.ide.common.blame.parser.ToolOutputParser;
@@ -77,7 +77,7 @@ public class DexTransform extends Transform {
 
     @NonNull private final TargetInfo targetInfo;
     @NonNull private final DexByteCodeConverter dexByteCodeConverter;
-    @NonNull private final ErrorReporter errorReporter;
+    @NonNull private final MessageReceiver messageReceiver;
     private final int minSdkVersion;
 
     public DexTransform(
@@ -87,7 +87,7 @@ public class DexTransform extends Transform {
             @Nullable FileCollection mainDexListFile,
             @NonNull TargetInfo targetInfo,
             @NonNull DexByteCodeConverter dexByteCodeConverter,
-            @NonNull ErrorReporter errorReporter,
+            @NonNull MessageReceiver messageReceiver,
             int minSdkVersion) {
         this.dexOptions = dexOptions;
         this.dexingType = dexingType;
@@ -95,7 +95,7 @@ public class DexTransform extends Transform {
         this.mainDexListFile = mainDexListFile;
         this.targetInfo = targetInfo;
         this.dexByteCodeConverter = dexByteCodeConverter;
-        this.errorReporter = errorReporter;
+        this.messageReceiver = messageReceiver;
         this.minSdkVersion = minSdkVersion;
     }
 
@@ -186,7 +186,7 @@ public class DexTransform extends Transform {
                 new ParsingProcessOutputHandler(
                         new ToolOutputParser(new DexParser(), Message.Kind.ERROR, logger),
                         new ToolOutputParser(new DexParser(), logger),
-                        errorReporter);
+                        messageReceiver);
 
         outputProvider.deleteAll();
 

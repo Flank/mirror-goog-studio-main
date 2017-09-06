@@ -17,20 +17,14 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.builder.errors.ConfigurableErrorHandler;
-import org.gradle.api.Project;
-import org.gradle.api.logging.Logger;
-import org.gradle.internal.reflect.Instantiator;
+import com.android.builder.errors.DeprecationReporter;
 
-/** DSL object for the defaultConfig object. */
-@SuppressWarnings({"WeakerAccess", "unused"}) // Exposed in the DSL.
-public class DefaultConfig extends BaseFlavor {
-    public DefaultConfig(
-            @NonNull String name,
-            @NonNull Project project,
-            @NonNull Instantiator instantiator,
-            @NonNull Logger logger,
-            @NonNull ConfigurableErrorHandler errorReporter) {
-        super(name, project, instantiator, logger, errorReporter);
+public class NoOpDeprecationReporter implements DeprecationReporter {
+    @Override
+    public void reportDeprecatedUsage(
+            @NonNull String message,
+            @NonNull String dslElementName,
+            @NonNull DeprecationTarget deprecationTarget) {
+        // do nothing
     }
 }
