@@ -21,7 +21,11 @@ import org.gradle.api.internal.DefaultDomainObjectSet;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
- * base 'android' extension for plugins that have a test component.
+ * Provides test components that are common to {@link AppExtension}, {@link LibraryExtension}, and
+ * {@link FeatureExtension}.
+ *
+ * <p>To learn more about testing Android projects, read <a
+ * href="https://developer.android.com/studio/test/index.html">Test Your App</a>.
  */
 public abstract class TestedExtension extends BaseExtension implements TestedAndroidConfig {
 
@@ -63,8 +67,17 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
     }
 
     /**
-     * Returns the list of (Android) test variants. Since the collections is built after evaluation,
-     * it should be used with Gradle's <code>all</code> iterator to process future items.
+     * Returns a collection of Android test <a
+     * href="https://developer.android.com/studio/build/build-variants.html">build variants</a>.
+     *
+     * <p>To process elements in this collection, you should use the <a
+     * href="https://docs.gradle.org/current/javadoc/org/gradle/api/DomainObjectCollection.html#all(org.gradle.api.Action)">
+     * <code>all</code></a> iterator. That's because the plugin populates this collection only after
+     * the project is evaluated. Unlike the <code>each</code> iterator, using <code>all</code>
+     * processes future elements as the plugin creates them.
+     *
+     * <p>To learn more about testing Android projects, read <a
+     * href="https://developer.android.com/studio/test/index.html">Test Your App</a>.
      */
     @Override
     @NonNull
@@ -77,8 +90,17 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
     }
 
     /**
-     * Returns the list of unit test variants. Since the collections is built after evaluation,
-     * it should be used with Gradle's <code>all</code> iterator to process future items.
+     * Returns a collection of Android unit test <a
+     * href="https://developer.android.com/studio/build/build-variants.html">build variants</a>.
+     *
+     * <p>To process elements in this collection, you should use the <a
+     * href="https://docs.gradle.org/current/javadoc/org/gradle/api/DomainObjectCollection.html#all(org.gradle.api.Action)">
+     * <code>all</code></a> iterator. That's because the plugin populates this collection only after
+     * the project is evaluated. Unlike the <code>each</code> iterator, using <code>all</code>
+     * processes future elements as the plugin creates them.
+     *
+     * <p>To learn more about testing Android projects, read <a
+     * href="https://developer.android.com/studio/test/index.html">Test Your App</a>.
      */
     @Override
     @NonNull
@@ -91,9 +113,53 @@ public abstract class TestedExtension extends BaseExtension implements TestedAnd
     }
 
     /**
-     * Name of the build type that will be used when running Android (on-device) tests.
+     * Specifies the <a
+     * href="https://developer.android.com/studio/build/build-variants.html#build-types">build
+     * type</a> that the plugin should use to test the module.
      *
-     * <p>Defaults to "debug".
+     * <p>By default, the Android plugin uses the "debug" build type. This means that when you
+     * deploy your instrumented tests using <code>gradlew connectedAndroidTest</code>, it uses the
+     * code and resources from the module's "debug" build type to create the test APK. The plugin
+     * then deploys the "debug" version of both the module's APK and the test APK to a connected
+     * device, and runs your tests.
+     *
+     * <p>To change the test build type to something other than "debug", specify it as follows:
+     *
+     * <pre>
+     * android {
+     *     // Changes the test build type for instrumented tests to "stage".
+     *     testBuildType "stage"
+     * }
+     * </pre>
+     *
+     * <p>If your module configures <a
+     * href="https://developer.android.com/studio/build/build-variants.html#product-flavors">product
+     * flavors</a>, the plugin creates a test APK and deploys tests for each build variant that uses
+     * the test build type. For example, consider if your module configures "debug" and "release"
+     * build types, and "free" and "paid" product flavors. By default, when you run your
+     * instrumented tests using <code>gradlew connectedAndroidTest</code>, the plugin performs
+     * executes the following tasks:
+     *
+     * <ul>
+     *   <li><code>connectedFreeDebugAndroidTest</code>: builds and deploys a <code>freeDebug</code>
+     *       test APK and module APK, and runs instrumented tests for that variant.
+     *   <li><code>connectedPaidDebugAndroidTest</code>: builds and deploys a <code>paidDebug</code>
+     *       test APK and module APK, and runs instrumented tests for that variant.
+     * </ul>
+     *
+     * <p>To learn more, read <a
+     * href="https://developer.android.com/studio/test/index.html#create_instrumented_test_for_a_build_variant">Create
+     * instrumented test for a build variant</a>.
+     *
+     * <p><b>Note:</b> You can execute <code>connected&lt;BuildVariant&gt;AndroidTest</code> tasks
+     * only for build variants that use the test build type. So, by default, running <code>
+     * connectedStageAndroidTest</code> results in the following build error:
+     *
+     * <pre>
+     * Task 'connectedStageAndroidTest' not found in root project
+     * </pre>
+     *
+     * <p>You can resolve this issue by changing the test build type to "stage".
      */
     @Override
     @NonNull

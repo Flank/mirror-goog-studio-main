@@ -33,7 +33,17 @@ import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
 import org.gradle.internal.reflect.Instantiator;
 
-/** Extension for Feature plugin */
+/**
+ * The {@code android} extension for {@code com.android.feature} projects.
+ *
+ * <p>Creating feature modules is useful when you want to build <a
+ * href="https://developer.android.com/topic/instant-apps/index.html">Android Instant Apps</a>. To
+ * learn more about creating feature modules, read <a
+ * href="https://developer.android.com/topic/instant-apps/getting-started/structure.html#structure_of_an_instant_app_with_multiple_features">Structure
+ * of an instant app with multiple features</a>.
+ *
+ * @since 3.0.0
+ */
 public class FeatureExtension extends LibraryExtension {
 
     private final DefaultDomainObjectSet<FeatureVariant> featureVariantList =
@@ -66,8 +76,29 @@ public class FeatureExtension extends LibraryExtension {
     }
 
     /**
-     * Returns the list of feature variants. Since the collections is built after evaluation, it
-     * should be used with Gradle's <code>all</code> iterator to process future items.
+     * Returns a collection of the Android feature <a
+     * href="https://developer.android.com/studio/build/build-variants.html">build variants</a>.
+     *
+     * <p>To process elements in this collection, you should use the <a
+     * href="https://docs.gradle.org/current/javadoc/org/gradle/api/DomainObjectCollection.html#all(org.gradle.api.Action)">
+     * <code>all</code></a> iterator. That's because the plugin populates this collection only after
+     * the project is evaluated. Unlike the <code>each</code> iterator, using <code>all</code>
+     * processes future elements as the plugin creates them.
+     *
+     * <p>The following sample iterates through all <code>featureVariants</code> elements at
+     * execution to <a
+     * href="https://developer.android.com/studio/build/manifest-build-variables.html">inject a
+     * build variable into the manifest</a>:
+     *
+     * <pre>
+     * android.featureVariants.all { variant ->
+     *     def mergedFlavor = variant.getMergedFlavor()
+     *     // Defines the value of a build variable you can use in the manifest.
+     *     mergedFlavor.manifestPlaceholders = [hostName:"www.example.com"]
+     * }
+     * </pre>
+     *
+     * @since 3.0.0
      */
     public DefaultDomainObjectSet<FeatureVariant> getFeatureVariants() {
         return featureVariantList;
@@ -91,6 +122,19 @@ public class FeatureExtension extends LibraryExtension {
         baseFeature(value);
     }
 
+    /**
+     * Specifies whether this module is the base feature for an <a
+     * href="https://developer.android.com/topic/instant-apps/index.html">Android Instant App</a>
+     * project.
+     *
+     * <p>To learn more about creating feature modules, including the base feature module, read <a
+     * href="https://developer.android.com/topic/instant-apps/getting-started/structure.html#structure_of_an_instant_app_with_multiple_features">Structure
+     * of an instant app with multiple features</a>.
+     *
+     * <p>By deafult, this property is set to <code>false</code>.
+     *
+     * @since 3.0.0
+     */
     @Override
     public Boolean getBaseFeature() {
         return isBaseFeature;
