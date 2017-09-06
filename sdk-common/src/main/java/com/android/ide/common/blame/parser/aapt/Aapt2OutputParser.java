@@ -28,7 +28,7 @@ import java.util.List;
 public class Aapt2OutputParser implements PatternAwareOutputParser {
 
     private static final AbstractAaptOutputParser[] PARSERS = {
-        new Aapt2ErrorParser(), new Aapt2DaemonErrorParser()
+        new Aapt2ErrorParser(), new Aapt2ErrorNoPathParser(), new Aapt2DaemonErrorParser()
     };
 
     @Override

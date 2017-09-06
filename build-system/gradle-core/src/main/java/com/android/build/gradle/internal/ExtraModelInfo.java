@@ -194,10 +194,10 @@ public class ExtraModelInfo extends ConfigurableErrorHandler implements MessageR
                 logger.trace(humanReadableMessage(message));
                 break;
             case UNKNOWN:
-                logger.debug(humanReadableMessage(message));
+                logger.warn(humanReadableMessage(message));
                 break;
             case SIMPLE:
-                logger.debug(humanReadableMessage(message));
+                logger.warn(humanReadableMessage(message));
                 break;
         }
     }

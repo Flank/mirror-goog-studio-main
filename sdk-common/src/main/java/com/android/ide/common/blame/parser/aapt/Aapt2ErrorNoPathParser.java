@@ -25,29 +25,17 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** Single line error parser. */
-public class Aapt2ErrorParser extends AbstractAaptOutputParser {
-
+/** Catch all errors that do not have a file path in them. */
+public class Aapt2ErrorNoPathParser extends AbstractAaptOutputParser {
     /**
-     * Single-line aapt error containing a path.
+     * Single-line aapt error containing a path without a file path.
      *
      * <pre>
-     * ERROR: &lt;path&gt;:&lt;line&gt; &lt;error&gt;
+     * ERROR: &lt;error&gt;
      * </pre>
      */
-    private static final Pattern MSG_PATTERN = Pattern.compile("^ERROR:\\s(.+):(\\d+)\\s(.+)$");
+    private static final Pattern MSG_PATTERN = Pattern.compile("^ERROR: (.+)$");
 
-    /**
-     * Parses the given output line.
-     *
-     * @param line the line to parse.
-     * @param reader passed in case this parser needs to parse more lines in order to create a
-     *     {@code Message}.
-     * @param messages stores the messages created during parsing, if any.
-     * @return {@code true} if this parser was able to parser the given line, {@code false}
-     *     otherwise.
-     * @throws ParsingFailedException if something goes wrong (e.g. malformed output.)
-     */
     @Override
     public boolean parse(
             @NonNull String line,
@@ -59,12 +47,9 @@ public class Aapt2ErrorParser extends AbstractAaptOutputParser {
         if (!m.matches()) {
             return false;
         }
-        String sourcePath = m.group(1);
-        String lineNumber = m.group(2);
-        String msgText = m.group(3);
+        String msgText = m.group(1);
 
-        Message msg =
-                createMessage(Message.Kind.ERROR, msgText, sourcePath, lineNumber, "", logger);
+        Message msg = createMessage(Message.Kind.ERROR, msgText, null, null, "", logger);
         messages.add(msg);
         return true;
     }
