@@ -46,9 +46,9 @@
                    to="${escapeXmlAttribute(srcOut)}/${serviceClass}.${ext}" />
     <open file="${escapeXmlAttribute(srcOut)}/${serviceClass}.${ext}" />
 <#elseif style == "digital">
-    <instantiate from="root/src/app_package/MyDigitalWatchFaceService.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${serviceClass}.java" />
-   <open file="${escapeXmlAttribute(srcOut)}/${serviceClass}.java" />
+    <instantiate from="root/src/app_package/MyDigitalWatchFaceService.${ext}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${serviceClass}.${ext}" />
+    <open file="${escapeXmlAttribute(srcOut)}/${serviceClass}.${ext}" />
 </#if>
 
 </recipe>
