@@ -54,7 +54,8 @@ class DexArchiveBuilderCacheHandler {
     private static final LoggerWrapper logger =
             LoggerWrapper.getLogger(DexArchiveBuilderTransform.class);
 
-    private static final int CACHE_KEY_VERSION = 3;
+    // Increase this if we might have generated broken cache entries to invalidate them.
+    private static final int CACHE_KEY_VERSION = 4;
 
     @Nullable private final FileCache userLevelCache;
     @NonNull private final DexOptions dexOptions;
