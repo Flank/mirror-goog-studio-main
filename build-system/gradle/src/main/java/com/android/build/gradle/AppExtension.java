@@ -17,9 +17,7 @@ import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
 import org.gradle.internal.reflect.Instantiator;
 
-/**
- * {@code android} extension for {@code com.android.application} projects.
- */
+/** The {@code android} extension for {@code com.android.application} projects. */
 public class AppExtension extends TestedExtension {
 
     private final DefaultDomainObjectSet<ApplicationVariant> applicationVariantList
@@ -51,8 +49,27 @@ public class AppExtension extends TestedExtension {
     }
 
     /**
-     * Returns the list of Application variants. Since the collections is built after evaluation, it
-     * should be used with Gradle's <code>all</code> iterator to process future items.
+     * Returns a collection of <a
+     * href="https://developer.android.com/studio/build/build-variants.html">build variants</a> that
+     * the app project includes.
+     *
+     * <p>To process elements in this collection, you should use the <a
+     * href="https://docs.gradle.org/current/javadoc/org/gradle/api/DomainObjectCollection.html#all(org.gradle.api.Action)">
+     * <code>all</code></a> iterator. That's because the plugin populates this collection only after
+     * the project is evaluated. Unlike the <code>each</code> iterator, using <code>all</code>
+     * processes future elements as the plugin creates them.
+     *
+     * <p>The following sample iterates through all <code>applicationVariants</code> elements to <a
+     * href="https://developer.android.com/studio/build/manifest-build-variables.html">inject a
+     * build variable into the manifest</a>:
+     *
+     * <pre>
+     * android.applicationVariants.all { variant ->
+     *     def mergedFlavor = variant.getMergedFlavor()
+     *     // Defines the value of a build variable you can use in the manifest.
+     *     mergedFlavor.manifestPlaceholders = [hostName:"www.example.com/${variant.versionName}"]
+     * }
+     * </pre>
      */
     public DomainObjectSet<ApplicationVariant> getApplicationVariants() {
         return applicationVariantList;

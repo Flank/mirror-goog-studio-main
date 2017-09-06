@@ -31,6 +31,7 @@
             <tr><td>com.android.build.gradle.AppExtension</td></tr>
             <tr><td>com.android.build.gradle.LibraryExtension</td></tr>
             <tr><td>com.android.build.gradle.TestExtension</td></tr>
+            <tr><td>com.android.build.gradle.FeatureExtension</td></tr>
         </table>
     </section>
 

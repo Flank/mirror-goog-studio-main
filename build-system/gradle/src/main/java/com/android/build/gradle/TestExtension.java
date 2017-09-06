@@ -84,7 +84,9 @@ public class TestExtension extends BaseExtension implements TestAndroidConfig {
     /**
      * Returns the variant of the tested project.
      *
-     * Default is 'debug'
+     * <p>Default is 'debug'
+     *
+     * @deprecated This is deprecated, test module can now test all flavors.
      */
     @Override
     @Deprecated
