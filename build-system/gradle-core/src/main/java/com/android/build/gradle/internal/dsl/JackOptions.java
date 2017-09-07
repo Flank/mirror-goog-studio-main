@@ -28,9 +28,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * DSL object for configuring Jack options.
+ * The Jack toolchain is <em>deprecated</em>.
  *
- * <p>See <a href="https://developer.android.com/studio/build/jack.html">Jack and Jill</a>
+ * <p>If you want to use Java 8 language features, use the improved support included in the default
+ * toolchain. To learn more, read <a
+ * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+ * features</a>.
+ *
+ * @deprecated For more information, read <a
+ *     href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+ *     features</a>.
  */
 @Deprecated
 @SuppressWarnings("UnnecessaryInheritDoc")
@@ -71,6 +78,7 @@ public class JackOptions implements CoreJackOptions {
     }
 
     /** {@inheritDoc} */
+    @Deprecated
     @Override
     @Nullable
     public Boolean isEnabled() {
@@ -83,6 +91,7 @@ public class JackOptions implements CoreJackOptions {
     }
 
     /** {@inheritDoc} */
+    @Deprecated
     @Override
     @Nullable
     public Boolean isJackInProcess() {
@@ -94,6 +103,7 @@ public class JackOptions implements CoreJackOptions {
     }
 
     /** {@inheritDoc} */
+    @Deprecated
     @Override
     @NonNull
     public Map<String, String> getAdditionalParameters() {
@@ -120,6 +130,7 @@ public class JackOptions implements CoreJackOptions {
     }
 
     /** {@inheritDoc} */
+    @Deprecated
     @Override
     @NonNull
     public List<String> getPluginNames() {
