@@ -113,6 +113,7 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:support_latest",
     "//prebuilts/studio/sdk:uiautomator_latest",
     "//prebuilts/studio/sdk:test-runner_latest",
+    "//prebuilts/tools/common/cmake:cmake-3.8.2",
     "//tools/base/bazel:offline_repo_repo.zip",
     "//tools/base/build-system:gradle-distrib",
 ]
