@@ -65,6 +65,42 @@ class CustomRuleTest {
     }
 
     @Test
+    fun testProjectLintJarWithServiceRegistry() {
+        // Like testProjectLintJar, but the custom rules are loaded via
+        // META-INF/services/*IssueRegistry loading instead of a manifest key
+        val expected = "" +
+                "src/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [AppCompatMethod]\n" +
+                "        getActionBar();                    // ERROR\n" + "        ~~~~~~~~~~~~\n" +
+                "src/test/pkg/AppCompatTest.java:10: Warning: Should use startSupportActionMode instead of startActionMode name [AppCompatMethod]\n" +
+                "        startActionMode(null);             // ERROR\n" + "        ~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/AppCompatTest.java:13: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [AppCompatMethod]\n" +
+                "        requestWindowFeature(0);           // ERROR\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [AppCompatMethod]\n" +
+                "        setProgressBarVisibility(true);    // ERROR\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/AppCompatTest.java:17: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [AppCompatMethod]\n" +
+                "        setProgressBarIndeterminate(true);\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [AppCompatMethod]\n" +
+                "        setProgressBarIndeterminateVisibility(true);\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" + "0 errors, 6 warnings\n"
+
+        lint().files(
+                classpath(),
+                manifest().minSdk(1),
+                appCompatTestSource,
+                appCompatTestClass)
+                .allowObsoleteLintChecks(false)
+                .client(object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = emptyList()
+
+                    override fun findRuleJars(project: Project): List<File> = listOf(
+                            lintJarWithServiceRegistry)
+                }).customRules(lintJar).allowMissingSdk().run().expect(expected)
+    }
+
+    @Test
     fun testProjectIsLibraryLintJar() {
         val expected = "" +
                 "src/main/java/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [AppCompatMethod]\n" +
@@ -316,6 +352,82 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
                 "T6jmf/ED/04NPKEGkZyC/qcbsJ4w0Pq1wX9GgZP3/vOLvHjCJew3LqeMBn83" +
                 "/7nhMifM6an+vyduDDtL/qNLFAD5Y1fac993/wK1/pChWw4AAA=="
 
+        @JvmField
+        val LINT_JAR_SERVICE_REGISTRY_BASE64_GZIP = "" +
+                "H4sIAAAAAAAAAJ2XCTSU+//Hx5IsWWexkz1EsiW7BoOxb5Ety4x1zJixVbIU" +
+                "yrUUsg+3bopkq3RlHwxFmPCzRYYs185IKBq/3N/9/y8d3fP//77nPOc5z3k+" +
+                "r/fz+X4+z/mez9sSTkcPAjAyMgLYqqXggAOLCUAPMDOw1ZMzNjc8Q+0EAOgA" +
+                "lvDjjPuvaP8KsfwpDPp+/S9spmdubGhgYytvZvjJrOutKVxOvpcVLifT00V6" +
+                "Ya3wL6WJGay8idlpY7PekBJ6Joc5XiJ/Lt885NFsoSSkSMYn/FGmGlgCOQuW" +
+                "BS2C52f817EULM2fucQ/sZEw+f4lk79yYQYAvudH90MuXAdzwSGwob6eCNyZ" +
+                "v3P/MV7vyHhPNErePdALi/b1kg9GowNw8gG+gcHyngG+iO83d4yvvDEOF4Kw" +
+                "Rnj74oKxVzK6tZhbdEFEinYRT2VlKuqYxrOzl2dYM5c4hJE6w1uDd0fr0oDD" +
+                "JDT1eBKuMyMbm2T6WGobFD8JaPfghxjb3tLYYgJviuq/5Mx4UWyHTutHzJUi" +
+                "mcydpGtyd/Aur2fLH41hT4+3C19dQS7GHF8uXhPRPfF7p76D4Qb6ghOpTP+y" +
+                "DyK1g3/v2x7tfp30Rh5dT/i+q5FDdRINh0AP7nu/tX/t8MzPozgOROFCMBg0" +
+                "NvgfooFHRIee+weA52hgv9YHWvYjdeYfKD0MBopGYdyD9RHBCM9gNPZ7z9xx" +
+                "uPyLX8L4B8BUBnhuqqJIjzjPvcoT7e2heAfJmL5hEdvUGduy0xJ8I4YBm+Eb" +
+                "AWaKuZxKYhorDHIu8yZwJyO4U21vA9Eyvf9ClE+PL2k+qnmvd7kxtfRNwgks" +
+                "TqC7fmelbjGM3PCJtLf7pQKQ4qkUb9UFo/CYiAplrcXGSkloSkz6MrFwQTzf" +
+                "PQPFxTynh0DZMz0d9CQYgNwerxgTV+0khrkEmFSYSEYYiXCuCM6QyMsqv+iV" +
+                "Uuiytkm1sRZG24WxFsbbwaBfm19Yad4i/bKNv/3Hw23NRo5WQCNPa9Yagslt" +
+                "ksStH2FHHKKPVcpVzYMo5Krg/S5Uvy33zAQ2Tjm4tiiidKyQ2koRr83mVJRS" +
+                "KfXqeSDM4khwkEiODHK9Jk6p4wZA4pqe2wAwM7BCXJmssgz++D4PG0AaQkWZ" +
+                "Vy+YEiLLsk9X9XRPFxmt6iWL58tOkyB9ue0IuS6EMk01Wb9nmk8jLGw4x4S7" +
+                "Py7HVN5RPOF63MaXkSp75+yi5N3dlmB1R7zcO8Ppe755VF8arVYxHO0F6SJT" +
+                "w+W3uapvB57Cu+QW4JCpRrX4wO758o4hM483FdlC7P32t+uvls2+ivT4PGmI" +
+                "T3t5qfPJYHBUCa8Cc3RVS0RZu4Mj4dlkarmoQGV/r7a6iahc/8RXm1rEzIaM" +
+                "GAuIC0SsXcmzF/W/qh0EU8G1DX6rhWeORwFbn+Sl43KFFWW6Xr0xYAlHvZJd" +
+                "tM5cuXLP7leXdakXKXVpmEz5d5t8TiZzriqTdUkq2VjQmOB5ZLZbUKdLpVcA" +
+                "iW04vEV/ndx/8Y1Br0/2yYntle7ZFLTjqft7NxtOTtvS+dOPDcXBYsFit+ct" +
+                "sxqtONX9VXHz983OS245278Ivjm+6dcY6Izv9adhnlcVMc1XLJVM8cy1CWNV" +
+                "RWGjNz/QE84WhPCyT7WKNkpPOYVb6a4mG3GcxBXyNs4Pewc/dxe2Kx0V76IX" +
+                "qW31pJ4fcgyS3iUqel+dTfPNodZGNy878ebd+lCWG2sw2BO2fX17jg0zohQy" +
+                "++XTY5fQwceOAC9OciZFsF78Y53iOg+3wtiDjY1Lcr2KBU2ladq85NYtg/rT" +
+                "U2BnCIWOV4f4VDRSfOr1dkISznmYxjWX9TyqZ+tYD/rhOQ/MnSEPsggIpoFd" +
+                "4kmlsiP/cPfHgNSJMEK0fdCCvWPZNVPBiMsEG7NaVI6rfT4iZE2tjN/HD35F" +
+                "m/Bb0tCaDe9rBckp7+2aJLeJrHtbkEhk7uUm3KBYdPGncmhTmUuI/zW/3C6K" +
+                "LXQru6jcLvutrYvKQsGq7YBBZyJn5ZmS5PdWDfHP4EmjTuPP7QjXPoGRwOSn" +
+                "67LinouFfjnw8pVy4RkveTz1mnmGyrGrC7U26PRO/5S3Piy03N4agXbVtq+R" +
+                "44W1S69k6gov+kM0SuRDdQlrbzzqots2++43nH1p5KI7w53E51xQMqPG3aAr" +
+                "P7T6pBHo48LiMagQbEpcVIyMc0vcTk4ifwwL9g8Z8K/JsUPuqJ/TJRgN5cOI" +
+                "q4hdmqjpl3vxt2UVVdceR8NkGt3yjO5m2iHPq8ymqEikBOH4kMoIYf92bT1p" +
+                "ZFa7TORAGgVC1VdYbd+Qg9Ljx1h3dDF/+MUHHq9+ENGq2PorTfJWc2p5nfQH" +
+                "ck2Eu2TOcmjnyEJzw9CoT1/I55A+vl6tcav5Wf5I0Wue7mahc103XT4DuEwl" +
+                "yp0KJ3+fZMPOjwu/b14H3BKKIXRxQRZVSrz6ZRUSy/omMtAbGSjFPCAg63zj" +
+                "6KxxQ7qJR6fKxZphSr4334JV7NiEZvfFbmC6RmuRmM7nJsNk1f4e7zy2lGA+" +
+                "LbG39Ssd4+mC5kv4muULm3dDtVlUFyqU6210LOSvND7lp372fSSbjUqYnbV+" +
+                "XfQcuOYchnPwZCPnZ+ZpLXHE18jLahp8820LepK6bDzDEhdckv0wyJngEPbJ" +
+                "4dPGDsDjml5f8gwDygZvAcHmjI0EqqDy8UubLQpzHoWdFoj0jZCz+R2Puats" +
+                "qQLXtQR8ni5XuVT4JWVtWWrU0941D52Ycl82uX734o2bk4raAMZUtrlvOtJ1" +
+                "nXBkWPMy24vRr45ZKs8/N9fAzmR5C2QhlhAwwkPBipiVmUnXr5FCxx6wi36M" +
+                "4PqNfQtqdBnvw/5uR46x92v4qLrpIhC1yFgmHOCUWBVZjJLr/QpFLZ4y5tg+" +
+                "bd4klYC9UUCr1Qobj8dIXM65T+bRihErjASlb0iey8Yw33lnQ/DVfA9SGARx" +
+                "vCfIoat6YLSXflsOKA7ZFDPi4ta5VlAcgS4+ty5/1UTLxEg27l6lPbMsZxnI" +
+                "Sr9MXCbNPu1ecSj4GX+bzrBkZLE01ZSQLvoe1McKjAt7s3aqt6INinYn6asJ" +
+                "2U+bLTUk1X2cfPrqsyJbSqCHm2Z9gmvjlzt7jWEzzN4fdDg5JfUlQHc4tmRv" +
+                "S3fGbqsjMzCJmGjg43tGiZi7QPNTHokYfqkNWevEd6+ZdjJ80k/KVFvcDqKs" +
+                "8tivMDYlhj+RMndNN8Fuv4tVro1pfUh5J7mSBG+RXPnIu8B0odI0mqbNWjxr" +
+                "K701CBse7SzUrDwjB72SJzIxzXjiSufA+d8Kisi0sw/0YJzgrpY2gcGEdU2h" +
+                "VpZTkxKaKVkUkGtbv3KJ3ASa2AHdFY9D0zWIe+IBBjEBDHlN+W2wm/TOYvnC" +
+                "LJY4VmFYZuk0WslL73ZAxK0odSu+lCkD6gcoUwQj+WRiu2+FLj6ISD1mFTt4" +
+                "J2qKQ2u+Iou6LCgS1wa5lD4MLBa0WrFfsbKdGWfd2DJUxZDdFCzVo5tZx/ZU" +
+                "48utFWCqQdNmAo1cJ1fUvb6+aRkBiOIKf53Cc5NPNQolUNn35ykdNqKt2vfh" +
+                "RQ14cAb+cShR/r8MJYeGxv9MJhnWZhajuhzXWYxNb4zeq4rI6GN/cotePLMl" +
+                "Bsphl/E7V9qASSyWrCYb1oscej5k9O1iVZa9wDbN7iliKfA+lwFYuyu8gNyV" +
+                "d3088e0LHMAp/IMu2GIxPP4LA6SS57I0QRGKusg7s8nzeDRfLN6ExCYBVbI2" +
+                "jJQ2pMsR/CVGshA84jAnlirtZkH4ZaccG99tlO2OHLj7h0Hu+y5KumB5RtAu" +
+                "NHdz6RQ4UIfEcuUkMKNuCZb1oODNWcPlslApdYjUDW5zXyHONuBXmbMtYN6O" +
+                "+ibocLKHxsehkp5L+XeO3errGB5JSrSlWN+vg/XzXXfyerZbujsouzfu1wqP" +
+                "LRZhXNMkMrvSO7BSuCp4VIVCdRkiSZHP7NP6ukOrBfP3TCLw+OQHteTVqB1i" +
+                "JRXAzzOL1lpyLEu4XyqyJzzTKX5J3b/+5Qn0qGf1SwWmPXU1SY+tHuEWfts5" +
+                "wy/ezF11hkHxJajOJGzI8rlh0jou3+Pm8zvgLmv6lrMJJXcV5WJeE9foxs0Y" +
+                "6JsUPh/vLzon5icxtvtUK7vqHLwH2DLbWT0I3u/+8LDQVTwNALBFu999GloQ" +
+                "4LAH+h93tG+gDq9DdupH9KCZAR3CtH5ipvYVmAE/Nz1/r44jLc3BDPb5gzZB" +
+                "7xD/5Uj+/2mJDqZ7lPf4e1FoDjqRn1Mchyhu2qOcyc9p4CHa4Aj6T6fycwGe" +
+                "QwKhRwv85Vz+rvS+ysED5MwhldJ/UPmJk/lR/OD/qXxIXI/lvzuRLOHHGPb5" +
+                "/ULMflfVYd1/+jeeVNdOOxAAAA=="
+
         private val LOMBOK_LINT_JAR_BASE64_GZIP = "" +
                 "H4sIAAAAAAAAAI1WezgTeh+fy2xTaJp6c0m5TDQjIYWGMYYxM5dJHMZEzV0R" +
                 "vee4tCG3yK0sl6hXCLnrOl1cNsQ0iYiG5DK3UHR6nafnfU7pPe97Pr/n+8fv" +
@@ -418,5 +530,7 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
         private val lintJar: File = base64gzip("lint1.jar", LINT_JAR_BASE64_GZIP).createFile(temp.root)
         private val oldLintJar: File = base64gzip("lint2.jar", LOMBOK_LINT_JAR_BASE64_GZIP).createFile(temp.root)
         private val psiLintJar: File = base64gzip("lint3.jar", PSI_LINT_JAR_BASE64_GZIP).createFile(temp.root)
+        private val lintJarWithServiceRegistry: File = base64gzip("lint1.jar",
+                LINT_JAR_SERVICE_REGISTRY_BASE64_GZIP).createFile(temp.root)
     }
 }
