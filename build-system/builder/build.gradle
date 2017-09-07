@@ -117,9 +117,7 @@ dependencies {
         transitive = false
     }
 
-    provided(project(path: ':external:r8')) {
-        transitive = false
-    }
+    provided(files('../../../../prebuilts/tools/common/r8/d8-master.jar'))
 
     sourcesProvided(project(path:':dx', configuration:'sourcesOnly')) {
         transitive = false

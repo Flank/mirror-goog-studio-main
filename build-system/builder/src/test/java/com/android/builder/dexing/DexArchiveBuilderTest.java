@@ -302,6 +302,7 @@ public class DexArchiveBuilderTest {
     public void checkStaticAndDefaultInterfaceMethods() throws Exception {
         Assume.assumeTrue(inputFormat == ClassesInputFormat.DIR);
         Assume.assumeTrue(outputFormat == DexArchiveFormat.DIR);
+        Assume.assumeFalse(dexerTool == DexerTool.D8);
 
         Path classesDir = temporaryFolder.getRoot().toPath().resolve("classes");
         String path =

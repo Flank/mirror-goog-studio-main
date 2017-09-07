@@ -42,7 +42,15 @@
     <orderEntry type="module" module-name="aaptjlib" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="library" name="gradle-api" level="project" />
-    <orderEntry type="module" module-name="r8" />
     <orderEntry type="module" module-name="layoutlib-api-base" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../prebuilts/tools/common/r8/d8-master.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

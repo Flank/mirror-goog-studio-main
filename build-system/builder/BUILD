@@ -34,7 +34,7 @@ kotlin_library(
         "//tools/base/build-system/profile",
         "//tools/base/aaptjlib",
         "//tools/dx/dalvik/dx",
-        "//tools/external/r8",
+        "//prebuilts/tools/common/r8:d8-master",
     ],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     plugins = [
