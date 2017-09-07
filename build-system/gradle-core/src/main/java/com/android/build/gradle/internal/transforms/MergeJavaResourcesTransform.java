@@ -276,7 +276,8 @@ public class MergeJavaResourcesTransform extends Transform {
 
         // Prefix libraries with "lib/" if we're doing libraries.
         assert mergedType.size() == 1;
-        if (mergedType.iterator().next() == ExtendedContentType.NATIVE_LIBS) {
+        ContentType mergedType = this.mergedType.iterator().next();
+        if (mergedType == ExtendedContentType.NATIVE_LIBS) {
             inputs =
                     inputs.stream()
                             .map(
@@ -309,12 +310,6 @@ public class MergeJavaResourcesTransform extends Transform {
                 })
                 .collect(Collectors.toList());
 
-
-        File outputDir =
-                outputProvider.getContentLocation(
-                        "resources", getOutputTypes(), getScopes(), Format.DIRECTORY);
-
-
         /*
          * Create the algorithm used by the merge transform. This algorithm decides on which
          * algorithm to delegate to depending on the packaging option of the path. By default it
@@ -341,10 +336,29 @@ public class MergeJavaResourcesTransform extends Transform {
          * Create an output that uses the algorithm. This is not the final output because,
          * unfortunately, we still have the complexity of the project scope overriding other scopes
          * to solve.
+         *
+         * When resources inside a jar file are extracted to a directory, the results may not be
+         * expected on Windows if the file names end with "." (bug 65337573), or if there is an
+         * uppercase/lowercase conflict. To work around this issue, we copy these resources to a
+         * jar file.
          */
-        IncrementalFileMergerOutput baseOutput =
-                IncrementalFileMergerOutputs.fromAlgorithmAndWriter(
-                        mergeTransformAlgorithm, MergeOutputWriters.toDirectory(outputDir));
+        IncrementalFileMergerOutput baseOutput;
+        if (mergedType == QualifiedContent.DefaultContentType.RESOURCES) {
+            File outputLocation =
+                    outputProvider.getContentLocation(
+                            "resources", getOutputTypes(), getScopes(), Format.JAR);
+            baseOutput =
+                    IncrementalFileMergerOutputs.fromAlgorithmAndWriter(
+                            mergeTransformAlgorithm, MergeOutputWriters.toZip(outputLocation));
+        } else {
+            File outputLocation =
+                    outputProvider.getContentLocation(
+                            "resources", getOutputTypes(), getScopes(), Format.DIRECTORY);
+            baseOutput =
+                    IncrementalFileMergerOutputs.fromAlgorithmAndWriter(
+                            mergeTransformAlgorithm,
+                            MergeOutputWriters.toDirectory(outputLocation));
+        }
 
         /*
          * We need a custom output to handle the case in which the same path appears in multiple
