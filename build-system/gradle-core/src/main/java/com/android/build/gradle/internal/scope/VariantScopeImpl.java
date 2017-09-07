@@ -1365,7 +1365,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getGeneratedClassListOutputFileForDataBinding() {
-        return new File(getLayoutInfoOutputForDataBinding(), "_generated.txt");
+        return new File(
+                globalScope.getIntermediatesDir()
+                        + "/data-binding-class-list/"
+                        + getVariantConfiguration().getDirName()
+                        + "/_generated.txt");
     }
 
     @NonNull
