@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.build.gradle.tasks;
+package com.android.tools.lint.gradle;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.GradleDetector;
@@ -48,7 +48,7 @@ import org.codehaus.groovy.ast.stmt.Statement;
  * which the Gradle plugin has access to.
  */
 public class GroovyGradleDetector extends GradleDetector {
-    static final Implementation IMPLEMENTATION = new Implementation(
+    public static final Implementation IMPLEMENTATION = new Implementation(
             GroovyGradleDetector.class,
             Scope.GRADLE_SCOPE);
 

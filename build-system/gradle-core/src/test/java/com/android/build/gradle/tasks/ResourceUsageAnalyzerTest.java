@@ -29,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.ResourceType;
-import com.android.tools.lint.checks.ResourceUsageModel.Resource;
+import com.android.ide.common.resources.usage.ResourceUsageModel.Resource;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;

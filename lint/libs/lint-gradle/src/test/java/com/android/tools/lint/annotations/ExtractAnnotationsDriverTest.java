@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks.annotations;
+package com.android.tools.lint.annotations;
 
 import static com.android.testutils.TestUtils.deleteFile;
 import static com.android.utils.SdkUtils.fileToUrlString;

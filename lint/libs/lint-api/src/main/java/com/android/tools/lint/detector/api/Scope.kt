@@ -20,6 +20,7 @@ import com.android.SdkConstants.ANDROID_MANIFEST_XML
 import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_GRADLE
 import com.android.SdkConstants.DOT_JAVA
+import com.android.SdkConstants.DOT_KT
 import com.android.SdkConstants.DOT_PNG
 import com.android.SdkConstants.DOT_PROPERTIES
 import com.android.SdkConstants.DOT_XML
@@ -196,7 +197,7 @@ enum class Scope {
                             scope.add(MANIFEST)
                         } else if (name.endsWith(DOT_XML)) {
                             scope.add(RESOURCE_FILE)
-                        } else if (name.endsWith(DOT_JAVA)) {
+                        } else if (name.endsWith(DOT_JAVA) || name.endsWith(DOT_KT)) {
                             scope.add(JAVA_FILE)
                         } else if (name.endsWith(DOT_CLASS)) {
                             scope.add(CLASS_FILE)

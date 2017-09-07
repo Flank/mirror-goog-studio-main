@@ -2000,10 +2000,6 @@ public class VersionChecksTest extends AbstractCheckTest {
     }
 
     public void testNestedChecksKotlin() {
-        if (skipKotlinTests()) {
-            return;
-        }
-
         // Kotlin version of testNestedChecks. There are several important changes here:
         // The version check utility method is now defined as an expression body, so there
         // is no explicit "return" keyword (which the code used to look for).
@@ -2116,6 +2112,29 @@ public class VersionChecksTest extends AbstractCheckTest {
                         "    public abstract boolean isOreoOrLater();\n" +
                         "    public abstract boolean isOreoOrAbove();\n" +
                         "}\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void testKotlinWhenStatement() {
+        // Regression test for
+        //   67712955: Kotlin when statement fails if subject is Build.VERSION.SDK_INT
+
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(4),
+                kotlin("" +
+                        "import android.os.Build.VERSION.SDK_INT\n" +
+                        "import android.os.Build.VERSION_CODES.N\n" +
+                        "import android.text.Html\n" +
+                        "\n" +
+                        "fun String.fromHtm() : String\n" +
+                        "{\n" +
+                        "    return when {\n" +
+                        "        false, SDK_INT >= N -> Html.fromHtml(this, Html.FROM_HTML_MODE_LEGACY)\n" +
+                        "        else -> Html.fromHtml(this)\n" +
+                        "    }.toString()\n" +
+                        "}"))
                 .run()
                 .expectClean();
     }

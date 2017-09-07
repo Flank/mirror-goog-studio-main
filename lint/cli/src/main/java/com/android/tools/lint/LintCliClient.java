@@ -72,6 +72,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.intellij.codeInsight.ExternalAnnotationsManager;
+import com.intellij.mock.MockProject;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.roots.LanguageLevelProjectExtension;
 import com.intellij.openapi.util.Disposer;
@@ -939,12 +940,18 @@ public class LintCliClient extends LintClient {
     }
 
 
+    @Nullable LintCoreProjectEnvironment projectEnvironment;
     @Nullable private com.intellij.openapi.project.Project ideaProject;
     @Nullable private Disposable projectDisposer;
 
     @Nullable
     public com.intellij.openapi.project.Project getIdeaProject() {
         return ideaProject;
+    }
+
+    @Nullable
+    public LintCoreProjectEnvironment getProjectEnvironment() {
+        return projectEnvironment;
     }
 
     @Override
@@ -957,6 +964,7 @@ public class LintCliClient extends LintClient {
 
         LintCoreProjectEnvironment projectEnvironment = LintCoreProjectEnvironment.create(
                 parentDisposable, appEnv);
+        this.projectEnvironment = projectEnvironment;
         ideaProject = projectEnvironment.getProject();
 
         // knownProject only lists root projects, not dependencies
@@ -966,13 +974,14 @@ public class LintCliClient extends LintClient {
             allProjects.addAll(project.getAllLibraries());
         }
 
-        List<File> files = Lists.newArrayListWithCapacity(50);
+        List<File> files = new ArrayList<>(50);
 
         for (Project project : allProjects) {
             // Note that there could be duplicates here since we're including multiple library
             // dependencies that could have the same dependencies (e.g. lib1 and lib2 both
             // referencing guava.jar)
             files.addAll(project.getJavaSourceFolders());
+            files.addAll(project.getTestSourceFolders());
             files.addAll(project.getGeneratedSourceFolders());
             files.addAll(project.getJavaLibraries(true));
             files.addAll(project.getTestLibraries());
@@ -1210,27 +1219,47 @@ public class LintCliClient extends LintClient {
         return super.getMergedManifest(project);
     }
 
+    private boolean initializedKotlin;
+
     protected class LintCliUastParser extends DefaultUastParser {
 
         private final Project project;
 
         public LintCliUastParser(Project project) {
             //noinspection ConstantConditions
-            super(project, LintCliClient.this.ideaProject);
+            super(project, ideaProject);
             this.project = project;
         }
 
         @Override
-        public boolean prepare(@NonNull final List<? extends JavaContext> contexts) {
+        public boolean prepare(@NonNull List<? extends JavaContext> contexts,
+                @NonNull List<? extends JavaContext> testContexts) {
             // If we're using Kotlin, ensure we initialize the bridge
+            List<File> kotlinFiles = new ArrayList<>();
             for (JavaContext context : contexts) {
                 if (context.file.getPath().endsWith(SdkConstants.DOT_KT)) {
-                    LintCoreApplicationEnvironment.registerKotlinUastPlugin();
-                    break;
+                    kotlinFiles.add(context.file);
+                }
+            }
+            for (JavaContext context : testContexts) {
+                if (context.file.getPath().endsWith(SdkConstants.DOT_KT)) {
+                    kotlinFiles.add(context.file);
+                }
+            }
+            if (!kotlinFiles.isEmpty()) {
+                MockProject project = (MockProject) ideaProject;
+                if (project != null && projectEnvironment != null) {
+                    if (!initializedKotlin) {
+                        initializedKotlin = true;
+                        KotlinLintAnalyzerFacade.registerProjectComponents(project);
+                    }
+
+                    List<File> paths = projectEnvironment.getPaths();
+                    KotlinLintAnalyzerFacade.analyze(kotlinFiles, paths, project);
                 }
             }
 
-            boolean ok = super.prepare(contexts);
+            boolean ok = super.prepare(contexts, testContexts);
 
             if (project == null || contexts.isEmpty()) {
                 return ok;

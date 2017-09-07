@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.tasks.annotations.Extractor;
 import com.android.testutils.apk.Zip;
 import java.io.File;
 import org.junit.Before;
@@ -131,15 +130,8 @@ public class ExtractAnnotationTest {
                 .doesNotContain(
                         "com/android/tests/extractannotations/ExtractTest$NonMaskType.class");
 
-        // public but @hide marked typedefs: should have been removed
-        if (Extractor.REMOVE_HIDDEN_TYPEDEFS) {
-            assertThat(classesJar)
-                    .doesNotContain(
-                            "com/android/tests/extractannotations/ExtractTest$StringMode.class");
-        } else {
-            assertThat(classesJar)
+        assertThat(classesJar)
                     .contains("com/android/tests/extractannotations/ExtractTest$StringMode.class");
-        }
 
         // Make sure the NonMask symbol (from a private typedef) is completely gone from the
         // outer class

@@ -18,14 +18,12 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_ID;
-import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -476,6 +474,7 @@ public class TestLintClient extends LintCliClient {
                     case LintOptions.SEVERITY_WARNING: severity = Severity.WARNING; break;
                     case LintOptions.SEVERITY_INFORMATIONAL: severity = Severity.INFORMATIONAL; break;
                     case LintOptions.SEVERITY_IGNORE: severity = Severity.IGNORE; break;
+                    case LintOptions.SEVERITY_DEFAULT_ENABLED: severity = Severity.WARNING; break;
                     default: continue;
                 }
                 overrides.put(id, severity);
@@ -652,8 +651,9 @@ public class TestLintClient extends LintCliClient {
     public UastParser getUastParser(@Nullable Project project) {
         return new LintCliUastParser(project) {
             @Override
-            public boolean prepare(@NonNull List<? extends JavaContext> contexts) {
-                boolean ok = super.prepare(contexts);
+            public boolean prepare(@NonNull List<? extends JavaContext> contexts,
+                    @NonNull List<? extends JavaContext> testContexts) {
+                boolean ok = super.prepare(contexts, testContexts);
                 if (task.forceSymbolResolutionErrors) {
                     ok = false;
                 }
@@ -663,15 +663,6 @@ public class TestLintClient extends LintCliClient {
             @Nullable
             @Override
             public UFile parse(@NonNull JavaContext context) {
-                if (context.file.getPath().endsWith(DOT_KT)) {
-                    // We don't yet have command line invocation of Kotlin working;
-                    // for now do simple (VERY simple) mocking
-                    context.report(IssueRegistry.LINT_ERROR, Location.create(context.file),
-                            "Kotlin not supported in the test file infrastructure yet; "
-                                    + "for now test manually in the IDE");
-                    return mock(UFile.class);
-                }
-
                 UFile file = super.parse(context);
 
                 if (!task.allowCompilationErrors) {
@@ -684,7 +675,8 @@ public class TestLintClient extends LintCliClient {
                             // error messages, source offsets, etc?
                         }
                     } else {
-                        fail("Failure processing source " + context.file +
+                        fail("Failure processing source " +
+                                context.getProject().getRelativePath(context.file) +
                                 ": No UAST AST created");
                     }
                 }

@@ -51,8 +51,10 @@ import com.intellij.psi.impl.file.impl.JavaFileManager;
 import com.intellij.psi.meta.MetaDataContributor;
 import com.intellij.psi.stubs.BinaryFileStubBuilders;
 import com.intellij.psi.util.JavaClassSupers;
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment;
 import org.jetbrains.uast.UastContext;
 import org.jetbrains.uast.UastLanguagePlugin;
+import org.jetbrains.uast.kotlin.KotlinUastLanguagePlugin;
 
 public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironment {
     private static final Object APPLICATION_LOCK = new Object();
@@ -97,6 +99,8 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
         registerApplicationServicesForCLI(applicationEnvironment);
         registerApplicationServices(applicationEnvironment);
 
+        KotlinCoreEnvironment.registerApplicationServices(applicationEnvironment);
+
         synchronized (APPLICATION_LOCK) {
             ourProjectCount++;
         }
@@ -139,31 +143,10 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
 
         rootArea.getExtensionPoint(UastLanguagePlugin.Companion.getExtensionPointName()).registerExtension(
                 new org.jetbrains.uast.java.JavaUastLanguagePlugin());
-    }
 
-    private static boolean kotlinAttempted;
-
-    /** Attempt to register the Kotlin plugin, assuming the Kotlin plugin has been enabled */
-    public static void registerKotlinUastPlugin() {
-        // Not yet working (needs additional fixes to the app and project environment instances;
-        // disable for now)
-        if (false && !kotlinAttempted) {
-            kotlinAttempted = true;
-
-            try {
-                Class<?> clz = Class.forName("org.jetbrains.uast.kotlin.KotlinUastLanguagePlugin");
-                UastLanguagePlugin plugin = (UastLanguagePlugin) clz.newInstance();
-                ExtensionsArea rootArea = Extensions.getRootArea();
-
-                CoreApplicationEnvironment.registerExtensionPoint(rootArea, UastLanguagePlugin.Companion.getExtensionPointName(), UastLanguagePlugin.class);
-
-                rootArea.getExtensionPoint(UastLanguagePlugin.Companion.getExtensionPointName()).
-                        registerExtension(plugin);
-            } catch (Throwable ex) {
-                System.err.println("Couldn't find or register Kotlin UAST plugin:" +
-                        ex.getLocalizedMessage());
-            }
-        }
+        KotlinUastLanguagePlugin plugin = new KotlinUastLanguagePlugin();
+        rootArea.getExtensionPoint(UastLanguagePlugin.Companion.getExtensionPointName()).
+                                    registerExtension(plugin);
     }
 
     private static void registerApplicationServicesForCLI(JavaCoreApplicationEnvironment applicationEnvironment) {

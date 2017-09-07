@@ -30,7 +30,6 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.LintGradleClient;
 import com.android.build.gradle.internal.dsl.LintOptions;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
@@ -39,45 +38,44 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
-import com.android.tools.lint.LintCliFlags;
-import com.android.tools.lint.Reporter;
-import com.android.tools.lint.TextReporter;
-import com.android.tools.lint.Warning;
-import com.android.tools.lint.checks.BuiltinIssueRegistry;
-import com.android.tools.lint.checks.GradleDetector;
-import com.android.tools.lint.client.api.IssueRegistry;
-import com.android.tools.lint.client.api.LintBaseline;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.utils.Pair;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.Version;
+import com.android.builder.utils.FileCache;
+import com.android.sdklib.BuildToolInfo;
+import com.android.tools.lint.gradle.api.ReflectiveLintRunner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Streams;
 import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
-import org.gradle.api.plugins.ExtraPropertiesExtension;
 import org.gradle.api.plugins.JavaBasePlugin;
-import org.gradle.tooling.provider.model.ToolingModelBuilder;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class LintBaseTask extends AndroidBuilderTask {
+    public static final String LINT_CLASS_PATH = "_lintClassPath";
+
     protected static final Logger LOG = Logging.getLogger(LintBaseTask.class);
+
+    @Nullable FileCollection lintClassPath;
+
+    /** Lint classpath */
+    @InputFiles
+    @Nullable
+    public FileCollection getLintClassPath() {
+        return lintClassPath;
+    }
 
     @Nullable protected LintOptions lintOptions;
     @Nullable protected File sdkHome;
-    private boolean fatalOnly;
     protected ToolingModelBuilderRegistry toolingRegistry;
     @Nullable protected File reportsDir;
 
@@ -86,228 +84,76 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
         return lintOptions;
     }
 
-    @Nullable
-    public File getSdkHome() {
-        return sdkHome;
-    }
-
-    public ToolingModelBuilderRegistry getToolingRegistry() {
-        return toolingRegistry;
-    }
-
-    protected void setFatalOnly(boolean fatalOnly) {
-        this.fatalOnly = fatalOnly;
-    }
-
-    public boolean isFatalOnly() {
-        return fatalOnly;
-    }
-
-    @Nullable
-    public File getReportsDir() {
-        return reportsDir;
-    }
-
-    protected void abort() {
-        abort(null, null);
-    }
-
-    protected void abort(
-            @Nullable LintGradleClient client,
-            @Nullable List<Warning> warnings) {
-        String message;
-        if (fatalOnly) {
-            message =
-                    ""
-                            + "Lint found fatal errors while assembling a release target.\n"
-                            + "\n"
-                            + "To proceed, either fix the issues identified by lint, or modify your build script as follows:\n"
-                            + "...\n"
-                            + "android {\n"
-                            + "    lintOptions {\n"
-                            + "        checkReleaseBuilds false\n"
-                            + "        // Or, if you prefer, you can continue to check for errors in release builds,\n"
-                            + "        // but continue the build even when errors are found:\n"
-                            + "        abortOnError false\n"
-                            + "    }\n"
-                            + "}\n"
-                            + "...";
-        } else {
-            message =
-                    ""
-                            + "Lint found errors in the project; aborting build.\n"
-                            + "\n"
-                            + "Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n"
-                            + "...\n"
-                            + "android {\n"
-                            + "    lintOptions {\n"
-                            + "        abortOnError false\n"
-                            + "    }\n"
-                            + "}\n"
-                            + "...";
-        }
-
-        if (warnings != null && client != null &&
-                // See if there's at least one text reporter
-                client.getFlags().getReporters().stream().
-                        noneMatch(reporter -> reporter instanceof TextReporter)) {
-            List<Warning> errors = warnings.stream().filter(
-                    warning -> warning.severity.isError()).collect(Collectors.toList());
-            if (!errors.isEmpty()) {
-                String prefix = "Errors found:\n\n";
-                if (errors.size() > 3) {
-                    // Truncate
-                    prefix = "The first 3 errors (out of " + errors.size() + ") were:\n";
-                    errors = Arrays.asList(errors.get(0), errors.get(1), errors.get(2));
-                }
-                StringWriter writer = new StringWriter();
-                LintCliFlags flags = client.getFlags();
-                flags.setExplainIssues(false);
-                TextReporter reporter = Reporter.createTextReporter(client, flags, null, writer, false);
-                try {
-                    Reporter.Stats stats = new Reporter.Stats(errors.size(), 0);
-                    reporter.setWriteStats(false);
-                    reporter.write(stats, errors);
-                    message += "\n\n" + prefix + writer.toString();
-                } catch (IOException ignore) {
-                }
-            }
-        }
-
-        throw new GradleException(message);
-    }
-
-    /** Runs lint on the given variant and returns the set of warnings */
-    protected Pair<List<Warning>, LintBaseline> runLint(
-            /*
-             * Note that as soon as we disable {@link #MODEL_LIBRARIES} this is
-             * unused and we can delete it and all the callers passing it recursively
-             */
-            @NonNull AndroidProject modelProject,
-            @NonNull Variant variant,
-            @NonNull VariantInputs variantInputs,
-            boolean report) {
-        IssueRegistry registry = createIssueRegistry();
-        LintCliFlags flags = new LintCliFlags();
-        LintGradleClient client =
-                new LintGradleClient(
-                        registry,
-                        flags,
-                        getProject(),
-                        modelProject,
-                        sdkHome,
-                        variant,
-                        variantInputs,
-                        getBuildTools());
-        if (fatalOnly) {
-            flags.setFatalOnly(true);
-        }
-        if (lintOptions != null) {
-            syncOptions(
-                    lintOptions,
-                    client,
-                    flags,
-                    variant,
-                    getProject(),
-                    reportsDir,
-                    report,
-                    fatalOnly);
-        }
-        if (!report || fatalOnly) {
-            flags.setQuiet(true);
-        }
-        flags.setWriteBaselineIfMissing(report && !fatalOnly);
-
-        Pair<List<Warning>, LintBaseline> warnings;
-        try {
-            warnings = client.run(registry);
-        } catch (IOException e) {
-            throw new GradleException("Invalid arguments.", e);
-        }
-
-        if (report && client.haveErrors() && flags.isSetExitCode()) {
-            abort(client, warnings.getFirst());
-        }
-
-        return warnings;
-    }
-
-    protected static void syncOptions(
-            @NonNull LintOptions options,
-            @NonNull LintGradleClient client,
-            @NonNull LintCliFlags flags,
-            @Nullable Variant variant,
-            @NonNull Project project,
-            @Nullable File reportsDir,
-            boolean report,
-            boolean fatalOnly) {
-        options.syncTo(
-                client,
-                flags,
-                variant != null ? variant.getName() : null,
-                project,
-                reportsDir,
-                report);
-
-        boolean displayEmpty = !(fatalOnly || flags.isQuiet());
-        for (Reporter reporter : flags.getReporters()) {
-            reporter.setDisplayEmpty(displayEmpty);
+    protected void runLint(LintBaseTaskDescriptor descriptor) {
+        FileCollection lintClassPath = getLintClassPath();
+        if (lintClassPath != null) {
+            new ReflectiveLintRunner().runLint(getProject().getGradle(),
+                    descriptor, lintClassPath.getFiles());
         }
     }
 
-    protected AndroidProject createAndroidProject(@NonNull Project gradleProject) {
-        String modelName = AndroidProject.class.getName();
-        ToolingModelBuilder modelBuilder = toolingRegistry.getBuilder(modelName);
-        assert modelBuilder != null;
-
-        // setup the level 3 sync.
-        final ExtraPropertiesExtension ext = gradleProject.getExtensions().getExtraProperties();
-        ext.set(
-                AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED,
-                Integer.toString(AndroidProject.MODEL_LEVEL_3_VARIANT_OUTPUT_POST_BUILD));
-        ext.set(AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD, true);
-
-        try {
-            return (AndroidProject) modelBuilder.buildAll(modelName, gradleProject);
-        } finally {
-            ext.set(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_VERSIONED, null);
-            ext.set(AndroidProject.PROPERTY_BUILD_MODEL_DISABLE_SRC_DOWNLOAD, null);
+    protected abstract class LintBaseTaskDescriptor extends
+            com.android.tools.lint.gradle.api.LintExecutionRequest {
+        @Override
+        @Nullable
+        public File getSdkHome() {
+            return sdkHome;
         }
-    }
-
-    private static BuiltinIssueRegistry createIssueRegistry() {
-        return new LintGradleIssueRegistry();
-    }
-
-    // Issue registry when Lint is run inside Gradle: we replace the Gradle
-    // detector with a local implementation which directly references Groovy
-    // for parsing. In Studio on the other hand, the implementation is replaced
-    // by a PSI-based check. (This is necessary for now since we don't have a
-    // tool-agnostic API for the Groovy AST and we don't want to add a 6.3MB dependency
-    // on Groovy itself quite yet.
-    private static class LintGradleIssueRegistry extends BuiltinIssueRegistry {
-        private boolean mInitialized;
-
-        public LintGradleIssueRegistry() {}
 
         @NonNull
         @Override
-        public List<Issue> getIssues() {
-            List<Issue> issues = super.getIssues();
-            if (!mInitialized) {
-                mInitialized = true;
-                for (Issue issue : issues) {
-                    if (issue.getImplementation().getDetectorClass() == GradleDetector.class) {
-                        issue.setImplementation(GroovyGradleDetector.IMPLEMENTATION);
-                    }
-                }
-            }
+        public ToolingModelBuilderRegistry getToolingRegistry() {
+            return toolingRegistry;
+        }
 
-            return issues;
+        @Nullable
+        @Override
+        public LintOptions getLintOptions() {
+            return lintOptions;
+        }
+
+        @Override
+        @Nullable
+        public File getReportsDir() {
+            return reportsDir;
+        }
+
+        @NonNull
+        @Override
+        public Project getProject() {
+            return LintBaseTask.this.getProject();
+        }
+
+        @NonNull
+        @Override
+        public BuildToolInfo getBuildTools() {
+            return LintBaseTask.this.getBuildTools();
+        }
+
+        @Override
+        public void warn(@NonNull String message, @NonNull Object... args) {
+            LOG.warn(message, args);
+        }
+
+        @NotNull
+        @Override
+        public String getGradlePluginVersion() {
+            return Version.ANDROID_GRADLE_PLUGIN_VERSION;
         }
     }
 
-    public static class VariantInputs {
+    @Nullable
+    protected static FileCache getUserIntermediatesCache(GlobalScope globalScope) {
+        if (globalScope
+                .getProjectOptions()
+                .get(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE)) {
+            return globalScope.getBuildCache();
+        } else {
+            return null;
+        }
+    }
+
+    public static class VariantInputs implements com.android.tools.lint.gradle.api.VariantInputs {
         @NonNull private final String name;
         @NonNull private final FileCollection localLintJarCollection;
         @NonNull private final FileCollection dependencyLintJarCollection;
@@ -356,16 +202,18 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
         }
 
         @NonNull
-        public String getName() {
-            return name;
-        }
-
-        @NonNull
         public FileCollection getAllInputs() {
             return allInputs;
         }
 
+        @Override
+        @NonNull
+        public String getName() {
+            return name;
+        }
+
         /** the lint rule jars */
+        @Override
         @NonNull
         public List<File> getRuleJars() {
             if (lintRuleJars == null) {
@@ -381,6 +229,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
         }
 
         /** the merged manifest of the current module */
+        @Override
         @NonNull
         public File getMergedManifest() {
             File file = mergedManifest.getSingleFile();
@@ -423,6 +272,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
             return universalSplit.orElseGet(() -> manifests.iterator().next().getOutputFile());
         }
 
+        @Override
         @Nullable
         public File getManifestMergeReport() {
             if (mergedManifestReport == null) {
@@ -459,6 +309,9 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
             lintTask.toolingRegistry = globalScope.getToolingRegistry();
             lintTask.reportsDir = globalScope.getReportsDir();
             lintTask.setAndroidBuilder(globalScope.getAndroidBuilder());
+
+            lintTask.lintClassPath = globalScope.getProject().getConfigurations()
+                    .getByName(LINT_CLASS_PATH);
         }
     }
 }

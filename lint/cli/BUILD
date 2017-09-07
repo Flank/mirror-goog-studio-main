@@ -15,8 +15,9 @@ kotlin_library(
     ),
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/intellij-core:intellij-core-171.4249.32",
-        "//prebuilts/tools/common/uast:uast-171.4249.32",
+        "//prebuilts/tools/common/lint-psi/intellij-core",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
+        "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",

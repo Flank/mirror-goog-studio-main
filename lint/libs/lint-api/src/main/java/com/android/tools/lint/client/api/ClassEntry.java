@@ -291,7 +291,8 @@ class ClassEntry implements Comparable<ClassEntry> {
                         | ClassReader.SKIP_FRAMES;
                 reader.accept(visitor, flags);
             } catch (Throwable t) {
-                client.log(null, "Error processing %1$s: broken class file?", entry.path());
+                client.log(null, "Error processing %1$s: broken class file? (%2$s)",
+                        entry.path(), t.getMessage());
             }
         }
     }

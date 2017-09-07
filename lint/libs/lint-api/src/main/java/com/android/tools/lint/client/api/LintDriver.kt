@@ -61,12 +61,12 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
 import com.android.tools.lint.detector.api.XmlContext
 import com.android.utils.Pair
+import com.android.utils.SdkUtils.isBitmapFile
 import com.google.common.annotations.Beta
 import com.google.common.base.Objects
 import com.google.common.base.Splitter
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Iterables
-import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import com.intellij.openapi.progress.ProcessCanceledException
@@ -1273,8 +1273,8 @@ class LintDriver
                         classNode = ClassNode()
                         reader.accept(classNode, 0 /* flags */)
                     } catch (t: Throwable) {
-                        client.log(null, "Error processing %1\$s: broken class file?",
-                                entry.path())
+                        client.log(null,
+                            "Error processing ${entry.path()}: broken class file? (${t.message})")
                         continue
                     }
 
@@ -1395,8 +1395,8 @@ class LintDriver
 
                 return classNode
             } catch (t: Throwable) {
-                client.log(null, "Error processing %1\$s: broken class file?",
-                        classFile.path)
+                client.log(null,
+                        "Error processing ${classFile.path}: broken class file? (${t.message})")
             }
 
         }
@@ -1503,8 +1503,8 @@ class LintDriver
         // Temporary: we still have some builtin checks that aren't migrated to
         // PSI. Until that's complete, remove them from the list here
         //List<Detector> scanners = checks;
-        val scanners = Lists.newArrayListWithCapacity<Detector>(checks.size)
-        val uastScanners = Lists.newArrayListWithCapacity<Detector>(checks.size)
+        val scanners = ArrayList<Detector>(checks.size)
+        val uastScanners = ArrayList<Detector>(checks.size)
         for (detector in checks) {
             @Suppress("DEPRECATION")
             if (detector is Detector.UastScanner) {
@@ -1525,7 +1525,7 @@ class LintDriver
             }
             val uElementVisitor = UElementVisitor(parser, uastScanners)
 
-            parserErrors = !uElementVisitor.prepare(srcContexts)
+            parserErrors = !uElementVisitor.prepare(srcContexts, testContexts)
 
             for (context in srcContexts) {
                 fireEvent(EventType.SCANNING_FILE, context)
@@ -1559,7 +1559,7 @@ class LintDriver
 
         if (runPsiCompatChecks) {
             // Warn about these obsolete custom checks
-            val filtered = Lists.newArrayListWithCapacity<Detector>(checks.size)
+            val filtered = ArrayList<Detector>(checks.size)
             for (detector in checks) {
                 @Suppress("DEPRECATION")
                 if (detector is com.android.tools.lint.detector.api.Detector.JavaPsiScanner) {
@@ -1630,7 +1630,7 @@ class LintDriver
                 }
 
                 // Filter the checks to only those that implement JavaScanner
-                val lombokChecks = Lists.newArrayListWithCapacity<Detector>(checks.size)
+                val lombokChecks = ArrayList<Detector>(checks.size)
                 for (detector in checks) {
                     @Suppress("DEPRECATION")
                     if (detector is com.android.tools.lint.detector.api.Detector.JavaScanner) {
@@ -1889,7 +1889,7 @@ class LintDriver
                         disposeXmlContext(context)
                     }
                 } else if (binaryChecks != null &&
-                        (LintUtils.isBitmapFile(file) || type == ResourceFolderType.RAW)) {
+                        (isBitmapFile(file) || type == ResourceFolderType.RAW)) {
                     val context = ResourceContext(this, project, main, file, type, "")
                     fireEvent(EventType.SCANNING_FILE, context)
                     visitor.visitBinaryResource(context)
@@ -1966,7 +1966,7 @@ class LintDriver
                         }
                     }
                 }
-            } else if (binaryChecks != null && file.isFile && LintUtils.isBitmapFile(file)) {
+            } else if (binaryChecks != null && file.isFile && isBitmapFile(file)) {
                 // Yes, find out its resource type
                 val folderName = file.parentFile.name
                 val type = ResourceFolderType.getFolderType(folderName)
@@ -2735,7 +2735,7 @@ class LintDriver
 
             val sb = StringBuilder(100)
             sb.append("Unexpected failure during lint analysis")
-            context?.file?.name.let { sb.append(" of ").append(it) }
+            context?.file?.name?.let { sb.append(" of ").append(it) }
             sb.append(" (this is a bug in lint or one of the libraries it depends on)\n\n")
             sb.append("`")
             sb.append(throwable.javaClass.simpleName)

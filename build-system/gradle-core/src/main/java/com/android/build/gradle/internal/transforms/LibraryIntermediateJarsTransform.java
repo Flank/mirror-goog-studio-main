@@ -28,7 +28,7 @@ import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
-import com.android.build.gradle.tasks.annotations.TypedefRemover;
+import com.android.builder.packaging.TypedefRemover;
 import com.android.builder.packaging.ZipEntryFilter;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.utils.FileUtils;

@@ -22,11 +22,6 @@ import static com.android.SdkConstants.ATTR_LOCALE;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.BIN_FOLDER;
-import static com.android.SdkConstants.DOT_GIF;
-import static com.android.SdkConstants.DOT_JPEG;
-import static com.android.SdkConstants.DOT_JPG;
-import static com.android.SdkConstants.DOT_PNG;
-import static com.android.SdkConstants.DOT_WEBP;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_BUILD_GRADLE;
 import static com.android.SdkConstants.ID_PREFIX;
@@ -297,22 +292,6 @@ public class LintUtils {
     }
 
     /**
-     * Returns true if the given file represents a bitmap drawable file
-     *
-     * @param file the file to be checked
-     * @return true if the given file is an xml file
-     */
-    public static boolean isBitmapFile(@NonNull File file) {
-        String path = file.getPath();
-        // endsWith(name, DOT_PNG) is also true for endsWith(name, DOT_9PNG)
-        return endsWith(path, DOT_PNG)
-                || endsWith(path, DOT_JPG)
-                || endsWith(path, DOT_GIF)
-                || endsWith(path, DOT_JPEG)
-                || endsWith(path, DOT_WEBP);
-    }
-
-    /**
      * Case insensitive ends with
      *
      * @param string the string to be tested whether it ends with the given
@@ -434,22 +413,6 @@ public class LintUtils {
      */
     public static boolean isRootElement(Element element) {
         return element == element.getOwnerDocument().getDocumentElement();
-    }
-
-    /**
-     * Returns the corresponding R field name for the given XML resource name
-     * @param styleName the XML name
-     * @return the corresponding R field name
-     */
-    public static String getFieldName(@NonNull String styleName) {
-        for (int i = 0, n = styleName.length(); i < n; i++) {
-            char c = styleName.charAt(i);
-            if (c == '.' || c == '-' || c == ':') {
-                return styleName.replace('.', '_').replace('-', '_').replace(':', '_');
-            }
-        }
-
-        return styleName;
     }
 
     /**

@@ -24,7 +24,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.tasks.annotations.TypedefRemover;
+import com.android.builder.packaging.TypedefRemover;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;

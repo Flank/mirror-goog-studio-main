@@ -23,7 +23,7 @@ public class ParcelDetectorTest extends AbstractCheckTest {
         return new ParcelDetector();
     }
 
-    public void test() throws Exception {
+    public void testParcelables() throws Exception {
         String expected = ""
                 + "src/test/bytecode/MyParcelable1.java:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n"
                 + "public class MyParcelable1 implements Parcelable {\n"
@@ -245,10 +245,6 @@ public class ParcelDetectorTest extends AbstractCheckTest {
     }
 
     public void testKotlin() {
-        if (skipKotlinTests()) {
-            return;
-        }
-
         lint().files(
                 kotlin("package test.pkg\n" +
                         "\n" +
@@ -261,7 +257,7 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                         "}"))
                 .incremental()
                 .run()
-                .expect("src/test/pkg/test.kt:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n" +
+                .expect("src/test/pkg/MissingParcelable1a.kt:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n" +
                         "class MissingParcelable1a : Parcelable {\n" +
                         "      ~~~~~~~~~~~~~~~~~~~\n" +
                         "1 errors, 0 warnings\n");

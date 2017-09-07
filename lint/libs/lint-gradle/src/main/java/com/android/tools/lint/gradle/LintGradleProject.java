@@ -1,8 +1,23 @@
-package com.android.build.gradle.internal;
+/*
+ * Copyright (C) 2013 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.lint.gradle;
 
 import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.SUPPORT_LIB_ARTIFACT;
-import static java.io.File.separatorChar;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -11,10 +26,13 @@ import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ApiVersion;
+import com.android.builder.model.BuildType;
+import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaLibrary;
 import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavor;
+import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
 import com.android.sdklib.AndroidTargetHash;
@@ -22,6 +40,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Project;
+import com.android.tools.lint.gradle.api.ToolingRegistryProvider;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
@@ -260,15 +279,34 @@ public class LintGradleProject extends Project {
         @Override
         public List<File> getProguardFiles() {
             if (proguardFiles == null) {
-                ProductFlavor flavor = mProject.getDefaultConfig().getProductFlavor();
-                proguardFiles = flavor.getProguardFiles().stream()
-                        .filter(File::exists)
-                        .collect(Collectors.toList());
                 try {
-                    proguardFiles.addAll(
-                            flavor.getConsumerProguardFiles().stream()
-                                    .filter(File::exists)
-                                    .collect(Collectors.toList()));
+                    proguardFiles = new ArrayList<>();
+                    Variant variant = mVariant;
+                    AndroidProject project = mProject;
+                    for (String flavorName : variant.getProductFlavors()) {
+                        for (ProductFlavorContainer flavor : project.getProductFlavors()) {
+                            ProductFlavor productFlavor = flavor.getProductFlavor();
+                            if (flavorName.equals(productFlavor.getName())) {
+                                proguardFiles.addAll(productFlavor.getProguardFiles());
+                                proguardFiles.addAll(productFlavor.getConsumerProguardFiles());
+                                break;
+                            }
+                        }
+                    }
+
+                    String buildTypeName = variant.getBuildType();
+                    for (BuildTypeContainer buildTypeContainer : project.getBuildTypes()) {
+                        BuildType buildType = buildTypeContainer.getBuildType();
+                        if (buildTypeName.equals(buildType.getName())) {
+                            proguardFiles.addAll(buildType.getProguardFiles());
+                            proguardFiles.addAll(buildType.getConsumerProguardFiles());
+                            break;
+                        }
+                    }
+
+                    ProductFlavor flavor = mProject.getDefaultConfig().getProductFlavor();
+                    proguardFiles.addAll(flavor.getProguardFiles());
+                    proguardFiles.addAll(flavor.getConsumerProguardFiles());
                 } catch (Throwable t) {
                     // On some models, this threw
                     //   org.gradle.tooling.model.UnsupportedMethodException:

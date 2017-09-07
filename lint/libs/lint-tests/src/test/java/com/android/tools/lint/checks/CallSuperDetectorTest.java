@@ -425,10 +425,6 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
     }
 
     public void testKotlinMissing() {
-        if (skipKotlinTests()) {
-            return;
-        }
-
         lint().files(
                 kotlin("package test.pkg\n" +
                         "\n" +
@@ -440,17 +436,13 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
                         "}"))
                 .incremental()
                 .run()
-                .expect("src/test/pkg/test.kt:6: Error: Overriding method should call super.onDetachedFromWindow [MissingSuperCall]\n" +
+                .expect("src/test/pkg/MissingSuperCallLibrary.kt:6: Error: Overriding method should call super.onDetachedFromWindow [MissingSuperCall]\n" +
                         "    override fun onDetachedFromWindow() {\n" +
                         "                 ~~~~~~~~~~~~~~~~~~~~\n" +
                         "1 errors, 0 warnings\n");
     }
 
     public void testKotlinOk() {
-        if (skipKotlinTests()) {
-            return;
-        }
-
         lint().files(
                 kotlin("package test.pkg\n" +
                         "\n" +

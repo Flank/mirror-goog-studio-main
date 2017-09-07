@@ -44,7 +44,6 @@ import com.intellij.psi.PsiType
 import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UCallExpression
-import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
@@ -57,7 +56,6 @@ import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getParentOfType
-import org.jetbrains.uast.getUastContext
 import org.jetbrains.uast.java.JavaUAnnotation
 import org.jetbrains.uast.util.isArrayInitializer
 import org.jetbrains.uast.util.isNewArrayWithInitializer
@@ -169,18 +167,29 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             }
 
         } else if (argument is UPolyadicExpression) {
-            val expression = argument as UPolyadicExpression?
             if (flag) {
-                for (operand in expression!!.operands) {
+                // Allow &'ing with masks
+                if (argument.operator === UastBinaryOperator.BITWISE_AND) {
+                    for (operand in argument.operands) {
+                        if (operand is UReferenceExpression) {
+                            val resolvedName = operand.resolvedName
+                            if (resolvedName != null && resolvedName.contains("mask", true)) {
+                                return
+                            }
+                        }
+                    }
+                }
+
+                for (operand in argument.operands) {
                     checkTypeDefConstant(context, annotation, operand, errorNode, true,
                             allAnnotations)
                 }
             } else {
-                val operator = expression!!.operator
+                val operator = argument.operator
                 if (operator === UastBinaryOperator.BITWISE_AND
                         || operator === UastBinaryOperator.BITWISE_OR
                         || operator === UastBinaryOperator.BITWISE_XOR) {
-                    report(context, TYPE_DEF, expression, context.getLocation(expression),
+                    report(context, TYPE_DEF, argument, context.getLocation(argument),
                             "Flag not allowed here")
                 }
             }
@@ -306,6 +315,8 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
                 }
             }
 
+            // Check field initializers provided it's not a class field, in which case
+            // we'd be reading out literal values which we don't want to do)
             if (value is PsiField && rangeAnnotation == null) {
                 val initializer = context.uastContext.getInitializerBody(value)
                 if (initializer != null) {
@@ -317,7 +328,7 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
 
             if (allowed is PsiCompiledElement || annotation.psi is PsiCompiledElement) {
                 // If we for some reason have a compiled annotation, don't flag the error
-                // since we can't represent intdef data on these annotations
+                // since we can't represent IntDef data on these annotations
                 return
             }
 

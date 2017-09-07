@@ -21,7 +21,9 @@ import com.google.common.collect.Sets;
 import com.intellij.core.CoreApplicationEnvironment;
 import com.intellij.core.JavaCoreApplicationEnvironment;
 import com.intellij.core.JavaCoreProjectEnvironment;
+import com.intellij.mock.MockProject;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.extensions.ExtensionsArea;
 import com.intellij.openapi.vfs.StandardFileSystems;
@@ -29,10 +31,12 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileSystem;
 import com.intellij.psi.PsiElementFinder;
 import com.intellij.psi.impl.PsiTreeChangePreprocessor;
-import com.intellij.psi.impl.file.impl.JavaFileManager;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.jetbrains.kotlin.cli.common.CliModuleVisibilityManagerImpl;
+import org.jetbrains.kotlin.load.kotlin.ModuleVisibilityManager;
 
 public class LintCoreProjectEnvironment extends JavaCoreProjectEnvironment {
     @NonNull
@@ -41,6 +45,7 @@ public class LintCoreProjectEnvironment extends JavaCoreProjectEnvironment {
             @NonNull JavaCoreApplicationEnvironment applicationEnvironment) {
         return new LintCoreProjectEnvironment(parentDisposable, applicationEnvironment);
     }
+
 
     @Override
     protected void preregisterServices() {
@@ -63,12 +68,15 @@ public class LintCoreProjectEnvironment extends JavaCoreProjectEnvironment {
         LintCoreApplicationEnvironment.registerProjectServices(this);
     }
 
-    @Override
-    protected JavaFileManager createCoreFileManager() {
-        return super.createCoreFileManager();
+    private List<File> myPaths = new ArrayList<>();
+
+    public List<File> getPaths() {
+        return myPaths;
     }
 
     public void registerPaths(@NonNull List<File> classpath) {
+        myPaths.addAll(classpath);
+
         int expectedSize = classpath.size();
         Set<File> files = Sets.newHashSetWithExpectedSize(expectedSize);
 

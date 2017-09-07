@@ -16,21 +16,8 @@
 
 package com.android.tools.lint.checks;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.tools.lint.client.api.UastParser;
 import com.android.tools.lint.detector.api.Detector;
-import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.Project;
-import com.android.tools.lint.helpers.DefaultUastParser;
-import com.intellij.lang.java.JavaLanguage;
-import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiFileFactory;
 import org.intellij.lang.annotations.Language;
-import org.jetbrains.uast.UFile;
-import org.jetbrains.uast.UastContext;
 
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName"})
 public class SdCardDetectorTest extends AbstractCheckTest {
@@ -41,7 +28,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
         return new SdCardDetector();
     }
 
-    public void test() throws Exception {
+    public void testBasic() {
         //noinspection all // Sample code
         String expected = ""
                 + "src/test/pkg/SdCardTest.java:13: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
@@ -127,7 +114,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSuppress() throws Exception {
+    public void testSuppress() {
         String expected = ""
                 + "src/test/pkg/SuppressTest5.java:40: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
                 + "  String notAnnotated = \"/sdcard/mypath\";\n"
@@ -206,7 +193,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testUtf8Bom() throws Exception {
+    public void testUtf8Bom() {
         String expected = ""
                 + "src/test/pkg/Utf8BomTest.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
                 + "    String s = \"/sdcard/mydir\";\n"
@@ -225,7 +212,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSuppressInAnnotation() throws Exception {
+    public void testSuppressInAnnotation() {
         lint().files(
                 java("src/test/pkg/MyInterface.java", ""
                         + "package test.pkg;\n"
@@ -238,7 +225,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testMatchInTestIfEnabled() throws Exception {
+    public void testMatchInTestIfEnabled() {
         //noinspection all // Sample code
         lint().files(
                 java("src/test/java/test/pkg/MyTest.java", ""
@@ -270,7 +257,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "0 errors, 2 warnings\n");
     }
 
-    public void testNothingInTests() throws Exception {
+    public void testNothingInTests() {
         //noinspection all // Sample code
         lint().files(
                 java("src/test/java/test/pkg/MyTest.java", ""
@@ -295,7 +282,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNothingInGenerated() throws Exception {
+    public void testNothingInGenerated() {
         //noinspection all // Sample code
         lint().files(
                 java("generated/test/pkg/MyTest.java", ""
@@ -314,7 +301,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testMatchInGeneratedIfEnabled() throws Exception {
+    public void testMatchInGeneratedIfEnabled() {
         //noinspection all // Sample code
         lint().files(
                 java("generated/test/pkg/MyTest.java", ""
@@ -356,11 +343,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         "0 errors, 1 warnings\n");
     }
 
-    public void testKotlin() throws Exception {
-        if (skipKotlinTests()) {
-            return;
-        }
-
+    public void testKotlin() {
         //noinspection all // Sample code
         lint().files(
                 kotlin(""

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks.annotations;
+package com.android.builder.packaging;
 
 import static com.android.SdkConstants.DOT_CLASS;
 import static org.objectweb.asm.Opcodes.ASM5;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.packaging.JarMerger;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
@@ -44,7 +43,6 @@ import org.objectweb.asm.ClassWriter;
  */
 @SuppressWarnings("SpellCheckingInspection")
 public class TypedefRemover implements JarMerger.Transformer {
-    @Nullable private final Extractor mExtractor;
     private final boolean mQuiet;
     private final boolean mVerbose;
     private final boolean mDryRun;
@@ -73,26 +71,30 @@ public class TypedefRemover implements JarMerger.Transformer {
     private Set<String> mAnnotationOuterClassFiles = Sets.newHashSet();
 
     public TypedefRemover(
-            @Nullable Extractor extractor,
             boolean quiet,
             boolean verbose,
             boolean dryRun) {
-        mExtractor = extractor;
         mQuiet = quiet;
         mVerbose = verbose;
         mDryRun = dryRun;
     }
 
     public TypedefRemover() {
-        this(null, true, false, false);
+        this(true, false, false);
     }
 
-    private void info(@NonNull String message) {
-        if (mExtractor != null) {
-            mExtractor.info(message);
-        } else {
-            System.out.println(message);
-        }
+    private static void info(@NonNull String message) {
+        System.out.println(message);
+    }
+
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
+    static void warning(String message) {
+        System.out.println("Warning: " + message);
+    }
+
+    @SuppressWarnings("UseOfSystemOutOrSystemErr")
+    private static void error(@NonNull String message) {
+        System.err.println("Error: " + message);
     }
 
     @NonNull
@@ -105,7 +107,7 @@ public class TypedefRemover implements JarMerger.Transformer {
                 }
             }
         } catch (IOException e) {
-            Extractor.error("Could not read " + file + ": " + e.getLocalizedMessage());
+            error("Could not read " + file + ": " + e.getLocalizedMessage());
         }
         return this;
     }
@@ -136,7 +138,7 @@ public class TypedefRemover implements JarMerger.Transformer {
             byte[] rewritten = rewriteOuterClass(reader);
             return new ByteArrayInputStream(rewritten);
         } catch (IOException ioe) {
-            Extractor.error("Could not process " + path + ": " + ioe.getLocalizedMessage());
+            error("Could not process " + path + ": " + ioe.getLocalizedMessage());
             return input;
         }
     }
@@ -188,14 +190,14 @@ public class TypedefRemover implements JarMerger.Transformer {
         for (String relative : mAnnotationOuterClassFiles) {
             File file = new File(classDir, relative.replace('/', File.separatorChar));
             if (!file.isFile()) {
-                Extractor.error("Warning: Could not find outer class " + file + " for typedef");
+                warning("Could not find outer class " + file + " for typedef");
                 continue;
             }
             byte[] bytes;
             try {
                 bytes = Files.toByteArray(file);
             } catch (IOException e) {
-                Extractor.error("Could not read " + file + ": " + e.getLocalizedMessage());
+                error("Could not read " + file + ": " + e.getLocalizedMessage());
                 continue;
             }
 
@@ -204,7 +206,7 @@ public class TypedefRemover implements JarMerger.Transformer {
             try {
                 Files.write(rewritten, file);
             } catch (IOException e) {
-                Extractor.error("Could not write " + file + ": " + e.getLocalizedMessage());
+                error("Could not write " + file + ": " + e.getLocalizedMessage());
                 //noinspection UnnecessaryContinue
                 continue;
             }
@@ -234,7 +236,7 @@ public class TypedefRemover implements JarMerger.Transformer {
         for (String relative : mAnnotationClassFiles) {
             File file = new File(classDir, relative.replace('/', File.separatorChar));
             if (!file.isFile()) {
-                Extractor.error("Warning: Could not find class file " + file + " for typedef");
+                warning("Could not find class file " + file + " for typedef");
                 continue;
             }
             if (mVerbose) {
@@ -247,7 +249,7 @@ public class TypedefRemover implements JarMerger.Transformer {
             if (!mDryRun) {
                 boolean deleted = file.delete();
                 if (!deleted) {
-                    Extractor.warning("Could not delete " + file);
+                    warning("Could not delete " + file);
                 }
             }
         }

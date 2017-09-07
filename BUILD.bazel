@@ -25,6 +25,7 @@ maven_repo(
         "//tools/base/devicelib:tools.devicelib",
         "//tools/base/fakeadbserver:tools.fakeadbserver",
         "//tools/base/lint/libs/lint-tests",
+        "//tools/base/lint:tools.lint-gradle",
         "//tools/base/testutils:tools.testutils",
     ],
     include_sources = True,

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal;
+package com.android.tools.lint.gradle;
 
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
@@ -22,11 +22,9 @@ import static java.io.File.separator;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.LintOptions;
 import com.android.builder.model.Variant;
-import com.android.builder.model.Version;
 import com.android.sdklib.BuildToolInfo;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
@@ -44,6 +42,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.tools.lint.gradle.api.VariantInputs;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Charsets;
@@ -60,30 +59,29 @@ import org.gradle.api.GradleException;
 import org.w3c.dom.Document;
 
 public class LintGradleClient extends LintCliClient {
-    private final AndroidProject modelProject;
-
     /**
      * Variant to run the client on.
      */
     @NonNull private final Variant variant;
 
     private final org.gradle.api.Project gradleProject;
+    private final String version;
     private File sdkHome;
-    @NonNull private final LintBaseTask.VariantInputs variantInputs;
+    @NonNull private final VariantInputs variantInputs;
     private final BuildToolInfo buildToolInfo;
 
     public LintGradleClient(
+            @NonNull String version,
             @NonNull IssueRegistry registry,
             @NonNull LintCliFlags flags,
             @NonNull org.gradle.api.Project gradleProject,
-            @NonNull AndroidProject modelProject,
             @Nullable File sdkHome,
             @NonNull Variant variant,
-            @NonNull LintBaseTask.VariantInputs variantInputs,
+            @NonNull VariantInputs variantInputs,
             @Nullable BuildToolInfo buildToolInfo) {
         super(flags, CLIENT_GRADLE);
+        this.version = version;
         this.gradleProject = gradleProject;
-        this.modelProject = modelProject;
         this.sdkHome = sdkHome;
         this.variantInputs = variantInputs;
         this.registry = registry;
@@ -94,7 +92,7 @@ public class LintGradleClient extends LintCliClient {
     @Nullable
     @Override
     public String getClientRevision() {
-        return Version.ANDROID_GRADLE_PLUGIN_VERSION;
+        return version;
     }
 
     @NonNull
@@ -119,7 +117,7 @@ public class LintGradleClient extends LintCliClient {
                     public Severity getSeverity(@NonNull Issue issue) {
                         Integer optionSeverity = overrides.get(issue.getId());
                         if (optionSeverity != null) {
-                            Severity severity = Severity.fromLintOptionSeverity(optionSeverity);
+                            Severity severity = SyncOptions.getSeverity(issue, optionSeverity);
 
                             if (flags.isFatalOnly() && severity != Severity.FATAL) {
                                 return Severity.IGNORE;
@@ -318,7 +316,10 @@ public class LintGradleClient extends LintCliClient {
             if (document != null) {
                 // Note for later that we'll need to resolve locations from
                 // the merged manifest
-                resolveMergeManifestSources(document, variantInputs.getManifestMergeReport());
+                File manifestMergeReport = variantInputs.getManifestMergeReport();
+                if (manifestMergeReport != null) {
+                    resolveMergeManifestSources(document, manifestMergeReport);
+                }
 
                 return document;
             }

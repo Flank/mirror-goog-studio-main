@@ -25,10 +25,10 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
+import com.android.utils.SdkUtils;
 import java.util.EnumSet;
 
 /**
@@ -68,7 +68,7 @@ public class MergeMarkerDetector extends Detector implements Detector.OtherFileS
             return;
         }
 
-        if (LintUtils.isBitmapFile(context.file)) {
+        if (SdkUtils.isBitmapFile(context.file)) {
             return;
         }
 

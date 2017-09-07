@@ -105,24 +105,20 @@ class ToastDetectorTest : AbstractCheckTest() {
     }
 
     fun testKotlin() {
-        if (skipKotlinTests()) {
-            return
-        }
-
         val expected = """
-        src/test/pkg/R.kt:34: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+        src/test/pkg/ToastTest.kt:34: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
                 Toast.makeText(context, "foo", Toast.LENGTH_LONG)
                 ~~~~~~~~~~~~~~
-        src/test/pkg/R.kt:35: Warning: Expected duration Toast.LENGTH_SHORT or Toast.LENGTH_LONG, a custom duration value is not supported [ShowToast]
+        src/test/pkg/ToastTest.kt:35: Warning: Expected duration Toast.LENGTH_SHORT or Toast.LENGTH_LONG, a custom duration value is not supported [ShowToast]
                 val toast = Toast.makeText(context, R.string.app_name, 5000)
                                                                        ~~~~
-        src/test/pkg/R.kt:35: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+        src/test/pkg/ToastTest.kt:35: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
                 val toast = Toast.makeText(context, R.string.app_name, 5000)
                             ~~~~~~~~~~~~~~
-        src/test/pkg/R.kt:40: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+        src/test/pkg/ToastTest.kt:40: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
                 Toast.makeText(context, "foo", Toast.LENGTH_LONG)
                 ~~~~~~~~~~~~~~
-        src/test/pkg/R.kt:50: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
+        src/test/pkg/ToastTest.kt:50: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
                 val toast = Toast.makeText(this, "MyToast", Toast.LENGTH_LONG)
                             ~~~~~~~~~~~~~~
         0 errors, 5 warnings

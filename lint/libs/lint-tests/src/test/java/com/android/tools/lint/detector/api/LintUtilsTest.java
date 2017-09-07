@@ -43,7 +43,6 @@ import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 import static com.android.tools.lint.detector.api.LintUtils.findSubstring;
 import static com.android.tools.lint.detector.api.LintUtils.formatList;
 import static com.android.tools.lint.detector.api.LintUtils.getAutoBoxedType;
-import static com.android.tools.lint.detector.api.LintUtils.getBaseName;
 import static com.android.tools.lint.detector.api.LintUtils.getChildren;
 import static com.android.tools.lint.detector.api.LintUtils.getCommonParent;
 import static com.android.tools.lint.detector.api.LintUtils.getEncodedString;
@@ -78,6 +77,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
+import com.android.tools.lint.checks.infrastructure.ClassName;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.checks.infrastructure.TestFiles;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
@@ -102,8 +102,6 @@ import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import junit.framework.TestCase;
 import lombok.ast.Node;
 import org.intellij.lang.annotations.Language;
@@ -113,7 +111,7 @@ import org.w3c.dom.Element;
 
 @SuppressWarnings("javadoc")
 public class LintUtilsTest extends TestCase {
-    public void testPrintList() throws Exception {
+    public void testPrintList() {
         assertEquals("bar, baz, foo",
                 formatList(Arrays.asList("foo", "bar", "baz"), 3));
         assertEquals("foo, bar, baz",
@@ -140,7 +138,7 @@ public class LintUtilsTest extends TestCase {
         assertFalse(isDataBindingExpression("foo"));
     }
 
-    public void testDescribeCounts() throws Exception {
+    public void testDescribeCounts() {
         assertThat(describeCounts(0, 0, true, true)).isEqualTo("No errors or warnings");
         assertThat(describeCounts(0, 0, true, false)).isEqualTo("no errors or warnings");
         assertThat(describeCounts(0, 1, true, true)).isEqualTo("1 warning");
@@ -155,7 +153,7 @@ public class LintUtilsTest extends TestCase {
         assertThat(describeCounts(5, 4, true, true)).isEqualTo("5 errors, 4 warnings");
     }
 
-    public void testEndsWith() throws Exception {
+    public void testEndsWith() {
         assertTrue(endsWith("Foo", ""));
         assertTrue(endsWith("Foo", "o"));
         assertTrue(endsWith("Foo", "oo"));
@@ -166,14 +164,14 @@ public class LintUtilsTest extends TestCase {
         assertFalse(endsWith("Foo", "f"));
     }
 
-    public void testStartsWith() throws Exception {
+    public void testStartsWith() {
         assertTrue(startsWith("FooBar", "Bar", 3));
         assertTrue(startsWith("FooBar", "BAR", 3));
         assertTrue(startsWith("FooBar", "Foo", 0));
         assertFalse(startsWith("FooBar", "Foo", 2));
     }
 
-    public void testIsXmlFile() throws Exception {
+    public void testIsXmlFile() {
         assertTrue(isXmlFile(new File("foo.xml")));
         assertTrue(isXmlFile(new File("foo.Xml")));
         assertTrue(isXmlFile(new File("foo.XML")));
@@ -181,12 +179,6 @@ public class LintUtilsTest extends TestCase {
         assertFalse(isXmlFile(new File("foo.png")));
         assertFalse(isXmlFile(new File("xml")));
         assertFalse(isXmlFile(new File("xml.png")));
-    }
-
-    public void testGetBasename() throws Exception {
-        assertEquals("foo", getBaseName("foo.png"));
-        assertEquals("foo", getBaseName("foo.9.png"));
-        assertEquals(".foo", getBaseName(".foo"));
     }
 
     public void testEditDistance() {
@@ -211,7 +203,7 @@ public class LintUtilsTest extends TestCase {
         assertFalse(isEditableTo("radiobutton", "bitton", 3));
     }
 
-    public void testSplitPath() throws Exception {
+    public void testSplitPath() {
         assertTrue(Arrays.equals(new String[] { "/foo", "/bar", "/baz" },
                 Iterables.toArray(splitPath("/foo:/bar:/baz"), String.class)));
 
@@ -285,13 +277,13 @@ public class LintUtilsTest extends TestCase {
                         new File("/foo/bar/foo2/foo3"))));
     }
 
-    public void testStripIdPrefix() throws Exception {
+    public void testStripIdPrefix() {
         assertEquals("foo", stripIdPrefix("@+id/foo"));
         assertEquals("foo", stripIdPrefix("@id/foo"));
         assertEquals("foo", stripIdPrefix("foo"));
     }
 
-    public void testIdReferencesMatch() throws Exception {
+    public void testIdReferencesMatch() {
         assertTrue(idReferencesMatch("@+id/foo", "@+id/foo"));
         assertTrue(idReferencesMatch("@id/foo", "@id/foo"));
         assertTrue(idReferencesMatch("@id/foo", "@+id/foo"));
@@ -398,7 +390,7 @@ public class LintUtilsTest extends TestCase {
         checkEncoding("UTF_32LE", true /*bom*/, "\r\n");
     }
 
-    public void testGetLocale() throws Exception {
+    public void testGetLocale() {
         assertNull(getLocale(""));
         assertNull(getLocale("values"));
         assertNull(getLocale("values-xlarge-port"));
@@ -409,7 +401,7 @@ public class LintUtilsTest extends TestCase {
     }
 
 
-    public void testGetLocale2() throws Exception {
+    public void testGetLocale2() {
         LintDetectorTest.TestFile xml;
         XmlContext context;
 
@@ -439,7 +431,7 @@ public class LintUtilsTest extends TestCase {
         assertEquals("nb", getLocale(context).getLanguage());
     }
 
-    public void testGetLocaleAndRegion() throws Exception {
+    public void testGetLocaleAndRegion() {
         assertNull(getLocaleAndRegion(""));
         assertNull(getLocaleAndRegion("values"));
         assertNull(getLocaleAndRegion("values-xlarge-port"));
@@ -513,24 +505,11 @@ public class LintUtilsTest extends TestCase {
         return context.getCompilationUnit();
     }
 
-    private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(.*)\\s*;");
-    private static final Pattern CLASS_PATTERN = Pattern
-            .compile("class\\s*(\\S+)\\s*(extends.*)?(implements.*)?\\{");
-
     public static Pair<JavaContext,Disposable> parsePsi(@Language("JAVA") String javaSource) {
         // Figure out the "to" path: the package plus class name + java in the src/ folder
-        Matcher matcher = PACKAGE_PATTERN.matcher(javaSource);
-        String pkg = "";
-        if (matcher.find()) {
-            pkg = matcher.group(1).trim();
-        }
-        matcher = CLASS_PATTERN.matcher(javaSource);
-        assertTrue("Couldn't find class declaration in source", matcher.find());
-        String cls = matcher.group(1).trim();
-        int typeParameter = cls.indexOf('<');
-        if (typeParameter != -1) {
-            cls = cls.substring(0, typeParameter);
-        }
+        ClassName name = new ClassName(javaSource);
+        String pkg = name.packageNameWithDefault();
+        String cls = name.getClassName();
         String path = "src/" + pkg.replace('.', '/') + '/' + cls + DOT_JAVA;
         return parsePsi(javaSource, new File(path.replace('/', separatorChar)));
     }
@@ -540,14 +519,10 @@ public class LintUtilsTest extends TestCase {
     @Deprecated
     public static JavaContext parse(@Language("JAVA") String javaSource) {
         // Figure out the "to" path: the package plus class name + java in the src/ folder
-        Matcher matcher = PACKAGE_PATTERN.matcher(javaSource);
-        String pkg = "";
-        if (matcher.find()) {
-            pkg = matcher.group(1).trim();
-        }
-        matcher = CLASS_PATTERN.matcher(javaSource);
-        assertTrue("Couldn't find class declaration in source", matcher.find());
-        String cls = matcher.group(1).trim();
+        ClassName name = new ClassName(javaSource);
+        String pkg = name.packageNameWithDefault();
+        String cls = name.getClassName();
+        assertTrue("Couldn't find class declaration in source", cls != null);
         String path = "src/" + pkg.replace('.', '/') + '/' + cls + DOT_JAVA;
         return parse(javaSource, new File(path.replace('/', separatorChar)));
     }
@@ -674,7 +649,7 @@ public class LintUtilsTest extends TestCase {
             UastParser uastParser = client.getUastParser(project);
             assertNotNull(uastParser);
             context.setUastParser(uastParser);
-            uastParser.prepare(Collections.singletonList(context));
+            uastParser.prepare(Collections.singletonList(context), Collections.emptyList());
             UFile uFile = uastParser.parse(context);
             context.setUastFile(uFile);
         }
@@ -693,7 +668,7 @@ public class LintUtilsTest extends TestCase {
                 null));
     }
 
-    public void testIsModelOlderThan() throws Exception {
+    public void testIsModelOlderThan() {
         Project project = mock(Project.class);
         when(project.getGradleModelVersion()).thenReturn(GradleVersion.parse("0.10.4"));
 
@@ -768,7 +743,7 @@ public class LintUtilsTest extends TestCase {
                         "Prefix foo Divider bar Suffix"));
     }
 
-    public void testEscapePropertyValue() throws Exception {
+    public void testEscapePropertyValue() {
         assertEquals("foo", escapePropertyValue("foo"));
         assertEquals("\\  foo  ", escapePropertyValue("  foo  "));
         assertEquals("c\\:/foo/bar", escapePropertyValue("c:/foo/bar"));
@@ -830,7 +805,7 @@ public class LintUtilsTest extends TestCase {
         throw new AssertionError("Didn't find " + activityName);
     }
 
-    public void testResolveManifestName() throws Exception {
+    public void testResolveManifestName() {
         assertEquals("test.pkg.TestActivity", resolveManifestName(getElementWithNameValue(""
                 + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                 + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"

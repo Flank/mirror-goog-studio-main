@@ -9,7 +9,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.detector.api.ClassContext;
-import com.android.utils.SdkUtils;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
@@ -40,6 +39,7 @@ import org.jetbrains.uast.UPolyadicExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UReturnExpression;
+import org.jetbrains.uast.USwitchClauseExpressionWithBody;
 import org.jetbrains.uast.UUnaryExpression;
 import org.jetbrains.uast.UastBinaryOperator;
 import org.jetbrains.uast.UastContext;
@@ -312,6 +312,14 @@ public class VersionChecks {
                     (isAndedWithConditional(current, api, prev) ||
                             isOredWithConditional(current, api, prev))) {
                 return true;
+            } else if (current instanceof USwitchClauseExpressionWithBody) {
+                USwitchClauseExpressionWithBody body = (USwitchClauseExpressionWithBody) current;
+                for (UExpression condition : body.getCaseValues()) {
+                    Boolean ok = isVersionCheckConditional(api, condition, true, prev, null);
+                    if (ok != null && ok) {
+                        return true;
+                    }
+                }
             } else if (current instanceof UMethod || current instanceof PsiFile) {
                 return false;
             }

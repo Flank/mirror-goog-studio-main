@@ -2863,10 +2863,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testKotlinVirtualDispatch() {
         // Regression test for https://issuetracker.google.com/64528052
-        if (skipKotlinTests()) {
-            return;
-        }
-
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(1),
@@ -4654,14 +4650,10 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testKotlinPropertySyntax() {
-        if (skipKotlinTests()) {
-            return;
-        }
-
         lint().files(
                 manifest().minSdk(1),
                 kotlin("package test.pkg\n" +
-                        "\n" +
+                        "@Suppress(\"UsePropertyAccessSyntax\")\n" +
                         "fun testApiCheck(calendar: java.util.Calendar) {\n" +
                         "    calendar.weekYear\n" +
                         "    calendar.getWeekYear()\n" +
@@ -4673,6 +4665,40 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         "src/test/pkg/test.kt:5: Error: Call requires API level 24 (current min is 1): java.util.Calendar#getWeekYear [NewApi]\n" +
                         "    calendar.getWeekYear()\n" +
                         "             ~~~~~~~~~~~\n" +
+                        "2 errors, 0 warnings\n");
+    }
+
+    public void testLazyProperties() {
+        // Regression test for https://issuetracker.google.com/65728903
+        lint().files(
+                manifest().minSdk(1),
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.app.Activity\n" +
+                        "import com.example.lint.library.myapplication.R\n" +
+                        "\n" +
+                        "class MainActivity2 : Activity() {\n" +
+                        "    val illegalColor1 by lazy {\n" +
+                        "        resources.getColor(R.color.primary_text_default_material_light, theme)\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    val illegalColor2 = resources.getColor(R.color.primary_text_default_material_light, theme)\n" +
+                        "}\n"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "public class R {\n"
+                        + "    public static class color {\n"
+                        + "        public static final int primary_text_default_material_light = 0x7f070031;\n"
+                        + "    }\n"
+                        + "}\n"))
+                .run()
+                .expect("src/test/pkg/MainActivity2.kt:8: Error: Call requires API level 23 (current min is 1): android.content.res.Resources#getColor [NewApi]\n" +
+                        "        resources.getColor(R.color.primary_text_default_material_light, theme)\n" +
+                        "                  ~~~~~~~~\n" +
+                        "src/test/pkg/MainActivity2.kt:11: Error: Call requires API level 23 (current min is 1): android.content.res.Resources#getColor [NewApi]\n" +
+                        "    val illegalColor2 = resources.getColor(R.color.primary_text_default_material_light, theme)\n" +
+                        "                                  ~~~~~~~~\n" +
                         "2 errors, 0 warnings\n");
     }
 

@@ -305,8 +305,9 @@ public class UElementVisitor {
         }
     }
 
-    public boolean prepare(@NonNull List<JavaContext> contexts) {
-        return parser.prepare(contexts);
+    public boolean prepare(@NonNull List<JavaContext> contexts,
+            @NonNull List<JavaContext> testContexts) {
+        return parser.prepare(contexts, testContexts);
     }
 
     public void dispose() {

@@ -34,6 +34,7 @@ import com.intellij.openapi.vfs.VirtualFileSystem;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.impl.PsiModificationTrackerImpl;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -100,7 +101,7 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
             files.add(sdkAnnotations);
         }
 
-        List<VirtualFile> newRoots = Lists.newArrayListWithCapacity(files.size());
+        List<VirtualFile> newRoots = new ArrayList<>(files.size());
 
         VirtualFileSystem local = StandardFileSystems.local();
         VirtualFileSystem jar = StandardFileSystems.jar();

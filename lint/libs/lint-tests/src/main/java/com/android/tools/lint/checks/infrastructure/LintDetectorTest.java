@@ -838,8 +838,9 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         public UastParser getUastParser(@Nullable Project project) {
             return new LintCliUastParser(project) {
                 @Override
-                public boolean prepare(@NonNull List<? extends JavaContext> contexts) {
-                    boolean ok = super.prepare(contexts);
+                public boolean prepare(@NonNull List<? extends JavaContext> contexts,
+                        @NonNull List<? extends JavaContext> testContexts) {
+                    boolean ok = super.prepare(contexts, testContexts);
                     if (forceErrors()) {
                         ok = false;
                     }
@@ -1401,10 +1402,5 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             super.within(root);
             return this;
         }
-    }
-
-    protected boolean skipKotlinTests() {
-        System.out.println("Warning: Skipping Kotlin unit tests for now");
-        return true;
     }
 }

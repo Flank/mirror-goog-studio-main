@@ -16,9 +16,9 @@
 
 package com.android.tools.lint;
 
-import static com.android.tools.lint.detector.api.LintUtils.isBitmapFile;
 import static com.android.tools.lint.detector.api.TextFormat.HTML;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
+import static com.android.utils.SdkUtils.isBitmapFile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -572,7 +572,7 @@ public class MaterialHtmlReporter extends Reporter {
             System.out.println(String.format("Wrote HTML report to %1$s", url));
         }
     }
-    
+
     private void append(@NonNull String s) {
         sb.append(s);
     }
@@ -694,7 +694,8 @@ public class MaterialHtmlReporter extends Reporter {
 
                                     // Only display up to 3 inlined views to keep big reports from
                                     // getting massive in rendering cost
-                                    if (shownSnippetsCount < 3 && !(isBitmapFile(l.getFile()))) {
+                                    if (shownSnippetsCount < 3 &&
+                                            !isBitmapFile(l.getFile())) {
                                         CharSequence s = client.readFile(l.getFile());
                                         if (s.length() > 0) {
                                             int offset = start != null ? start.getOffset() : -1;

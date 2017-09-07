@@ -264,4 +264,10 @@ public interface LintOptions {
     int SEVERITY_INFORMATIONAL = 4;
     /** A severity for Lint. Corresponds to com.android.tools.lint.detector.api.Severity#IGNORE */
     int SEVERITY_IGNORE        = 5;
+    /**
+     * A severity for lint. This severity means that the severity should be whatever the default
+     * is for this issue (this is used when the DSL just says "enable", and Gradle doesn't know
+     * what the default severity is.)
+     */
+    int SEVERITY_DEFAULT_ENABLED = 6;
 }

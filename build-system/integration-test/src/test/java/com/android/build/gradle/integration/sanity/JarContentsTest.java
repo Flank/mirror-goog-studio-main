@@ -88,7 +88,7 @@ public class JarContentsTest {
     static {
         // Useful command for getting these lists:
         // unzip -l path/to.jar | grep -v ".class$" | grep -v -E "NOTICE|NOTICE.txt|META\-INF\/MANIFEST.MF" \
-        // | tail -n +4 | head -n -2 | cut -c 31- | sort
+        // | tail -n +4 | head -n -2 | cut -c 31- | sort -f | awk '{print "\"" $0 "\"," }'
 
         ImmutableSetMultimap.Builder<String, String> expected = ImmutableSetMultimap.builder();
         expected.putAll(
@@ -525,7 +525,6 @@ public class JarContentsTest {
                 "com/android/build/gradle/shrinker/parser/",
                 "com/android/build/gradle/shrinker/tracing/",
                 "com/android/build/gradle/tasks/",
-                "com/android/build/gradle/tasks/annotations/",
                 "com/android/build/gradle/tasks/factory/",
                 "com/android/build/gradle/tasks/ir/",
                 "instant-run/",
@@ -571,6 +570,7 @@ public class JarContentsTest {
                 "com/android/ide/common/resources/",
                 "com/android/ide/common/resources/configuration/",
                 "com/android/ide/common/resources/sampledata/",
+                "com/android/ide/common/resources/usage/",
                 "com/android/ide/common/sdk/",
                 "com/android/ide/common/signing/",
                 "com/android/ide/common/util/",
@@ -958,6 +958,28 @@ public class JarContentsTest {
                 "NOTICE",
                 "META-INF/MANIFEST.MF",
                 "META-INF/");
+        expected.putAll(
+                "com/android/tools/lint/lint-gradle",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/lint/",
+                "com/android/tools/lint/annotations/",
+                "com/android/tools/lint/gradle/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
+        expected.putAll(
+                "com/android/tools/lint/lint-gradle-api",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/lint/",
+                "com/android/tools/lint/gradle/",
+                "com/android/tools/lint/gradle/api/",
+                "META-INF/",
+                "META-INF/MANIFEST.MF",
+                "NOTICE");
         expected.putAll(
                 "com/android/tools/lint/lint-tests",
                 "com/",

@@ -17,11 +17,9 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.scope.VariantScope;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.Variant;
 import com.android.utils.StringHelper;
-import java.io.IOException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
@@ -30,6 +28,7 @@ import org.gradle.api.tasks.TaskAction;
 public class LintPerVariantTask extends LintBaseTask {
 
     private VariantInputs variantInputs;
+    private boolean fatalOnly;
 
     @InputFiles
     @Optional
@@ -38,19 +37,28 @@ public class LintPerVariantTask extends LintBaseTask {
     }
 
     @TaskAction
-    public void lint() throws IOException {
-        AndroidProject modelProject = createAndroidProject(getProject());
-        for (Variant variant : modelProject.getVariants()) {
-            if (variant.getName().equals(getVariantName())) {
-                lintSingleVariant(modelProject, variant);
-                break;
-            }
-        }
+    public void lint() {
+        runLint(new LintPerVariantTaskDescriptor());
     }
 
-    /** Runs lint on a single specified variant */
-    public void lintSingleVariant(@NonNull AndroidProject modelProject, @NonNull Variant variant) {
-        runLint(modelProject, variant, variantInputs, true);
+    private class LintPerVariantTaskDescriptor extends LintBaseTaskDescriptor {
+        @Nullable
+        @Override
+        public String getVariantName() {
+            return LintPerVariantTask.this.getVariantName();
+        }
+
+        @Nullable
+        @Override
+        public VariantInputs getVariantInputs(@NonNull String variantName) {
+            assert variantName.equals(getVariantName());
+            return variantInputs;
+        }
+
+        @Override
+        public boolean isFatalOnly() {
+            return fatalOnly;
+        }
     }
 
     public static class ConfigAction extends BaseConfigAction<LintPerVariantTask> {
@@ -118,8 +126,7 @@ public class LintPerVariantTask extends LintBaseTask {
             task.setVariantName(variantName);
 
             task.variantInputs = new VariantInputs(scope);
-
-            task.setFatalOnly(true);
+            task.fatalOnly = true;
             task.setDescription(
                     "Runs lint on just the fatal issues in the " + variantName + " build.");
         }

@@ -621,6 +621,25 @@ public class AnnotationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testWrongUsagesInKotlin() {
+        lint().files(
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.support.annotation.LayoutRes\n" +
+                        "import android.view.View\n" +
+                        "import android.view.ViewGroup\n" +
+                        "import android.widget.Button\n" +
+                        "\n" +
+                        "fun ViewGroup.inflate(@LayoutRes layoutRes: Int, attachToRoot: Boolean = false): View {\n" +
+                        "    return Button(null, null, 5)\n" +
+                        "}\n"),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expectClean();
+    }
+
     public void testOverlappingConstants() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=214161
         // Ensure that we don't flag a missing constant if there is an existing constant

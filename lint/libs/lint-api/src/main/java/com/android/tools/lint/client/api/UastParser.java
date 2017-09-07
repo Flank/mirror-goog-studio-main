@@ -49,10 +49,12 @@ public abstract class UastParser {
      * performing global type analysis over and over again for each individual
      * file
      *
-     * @param contexts a list of contexts to be parsed
+     * @param contexts a list of production source contexts to be parsed
+     * @param testContexts a list of test source contexts to be parsed
      * @return true if the preparation succeeded; false if there were errors
      */
-    public boolean prepare(@NonNull List<? extends JavaContext> contexts) {
+    public boolean prepare(@NonNull List<? extends JavaContext> contexts,
+            @NonNull List<? extends JavaContext> testContexts) {
         return true;
     }
 
@@ -179,7 +181,7 @@ public abstract class UastParser {
     /**
      * Dispose any remaining data structures held for all contexts.
      * Typically frees up any resources allocated by
-     * {@link #prepare(List)}
+     * {@link #prepare(List,List)}
      */
     public void dispose() {
     }

@@ -53,13 +53,16 @@ import com.intellij.psi.PsiWildcardType;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.jetbrains.uast.UAnnotated;
 import org.jetbrains.uast.UAnnotation;
+import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UMethod;
 
 @SuppressWarnings("MethodMayBeStatic") // Some of these methods may be overridden by LintClients
@@ -819,6 +822,19 @@ public abstract class JavaEvaluator {
         }
 
         return null;
+    }
+
+    /**
+     * For a given call, computes the argument to parameter mapping. For Java
+     * this is generally one to one (except for varargs), but in Kotlin it can be
+     * quite a bit more complicated due to extension methods, named parameters,
+     * default parameters, and varargs and the spread operator.
+     */
+    @NonNull
+    public Map<UExpression, PsiParameter> computeArgumentMapping(
+            UCallExpression call,
+            PsiMethod method) {
+        return Collections.emptyMap();
     }
 
     @Nullable

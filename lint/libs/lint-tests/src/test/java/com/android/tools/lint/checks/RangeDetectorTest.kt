@@ -746,10 +746,6 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
     fun testRangeInKotlin() {
         // Regression test for https://issuetracker.google.com/66892728
 
-        if (skipKotlinTests()) {
-            return
-        }
-
         lint().files(
                 kotlin("" +
                         "package test.pkg\n" +

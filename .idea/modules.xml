@@ -54,6 +54,8 @@
       <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-api/lint-api-base.iml" filepath="$PROJECT_DIR$/lint/libs/lint-api/lint-api-base.iml" group="base/lint" />
       <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-checks/lint-checks-base.iml" filepath="$PROJECT_DIR$/lint/libs/lint-checks/lint-checks-base.iml" group="base/lint" />
       <module fileurl="file://$PROJECT_DIR$/lint/cli/lint-cli.iml" filepath="$PROJECT_DIR$/lint/cli/lint-cli.iml" group="base/lint" />
+      <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-gradle/lint-gradle.iml" filepath="$PROJECT_DIR$/lint/libs/lint-gradle/lint-gradle.iml" group="base/lint" />
+      <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-gradle-api/lint-gradle-api.iml" filepath="$PROJECT_DIR$/lint/libs/lint-gradle-api/lint-gradle-api.iml" group="base/lint" />
       <module fileurl="file://$PROJECT_DIR$/lint/libs/lint-tests/lint-tests.iml" filepath="$PROJECT_DIR$/lint/libs/lint-tests/lint-tests.iml" group="base/lint" />
       <module fileurl="file://$PROJECT_DIR$/build-system/manifest-merger/manifest-merger-base.iml" filepath="$PROJECT_DIR$/build-system/manifest-merger/manifest-merger-base.iml" group="base/build-system" />
       <module fileurl="file://$PROJECT_DIR$/ninepatch/ninepatch.iml" filepath="$PROJECT_DIR$/ninepatch/ninepatch.iml" group="base" />

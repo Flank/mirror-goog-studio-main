@@ -56,8 +56,8 @@ kotlin_library(
     ),
     visibility = ["//visibility:public"],
     deps = [
-        "//prebuilts/tools/common/intellij-core:intellij-core-171.4249.32",
-        "//prebuilts/tools/common/uast:uast-171.4249.32",
+        "//prebuilts/tools/common/lint-psi/intellij-core",
+        "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.manifest-merger",
         "//tools/base/build-system/builder-model",
@@ -110,8 +110,8 @@ kotlin_library(
     visibility = ["//visibility:public"],
     deps = [
         ":tools.lint-api",
-        "//prebuilts/tools/common/intellij-core:intellij-core-171.4249.32",
-        "//prebuilts/tools/common/uast:uast-171.4249.32",
+        "//prebuilts/tools/common/lint-psi/intellij-core",
+        "//prebuilts/tools/common/lint-psi/uast",
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
         "//tools/base/common:tools.common",
@@ -131,6 +131,84 @@ kotlin_library(
 maven_pom(
     name = "lint-checks.pom",
     artifact = "lint-checks",
+    group = "com.android.tools.lint",
+    source = "//tools/buildSrc/base:base_version",
+)
+
+kotlin_library(
+    name = "tools.lint-gradle-api",
+    # TODO: move resources out of java?
+    srcs = ["libs/lint-gradle-api/src/main/java"],
+    pom = "lint-gradle-api.pom",
+    resources = glob(
+        include = ["libs/lint-gradle-api/src/main/java/**"],
+        exclude = [
+            "libs/lint-gradle-api/src/main/java/**/*.java",
+            "libs/lint-gradle-api/src/main/java/**/*.kt",
+        ],
+    ),
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/build-system:gradle-api_neverlink",
+        "//tools/base/build-system/builder-model",
+        "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+    ],
+)
+
+maven_pom(
+    name = "lint-gradle-api.pom",
+    artifact = "lint-gradle-api",
+    group = "com.android.tools.lint",
+    source = "//tools/buildSrc/base:base_version",
+)
+
+kotlin_library(
+    name = "tools.lint-gradle",
+    # TODO: move resources out of java?
+    srcs = ["libs/lint-gradle/src/main/java"],
+    pom = "lint-gradle.pom",
+    resources = glob(
+        include = ["libs/lint-gradle/src/main/java/**"],
+        exclude = [
+            "libs/lint-gradle/src/main/java/**/*.java",
+            "libs/lint-gradle/src/main/java/**/*.kt",
+        ],
+    ),
+    visibility = ["//visibility:public"],
+    deps = [
+        # NOTE NOTE NOTE - before changing this, note that lint dependencies
+        # must also be reflected in [ReflectiveLintRunner#computeUrls] as well
+        # so update both in sync
+        ":tools.lint-gradle-api",
+        "//prebuilts/tools/common/lint-psi/intellij-core",
+        "//prebuilts/tools/common/lint-psi/uast",
+        "//tools/base/annotations",
+        "//tools/base/build-system:gradle-api_neverlink",
+        "//tools/base/build-system/gradle-api",
+        "//tools/base/build-system:tools.manifest-merger",
+        "//tools/base/build-system/builder",
+        "//tools/base/build-system/builder-model",
+        "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
+        "//tools/base/layoutlib-api:tools.layoutlib-api",
+        "//tools/base/lint:tools.lint-api",
+        "//tools/base/lint:tools.lint-checks",
+        "//tools/base/lint/cli",
+        "//tools/base/repository:tools.repository",
+        "//tools/base/sdk-common:tools.sdk-common",
+        "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.codehaus.groovy_groovy-all",
+        "//tools/base/third_party:org.jetbrains_annotations",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+    ],
+)
+
+maven_pom(
+    name = "lint-gradle.pom",
+    artifact = "lint-gradle",
     group = "com.android.tools.lint",
     source = "//tools/buildSrc/base:base_version",
 )

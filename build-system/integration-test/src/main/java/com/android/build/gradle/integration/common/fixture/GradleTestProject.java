@@ -536,7 +536,9 @@ public final class GradleTestProject implements TestRule {
                                 + "        apply plugin: 'devicepool'\n"
                                 + "    }\n"
                                 + "}\n"
-                                + "\n"
+                                + "allprojects {\n"
+                                +  "    " + generateLocalRepoScript() + "\n"
+                                + "}\n"
                                 + "",
                         DEFAULT_BUILD_TOOL_VERSION,
                         DEFAULT_COMPILE_SDK_VERSION,

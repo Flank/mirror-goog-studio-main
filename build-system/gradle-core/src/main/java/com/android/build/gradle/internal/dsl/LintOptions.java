@@ -16,38 +16,16 @@
 
 package com.android.build.gradle.internal.dsl;
 
-import static com.android.SdkConstants.DOT_XML;
-import static com.android.builder.core.BuilderConstants.FD_REPORTS;
-import static com.android.tools.lint.detector.api.Severity.ERROR;
-import static com.android.tools.lint.detector.api.Severity.FATAL;
-import static com.android.tools.lint.detector.api.Severity.IGNORE;
-import static com.android.tools.lint.detector.api.Severity.INFORMATIONAL;
-import static com.android.tools.lint.detector.api.Severity.WARNING;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.CombinedInput;
-import com.android.tools.lint.LintCliClient;
-import com.android.tools.lint.LintCliFlags;
-import com.android.tools.lint.Reporter;
-import com.android.tools.lint.checks.BuiltinIssueRegistry;
-import com.android.tools.lint.client.api.DefaultConfiguration;
-import com.android.tools.lint.detector.api.Issue;
-import com.android.tools.lint.detector.api.Severity;
-import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.io.Writer;
 import java.util.Map;
 import java.util.Set;
 import org.gradle.api.GradleException;
-import org.gradle.api.Project;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.Optional;
@@ -57,15 +35,10 @@ import org.gradle.api.tasks.OutputFile;
  * DSL object for configuring lint options.
  */
 public class LintOptions implements com.android.builder.model.LintOptions, Serializable {
-    public static final String STDOUT = "stdout";
-    public static final String STDERR = "stderr";
     private static final long serialVersionUID = 1L;
 
-    @NonNull
     private Set<String> disable = Sets.newHashSet();
-    @NonNull
     private Set<String> enable = Sets.newHashSet();
-    @Nullable
     private Set<String> check = Sets.newHashSet();
     private boolean abortOnError = true;
     private boolean absolutePaths = true;
@@ -92,7 +65,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     @Nullable
     private File xmlOutput;
 
-    private Map<String,Severity> severities = Maps.newHashMap();
+    private Map<String,Integer> severities = Maps.newHashMap();
     private File baselineFile;
 
     public LintOptions() {
@@ -151,7 +124,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
 
         if (severityOverrides != null) {
             for (Map.Entry<String,Integer> entry : severityOverrides.entrySet()) {
-                severities.put(entry.getKey(), convert(entry.getValue()));
+                severities.put(entry.getKey(), entry.getValue());
             }
         }
     }
@@ -425,6 +398,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     /**
      * Returns the default configuration file to use as a fallback
      */
+    @Nullable
     @Override
     @Optional @InputFile
     public File getLintConfig() {
@@ -456,9 +430,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     public void setXmlOutput(@NonNull File xmlOutput) {
-        if (xmlOutput.getName().equals(DefaultConfiguration.CONFIG_FILE_NAME)) {
-            throw new GradleException("Don't set the xmlOutput file to \"" +
-                    DefaultConfiguration.CONFIG_FILE_NAME + "\"; that's a "
+        if (xmlOutput.getName().equals("lint.xml")) {
+            throw new GradleException("Don't set the xmlOutput file to \"lint.xml\"; that's a "
                     + "reserved filename used for for lint configuration files, not reports.");
         }
         this.xmlOutput = xmlOutput;
@@ -518,166 +491,6 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         this.lintConfig = lintConfig;
     }
 
-    public void syncTo(
-            @NonNull LintCliClient client,
-            @NonNull LintCliFlags flags,
-            @Nullable String variantName,
-            @Nullable Project project,
-            @Nullable File reportsDir,
-            boolean report) {
-        if (disable != null) {
-            flags.getSuppressedIds().addAll(disable);
-        }
-        if (enable != null) {
-            flags.getEnabledIds().addAll(enable);
-        }
-        if (check != null && !check.isEmpty()) {
-            flags.setExactCheckedIds(check);
-        }
-        flags.setSetExitCode(this.abortOnError);
-        flags.setFullPath(absolutePaths);
-        flags.setShowSourceLines(!noLines);
-        flags.setQuiet(quiet);
-        flags.setCheckAllWarnings(checkAllWarnings);
-        flags.setIgnoreWarnings(ignoreWarnings);
-        flags.setWarningsAsErrors(warningsAsErrors);
-        flags.setCheckTestSources(checkTestSources);
-        flags.setCheckGeneratedSources(checkGeneratedSources);
-        flags.setCheckDependencies(checkDependencies);
-        flags.setShowEverything(showAll);
-        flags.setDefaultConfiguration(lintConfig);
-        flags.setSeverityOverrides(severities);
-        flags.setExplainIssues(explainIssues);
-        flags.setBaselineFile(baselineFile);
-
-        if (report || flags.isFatalOnly() && this.abortOnError) {
-            if (textReport || flags.isFatalOnly()) {
-                File output = textOutput;
-                if (output == null) {
-                    output = new File(flags.isFatalOnly() ? STDERR: STDOUT);
-                } else if (!output.isAbsolute() && !isStdOut(output) && !isStdErr(output)) {
-                    output = project.file(output.getPath());
-                }
-                output = validateOutputFile(output);
-
-                Writer writer;
-                File file = null;
-                boolean closeWriter;
-                if (isStdOut(output)) {
-                    //noinspection IOResourceOpenedButNotSafelyClosed
-                    writer = new PrintWriter(System.out, true);
-                    closeWriter = false;
-                } else if (isStdErr(output)) {
-                    //noinspection IOResourceOpenedButNotSafelyClosed
-                    writer = new PrintWriter(System.err, true);
-                    closeWriter = false;
-                } else {
-                    file = output;
-                    try {
-                        //noinspection IOResourceOpenedButNotSafelyClosed
-                        writer = new BufferedWriter(new FileWriter(output));
-                    } catch (IOException e) {
-                        throw new org.gradle.api.GradleException("Text invalid argument.", e);
-                    }
-                    closeWriter = true;
-                }
-                flags.getReporters().add(Reporter.createTextReporter(client, flags, file, writer,
-                        closeWriter));
-            }
-            if (htmlReport) {
-                File output = htmlOutput;
-                if (output == null || flags.isFatalOnly()) {
-                    output = createOutputPath(project, variantName, ".html", reportsDir,
-                            flags.isFatalOnly());
-                } else if (!output.isAbsolute()) {
-                    output = project.file(output.getPath());
-                }
-                output = validateOutputFile(output);
-                try {
-                    flags.getReporters().add(Reporter.createHtmlReporter(client, output, flags,
-                            false));
-                } catch (IOException e) {
-                    throw new GradleException("HTML invalid argument.", e);
-                }
-            }
-            if (xmlReport) {
-                File output = xmlOutput;
-                if (output == null || flags.isFatalOnly()) {
-                    output = createOutputPath(project, variantName, DOT_XML, reportsDir,
-                            flags.isFatalOnly());
-                } else if (!output.isAbsolute()) {
-                    output = project.file(output.getPath());
-                }
-                output = validateOutputFile(output);
-                try {
-                    flags.getReporters().add(Reporter.createXmlReporter(client, output, false));
-                } catch (IOException e) {
-                    throw new org.gradle.api.GradleException("XML invalid argument.", e);
-                }
-            }
-        }
-    }
-
-    private static boolean isStdOut(@NonNull File output) {
-        return STDOUT.equals(output.getPath());
-    }
-
-    private static boolean isStdErr(@NonNull File output) {
-        return STDERR.equals(output.getPath());
-    }
-
-    @NonNull
-    private static File validateOutputFile(@NonNull File output) {
-        if (isStdOut(output) || isStdErr(output)) {
-            return output;
-        }
-
-        File parent = output.getParentFile();
-        if (!parent.exists()) {
-            parent.mkdirs();
-        }
-
-        output = output.getAbsoluteFile();
-        if (output.exists()) {
-            boolean delete = output.delete();
-            if (!delete) {
-                throw new org.gradle.api.GradleException("Could not delete old " + output);
-            }
-        }
-        if (output.getParentFile() != null && !output.getParentFile().canWrite()) {
-            throw new org.gradle.api.GradleException("Cannot write output file " + output);
-        }
-
-        return output;
-    }
-
-    private static File createOutputPath(
-            @Nullable Project project,
-            @Nullable String variantName,
-            @NonNull String extension,
-            @Nullable File reportsDir,
-            boolean fatalOnly) {
-        StringBuilder base = new StringBuilder();
-        base.append("lint-results");
-        if (!Strings.isNullOrEmpty(variantName)) {
-            base.append("-");
-            base.append(variantName);
-        }
-        if (fatalOnly) {
-            base.append("-fatal");
-        }
-        base.append(extension);
-
-        if (reportsDir != null) {
-            return new File(reportsDir, base.toString());
-        } else if (project == null) {
-            return new File(base.toString());
-        } else {
-            File buildDir = project.getBuildDir();
-            return new File(buildDir, FD_REPORTS + File.separator + base.toString());
-        }
-    }
-
     @Override @Nullable
     public File getBaselineFile() {
         return baselineFile;
@@ -717,13 +530,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
             return null;
         }
 
-        Map<String, Integer> map =
-                Maps.newHashMapWithExpectedSize(severities.size());
-        for (Map.Entry<String,Severity> entry : severities.entrySet()) {
-            map.put(entry.getKey(), convert(entry.getValue()));
-        }
-
-        return map;
+        return severities;
     }
 
     // -- DSL Methods.
@@ -749,8 +556,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
      */
     public void enable(String id) {
         enable.add(id);
-        Issue issue = new BuiltinIssueRegistry().getIssue(id);
-        severities.put(id, issue != null ? issue.getDefaultSeverity() : WARNING);
+        severities.put(id, SEVERITY_DEFAULT_ENABLED);
     }
 
     /**
@@ -767,7 +573,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
      */
     public void disable(String id) {
         disable.add(id);
-        severities.put(id, IGNORE);
+        severities.put(id, SEVERITY_IGNORE);
     }
 
     /**
@@ -780,11 +586,13 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     }
 
     // For textOutput 'stdout' or 'stderr' (normally a file)
+    @SuppressWarnings("unused") // DSL method
     public void textOutput(String textOutput) {
         this.textOutput = new File(textOutput);
     }
 
     // For textOutput file()
+    @SuppressWarnings("unused") // DSL method
     public void textOutput(File textOutput) {
         this.textOutput = textOutput;
     }
@@ -793,7 +601,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
      * Adds a severity override for the given issues.
      */
     public void fatal(String id) {
-        severities.put(id, FATAL);
+        severities.put(id, SEVERITY_FATAL);
     }
 
     /**
@@ -809,7 +617,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
      * Adds a severity override for the given issues.
      */
     public void error(String id) {
-        severities.put(id, ERROR);
+        severities.put(id, SEVERITY_ERROR);
     }
 
     /**
@@ -825,7 +633,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
      * Adds a severity override for the given issues.
      */
     public void warning(String id) {
-        severities.put(id, WARNING);
+        severities.put(id, SEVERITY_WARNING);
     }
 
     /**
@@ -841,7 +649,7 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
      * Adds a severity override for the given issues.
      */
     public void ignore(String id) {
-        severities.put(id, IGNORE);
+        severities.put(id, SEVERITY_IGNORE);
     }
 
     /**
@@ -857,52 +665,16 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
      * Adds a severity override for the given issues.
      */
     public void informational(String id) {
-        severities.put(id, INFORMATIONAL);
+        severities.put(id, SEVERITY_INFORMATIONAL);
     }
 
     /**
      * Adds a severity override for the given issues.
      */
+    @SuppressWarnings("unused") // DSL method
     public void informational(String... ids) {
         for (String id : ids) {
             informational(id);
-        }
-    }
-
-    // Without these qualifiers, Groovy compilation will fail with "Apparent variable
-    // 'SEVERITY_FATAL' was found in a static scope but doesn't refer to a local variable,
-    // static field or class"
-    //@SuppressWarnings("UnnecessaryQualifiedReference")
-    private static int convert(Severity s) {
-        switch (s) {
-            case FATAL:
-                return com.android.builder.model.LintOptions.SEVERITY_FATAL;
-            case ERROR:
-                return com.android.builder.model.LintOptions.SEVERITY_ERROR;
-            case WARNING:
-                return com.android.builder.model.LintOptions.SEVERITY_WARNING;
-            case INFORMATIONAL:
-                return com.android.builder.model.LintOptions.SEVERITY_INFORMATIONAL;
-            case IGNORE:
-            default:
-                return com.android.builder.model.LintOptions.SEVERITY_IGNORE;
-        }
-    }
-
-    //@SuppressWarnings("UnnecessaryQualifiedReference")
-    private static Severity convert(int s) {
-        switch (s) {
-            case com.android.builder.model.LintOptions.SEVERITY_FATAL:
-                return FATAL;
-            case com.android.builder.model.LintOptions.SEVERITY_ERROR:
-                return ERROR;
-            case com.android.builder.model.LintOptions.SEVERITY_WARNING:
-                return WARNING;
-            case com.android.builder.model.LintOptions.SEVERITY_INFORMATIONAL:
-                return INFORMATIONAL;
-            case com.android.builder.model.LintOptions.SEVERITY_IGNORE:
-            default:
-                return IGNORE;
         }
     }
 

@@ -1817,7 +1817,7 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
         }
     }
 
-    // Like LintUtils.getBaseName, but for files like .svn it returns "" rather than ".svn"
+    // Like SdkUtils.fileNameToResourceName, but for files like .svn it returns "" rather than ".svn"
     private static String getBaseName(String name) {
         String baseName = name;
         int index = baseName.indexOf('.');

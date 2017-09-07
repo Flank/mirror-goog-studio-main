@@ -722,6 +722,60 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 .expectInlinedMessages()
     }
 
+    fun testAndingWithForeignMasks() {
+        // False positive encountered in the support lib codebase (simplified):
+        // Allow &'ing flags with masks without restrictions (necessary since in
+        // many cases the masks are coming from unknown declarations (class fields
+        // where we only have values, not references)
+        lint().files(
+                java("""
+                    package test.pkg;
+
+                    import android.support.annotation.IntDef;
+                    import android.view.Gravity;
+                    import android.view.View;
+
+                    import java.lang.annotation.Retention;
+                    import java.lang.annotation.RetentionPolicy;
+
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    public class GravityTest {
+                        @IntDef(value = {Gravity.LEFT, Gravity.RIGHT}, flag = true)
+                        @Retention(RetentionPolicy.SOURCE)
+                        private @interface EdgeGravity {}
+
+
+                        public void usage(final View child) {
+                            @EdgeGravity final int childGravity =
+                                    getDrawerViewAbsoluteGravity(child) & Gravity.HORIZONTAL_GRAVITY_MASK;
+                            if (true) {
+                                throw new IllegalStateException("Child drawer has absolute gravity "
+                                        + gravityToString(childGravity) + " but this tag already has a "
+                                        + "drawer view along that edge");
+                            }
+                        }
+
+                        int getDrawerViewAbsoluteGravity(View drawerView) {
+                            return Gravity.LEFT; // Wrong
+                        }
+
+                        static String gravityToString(@EdgeGravity int gravity) {
+                            if ((gravity & Gravity.LEFT) == Gravity.LEFT) {
+                                return "LEFT";
+                            }
+                            if ((gravity & Gravity.RIGHT) == Gravity.RIGHT) {
+                                return "RIGHT";
+                            }
+                            return Integer.toHexString(gravity);
+                        }
+                    }
+                    """).indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expectClean()
+    }
+
     fun testVarIntDef() {
         // Regression test for b/37078720
         lint().files(

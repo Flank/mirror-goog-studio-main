@@ -18,18 +18,18 @@ package com.android.utils;
 
 import static com.android.utils.SdkUtils.FILENAME_PREFIX;
 import static com.android.utils.SdkUtils.createPathComment;
+import static com.android.utils.SdkUtils.fileNameToResourceName;
 import static com.android.utils.SdkUtils.fileToUrlString;
+import static com.android.utils.SdkUtils.globToRegexp;
 import static com.android.utils.SdkUtils.urlToFile;
 
 import com.android.SdkConstants;
-
-import junit.framework.TestCase;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import java.io.File;
 import java.net.URL;
+import java.util.regex.Pattern;
+import junit.framework.TestCase;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 @SuppressWarnings("javadoc")
 public class SdkUtilsTest extends TestCase {
@@ -264,5 +264,50 @@ public class SdkUtilsTest extends TestCase {
         assertEquals("Theme_Light", SdkUtils.getResourceFieldName("Theme.Light"));
         assertEquals("Theme_Light", SdkUtils.getResourceFieldName("Theme.Light"));
         assertEquals("abc____", SdkUtils.getResourceFieldName("abc:-._"));
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public void testGlobToRegexp() {
+        assertEquals("^foo$", globToRegexp("foo"));
+        assertEquals("^foo/bar$", globToRegexp("foo/bar"));
+        assertEquals("^\\Qfoo\\bar\\E$", globToRegexp("foo\\bar"));
+        assertEquals("^f.?oo$", globToRegexp("f?oo"));
+        assertEquals("^fo.*?o$", globToRegexp("fo*o"));
+        assertEquals("^fo.*?o.*?$", globToRegexp("fo*o*"));
+        assertEquals("^fo.*?o$", globToRegexp("fo**o"));
+
+        assertEquals("^\\Qfoo(|)bar\\E$", globToRegexp("foo(|)bar"));
+        assertEquals("^\\Qf(o\\E.*?\\Q)b\\E.*?\\Q(\\E$", globToRegexp("f(o*)b**("));
+
+        assertTrue(Pattern.compile(globToRegexp("foo")).matcher("foo").matches());
+        assertFalse(Pattern.compile(globToRegexp("foo")).matcher("afoo").matches());
+        assertFalse(Pattern.compile(globToRegexp("foo")).matcher("fooa").matches());
+        assertTrue(Pattern.compile(globToRegexp("foo/bar")).matcher("foo/bar").matches());
+        assertFalse(Pattern.compile(globToRegexp("foo/bar")).matcher("foo/barf").matches());
+        assertFalse(Pattern.compile(globToRegexp("foo/bar")).matcher("foo/baz").matches());
+        assertTrue(Pattern.compile(globToRegexp("foo\\bar")).matcher("foo\\bar").matches());
+        assertTrue(Pattern.compile(globToRegexp("f?oo")).matcher("fboo").matches());
+        assertFalse(Pattern.compile(globToRegexp("f?oo")).matcher("fbaoo").matches());
+        assertTrue(Pattern.compile(globToRegexp("fo*o")).matcher("foo").matches());
+        assertTrue(Pattern.compile(globToRegexp("fo*o")).matcher("fooooo").matches());
+        assertTrue(Pattern.compile(globToRegexp("fo*o*")).matcher("fo?oa").matches());
+        assertTrue(Pattern.compile(globToRegexp("fo**o")).matcher("foo").matches());
+        assertTrue(Pattern.compile(globToRegexp("fo**o")).matcher("foooooo").matches());
+        assertTrue(Pattern.compile(globToRegexp("fo**o")).matcher("fo/abc/o").matches());
+        assertFalse(Pattern.compile(globToRegexp("fo**o")).matcher("fo/abc/oa").matches());
+        assertTrue(Pattern.compile(globToRegexp("f(o*)b**(")).matcher("f(o)b(").matches());
+        assertTrue(Pattern.compile(globToRegexp("f(o*)b**(")).matcher("f(oaa)b/c/d(").matches());
+    }
+
+    public void testFileNameToResourceName() {
+        assertEquals("foo", fileNameToResourceName("foo.png"));
+        assertEquals("foo", fileNameToResourceName("foo.9.png"));
+        assertEquals(".foo", fileNameToResourceName(".foo"));
+    }
+
+    public void testIsBitmapFile() {
+        assertFalse(SdkUtils.isBitmapFile(new File("foo" + File.separator + "bar.txt")));
+        assertTrue(SdkUtils.isBitmapFile(new File("foo" + File.separator + "bar.png")));
+        assertTrue(SdkUtils.isBitmapFile(new File("foo" + File.separator + "bar.jpg")));
     }
 }

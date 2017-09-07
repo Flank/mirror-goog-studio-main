@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks.annotations;
+package com.android.tools.lint.annotations;
 
 import static java.io.File.pathSeparator;
 import static java.io.File.pathSeparatorChar;

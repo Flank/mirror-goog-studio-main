@@ -33,7 +33,9 @@ import static com.android.SdkConstants.TAG_STYLE;
 import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.tools.lint.detector.api.LintUtils.getBaseName;
+import static com.android.tools.lint.detector.api.LintUtils.isXmlFile;
 import static com.android.utils.SdkUtils.getResourceFieldName;
+import static com.android.utils.SdkUtils.isBitmapFile;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -51,7 +53,6 @@ import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
-import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
@@ -300,8 +301,7 @@ public class PrivateResourceDetector extends ResourceXmlDetector implements Uast
     @Override
     public void beforeCheckFile(@NonNull Context context) {
         File file = context.file;
-        boolean isXmlFile = LintUtils.isXmlFile(file);
-        if (!isXmlFile && !LintUtils.isBitmapFile(file)) {
+        if (!isXmlFile(file) && !isBitmapFile(file)) {
             return;
         }
         String parentName = file.getParentFile().getName();

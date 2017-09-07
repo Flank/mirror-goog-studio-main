@@ -1,0 +1,15 @@
+apply plugin: 'java'
+
+group = 'com.android.tools.external.com-intellij'
+archivesBaseName = 'kotlin-compiler'
+version = rootProject.ext.baseVersion
+
+jar {
+    from zipTree("../../../../../prebuilts/tools/common/lint-psi/kotlin-compiler/kotlin-compiler.jar")
+}
+
+project.ext.pomName = 'Kotlin Compiler'
+project.ext.pomDesc = 'Kotlin Compiler'
+
+apply from: "$rootDir/buildSrc/base/publish.gradle"
+

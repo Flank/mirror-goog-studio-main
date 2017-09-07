@@ -606,10 +606,6 @@ class RestrictToDetectorTest : AbstractCheckTest() {
     }
 
     fun testKotlinVisibility() {
-        if (skipKotlinTests()) {
-            return
-        }
-
         // Regression test for https://issuetracker.google.com/67489310
         // Handle Kotlin compilation unit visibility (files, internal ,etc)
         lint().files(

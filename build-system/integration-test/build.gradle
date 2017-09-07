@@ -23,7 +23,6 @@ dependencies {
     compile project(':base:builder-model')
     compile project(':base:gradle')
     compile project(':base:instant-run:instant-run-client')
-    compile project(':base:lint')
     compile project(':base:sdk-common')
     compile project(':base:testing-infrastructure:device-pool:device-provider')
     compile project(':base:testutils')

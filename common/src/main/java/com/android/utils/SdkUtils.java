@@ -36,6 +36,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 /** Miscellaneous utilities used by the Android SDK tools */
 public class SdkUtils {
@@ -303,6 +304,21 @@ public class SdkUtils {
         return resourceName;
     }
 
+    /**
+     * Returns the basename of the given filename, unless it's a dot-file such as ".svn".
+     *
+     * @param fileName the file name to extract the basename from
+     * @return the basename (the filename without the file extension)
+     */
+    public static String fileNameToResourceName(@NonNull String fileName) {
+        int extension = fileName.indexOf('.');
+        if (extension > 0) {
+            return fileName.substring(0, extension);
+        } else {
+            return fileName;
+        }
+    }
+
     public static final List<String> IMAGE_EXTENSIONS = ImmutableList.of(
             DOT_PNG, DOT_9PNG, DOT_GIF, DOT_JPEG, DOT_JPG, DOT_BMP, DOT_WEBP);
 
@@ -321,6 +337,16 @@ public class SdkUtils {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns true if the given file represents a bitmap drawable file
+     *
+     * @param file the file to be checked
+     * @return true if the given file is an xml file
+     */
+    public static boolean isBitmapFile(@NonNull File file) {
+        return hasImageExtension(file.getPath());
     }
 
     /**
@@ -354,6 +380,78 @@ public class SdkUtils {
         }
         catch (IOException e) {
             return value; // shouldn't happen; we're not going to disk
+        }
+    }
+
+    @NonNull
+    public static String globToRegexp(@NonNull String glob) {
+        StringBuilder sb = new StringBuilder(glob.length() * 2);
+        int begin = 0;
+        sb.append('^');
+        for (int i = 0, n = glob.length(); i < n; i++) {
+            char c = glob.charAt(i);
+            if (c == '*') {
+                begin = appendQuoted(sb, glob, begin, i) + 1;
+                if (i < n - 1 && glob.charAt(i + 1) == '*') {
+                    i++;
+                    begin++;
+                }
+                sb.append(".*?");
+            } else if (c == '?') {
+                begin = appendQuoted(sb, glob, begin, i) + 1;
+                sb.append(".?");
+            }
+        }
+        appendQuoted(sb, glob, begin, glob.length());
+        sb.append('$');
+        return sb.toString();
+    }
+
+    private static int appendQuoted(StringBuilder sb, String s, int from, int to) {
+        if (to > from) {
+            boolean isSimple = true;
+            for (int i = from; i < to; i++) {
+                char c = s.charAt(i);
+                if (!Character.isLetterOrDigit(c) && c != '/' && c != ' ') {
+                    isSimple = false;
+                    break;
+                }
+            }
+            if (isSimple) {
+                for (int i = from; i < to; i++) {
+                    sb.append(s.charAt(i));
+                }
+                return to;
+            }
+            sb.append(Pattern.quote(s.substring(from, to)));
+        }
+        return to;
+    }
+
+    public static boolean isServiceKey(@NonNull String name) {
+        // These are keys used by misc developer services.
+        // Configuration files provided by for example
+        //   https://developers.google.com/cloud-messaging/android/client
+        // in earlier versions would omit translatable="false", which meant users
+        // would run into fatal translation errors at build time.
+        // See for example
+        //    https://code.google.com/p/android/issues/detail?id=195824
+        // For Firebase see also
+        //    https://firebase.google.com/docs/reference/gradle/#processing_the_json_file
+        // And finally
+        //    https://developers.google.com/android/guides/google-services-plugin
+        switch (name) {
+            case "gcm_defaultSenderId":
+            case "google_app_id":
+            case "google_api_key":
+            case "google_storage_bucket":
+            case "ga_trackingID":
+            case "default_web_client_id":
+            case "firebase_database_url":
+            case "google_crash_reporting_api_key":
+                return true;
+            default:
+                return false;
         }
     }
 }

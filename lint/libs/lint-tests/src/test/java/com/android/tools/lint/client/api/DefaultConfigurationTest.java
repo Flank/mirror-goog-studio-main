@@ -15,8 +15,6 @@
  */
 package com.android.tools.lint.client.api;
 
-import static com.android.tools.lint.client.api.DefaultConfiguration.globToRegexp;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.tools.lint.checks.AbstractCheckTest;
@@ -42,12 +40,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.regex.Pattern;
 import org.intellij.lang.annotations.Language;
 
 public class DefaultConfigurationTest extends AbstractCheckTest {
 
-    public void test() throws Exception {
+    public void testBasic() throws Exception {
         DefaultConfiguration configuration = getConfiguration(""
                 + "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
                 + "<lint>\n"
@@ -345,39 +342,6 @@ public class DefaultConfigurationTest extends AbstractCheckTest {
     protected Detector getDetector() {
         fail("Not used from this unit test");
         return null;
-    }
-
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    public void testGlobToRegexp() {
-        assertEquals("^foo$", globToRegexp("foo"));
-        assertEquals("^foo/bar$", globToRegexp("foo/bar"));
-        assertEquals("^\\Qfoo\\bar\\E$", globToRegexp("foo\\bar"));
-        assertEquals("^f.?oo$", globToRegexp("f?oo"));
-        assertEquals("^fo.*?o$", globToRegexp("fo*o"));
-        assertEquals("^fo.*?o.*?$", globToRegexp("fo*o*"));
-        assertEquals("^fo.*?o$", globToRegexp("fo**o"));
-
-        assertEquals("^\\Qfoo(|)bar\\E$", globToRegexp("foo(|)bar"));
-        assertEquals("^\\Qf(o\\E.*?\\Q)b\\E.*?\\Q(\\E$", globToRegexp("f(o*)b**("));
-
-        assertTrue(Pattern.compile(globToRegexp("foo")).matcher("foo").matches());
-        assertFalse(Pattern.compile(globToRegexp("foo")).matcher("afoo").matches());
-        assertFalse(Pattern.compile(globToRegexp("foo")).matcher("fooa").matches());
-        assertTrue(Pattern.compile(globToRegexp("foo/bar")).matcher("foo/bar").matches());
-        assertFalse(Pattern.compile(globToRegexp("foo/bar")).matcher("foo/barf").matches());
-        assertFalse(Pattern.compile(globToRegexp("foo/bar")).matcher("foo/baz").matches());
-        assertTrue(Pattern.compile(globToRegexp("foo\\bar")).matcher("foo\\bar").matches());
-        assertTrue(Pattern.compile(globToRegexp("f?oo")).matcher("fboo").matches());
-        assertFalse(Pattern.compile(globToRegexp("f?oo")).matcher("fbaoo").matches());
-        assertTrue(Pattern.compile(globToRegexp("fo*o")).matcher("foo").matches());
-        assertTrue(Pattern.compile(globToRegexp("fo*o")).matcher("fooooo").matches());
-        assertTrue(Pattern.compile(globToRegexp("fo*o*")).matcher("fo?oa").matches());
-        assertTrue(Pattern.compile(globToRegexp("fo**o")).matcher("foo").matches());
-        assertTrue(Pattern.compile(globToRegexp("fo**o")).matcher("foooooo").matches());
-        assertTrue(Pattern.compile(globToRegexp("fo**o")).matcher("fo/abc/o").matches());
-        assertFalse(Pattern.compile(globToRegexp("fo**o")).matcher("fo/abc/oa").matches());
-        assertTrue(Pattern.compile(globToRegexp("f(o*)b**(")).matcher("f(o)b(").matches());
-        assertTrue(Pattern.compile(globToRegexp("f(o*)b**(")).matcher("f(oaa)b/c/d(").matches());
     }
 
     // Tests for a structure that looks like a gradle project with

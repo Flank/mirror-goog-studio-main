@@ -1055,7 +1055,7 @@ abstract class LintClient {
                     }
                 }
             }
-        } catch (e: AndroidLocation.AndroidLocationException) {
+        } catch (ignore: AndroidLocation.AndroidLocationException) {
             // Ignore -- no android dir, so no rules to load.
         }
 

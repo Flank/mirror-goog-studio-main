@@ -16,13 +16,16 @@
 
 package com.android.tools.lint.helpers
 
+import com.android.SdkConstants.DOT_KT
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.client.api.UastParser
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.UastLintUtils
+import com.intellij.lang.Language
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.io.FileUtilRt
@@ -64,7 +67,7 @@ open class DefaultUastParser(
 
     open protected fun createEvaluator(project: Project?,
                                   p: com.intellij.openapi.project.Project): DefaultJavaEvaluator =
-            DefaultJavaEvaluator(p, project)
+            DefaultJavaEvaluator(p, project!!)
 
     /**
      * Prepare to parse the given contexts. This method will be called before
@@ -79,7 +82,9 @@ open class DefaultUastParser(
      *
      * @return true if the preparation succeeded; false if there were errors
      */
-    override fun prepare(contexts: List<JavaContext>): Boolean = true
+    override fun prepare(
+            contexts: List<JavaContext>,
+            testContexts: List<JavaContext>): Boolean = true
 
     /**
      * Returns an evaluator which can perform various resolution tasks,
@@ -107,6 +112,13 @@ open class DefaultUastParser(
                 .findFileByPath(context.file.absolutePath) ?: return null
 
         val psiFile = PsiManager.getInstance(ideaProject).findFile(virtualFile) ?: return null
+
+        if (psiFile.language == Language.ANY && context.file.path.endsWith(DOT_KT)) {
+            // Expected to get Kotlin language back here!
+            context.client.log(Severity.ERROR, null, "Could not process " +
+                context.project.getRelativePath(context.file) +
+                    ": Kotlin not configured correctly");
+        }
 
         if (psiFile is PsiPlainTextFile) { // plain text: file too large to process with PSI
             if (!warnedAboutLargeFiles) {

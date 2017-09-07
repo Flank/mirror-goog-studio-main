@@ -33,13 +33,13 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifierListOwner;
 import com.intellij.psi.PsiPackage;
 import com.intellij.psi.PsiParameter;
-import com.intellij.psi.PsiParameterList;
 import com.intellij.psi.PsiVariable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UAnnotation;
@@ -360,39 +360,19 @@ class AnnotationHandler {
                     methodAnnotations, classAnnotations);
         }
 
-        List<UExpression> arguments = call.getValueArguments();
-        PsiParameterList parameterList = method.getParameterList();
-        PsiParameter[] parameters = parameterList.getParameters();
-
-        List<UAnnotation> annotations = null;
-        int j = 0;
-        if (parameters.length > 0 && "$receiver".equals(parameters[0].getName())) {
-            // Kotlin extension method.
-            // TODO: Find out if there's a better way to look this up!
-            // (and more importantly, handle named parameters, *args, etc.
-            j++;
-        }
-        for (int i = 0, n = Math.min(parameters.length, arguments.size());
-                j < n;
-                i++, j++) {
-            UExpression argument = arguments.get(i);
-            PsiParameter parameter = parameters[j];
+        Map<UExpression, PsiParameter> mapping = evaluator.computeArgumentMapping(call, method);
+        for (Map.Entry<UExpression, PsiParameter> entry : mapping.entrySet()) {
+            UExpression argument = entry.getKey();
+            PsiParameter parameter = entry.getValue();
             PsiAnnotation[] allAnnotations = evaluator.getAllAnnotations(parameter, true);
             PsiAnnotation[] filtered = filterRelevantAnnotations(evaluator, allAnnotations);
             if (filtered.length == 0) {
                 continue;
             }
-            annotations = JavaUAnnotation.wrap(filtered);
+            List<UAnnotation> annotations = JavaUAnnotation.wrap(filtered);
             checkAnnotations(context, argument, method, annotations,
                     methodAnnotations, classAnnotations);
-        }
-        if (annotations != null) {
-            // last parameter is varargs (same parameter annotations)
-            for (int i = parameters.length; i < arguments.size(); i++) {
-                UExpression argument = arguments.get(i);
-                checkAnnotations(context, argument, method, annotations,
-                        methodAnnotations, classAnnotations);
-            }
+
         }
     }
 

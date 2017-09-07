@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler;
 public class KotlinCompiler extends JarOutputCompiler {
 
     private String moduleName;
+    private String jvmTarget = "1.8";
 
     protected KotlinCompiler() {
         super("kotlinc");
@@ -53,6 +54,9 @@ public class KotlinCompiler extends JarOutputCompiler {
             String arg = it.next();
             if (arg.equals("--module_name") && it.hasNext()) {
                 moduleName = it.next();
+            }
+            if (arg.equals("--jvm-target") && it.hasNext()) {
+                jvmTarget = it.next();
             }
         }
     }
@@ -110,6 +114,10 @@ public class KotlinCompiler extends JarOutputCompiler {
 
             args.add("-module");
             args.add(xml.getAbsolutePath());
+            if (jvmTarget != null) {
+                args.add("-jvm-target");
+                args.add(jvmTarget);
+            }
 
             ExitCode exit =
                     CLICompiler.doMainNoExit(new K2JVMCompiler(), args.toArray(new String[] {}));

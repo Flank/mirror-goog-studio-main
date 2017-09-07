@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants
+import com.android.SdkConstants.INT_DEF_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.FLOAT_RANGE_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.SIZE_ANNOTATION
@@ -41,7 +43,11 @@ class RangeDetector : AbstractAnnotationDetector(), Detector.UastScanner {
     override fun applicableAnnotations(): List<String> = listOf(
             INT_RANGE_ANNOTATION,
             FLOAT_RANGE_ANNOTATION,
-            SIZE_ANNOTATION
+            SIZE_ANNOTATION,
+
+            // Such that the annotation is considered relevant by the annotation handler
+            // even if the typedef check itself is disabled
+            INT_DEF_ANNOTATION
     )
 
     override fun visitAnnotationUsage(
@@ -65,6 +71,8 @@ class RangeDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             SIZE_ANNOTATION -> {
                 checkSize(context, annotation, argument)
             }
+
+            INT_DEF_ANNOTATION -> {}
         }
     }
 

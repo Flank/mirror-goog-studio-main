@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
 import static com.android.SdkConstants.PLATFORM_WINDOWS;
+import static com.android.utils.SdkUtils.globToRegexp;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -409,51 +410,6 @@ public class DefaultConfiguration extends Configuration {
         } catch (Exception e) {
             client.log(e, null);
         }
-    }
-
-    @NonNull
-    public static String globToRegexp(@NonNull String glob) {
-        StringBuilder sb = new StringBuilder(glob.length() * 2);
-        int begin = 0;
-        sb.append('^');
-        for (int i = 0, n = glob.length(); i < n; i++) {
-            char c = glob.charAt(i);
-            if (c == '*') {
-                begin = appendQuoted(sb, glob, begin, i) + 1;
-                if (i < n - 1 && glob.charAt(i + 1) == '*') {
-                    i++;
-                    begin++;
-                }
-                sb.append(".*?");
-            } else if (c == '?') {
-                begin = appendQuoted(sb, glob, begin, i) + 1;
-                sb.append(".?");
-            }
-        }
-        appendQuoted(sb, glob, begin, glob.length());
-        sb.append('$');
-        return sb.toString();
-    }
-
-    private static int appendQuoted(StringBuilder sb, String s, int from, int to) {
-        if (to > from) {
-            boolean isSimple = true;
-            for (int i = from; i < to; i++) {
-                char c = s.charAt(i);
-                if (!Character.isLetterOrDigit(c) && c != '/' && c != ' ') {
-                    isSimple = false;
-                    break;
-                }
-            }
-            if (isSimple) {
-                for (int i = from; i < to; i++) {
-                    sb.append(s.charAt(i));
-                }
-                return to;
-            }
-            sb.append(Pattern.quote(s.substring(from, to)));
-        }
-        return to;
     }
 
     private void addRegexp(@NonNull String idList, @NonNull Iterable<String> ids, int n,

@@ -28,5 +28,6 @@
     <orderEntry type="module" module-name="gradle-api" />
     <orderEntry type="module" module-name="layoutlib-api-base" />
     <orderEntry type="library" scope="TEST" name="truth" level="project" />
+    <orderEntry type="module" module-name="lint-gradle-api" />
   </component>
 </module>

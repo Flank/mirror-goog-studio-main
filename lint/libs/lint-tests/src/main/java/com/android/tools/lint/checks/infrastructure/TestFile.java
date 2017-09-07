@@ -30,14 +30,11 @@ import static com.android.utils.SdkUtils.escapePropertyValue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.lint.Warning;
-import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.SdkUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
-import com.intellij.util.ArrayUtil;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
@@ -55,8 +52,6 @@ import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import javax.imageio.ImageIO;
 import junit.framework.TestCase;
@@ -182,33 +177,21 @@ public class TestFile {
     }
 
     public static class JavaTestFile extends LintDetectorTest.TestFile {
-        private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+(.*)\\s*;");
-        private static final Pattern CLASS_PATTERN = Pattern.compile(
-                "(class|interface|@interface|enum)\\s*(\\S+)\\s*(<.+>)?\\s*(extends.*)?\\s*(implements.*)?\\{",
-                Pattern.MULTILINE);
-
         public JavaTestFile() {
         }
 
         @NonNull
         public static LintDetectorTest.TestFile create(@NonNull @Language("JAVA") String source) {
             // Figure out the "to" path: the package plus class name + java in the src/ folder
-            Matcher matcher = PACKAGE_PATTERN.matcher(source);
-            boolean foundPackage = matcher.find();
-            assert foundPackage : "Couldn't find package declaration in source";
-            String pkg = matcher.group(1).trim();
-            matcher = CLASS_PATTERN.matcher(source);
-            boolean foundClass = matcher.find();
+            ClassName name = new ClassName(source);
+            String pkg = name.packageNameWithDefault();
+            String cls = name.getClassName();
             String to;
-            if (!foundClass) {
+            //noinspection VariableNotUsedInsideIf
+            if (cls == null) {
                 assert !source.contains("{") : "Couldn't find class declaration in source";
                 to = pkg.replace('.', '/') + '/' + "package-info.java";
             } else {
-                String cls = matcher.group(2).trim();
-                if (cls.contains("<")) {
-                    // Remove type variables
-                    cls = cls.substring(0, cls.indexOf('<'));
-                }
                 to = pkg.replace('.', '/') + '/' + cls + DOT_JAVA;
             }
 
@@ -226,35 +209,21 @@ public class TestFile {
     }
 
     public static class KotlinTestFile extends LintDetectorTest.TestFile {
-        private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+([\\S&&[^;]]*)");
-        private static final Pattern CLASS_PATTERN = Pattern
-                .compile("(class|interface|enum)\\s*(\\S+)\\s*(extends.*)?\\s*(implements.*)?\\{",
-                        Pattern.MULTILINE);
-
         public KotlinTestFile() {
         }
 
         @NonNull
         public static LintDetectorTest.TestFile create(@NonNull @Language("kotlin") String source) {
             // Figure out the "to" path: the package plus class name + kt in the src/ folder
-            Matcher matcher = PACKAGE_PATTERN.matcher(source);
-            boolean foundPackage = matcher.find();
-            assert foundPackage : "Couldn't find package declaration in source";
-            String pkg = matcher.group(1).trim();
-            matcher = CLASS_PATTERN.matcher(source);
-            boolean foundClass = matcher.find();
-            String cls;
-            if (foundClass) {
-                cls = matcher.group(2).trim();
-                if (cls.contains("<")) {
-                    // Remove type variables
-                    cls = cls.substring(0, cls.indexOf('<'));
-                }
-            } else {
+            ClassName name = new ClassName(source);
+            String pkg = name.packageNameWithDefault();
+            String cls = name.getClassName();
+            if (cls == null) {
                 // Don't require Kotlin test files to contain a class -- it could just be
                 // top level functions
                 cls = "test";
             }
+
             String to = pkg.replace('.', '/') + '/' + cls + DOT_KT;
 
             return new KotlinTestFile().to(to).within("src").withSource(source);

@@ -878,11 +878,8 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 .expectClean()
     }
 
-    fun testExtensionMethods() {
-        if (skipKotlinTests()) {
-            return
-        }
-
+    @Ignore("Needs Kotlin-specific implementation of JavaEvaluator#computeArgumentMapping")
+    fun ignore_testExtensionMethods() {
         // Regression test for https://issuetracker.google.com/65602862
         lint().files(
                 kotlin("" +
@@ -897,8 +894,12 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                         "class TestActivity: Activity() {\n" +
                         "\n" +
                         "    @ColorInt\n" +
-                        "    fun Context.getColor(@AttrRes attrId: Int, @ColorInt defaultColor: Int) = theme.getColor(attrId, defaultColor)\n" +
-                        "\n" +
+                        "    fun Context.getColor1(@AttrRes attrId: Int, @ColorInt defaultColor: Int) = theme.getColor(attrId, defaultColor)\n" +
+                        "    @ColorInt\n" +
+                        "    fun Context.getColor2(@AttrRes attrId: Int, @ColorInt defaultColor: Int) { return theme.getColor(attrId, defaultColor) }\n" +
+                        "    @ColorInt\n" +
+                        "    fun Context.getColor3(@AttrRes attrId: Int, @ColorInt defaultColor: Int) { return theme.getColor(defaultColor = defaultColor, attrId = attrId) }\n" +
+                        "    fun Context.getColor4() { return theme.getColor(defaultColor = 0xFFFFFF00, attrId = 0) }\n" +
                         "    @ColorInt\n" +
                         "    fun Resources.Theme.getColor(@AttrRes attrId: Int, @ColorInt defaultColor: Int): Int {\n" +
                         "        return 0;\n" +

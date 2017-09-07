@@ -460,7 +460,13 @@ public class AnnotationDetector extends Detector implements UastScanner {
                         : method.getReturnType();
             } else if (parent instanceof UVariable) {
                 // Field or local variable or parameter
-                type = ((UVariable) parent).getType();
+                UVariable variable = (UVariable) parent;
+                if (variable.getTypeReference() == null) {
+                    // Uh oh.
+                    // https://youtrack.jetbrains.com/issue/KT-20172
+                    return;
+                }
+                type = variable.getType();
             } else {
                 return;
             }

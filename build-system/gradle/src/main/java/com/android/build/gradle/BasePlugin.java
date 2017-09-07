@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.ToolingRegistryProvider;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
 import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl;
@@ -84,6 +83,7 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
+import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.DeprecationReporter;
@@ -107,6 +107,7 @@ import com.android.repository.api.SettingsController;
 import com.android.repository.impl.downloader.LocalFileAwareDownloader;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.legacy.LegacyDownloader;
+import com.android.tools.lint.gradle.api.ToolingRegistryProvider;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.base.CharMatcher;
@@ -131,6 +132,7 @@ import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.LogLevel;
@@ -424,6 +426,19 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                                 }
                             }
                         });
+
+        createLintClasspathConfiguration();
+    }
+
+    private void createLintClasspathConfiguration() {
+        Configuration config = project.getConfigurations().create(LintBaseTask.LINT_CLASS_PATH);
+        config.setVisible(false);
+        config.setTransitive(true);
+        config.setCanBeConsumed(false);
+        config.setDescription("The lint embedded classpath");
+
+        project.getDependencies().add(config.getName(), "com.android.tools.lint:lint-gradle:" +
+                Version.ANDROID_TOOLS_BASE_VERSION);
     }
 
     private void configureExtension() {

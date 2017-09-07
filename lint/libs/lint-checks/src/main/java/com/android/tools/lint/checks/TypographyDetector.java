@@ -33,6 +33,7 @@ import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.SdkUtils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -223,7 +224,7 @@ public class TypographyDetector extends ResourceXmlDetector {
         // service keys, or are non-translatable (these are typically also
         // service keys)
         String name = element.getAttribute(ATTR_NAME);
-        if (TranslationDetector.isServiceKey(name)) {
+        if (SdkUtils.isServiceKey(name)) {
             return;
         }
         Attr translatable = element.getAttributeNode(ATTR_TRANSLATABLE);

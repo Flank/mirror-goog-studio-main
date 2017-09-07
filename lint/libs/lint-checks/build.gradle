@@ -9,6 +9,9 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     compile project(':base:lint-api')
+    compile libs.guava
+    compile project(':base:intellij-core')
+    compile project(':base:uast')
     compile libs.asm_analysis
 }
 

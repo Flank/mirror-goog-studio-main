@@ -1543,7 +1543,7 @@ public class ConstantEvaluator {
             PsiPolyadicExpression expression = (PsiPolyadicExpression) node;
             IElementType operator = expression.getOperationTokenType();
             PsiExpression[] operands = expression.getOperands();
-            List<Object> values = Lists.newArrayListWithCapacity(operands.length);
+            List<Object> values = new ArrayList<>(operands.length);
 
             boolean hasString = false;
             boolean hasBoolean = false;

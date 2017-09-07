@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks.annotations;
+package com.android.builder.packaging;
 
 import static com.google.common.base.Charsets.UTF_8;
 import static com.google.common.truth.Truth.assertThat;
@@ -84,11 +84,10 @@ public class TypedefRemoverTest {
     public void testRecipeFile() throws IOException {
         TypedefRemover remover = new TypedefRemover();
         File typedefFile = testFolder.newFile("typedefs.txt");
-        Files.write(""
+        Files.asCharSink(typedefFile, UTF_8).write(""
                 + "D test/pkg/IntDefTest$DialogFlags\n"
                 + "D test/pkg/IntDefTest$DialogStyle\n"
-                + "D test/pkg/OuterClass$InnerClass\n",
-                typedefFile, UTF_8);
+                + "D test/pkg/OuterClass$InnerClass\n");
 
         InputStream input = new ByteArrayInputStream(new byte[] { 1, 2, 3, 4, 5});
         remover.setTypedefFile(typedefFile);

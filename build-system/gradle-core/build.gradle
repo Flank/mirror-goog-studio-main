@@ -33,8 +33,7 @@ dependencies {
     compileOnly libs.auto_value
 
     compile project(':base:builder')
-    compile project(':base:lint')
-    compile project(':base:uast')
+    compile project(':base:lint-gradle-api')
     compile project(':base:gradle-api')
     compile project(':dataBinding:compilerCommon')
 
@@ -71,9 +70,10 @@ dependencies {
     testCompile libs.truth
     testCompile libs.mockito_core
     testCompile libs.guava
-	testCompile libs.equalsverifier
+    testCompile libs.equalsverifier
     testCompile project(':base:project-test-lib')
     testCompile project(':base:testutils')
+    testCompile 'org.jetbrains:annotations:jar:13.0'
     testCompile libs.jsoup
 }
 

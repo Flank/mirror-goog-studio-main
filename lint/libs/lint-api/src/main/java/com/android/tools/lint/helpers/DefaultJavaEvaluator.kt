@@ -1,0 +1,259 @@
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.lint.helpers
+
+import com.android.builder.model.Dependencies
+import com.android.tools.lint.client.api.JavaEvaluator
+import com.android.tools.lint.detector.api.LintUtils
+import com.android.tools.lint.detector.api.Project
+import com.google.common.collect.Sets
+import com.intellij.codeInsight.AnnotationUtil
+import com.intellij.psi.JavaDirectoryService
+import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiAnnotation
+import com.intellij.psi.PsiClass
+import com.intellij.psi.PsiClassType
+import com.intellij.psi.PsiCompiledFile
+import com.intellij.psi.PsiElement
+import com.intellij.psi.PsiFile
+import com.intellij.psi.PsiJavaFile
+import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiModifierList
+import com.intellij.psi.PsiModifierListOwner
+import com.intellij.psi.PsiPackage
+import com.intellij.psi.PsiParameter
+import com.intellij.psi.PsiType
+import com.intellij.psi.impl.file.PsiPackageImpl
+import com.intellij.psi.impl.source.tree.java.PsiCompositeModifierList
+import com.intellij.psi.search.GlobalSearchScope
+import com.intellij.psi.util.InheritanceUtil
+import com.intellij.psi.util.MethodSignatureUtil
+import com.intellij.psi.util.TypeConversionUtil
+import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.getContainingFile
+
+open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.project.Project?,
+        private val myLintProject: Project?) : JavaEvaluator() {
+
+    override fun getDependencies(): Dependencies? {
+        if (myLintProject != null && myLintProject.isAndroidProject) {
+            val variant = myLintProject.currentVariant
+            if (variant != null) {
+                return variant.mainArtifact.dependencies
+            }
+        }
+        return null
+    }
+
+    override fun extendsClass(cls: PsiClass?, className: String, strict: Boolean): Boolean {
+        // TODO: This checks interfaces too. Let's find a cheaper method which only checks direct super classes!
+        return InheritanceUtil.isInheritor(cls, strict, className)
+    }
+
+    override fun implementsInterface(cls: PsiClass,
+            interfaceName: String,
+            strict: Boolean): Boolean {
+        // TODO: This checks superclasses too. Let's find a cheaper method which only checks interfaces.
+        return InheritanceUtil.isInheritor(cls, strict, interfaceName)
+    }
+
+    override fun inheritsFrom(cls: PsiClass, className: String, strict: Boolean): Boolean {
+        return InheritanceUtil.isInheritor(cls, strict, className)
+    }
+
+    override fun findClass(qualifiedName: String): PsiClass? {
+        return JavaPsiFacade.getInstance(myProject ?: return null).findClass(qualifiedName,
+                GlobalSearchScope.allScope(myProject))
+    }
+
+    override fun getClassType(cls: PsiClass?): PsiClassType? {
+        return if (myProject != null && cls != null)
+            JavaPsiFacade.getElementFactory(myProject).createType(cls)
+        else
+            null
+    }
+
+    override fun getAllAnnotations(owner: PsiModifierListOwner,
+            inHierarchy: Boolean): Array<PsiAnnotation> {
+        // withInferred=false when running outside the IDE: we don't have
+        // an InferredAnnotationsManager
+        return AnnotationUtil.getAllAnnotations(owner, inHierarchy, null, false)
+    }
+
+    override fun findAnnotationInHierarchy(listOwner: PsiModifierListOwner,
+            vararg annotationNames: String): PsiAnnotation? {
+        return AnnotationUtil.findAnnotationInHierarchy(listOwner,
+                Sets.newHashSet(*annotationNames))
+    }
+
+    override fun findAnnotation(listOwner: PsiModifierListOwner?,
+            vararg annotationNames: String): PsiAnnotation? {
+        return AnnotationUtil.findAnnotation(listOwner, false, *annotationNames)
+    }
+
+    override fun areSignaturesEqual(method1: PsiMethod, method2: PsiMethod): Boolean {
+        return MethodSignatureUtil.areSignaturesEqual(method1, method2)
+    }
+
+    override fun findJarPath(element: PsiElement): String? {
+        val containingFile = element.containingFile
+        @Suppress("USELESS_CAST")
+        return findJarPath(containingFile as PsiFile?)
+    }
+
+    override fun findJarPath(element: UElement): String? {
+        val uFile = element.getContainingFile()
+        return if (uFile != null) findJarPath(uFile.psi as PsiFile?) else null
+    }
+
+    private fun findJarPath(containingFile: PsiFile?): String? {
+        if (containingFile is PsiCompiledFile) {
+            ///This code is roughly similar to the following:
+            //      VirtualFile jarVirtualFile = PsiUtil.getJarFile(containingFile);
+            //      if (jarVirtualFile != null) {
+            //        return jarVirtualFile.getPath();
+            //      }
+            // However, the above methods will do some extra string manipulation and
+            // VirtualFile lookup which we don't actually need (we're just after the
+            // raw URL suffix)
+            val file = containingFile.virtualFile
+            if (file != null && file.fileSystem.protocol == "jar") {
+                val path = file.path
+                val separatorIndex = path.indexOf("!/")
+                if (separatorIndex >= 0) {
+                    return path.substring(0, separatorIndex)
+                }
+            }
+        }
+
+        return null
+    }
+
+    override fun getPackage(node: PsiElement): PsiPackage? {
+        val containingFile = node as? PsiFile ?: node.containingFile
+        if (containingFile != null) {
+            // Optimization: JavaDirectoryService can be slow so try to compute it directly
+            if (containingFile is PsiJavaFile) {
+                val packageName = containingFile.packageName
+                return object : PsiPackageImpl(node.manager, packageName) {
+                    override fun getAnnotationList(): PsiModifierList? {
+                        val cls = findClass(packageName + '.' + PsiPackage.PACKAGE_INFO_CLASS)
+                        if (cls != null) {
+                            val modifierList = cls.modifierList
+                            return if (modifierList != null) {
+                                // Use composite even if we just have one such that we don't
+                                // pass a modifier list tied to source elements in the class
+                                // (modifier lists can be part of the AST)
+                                PsiCompositeModifierList(manager,
+                                        listOf(modifierList))
+                            } else modifierList
+                        }
+                        return null
+                    }
+                }
+            }
+
+            val dir = containingFile.parent
+            if (dir != null) {
+                return JavaDirectoryService.getInstance().getPackage(dir)
+            }
+        }
+        return null
+    }
+
+    override fun getPackage(node: UElement): PsiPackage? {
+        val uFile = node.getContainingFile() // Can't be getContainingUFile yet, IDE UAST must be newer
+        return if (uFile != null) {
+            getPackage(uFile.psi)
+        } else null
+    }
+
+    override fun getQualifiedName(psiClassType: PsiClassType): String? {
+        val erased = erasure(psiClassType)
+        return if (erased is PsiClassType) {
+            super.getQualifiedName((erased as PsiClassType?)!!)
+        } else super.getQualifiedName(psiClassType)
+
+    }
+
+    override fun getQualifiedName(psiClass: PsiClass): String? {
+        return psiClass.qualifiedName
+    }
+
+    override fun getInternalName(psiClassType: PsiClassType): String? {
+        val erased = erasure(psiClassType)
+        return if (erased is PsiClassType) {
+            super.getInternalName((erased as PsiClassType?)!!)
+        } else super.getInternalName(psiClassType)
+
+    }
+
+    override fun getInternalName(psiClass: PsiClass): String? {
+        return LintUtils.getInternalName(psiClass)
+    }
+
+    override fun erasure(type: PsiType?): PsiType? {
+        return TypeConversionUtil.erasure(type)
+    }
+
+    override fun computeArgumentMapping(call: UCallExpression, method: PsiMethod):
+            Map<UExpression, PsiParameter> {
+        val parameterList = method.parameterList
+        if (parameterList.parametersCount == 0) {
+            return emptyMap()
+        }
+
+        // TODO: In Kotlin, produce argument mapping based on the BindingContext
+
+        val arguments = call.valueArguments
+        val parameters = parameterList.parameters
+
+        var j = 0
+        if (parameters.isNotEmpty() && "\$receiver" == parameters[0].name) {
+            // Kotlin extension method.
+            // TODO: Find out if there's a better way to look this up!
+            // (and more importantly, handle named parameters, *args, etc.
+            j++
+        }
+
+        var i = 0
+        val n = Math.min(parameters.size, arguments.size)
+        val map = HashMap<UExpression, PsiParameter>(2 * n)
+        while (j < n) {
+            val argument = arguments[i]
+            val parameter = parameters[j]
+            map[argument] = parameter
+            i++
+            j++
+        }
+
+        if (i < arguments.size && j > 0) {
+            // last parameter is varargs (same parameter annotations)
+            j--
+            while (i < arguments.size) {
+                val argument = arguments[i]
+                val parameter = parameters[j]
+                map[argument] = parameter
+                i++
+            }
+        }
+
+        return map
+    }
+}

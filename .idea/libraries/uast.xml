@@ -1,13 +1,15 @@
 <component name="libraryTable">
   <library name="uast">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/uast/1.0/uast-common-1.0.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/uast/1.0/uast-java-1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/lint-psi/uast/uast-common.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/lint-psi/uast/uast-java.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/lint-psi/uast/uast-kotlin.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/uast/1.0/uast-common-1.0-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/uast/1.0/uast-java-1.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/lint-psi/uast/uast-common-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/lint-psi/uast/uast-java-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../../prebuilts/tools/common/lint-psi/uast/uast-kotlin-sources.jar!/" />
     </SOURCES>
   </library>
 </component>

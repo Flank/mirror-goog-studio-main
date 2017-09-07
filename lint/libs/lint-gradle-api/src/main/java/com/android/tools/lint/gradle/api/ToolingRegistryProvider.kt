@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal;
+package com.android.tools.lint.gradle.api
 
-import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry
 
 /**
  * Interface implemented by objects that can provide a
- * {@link org.gradle.tooling.provider.model.ToolingModelBuilderRegistry}
+ * [org.gradle.tooling.provider.model.ToolingModelBuilderRegistry]
  */
-public interface ToolingRegistryProvider {
-    ToolingModelBuilderRegistry getModelBuilderRegistry();
+interface ToolingRegistryProvider {
+    val modelBuilderRegistry: ToolingModelBuilderRegistry
 }

@@ -201,13 +201,6 @@ maven_java_library(
 )
 
 maven_java_library(
-    name = "com.intellij_annotations",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/intellij/annotations/12.0:jar",
-    visibility = ["//visibility:public"],
-    exports = [],
-)
-
-maven_java_library(
     name = "com.squareup.okhttp_okhttp",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/okhttp/okhttp/2.5.0:jar",
     visibility = ["//visibility:public"],
@@ -798,6 +791,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "org.jetbrains_annotations",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/annotations/13.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "org.jetbrains.kotlin_kotlin-android-extensions",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.1.4-3:jar",
     visibility = ["//visibility:public"],
@@ -880,13 +880,6 @@ maven_java_library(
 maven_java_library(
     name = "org.jetbrains.trove4j_trove4j",
     export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/trove4j/trove4j/20160824:jar",
-    visibility = ["//visibility:public"],
-    exports = [],
-)
-
-maven_java_library(
-    name = "org.jetbrains_annotations",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/jetbrains/annotations/13.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )

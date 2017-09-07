@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.tasks.annotations;
+package com.android.tools.lint.annotations;
 
 import static com.android.SdkConstants.AMP_ENTITY;
 import static com.android.SdkConstants.APOS_ENTITY;
@@ -39,6 +39,7 @@ import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.packaging.TypedefRemover;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
@@ -281,7 +282,7 @@ public class Extractor {
             boolean verbose = false;
             boolean dryRun = false;
             //noinspection ConstantConditions
-            TypedefRemover remover = new TypedefRemover(this, quiet, verbose, dryRun);
+            TypedefRemover remover = new TypedefRemover(quiet, verbose, dryRun);
             remover.remove(classDir, typedefsToRemove);
         }
     }
@@ -310,7 +311,7 @@ public class Extractor {
         boolean verbose = false;
         boolean dryRun = false;
         //noinspection ConstantConditions
-        TypedefRemover remover = new TypedefRemover(null, quiet, verbose, dryRun);
+        TypedefRemover remover = new TypedefRemover(quiet, verbose, dryRun);
         remover.removeFromTypedefFile(classDir, typedefFile);
     }
 

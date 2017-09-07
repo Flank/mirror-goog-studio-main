@@ -100,6 +100,7 @@ enum class Severity constructor(
                     LintOptions.SEVERITY_WARNING -> Severity.WARNING
                     LintOptions.SEVERITY_INFORMATIONAL -> Severity.INFORMATIONAL
                     LintOptions.SEVERITY_IGNORE -> Severity.IGNORE
+                    LintOptions.SEVERITY_DEFAULT_ENABLED -> Severity.WARNING
                     else -> Severity.IGNORE
                 }
 
