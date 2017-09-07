@@ -42,3 +42,7 @@ sdk {
 tasks.withType(Javadoc) {
     options.addStringOption('Xdoclint:none', '-quiet')
 }
+
+jar {
+  from 'NOTICE'
+}

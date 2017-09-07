@@ -22,11 +22,12 @@ import com.android.builder.model.Version;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FilterInputStream;
@@ -37,14 +38,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.junit.Assert;
 import org.junit.Test;
 
 /** Checks what we distribute in our jars. */
@@ -72,9 +74,8 @@ public class JarContentsTest {
                     "screenshot2",
                     "swtmenubar");
 
-    // TODO: Handle NOTICE files in Bazel (b/64921827).
-    private static final Set<String> GLOBAL_WHITELIST =
-            ImmutableSet.of("NOTICE", "NOTICE.txt", "META-INF/MANIFEST.MF");
+    private static final Set<String> LICENSE_NAMES =
+            ImmutableSet.of("NOTICE", "NOTICE.txt", "LICENSE");
 
     private static final String EXTERNAL_DEPS = "/com/android/tools/external/";
 
@@ -82,7 +83,7 @@ public class JarContentsTest {
     private static final String JAVALIBMODELBUILDER_ZIP =
             "tools/base/java-lib-model-builder_repo.zip";
 
-    private static final Multimap<String, String> EXPECTED;
+    private static final SetMultimap<String, String> EXPECTED;
 
     static {
         // Useful command for getting these lists:
@@ -101,6 +102,8 @@ public class JarContentsTest {
                 "com/android/ddmlib/logcat/",
                 "com/android/ddmlib/testrunner/",
                 "com/android/ddmlib/utils/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/testutils",
@@ -114,6 +117,8 @@ public class JarContentsTest {
                 "com/android/testutils/incremental/",
                 "com/android/testutils/internal/",
                 "com/android/testutils/truth/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/build/gradle-api",
@@ -124,6 +129,8 @@ public class JarContentsTest {
                 "com/android/build/api/attributes/",
                 "com/android/build/api/transform/",
                 "com/android/build/api/variant/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/build/builder-test-api",
@@ -132,6 +139,8 @@ public class JarContentsTest {
                 "com/android/builder/",
                 "com/android/builder/testing/",
                 "com/android/builder/testing/api/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/build/builder-model",
@@ -142,12 +151,16 @@ public class JarContentsTest {
                 "com/android/builder/model/",
                 "com/android/builder/model/level2/",
                 "com/android/builder/model/version.properties",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/build/jobb",
                 "com/",
                 "com/android/",
                 "com/android/jobb/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/",
                 "Twofish/");
         expected.putAll(
@@ -351,6 +364,7 @@ public class JarContentsTest {
                 "desugar_deploy.jar:com/google/thirdparty/",
                 "desugar_deploy.jar:com/google/thirdparty/publicsuffix/",
                 "desugar_deploy.jar:META-INF/",
+                "desugar_deploy.jar:META-INF/MANIFEST.MF",
                 "desugar_deploy.jar:META-INF/maven/",
                 "desugar_deploy.jar:META-INF/maven/com.google.guava/",
                 "desugar_deploy.jar:META-INF/maven/com.google.guava/guava/",
@@ -371,12 +385,15 @@ public class JarContentsTest {
                 "libthrowable_extension.jar:com/google/devtools/build/android/desugar/",
                 "libthrowable_extension.jar:com/google/devtools/build/android/desugar/runtime/",
                 "libthrowable_extension.jar:META-INF/",
+                "libthrowable_extension.jar:META-INF/MANIFEST.MF",
                 "linux64/",
                 "linux64/libaapt2_jni.so",
                 "linux64/libc++.so",
                 "mac64/",
                 "mac64/libaapt2_jni.dylib",
                 "mac64/libc++.dylib",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/",
                 "win32/",
                 "win32/libaapt2_jni.dll",
@@ -389,6 +406,8 @@ public class JarContentsTest {
                 "com/",
                 "com/android/",
                 "com/android/manifmerger/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/build/gradle",
@@ -398,6 +417,8 @@ public class JarContentsTest {
                 "com/android/build/gradle/",
                 "com/android/build/gradle/internal/",
                 "com/android/build/gradle/internal/dsl/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/",
                 "META-INF/gradle-plugins/",
                 "META-INF/gradle-plugins/android-library.properties",
@@ -427,6 +448,8 @@ public class JarContentsTest {
                 "com/android/apksig/internal/zip/",
                 "com/android/apksig/util/",
                 "com/android/apksig/zip/",
+                "LICENSE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/build/gradle-core",
@@ -499,6 +522,9 @@ public class JarContentsTest {
                 "instant-run/instant-run-server.jar:com/android/tools/ir/server/",
                 "instant-run/instant-run-server.jar:com/android/tools/ir/runtime/",
                 "instant-run/instant-run-server.jar:META-INF/",
+                "instant-run/instant-run-server.jar:META-INF/MANIFEST.MF",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/",
                 "META-INF/gradle-plugins/",
                 "META-INF/gradle-plugins/com.android.base.properties");
@@ -536,6 +562,8 @@ public class JarContentsTest {
                 "com/android/instantapp/run/",
                 "com/android/instantapp/sdk/",
                 "com/android/instantapp/utils/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/",
                 "README.md",
                 "versions-offline/",
@@ -614,6 +642,8 @@ public class JarContentsTest {
                 "com/android/",
                 "com/android/tools/",
                 "com/android/tools/analytics/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/analytics-library/inspector",
@@ -621,6 +651,8 @@ public class JarContentsTest {
                 "com/android/",
                 "com/android/tools/",
                 "com/android/tools/analytics/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/analytics-library/tracker",
@@ -628,6 +660,8 @@ public class JarContentsTest {
                 "com/android/",
                 "com/android/tools/",
                 "com/android/tools/analytics/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/analytics-library/protos",
@@ -646,6 +680,8 @@ public class JarContentsTest {
                 "com/google/wireless/android/play/playlog/proto/",
                 "com/google/wireless/android/sdk/",
                 "com/google/wireless/android/sdk/stats/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/analytics-library/publisher",
@@ -653,6 +689,8 @@ public class JarContentsTest {
                 "com/android/",
                 "com/android/tools/",
                 "com/android/tools/analytics/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/swtmenubar",
@@ -660,6 +698,8 @@ public class JarContentsTest {
                 "com/android/",
                 "com/android/menubar/",
                 "com/android/menubar/internal/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/annotations",
@@ -667,6 +707,8 @@ public class JarContentsTest {
                 "com/android/",
                 "com/android/annotations/",
                 "com/android/annotations/concurrency/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/devicelib",
@@ -677,12 +719,16 @@ public class JarContentsTest {
                 "com/android/tools/device/internal/",
                 "com/android/tools/device/internal/adb/",
                 "com/android/tools/device/internal/adb/commands/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/ninepatch",
                 "com/",
                 "com/android/",
                 "com/android/ninepatch/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/chimpchat",
@@ -693,6 +739,8 @@ public class JarContentsTest {
                 "com/android/chimpchat/adb/image/",
                 "com/android/chimpchat/core/",
                 "com/android/chimpchat/hierarchyviewer/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/sdklib",
@@ -774,6 +822,8 @@ public class JarContentsTest {
                 "com/android/sdklib/tool/",
                 "com/android/sdklib/tool/sdkmanager/",
                 "com/android/sdklib/util/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/common",
@@ -790,6 +840,8 @@ public class JarContentsTest {
                 "com/android/utils/",
                 "com/android/utils/concurrency/",
                 "com/android/xml/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/repository",
@@ -824,12 +876,16 @@ public class JarContentsTest {
                 "com/android/repository/io/impl/",
                 "com/android/repository/testframework/",
                 "com/android/repository/util/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/archquery",
                 "com/",
                 "com/android/",
                 "com/android/archquery/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/layoutlib/layoutlib-api",
@@ -841,6 +897,8 @@ public class JarContentsTest {
                 "com/android/ide/common/rendering/api/",
                 "com/android/resources/",
                 "com/android/util/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/fakeadbserver/fakeadbserver",
@@ -852,6 +910,8 @@ public class JarContentsTest {
                 "com/android/fakeadbserver/hostcommandhandlers/",
                 "com/android/fakeadbserver/shellcommandhandlers/",
                 "com/android/fakeadbserver/statechangehubs/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/lint/lint-checks",
@@ -860,6 +920,8 @@ public class JarContentsTest {
                 "com/android/tools/",
                 "com/android/tools/lint/",
                 "com/android/tools/lint/checks/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/lint/lint-api",
@@ -873,6 +935,8 @@ public class JarContentsTest {
                 "com/android/tools/lint/detector/api/",
                 "com/android/tools/lint/detector/api/interprocedural/",
                 "com/android/tools/lint/helpers/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/lint/lint-tests",
@@ -882,6 +946,8 @@ public class JarContentsTest {
                 "com/android/tools/lint/",
                 "com/android/tools/lint/checks/",
                 "com/android/tools/lint/checks/infrastructure/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/lint/lint",
@@ -895,12 +961,16 @@ public class JarContentsTest {
                 "com/android/tools/lint/lint-run.png",
                 "com/android/tools/lint/lint-warning.png",
                 "com/android/tools/lint/psi/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/screenshot2",
                 "com/",
                 "com/android/",
                 "com/android/screenshot/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/tools/dvlib",
@@ -910,6 +980,8 @@ public class JarContentsTest {
                 "com/android/dvlib/devices-1.xsd",
                 "com/android/dvlib/devices-2.xsd",
                 "com/android/dvlib/devices-3.xsd",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/databinding/compilerCommon",
@@ -923,11 +995,15 @@ public class JarContentsTest {
                 "android/databinding/tool/util/",
                 "android/databinding/tool/writer/",
                 "data_binding_version_info.properties",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/databinding/baseLibrary",
                 "android/",
                 "android/databinding/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/databinding/compiler",
@@ -944,6 +1020,8 @@ public class JarContentsTest {
                 "android/databinding/tool/util/",
                 "android/databinding/tool/writer/",
                 "api-versions.xml",
+                "NOTICE.txt",
+                "META-INF/MANIFEST.MF",
                 "META-INF/",
                 "META-INF/services/",
                 "META-INF/services/javax.annotation.processing.Processor");
@@ -953,6 +1031,8 @@ public class JarContentsTest {
                 "com/android/",
                 "com/android/java/",
                 "com/android/java/model/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/");
         expected.putAll(
                 "com/android/java/tools/build/java-lib-model-builder",
@@ -962,6 +1042,8 @@ public class JarContentsTest {
                 "com/android/java/model/",
                 "com/android/java/model/builder/",
                 "com/android/java/model/impl/",
+                "NOTICE",
+                "META-INF/MANIFEST.MF",
                 "META-INF/",
                 "META-INF/gradle-plugins/",
                 "META-INF/gradle-plugins/com.android.java.properties");
@@ -974,7 +1056,7 @@ public class JarContentsTest {
                             .build();
 
             EXPECTED =
-                    ImmutableMultimap.copyOf(
+                    ImmutableSetMultimap.copyOf(
                             Multimaps.filterEntries(
                                     expected.build(),
                                     entry ->
@@ -1009,14 +1091,17 @@ public class JarContentsTest {
         List<Path> ourJars =
                 Files.walk(androidTools)
                         .filter(path -> path.toString().endsWith(".jar"))
-                        .filter(path -> !path.toString().endsWith("-sources.jar"))
                         .filter(path -> !isIgnored(path.toString()))
                         .filter(JarContentsTest::isCurrentVersion)
                         .collect(Collectors.toList());
 
         for (Path jar : ourJars) {
-            checkJar(jar, repo);
-            jarNames.add(jarRelativePathWithoutVersion(jar, repo));
+            if (jar.toString().endsWith("-sources.jar")) {
+                checkSourcesJar(jar);
+            } else {
+                checkJar(jar, repo);
+                jarNames.add(jarRelativePathWithoutVersion(jar, repo));
+            }
         }
 
         List<String> expectedJars =
@@ -1029,6 +1114,27 @@ public class JarContentsTest {
         expectedJars.remove("com/android/tools/internal/build/test/devicepool");
         assertThat(expectedJars).isNotEmpty();
         assertThat(jarNames).named("Jars for " + groupPrefix).containsAllIn(expectedJars);
+    }
+
+    private static void checkSourcesJar(Path jarPath) throws IOException {
+        checkLicense(jarPath);
+    }
+
+    private static void checkLicense(Path jarPath) throws IOException {
+        // TODO: Handle NOTICE files in Bazel (b/64921827).
+        if (TestUtils.runningFromBazel()) {
+            return;
+        }
+
+        try (JarFile jarFile = new JarFile(jarPath.toFile())) {
+            for (String possibleName : LICENSE_NAMES) {
+                if (jarFile.getEntry(possibleName) != null) {
+                    return;
+                }
+            }
+
+            Assert.fail("No license file in " + jarPath);
+        }
     }
 
     private static boolean isIgnored(String path) {
@@ -1061,7 +1167,8 @@ public class JarContentsTest {
             return false;
         }
 
-        if (GLOBAL_WHITELIST.contains(fileName)) {
+        if (LICENSE_NAMES.contains(fileName) && TestUtils.runningFromBazel()) {
+            // TODO: Handle NOTICE files in Bazel (b/64921827).
             return false;
         }
 
@@ -1101,10 +1208,17 @@ public class JarContentsTest {
     }
 
     private static void checkJar(Path jar, Path repo) throws Exception {
+        checkLicense(jar);
+
         String key = FileUtils.toSystemIndependentPath(jarRelativePathWithoutVersion(jar, repo));
-        Collection<String> expected = EXPECTED.get(key);
+        Set<String> expected = EXPECTED.get(key);
         if (expected == null) {
             expected = Collections.emptySet();
+        }
+
+        if (TestUtils.runningFromBazel()) {
+            // TODO: Handle NOTICE files in Bazel (b/64921827).
+            expected = Sets.difference(expected, LICENSE_NAMES);
         }
 
         Set<String> actual = new HashSet<>();
