@@ -27,3 +27,7 @@ sdk {
         }
     }
 }
+
+jar {
+    from 'NOTICE'
+}
