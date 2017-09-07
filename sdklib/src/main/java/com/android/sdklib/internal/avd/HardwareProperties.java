@@ -16,12 +16,12 @@
 
 package com.android.sdklib.internal.avd;
 
+import com.android.SdkConstants;
+import com.android.io.IAbstractFile;
+import com.android.io.StreamException;
 import com.android.utils.ILogger;
-import com.google.common.base.Charsets;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -202,11 +202,10 @@ public class HardwareProperties {
      * @param log the ILogger object receiving warning/error from the parsing. Cannot be null.
      * @return the map of (key,value) pairs, or null if the parsing failed.
      */
-    public static Map<String, HardwareProperty> parseHardwareDefinitions(File file, ILogger log) {
+    public static Map<String, HardwareProperty> parseHardwareDefinitions(IAbstractFile propFile, ILogger log) {
         BufferedReader reader = null;
         try {
-            FileInputStream fis = new FileInputStream(file);
-            reader = new BufferedReader(new InputStreamReader(fis, Charsets.UTF_8));
+            reader = new BufferedReader(new InputStreamReader(propFile.getContents(), SdkConstants.INI_CHARSET));
 
             Map<String, HardwareProperty> map = new TreeMap<String, HardwareProperty>();
 
@@ -227,7 +226,7 @@ public class HardwareProperties {
 
                         if (prop == null) {
                             log.warning("Error parsing '%1$s': missing '%2$s'",
-                                    file.getAbsolutePath(), HW_PROP_NAME);
+                                    propFile.getOsLocation(), HW_PROP_NAME);
                             return null;
                         }
 
@@ -270,19 +269,23 @@ public class HardwareProperties {
                         }
                     } else {
                         log.warning("Error parsing '%1$s': \"%2$s\" is not a valid syntax",
-                                file.getAbsolutePath(), line);
+                                propFile.getOsLocation(), line);
                         return null;
                     }
                 }
             }
 
             return map;
-        } catch (FileNotFoundException e) {
+        } catch (StreamException e) {
+            log.warning("Error parsing '%1$s': %2$s.",
+                        propFile.getOsLocation(),
+                        e.getMessage());
+        }  catch (FileNotFoundException e) {
             // this should not happen since we usually test the file existence before
             // calling the method.
             // Return null below.
         } catch (IOException e) {
-            log.warning("Error parsing '%1$s': %2$s.", file.getAbsolutePath(),
+            log.warning("Error parsing '%1$s': %2$s.", propFile.getOsLocation(),
                         e.getMessage());
         } finally {
             if (reader != null) {

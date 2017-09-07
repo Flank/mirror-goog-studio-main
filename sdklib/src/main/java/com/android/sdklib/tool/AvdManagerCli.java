@@ -27,6 +27,8 @@ import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.repository.api.ProgressIndicator;
 import com.android.repository.api.ProgressIndicatorAdapter;
+import com.android.repository.io.FileOp;
+import com.android.sdklib.FileOpFileWrapper;
 import com.android.sdklib.IAndroidTarget;
 import com.android.sdklib.ISystemImage;
 import com.android.sdklib.SdkVersionInfo;
@@ -1030,9 +1032,10 @@ class AvdManagerCli extends CommandLineParser {
         }
         File libDir = new File(emulatorPackage.getLocation(), SdkConstants.FD_LIB);
         File hardwareDefs = new File(libDir, SdkConstants.FN_HARDWARE_INI);
+        FileOp fop = mSdkHandler.getFileOp();
         Map<String, HardwareProperties.HardwareProperty> hwMap = HardwareProperties
                 .parseHardwareDefinitions(
-                        hardwareDefs, null /*sdkLog*/);
+                        new FileOpFileWrapper(hardwareDefs, fop, false), mSdkLog);
 
         HashMap<String, String> map = new HashMap<>();
 
