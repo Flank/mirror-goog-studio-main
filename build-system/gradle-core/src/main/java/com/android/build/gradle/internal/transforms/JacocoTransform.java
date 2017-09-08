@@ -15,7 +15,6 @@
  */
 package com.android.build.gradle.internal.transforms;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
@@ -28,6 +27,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import org.jacoco.core.instr.Instrumenter;
 import org.jacoco.core.runtime.OfflineInstrumentationAccessGenerator;
 
@@ -43,6 +44,12 @@ import org.jacoco.core.runtime.OfflineInstrumentationAccessGenerator;
  * Jacoco Transform
  */
 public class JacocoTransform extends Transform {
+
+    private static final Pattern CLASS_PATTERN = Pattern.compile(".*\\.class$");
+    // META-INF/*.kotlin_module files need to be copied to output so they show up
+    // in the intermediate classes jar.
+    private static final Pattern KOTLIN_MODULE_PATTERN =
+            Pattern.compile("^META-INF/.*\\.kotlin_module$");
 
     public JacocoTransform() {}
 
@@ -115,12 +122,15 @@ public class JacocoTransform extends Transform {
             @NonNull Map<File, Status> changedFiles) throws IOException {
         for (Map.Entry<File, Status> changedInput : changedFiles.entrySet()) {
             File inputFile = changedInput.getKey();
-            if (!inputFile.getName().endsWith(SdkConstants.DOT_CLASS)) {
+            Action fileAction = calculateAction(inputFile, inputDir);
+            if (fileAction == Action.IGNORE) {
                 continue;
             }
 
-            File outputFile = new File(outputDir,
-                    FileUtils.relativePossiblyNonExistingPath(inputFile, inputDir));
+            File outputFile =
+                    new File(
+                            outputDir,
+                            FileUtils.relativePossiblyNonExistingPath(inputFile, inputDir));
             switch (changedInput.getValue()) {
                 case REMOVED:
                     FileUtils.delete(outputFile);
@@ -128,7 +138,20 @@ public class JacocoTransform extends Transform {
                 case ADDED:
                     // fall through
                 case CHANGED:
-                    instrumentFile(instrumenter, inputFile, outputFile);
+                    switch (fileAction) {
+                        case COPY:
+                            copy(inputFile, outputFile);
+                            break;
+                        case INSTRUMENT:
+                            instrumentFile(instrumenter, inputFile, outputFile);
+                            break;
+                        case IGNORE:
+                            // do nothing
+                            break;
+                        default:
+                            throw new RuntimeException(
+                                    "Unsupported Action: " + fileAction.toString());
+                    }
                     break;
                 case NOTCHANGED:
                     // do nothing
@@ -144,12 +167,25 @@ public class JacocoTransform extends Transform {
         FileUtils.cleanOutputDir(outputDir);
         Iterable<File> files = FileUtils.getAllFiles(inputDir);
         for (File inputFile : files) {
-            if (!inputFile.getName().endsWith(SdkConstants.DOT_CLASS)) {
+            Action fileAction = calculateAction(inputFile, inputDir);
+            if (fileAction == Action.IGNORE) {
                 continue;
             }
 
             File outputFile = new File(outputDir, FileUtils.relativePath(inputFile, inputDir));
-            instrumentFile(instrumenter, inputFile, outputFile);
+            switch (fileAction) {
+                case COPY:
+                    copy(inputFile, outputFile);
+                    break;
+                case INSTRUMENT:
+                    instrumentFile(instrumenter, inputFile, outputFile);
+                    break;
+                case IGNORE:
+                    // do nothing
+                    break;
+                default:
+                    throw new RuntimeException("Unsupported Action: " + fileAction.toString());
+            }
         }
     }
 
@@ -170,4 +206,58 @@ public class JacocoTransform extends Transform {
         }
     }
 
+    private static void copy(@NonNull File inputFile, @NonNull File outputFile) throws IOException {
+        Files.createParentDirs(outputFile);
+        Files.copy(inputFile, outputFile);
+    }
+
+    private static Action calculateAction(@NonNull File inputFile, @NonNull File inputDir) {
+        final String inputRelativePath =
+                FileUtils.toSystemIndependentPath(
+                        FileUtils.relativePossiblyNonExistingPath(inputFile, inputDir));
+        for (Pattern pattern : Action.COPY.getPatterns()) {
+            if (pattern.matcher(inputRelativePath).matches()) {
+                return Action.COPY;
+            }
+        }
+        for (Pattern pattern : Action.INSTRUMENT.getPatterns()) {
+            if (pattern.matcher(inputRelativePath).matches()) {
+                return Action.INSTRUMENT;
+            }
+        }
+        return Action.IGNORE;
+    }
+
+    /** The possible actions which can happen to an input file */
+    private enum Action {
+
+        /** The file is just copied to the transform output. */
+        COPY(KOTLIN_MODULE_PATTERN),
+
+        /** The file is ignored. */
+        IGNORE(),
+
+        /** The file is instrumented and added to the transform output. */
+        INSTRUMENT(CLASS_PATTERN);
+
+        private final ImmutableList<Pattern> patterns;
+
+        /**
+         * @param patterns Patterns are compared to files' relative paths to determine if they
+         *     undergo the corresponding action.
+         */
+        Action(@NonNull Pattern... patterns) {
+            ImmutableList.Builder<Pattern> builder = new ImmutableList.Builder<>();
+            for (Pattern pattern : patterns) {
+                Preconditions.checkNotNull(pattern);
+                builder.add(pattern);
+            }
+            this.patterns = builder.build();
+        }
+
+        @NonNull
+        ImmutableList<Pattern> getPatterns() {
+            return patterns;
+        }
+    }
 }

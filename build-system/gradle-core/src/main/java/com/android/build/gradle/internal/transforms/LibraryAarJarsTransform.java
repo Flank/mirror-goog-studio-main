@@ -122,6 +122,7 @@ public class LibraryAarJarsTransform extends LibraryBaseTransform {
         mergeInputsToLocation(
                 mainScope,
                 mainClassLocation,
+                false,
                 archivePath -> checkEntry(patterns, archivePath),
                 typedefRecipe != null ? new TypedefRemover().setTypedefFile(typedefRecipe) : null);
 
