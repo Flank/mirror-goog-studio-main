@@ -29,9 +29,7 @@ import org.junit.Test;
 public class GenerateSourcesOnlyTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(HelloWorldLibraryApp.forStablePlugin())
-                    .create();
+            GradleTestProject.builder().fromTestApp(HelloWorldLibraryApp.create()).create();
 
     @Test
     public void checkLibraryNotBuilt() throws Exception {

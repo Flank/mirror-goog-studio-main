@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableMap;
  * Simple test application with an Android library that prints "hello world!".
  */
 public class HelloWorldLibraryApp extends MultiModuleTestProject implements TestProject {
-    public static HelloWorldLibraryApp forStablePlugin() {
+    public static HelloWorldLibraryApp create() {
         return new HelloWorldLibraryApp();
     }
 
@@ -39,7 +39,7 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
                         "apply plugin: 'com.android.application'\n"
                                 + "\n"
                                 + "dependencies {\n"
-                                + "    api project(':lib')\n"
+                                + "    implementation project(':lib')\n"
                                 + "}\n"
                                 + "\n"
                                 + "android {\n"

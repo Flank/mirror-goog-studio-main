@@ -94,6 +94,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
@@ -700,6 +701,7 @@ public class ProcessAndroidResources extends IncrementalTask {
                             .getApkDatas()
                             .stream()
                             .map(ApkData::getFilterName)
+                            .filter(Objects::nonNull)
                             .collect(Collectors.toList());
             throw new RuntimeException(
                     String.format(
