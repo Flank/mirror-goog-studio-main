@@ -111,7 +111,7 @@ class BlacklistedDeps(val project: Project) {
         if (library.isProvided/* && stack.size == 1*/) {
             return
         }
-        library.requestedCoordinates
+
         val coordinates = library.resolvedCoordinates
 
         // This shouldn't be necessary according to the nullability annotations on this API,
