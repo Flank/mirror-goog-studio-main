@@ -47,6 +47,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.Set;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -372,6 +373,7 @@ public class SdkAutoDownloadTest {
     }
 
     @Test
+    @Ignore("https://issuetracker.google.com/issues/65237460")
     public void checkDependencies_androidRepository() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -397,6 +399,7 @@ public class SdkAutoDownloadTest {
     }
 
     @Test
+    @Ignore("https://issuetracker.google.com/issues/65237460")
     public void checkDependencies_googleRepository() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -424,6 +427,7 @@ public class SdkAutoDownloadTest {
     }
 
     @Test
+    @Ignore("https://issuetracker.google.com/issues/65237460")
     public void checkDependencies_individualRepository() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
