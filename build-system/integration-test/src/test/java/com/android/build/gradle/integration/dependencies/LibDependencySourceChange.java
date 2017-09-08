@@ -31,9 +31,7 @@ public class LibDependencySourceChange {
 
     @ClassRule
     public static GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(HelloWorldLibraryApp.forStablePlugin())
-                    .create();
+            GradleTestProject.builder().fromTestApp(HelloWorldLibraryApp.create()).create();
 
     @BeforeClass
     public static void setUp() throws Exception {

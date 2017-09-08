@@ -77,6 +77,7 @@ public abstract class ApkData implements ApkInfo, VariantOutput {
         return true;
     }
 
+    @Nullable
     public abstract String getFilterName();
 
     public abstract String getBaseName();
