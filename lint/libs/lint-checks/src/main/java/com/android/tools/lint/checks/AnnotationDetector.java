@@ -457,6 +457,11 @@ public class AnnotationDetector extends Detector implements UastScanner {
             }
 
             String typeName = type.getCanonicalText();
+            if (typeName.equals("error.NonExistentClass")) {
+                // Type not found. Not awesome.
+                // https://youtrack.jetbrains.com/issue/KT-20172
+                return;
+            }
             if (!typeName.equals(type1)
                     && (type2 == null || !typeName.equals(type2))) {
                 // Autoboxing? You can put @DrawableRes on a java.lang.Integer for example

@@ -35,6 +35,7 @@ import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.ULambdaExpression;
 import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.UReturnExpression;
 import org.jetbrains.uast.UastUtils;
 import org.jetbrains.uast.visitor.AbstractUastVisitor;
@@ -94,6 +95,13 @@ public class ToastDetector extends Detector implements UastScanner {
                 UMethod.class, UBlockExpression.class, ULambdaExpression.class);
 
         if (surroundingDeclaration == null) {
+            return;
+        }
+
+        UElement parent = call.getUastParent();
+        if (parent instanceof UMethod || parent instanceof UReferenceExpression &&
+                parent.getUastParent() instanceof UMethod) {
+            // Kotlin expression body
             return;
         }
 

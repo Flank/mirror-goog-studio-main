@@ -360,6 +360,7 @@ public class UElementVisitor {
         public boolean visitLambdaExpression(ULambdaExpression node) {
             // Have to go to PSI here; not available on ULambdaExpression yet
             // https://github.com/JetBrains/uast/issues/16
+            //    ULambdaExpression#getFunctionalInterfaceType
             PsiElement psi = node.getPsi();
             if (psi instanceof PsiLambdaExpression) {
                 PsiType type = ((PsiLambdaExpression) psi).getFunctionalInterfaceType();
