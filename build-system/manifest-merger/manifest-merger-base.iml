@@ -15,5 +15,6 @@
     <orderEntry type="module" module-name="testutils" scope="TEST" />
     <orderEntry type="module" module-name="common" />
     <orderEntry type="module" module-name="sdklib-base" />
+    <orderEntry type="library" scope="TEST" name="truth" level="project" />
   </component>
 </module>

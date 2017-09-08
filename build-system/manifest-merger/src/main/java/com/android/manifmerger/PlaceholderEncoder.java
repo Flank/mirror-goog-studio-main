@@ -21,6 +21,7 @@ import java.util.regex.Matcher;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -50,20 +51,37 @@ public class PlaceholderEncoder {
      * @param element the element to visit
      */
     private static void visit(@NonNull Element element) {
+        NamedNodeMap elementAttributes = element.getAttributes();
+        for (int i = 0; i < elementAttributes.getLength(); i++) {
+            Node attribute = elementAttributes.item(i);
+            handleAttribute((Attr) attribute);
+        }
         NodeList childNodes = element.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node childNode = childNodes.item(i);
             if (childNode instanceof Element) {
                 visit((Element) childNode);
             } else if (childNode instanceof Attr) {
-                Attr attr = (Attr) childNode;
-                Matcher matcher = PlaceholderHandler.PATTERN.matcher(attr.getValue());
-                if (matcher.matches()) {
-                    String encodedValue =
-                            "dollar_openBracket_" + matcher.group(2) + "_closeBracket";
-                    attr.setValue(encodedValue);
-                }
+                handleAttribute((Attr) childNode);
             }
+        }
+    }
+
+    /**
+     * Handles an XML attribute, by subsituting placeholders to an AAPT friendly encoding.
+     *
+     * @param attr attribute potentially containing a placeholder.
+     */
+    private static void handleAttribute(Attr attr) {
+        Matcher matcher = PlaceholderHandler.PATTERN.matcher(attr.getValue());
+        if (matcher.matches()) {
+            String encodedValue =
+                    matcher.group(1)
+                            + "dollar_openBracket_"
+                            + matcher.group(2)
+                            + "_closeBracket"
+                            + matcher.group(3);
+            attr.setValue(encodedValue);
         }
     }
 }
