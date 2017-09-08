@@ -87,86 +87,22 @@ public class MergingLogPersistUtil {
     private static final String END_OFFSETS = "endOffsets";
 
     private static File getMultiFile(File folder, String shard) {
-        return new File (new File(folder, "multi"), shard + DOT_JSON);
+        // Previously, these log files used to be kept under the "multi" directory, and we did not
+        // clean it at the start of a full build. Recently, we introduced a new format for these log
+        // files. Therefore, if the users switch between versions of the plugin that have different
+        // formats of the log files, the next build will fail to read the existing log files. (We
+        // tried to support a newer plugin version reading the old format, but we still cannot
+        // support an older plugin version reading the new format.) To work around this issue, we
+        // need to use a different directory to contain log files with the new format.
+        // Note that, with a recent change, we now also clean these log files at the start of a full
+        // build. Therefore, moving forward, we won't need to use a new directory again even if we
+        // introduce yet another new format.
+        return new File(new File(folder, "multi-v2"), shard + DOT_JSON);
     }
 
     private static File getSingleFile(File folder, String shard) {
         return new File (new File(folder, "single"), shard + DOT_JSON);
     }
-
-    /**
-     * Version 1 file format is now deprecated, but for backward compatibility, we support reading
-     * the old format.
-     *
-     * <p>File format example for values files: (all paths are absolute)
-     *
-     * <pre>[
-     *     {
-     *         "outputFile": "/path/build/intermediates/res/merged/f1/debug/values/values.xml",
-     *         "map": [
-     *             {
-     *                 "to": {
-     *                     "startLine": 2,
-     *                     "startColumn": 4,
-     *                     "startOffset": 55,
-     *                     "endColumn": 54,
-     *                     "endOffset": 105
-     *                 },
-     *                 "from": {
-     *                     "file": "/path/src/f1/res/values/strings.xml",
-     *                     "position": {
-     *                         "startLine": 2,
-     *                         "startColumn": 4,
-     *                         "startOffset": 55,
-     *                         "endColumn": 54,
-     *                         "endOffset": 105
-     *                     }
-     *                 }
-     *             },
-     *             ...
-     *         ]
-     *     },
-     *     ...
-     * ]</pre>
-     *
-     * There should not be multiple object in the outer list for the same outputFile.
-     *
-     * <p>This format is now obsolete and has been replaced with version 2. we still support loading
-     * old formatted files for backward compatibility.
-     */
-    static void saveToMultiFile(
-            @NonNull File folder,
-            @NonNull String shard,
-            @NonNull Map<SourceFile, Map<SourcePosition, SourceFilePosition>> map)
-            throws IOException {
-        File file = getMultiFile(folder, shard);
-        file.getParentFile().mkdir();
-        JsonWriter out = new JsonWriter(Files.newWriter(file, Charsets.UTF_8));
-        try {
-            out.setIndent(INDENT_STRING);
-            out.beginArray();
-            for (Map.Entry<SourceFile, Map<SourcePosition, SourceFilePosition>> entry : map.entrySet()) {
-                out.beginObject().name(KEY_OUTPUT_FILE);
-                mSourceFileJsonTypeAdapter.write(out, entry.getKey());
-                out.name(KEY_MAP);
-                out.beginArray();
-                for (Map.Entry<SourcePosition, SourceFilePosition> innerEntry : entry.getValue().entrySet()) {
-                    out.beginObject();
-                    out.name(KEY_TO);
-                    mSourcePositionJsonTypeAdapter.write(out, innerEntry.getKey());
-                    out.name(KEY_FROM);
-                    mSourceFilePositionJsonTypeAdapter.write(out, innerEntry.getValue());
-                    out.endObject();
-                }
-                out.endArray();
-                out.endObject();
-            }
-            out.endArray();
-        } finally {
-            out.close();
-        }
-    }
-
 
     /**
      * Version 2 format of the merger-log files. The lines, columns et offsets are now collections
@@ -451,9 +387,6 @@ public class MergingLogPersistUtil {
             return map;
         }
         try {
-            if (reader.peek() == JsonToken.BEGIN_ARRAY) {
-                return loadFromMultiFile(folder, shard);
-            }
             reader.beginObject();
             String name = reader.nextName();
             if (!name.equals("logs")) {
@@ -569,77 +502,6 @@ public class MergingLogPersistUtil {
                 positions.containsKey(END_OFFSETS)
                         ? positions.get(END_OFFSETS).get(index)
                         : positions.get(START_OFFSETS).get(index));
-    }
-
-    @NonNull
-    static Map<SourceFile, Map<SourcePosition, SourceFilePosition>> loadFromMultiFile(
-            @NonNull File folder,
-            @NonNull String shard) {
-        Map<SourceFile, Map<SourcePosition, SourceFilePosition>> map = Maps.newConcurrentMap();
-        JsonReader reader;
-        File file = getMultiFile(folder, shard);
-        if (!file.exists()) {
-            return map;
-        }
-        try {
-            reader = new JsonReader(Files.newReader(file, Charsets.UTF_8));
-        } catch (FileNotFoundException e) {
-            // Shouldn't happen unless it disappears under us.
-            return map;
-        }
-        try {
-            reader.beginArray();
-            while (reader.peek() != JsonToken.END_ARRAY) {
-                reader.beginObject();
-                SourceFile toFile = SourceFile.UNKNOWN;
-                Map<SourcePosition, SourceFilePosition> innerMap = Maps.newLinkedHashMap();
-                while (reader.peek() != JsonToken.END_OBJECT) {
-                    final String name = reader.nextName();
-                    if (name.equals(KEY_OUTPUT_FILE)) {
-                        toFile = mSourceFileJsonTypeAdapter.read(reader);
-                    } else if (name.equals(KEY_MAP)) {
-                        reader.beginArray();
-                        while (reader.peek() != JsonToken.END_ARRAY) {
-                            reader.beginObject();
-                            SourceFilePosition from = null;
-                            SourcePosition to = null;
-                            while (reader.peek() != JsonToken.END_OBJECT) {
-                                final String innerName = reader.nextName();
-                                if (innerName.equals(KEY_FROM)) {
-                                    from = mSourceFilePositionJsonTypeAdapter.read(reader);
-                                } else if (innerName.equals(KEY_TO)) {
-                                    to = mSourcePositionJsonTypeAdapter.read(reader);
-                                } else {
-                                    throw new IOException(
-                                            String.format("Unexpected property: %s", innerName));
-                                }
-                            }
-                            if (from == null || to == null) {
-                                throw new IOException("Each record must contain both from and to.");
-                            }
-                            innerMap.put(to, from);
-                            reader.endObject();
-                        }
-                        reader.endArray();
-                    } else {
-                        throw new IOException(String.format("Unexpected property: %s", name));
-                    }
-                }
-                map.put(toFile, innerMap);
-                reader.endObject();
-            }
-            reader.endArray();
-            return map;
-        } catch (IOException e) {
-            // TODO: trigger a non-incremental merge if this happens.
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                reader.close();
-            } catch (Throwable e2) {
-                // well, we tried.
-            }
-        }
     }
 
     /**
