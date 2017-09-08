@@ -120,14 +120,13 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
       std::stringstream samples_per_sec;
       samples_per_sec << one_sec_in_us / sampling_interval_us;
 
-      const char *app_pkg_name =
-          ProcessManager::GetPackageNameFromAppName(app_name).c_str();
-      const char *simpleperf_bin =
-          (CurrentProcess::dir() + kSimpleperfExecutable).c_str();
-      execlp(simpleperf_bin, simpleperf_bin, "record", "--app", app_pkg_name,
-             "--call-graph", "dwarf", "-o", entry.raw_trace_path.c_str(), "-p",
-             string_pid.str().c_str(), "-f", samples_per_sec.str().c_str(),
-             "--exit-with-parent", NULL);
+      string app_pkg_name = ProcessManager::GetPackageNameFromAppName(app_name);
+      string simpleperf_bin = (CurrentProcess::dir() + kSimpleperfExecutable);
+
+      execlp(simpleperf_bin.c_str(), simpleperf_bin.c_str(), "record", "--app",
+             app_pkg_name.c_str(), "--call-graph", "dwarf", "-o",
+             entry.raw_trace_path.c_str(), "-p", string_pid.str().c_str(), "-f",
+             samples_per_sec.str().c_str(), "--exit-with-parent", NULL);
       exit(EXIT_FAILURE);
       break;  // Useless break but makes compiler happy.
     }
