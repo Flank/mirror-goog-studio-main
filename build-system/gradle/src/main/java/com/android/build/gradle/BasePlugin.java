@@ -73,6 +73,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Version;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
@@ -280,12 +281,30 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
     }
 
     private void configureProject() {
+        final Gradle gradle = project.getGradle();
+
         extraModelInfo = new ExtraModelInfo(projectOptions, project.getLogger());
         checkGradleVersion();
 
         sdkHandler = new SdkHandler(project, getLogger());
 
-        if (!project.getGradle().getStartParameter().isOffline()
+        if (gradle.getParent() != null || !gradle.getIncludedBuilds().isEmpty()) {
+            String version = gradle.getGradleVersion();
+            if (version.startsWith("4.1") || version.startsWith("4.2")) {
+                // Putting a warning because it might actually work if the included build is using
+                // plugin 2.3 or just java plugins.
+                extraModelInfo.handleSyncWarning(
+                        null,
+                        SyncIssue.TYPE_GENERIC,
+                        "A composite "
+                                + project.getName()
+                                + " setup has been detected.\n"
+                                + "Composite builds are not fully supported and are likely to break when using Gradle 4.1 or 4.2.\n"
+                                + "Support with later versions of Gradle is unknown.");
+            }
+        }
+
+        if (!gradle.getStartParameter().isOffline()
                 && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD)
                 && !projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE)) {
             SdkLibData sdkLibData = SdkLibData.download(getDownloader(), getSettingsController());
@@ -318,52 +337,49 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         // after the current project is done).
         // This is will be called for each (android) projects though, so this should support
         // being called 2+ times.
-        project.getGradle()
-                .addBuildListener(
-                        new BuildListener() {
-                            @Override
-                            public void buildStarted(Gradle gradle) {
-                                TaskInputHelper.enableBypass();
-                            }
+        gradle.addBuildListener(
+                new BuildListener() {
+                    @Override
+                    public void buildStarted(Gradle gradle) {
+                        TaskInputHelper.enableBypass();
+                    }
 
-                            @Override
-                            public void settingsEvaluated(Settings settings) {}
+                    @Override
+                    public void settingsEvaluated(Settings settings) {}
 
-                            @Override
-                            public void projectsLoaded(Gradle gradle) {}
+                    @Override
+                    public void projectsLoaded(Gradle gradle) {}
 
-                            @Override
-                            public void projectsEvaluated(Gradle gradle) {}
+                    @Override
+                    public void projectsEvaluated(Gradle gradle) {}
 
-                            @Override
-                            public void buildFinished(BuildResult buildResult) {
-                                // Do not run buildFinished for included project in composite build.
-                                if (buildResult.getGradle().getParent() != null) {
-                                    return;
-                                }
-                                ExecutorSingleton.shutdown();
-                                sdkHandler.unload();
-                                threadRecorder.record(
-                                        ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
-                                        project.getPath(),
-                                        null,
-                                        () -> {
-                                            PreDexCache.getCache()
-                                                    .clear(
-                                                            FileUtils.join(
-                                                                    project.getRootProject()
-                                                                            .getBuildDir(),
-                                                                    FD_INTERMEDIATES,
-                                                                    "dex-cache",
-                                                                    "cache.xml"),
-                                                            getLogger());
-                                            Main.clearInternTables();
-                                        });
-                            }
-                        });
+                    @Override
+                    public void buildFinished(BuildResult buildResult) {
+                        // Do not run buildFinished for included project in composite build.
+                        if (buildResult.getGradle().getParent() != null) {
+                            return;
+                        }
+                        ExecutorSingleton.shutdown();
+                        sdkHandler.unload();
+                        threadRecorder.record(
+                                ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
+                                project.getPath(),
+                                null,
+                                () -> {
+                                    PreDexCache.getCache()
+                                            .clear(
+                                                    FileUtils.join(
+                                                            project.getRootProject().getBuildDir(),
+                                                            FD_INTERMEDIATES,
+                                                            "dex-cache",
+                                                            "cache.xml"),
+                                                    getLogger());
+                                    Main.clearInternTables();
+                                });
+                    }
+                });
 
-        project.getGradle()
-                .getTaskGraph()
+        gradle.getTaskGraph()
                 .addTaskExecutionGraphListener(
                         taskGraph -> {
                             TaskInputHelper.disableBypass();
