@@ -227,8 +227,8 @@ public class ApiDetector extends ResourceXmlDetector
             "the value is available even when running on older devices. In some " +
             "cases that's fine, and in other cases it can result in a runtime " +
             "crash or incorrect behavior. It depends on the context, so consider " +
-            "the code carefully and device whether it's safe and can be suppressed " +
-            "or whether the code needs tbe guarded.\n" +
+            "the code carefully and decide whether it's safe and can be suppressed " +
+            "or whether the code needs to be guarded.\n" +
             "\n" +
             "If you really want to use this API and don't need to support older devices just " +
             "set the `minSdkVersion` in your `build.gradle` or `AndroidManifest.xml` files." +
