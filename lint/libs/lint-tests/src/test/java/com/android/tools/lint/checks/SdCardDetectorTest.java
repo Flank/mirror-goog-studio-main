@@ -338,6 +338,10 @@ public class SdCardDetectorTest extends AbstractCheckTest {
     }
 
     public void testKotlin() throws Exception {
+        if (skipKotlinTests()) {
+            return;
+        }
+
         //noinspection all // Sample code
         lint().files(
                 kotlin(""
@@ -347,47 +351,11 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "    val s: String = \"/sdcard/mydir\"\n"
                         + "}\n"),
                 gradle(""))
-                .client(new com.android.tools.lint.checks.infrastructure.TestLintClient() {
-                    @Nullable
-                    @Override
-                    public UastParser getUastParser(@Nullable Project project) {
-                        // We don't yet have a Kotlin UAST plugin as part of the
-                        // lint distribution (the plan is for the Kotlin UAST plugin
-                        // to be supplied by the IDE Kotlin plugin and the Gradle Kotlin
-                        // plugin). We may end up packaging it with the lint tests to
-                        // help with lint testing but for now, just hack around this
-                        // to test the basic Kotlin lint driver plumbing by supplying
-                        // a UAST tree that is created from the equivalent Java instead:
-                        com.intellij.openapi.project.Project ideaProject = getIdeaProject();
-                        assertThat(ideaProject).isNotNull();
-                        return new DefaultUastParser(project, ideaProject) {
-                            @Nullable
-                            @Override
-                            public UFile parse(@NonNull JavaContext context) {
-                                // Present equivalent UAST (based on Java not Kotlin)
-                                assert context.file.getName().startsWith("MyTest.");
-                                String source = ""
-                                        + "package test.pkg;\n"
-                                        + "\n"
-                                        + "public class MyTest {\n"
-                                        + "   String s = \"/sdcard/mydir\";\n"
-                                        + "}\n";
-                                PsiFile file = PsiFileFactory.getInstance(getIdeaProject())
-                                        .createFileFromText(JavaLanguage.INSTANCE, source);
-                                assertThat(file).isNotNull();
-                                UastContext uastContext = getUastContext();
-                                assertThat(uastContext).isNotNull();
-                                return (UFile) uastContext.convertElementWithParent(file,
-                                        UFile.class);
-                            }
-                        };
-                    }
-                })
                 .run()
                 .expect(""
                         + "src/main/kotlin/test/pkg/MyTest.kt:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
                         + "    val s: String = \"/sdcard/mydir\"\n"
-                        + "                     ^\n"
+                        + "                     ~~~~~~~~~~~~~\n"
                         + "0 errors, 1 warnings\n");
     }
 

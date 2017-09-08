@@ -1360,6 +1360,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         public TestFile() {
         }
 
+        // This source file is indented: dedent the contents before creating the file
+        public TestFile indented() {
+            contents = kotlin.text.StringsKt.trimIndent(contents);
+            return this;
+        }
+
         @Override
         public TestFile withSource(@NonNull String source) {
             super.withSource(source);
@@ -1395,5 +1401,10 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
             super.within(root);
             return this;
         }
+    }
+
+    protected boolean skipKotlinTests() {
+        System.out.println("Warning: Skipping Kotlin unit tests for now");
+        return true;
     }
 }

@@ -23,6 +23,7 @@ kotlin_library(
         "//tools/base/third_party:com.intellij_annotations",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/third_party:org.ow2.asm_asm",

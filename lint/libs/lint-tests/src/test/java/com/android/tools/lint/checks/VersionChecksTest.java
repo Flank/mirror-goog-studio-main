@@ -1999,6 +1999,84 @@ public class VersionChecksTest extends AbstractCheckTest {
                         + "1 errors, 1 warnings\n");
     }
 
+    public void testNestedChecksKotlin() {
+        if (skipKotlinTests()) {
+            return;
+        }
+
+        // Kotlin version of testNestedChecks. There are several important changes here:
+        // The version check utility method is now defined as an expression body, so there
+        // is no explicit "return" keyword (which the code used to look for).
+        // Second, we're accessing the version check using property syntax, not a call, which
+        // also required changes to the AST analysis.
+
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(11),
+                kotlin("" +
+                        "package p1.p2\n" +
+                        "\n" +
+                        "import android.os.Build\n" +
+                        "import android.widget.GridLayout\n" +
+                        "\n" +
+                        "class NestedChecks {\n" +
+                        "    fun testEarlyExit1() {\n" +
+                        "        // https://code.google.com/p/android/issues/detail?id=37728\n" +
+                        "        if (Build.VERSION.SDK_INT < 14) return\n" +
+                        "\n" +
+                        "        GridLayout(null) // OK\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    fun testEarlyExit2() {\n" +
+                        "        if (!Utils.isIcs) {\n" +
+                        "            return\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        GridLayout(null) // OK\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    fun testEarlyExit3(nested: Boolean) {\n" +
+                        "        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.ICE_CREAM_SANDWICH) {\n" +
+                        "            return\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        if (nested) {\n" +
+                        "            GridLayout(null) // OK\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    fun testEarlyExit4(nested: Boolean) {\n" +
+                        "        if (nested) {\n" +
+                        "            if (Utils.isIcs) {\n" +
+                        "                return\n" +
+                        "            }\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        GridLayout(null) // ERROR\n" +
+                        "\n" +
+                        "        if (Utils.isIcs) { // too late\n" +
+                        "\n" +
+                        "            return\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    private object Utils {\n" +
+                        "        val isIcs: Boolean\n" +
+                        "            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH\n" +
+                        "        val isGingerbread: Boolean\n" +
+                        "            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD\n" +
+                        "    }\n" +
+                        "}"))
+                .run().expect("" +
+                "src/p1/p2/NestedChecks.kt:39: Error: Call requires API level 14 (current min is 11): new android.widget.GridLayout [NewApi]\n" +
+                "        GridLayout(null) // ERROR\n" +
+                "        ~~~~~~~~~~~~~~~~\n" +
+                "src/p1/p2/NestedChecks.kt:51: Warning: Unnecessary; SDK_INT is always >= 11 [ObsoleteSdkInt]\n" +
+                "            get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.GINGERBREAD\n" +
+                "                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "1 errors, 1 warnings\n");
+    }
+
     @Override
     protected Detector getDetector() {
         return new ApiDetector();

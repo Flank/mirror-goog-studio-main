@@ -368,6 +368,11 @@ public class VersionChecks {
                     ((UQualifiedReferenceExpression)element).getSelector() instanceof UCallExpression) {
                 UCallExpression call = (UCallExpression) ((UQualifiedReferenceExpression)element).getSelector();
                 return isValidVersionCall(api, and, call);
+            } else if (resolved instanceof PsiMethod &&
+                    element instanceof UQualifiedReferenceExpression &&
+                    ((UQualifiedReferenceExpression)element).getReceiver() instanceof UReferenceExpression) {
+                // Method call via Kotlin property syntax
+                return isValidVersionCall(api, and, element, (PsiMethod) resolved);
             }
         } else if (element instanceof UUnaryExpression) {
             UUnaryExpression prefixExpression = (UUnaryExpression) element;
@@ -389,6 +394,12 @@ public class VersionChecks {
         if (method == null) {
             return null;
         }
+        return isValidVersionCall(api, and, call, method);
+    }
+
+    @Nullable
+    private static Boolean isValidVersionCall(int api, boolean and,
+            @NonNull UElement call, @NonNull PsiMethod method) {
         String name = method.getName();
         if (name.startsWith("isAtLeast")) {
             PsiClass containingClass = method.getContainingClass();
@@ -419,47 +430,55 @@ public class VersionChecks {
 
             if (expressions.size() == 1) {
                 UExpression statement = expressions.get(0);
+                UExpression returnValue = null;
                 if (statement instanceof UReturnExpression) {
                     UReturnExpression returnStatement = (UReturnExpression) statement;
-                    UExpression returnValue = returnStatement.getReturnExpression();
-                    if (returnValue != null) {
-                        List<UExpression> arguments = call.getValueArguments();
-                        if (arguments.isEmpty()) {
-                            if (returnValue instanceof UPolyadicExpression
-                                    || returnValue instanceof UCallExpression
-                                    || returnValue instanceof UQualifiedReferenceExpression) {
-                                Boolean isConditional = isVersionCheckConditional(api,
-                                        returnValue,
-                                        and, null, null);
-                                if (isConditional != null) {
-                                    return isConditional;
-                                }
+                    returnValue = returnStatement.getReturnExpression();
+                } else if (statement != null) {
+                    // Kotlin: may not have an explicit return statement
+                    returnValue = statement;
+                }
+                if (returnValue != null) {
+                    List<UExpression> arguments =
+                            call instanceof UCallExpression ?
+                                    ((UCallExpression)call).getValueArguments() :
+                                    // Property syntax
+                                    Collections.emptyList();
+                    if (arguments.isEmpty()) {
+                        if (returnValue instanceof UPolyadicExpression
+                                || returnValue instanceof UCallExpression
+                                || returnValue instanceof UQualifiedReferenceExpression) {
+                            Boolean isConditional = isVersionCheckConditional(api,
+                                    returnValue,
+                                    and, null, null);
+                            if (isConditional != null) {
+                                return isConditional;
                             }
-                        } else if (arguments.size() == 1) {
-                            // See if we're passing in a value to the version utility method
-                            ApiLevelLookup lookup = arg -> {
-                                if (arg instanceof UReferenceExpression) {
-                                    PsiElement resolved = ((UReferenceExpression) arg)
-                                            .resolve();
-                                    if (resolved instanceof PsiParameter) {
-                                        PsiParameter parameter = (PsiParameter) resolved;
-                                        PsiParameterList parameterList = PsiTreeUtil.getParentOfType(resolved,
-                                                        PsiParameterList.class);
-                                        if (parameterList != null) {
-                                            int index = parameterList.getParameterIndex(parameter);
-                                            if (index != -1 && index < arguments.size()) {
-                                                return getApiLevel(arguments.get(index), null);
-                                            }
+                        }
+                    } else if (arguments.size() == 1) {
+                        // See if we're passing in a value to the version utility method
+                        ApiLevelLookup lookup = arg -> {
+                            if (arg instanceof UReferenceExpression) {
+                                PsiElement resolved = ((UReferenceExpression) arg)
+                                        .resolve();
+                                if (resolved instanceof PsiParameter) {
+                                    PsiParameter parameter = (PsiParameter) resolved;
+                                    PsiParameterList parameterList = PsiTreeUtil.getParentOfType(resolved,
+                                                    PsiParameterList.class);
+                                    if (parameterList != null) {
+                                        int index = parameterList.getParameterIndex(parameter);
+                                        if (index != -1 && index < arguments.size()) {
+                                            return getApiLevel(arguments.get(index), null);
                                         }
                                     }
                                 }
-                                return -1;
-                            };
-                            Boolean ok = isVersionCheckConditional(api, returnValue,
-                                    and, null, lookup);
-                            if (ok != null) {
-                                return ok;
                             }
+                            return -1;
+                        };
+                        Boolean ok = isVersionCheckConditional(api, returnValue,
+                                and, null, lookup);
+                        if (ok != null) {
+                            return ok;
                         }
                     }
                 }
