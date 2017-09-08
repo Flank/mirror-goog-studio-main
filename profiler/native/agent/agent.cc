@@ -15,6 +15,7 @@
  */
 #include "agent.h"
 
+#include <limits.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <cassert>
@@ -23,6 +24,7 @@
 #include <string>
 
 #include <grpc++/support/channel_arguments.h>
+#include <grpc/support/log.h>
 #include "utils/device_info.h"
 #include "utils/log.h"
 #include "utils/socket_utils.h"
@@ -70,6 +72,10 @@ Agent::Agent(const Config& config)
     // communicates to perfd via a fixed port.
     ConnectToPerfd(config.GetAgentConfig().service_address());
   }
+
+#ifdef NDEBUG
+  gpr_set_log_verbosity(static_cast<gpr_log_severity>(SHRT_MAX));
+#endif
 
   heartbeat_thread_ = std::thread(&Agent::RunHeartbeatThread, this);
 }
