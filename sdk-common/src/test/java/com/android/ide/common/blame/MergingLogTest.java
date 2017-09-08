@@ -19,12 +19,10 @@ package com.android.ide.common.blame;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.base.Charsets;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
@@ -118,82 +116,6 @@ public class MergingLogTest {
     }
 
     @Test
-    public void testVersionOneLoading() throws IOException {
-        String versionOneLog =
-                "[    {\n"
-                        + "        \"outputFile\": \"merged/values/values.xml\",\n"
-                        + "        \"map\": [\n"
-                        + "            {\n"
-                        + "                \"to\": {\n"
-                        + "                    \"startLine\": 1,\n"
-                        + "                    \"startColumn\": 2,\n"
-                        + "                    \"startOffset\": 3,\n"
-                        + "                    \"endLine\": 7,\n"
-                        + "                    \"endColumn\": 1,\n"
-                        + "                    \"endOffset\": 120\n"
-                        + "                },\n"
-                        + "                \"from\": {\n"
-                        + "                    \"file\": \"exploded/a/values/values.xml\",\n"
-                        + "                    \"position\": {\n"
-                        + "                        \"startLine\": 7,\n"
-                        + "                        \"startColumn\": 8,\n"
-                        + "                        \"startOffset\": 20\n"
-                        + "                    }\n"
-                        + "                }\n"
-                        + "            },\n"
-                        + "            {\n"
-                        + "                \"to\": {\n"
-                        + "                    \"startLine\": 4,\n"
-                        + "                    \"startColumn\": 1,\n"
-                        + "                    \"startOffset\": 34,\n"
-                        + "                    \"endLine\": 6,\n"
-                        + "                    \"endColumn\": 20,\n"
-                        + "                    \"endOffset\": 100\n"
-                        + "                },\n"
-                        + "                \"from\": {\n"
-                        + "                    \"file\": \"exploded/b/values/values.xml\",\n"
-                        + "                    \"position\": {\n"
-                        + "                        \"startLine\": 2,\n"
-                        + "                        \"startColumn\": 3,\n"
-                        + "                        \"startOffset\": 14\n"
-                        + "                    }\n"
-                        + "                }\n"
-                        + "            }\n"
-                        + "        ]\n"
-                        + "    }\n"
-                        + "]";
-
-        File multi = mTemporaryFolder.newFolder("multi");
-        Files.write(versionOneLog, new File(multi, "values.json"), Charsets.UTF_8);
-
-        Map<SourceFile, Map<SourcePosition, SourceFilePosition>> values =
-                MergingLogPersistUtil.loadFromMultiFileVersion2(
-                        mTemporaryFolder.getRoot(), "values");
-
-        assertThat(values).hasSize(1);
-        Map.Entry<SourceFile, Map<SourcePosition, SourceFilePosition>> onlyElement =
-                Iterators.getOnlyElement(values.entrySet().iterator());
-        assertThat(onlyElement.getKey().getSourceFile().getPath())
-                .contains("merged/values/values.xml");
-        Map<SourcePosition, SourceFilePosition> mappings = onlyElement.getValue();
-        assertThat(mappings).hasSize(2);
-        Iterator<Map.Entry<SourcePosition, SourceFilePosition>> iterator =
-                mappings.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<SourcePosition, SourceFilePosition> mapping = iterator.next();
-            if (mapping.getKey().getStartLine() == 1) {
-                assertThat(mapping.getValue().getFile().getSourceFile().getPath())
-                        .contains("exploded/a/values/values.xml");
-                assertThat(mapping.getValue().getPosition().getStartLine()).isEqualTo(7);
-            } else if (mapping.getKey().getStartLine() == 4) {
-                assertThat(mapping.getValue().getFile().getSourceFile().getPath())
-                        .contains("exploded/b/values/values.xml");
-                assertThat(mapping.getValue().getPosition().getStartLine()).isEqualTo(2);
-            }
-        }
-    }
-
-    @Test
     public void testMinimalPersistence() throws IOException {
         SourcePosition sourcePosition1 = new SourcePosition(7, 8, 20);
         File sourceFile1 = absoluteFile("exploded/a/values/values.xml");
@@ -216,7 +138,7 @@ public class MergingLogTest {
 
         mergingLog.write();
         assertThat(tempDir.listFiles()).isNotEmpty();
-        File expectedLogFile = new File(new File(tempDir, "multi"), "values.json");
+        File expectedLogFile = new File(new File(tempDir, "multi-v2"), "values.json");
         assertThat(expectedLogFile.exists()).isTrue();
         String log = Files.asCharSource(expectedLogFile, Charsets.UTF_8).read();
         assertThat(log).doesNotContain("\"to\"");
