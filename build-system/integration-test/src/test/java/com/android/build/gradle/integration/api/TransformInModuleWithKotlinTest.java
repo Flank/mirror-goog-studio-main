@@ -25,7 +25,9 @@ import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
+import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
+import com.google.common.io.Files;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -41,6 +43,12 @@ public class TransformInModuleWithKotlinTest {
 
     @Test
     public void testTransform() throws IOException, InterruptedException, ProcessException {
+        // enable coverage in library as regression test for b/65345148
+        Files.append(
+                "\nandroid.buildTypes.debug.testCoverageEnabled true\n",
+                project.getSubproject("lib").getBuildFile(),
+                Charsets.UTF_8);
+
         project.execute("clean", "assembleDebug");
 
         Map<String, ProjectBuildOutput> multi = project.model().getMulti(ProjectBuildOutput.class);

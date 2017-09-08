@@ -102,6 +102,34 @@ public class LibraryIntermediateJarsTransformTest {
         //assertThat(resZip).doesNotContain("com/example/");
     }
 
+    @Test
+    public void testMergingInputsJustClasses()
+            throws TransformException, InterruptedException, IOException {
+        // get a simple input
+        TransformInvocation invocation =
+                invocationBuilder()
+                        .setIncremental(false)
+                        .addReferenceInput(
+                                singleJarBuilder(getInputFile("test-jar1.jar"))
+                                        .setContentTypes(CLASSES)
+                                        .setScopes(PROJECT)
+                                        .build())
+                        .addReferenceInput(
+                                singleJarBuilder(getInputFile("test-jar2.jar"))
+                                        .setContentTypes(CLASSES)
+                                        .setScopes(PROJECT)
+                                        .build())
+                        .build();
+
+        transform.transform(invocation);
+
+        // check the output
+        final Zip classZip = new Zip(mainClassLocation);
+
+        // META-INF files in classZip
+        assertThat(classZip).contains("META-INF/MANIFEST.MF");
+    }
+
     private File getInputFile(@NonNull String name) throws IOException {
         InputStream stream = this.getClass().getResourceAsStream(name);
         final Path inputPath = Files.createTempFile(null, null);
