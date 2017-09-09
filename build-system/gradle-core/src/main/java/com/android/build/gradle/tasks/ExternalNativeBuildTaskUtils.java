@@ -61,7 +61,6 @@ import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 
 /**
  * Shared utility methods for dealing with external native build tasks.
@@ -69,10 +68,6 @@ import java.util.function.Predicate;
 public class ExternalNativeBuildTaskUtils {
     // Forked CMake version is the one we get when we execute "cmake --version" commond.
     public static final String CUSTOM_FORK_CMAKE_VERSION = "3.6.0-rc2";
-    // Forked CMake revision is the one specified within package.xml
-    private static final String DEFAULT_FORKED_CMAKE_REVISION = "3.6.4111459";
-    // Default CMake revision to download.
-    private static final String DEFAULT_CMAKE_REVISION = DEFAULT_FORKED_CMAKE_REVISION;
 
     /**
      * Utility function that takes an ABI string and returns the corresponding output folder. Output
@@ -456,19 +451,15 @@ public class ExternalNativeBuildTaskUtils {
     private static File getCmakeFolderFromSdkPackage(@NonNull SdkHandler sdkHandler) {
         ProgressIndicator progress = new ConsoleProgressIndicator();
         AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkHandler.getSdkFolder());
-        Predicate<Revision> requiredRevision =
-                (revision) -> revision.equals(Revision.parseRevision(DEFAULT_CMAKE_REVISION));
         LocalPackage cmakePackage =
-                sdk.getLatestLocalPackageForPrefix(
-                        SdkConstants.FD_CMAKE, requiredRevision, true, progress);
+                sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, null, true, progress);
         if (cmakePackage != null) {
             return cmakePackage.getLocation();
         }
         // If CMake package is not found, we install it and try to find it.
         sdkHandler.installCMake();
         cmakePackage =
-                sdk.getLatestLocalPackageForPrefix(
-                        SdkConstants.FD_CMAKE, requiredRevision, true, progress);
+                sdk.getLatestLocalPackageForPrefix(SdkConstants.FD_CMAKE, null, true, progress);
         if (cmakePackage != null) {
             return cmakePackage.getLocation();
         }
