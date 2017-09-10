@@ -15,6 +15,10 @@
  */
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.AnnotationDetector.FLOAT_RANGE_ANNOTATION;
+import static com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION;
+import static com.android.tools.lint.checks.AnnotationDetector.SIZE_ANNOTATION;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.intellij.psi.PsiAnnotation;
@@ -32,11 +36,11 @@ public abstract class RangeConstraint {
             return null;
         }
         switch (qualifiedName) {
-            case SupportAnnotationDetector.INT_RANGE_ANNOTATION:
+            case INT_RANGE_ANNOTATION:
                 return IntRangeConstraint.create(annotation);
-            case SupportAnnotationDetector.FLOAT_RANGE_ANNOTATION:
+            case FLOAT_RANGE_ANNOTATION:
                 return FloatRangeConstraint.create(annotation);
-            case SupportAnnotationDetector.SIZE_ANNOTATION:
+            case SIZE_ANNOTATION:
                 return SizeConstraint.create(annotation);
             default:
                 return null;

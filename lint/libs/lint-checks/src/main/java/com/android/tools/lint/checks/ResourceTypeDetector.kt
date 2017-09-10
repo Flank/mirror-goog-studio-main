@@ -1,0 +1,492 @@
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.lint.checks
+
+import com.android.resources.ResourceType
+import com.android.resources.ResourceType.COLOR
+import com.android.resources.ResourceType.DRAWABLE
+import com.android.resources.ResourceType.MIPMAP
+import com.android.resources.ResourceType.STYLEABLE
+import com.android.tools.lint.checks.AnnotationDetector.HALF_FLOAT_ANNOTATION
+import com.android.tools.lint.detector.api.Category
+import com.android.tools.lint.detector.api.ConstantEvaluator
+import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Implementation
+import com.android.tools.lint.detector.api.Issue
+import com.android.tools.lint.detector.api.JavaContext
+import com.android.tools.lint.detector.api.ResourceEvaluator
+import com.android.tools.lint.detector.api.ResourceEvaluator.ANIMATOR_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.ANIM_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.ANY_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.ARRAY_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.ATTR_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.BOOL_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.DIMEN_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.DRAWABLE_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.FONT_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.FRACTION_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.ID_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.INTEGER_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.INTERPOLATOR_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.LAYOUT_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.MENU_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.NAVIGATION_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.PLURALS_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.PX_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.RAW_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.STRING_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.STYLEABLE_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.STYLE_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.TRANSITION_RES_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.XML_RES_ANNOTATION
+import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.UastLintUtils
+import com.google.common.base.Joiner
+import com.google.common.collect.Sets
+import com.intellij.psi.PsiArrayType
+import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiVariable
+import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UBinaryExpressionWithType
+import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UIfExpression
+import org.jetbrains.uast.UParenthesizedExpression
+import org.jetbrains.uast.UQualifiedReferenceExpression
+import org.jetbrains.uast.UReferenceExpression
+import org.jetbrains.uast.getParentOfType
+import org.jetbrains.uast.util.isMethodCall
+import org.jetbrains.uast.util.isNewArrayWithDimensions
+import org.jetbrains.uast.util.isNewArrayWithInitializer
+import org.jetbrains.uast.util.isTypeCast
+import java.util.EnumSet
+import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import org.jetbrains.uast.UastBinaryOperator
+import org.jetbrains.uast.UBinaryExpression
+import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_MARKER_TYPE
+import com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_MARKER_TYPE
+import com.intellij.psi.PsiType
+
+class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner {
+    override fun applicableAnnotations(): List<String> = listOf(
+            COLOR_INT_ANNOTATION,
+            DIMENSION_ANNOTATION,
+            PX_ANNOTATION,
+            HALF_FLOAT_ANNOTATION,
+
+            ANIMATOR_RES_ANNOTATION,
+            ANIM_RES_ANNOTATION,
+            ANY_RES_ANNOTATION,
+            ARRAY_RES_ANNOTATION,
+            ATTR_RES_ANNOTATION,
+            BOOL_RES_ANNOTATION,
+            COLOR_RES_ANNOTATION,
+            FONT_RES_ANNOTATION,
+            DIMEN_RES_ANNOTATION,
+            DRAWABLE_RES_ANNOTATION,
+            FRACTION_RES_ANNOTATION,
+            ID_RES_ANNOTATION,
+            INTEGER_RES_ANNOTATION,
+            INTERPOLATOR_RES_ANNOTATION,
+            LAYOUT_RES_ANNOTATION,
+            MENU_RES_ANNOTATION,
+            NAVIGATION_RES_ANNOTATION,
+            PLURALS_RES_ANNOTATION,
+            RAW_RES_ANNOTATION,
+            STRING_RES_ANNOTATION,
+            STYLEABLE_RES_ANNOTATION,
+            STYLE_RES_ANNOTATION,
+            TRANSITION_RES_ANNOTATION,
+            XML_RES_ANNOTATION
+    )
+
+    override fun visitAnnotationUsage(
+            context: JavaContext,
+            argument: UElement,
+            annotation: UAnnotation,
+            qualifiedName: String,
+            method: PsiMethod?,
+            annotations: MutableList<UAnnotation>,
+            allMemberAnnotations: MutableList<UAnnotation>,
+            allClassAnnotations: MutableList<UAnnotation>,
+            allPackageAnnotations: MutableList<UAnnotation>) {
+        when (qualifiedName) {
+            COLOR_INT_ANNOTATION -> checkColor(context, argument)
+            HALF_FLOAT_ANNOTATION -> checkHalfFloat(context, argument, method)
+            DIMENSION_ANNOTATION, PX_ANNOTATION ->  checkPx(context, argument)
+            else -> {
+                if (isResourceAnnotation(qualifiedName)) {
+                    // Make sure it's the first one to avoid duplicate warnings since we check all
+                    if (annotations.size > 1 &&
+                            getFirstResourceAnnotation(annotations) !== annotation) {
+                        return
+                    }
+
+                    val expression = argument.getParentOfType<UExpression>(
+                            UExpression::class.java, true) ?: return
+                    // Crap - how do we avoid double-checking here, we can't limit ourselves
+                    // to just left or right because what if the other one doesn't have
+                    // data?
+                    if (expression is UBinaryExpression) {
+                        // Comparing resource types is suspicious
+                        val operator = (expression as UBinaryExpression).operator
+                        if (operator is UastBinaryOperator.ComparisonOperator &&
+                                operator !== UastBinaryOperator.EQUALS &&
+                                operator !== UastBinaryOperator.NOT_EQUALS &&
+                                operator !== UastBinaryOperator.IDENTITY_EQUALS &&
+                                operator !== UastBinaryOperator.IDENTITY_NOT_EQUALS) {
+                            context.report(RESOURCE_TYPE, expression,
+                                    context.getLocation(expression),
+                                    String.format("Comparing resource types (`@%1\$s`) other "
+                                            + "than equality is dangerous and usually "
+                                            + "wrong;  some resource types set top bit "
+                                            + "which turns the value negative",
+                                            qualifiedName.substring(
+                                                    SUPPORT_ANNOTATIONS_PREFIX.length)))
+                            return
+                        }
+                    }
+
+                    val types = ResourceEvaluator.getTypesFromAnnotations(annotations)
+                    if (types != null) {
+                        checkResourceType(context, argument, types, method)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun getFirstResourceAnnotation(annotations: List<UAnnotation>): UAnnotation? {
+        for (annotation in annotations) {
+            val qualifiedName = annotation.qualifiedName
+            if (qualifiedName != null && isResourceAnnotation(qualifiedName)) {
+                return annotation
+            }
+        }
+        return null
+    }
+
+    private fun isResourceAnnotation(signature: String): Boolean {
+        return ResourceEvaluator.getTypeFromAnnotationSignature(signature) != null ||
+                signature == ANY_RES_ANNOTATION
+    }
+
+    private fun checkColor(context: JavaContext, argument: UElement) {
+        if (argument is UIfExpression) {
+            if (argument.thenExpression != null) {
+                checkColor(context, argument.thenExpression!!)
+            }
+            if (argument.elseExpression != null) {
+                checkColor(context, argument.elseExpression!!)
+            }
+            return
+        }
+
+        val types = ResourceEvaluator.getResourceTypes(context.evaluator,
+                argument)
+
+        if (types != null && types.contains(COLOR)) {
+            val message = String.format(
+                    "Should pass resolved color instead of resource id here: " + "`getResources().getColor(%1\$s)`",
+                    argument.asSourceString())
+            report(context, COLOR_USAGE, argument, context.getLocation(argument), message)
+        }
+    }
+
+    /**
+     * Checks for the following constraints regarding half float annotated shorts:
+     *
+     * (1) you're not passing literals; this is fraught with danger and there are
+     * a lot of constants available in the android.util.Half class already
+     *
+     * (2) you're not performing arithmetic on these operands; there are utility methods
+     * in android.util.Half that should be used instead
+     *
+     * (3) when you're operating on Half float variables, none of the operations are
+     * accidentally widening the result to int
+     */
+    private fun checkHalfFloat(
+            context: JavaContext,
+            argument: UElement,
+            method: PsiMethod?) {
+        if (argument is UIfExpression) {
+            val thenExpression = argument.thenExpression
+            if (thenExpression != null) {
+                checkColor(context, thenExpression)
+            }
+            val elseExpression = argument.elseExpression
+            if (elseExpression != null) {
+                checkColor(context, elseExpression)
+            }
+            return
+        }
+
+        val types = ResourceEvaluator.getResourceTypes(context.evaluator,
+                argument)
+
+        // TODO: Look up dimension resources too
+        if (types != null && !types.isEmpty()) {
+            val type: String
+            if (types.contains(DIMENSION_MARKER_TYPE)) {
+                type = "dimension"
+            } else if (types.contains(COLOR_INT_MARKER_TYPE)) {
+                type = "color"
+            } else {
+                type = "resource id"
+            }
+            val message = String.format("Expected a half float here, not a %1\$s", type)
+            // TODO: Change issue to HALF_FLOAT
+            report(context, COLOR_USAGE, argument, context.getLocation(argument), message)
+            return
+        }
+
+        // TODO: Visit all occurrences of this member to see if it's used incorrectly
+        //    -- expression type -> int -- widening
+
+        var curr = argument.getParentOfType<UExpression>(UExpression::class.java, false)
+        while (curr != null) {
+            if (curr is UBinaryExpressionWithType) {
+                // Explicit cast
+                break
+            }
+            val expressionType = curr.getExpressionType()
+            if (expressionType != null && !PsiType.SHORT.equals(expressionType)) {
+                if (PsiType.VOID == expressionType || PsiType.BOOLEAN == expressionType) {
+                    break
+                }
+                val message = String.format("Half-float type in expression widened to %1\$s",
+                        expressionType.canonicalText)
+                // TODO: Change issue to HALF_FLOAT
+                report(context, COLOR_USAGE, argument, context.getLocation(argument), message)
+                break
+            }
+
+            curr = curr.getParentOfType<UExpression>(UExpression::class.java, true)
+        }
+    }
+
+    private fun checkPx(context: JavaContext, argument: UElement) {
+        if (argument is UIfExpression) {
+            if (argument.thenExpression != null) {
+                checkPx(context, argument.thenExpression!!)
+            }
+            if (argument.elseExpression != null) {
+                checkPx(context, argument.elseExpression!!)
+            }
+            return
+        }
+
+        val types = ResourceEvaluator.getResourceTypes(context.evaluator,
+                argument)
+
+        if (types != null && types.contains(ResourceType.DIMEN)) {
+            val message = String.format(
+                    "Should pass resolved pixel dimension instead of resource id here: " +
+                            "`getResources().getDimension*(%1\$s)`",
+                    argument.asSourceString())
+            report(context, COLOR_USAGE, argument,
+                    context.getLocation(argument), message)
+        }
+    }
+
+
+    private fun checkResourceType(
+            context: JavaContext,
+            argument: UElement,
+            expectedType: EnumSet<ResourceType>,
+            calledMethod: PsiMethod?) {
+        val actual = ResourceEvaluator.getResourceTypes(context.evaluator, argument)
+
+        if (actual == null && (!UastLintUtils.isNumber(argument) || UastLintUtils.isZero(argument) || UastLintUtils.isMinusOne(
+                argument))) {
+            return
+        } else if (actual != null && (!Sets.intersection(actual,
+                expectedType).isEmpty() || expectedType.contains(DRAWABLE) && (actual.contains(COLOR) || actual.contains(
+                MIPMAP)))) {
+            return
+        }
+
+        if (expectedType.contains(STYLEABLE) && expectedType.size == 1
+                && calledMethod != null
+                && context.evaluator.isMemberInClass(calledMethod,
+                "android.content.res.TypedArray")) {
+            val call = argument.getParentOfType<UExpression>(UCallExpression::class.java, false)
+            if (call is UCallExpression
+                    && typeArrayFromArrayLiteral(call.receiver, context)) {
+                // You're generally supposed to provide a styleable to the TypedArray methods,
+                // but you're also allowed to supply an integer array
+                return
+            }
+        }
+
+        val message: String
+        if (actual != null && actual.size == 1 && actual.contains(
+                ResourceEvaluator.COLOR_INT_MARKER_TYPE)) {
+            message = "Expected a color resource id (`R.color.`) but received an RGB integer"
+        } else if (expectedType.contains(ResourceEvaluator.COLOR_INT_MARKER_TYPE)) {
+            message = String.format("Should pass resolved color instead of resource id here: " + "`getResources().getColor(%1\$s)`",
+                    argument.asSourceString())
+        } else if (actual != null && actual.size == 1 && actual.contains(
+                ResourceEvaluator.DIMENSION_MARKER_TYPE)) {
+            message = "Expected a dimension resource id (`R.color.`) but received a pixel integer"
+        } else if (expectedType.contains(ResourceEvaluator.DIMENSION_MARKER_TYPE)) {
+            message = String.format("Should pass resolved pixel size instead of resource id here: " + "`getResources().getDimension*(%1\$s)`",
+                    argument.asSourceString())
+        } else if (expectedType.size < ResourceType.getNames().size - 2) { // -2: marker types
+            message = String.format("Expected resource of type %1\$s",
+                    Joiner.on(" or ").join(expectedType))
+        } else {
+            message = "Expected resource identifier (`R`.type.`name`)"
+        }
+        report(context, RESOURCE_TYPE, argument, context.getLocation(argument), message)
+    }
+
+    /**
+     * Returns true if the node is pointing to a TypedArray whose value was obtained
+     * from an array literal
+     */
+    private fun typeArrayFromArrayLiteral(node: UElement?, context: JavaContext): Boolean {
+        if (node == null) {
+            return false
+        }
+        val expression = getMethodCall(node)
+        if (expression != null) {
+            val name = expression.methodName
+            if (name != null && "obtainStyledAttributes" == name) {
+                val expressions = expression.valueArguments
+                if (!expressions.isEmpty()) {
+                    var arg: Int
+                    if (expressions.size == 1) {
+                        // obtainStyledAttributes(int[] attrs)
+                        arg = 0
+                    } else if (expressions.size == 2) {
+                        // obtainStyledAttributes(AttributeSet set, int[] attrs)
+                        // obtainStyledAttributes(int resid, int[] attrs)
+                        arg = 0
+                        while (arg < expressions.size) {
+                            val type = expressions[arg].getExpressionType()
+                            if (type is PsiArrayType) {
+                                break
+                            }
+                            arg++
+                        }
+                        if (arg == expressions.size) {
+                            return false
+                        }
+                    } else if (expressions.size == 4) {
+                        // obtainStyledAttributes(AttributeSet set, int[] attrs, int defStyleAttr, int defStyleRes)
+                        arg = 1
+                    } else {
+                        return false
+                    }
+
+                    return ConstantEvaluator.isArrayLiteral(expressions[arg]
+                    )
+                }
+            }
+            return false
+        } else if (node is UReferenceExpression) {
+            val resolved = node.resolve()
+            if (resolved is PsiVariable) {
+                val variable = resolved as PsiVariable?
+                val lastAssignment = UastLintUtils.findLastAssignment(variable!!, node)
+
+                if (lastAssignment != null) {
+                    return typeArrayFromArrayLiteral(lastAssignment, context)
+                }
+            }
+        } else if (node.isNewArrayWithInitializer()) {
+            return true
+        } else if (node.isNewArrayWithDimensions()) {
+            return true
+        } else if (node is UParenthesizedExpression) {
+            val parenthesizedExpression = node as UParenthesizedExpression?
+            val operand = parenthesizedExpression!!.expression
+            return typeArrayFromArrayLiteral(operand, context)
+        } else if (node.isTypeCast()) {
+            val castExpression = (node as UBinaryExpressionWithType?)!!
+            val operand = castExpression.operand
+            return typeArrayFromArrayLiteral(operand, context)
+        }
+
+        return false
+    }
+
+    private fun getMethodCall(node: UElement?): UCallExpression? {
+        if (node is UQualifiedReferenceExpression) {
+            val last = getLastInQualifiedChain((node as UQualifiedReferenceExpression?)!!)
+            if (last.isMethodCall()) {
+                return last as UCallExpression
+            }
+        }
+
+        return if (node != null && node.isMethodCall()) {
+            node as UCallExpression?
+        } else null
+
+    }
+
+    private fun getLastInQualifiedChain(node: UQualifiedReferenceExpression): UExpression {
+        var last = node.selector
+        while (last is UQualifiedReferenceExpression) {
+            last = last.selector
+        }
+        return last
+    }
+
+    companion object {
+        private val IMPLEMENTATION = Implementation(ResourceTypeDetector::class.java,
+                Scope.JAVA_FILE_SCOPE)
+
+        /**
+         * Attempting pass the wrong type of resource
+         */
+        @JvmField
+        val RESOURCE_TYPE = Issue.create(
+                "ResourceType",
+                "Wrong Resource Type",
+
+                "Ensures that resource id's passed to APIs are of the right type; for example, " +
+                "calling `Resources.getColor(R.string.name)` is wrong.",
+
+                Category.CORRECTNESS,
+                7,
+                Severity.FATAL,
+                IMPLEMENTATION)
+
+        /** Attempting to set a resource id as a color  */
+        @JvmField
+        val COLOR_USAGE = Issue.create(
+                "ResourceAsColor",
+                "Should pass resolved color instead of resource id",
+
+                "Methods that take a color in the form of an integer should be passed " +
+                "an RGB triple, not the actual color resource id. You must call " +
+                "`getResources().getColor(resource)` to resolve the actual color value first.",
+
+                Category.CORRECTNESS,
+                7,
+                Severity.ERROR,
+                IMPLEMENTATION)
+
+    }
+}

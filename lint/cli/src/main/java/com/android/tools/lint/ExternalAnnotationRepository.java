@@ -22,8 +22,8 @@ import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_TRUE;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.CHECK_RESULT_ANNOTATION;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION_ANNOTATION;
+import static com.android.tools.lint.checks.AnnotationDetector.CHECK_RESULT_ANNOTATION;
+import static com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

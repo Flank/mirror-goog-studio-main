@@ -15,8 +15,8 @@
  */
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.SupportAnnotationDetector.UI_THREAD_ANNOTATION
-import com.android.tools.lint.checks.SupportAnnotationDetector.WORKER_THREAD_ANNOTATION
+import com.android.tools.lint.checks.AnnotationDetector.UI_THREAD_ANNOTATION
+import com.android.tools.lint.checks.AnnotationDetector.WORKER_THREAD_ANNOTATION
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
@@ -72,10 +72,10 @@ fun searchForInterproceduralThreadAnnotationViolations(
 
     val contextualGraph = callGraph.buildContextualCallGraph(receiverEval)
     val uiSearchNodes = contextualGraph.contextualNodes.filter {
-        it.node.target.isAnnotatedWith(SupportAnnotationDetector.UI_THREAD_ANNOTATION)
+        it.node.target.isAnnotatedWith(AnnotationDetector.UI_THREAD_ANNOTATION)
     }
     val workerSearchNodes = contextualGraph.contextualNodes.filter {
-        it.node.target.isAnnotatedWith(SupportAnnotationDetector.WORKER_THREAD_ANNOTATION)
+        it.node.target.isAnnotatedWith(AnnotationDetector.WORKER_THREAD_ANNOTATION)
     }
 
     // Some methods take in a lambda (say) and run it on a different thread.
@@ -192,6 +192,7 @@ class WrongThreadInterproceduralDetector : Detector(), Detector.UastScanner {
 
     companion object {
         val SCOPE: EnumSet<Scope> = EnumSet.of(Scope.ALL_JAVA_FILES)
+        @JvmField
         val ISSUE = Issue.create(
                 "WrongThreadInterprocedural",
                 "Wrong Thread (Interprocedural)",

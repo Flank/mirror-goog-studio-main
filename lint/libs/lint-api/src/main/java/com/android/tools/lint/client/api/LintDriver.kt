@@ -1515,15 +1515,13 @@ class LintDriver
         }
 
         if (!uastScanners.isEmpty()) {
-            val parser = client.getUastParser(project)
+            val parser = client.getUastParser(currentProject)
             if (parser == null) {
                 client.log(null, "No java parser provided to lint: not running Java checks")
                 return
             }
-
-            val uastParser = client.getUastParser(currentProject)
             for (context in allContexts) {
-                context.uastParser = uastParser
+                context.uastParser = parser
             }
             val uElementVisitor = UElementVisitor(parser, uastScanners)
 

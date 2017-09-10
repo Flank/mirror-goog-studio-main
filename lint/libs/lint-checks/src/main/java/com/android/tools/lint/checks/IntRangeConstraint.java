@@ -15,10 +15,10 @@
  */
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.PermissionRequirement.getAnnotationLongValue;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_FROM;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_TO;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.INT_RANGE_ANNOTATION;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_FROM;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_TO;
+import static com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION;
+import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationLongValue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

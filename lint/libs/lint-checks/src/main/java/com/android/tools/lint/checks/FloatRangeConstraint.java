@@ -15,13 +15,13 @@
  */
 package com.android.tools.lint.checks;
 
-import static com.android.tools.lint.checks.PermissionRequirement.getAnnotationBooleanValue;
-import static com.android.tools.lint.checks.PermissionRequirement.getAnnotationDoubleValue;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_FROM;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_FROM_INCLUSIVE;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_TO;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_TO_INCLUSIVE;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.FLOAT_RANGE_ANNOTATION;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_FROM;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_FROM_INCLUSIVE;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_TO;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_TO_INCLUSIVE;
+import static com.android.tools.lint.checks.AnnotationDetector.FLOAT_RANGE_ANNOTATION;
+import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationBooleanValue;
+import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationDoubleValue;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;

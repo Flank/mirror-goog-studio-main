@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
@@ -145,4 +147,10 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
             return driver;
         }
     }
+
+    public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
+    protected TestFile SUPPORT_ANNOTATIONS_JAR = base64gzip(SUPPORT_JAR_PATH,
+            SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
+    protected TestFile SUPPORT_ANNOTATIONS_CLASS_PATH = classpath(SUPPORT_JAR_PATH);
+
 }

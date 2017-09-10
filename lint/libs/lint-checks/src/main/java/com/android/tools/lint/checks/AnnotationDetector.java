@@ -22,38 +22,26 @@ import static com.android.SdkConstants.INT_DEF_ANNOTATION;
 import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE;
-import static com.android.tools.lint.checks.PermissionRequirement.getAnnotationBooleanValue;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_ALL_OF;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_ANY_OF;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_FROM;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_MAX;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_MIN;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_MULTIPLE;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_TO;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.CHECK_RESULT_ANNOTATION;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.FLOAT_RANGE_ANNOTATION;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.INT_RANGE_ANNOTATION;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION_ANNOTATION;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION_ANNOTATION_READ;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION_ANNOTATION_WRITE;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.SIZE_ANNOTATION;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.filterRelevantAnnotations;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.findIntDef;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.getDoubleAttribute;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.getLongAttribute;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_DOUBLE;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_FLOAT;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_INT;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_LONG;
+import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT;
 import static com.android.tools.lint.client.api.JavaParser.TYPE_STRING;
 import static com.android.tools.lint.detector.api.LintUtils.getAutoBoxedType;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.PX_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.RES_SUFFIX;
+import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationBooleanValue;
+import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValue;
+import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValues;
+import static com.android.tools.lint.detector.api.UastLintUtils.getDoubleAttribute;
+import static com.android.tools.lint.detector.api.UastLintUtils.getLongAttribute;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.IssueRegistry;
+import com.android.tools.lint.client.api.JavaEvaluator;
 import com.android.tools.lint.client.api.UElementHandler;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
@@ -80,6 +68,7 @@ import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
@@ -121,6 +110,45 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
  * Checks annotations to make sure they are valid
  */
 public class AnnotationDetector extends Detector implements UastScanner {
+    public static final String GMS_HIDE_ANNOTATION = "com.google.android.gms.common.internal.Hide";
+    public static final String CHECK_RESULT_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "CheckResult";
+    public static final String INT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "IntRange";
+    public static final String FLOAT_RANGE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "FloatRange";
+    public static final String SIZE_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "Size";
+    public static final String PERMISSION_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RequiresPermission";
+    public static final String UI_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "UiThread";
+    public static final String MAIN_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "MainThread";
+    public static final String WORKER_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "WorkerThread";
+    public static final String BINDER_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "BinderThread";
+    public static final String ANY_THREAD_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "AnyThread";
+    public static final String RESTRICT_TO_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "RestrictTo";
+    public static final String VISIBLE_FOR_TESTING_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "VisibleForTesting";
+    public static final String PERMISSION_ANNOTATION_READ = PERMISSION_ANNOTATION + ".Read";
+    public static final String PERMISSION_ANNOTATION_WRITE = PERMISSION_ANNOTATION + ".Write";
+
+    // TODO: Add analysis to enforce this annotation:
+    public static final String HALF_FLOAT_ANNOTATION = "android.support.annotation.HalfFloat";
+
+    public static final String THREAD_SUFFIX = "Thread";
+    public static final String ATTR_SUGGEST = "suggest";
+    public static final String ATTR_TO = "to";
+    public static final String ATTR_FROM = "from";
+    public static final String ATTR_FROM_INCLUSIVE = "fromInclusive";
+    public static final String ATTR_TO_INCLUSIVE = "toInclusive";
+    public static final String ATTR_MULTIPLE = "multiple";
+    public static final String ATTR_MIN = "min";
+    public static final String ATTR_MAX = "max";
+    public static final String ATTR_ALL_OF = "allOf";
+    public static final String ATTR_ANY_OF = "anyOf";
+    public static final String ATTR_CONDITIONAL = "conditional";
+
+    public static final String SECURITY_EXCEPTION = "java.lang.SecurityException";
+
+    public static final String FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE = "edu.umd.cs.findbugs.annotations.CheckReturnValue";
+    public static final String JAVAX_ANNOTATION_CHECK_RETURN_VALUE = "javax.annotation.CheckReturnValue";
+    public static final String ERRORPRONE_CAN_IGNORE_RETURN_VALUE = "com.google.errorprone.annotations.CanIgnoreReturnValue";
+    public static final String GUAVA_VISIBLE_FOR_TESTING = "com.google.common.annotations.VisibleForTesting";
+
 
     public static final Implementation IMPLEMENTATION = new Implementation(
               AnnotationDetector.class,
@@ -303,7 +331,7 @@ public class AnnotationDetector extends Detector implements UastScanner {
                     if (INT_RANGE_ANNOTATION.equals(type)) {
                         checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
 
-                        long from = SupportAnnotationDetector.getLongAttribute(mContext, annotation, ATTR_FROM, Long.MIN_VALUE);
+                        long from = getLongAttribute(mContext, annotation, ATTR_FROM, Long.MIN_VALUE);
                         long to = getLongAttribute(mContext, annotation, ATTR_TO, Long.MAX_VALUE);
                         invalid = from > to;
                     } else {
@@ -353,9 +381,9 @@ public class AnnotationDetector extends Detector implements UastScanner {
                     // Check that if there are no arguments, this is specified on a parameter,
                     // and conversely, on methods and fields there is a valid argument.
                     if (annotation.getUastParent() instanceof UMethod) {
-                        String value = PermissionRequirement.getAnnotationStringValue(annotation, ATTR_VALUE);
-                        String[] anyOf = PermissionRequirement.getAnnotationStringValues(annotation, ATTR_ANY_OF);
-                        String[] allOf = PermissionRequirement.getAnnotationStringValues(annotation, ATTR_ALL_OF);
+                        String value = getAnnotationStringValue(annotation, ATTR_VALUE);
+                        String[] anyOf = getAnnotationStringValues(annotation, ATTR_ANY_OF);
+                        String[] allOf = getAnnotationStringValues(annotation, ATTR_ALL_OF);
 
                         int set = 0;
                         //noinspection VariableNotUsedInsideIf
@@ -382,7 +410,9 @@ public class AnnotationDetector extends Detector implements UastScanner {
                                     "Only specify one of `value`, `anyOf` or `allOf`");
                         }
                     }
-
+                } else if (type.equals(HALF_FLOAT_ANNOTATION)) {
+                    // Check that half floats are on shorts
+                    checkTargetType(annotation, TYPE_SHORT, null, true);
                 } else if (type.endsWith(RES_SUFFIX)) {
                     // Check that resource type annotations are on ints
                     checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
@@ -516,7 +546,7 @@ public class AnnotationDetector extends Detector implements UastScanner {
                             (PsiModifierListOwner)resolved, true);
                     PsiAnnotation[] relevantAnnotations =
                             filterRelevantAnnotations(mContext.getEvaluator(), annotations);
-                    UAnnotation annotation = findIntDef(
+                    UAnnotation annotation = TypedefDetector.Companion.findIntDef(
                             JavaUAnnotation.wrap(relevantAnnotations));
                     if (annotation != null) {
                         return annotation;
@@ -540,7 +570,7 @@ public class AnnotationDetector extends Detector implements UastScanner {
                     PsiAnnotation[] relevantAnnotations =
                             filterRelevantAnnotations(mContext.getEvaluator(), annotations);
                     List<UAnnotation> uAnnotations = JavaUAnnotation.wrap(relevantAnnotations);
-                    UAnnotation annotation = findIntDef(uAnnotations);
+                    UAnnotation annotation = TypedefDetector.Companion.findIntDef(uAnnotations);
                     if (annotation != null) {
                         return annotation;
                     }
@@ -960,4 +990,80 @@ public class AnnotationDetector extends Detector implements UastScanner {
         return false;
     }
 
+    // Like JavaEvaluator#filterRelevantAnnotations, but hardcoded for the IntRange and
+    // IntDef annotations since this check isn't a generalized annotation checker like the
+    // others.
+    @NonNull
+    static PsiAnnotation[] filterRelevantAnnotations(
+            @NonNull JavaEvaluator evaluator, @NonNull PsiAnnotation[] annotations) {
+        List<PsiAnnotation> result = null;
+        int length = annotations.length;
+        if (length == 0) {
+            return annotations;
+        }
+        for (PsiAnnotation annotation : annotations) {
+            String signature = annotation.getQualifiedName();
+            if (signature == null || signature.startsWith("java.")) {
+                // @Override, @SuppressWarnings etc. Ignore
+                continue;
+            }
+
+            if (signature.startsWith(SUPPORT_ANNOTATIONS_PREFIX)
+                    || signature.equals(GMS_HIDE_ANNOTATION)) {
+                // Bail on the nullness annotations early since they're the most commonly
+                // defined ones. They're not analyzed in lint yet.
+                if (signature.endsWith(".Nullable") || signature.endsWith(".NonNull")) {
+                    continue;
+                }
+
+                // Common case: there's just one annotation; no need to create a list copy
+                if (length == 1) {
+                    return annotations;
+                }
+                if (result == null) {
+                    result = new ArrayList<>(2);
+                }
+                result.add(annotation);
+            }
+
+            // Special case @IntDef and @StringDef: These are used on annotations
+            // themselves. For example, you create a new annotation named @foo.bar.Baz,
+            // annotate it with @IntDef, and then use @foo.bar.Baz in your signatures.
+            // Here we want to map from @foo.bar.Baz to the corresponding int def.
+            // Don't need to compute this if performing @IntDef or @StringDef lookup
+            PsiJavaCodeReferenceElement ref = annotation.getNameReferenceElement();
+            if (ref == null) {
+                continue;
+            }
+            PsiElement resolved = ref.resolve();
+            if (!(resolved instanceof PsiClass) || !((PsiClass)resolved).isAnnotationType()) {
+                continue;
+            }
+            PsiClass cls = (PsiClass)resolved;
+            PsiAnnotation[] innerAnnotations = evaluator.getAllAnnotations(cls, false);
+            for (int j = 0; j < innerAnnotations.length; j++) {
+                PsiAnnotation inner = innerAnnotations[j];
+                String a = inner.getQualifiedName();
+                if (a == null || a.startsWith("java.")) {
+                    // @Override, @SuppressWarnings etc. Ignore
+                    continue;
+                }
+                if (a.equals(INT_DEF_ANNOTATION)
+                        || a.equals(PERMISSION_ANNOTATION)
+                        || a.equals(INT_RANGE_ANNOTATION)
+                        || a.equals(STRING_DEF_ANNOTATION)) {
+                    if (length == 1 && j == innerAnnotations.length - 1 && result == null) {
+                        return innerAnnotations;
+                    }
+                    if (result == null) {
+                        result = new ArrayList<>(2);
+                    }
+                    result.add(inner);
+                }
+            }
+        }
+
+        return result != null
+                ? result.toArray(PsiAnnotation.EMPTY_ARRAY) : PsiAnnotation.EMPTY_ARRAY;
+    }
 }

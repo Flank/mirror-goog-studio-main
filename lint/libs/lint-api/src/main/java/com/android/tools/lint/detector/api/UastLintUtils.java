@@ -16,9 +16,12 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.SdkConstants.ATTR_VALUE;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.ResourceReference;
+import com.google.common.collect.Lists;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
@@ -30,18 +33,25 @@ import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiVariable;
 import java.lang.reflect.Field;
+import java.util.List;
+import org.jetbrains.uast.UAnnotation;
+import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UDeclaration;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UPrefixExpression;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
 import org.jetbrains.uast.UReferenceExpression;
 import org.jetbrains.uast.USimpleNameReferenceExpression;
+import org.jetbrains.uast.UUnaryExpression;
 import org.jetbrains.uast.UVariable;
 import org.jetbrains.uast.UastContext;
+import org.jetbrains.uast.UastPrefixOperator;
 import org.jetbrains.uast.UastUtils;
+import org.jetbrains.uast.util.UastExpressionUtils;
 
 public class UastLintUtils {
 
@@ -266,5 +276,277 @@ public class UastLintUtils {
         }
 
         return null;
+    }
+
+    public static boolean isNumber(@NonNull UElement argument) {
+        if (argument instanceof ULiteralExpression) {
+            Object value = ((ULiteralExpression) argument).getValue();
+            return value instanceof Number;
+        } else if (argument instanceof UPrefixExpression) {
+            UPrefixExpression expression = (UPrefixExpression) argument;
+            UExpression operand = expression.getOperand();
+            return isNumber(operand);
+        } else {
+            return false;
+        }
+    }
+
+    public static boolean isZero(@NonNull UElement argument) {
+        if (argument instanceof ULiteralExpression) {
+            Object value = ((ULiteralExpression) argument).getValue();
+            return value instanceof Number && ((Number)value).intValue() == 0;
+        }
+        return false;
+    }
+
+    public static boolean isMinusOne(@NonNull UElement argument) {
+        if (argument instanceof UUnaryExpression) {
+            UUnaryExpression expression = (UUnaryExpression) argument;
+            UExpression operand = expression.getOperand();
+            if (operand instanceof ULiteralExpression &&
+                    expression.getOperator() == UastPrefixOperator.UNARY_MINUS) {
+                Object value = ((ULiteralExpression) operand).getValue();
+                return value instanceof Number && ((Number) value).intValue() == 1;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    @Nullable
+    public static UExpression getAnnotationValue(@NonNull UAnnotation annotation) {
+        UExpression value = annotation.findDeclaredAttributeValue(ATTR_VALUE);
+        if (value == null) {
+            value = annotation.findDeclaredAttributeValue(null);
+        }
+
+        return value;
+    }
+
+    public static long getLongAttribute(@NonNull JavaContext context,
+            @NonNull UAnnotation annotation,
+            @NonNull String name, long defaultValue) {
+        Long value = getAnnotationLongValue(annotation, name);
+        if (value != null) {
+            return value;
+        }
+
+        return defaultValue;
+    }
+
+    public static double getDoubleAttribute(@NonNull JavaContext context,
+            @NonNull UAnnotation annotation,
+            @NonNull String name, double defaultValue) {
+        Double value = getAnnotationDoubleValue(annotation, name);
+        if (value != null) {
+            return value;
+        }
+
+        return defaultValue;
+    }
+
+    public static boolean getBoolean(@NonNull JavaContext context,
+            @NonNull UAnnotation annotation,
+            @NonNull String name, boolean defaultValue) {
+        Boolean value = getAnnotationBooleanValue(annotation, name);
+        if (value != null) {
+            return value;
+        }
+
+        return defaultValue;
+    }
+
+    @Nullable
+    public static Boolean getAnnotationBooleanValue(
+            @Nullable UAnnotation annotation,
+            @NonNull String name) {
+        if (annotation != null) {
+            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
+            if (attributeValue == null && ATTR_VALUE.equals(name)) {
+                attributeValue = annotation.findDeclaredAttributeValue(null);
+            }
+            // Use constant evaluator since we want to resolve field references as well
+            if (attributeValue != null) {
+                Object o = ConstantEvaluator.evaluate(null, attributeValue);
+                if (o instanceof Boolean) {
+                    return (Boolean) o;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static boolean getAnnotationBooleanValue(
+            @Nullable UAnnotation annotation,
+            @NonNull String name,
+            boolean defaultValue) {
+        Boolean value = getAnnotationBooleanValue(annotation, name);
+        if (value != null) {
+            return value;
+        }
+        return defaultValue;
+    }
+
+    @Nullable
+    public static Long getAnnotationLongValue(
+            @Nullable UAnnotation annotation,
+            @NonNull String name) {
+        if (annotation != null) {
+            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
+            if (attributeValue == null && ATTR_VALUE.equals(name)) {
+                attributeValue = annotation.findDeclaredAttributeValue(null);
+            }
+            // Use constant evaluator since we want to resolve field references as well
+            if (attributeValue != null) {
+                Object o = ConstantEvaluator.evaluate(null, attributeValue);
+                if (o instanceof Number) {
+                    return ((Number)o).longValue();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static long getAnnotationLongValue(
+            @Nullable UAnnotation annotation,
+            @NonNull String name,
+            long defaultValue) {
+        Long value = getAnnotationLongValue(annotation, name);
+        if (value != null) {
+            return value;
+        }
+        return defaultValue;
+    }
+
+    @Nullable
+    public static Double getAnnotationDoubleValue(
+            @Nullable UAnnotation annotation,
+            @NonNull String name) {
+        if (annotation != null) {
+            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
+            if (attributeValue == null && ATTR_VALUE.equals(name)) {
+                attributeValue = annotation.findDeclaredAttributeValue(null);
+            }
+            // Use constant evaluator since we want to resolve field references as well
+            if (attributeValue != null) {
+                Object o = ConstantEvaluator.evaluate(null, attributeValue);
+                if (o instanceof Number) {
+                    return ((Number)o).doubleValue();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static double getAnnotationDoubleValue(
+            @Nullable UAnnotation annotation,
+            @NonNull String name,
+            double defaultValue) {
+        Double value = getAnnotationDoubleValue(annotation, name);
+        if (value != null) {
+            return value;
+        }
+        return defaultValue;
+    }
+
+    @Nullable
+    public static String getAnnotationStringValue(
+            @Nullable UAnnotation annotation,
+            @NonNull String name) {
+        if (annotation != null) {
+            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
+            if (attributeValue == null && ATTR_VALUE.equals(name)) {
+                attributeValue = annotation.findDeclaredAttributeValue(null);
+            }
+            // Use constant evaluator since we want to resolve field references as well
+            if (attributeValue != null) {
+                Object o = ConstantEvaluator.evaluate(null, attributeValue);
+                if (o instanceof String) {
+                    return (String) o;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    public static String[] getAnnotationStringValues(
+            @Nullable UAnnotation annotation,
+            @NonNull String name) {
+        if (annotation != null) {
+            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
+            if (attributeValue == null && ATTR_VALUE.equals(name)) {
+                attributeValue = annotation.findDeclaredAttributeValue(null);
+            }
+            if (attributeValue == null) {
+                return null;
+            }
+            if (UastExpressionUtils.isArrayInitializer(attributeValue)) {
+                List<UExpression> initializers =
+                        ((UCallExpression) attributeValue).getValueArguments();
+                List<String> result = Lists.newArrayListWithCapacity(initializers.size());
+                ConstantEvaluator constantEvaluator = new ConstantEvaluator(null);
+                for (UExpression element : initializers) {
+                    Object o = constantEvaluator.evaluate(element);
+                    if (o instanceof String) {
+                        result.add((String)o);
+                    }
+                }
+                if (result.isEmpty()) {
+                    return null;
+                } else {
+                    return result.toArray(new String[0]);
+                }
+            } else {
+                // Use constant evaluator since we want to resolve field references as well
+                Object o = ConstantEvaluator.evaluate(null, attributeValue);
+                if (o instanceof String) {
+                    return new String[]{(String) o};
+                } else if (o instanceof String[]) {
+                    return (String[])o;
+                } else if (o instanceof Object[]) {
+                    Object[] array = (Object[]) o;
+                    List<String> strings = Lists.newArrayListWithCapacity(array.length);
+                    for (Object element : array) {
+                        if (element instanceof String) {
+                            strings.add((String) element);
+                        }
+                    }
+                    return strings.toArray(new String[0]);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static boolean containsAnnotation(
+            @NonNull List<UAnnotation> list,
+            @NonNull UAnnotation annotation) {
+        for (UAnnotation a : list) {
+            if (a == annotation) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean containsAnnotation(
+            @NonNull List<UAnnotation> list,
+            @NonNull String qualifiedName) {
+        for (UAnnotation annotation : list) {
+            if (qualifiedName.equals(annotation.getQualifiedName())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

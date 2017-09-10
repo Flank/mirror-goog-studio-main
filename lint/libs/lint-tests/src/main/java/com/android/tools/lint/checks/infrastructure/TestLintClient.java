@@ -790,12 +790,15 @@ public class TestLintClient extends LintCliClient {
 
         super.report(context, issue, severity, location, message, format, fix);
 
-        // Make sure errors are unique!
-        Warning prev = null;
-        for (Warning warning : warnings) {
-            assertNotSame(warning, prev);
-            assert prev == null || !warning.equals(prev) : "Warning (message, location) reported more than once: " + warning;
-            prev = warning;
+        // Make sure errors are unique! See documentation for #allowDuplicates.
+        if (!task.allowDuplicates) {
+            Warning prev = null;
+            for (Warning warning : warnings) {
+                assertNotSame(warning, prev);
+                assert prev == null || !warning.equals(prev) :
+                        "Warning (message, location) reported more than once: " + warning;
+                prev = warning;
+            }
         }
 
         if (fix instanceof LintFix.ReplaceString) {

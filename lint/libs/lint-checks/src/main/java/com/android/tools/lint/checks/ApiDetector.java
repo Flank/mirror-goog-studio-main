@@ -59,6 +59,7 @@ import static com.android.tools.lint.checks.VersionChecks.isVersionCheckConditio
 import static com.android.tools.lint.checks.VersionChecks.isWithinVersionCheckConditional;
 import static com.android.tools.lint.detector.api.ClassContext.getFqcn;
 import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
+import static com.android.tools.lint.detector.api.UastLintUtils.getLongAttribute;
 import static com.android.utils.CharSequences.indexOf;
 import static com.android.utils.SdkUtils.getResourceFieldName;
 import static com.intellij.pom.java.LanguageLevel.JDK_1_7;
@@ -1853,11 +1854,11 @@ public class ApiDetector extends ResourceXmlDetector
             for (PsiAnnotation annotation : modifierList.getAnnotations()) {
                 if (REQUIRES_API_ANNOTATION.equals(annotation.getQualifiedName())) {
                     UAnnotation wrapped = JavaUAnnotation.wrap(annotation);
-                    int api = (int) SupportAnnotationDetector.getLongAttribute(mContext,
+                    int api = (int) getLongAttribute(mContext,
                             wrapped, ATTR_VALUE, -1);
                     if (api <= 1) {
                         // @RequiresApi has two aliasing attributes: api and value
-                        api = (int) SupportAnnotationDetector.getLongAttribute(mContext,
+                        api = (int) getLongAttribute(mContext,
                                 wrapped, "api", -1);
                     }
                     int minSdk = getMinSdk(mContext);

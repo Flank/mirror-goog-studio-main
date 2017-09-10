@@ -108,6 +108,7 @@ public class TestLintTask {
     boolean vital;
     Map<String, byte[]> mockNetworkData;
     boolean allowNetworkAccess;
+    boolean allowDuplicates = false;
 
     /** Creates a new lint test task */
     public TestLintTask() {
@@ -551,6 +552,38 @@ public class TestLintTask {
     public TestLintTask forceSymbolResolutionErrors() {
         ensurePreRun();
         this.forceSymbolResolutionErrors = true;
+        return this;
+    }
+
+    /**
+     * Normally the lint test infrastructure ensures that all reported errors
+     * are unique (which means that no error has the exact same message for
+     * the exact same error range in the source file). That's normally a sign
+     * of a bug in the detector. If you're trying to report multiple issues that
+     * happen to overlap the same region for the same issue id, make sure that
+     * the error message is unique; the common way to do that is to include
+     * parameters in the error message, such as the name of the variable or
+     * expression in question, and so on.
+     *
+     * There <b>are</b> some cases where it's very difficult to avoid reporting
+     * the same error message twice. For example, the ResourceTypeDetector,
+     * when it discovers that an expression has a certain resource type
+     * (e.g. "R.drawable.foo" is a @DrawableRes, as is "getResources().getDrawable(x)")
+     * it sees if this expression is used in a surrounding binary expression
+     * for comparison purposes and warns if you're performing some suspicious
+     * comparisons (for resource types only equals/not-equals is expected;
+     * making number-range comparisons is usually a bug.)   If you report
+     * this bug on the binary expression, you could end up reporting it twice
+     * if we reach the expression both from the left operand and from the right
+     * operand. But you don't want to limit reporting the error to just one of
+     * those branches since it needs to work for both the case when both sides
+     * have a known resource type as when either only the left or only the right
+     * have a known resource type. In these scenarios you can turn off the
+     * duplicate check.
+     *
+     * @return this, for constructor chaining
+     */
+    public TestLintTask allowDuplicates() {
         return this;
     }
 

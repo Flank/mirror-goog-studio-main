@@ -21,7 +21,7 @@ import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.TAG_PERMISSION;
 import static com.android.tools.lint.checks.PermissionRequirement.REVOCABLE_PERMISSION_NAMES;
 import static com.android.tools.lint.checks.PermissionRequirement.isRevocableSystemPermission;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.PERMISSION_ANNOTATION;
+import static com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 

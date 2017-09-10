@@ -16,11 +16,11 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ATTR_VALUE;
-import static com.android.tools.lint.checks.PermissionRequirement.getAnnotationLongValue;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_MAX;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_MIN;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_MULTIPLE;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.SIZE_ANNOTATION;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_MAX;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_MIN;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_MULTIPLE;
+import static com.android.tools.lint.checks.AnnotationDetector.SIZE_ANNOTATION;
+import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationLongValue;
 import static com.intellij.psi.CommonClassNames.JAVA_LANG_STRING;
 
 import com.android.annotations.NonNull;

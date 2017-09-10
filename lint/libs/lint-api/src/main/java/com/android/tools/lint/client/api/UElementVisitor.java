@@ -24,7 +24,9 @@ import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
 import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.progress.ProgressManager;
@@ -40,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UArrayAccessExpression;
 import org.jetbrains.uast.UBinaryExpression;
@@ -128,10 +131,13 @@ public class UElementVisitor {
     private final UastParser parser;
     private final Map<String, List<VisitingDetector>> superClassDetectors =
             new HashMap<>();
+    private final AnnotationHandler annotationHandler;
 
     UElementVisitor(@NonNull UastParser parser, @NonNull List<Detector> detectors) {
         this.parser = parser;
         allDetectors = new ArrayList<>(detectors.size());
+
+        Multimap<String, UastScanner> annotationScanners = null;
 
         for (Detector detector : detectors) {
             UastScanner uastScanner = (UastScanner) detector;
@@ -200,7 +206,27 @@ public class UElementVisitor {
             if (detector.appliesToResourceRefs()) {
                 resourceFieldDetectors.add(v);
             }
+
+            List<String> annotations = detector.applicableAnnotations();
+            if (annotations != null) {
+                if (annotationScanners == null) {
+                    annotationScanners = ArrayListMultimap.create();
+                }
+                for (String annotation : annotations) {
+                    annotationScanners.put(annotation, uastScanner);
+                }
+            }
         }
+
+        Set<String> relevantAnnotations;
+        if (annotationScanners != null) {
+            annotationHandler = new AnnotationHandler(annotationScanners);
+            relevantAnnotations = annotationHandler.getRelevantAnnotations();
+        } else {
+            annotationHandler = null;
+            relevantAnnotations = null;
+        }
+        parser.getEvaluator().setRelevantAnnotations(relevantAnnotations);
     }
 
     void visitFile(@NonNull final JavaContext context) {
@@ -240,18 +266,19 @@ public class UElementVisitor {
                 if (!methodDetectors.isEmpty()
                         || !resourceFieldDetectors.isEmpty()
                         || !constructorDetectors.isEmpty()
-                        || !referenceDetectors.isEmpty()) {
+                        || !referenceDetectors.isEmpty()
+                        || annotationHandler != null) {
                     client.runReadAction(() -> {
-                        // TODO: Do we need to break this one up into finer grain
-                        // locking units
+                        // TODO: Do we need to break this one up into finer grain locking units
                         UastVisitor visitor = new DelegatingPsiVisitor(context);
                         uFile.accept(visitor);
                     });
                 } else {
+                    // Note that the DelegatingPsiVisitor is a subclass of DispatchPsiVisitor
+                    // so the above includes the below as well (through super classes)
                     if (!nodePsiTypeDetectors.isEmpty()) {
                         client.runReadAction(() -> {
-                            // TODO: Do we need to break this one up into finer grain
-                            // locking units
+                            // TODO: Do we need to break this one up into finer grain locking units
                             UastVisitor visitor = new DispatchPsiVisitor();
                             uFile.accept(visitor);
                         });
@@ -357,7 +384,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitLambdaExpression(ULambdaExpression node) {
+        public boolean visitLambdaExpression(@NotNull ULambdaExpression node) {
             // Have to go to PSI here; not available on ULambdaExpression yet
             // https://github.com/JetBrains/uast/issues/16
             //    ULambdaExpression#getFunctionalInterfaceType
@@ -376,7 +403,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitClass(UClass node) {
+        public boolean visitClass(@NotNull UClass node) {
             boolean result = super.visitClass(node);
             checkClass(null, node, node);
             return result;
@@ -446,7 +473,7 @@ public class UElementVisitor {
     private class DispatchPsiVisitor extends AbstractUastVisitor {
 
         @Override
-        public boolean visitAnnotation(UAnnotation node) {
+        public boolean visitAnnotation(@NotNull UAnnotation node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UAnnotation.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -457,7 +484,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitArrayAccessExpression(UArrayAccessExpression node) {
+        public boolean visitArrayAccessExpression(@NotNull UArrayAccessExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UArrayAccessExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -468,7 +495,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitBinaryExpression(UBinaryExpression node) {
+        public boolean visitBinaryExpression(@NotNull UBinaryExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UBinaryExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -479,7 +506,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitBinaryExpressionWithType(UBinaryExpressionWithType node) {
+        public boolean visitBinaryExpressionWithType(@NotNull UBinaryExpressionWithType node) {
             List<VisitingDetector> list = nodePsiTypeDetectors
                     .get(UBinaryExpressionWithType.class);
             if (list != null) {
@@ -491,7 +518,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitBlockExpression(UBlockExpression node) {
+        public boolean visitBlockExpression(@NotNull UBlockExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UBlockExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -502,7 +529,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitBreakExpression(UBreakExpression node) {
+        public boolean visitBreakExpression(@NotNull UBreakExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UBreakExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -513,7 +540,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitCallExpression(UCallExpression node) {
+        public boolean visitCallExpression(@NotNull UCallExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UCallExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -524,7 +551,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitCallableReferenceExpression(UCallableReferenceExpression node) {
+        public boolean visitCallableReferenceExpression(@NotNull UCallableReferenceExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors
                     .get(UCallableReferenceExpression.class);
             if (list != null) {
@@ -536,7 +563,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitCatchClause(UCatchClause node) {
+        public boolean visitCatchClause(@NotNull UCatchClause node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UCatchClause.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -547,7 +574,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitClass(UClass node) {
+        public boolean visitClass(@NotNull UClass node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UClass.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -558,7 +585,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitClassLiteralExpression(UClassLiteralExpression node) {
+        public boolean visitClassLiteralExpression(@NotNull UClassLiteralExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UClassLiteralExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -569,7 +596,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitContinueExpression(UContinueExpression node) {
+        public boolean visitContinueExpression(@NotNull UContinueExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UContinueExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -580,7 +607,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitDeclarationsExpression(UDeclarationsExpression node) {
+        public boolean visitDeclarationsExpression(@NotNull UDeclarationsExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UDeclarationsExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -591,7 +618,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitDoWhileExpression(UDoWhileExpression node) {
+        public boolean visitDoWhileExpression(@NotNull UDoWhileExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UDoWhileExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -602,7 +629,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitElement(UElement node) {
+        public boolean visitElement(@NotNull UElement node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UElement.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -613,7 +640,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitEnumConstant(UEnumConstant node) {
+        public boolean visitEnumConstant(@NotNull UEnumConstant node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UEnumConstant.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -624,7 +651,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitExpressionList(UExpressionList node) {
+        public boolean visitExpressionList(@NotNull UExpressionList node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UExpressionList.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -635,7 +662,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitField(UField node) {
+        public boolean visitField(@NotNull UField node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UField.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -646,7 +673,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitFile(UFile node) {
+        public boolean visitFile(@NotNull UFile node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UFile.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -657,7 +684,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitForEachExpression(UForEachExpression node) {
+        public boolean visitForEachExpression(@NotNull UForEachExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UForEachExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -668,7 +695,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitForExpression(UForExpression node) {
+        public boolean visitForExpression(@NotNull UForExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UForExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -679,7 +706,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitIfExpression(UIfExpression node) {
+        public boolean visitIfExpression(@NotNull UIfExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UIfExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -690,7 +717,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitImportStatement(UImportStatement node) {
+        public boolean visitImportStatement(@NotNull UImportStatement node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UImportStatement.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -701,7 +728,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitInitializer(UClassInitializer node) {
+        public boolean visitInitializer(@NotNull UClassInitializer node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UClassInitializer.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -712,7 +739,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitLabeledExpression(ULabeledExpression node) {
+        public boolean visitLabeledExpression(@NotNull ULabeledExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(ULabeledExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -723,7 +750,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitLambdaExpression(ULambdaExpression node) {
+        public boolean visitLambdaExpression(@NotNull ULambdaExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(ULambdaExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -734,7 +761,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitLiteralExpression(ULiteralExpression node) {
+        public boolean visitLiteralExpression(@NotNull ULiteralExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(ULiteralExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -745,7 +772,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitLocalVariable(ULocalVariable node) {
+        public boolean visitLocalVariable(@NotNull ULocalVariable node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(ULocalVariable.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -756,7 +783,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitMethod(UMethod node) {
+        public boolean visitMethod(@NotNull UMethod node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UMethod.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -767,7 +794,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitObjectLiteralExpression(UObjectLiteralExpression node) {
+        public boolean visitObjectLiteralExpression(@NotNull UObjectLiteralExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UObjectLiteralExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -778,7 +805,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitParameter(UParameter node) {
+        public boolean visitParameter(@NotNull UParameter node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UParameter.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -789,7 +816,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitParenthesizedExpression(UParenthesizedExpression node) {
+        public boolean visitParenthesizedExpression(@NotNull UParenthesizedExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UParenthesizedExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -800,7 +827,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitPolyadicExpression(UPolyadicExpression node) {
+        public boolean visitPolyadicExpression(@NotNull UPolyadicExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UPolyadicExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -811,7 +838,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitPostfixExpression(UPostfixExpression node) {
+        public boolean visitPostfixExpression(@NotNull UPostfixExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UPostfixExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -822,7 +849,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitPrefixExpression(UPrefixExpression node) {
+        public boolean visitPrefixExpression(@NotNull UPrefixExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UPrefixExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -833,7 +860,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitQualifiedReferenceExpression(UQualifiedReferenceExpression node) {
+        public boolean visitQualifiedReferenceExpression(@NotNull UQualifiedReferenceExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors
                     .get(UQualifiedReferenceExpression.class);
             if (list != null) {
@@ -845,7 +872,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitReturnExpression(UReturnExpression node) {
+        public boolean visitReturnExpression(@NotNull UReturnExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UReturnExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -856,7 +883,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitSimpleNameReferenceExpression(USimpleNameReferenceExpression node) {
+        public boolean visitSimpleNameReferenceExpression(@NotNull USimpleNameReferenceExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors
                     .get(USimpleNameReferenceExpression.class);
             if (list != null) {
@@ -868,7 +895,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitSuperExpression(USuperExpression node) {
+        public boolean visitSuperExpression(@NotNull USuperExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(USuperExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -879,7 +906,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitSwitchClauseExpression(USwitchClauseExpression node) {
+        public boolean visitSwitchClauseExpression(@NotNull USwitchClauseExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(USwitchClauseExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -890,7 +917,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitSwitchExpression(USwitchExpression node) {
+        public boolean visitSwitchExpression(@NotNull USwitchExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(USwitchExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -901,7 +928,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitThisExpression(UThisExpression node) {
+        public boolean visitThisExpression(@NotNull UThisExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UThisExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -912,7 +939,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitThrowExpression(UThrowExpression node) {
+        public boolean visitThrowExpression(@NotNull UThrowExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UThrowExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -923,7 +950,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitTryExpression(UTryExpression node) {
+        public boolean visitTryExpression(@NotNull UTryExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UTryExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -934,7 +961,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitTypeReferenceExpression(UTypeReferenceExpression node) {
+        public boolean visitTypeReferenceExpression(@NotNull UTypeReferenceExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UTypeReferenceExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -945,7 +972,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitUnaryExpression(UUnaryExpression node) {
+        public boolean visitUnaryExpression(@NotNull UUnaryExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UUnaryExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -956,7 +983,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitVariable(UVariable node) {
+        public boolean visitVariable(@NotNull UVariable node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UVariable.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -967,7 +994,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitWhileExpression(UWhileExpression node) {
+        public boolean visitWhileExpression(@NotNull UWhileExpression node) {
             List<VisitingDetector> list = nodePsiTypeDetectors.get(UWhileExpression.class);
             if (list != null) {
                 for (VisitingDetector v : list) {
@@ -997,7 +1024,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitSimpleNameReferenceExpression(USimpleNameReferenceExpression node) {
+        public boolean visitSimpleNameReferenceExpression(@NotNull USimpleNameReferenceExpression node) {
             if (mVisitReferences || mVisitResources) {
                 ProgressManager.checkCanceled();
             }
@@ -1037,7 +1064,7 @@ public class UElementVisitor {
         }
 
         @Override
-        public boolean visitCallExpression(UCallExpression node) {
+        public boolean visitCallExpression(@NotNull UCallExpression node) {
             boolean result = super.visitCallExpression(node);
 
             ProgressManager.checkCanceled();
@@ -1046,6 +1073,10 @@ public class UElementVisitor {
                 visitMethodCallExpression(node);
             } else if (UastExpressionUtils.isConstructorCall(node)) {
                 visitNewExpression(node);
+            }
+
+            if (annotationHandler != null) {
+                annotationHandler.visitCallExpression(mContext, node);
             }
 
             return result;
@@ -1092,6 +1123,53 @@ public class UElementVisitor {
                     }
                 }
             }
+        }
+
+        // Annotations
+
+        // (visitCallExpression handled above)
+
+        @Override
+        public boolean visitMethod(@NonNull UMethod method) {
+            if (annotationHandler != null) {
+                annotationHandler.visitMethod(mContext, method);
+            }
+            return super.visitMethod(method);
+        }
+
+        @Override
+        public boolean visitAnnotation(@NonNull UAnnotation annotation) {
+            if (annotationHandler != null) {
+                annotationHandler.visitAnnotation(mContext, annotation);
+            }
+
+            return super.visitAnnotation(annotation);
+        }
+
+        @Override
+        public boolean visitEnumConstant(@NonNull UEnumConstant constant) {
+            if (annotationHandler != null) {
+                annotationHandler.visitEnumConstant(mContext, constant);
+            }
+            return super.visitEnumConstant(constant);
+        }
+
+        @Override
+        public boolean visitArrayAccessExpression(@NonNull UArrayAccessExpression expression) {
+            if (annotationHandler != null) {
+                annotationHandler.visitArrayAccessExpression(mContext, expression);
+            }
+
+            return super.visitArrayAccessExpression(expression);
+        }
+
+        @Override
+        public boolean visitVariable(@NotNull UVariable node) {
+            if (annotationHandler != null) {
+                annotationHandler.visitVariable(mContext, node);
+            }
+
+            return super.visitVariable(node);
         }
     }
 }

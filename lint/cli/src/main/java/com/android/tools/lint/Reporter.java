@@ -35,6 +35,7 @@ import com.android.tools.lint.checks.ApiDetector;
 import com.android.tools.lint.checks.AppCompatCallDetector;
 import com.android.tools.lint.checks.AppIndexingApiDetector;
 import com.android.tools.lint.checks.ByteOrderMarkDetector;
+import com.android.tools.lint.checks.CheckResultDetector;
 import com.android.tools.lint.checks.CleanupDetector;
 import com.android.tools.lint.checks.CommentDetector;
 import com.android.tools.lint.checks.DetectMissingPrefix;
@@ -51,6 +52,7 @@ import com.android.tools.lint.checks.MissingIdDetector;
 import com.android.tools.lint.checks.NamespaceDetector;
 import com.android.tools.lint.checks.ObsoleteLayoutParamsDetector;
 import com.android.tools.lint.checks.ParcelDetector;
+import com.android.tools.lint.checks.PermissionDetector;
 import com.android.tools.lint.checks.PropertyFileDetector;
 import com.android.tools.lint.checks.PxUsageDetector;
 import com.android.tools.lint.checks.ReadParcelableDetector;
@@ -58,7 +60,6 @@ import com.android.tools.lint.checks.RtlDetector;
 import com.android.tools.lint.checks.ScrollViewChildDetector;
 import com.android.tools.lint.checks.SecurityDetector;
 import com.android.tools.lint.checks.SignatureOrSystemDetector;
-import com.android.tools.lint.checks.SupportAnnotationDetector;
 import com.android.tools.lint.checks.TextFieldDetector;
 import com.android.tools.lint.checks.TextViewDetector;
 import com.android.tools.lint.checks.TitleDetector;
@@ -491,6 +492,7 @@ public abstract class Reporter {
                     AppIndexingApiDetector.ISSUE_APP_INDEXING_API,
                     //AppIndexingApiDetector.ISSUE_URL_ERROR,
                     ByteOrderMarkDetector.BOM,
+                    CheckResultDetector.CHECK_RESULT,
                     CleanupDetector.SHARED_PREF,
                     CommentDetector.STOP_SHIP,
                     DetectMissingPrefix.MISSING_NAMESPACE,
@@ -521,6 +523,8 @@ public abstract class Reporter {
                     NamespaceDetector.RES_AUTO,
                     ObsoleteLayoutParamsDetector.ISSUE,
                     ParcelDetector.ISSUE,
+                    PermissionDetector.CHECK_PERMISSION,
+                    PermissionDetector.MISSING_PERMISSION,
                     PropertyFileDetector.ESCAPE,
                     PropertyFileDetector.HTTP,
                     PxUsageDetector.DP_ISSUE,
@@ -530,9 +534,6 @@ public abstract class Reporter {
                     ScrollViewChildDetector.ISSUE,
                     SecurityDetector.EXPORTED_SERVICE,
                     SignatureOrSystemDetector.ISSUE,
-                    SupportAnnotationDetector.CHECK_PERMISSION,
-                    SupportAnnotationDetector.CHECK_RESULT,
-                    SupportAnnotationDetector.MISSING_PERMISSION,
                     TextFieldDetector.ISSUE,
                     TextViewDetector.SELECTABLE,
                     TitleDetector.ISSUE,

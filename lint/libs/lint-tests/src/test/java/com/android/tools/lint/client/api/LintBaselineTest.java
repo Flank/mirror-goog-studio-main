@@ -21,7 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.checks.ManifestDetector;
-import com.android.tools.lint.checks.SupportAnnotationDetector;
+import com.android.tools.lint.checks.RangeDetector;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Location;
@@ -151,7 +151,7 @@ public class LintBaselineTest extends AbstractCheckTest {
         assertThat(baseline.getFixedCount()).isEqualTo(2);
 
         // Match
-        found = baseline.findAndMark(SupportAnnotationDetector.RANGE,
+        found = baseline.findAndMark(RangeDetector.RANGE,
                 Location.create(new File(
                         "java/android/support/v4/widget/SlidingPaneLayout.java")),
                 "Value must be \u2265 0 (was -1)", Severity.WARNING,

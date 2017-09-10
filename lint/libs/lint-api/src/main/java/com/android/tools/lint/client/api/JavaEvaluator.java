@@ -35,6 +35,7 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiEllipsisType;
+import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiMember;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
@@ -50,8 +51,12 @@ import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiTypeVisitor;
 import com.intellij.psi.PsiWildcardType;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.jetbrains.uast.UAnnotated;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UElement;
@@ -814,6 +819,85 @@ public abstract class JavaEvaluator {
         }
 
         return null;
+    }
+
+    @Nullable
+    private Set<String> relevantAnnotations;
+
+    void setRelevantAnnotations(@Nullable Set<String> relevantAnnotations) {
+        this.relevantAnnotations = relevantAnnotations;
+    }
+
+    /**
+     * Filters the set of annotations down to those considered by lint (and more importantly,
+     * handles indirection, e.g. a custom annotation annotated with a known annotation will
+     * return the known annotation instead. For example, if you make an annotation named
+     * {@code @Duration} and annotate it with {@code @IntDef(a,b,c)}, this method will return
+     * the {@code @IntDef} annotation instead of {@code @Duration} for the element annotated
+     * with a duration.
+     */
+    @NonNull
+    public PsiAnnotation[] filterRelevantAnnotations(@NonNull PsiAnnotation[] annotations) {
+        if (relevantAnnotations == null) {
+            return PsiAnnotation.EMPTY_ARRAY;
+        }
+        List<PsiAnnotation> result = null;
+        int length = annotations.length;
+        if (length == 0) {
+            return annotations;
+        }
+        for (PsiAnnotation annotation : annotations) {
+            String signature = annotation.getQualifiedName();
+            if (signature == null ||
+                    signature.startsWith("java.") && !relevantAnnotations.contains(signature)) {
+                // @Override, @SuppressWarnings etc. Ignore
+                continue;
+            }
+
+            if (relevantAnnotations.contains(signature)) {
+                // Common case: there's just one annotation; no need to create a list copy
+                if (length == 1) {
+                    return annotations;
+                }
+                if (result == null) {
+                    result = new ArrayList<>(2);
+                }
+                result.add(annotation);
+                continue;
+            }
+
+            // Special case @IntDef and @StringDef: These are used on annotations
+            // themselves. For example, you create a new annotation named @foo.bar.Baz,
+            // annotate it with @IntDef, and then use @foo.bar.Baz in your signatures.
+            // Here we want to map from @foo.bar.Baz to the corresponding int def.
+            // Don't need to compute this if performing @IntDef or @StringDef lookup
+            PsiJavaCodeReferenceElement ref = annotation.getNameReferenceElement();
+            if (ref == null) {
+                continue;
+            }
+            PsiElement resolved = ref.resolve();
+            if (!(resolved instanceof PsiClass) || !((PsiClass) resolved).isAnnotationType()) {
+                continue;
+            }
+            PsiClass cls = (PsiClass) resolved;
+            PsiAnnotation[] innerAnnotations = getAllAnnotations(cls, false);
+            for (int j = 0; j < innerAnnotations.length; j++) {
+                PsiAnnotation inner = innerAnnotations[j];
+                String a = inner.getQualifiedName();
+                if (a != null && relevantAnnotations.contains(a)) {
+                    if (length == 1 && j == innerAnnotations.length - 1 && result == null) {
+                        return innerAnnotations;
+                    }
+                    if (result == null) {
+                        result = new ArrayList<>(2);
+                    }
+                    result.add(inner);
+                }
+            }
+        }
+
+        return result != null
+                ? result.toArray(PsiAnnotation.EMPTY_ARRAY) : PsiAnnotation.EMPTY_ARRAY;
     }
 
     /**

@@ -17,15 +17,17 @@ package com.android.tools.lint.checks;
 
 
 import static com.android.SdkConstants.ATTR_VALUE;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_ALL_OF;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_ANY_OF;
-import static com.android.tools.lint.checks.SupportAnnotationDetector.ATTR_CONDITIONAL;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_ALL_OF;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_ANY_OF;
+import static com.android.tools.lint.checks.AnnotationDetector.ATTR_CONDITIONAL;
+import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationBooleanValue;
+import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValue;
+import static com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValues;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.sdklib.AndroidVersion;
-import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.psi.JavaTokenType;
@@ -35,9 +37,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import org.jetbrains.uast.UAnnotation;
-import org.jetbrains.uast.UCallExpression;
-import org.jetbrains.uast.UExpression;
-import org.jetbrains.uast.util.UastExpressionUtils;
 
 /**
  * A permission requirement is a boolean expression of permission names that a
@@ -132,174 +131,6 @@ public abstract class PermissionRequirement {
         }
 
         return NONE;
-    }
-
-    @Nullable
-    public static Boolean getAnnotationBooleanValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name) {
-        if (annotation != null) {
-            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
-            if (attributeValue == null && ATTR_VALUE.equals(name)) {
-                attributeValue = annotation.findDeclaredAttributeValue(null);
-            }
-            // Use constant evaluator since we want to resolve field references as well
-            if (attributeValue != null) {
-                Object o = ConstantEvaluator.evaluate(null, attributeValue);
-                if (o instanceof Boolean) {
-                    return (Boolean) o;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public static boolean getAnnotationBooleanValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name,
-            boolean defaultValue) {
-        Boolean value = getAnnotationBooleanValue(annotation, name);
-        if (value != null) {
-            return value;
-        }
-        return defaultValue;
-    }
-
-    @Nullable
-    public static Long getAnnotationLongValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name) {
-        if (annotation != null) {
-            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
-            if (attributeValue == null && ATTR_VALUE.equals(name)) {
-                attributeValue = annotation.findDeclaredAttributeValue(null);
-            }
-            // Use constant evaluator since we want to resolve field references as well
-            if (attributeValue != null) {
-                Object o = ConstantEvaluator.evaluate(null, attributeValue);
-                if (o instanceof Number) {
-                    return ((Number)o).longValue();
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public static long getAnnotationLongValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name,
-            long defaultValue) {
-        Long value = getAnnotationLongValue(annotation, name);
-        if (value != null) {
-            return value;
-        }
-        return defaultValue;
-    }
-
-    @Nullable
-    public static Double getAnnotationDoubleValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name) {
-        if (annotation != null) {
-            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
-            if (attributeValue == null && ATTR_VALUE.equals(name)) {
-                attributeValue = annotation.findDeclaredAttributeValue(null);
-            }
-            // Use constant evaluator since we want to resolve field references as well
-            if (attributeValue != null) {
-                Object o = ConstantEvaluator.evaluate(null, attributeValue);
-                if (o instanceof Number) {
-                    return ((Number)o).doubleValue();
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public static double getAnnotationDoubleValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name,
-            double defaultValue) {
-        Double value = getAnnotationDoubleValue(annotation, name);
-        if (value != null) {
-            return value;
-        }
-        return defaultValue;
-    }
-
-    @Nullable
-    public static String getAnnotationStringValue(
-            @Nullable UAnnotation annotation,
-            @NonNull String name) {
-        if (annotation != null) {
-            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
-            if (attributeValue == null && ATTR_VALUE.equals(name)) {
-                attributeValue = annotation.findDeclaredAttributeValue(null);
-            }
-            // Use constant evaluator since we want to resolve field references as well
-            if (attributeValue != null) {
-                Object o = ConstantEvaluator.evaluate(null, attributeValue);
-                if (o instanceof String) {
-                    return (String) o;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    @Nullable
-    public static String[] getAnnotationStringValues(
-            @Nullable UAnnotation annotation,
-            @NonNull String name) {
-        if (annotation != null) {
-            UExpression attributeValue = annotation.findDeclaredAttributeValue(name);
-            if (attributeValue == null && ATTR_VALUE.equals(name)) {
-                attributeValue = annotation.findDeclaredAttributeValue(null);
-            }
-            if (attributeValue == null) {
-                return null;
-            }
-            if (UastExpressionUtils.isArrayInitializer(attributeValue)) {
-                List<UExpression> initializers =
-                        ((UCallExpression) attributeValue).getValueArguments();
-                List<String> result = Lists.newArrayListWithCapacity(initializers.size());
-                ConstantEvaluator constantEvaluator = new ConstantEvaluator(null);
-                for (UExpression element : initializers) {
-                    Object o = constantEvaluator.evaluate(element);
-                    if (o instanceof String) {
-                        result.add((String)o);
-                    }
-                }
-                if (result.isEmpty()) {
-                    return null;
-                } else {
-                    return result.toArray(new String[0]);
-                }
-            } else {
-                // Use constant evaluator since we want to resolve field references as well
-                Object o = ConstantEvaluator.evaluate(null, attributeValue);
-                if (o instanceof String) {
-                    return new String[]{(String) o};
-                } else if (o instanceof String[]) {
-                    return (String[])o;
-                } else if (o instanceof Object[]) {
-                    Object[] array = (Object[]) o;
-                    List<String> strings = Lists.newArrayListWithCapacity(array.length);
-                    for (Object element : array) {
-                        if (element instanceof String) {
-                            strings.add((String) element);
-                        }
-                    }
-                    return strings.toArray(new String[0]);
-                }
-            }
-        }
-
-        return null;
     }
 
     /**

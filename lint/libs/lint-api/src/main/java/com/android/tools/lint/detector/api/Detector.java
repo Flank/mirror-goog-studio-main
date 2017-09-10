@@ -47,6 +47,7 @@ import lombok.ast.ClassDeclaration;
 import lombok.ast.ConstructorInvocation;
 import lombok.ast.MethodInvocation;
 import lombok.ast.Node;
+import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UClass;
@@ -733,6 +734,9 @@ public abstract class Detector {
      * {@link JavaPsiScanner#visitMethod(JavaContext, JavaElementVisitor, PsiMethodCallExpression, PsiMethod)}
      * should be changed to {@link UastScanner#visitMethod(JavaContext, UCallExpression, PsiMethod)}.
      * <p>
+     * Similarly, replace {@link JavaPsiScanner#createPsiVisitor} with {@link UastScanner#createUastHandler},
+     * {@link JavaPsiScanner#getApplicablePsiTypes()} with {@link UastScanner#getApplicableUastTypes()}, etc.
+     * <p>
      * There are a bunch of new methods on classes like {@link JavaContext} which lets
      * you pass in a {@link UElement} to match the existing {@link PsiElement} methods.
      * <p>
@@ -1152,6 +1156,64 @@ public abstract class Detector {
          * @param lambda  the lambda
          */
         void visitClass(@NonNull JavaContext context, @NonNull ULambdaExpression lambda);
+
+        /**
+         * Returns a list of fully qualified names for super classes that this
+         * detector cares about. If not null, this detector will <b>only</b> be called
+         * if the current class is a subclass of one of the specified superclasses.
+         * Lint will invoke {@link #visitClass(JavaContext, UClass)} (and sometimes
+         * {@link #visitClass(JavaContext, ULambdaExpression)} when it encounters
+         * subclasses and lambdas for these types.
+         *
+         * @return a list of fully qualified names
+         */
+        @Nullable
+        List<String> applicableAnnotations();
+
+        /**
+         * Called whenever the given element references an element that has been annotated with one
+         * of the annotations returned from {@link #applicableAnnotations()}.
+         *
+         * The element itself may not be annotated; it can also be a member in a class which has
+         * been annotated, or a package which has been annotated.
+         *
+         * The call is handed the annotations found at each level (member, class, package) so that
+         * it can decide how to handle them.
+         *
+         * @param context               the lint scanning context
+         * @param argument              the element to be checked
+         * @param annotation            the annotation this detector is interested in
+         * @param qualifiedName         the annotation's qualified name
+         * @param method                the method, if any
+         * @param annotations           the annotations to check. These are the annotations
+         *                              you've registered an interest in with
+         *                              {@link #applicableAnnotations()}, whether they were
+         *                              specified as a parameter annotation, method annotation,
+         *                              class annotation or package annotation. The various
+         *                              annotations available in those contexts are also supplied.
+         *                              This lets you not only see where an annotation was
+         *                              specified, but you can check the relative priorities
+         *                              of annotations. For example, let's say you have a
+         *                              {@code @WorkerThread} annotation on a class. If you also
+         *                              happen to have a {@code @UiThread} annotation on a member
+         *                              you shouldn't enforce worker thread semantics on the
+         *                              member.
+         * @param allMemberAnnotations  all member annotations (may include other annotations
+         *                              than the ones you've registered an interest in with
+         *                              {@link #applicableAnnotations()})
+         * @param allClassAnnotations   all annotations in the target surrounding class
+         * @param allPackageAnnotations all annotations in the target surrounding package
+         */
+        void visitAnnotationUsage(
+                @NonNull JavaContext context,
+                @NonNull UElement argument,
+                @NonNull UAnnotation annotation,
+                @NonNull String qualifiedName,
+                @Nullable PsiMethod method,
+                @NonNull List<UAnnotation> annotations,
+                @NonNull List<UAnnotation> allMemberAnnotations,
+                @NonNull List<UAnnotation> allClassAnnotations,
+                @NonNull List<UAnnotation> allPackageAnnotations);
     }
 
     /** Specialized interface for detectors that scan Java class files */
@@ -1792,5 +1854,22 @@ public abstract class Detector {
             @NonNull ResourceType type,
             @NonNull String name,
             boolean isFramework) {
+    }
+
+    public void visitAnnotationUsage(
+            @NonNull JavaContext context,
+            @NonNull UElement argument,
+            @NonNull UAnnotation annotation,
+            @NonNull String qualifiedName,
+            @Nullable PsiMethod method,
+            @NonNull List<UAnnotation> annotations,
+            @NonNull List<UAnnotation> allMemberAnnotations,
+            @NonNull List<UAnnotation> allClassAnnotations,
+            @NonNull List<UAnnotation> allPackageAnnotations) {
+    }
+
+    @Nullable
+    public List<String> applicableAnnotations() {
+        return null;
     }
 }
