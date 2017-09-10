@@ -755,25 +755,6 @@ public abstract class BaseExtension implements AndroidConfig {
         logger.warn("publishNonDefault is deprecated and has no effect anymore. All variants are now published.");
     }
 
-    public void buildTypeMatching(@NonNull String consumer, @NonNull String... alternates) {
-        // STOPSHIP
-        extraModelInfo.handleSyncError(
-                null,
-                TYPE_GENERIC,
-                "buildTypeMatching has been removed. Use buildTypes.<name>.fallbacks ...");
-    }
-
-    public void productFlavorMatching(
-            @NonNull String consumerDimension,
-            @NonNull String consumer,
-            @NonNull String... alternates) {
-        // STOPSHIP
-        extraModelInfo.handleSyncError(
-                null,
-                TYPE_GENERIC,
-                "productFlavorMatching has been removed. Use productFlavors.<name>.fallbacks ...");
-    }
-
     public void variantFilter(Action<VariantFilter> filter) {
         setVariantFilter(filter);
     }

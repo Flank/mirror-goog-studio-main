@@ -18,10 +18,15 @@ package com.android.build.gradle.tasks;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
+import com.android.repository.Revision;
+import com.android.repository.api.ConsoleProgressIndicator;
+import com.android.repository.api.LocalPackage;
+import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestUtils;
 import java.io.File;
 import java.util.Arrays;
@@ -44,6 +49,8 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
     File objFolder;
     File jsonFolder;
     File makeFile;
+    File cmakeFolder;
+    File ninjaFolder;
     boolean debuggable;
     List<String> buildArguments;
     List<String> cFlags;
@@ -66,6 +73,15 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         objFolder = null;
         jsonFolder = Mockito.mock(File.class);
         makeFile = Mockito.mock(File.class);
+        AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkDirectory);
+        LocalPackage cmakePackage =
+                sdk.getLatestLocalPackageForPrefix(
+                        SdkConstants.FD_CMAKE, null, true, new ConsoleProgressIndicator());
+        if (cmakePackage != null) {
+            cmakeFolder = cmakePackage.getLocation();
+        }
+
+        ninjaFolder = new File(cmakeFolder, "bin");
         debuggable = true;
         buildArguments =
                 Arrays.asList("build-argument-foo", "build-argument-bar", "build-argument-baz");
@@ -76,7 +92,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
 
     @Test
     public void testGetCacheArguments() {
-
+        Mockito.when(ndkHandler.getRevision()).thenReturn(new Revision(15));
         CmakeServerExternalNativeJsonGenerator cmakeServerStrategy =
                 new CmakeServerExternalNativeJsonGenerator(
                         ndkHandler,
@@ -90,6 +106,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         objFolder,
                         jsonFolder,
                         makeFile,
+                        cmakeFolder,
                         debuggable,
                         buildArguments,
                         cFlags,

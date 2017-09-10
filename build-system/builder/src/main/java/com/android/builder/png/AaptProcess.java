@@ -23,8 +23,9 @@ import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.v2.AaptV2CommandBuilder;
 import com.android.builder.tasks.BooleanLatch;
 import com.android.builder.tasks.Job;
-import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.res2.CompileResourceRequest;
+import com.android.sdklib.BuildToolInfo;
+import com.android.tools.aapt2.Aapt2Exception;
 import com.android.utils.FileUtils;
 import com.android.utils.GrabProcessOutput;
 import com.android.utils.ILogger;
@@ -41,14 +42,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * interface to the aapt long running process.
  */
 public class AaptProcess {
-
-    private static final boolean VERBOSE_LOGGING = false;
     private static final int DEFAULT_SLAVE_AAPT_TIMEOUT_IN_SECONDS = 5;
     private static final int SLAVE_AAPT_TIMEOUT_IN_SECONDS =
             System.getenv("SLAVE_AAPT_TIMEOUT") == null
                     ? DEFAULT_SLAVE_AAPT_TIMEOUT_IN_SECONDS
                     : Integer.parseInt(System.getenv("SLAVE_AAPT_TIMEOUT"));
-    private static final Joiner joiner = Joiner.on(' ');
+    private static final Joiner joiner = Joiner.on('\n');
 
     private final String mAaptLocation;
     private final Process mProcess;
@@ -82,33 +81,22 @@ public class AaptProcess {
      */
     public void crunch(@NonNull File in, @NonNull File out, @NonNull Job<AaptProcess> job)
             throws IOException {
-        if (VERBOSE_LOGGING) {
-            mLogger.verbose(
-                    "Process(%1$d) %2$s job:%3$s", hashCode(), in.getName(), job.toString());
-        }
         if (!mReady.get()) {
             throw new RuntimeException("AAPT process not ready to receive commands");
         }
         NotifierProcessOutput notifier =
                 new NotifierProcessOutput(job, mProcessOutputFacade, mLogger);
 
-        if (VERBOSE_LOGGING) {
-            mLogger.verbose(
-                    "Process(%1$d) length = %2$d:%3$d",
-                    hashCode(), in.getAbsolutePath().length(), out.getAbsolutePath().length());
-        }
         mProcessOutputFacade.setNotifier(notifier);
         mWriter.write("s\n");
         mWriter.write(FileUtils.toExportableSystemDependentPath(in));
-        mWriter.write("\n");
+        mWriter.write('\n');
         mWriter.write(FileUtils.toExportableSystemDependentPath(out));
-        mWriter.write("\n");
+        mWriter.write('\n');
         mWriter.flush();
         processCount++;
-        if (VERBOSE_LOGGING) {
-            mLogger.verbose(
-                    "Processed(%1$d) %2$s job:%3$s", hashCode(), in.getName(), job.toString());
-        }
+        mLogger.verbose(
+                "AAPT1 processed(%1$d) %2$s job:%3$s", hashCode(), in.getName(), job.toString());
     }
 
     /**
@@ -121,37 +109,24 @@ public class AaptProcess {
      */
     public void compile(@NonNull CompileResourceRequest request, @NonNull Job<AaptProcess> job)
             throws IOException {
-
-        if (VERBOSE_LOGGING) {
-            mLogger.verbose(
-                    "Process(%1$d) %2$s job:%3$s",
-                    hashCode(), request.getInput().getName(), job.toString());
-        }
         if (!mReady.get()) {
-            throw new RuntimeException("AAPT process not ready to receive commands");
+            throw new RuntimeException("AAPT2 process not ready to receive commands");
         }
         NotifierProcessOutput notifier =
                 new NotifierProcessOutput(job, mProcessOutputFacade, mLogger);
 
-        if (VERBOSE_LOGGING) {
-            mLogger.verbose(
-                    "Process(%1$d) length = %2$d:%3$d",
-                    hashCode(),
-                    request.getInput().getAbsolutePath().length(),
-                    request.getOutput().getAbsolutePath().length());
-        }
         mProcessOutputFacade.setNotifier(notifier);
-        mWriter.write("c ");
+        mWriter.write('c');
+        mWriter.write('\n');
         mWriter.write(joiner.join(AaptV2CommandBuilder.makeCompile(request)));
         // Finish the request
         mWriter.write('\n');
+        mWriter.write('\n');
         mWriter.flush();
         processCount++;
-        if (VERBOSE_LOGGING) {
-            mLogger.verbose(
-                    "Processed(%1$d) %2$s job:%3$s",
-                    hashCode(), request.getInput().getName(), job.toString());
-        }
+        mLogger.verbose(
+                "AAPT2 processed(%1$d) %2$s job:%3$s",
+                hashCode(), request.getInput().getName(), job.toString());
     }
 
     /**
@@ -168,30 +143,26 @@ public class AaptProcess {
             @NonNull File intermediateDir,
             @NonNull Job<AaptProcess> job)
             throws IOException {
-
-        if (VERBOSE_LOGGING) {
-            mLogger.verbose("Process(%1$d) linking job:%2$s", hashCode(), job.toString());
-        }
         if (!mReady.get()) {
-            throw new RuntimeException("AAPT process not ready to receive commands");
+            throw new RuntimeException("AAPT2 process not ready to receive commands");
         }
         NotifierProcessOutput notifier =
                 new NotifierProcessOutput(job, mProcessOutputFacade, mLogger);
 
         mProcessOutputFacade.setNotifier(notifier);
         try {
-            mWriter.write("l ");
+            mWriter.write('l');
+            mWriter.write('\n');
             mWriter.write(joiner.join(AaptV2CommandBuilder.makeLink(config, intermediateDir)));
             // Finish the request
+            mWriter.write('\n');
             mWriter.write('\n');
             mWriter.flush();
         } catch (AaptException e) {
             throw new IOException(e);
         }
         processCount++;
-        if (VERBOSE_LOGGING) {
-            mLogger.verbose("Processed(%1$d) linking job:%2$s", hashCode(), job.toString());
-        }
+        mLogger.verbose("AAPT2 processed(%1$d) linking job:%2$s", hashCode(), job.toString());
     }
 
     public void waitForReady() throws InterruptedException {
@@ -206,9 +177,7 @@ public class AaptProcess {
         }
 
         if (mReady.get()) {
-            if (VERBOSE_LOGGING) {
-                mLogger.verbose("Slave %1$s is ready", hashCode());
-            }
+            mLogger.verbose("Slave %1$s is ready", hashCode());
         } else {
             mLogger.verbose("Slave %1$s failed to start", hashCode());
         }
@@ -232,11 +201,10 @@ public class AaptProcess {
 
         mReady.set(false);
         mWriter.write("quit\n");
+        mWriter.write('\n');
         mWriter.flush();
         mProcess.waitFor();
-        if (VERBOSE_LOGGING) {
-            mLogger.verbose("Process (%1$s) processed %2$s files", hashCode(), processCount);
-        }
+        mLogger.verbose("Process (%1$s) processed %2$s files", hashCode(), processCount);
     }
 
     public static class Builder {
@@ -254,14 +222,10 @@ public class AaptProcess {
                     "m",
             };
 
-            if (VERBOSE_LOGGING) {
-                mLogger.verbose("Trying to start %1$s", command[0]);
-            }
+            mLogger.verbose("Trying to start %1$s", command[0]);
             Process process = new ProcessBuilder(command).start();
             AaptProcess aaptProcess = new AaptProcess(mAaptLocation, process, mLogger);
-            if (VERBOSE_LOGGING) {
-                mLogger.verbose("Started %1$d", aaptProcess.hashCode());
-            }
+            mLogger.verbose("Started %1$d", aaptProcess.hashCode());
             return aaptProcess;
         }
     }
@@ -308,13 +272,7 @@ public class AaptProcess {
                 return;
             }
             NotifierProcessOutput delegate = getNotifier();
-            if (VERBOSE_LOGGING) {
-                mLogger.verbose("AAPT out(%1$s): %2$s", toString(), line);
-            }
             if (delegate != null) {
-                if (VERBOSE_LOGGING) {
-                    mLogger.verbose("AAPT out(%1$s): -> %2$s", toString(), delegate.mJob);
-                }
                 delegate.out(line);
             } else {
                 mLogger.error(null, "AAPT out(%1$s) : No Delegate set : lost message:%2$s",
@@ -336,7 +294,14 @@ public class AaptProcess {
             } else {
                 if (!mReady.get()) {
                     if (line.equals("ERROR: Unknown command 'm'")) {
-                       throw new RuntimeException("Invalid aapt version, version 21 or above is required");
+                        throw new RuntimeException(
+                                "Invalid AAPT version.\n"
+                                        + "For AAPT1 version 21 or above is required.\n"
+                                        + "For AAPT2 version "
+                                        + BuildToolInfo.PathId.DAEMON_AAPT2
+                                                .getMinRevision()
+                                                .toString()
+                                        + " or above is required.");
                     }
                     mLogger.verbose("AAPT err(%1$s): %2$s", toString(), line);
                     mLogger.error(null, "AAPT err(%1$s): %2$s", toString(), line);
@@ -367,38 +332,32 @@ public class AaptProcess {
         @SuppressWarnings("StringBufferField")
         @NonNull private final StringBuilder mErrorBuilder = new StringBuilder();
 
-            NotifierProcessOutput(
-                    @NonNull Job<AaptProcess> job,
-                    @NonNull ProcessOutputFacade owner,
-                    @NonNull ILogger iLogger) {
-                mOwner = owner;
-                mJob = job;
+        NotifierProcessOutput(
+                @NonNull Job<AaptProcess> job,
+                @NonNull ProcessOutputFacade owner,
+                @NonNull ILogger iLogger) {
+            mOwner = owner;
+            mJob = job;
             mLogger = iLogger;
         }
 
         @Override
         public void out(@Nullable String line) {
             if (line != null) {
-                if (VERBOSE_LOGGING) {
-                    mLogger.verbose("AAPT notify(%1$s): %2$s", mJob, line);
-                }
+                //AAPT1 outputs "Done" and "Error" to stdout.
                 if (line.equalsIgnoreCase("Done")) {
                     mOwner.reset();
                     if (mInError.get()) {
-                        if (VERBOSE_LOGGING) {
-                            mLogger.verbose(
-                                    "Job is in error mode, cause : %1$s", mErrorBuilder.toString());
-                        }
-                        mJob.error(new ProcessException(mErrorBuilder.toString()));
+                        mLogger.verbose(
+                                "Job is in error mode, cause : %1$s", mErrorBuilder.toString());
+                        mJob.error(new AaptException(mErrorBuilder.toString()));
                     } else {
                         mJob.finished();
                     }
                 } else if (line.equalsIgnoreCase("Error")) {
                     mInError.set(true);
                 } else {
-                    if (VERBOSE_LOGGING) {
-                        mLogger.verbose("AAPT(%1$s) discarded: %2$s", mJob, line);
-                    }
+                    mLogger.verbose("AAPT(%1$s) discarded: %2$s", mJob, line);
                 }
             }
         }
@@ -406,13 +365,26 @@ public class AaptProcess {
         @Override
         public void err(@Nullable String line) {
             if (line != null) {
-                if (mInError.get()) {
+                //AAPT2 outputs "Done" and "Error" to stderr for better error handling.
+                if (line.equalsIgnoreCase("Done")) {
+                    mOwner.reset();
+                    if (mInError.get()) {
+                        mLogger.verbose(
+                                "Job is in error mode, cause : %1$s", mErrorBuilder.toString());
+                        mJob.error(new Aapt2Exception(mErrorBuilder.toString()));
+                    } else {
+                        mJob.finished();
+                    }
+                } else if (line.equalsIgnoreCase("Error")) {
+                    // Mark that the error actually happened.
+                    mInError.set(true);
+                } else if (mInError.get() || line.contains("error:")) {
+                    // Grab all the possible errors.
                     mErrorBuilder.append(line);
                 }
-                mLogger.verbose("AAPT warning(%1$s), Job(%2$s): %3$s",
+                mLogger.verbose(
+                        "AAPT warning(%1$s), Job(%2$s): %3$s",
                         mOwner.getProcess().hashCode(), mJob, line);
-                mLogger.warning("AAPT: %1$s", line);
-
             }
         }
     }

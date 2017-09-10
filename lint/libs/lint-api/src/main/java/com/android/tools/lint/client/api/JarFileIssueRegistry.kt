@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.Severity
 import com.android.utils.SdkUtils
 import java.io.File
 import java.io.IOException
+import java.io.InputStreamReader
 import java.lang.ref.SoftReference
 import java.net.URLClassLoader
 import java.util.HashMap
@@ -97,6 +98,10 @@ private constructor(
     }
 
     companion object Factory {
+        /** Service key for automatic discovery of lint rules */
+        private const val SERVICE_KEY =
+                "META-INF/services/com.android.tools.lint.client.api.IssueRegistry"
+
         /**
          * Manifest constant for declaring an issue provider.
          *
@@ -244,6 +249,32 @@ private constructor(
                             registryClassToJarFile[className] = jarFile
                         }
                     } else {
+                        // Load service keys. We're reading it manually instead of using
+                        // ServiceLoader because we don't want to put these jars into
+                        // the class loaders yet (since there can be many duplicates
+                        // when a library is available through multiple dependencies)
+                        val services = file.getJarEntry(SERVICE_KEY)
+                        if (services != null) {
+                            file.getInputStream(services).use {
+                                val reader = InputStreamReader(it, Charsets.UTF_8)
+                                reader.useLines {
+                                    for (line in it) {
+                                        val comment = line.indexOf("#")
+                                        val className = if (comment >= 0) {
+                                            line.substring(0, comment).trim()
+                                        } else {
+                                            line.trim()
+                                        }
+                                        if (!className.isEmpty() &&
+                                                registryClassToJarFile[className] == null) {
+                                            registryClassToJarFile[className] = jarFile
+                                        }
+                                    }
+                                }
+                            }
+                            return registryClassToJarFile
+                        }
+
                         client.log(Severity.ERROR, null,
                                 "Custom lint rule jar %1\$s does not contain a valid " +
                                 "registry manifest key (%2\$s).\n" +

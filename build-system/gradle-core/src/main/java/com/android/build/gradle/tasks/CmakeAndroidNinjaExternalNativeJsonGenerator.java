@@ -47,6 +47,7 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
             @NonNull File objFolder,
             @NonNull File jsonFolder,
             @NonNull File makeFile,
+            @NonNull File cmakeInstallFolder,
             boolean debuggable,
             @Nullable List<String> buildArguments,
             @Nullable List<String> cFlags,
@@ -64,6 +65,7 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
                 objFolder,
                 jsonFolder,
                 makeFile,
+                cmakeInstallFolder,
                 debuggable,
                 buildArguments,
                 cFlags,
@@ -78,7 +80,8 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
 
         cacheArguments.add(
                 String.format("-DCMAKE_TOOLCHAIN_FILE=%s", getToolChainFile().getAbsolutePath()));
-        cacheArguments.add(String.format("-DANDROID_NDK=%s", getNdkFolder()));
+        cacheArguments.add(
+                String.format("-DCMAKE_MAKE_PROGRAM=%s", getNinjaExecutable().getAbsolutePath()));
         cacheArguments.add("-GAndroid Gradle - Ninja");
         return cacheArguments;
     }
@@ -90,5 +93,14 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
             throws ProcessException, IOException {
         return executeBuildProcessAndLogError(
                 androidBuilder, getProcessBuilder(abi, abiPlatformVersion, outputJsonDir), true);
+    }
+
+
+    @NonNull
+    private File getNinjaExecutable() {
+        if (isWindows()) {
+            return new File(getCmakeBinFolder(), "ninja.exe");
+        }
+        return new File(getCmakeBinFolder(), "ninja");
     }
 };

@@ -243,4 +243,27 @@ public class ParcelDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testKotlin() {
+        if (skipKotlinTests()) {
+            return;
+        }
+
+        lint().files(
+                kotlin("package test.pkg\n" +
+                        "\n" +
+                        "import android.os.Parcel\n" +
+                        "import android.os.Parcelable\n" +
+                        "\n" +
+                        "class MissingParcelable1a : Parcelable {\n" +
+                        "    override fun describeContents(): Int { return 0 }\n" +
+                        "    override fun writeToParcel(dest: Parcel, flags: Int) {}\n" +
+                        "}"))
+                .incremental()
+                .run()
+                .expect("src/test/pkg/test.kt:6: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n" +
+                        "class MissingParcelable1a : Parcelable {\n" +
+                        "      ~~~~~~~~~~~~~~~~~~~\n" +
+                        "1 errors, 0 warnings\n");
+    }
 }

@@ -361,11 +361,49 @@ public class LintFixVerifier {
         String locationRange = contents.substring(start.getOffset(), end.getOffset());
         int startOffset;
         int endOffset;
+        String replacement = replaceFix.replacement;
 
         if (oldString == null && oldPattern == null) {
             // Replace the whole range
             startOffset = start.getOffset();
             endOffset = end.getOffset();
+
+            // See if there's nothing left on the line; if so, delete the whole line
+            boolean allSpace = true;
+            for (int offset = 0; offset < replacement.length(); offset++) {
+                char c = contents.charAt(offset);
+                if (!Character.isWhitespace(c)) {
+                    allSpace = false;
+                    break;
+                }
+            }
+
+            if (allSpace) {
+                int lineBegin = startOffset;
+                while (lineBegin > 0) {
+                    char c = contents.charAt(lineBegin - 1);
+                    if (c == '\n') {
+                        break;
+                    } else if (!Character.isWhitespace(c)) {
+                        allSpace = false;
+                        break;
+                    }
+                    lineBegin--;
+                }
+
+                int lineEnd = endOffset;
+                while (lineEnd < contents.length()) {
+                    char c = contents.charAt(lineEnd);
+                    lineEnd++;
+                    if (c == '\n') {
+                        break;
+                    }
+                }
+                if (allSpace) {
+                    startOffset = lineBegin;
+                    endOffset = lineEnd;
+                }
+            }
         } else if (oldString != null) {
             int index = locationRange.indexOf(oldString);
             if (index != -1) {
@@ -392,7 +430,7 @@ public class LintFixVerifier {
             }
         }
 
-        return contents.substring(0, startOffset) + replaceFix.replacement +
+        return contents.substring(0, startOffset) + replacement +
                 contents.substring(endOffset);
     }
 

@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.transforms;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.Format;
 import com.android.build.api.transform.JarInput;
@@ -46,12 +47,10 @@ import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Multimap;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -91,17 +90,19 @@ import org.gradle.api.file.FileCollection;
  * than 100 DEX files (see <a href="http://b.android.com/233093">http://b.android.com/233093</a>).
  * This means that in the incremental case, if the a dex archive of an external library has changed,
  * we will re-merge all external libraries again. If a dex archive of other type of input has
- * changed, we will re-merge only that dex archive.
+ * changed, we will re-merge only that dex archive. For Android L, due to previously mentioned dex
+ * file number limit, we might merge all directory inputs and all non-external jar inputs in two
+ * separate dex merger invocations (see {@link #shouldMergeInputsForNative(Collection, Collection)}.
  */
 public class DexMergerTransform extends Transform {
 
     private static final LoggerWrapper logger = LoggerWrapper.getLogger(DexMergerTransform.class);
-    private static final int ANDROID_L_MAX_DEX_FILES = 100;
+    @VisibleForTesting public static final int ANDROID_L_MAX_DEX_FILES = 100;
     // We assume the maximum number of dexes that will be produced from the external dependencies is
-    // JAR_DEX_FILES, so the remaining ANDROID_L_MAX_DEX_FILES - JAR_DEX_FILES can be used for
-    // program classes. This is a generous assumption that 50 completely full dex files will be
-    // needed for external dependencies.
-    private static final int JAR_DEX_FILES = 50;
+    // EXTERNAL_DEPS_DEX_FILES, so the remaining ANDROID_L_MAX_DEX_FILES - EXTERNAL_DEPS_DEX_FILES
+    // can be used for the remaining inputs. This is a generous assumption that 50 completely full
+    // dex files will be needed for the external dependencies.
+    @VisibleForTesting public static final int EXTERNAL_DEPS_DEX_FILES = 50;
 
     @NonNull private final DexingType dexingType;
     @Nullable private final FileCollection mainDexListFile;
@@ -290,71 +291,88 @@ public class DexMergerTransform extends Transform {
             throws IOException {
 
         ImmutableList.Builder<ForkJoinTask<Void>> subTasks = ImmutableList.builder();
-        Multimap<Status, Path> externalLibs = ArrayListMultimap.create();
-        List<DirectoryInput> directoryInputs =
-                inputs.stream()
-                        .flatMap(i -> i.getDirectoryInputs().stream())
-                        .collect(Collectors.toList());
-        subTasks.addAll(processDirectories(output, outputProvider, isIncremental, directoryInputs));
 
-        List<JarInput> jarInputs =
-                inputs.stream()
-                        .flatMap(i -> i.getJarInputs().stream())
-                        .collect(Collectors.toList());
+        List<DirectoryInput> directoryInputs = new ArrayList<>();
+        List<JarInput> externalLibs = new ArrayList<>();
+        List<JarInput> nonExternalJars = new ArrayList<>();
+        collectInputsForNativeMultiDex(inputs, directoryInputs, externalLibs, nonExternalJars);
+
+        boolean mergeAllInputs = shouldMergeInputsForNative(directoryInputs, nonExternalJars);
         subTasks.addAll(
-                processJars(output, outputProvider, isIncremental, jarInputs, externalLibs));
+                processDirectories(
+                        output, outputProvider, isIncremental, directoryInputs, mergeAllInputs));
 
-        File externalLibsOutput =
-                getDexOutputLocation(
-                        outputProvider, "externalLibs", ImmutableSet.of(Scope.EXTERNAL_LIBRARIES));
-
-        if (!isIncremental
-                || externalLibs.containsKey(Status.CHANGED)
-                || externalLibs.containsKey(Status.ADDED)
-                || externalLibs.containsKey(Status.REMOVED)) {
-            // if non-incremental, or inputs have changed, merge again
-            FileUtils.cleanOutputDir(externalLibsOutput);
-            Iterable<Path> externalLibsToMerge =
-                    Iterables.concat(
-                            externalLibs.get(Status.CHANGED),
-                            externalLibs.get(Status.NOTCHANGED),
-                            externalLibs.get(Status.ADDED));
-            if (!Iterables.isEmpty(externalLibsToMerge)) {
-                subTasks.add(
-                        submitForMerging(output, externalLibsOutput, externalLibsToMerge, null));
-            }
+        if (mergeAllInputs) {
+            subTasks.addAll(
+                    processNonExternalJarsTogether(
+                            output, outputProvider, isIncremental, nonExternalJars));
+        } else {
+            subTasks.addAll(
+                    processNonExternalJarsSeparately(
+                            output, outputProvider, isIncremental, nonExternalJars));
         }
+
+        subTasks.addAll(processExternalJars(output, outputProvider, isIncremental, externalLibs));
         return subTasks.build();
     }
 
     /**
-     * If directory inputs should be merge individually, or we should merge all of them together.
-     * Reason for this check is that on L (API levels 21 and 22) there is a 100 dex files limit that
-     * we might hit if each of the directory inputs is merged individually.
+     * If all directory and non-external jar inputs should be merge individually, or we should merge
+     * them together (all directory ones together, and all non-external jar ones together).
+     *
+     * <p>In order to improve the incremental build times, we will try to merge a single directory
+     * input or non-external jar input in a single dex merger invocation i.e. a single input will
+     * produce at least one dex file.
+     *
+     * <p>However, on Android L (API levels 21 and 22) there is a 100 dex files limit that we might
+     * hit. Therefore, we might need to merge all directory inputs in a single dex merger
+     * invocation. The same applies to non-external jar inputs.
      */
-    private boolean shouldMergeAllDirInputs(@NonNull Collection<DirectoryInput> directories) {
+    private boolean shouldMergeInputsForNative(
+            @NonNull Collection<DirectoryInput> directories,
+            @NonNull Collection<JarInput> nonExternalJars) {
         if (minSdkVersion > 22) {
             return false;
         }
 
         long dirInputsCount = directories.stream().filter(d -> d.getFile().exists()).count();
-        return dirInputsCount > ANDROID_L_MAX_DEX_FILES - JAR_DEX_FILES;
+        long nonExternalJarCount =
+                nonExternalJars.stream().filter(d -> d.getStatus() != Status.REMOVED).count();
+        return dirInputsCount + nonExternalJarCount
+                > ANDROID_L_MAX_DEX_FILES - EXTERNAL_DEPS_DEX_FILES;
     }
 
-    private List<ForkJoinTask<Void>> processJars(
+    /**
+     * Reads all inputs and adds the input to the corresponding collection. NB: this method mutates
+     * the collections in its parameters.
+     */
+    private static void collectInputsForNativeMultiDex(
+            @NonNull Collection<TransformInput> inputs,
+            @NonNull Collection<DirectoryInput> directoryInputs,
+            @NonNull Collection<JarInput> externalLibs,
+            @NonNull Collection<JarInput> nonExternalJars) {
+        for (TransformInput input : inputs) {
+            directoryInputs.addAll(input.getDirectoryInputs());
+
+            for (JarInput jarInput : input.getJarInputs()) {
+                if (jarInput.getScopes().equals(Collections.singleton(Scope.EXTERNAL_LIBRARIES))) {
+                    externalLibs.add(jarInput);
+                } else {
+                    nonExternalJars.add(jarInput);
+                }
+            }
+        }
+    }
+
+    private List<ForkJoinTask<Void>> processNonExternalJarsSeparately(
             @NonNull ProcessOutput output,
             @NonNull TransformOutputProvider outputProvider,
             boolean isIncremental,
-            @NonNull Collection<JarInput> inputs,
-            @NonNull Multimap<Status, Path> externalLibs)
+            @NonNull Collection<JarInput> inputs)
             throws IOException {
         ImmutableList.Builder<ForkJoinTask<Void>> subTasks = ImmutableList.builder();
-        for (JarInput jarInput : inputs) {
-            if (jarInput.getScopes().equals(Collections.singleton(Scope.EXTERNAL_LIBRARIES))) {
-                externalLibs.put(jarInput.getStatus(), jarInput.getFile().toPath());
-                continue;
-            }
 
+        for (JarInput jarInput : inputs) {
             File dexOutput =
                     getDexOutputLocation(outputProvider, jarInput.getName(), jarInput.getScopes());
 
@@ -376,11 +394,57 @@ public class DexMergerTransform extends Transform {
         return subTasks.build();
     }
 
+    @NonNull
+    private List<ForkJoinTask<Void>> processNonExternalJarsTogether(
+            @NonNull ProcessOutput output,
+            @NonNull TransformOutputProvider outputProvider,
+            boolean isIncremental,
+            @NonNull Collection<JarInput> inputs)
+            throws IOException {
+        Map<Status, List<JarInput>> byStatus =
+                inputs.stream().collect(Collectors.groupingBy(JarInput::getStatus));
+        for (Status s : Status.values()) {
+            byStatus.putIfAbsent(s, ImmutableList.of());
+        }
+
+        if (isIncremental && byStatus.keySet().equals(Collections.singleton(Status.NOTCHANGED))) {
+            return ImmutableList.of();
+        }
+
+        Set<? super Scope> allScopes =
+                inputs.stream()
+                        .map(JarInput::getScopes)
+                        .flatMap(Set::stream)
+                        .collect(Collectors.toSet());
+        File mergedOutput = getDexOutputLocation(outputProvider, "nonExternalJars", allScopes);
+        FileUtils.cleanOutputDir(mergedOutput);
+
+        List<Path> toMerge =
+                new ArrayList<>(
+                        byStatus.get(Status.CHANGED).size()
+                                + byStatus.get(Status.NOTCHANGED).size()
+                                + byStatus.get(Status.ADDED).size());
+        for (JarInput input :
+                Iterables.concat(
+                        byStatus.get(Status.CHANGED),
+                        byStatus.get(Status.NOTCHANGED),
+                        byStatus.get(Status.ADDED))) {
+            toMerge.add(input.getFile().toPath());
+        }
+
+        if (!toMerge.isEmpty()) {
+            return ImmutableList.of(submitForMerging(output, mergedOutput, toMerge, null));
+        } else {
+            return ImmutableList.of();
+        }
+    }
+
     private List<ForkJoinTask<Void>> processDirectories(
             @NonNull ProcessOutput output,
             @NonNull TransformOutputProvider outputProvider,
             boolean isIncremental,
-            @NonNull Collection<DirectoryInput> inputs)
+            @NonNull Collection<DirectoryInput> inputs,
+            boolean mergeAllInputs)
             throws IOException {
         ImmutableList.Builder<ForkJoinTask<Void>> subTasks = ImmutableList.builder();
         List<DirectoryInput> deleted = new ArrayList<>();
@@ -411,19 +475,21 @@ public class DexMergerTransform extends Transform {
             }
         }
 
-        if (shouldMergeAllDirInputs(inputs)) {
+        if (isIncremental && deleted.isEmpty() && changed.isEmpty()) {
+            return subTasks.build();
+        }
+
+        if (mergeAllInputs) {
             File dexOutput =
                     getDexOutputLocation(
                             outputProvider, "directories", ImmutableSet.of(Scope.PROJECT));
-            if (!deleted.isEmpty() || !changed.isEmpty()) {
-                FileUtils.cleanOutputDir(dexOutput);
-            }
+            FileUtils.cleanOutputDir(dexOutput);
 
-            if (!changed.isEmpty() || !notChanged.isEmpty()) {
-                List<Path> toMerge = new ArrayList<>(changed.size() + notChanged.size());
-                for (DirectoryInput input : Iterables.concat(changed, notChanged)) {
-                    toMerge.add(input.getFile().toPath());
-                }
+            List<Path> toMerge = new ArrayList<>(changed.size() + notChanged.size());
+            for (DirectoryInput input : Iterables.concat(changed, notChanged)) {
+                toMerge.add(input.getFile().toPath());
+            }
+            if (!toMerge.isEmpty()) {
                 subTasks.add(submitForMerging(output, dexOutput, toMerge, null));
             }
         } else {
@@ -450,6 +516,37 @@ public class DexMergerTransform extends Transform {
                                 null));
             }
         }
+        return subTasks.build();
+    }
+
+    @NonNull
+    private List<ForkJoinTask<Void>> processExternalJars(
+            @NonNull ProcessOutput output,
+            @NonNull TransformOutputProvider outputProvider,
+            boolean isIncremental,
+            List<JarInput> externalLibs)
+            throws IOException {
+        ImmutableList.Builder<ForkJoinTask<Void>> subTasks = ImmutableList.builder();
+        File externalLibsOutput =
+                getDexOutputLocation(
+                        outputProvider, "externalLibs", ImmutableSet.of(Scope.EXTERNAL_LIBRARIES));
+
+        if (!isIncremental
+                || externalLibs.stream().anyMatch(i -> i.getStatus() != Status.NOTCHANGED)) {
+            // if non-incremental, or inputs have changed, merge again
+            FileUtils.cleanOutputDir(externalLibsOutput);
+            Iterable<Path> externalLibsToMerge =
+                    externalLibs
+                            .stream()
+                            .filter(i -> i.getStatus() != Status.REMOVED)
+                            .map(input -> input.getFile().toPath())
+                            .collect(Collectors.toList());
+            if (!Iterables.isEmpty(externalLibsToMerge)) {
+                subTasks.add(
+                        submitForMerging(output, externalLibsOutput, externalLibsToMerge, null));
+            }
+        }
+
         return subTasks.build();
     }
 

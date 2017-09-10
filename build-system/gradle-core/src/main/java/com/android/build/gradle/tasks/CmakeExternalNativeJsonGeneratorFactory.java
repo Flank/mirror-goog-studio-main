@@ -45,17 +45,18 @@ class CmakeExternalNativeJsonGeneratorFactory {
             @NonNull File objFolder,
             @NonNull File jsonFolder,
             @NonNull File makeFile,
+            @NonNull File cmakeInstallFolder,
             boolean debuggable,
             @Nullable List<String> buildArguments,
             @Nullable List<String> cFlags,
             @Nullable List<String> cppFlags,
             @NonNull List<File> nativeBuildConfigurationsJsons) {
         // Custom Cmake shipped with Android studio has a fixed version, we'll just use that exact
-        // version.
-        final String androidStudioCustomCmakeVersion = "3.6.0-rc2";
+        // version to check.
         if (cmakeRevision.equals(
                 Revision.parseRevision(
-                        androidStudioCustomCmakeVersion, Revision.Precision.MICRO))) {
+                        ExternalNativeBuildTaskUtils.CUSTOM_FORK_CMAKE_VERSION,
+                        Revision.Precision.MICRO))) {
             return new CmakeAndroidNinjaExternalNativeJsonGenerator(
                     ndkHandler,
                     minSdkVersion,
@@ -68,6 +69,7 @@ class CmakeExternalNativeJsonGeneratorFactory {
                     objFolder,
                     jsonFolder,
                     makeFile,
+                    cmakeInstallFolder,
                     debuggable,
                     buildArguments,
                     cFlags,
@@ -95,6 +97,7 @@ class CmakeExternalNativeJsonGeneratorFactory {
                 objFolder,
                 jsonFolder,
                 makeFile,
+                cmakeInstallFolder,
                 debuggable,
                 buildArguments,
                 cFlags,

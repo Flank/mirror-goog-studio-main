@@ -22,31 +22,89 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Options for configuring Jack.
+ * The Jack toolchain is <em>deprecated</em>.
+ *
+ * <p>If you want to use Java 8 language features, use the improved support included in the default
+ * toolchain. To learn more, read <a
+ * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+ * features</a>.
+ *
+ * @deprecated For more information, read <a
+ *     href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+ *     features</a>.
  */
+@Deprecated
 public interface CoreJackOptions {
 
     /**
      * Whether to use Jack for compilation. By default, this value is {@code false}.
+     *
+     * <p>The Jack toolchain is <em>deprecated</em>.
+     *
+     * <p>If you want to use Java 8 language features, use the improved support included in the
+     * default toolchain. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
+     *
+     * @deprecated For more information, read <a
+     *     href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     *     features</a>.
      */
+    @Deprecated
     @Nullable
     Boolean isEnabled();
 
     /**
      * Whether to run Jack the same JVM as Gradle. By default, this value is {@code true}.
+     *
+     * <p>The Jack toolchain is <em>deprecated</em>.
+     *
+     * <p>If you want to use Java 8 language features, use the improved support included in the
+     * default toolchain. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
+     *
+     * @deprecated For more information, read <a
+     *     href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     *     features</a>.
      */
+    @Deprecated
     @Nullable
     Boolean isJackInProcess();
 
     /**
      * Additional parameters to be passed to Jack.
+     *
+     * <p>The Jack toolchain is <em>deprecated</em>.
+     *
+     * <p>If you want to use Java 8 language features, use the improved support included in the
+     * default toolchain. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
+     *
+     * @deprecated For more information, read <a
+     *     href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     *     features</a>.
      */
+    @Deprecated
     @NonNull
     Map<String, String> getAdditionalParameters();
 
     /**
      * Jack plugins that will be added to the Jack pipeline.
+     *
+     * <p>The Jack toolchain is <em>deprecated</em>.
+     *
+     * <p>If you want to use Java 8 language features, use the improved support included in the
+     * default toolchain. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
+     *
+     * @deprecated For more information, read <a
+     *     href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     *     features</a>.
      */
+    @Deprecated
     @NonNull
     List<String> getPluginNames();
 }

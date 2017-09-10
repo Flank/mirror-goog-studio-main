@@ -18,10 +18,14 @@ package com.android.build.gradle.tasks;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
+import com.android.repository.api.ConsoleProgressIndicator;
+import com.android.repository.api.LocalPackage;
+import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestUtils;
 import java.io.File;
 import java.util.Arrays;
@@ -44,6 +48,7 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
     File objFolder;
     File jsonFolder;
     File makeFile;
+    File cmakeFolder;
     boolean debuggable;
     List<String> buildArguments;
     List<String> cFlags;
@@ -60,12 +65,20 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         variantName = "dummy variant name";
         abis = Mockito.mock(Collection.class);
         androidBuilder = Mockito.mock(AndroidBuilder.class);
-        sdkFolder = TestUtils.getSdk(); //Mockito.mock(File.class);
+        sdkFolder = TestUtils.getSdk();
         ndkFolder = TestUtils.getNdk();
         soFolder = Mockito.mock(File.class);
         objFolder = null;
         jsonFolder = Mockito.mock(File.class);
         makeFile = Mockito.mock(File.class);
+        AndroidSdkHandler sdk = AndroidSdkHandler.getInstance(sdkDirectory);
+        LocalPackage cmakePackage =
+                sdk.getLatestLocalPackageForPrefix(
+                        SdkConstants.FD_CMAKE, null, true, new ConsoleProgressIndicator());
+        if (cmakePackage != null) {
+            cmakeFolder = cmakePackage.getLocation();
+        }
+
         debuggable = true;
         buildArguments =
                 Arrays.asList("build-argument-foo", "build-argument-bar", "build-argument-baz");
@@ -89,6 +102,7 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
                         objFolder,
                         jsonFolder,
                         makeFile,
+                        cmakeFolder,
                         debuggable,
                         buildArguments,
                         cFlags,

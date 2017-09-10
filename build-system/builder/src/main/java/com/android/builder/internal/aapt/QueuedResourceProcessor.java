@@ -34,8 +34,6 @@ import java.util.concurrent.atomic.AtomicInteger;
  * processes to serve those.
  */
 public abstract class QueuedResourceProcessor implements ResourceProcessor {
-
-    public static final boolean VERBOSE_LOGGING = false;
     /** Number of concurrent processes to launch. */
     protected static final int DEFAULT_NUMBER_DAEMON_PROCESSES =
             Integer.max(5, Runtime.getRuntime().availableProcessors());
@@ -80,10 +78,6 @@ public abstract class QueuedResourceProcessor implements ResourceProcessor {
     }
 
     protected void waitForAll(int key) throws InterruptedException {
-        if (VERBOSE_LOGGING) {
-            logger.verbose("Thread(%1$s): begin waitForAll", Thread.currentThread().getName());
-        }
-
         Job<AaptProcess> aaptProcessJob;
         boolean hasExceptions = false;
 
@@ -122,9 +116,6 @@ public abstract class QueuedResourceProcessor implements ResourceProcessor {
         if (hasExceptions) {
             throw new RuntimeException("Some file processing failed, see logs for details");
         }
-        if (VERBOSE_LOGGING) {
-            logger.verbose("Thread(%1$s): end waitForAll", Thread.currentThread().getName());
-        }
     }
 
     @Override
@@ -145,9 +136,6 @@ public abstract class QueuedResourceProcessor implements ResourceProcessor {
         try {
             waitForAll(key);
             outstandingJobs.get(key).clear();
-            if (VERBOSE_LOGGING) {
-                logger.verbose("Job finished in %1$d", System.currentTimeMillis() - startTime);
-            }
         } finally {
             // even if we have failures, we need to shutdown property the sub processes.
             if (refCount.decrementAndGet() == 0) {

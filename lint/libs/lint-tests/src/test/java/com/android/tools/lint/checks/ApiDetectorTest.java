@@ -2818,9 +2818,11 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    @Ignore("Kotlin UAST not yet working from tests")
-    public void ignore_testKotlinVirtualDispatch() {
+    public void testKotlinVirtualDispatch() {
         // Regression test for https://issuetracker.google.com/64528052
+        if (skipKotlinTests()) {
+            return;
+        }
 
         //noinspection all // Sample code
         lint().files(
@@ -4606,6 +4608,29 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
+    }
+
+    public void testKotlinPropertySyntax() {
+        if (skipKotlinTests()) {
+            return;
+        }
+
+        lint().files(
+                manifest().minSdk(1),
+                kotlin("package test.pkg\n" +
+                        "\n" +
+                        "fun testApiCheck(calendar: java.util.Calendar) {\n" +
+                        "    calendar.weekYear\n" +
+                        "    calendar.getWeekYear()\n" +
+                        "}    \n"))
+                .run()
+                .expect("src/test/pkg/test.kt:4: Error: Call requires API level 24 (current min is 1): java.util.Calendar#getWeekYear [NewApi]\n" +
+                        "    calendar.weekYear\n" +
+                        "             ~~~~~~~~\n" +
+                        "src/test/pkg/test.kt:5: Error: Call requires API level 24 (current min is 1): java.util.Calendar#getWeekYear [NewApi]\n" +
+                        "    calendar.getWeekYear()\n" +
+                        "             ~~~~~~~~~~~\n" +
+                        "2 errors, 0 warnings\n");
     }
 
     public void testSupportLibrary() {

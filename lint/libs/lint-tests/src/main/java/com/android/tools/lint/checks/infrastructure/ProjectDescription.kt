@@ -79,7 +79,14 @@ class ProjectDescription {
 
     /**
      * Adds the given dependency graph (the output of the Gradle dependency task)
-     * to be constructed when mocking a Gradle model for this project
+     * to be constructed when mocking a Gradle model for this project.
+     * <p>
+     * To generate this, run for example
+     * <pre>
+     *     ./gradlew :app:dependencies
+     * </pre>
+     * and then look at the debugCompileClasspath (or other graph that you want
+     * to model).
      *
      * @param dependencyGraph the graph description
      * @return this for constructor chaining

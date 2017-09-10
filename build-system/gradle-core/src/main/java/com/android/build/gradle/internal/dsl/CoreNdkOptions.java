@@ -44,7 +44,34 @@ public interface CoreNdkOptions {
     List<String> getLdLibs();
 
     /**
-     * The ABI Filters
+     * Specifies the Application Binary Interfaces (ABI) that Gradle should build outputs for and
+     * package with your APK.
+     *
+     * <p>You can list any subset of the <a
+     * href="https://developer.android.com/ndk/guides/abis.html#sa">ABIs the NDK supports</a>, as
+     * shown below:
+     *
+     * <pre>
+     * android {
+     *     // Similar to other properties in the defaultConfig block, you can override
+     *     // these properties for each product flavor in your build configuration.
+     *     defaultConfig {
+     *         ndk {
+     *             // Tells Gradle to build outputs for the following ABIs and package
+     *             // them into your APK.
+     *             abiFilters 'x86', 'x86_64', 'armeabi'
+     *         }
+     *     }
+     * }
+     * </pre>
+     *
+     * <p>When this flag is not configured, Gradle builds and packages all available ABIs.
+     *
+     * <p>To reduce the size of your APK, consider <a
+     * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split">
+     * configuring multiple APKs based on ABI</a>—instead of creating one large APK with all
+     * versions of your native libraries, Gradle creates a separate APK for each ABI you want to
+     * support and only packages the files each ABI needs.
      */
     @Nullable
     Set<String> getAbiFilters();

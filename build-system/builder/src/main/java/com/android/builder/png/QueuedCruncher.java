@@ -106,20 +106,7 @@ public class QueuedCruncher extends QueuedResourceProcessor {
                                                 Thread.currentThread().getName());
                                         return;
                                     }
-                                    if (VERBOSE_LOGGING) {
-                                        logger.verbose(
-                                                "Thread(%1$s): submitting job %2$s to %3$d",
-                                                Thread.currentThread().getName(),
-                                                job.getJobTitle(),
-                                                aapt.hashCode());
-                                    }
                                     aapt.crunch(request.getInput(), outputFile, job);
-                                    if (VERBOSE_LOGGING) {
-                                        logger.verbose(
-                                                "Thread(%1$s): submitted job %2$s",
-                                                Thread.currentThread().getName(),
-                                                job.getJobTitle());
-                                    }
                                 }
 
                                 @Override

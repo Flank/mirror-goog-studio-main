@@ -110,18 +110,10 @@ public class NdkOptions implements CoreNdkOptions, Serializable {
         return this;
     }
 
-    /**
-     * ABI configurations of your native libraries Gradle should
-     * build and package with your APK. You can list any subset of the
-     * <a href="https://developer.android.com/ndk/guides/abis.html#sa">
-     * ABIs the NDK supports</a>.
-     * <p>For example:</p>
-     * <p><code>abiFilters 'x86', 'x86_64', 'armeabi'</code></p>
-     *
-     * <p>When this flag is not configured, Gradle builds and packages all available ABIs.</p>
-     */
+    /** {@inheritDoc} */
     @Override
-    @Input @Optional
+    @Input
+    @Optional
     public Set<String> getAbiFilters() {
         return abiFilters;
     }

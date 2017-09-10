@@ -23,7 +23,26 @@ import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
 /**
- * DSL object to configure external native builds.
+ * DSL object to configure external native builds using <a href="https://cmake.org/">CMake</a> or <a
+ * href="https://developer.android.com/ndk/guides/build.html">ndk-build</a>.
+ *
+ * <pre>
+ * android {
+ *     externalNativeBuild {
+ *         // Encapsulates your CMake build configurations.
+ *         // For ndk-build, instead use the ndkBuild block.
+ *         cmake {
+ *             // Specifies a path to your CMake build script that's
+ *             // relative to the build.gradle file.
+ *             path "CMakeLists.txt"
+ *         }
+ *     }
+ * }
+ * </pre>
+ *
+ * <p>To learn more about including external native builds to your Android Studio projects, read <a
+ * href="https://developer.android.com/studio/projects/add-native-code.html">Add C and C++ Code to
+ * Your Project</a>.
  */
 public class ExternalNativeBuild implements CoreExternalNativeBuild {
     private NdkBuildOptions ndkBuild;
@@ -35,7 +54,9 @@ public class ExternalNativeBuild implements CoreExternalNativeBuild {
     }
 
     /**
-     * ndk-build options.
+     * Encapsulates ndk-build options.
+     *
+     * <p>For more information, see {@link NdkBuildOptions}.
      */
     @NonNull
     @Override
@@ -44,7 +65,11 @@ public class ExternalNativeBuild implements CoreExternalNativeBuild {
     }
 
     /**
-     * Configures the {@link NdkBuildOptions}.
+     * Encapsulates per-variant configurations for your external ndk-build project, such as the path
+     * to your <code>Android.mk</code> build script and build output directory.
+     *
+     * <p>For more information about the properties you can configure in this block, see {@link
+     * NdkBuildOptions}.
      */
     public NdkBuildOptions ndkBuild(Action<NdkBuildOptions> action) {
         action.execute(ndkBuild);
@@ -52,7 +77,9 @@ public class ExternalNativeBuild implements CoreExternalNativeBuild {
     }
 
     /**
-     * CMake build options.
+     * Encapsulates CMake build options.
+     *
+     * <p>For more information, see {@link CmakeOptions}.
      */
     @NonNull
     @Override
@@ -61,7 +88,11 @@ public class ExternalNativeBuild implements CoreExternalNativeBuild {
     }
 
     /**
-     * Configures the {@link CmakeOptions}.
+     * Encapsulates per-variant configurations for your external ndk-build project, such as the path
+     * to your <code>CMakeLists.txt</code> build script and build output directory.
+     *
+     * <p>For more information about the properties you can configure in this block, see {@link
+     * CmakeOptions}.
      */
     public CmakeOptions cmake(Action<CmakeOptions> action) {
         action.execute(cmake);
