@@ -96,15 +96,29 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
             @NonNull File outputJson) {
         checkConfiguration();
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
+
+        builder.setExecutable(getSdkCmakeExecutable());
+        builder.addArgs(getProcessBuilderArgs(abi, abiPlatformVersion, outputJson));
+
+        return builder;
+    }
+
+    /** Returns the list of arguments to be passed to process builder. */
+    @VisibleForTesting
+    @NonNull
+    List<String> getProcessBuilderArgs(
+            @NonNull String abi, int abiPlatformVersion, @NonNull File outputJson) {
+        List<String> processBuilderArgs = Lists.newArrayList();
         // CMake requires a folder. Trim the filename off.
         File cmakeListsFolder = getMakefile().getParentFile();
 
-        builder.setExecutable(getSdkCmakeExecutable());
-        builder.addArgs(String.format("-H%s", cmakeListsFolder));
-        builder.addArgs(String.format("-B%s", outputJson.getParentFile()));
-        builder.addArgs(getCacheArguments(abi, abiPlatformVersion));
+        processBuilderArgs.add(String.format("-H%s", cmakeListsFolder));
+        processBuilderArgs.add(String.format("-B%s", outputJson.getParentFile()));
+        processBuilderArgs.addAll(getCacheArguments(abi, abiPlatformVersion));
 
-        return builder;
+        // Add user provided build arguments
+        processBuilderArgs.addAll(getBuildArguments());
+        return processBuilderArgs;
     }
 
     /**
@@ -116,7 +130,6 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
      */
     protected List<String> getCommonCacheArguments(@NonNull String abi, int abiPlatformVersion) {
         List<String> cacheArguments = Lists.newArrayList();
-        cacheArguments.add("-DCMAKE_SYSTEM_NAME=Android");
         cacheArguments.add(String.format("-DANDROID_ABI=%s", abi));
         cacheArguments.add(String.format("-DANDROID_PLATFORM=android-%s", abiPlatformVersion));
         cacheArguments.add(
@@ -135,7 +148,6 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
                     String.format("-DCMAKE_CXX_FLAGS=%s", Joiner.on(" ").join(getCppFlags())));
         }
 
-        cacheArguments.addAll(getBuildArguments());
         return cacheArguments;
     }
 
