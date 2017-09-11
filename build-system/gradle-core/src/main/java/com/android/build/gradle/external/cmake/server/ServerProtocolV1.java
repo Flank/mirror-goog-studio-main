@@ -395,6 +395,7 @@ public class ServerProtocolV1 implements Server {
                                 .receive(gson.fromJson(message, InteractiveProgress.class));
                         break;
                     }
+                    break;
                 case "signal":
                     if (serverReceiver.getProgressReceiver() != null) {
                         serverReceiver
