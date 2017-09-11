@@ -30,6 +30,7 @@ import com.android.testutils.TestUtils;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -108,10 +109,10 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
                         cFlags,
                         cppFlags,
                         nativeBuildConfigurationsJsons);
-        List<String> cacheArguments = cmakeAndroidNinjaStrategy.getCacheArguments("x86", 12);
+        List<String> cacheArguments =
+                cmakeAndroidNinjaStrategy.getProcessBuilderArgs("x86", 12, jsonFolder);
 
         assertThat(cacheArguments).isNotEmpty();
-        assertThat(cacheArguments).contains("-DCMAKE_SYSTEM_NAME=Android");
         assertThat(cacheArguments)
                 .contains(
                         String.format(
@@ -119,9 +120,17 @@ public class CmakeAndroidNinjaExternalNativeJsonGeneratorTest {
         assertThat(cacheArguments).contains("-DCMAKE_BUILD_TYPE=Debug");
         assertThat(cacheArguments).contains("-DCMAKE_C_FLAGS=c-flags1 c-flag2");
         assertThat(cacheArguments).contains("-DCMAKE_CXX_FLAGS=cpp-flags1 cpp-flag2");
+        assertThat(cacheArguments).contains("-GAndroid Gradle - Ninja");
+
         assertThat(cacheArguments).contains("build-argument-foo");
         assertThat(cacheArguments).contains("build-argument-bar");
         assertThat(cacheArguments).contains("build-argument-baz");
-        assertThat(cacheArguments).contains("-GAndroid Gradle - Ninja");
+
+        // Ensure that the buildArguments (supplied by the user) is added to the end of the argument
+        // list.
+        // If cacheArguments = 1,2,3,4,a,b,c and buildArguments = a,b,c, we just compare where in
+        // the cacheArguments does buildArguments sublist is and verify if it's indeed at the end.
+        int indexOfSubset = Collections.indexOfSubList(cacheArguments, buildArguments);
+        assertThat(cacheArguments.size() - indexOfSubset).isEqualTo(buildArguments.size());
     }
 }
