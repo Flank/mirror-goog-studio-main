@@ -42,4 +42,7 @@ cc_library(
         "writer.h",
     ],
     visibility = ["//visibility:public"],
+    deps = [
+        "@zlib_repo//:zlib",
+    ],
 )
