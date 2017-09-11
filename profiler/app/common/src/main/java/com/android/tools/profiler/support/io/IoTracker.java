@@ -54,6 +54,11 @@ public class IoTracker {
         myIsTerminated = true;
     }
 
+    @Override
+    protected void finalize() throws Throwable {
+        trackTerminatingFileSession();
+    }
+
     /**
      * Gets the current time from the device clock in nano seconds to be consistent with the native
      * code that uses the same method to set some timestamps.
@@ -86,7 +91,8 @@ public class IoTracker {
      * @param startTimestamp the timestamp when reading or writing started.
      * @param read true if the I/O call is reading from a file, and false if it's writing.
      */
-    private native void trackIoCall(long sessionId, int numberOfBytes, long startTimestamp, boolean read);
+    private native void trackIoCall(
+            long sessionId, int numberOfBytes, long startTimestamp, boolean read);
 
     /**
      * Sends info about terminating a file session.

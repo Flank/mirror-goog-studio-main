@@ -17,11 +17,7 @@
 package com.android.tools.profiler.support.io.writer;
 
 import com.android.tools.profiler.support.io.IoTracker;
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
 
 public class FileWriter$ extends FileWriter {
 
@@ -117,13 +113,10 @@ public class FileWriter$ extends FileWriter {
 
     @Override
     public void close() throws IOException {
-        super.close();
-        ioTracker.trackTerminatingFileSession();
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        ioTracker.trackTerminatingFileSession();
+        try {
+            super.close();
+        } finally {
+            ioTracker.trackTerminatingFileSession();
+        }
     }
 }

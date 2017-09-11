@@ -56,7 +56,7 @@ public class ScannerWrapper {
      * Creates a new tracker for the {@link Scanner} object.
      *
      * @param scanner The object that is reading from a file.
-     * @param filePath the path of the file that {@param scanner} is reading from.
+     * @param filePath The path of the file that {@param scanner} is reading from.
      * @return The passed object.
      */
     private static Scanner startNewFileScannerSession(Scanner scanner, String filePath) {
@@ -87,7 +87,7 @@ public class ScannerWrapper {
 
     @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static Scanner wrapConstructor(File source, String charsetName)
-        throws FileNotFoundException {
+            throws FileNotFoundException {
         return startNewFileScannerSession(new Scanner(source, charsetName), source.getPath());
     }
 
@@ -254,7 +254,10 @@ public class ScannerWrapper {
 
     @SuppressWarnings("unused") // Called in the ProfilerPlugin via reflection
     public static void wrapClose(Scanner scanner) throws IOException {
-        scanner.close();
-        endFileScannerSession(scanner);
+        try {
+            scanner.close();
+        } finally {
+            endFileScannerSession(scanner);
+        }
     }
 }

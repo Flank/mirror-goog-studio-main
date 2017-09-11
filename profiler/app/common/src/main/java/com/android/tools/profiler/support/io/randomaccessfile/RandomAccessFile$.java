@@ -84,13 +84,10 @@ public class RandomAccessFile$ extends RandomAccessFile {
 
     @Override
     public void close() throws IOException {
-        super.close();
-        ioTracker.trackTerminatingFileSession();
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        ioTracker.trackTerminatingFileSession();
+        try {
+            super.close();
+        } finally {
+            ioTracker.trackTerminatingFileSession();
+        }
     }
 }

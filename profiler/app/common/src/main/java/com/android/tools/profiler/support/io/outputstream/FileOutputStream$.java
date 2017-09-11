@@ -17,11 +17,7 @@
 package com.android.tools.profiler.support.io.outputstream;
 
 import com.android.tools.profiler.support.io.IoTracker;
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 
 public class FileOutputStream$ extends FileOutputStream {
 
@@ -79,13 +75,10 @@ public class FileOutputStream$ extends FileOutputStream {
 
     @Override
     public void close() throws IOException {
-        super.close();
-        ioTracker.trackTerminatingFileSession();
-    }
-
-    @Override
-    protected void finalize() throws IOException {
-        super.finalize();
-        ioTracker.trackTerminatingFileSession();
+        try {
+            super.close();
+        } finally {
+            ioTracker.trackTerminatingFileSession();
+        }
     }
 }

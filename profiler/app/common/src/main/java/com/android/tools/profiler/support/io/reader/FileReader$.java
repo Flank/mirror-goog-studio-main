@@ -17,11 +17,7 @@
 package com.android.tools.profiler.support.io.reader;
 
 import com.android.tools.profiler.support.io.IoTracker;
-import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.CharBuffer;
 
 public class FileReader$ extends FileReader {
@@ -80,13 +76,10 @@ public class FileReader$ extends FileReader {
 
     @Override
     public void close() throws IOException {
-        super.close();
-        ioTracker.trackTerminatingFileSession();
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        ioTracker.trackTerminatingFileSession();
+        try {
+            super.close();
+        } finally {
+            ioTracker.trackTerminatingFileSession();
+        }
     }
 }
