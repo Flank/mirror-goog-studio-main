@@ -61,6 +61,12 @@ public final class LogCatMessageParserTest extends TestCase {
             "wtf message",                                   //$NON-NLS-1$
             "[ 08-11 21:15:35.754   540:0x21c D/dtag     ]", //$NON-NLS-1$
             "debug message",                                 //$NON-NLS-1$
+            "[ 09-11 14:18:30.992   524:  524 E/         ]", //$NON-NLS-1$
+            "failed to retrieved process context for pid 0", //$NON-NLS-1$
+            "[ 09-11 14:18:30.992   524:  524 E/my tag   ]", //$NON-NLS-1$
+            "my tag message",                                //$NON-NLS-1$
+            "[ 09-11 14:18:30.992   524:  524 E/my tag with spaces  ]", //$NON-NLS-1$
+            "my tag with spaces message",                    //$NON-NLS-1$
     };
 
     @Override
@@ -77,7 +83,7 @@ public final class LogCatMessageParserTest extends TestCase {
 
     /** Check that the correct number of messages are received. */
     public void testMessageCount() {
-        assertEquals(7, mParsedMessages.size());
+        assertEquals(10, mParsedMessages.size());
     }
 
     /** Check the log level in a few of the parsed messages. */
@@ -89,6 +95,24 @@ public final class LogCatMessageParserTest extends TestCase {
     /** Check the parsed tag. */
     public void testTag() {
         assertEquals(mParsedMessages.get(1).getTag(), "etag");
+    }
+
+    /** Check for empty tag */
+    public void testEmptyTag() {
+        // Technically, the "Log" API allows the "tag" parameter to be an empty string
+        assertEquals(mParsedMessages.get(7).getTag(), "");
+    }
+
+    /** Check for empty tag */
+    public void testTagWithSpace() {
+        // Technically, the "Log" API allows the "tag" parameter to be an empty string
+        assertEquals(mParsedMessages.get(8).getTag(), "my tag");
+    }
+
+    /** Check for empty tag */
+    public void testTagWithSpaces() {
+        // Technically, the "Log" API allows the "tag" parameter to be an empty string
+        assertEquals(mParsedMessages.get(9).getTag(), "my tag with spaces");
     }
 
     /** Check the time field. */

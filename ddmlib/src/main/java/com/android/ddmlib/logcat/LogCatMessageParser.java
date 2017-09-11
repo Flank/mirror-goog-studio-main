@@ -42,7 +42,7 @@ public final class LogCatMessageParser {
      */
     private static final Pattern sLogHeaderPattern = Pattern.compile(
             "^\\[\\s(\\d\\d-\\d\\d\\s\\d\\d:\\d\\d:\\d\\d\\.\\d+)"
-                    + "\\s+(\\d*):\\s*(\\S+)\\s([VDIWEAF])/(.*[^\\s])\\s+\\]$");
+                    + "\\s+(\\d*):\\s*(\\S+)\\s([VDIWEAF])/(.*?)\\s*\\]$");
 
     @Nullable
     LogCatHeader mPrevHeader;
