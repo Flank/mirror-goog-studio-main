@@ -7,6 +7,7 @@ dependencies {
     compile libs.guava
 
     testCompile libs.junit
+    testCompile project(':base:testutils')
     testCompile libs.truth
 }
 

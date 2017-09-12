@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.ide.common.util;
+package com.android.utils.concurrency;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.concurrency.Immutable;
+import com.android.utils.JvmWideVariable;
 import com.google.common.base.Preconditions;
 import com.google.common.reflect.TypeToken;
 import java.io.File;
@@ -49,9 +50,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * constructing a {@code ReadWriteThreadLock} instance. Then, different threads using the same or
  * different {@code ReadWriteThreadLock} instances on the same lock object can be synchronized.
  *
- * <p>Note that {@code ReadWriteThreadLock} requires the type (class) of the lock object to be
- * loaded by a single class loader, as objects of the same type loaded by different class loaders
- * cannot be compared (one never equals() the other).
+ * <p>Note that the type of the lock object must be loaded once by a single class loader, as objects
+ * of the same type loaded by different class loaders cannot be compared (one never equals() the
+ * other).
  *
  * <p>The basic usage of this class is similar to {@link ReentrantReadWriteLock} and {@link
  * java.util.concurrent.locks.Lock}. Below is a typical example.
@@ -121,8 +122,10 @@ public final class ReadWriteThreadLock {
      * synchronized on the same lock object (two lock objects are the same if one equals() the
      * other).
      *
-     * <p>The type (class) of the lock object must be loaded by a single class loader. Currently,
-     * this method requires the single class loader to be the bootstrap class loader.
+     * <p>The type of the lock object must be loaded once by a single class loader, as objects of
+     * the same type loaded by different class loaders cannot be compared (one never equals() the
+     * other). Currently, this constructor requires that single class loader to be the bootstrap
+     * class loader.
      *
      * <p>If the client uses a file as the lock object, in order for this class to detect same
      * physical files via equals() the client needs to normalize the lock file's path when
@@ -130,7 +133,7 @@ public final class ReadWriteThreadLock {
      * as there are subtle issues with other methods such as {@link File#getCanonicalPath()}, {@link
      * Path#normalize()}, and {@link Path#toRealPath(LinkOption...)}).
      *
-     * @param lockObject the lock object, must be loaded by a single class loader
+     * @param lockObject the lock object, which must be loaded by the bootstrap class loader
      */
     public ReadWriteThreadLock(@NonNull Object lockObject) {
         Preconditions.checkArgument(

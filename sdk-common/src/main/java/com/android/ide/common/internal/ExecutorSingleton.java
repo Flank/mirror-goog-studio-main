@@ -17,7 +17,7 @@
 package com.android.ide.common.internal;
 
 import com.android.annotations.NonNull;
-import com.android.ide.common.util.JvmWideVariable;
+import com.android.utils.JvmWideVariable;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;

@@ -785,6 +785,7 @@ public class JarContentsTest {
                 "com/android/tools/",
                 "com/android/tools/proguard/",
                 "com/android/utils/",
+                "com/android/utils/concurrency/",
                 "com/android/xml/",
                 "META-INF/");
         expected.putAll(
