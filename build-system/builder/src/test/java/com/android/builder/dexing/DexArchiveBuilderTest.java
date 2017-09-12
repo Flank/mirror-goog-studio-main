@@ -322,15 +322,14 @@ public class DexArchiveBuilderTest {
         Dex dex = new Dex(dexFile);
         assertThat(dex).containsClass(dexClassName);
 
+        // D8 has desugaring enabled by default, so we check this behavior only for DX
+        Assume.assumeTrue(dexerTool == DexerTool.DX);
         try {
             DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, dexerTool);
             fail("Default and static interface method should require min sdk 24.");
         } catch (DexArchiveBuilderException ignored) {
-            String expectedMessage =
-                    dexerTool == DexerTool.DX
-                            ? "default or static interface method used without --min-sdk-version"
-                            : "Static interface methods are only supported";
-            Truth.assertThat(Throwables.getStackTraceAsString(ignored)).contains(expectedMessage);
+            Truth.assertThat(Throwables.getStackTraceAsString(ignored))
+                    .contains("default or static interface method used without --min-sdk-version");
         }
     }
 
