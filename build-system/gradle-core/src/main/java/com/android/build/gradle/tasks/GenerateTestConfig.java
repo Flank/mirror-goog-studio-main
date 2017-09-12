@@ -55,6 +55,7 @@ public class GenerateTestConfig extends DefaultTask {
     File generatedJavaResourcesDirectory;
     OutputScope outputScope;
     FileCollection manifests;
+    String packageForR;
 
     @InputFiles
     FileCollection getManifests() {
@@ -77,6 +78,7 @@ public class GenerateTestConfig extends DefaultTask {
                 assetsDirectory.getSingleFile().toPath().toAbsolutePath(),
                 resourcesDirectory.getSingleFile().toPath().toAbsolutePath(),
                 sdkHome,
+                packageForR,
                 checkNotNull(output, "Unable to find manifest output").getOutputFile().toPath(),
                 generatedJavaResourcesDirectory.toPath().toAbsolutePath());
     }
@@ -86,6 +88,7 @@ public class GenerateTestConfig extends DefaultTask {
             @NonNull Path assetsDir,
             @NonNull Path resDir,
             @NonNull Path sdkHome,
+            @NonNull String packageForR,
             @NonNull Path manifest,
             @NonNull Path outputDir)
             throws IOException {
@@ -95,6 +98,7 @@ public class GenerateTestConfig extends DefaultTask {
         properties.setProperty("android_merged_resources", resDir.toAbsolutePath().toString());
         properties.setProperty("android_merged_assets", assetsDir.toAbsolutePath().toString());
         properties.setProperty("android_merged_manifest", manifest.toAbsolutePath().toString());
+        properties.setProperty("android_custom_package", packageForR);
 
         Path output =
                 outputDir
@@ -127,6 +131,11 @@ public class GenerateTestConfig extends DefaultTask {
     @OutputDirectory
     public File getOutputFile() {
         return generatedJavaResourcesDirectory;
+    }
+
+    @Input
+    public String getPackageForR() {
+        return packageForR;
     }
 
     public static class ConfigAction implements TaskConfigAction<GenerateTestConfig> {
@@ -171,6 +180,7 @@ public class GenerateTestConfig extends DefaultTask {
             task.sdkHome =
                     Paths.get(scope.getGlobalScope().getAndroidBuilder().getTarget().getLocation());
             task.generatedJavaResourcesDirectory = outputDirectory;
+            task.packageForR = testedScope.getVariantConfiguration().getOriginalApplicationId();
         }
     }
 }
