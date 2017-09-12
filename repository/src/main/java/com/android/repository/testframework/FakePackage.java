@@ -137,6 +137,7 @@ public abstract class FakePackage implements RepoPackage {
             private String mCompleteUrl;
             private String mPatchUrl;
             private Revision mPatchSrc;
+            private CompleteType mComplete;
 
             public void setCompleteUrl(String url) {
                 mCompleteUrl = url;
@@ -150,10 +151,12 @@ public abstract class FakePackage implements RepoPackage {
             @NonNull
             @Override
             public CompleteType getComplete() {
-                if (mCompleteUrl != null) {
-                    CompleteType result = createFactory().createCompleteType();
-                    result.setUrl(mCompleteUrl);
-                    return result;
+                if (mComplete == null && mCompleteUrl != null) {
+                    mComplete = createFactory().createCompleteType();
+                    mComplete.setUrl(mCompleteUrl);
+                }
+                if (mComplete != null) {
+                    return mComplete;
                 }
                 return null;
             }
