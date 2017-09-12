@@ -412,11 +412,11 @@ public class ApkAnalyzerImpl {
         if (!errors.isEmpty() && loaded.isEmpty()) {
             System.err.println(
                     "No Proguard mapping files found. The filenames must match one of: mapping.txt, seeds.txt, usage.txt");
-        } else if (errors.isEmpty()) {
+        } else if (errors.isEmpty() && !loaded.isEmpty()) {
             System.err.println(
                     "Successfully loaded maps from: "
                             + loaded.stream().collect(Collectors.joining(", ")));
-        } else {
+        } else if (!errors.isEmpty() && !loaded.isEmpty()) {
             System.err.println(
                     "Successfully loaded maps from: "
                             + loaded.stream().collect(Collectors.joining(", "))
@@ -590,7 +590,9 @@ public class ApkAnalyzerImpl {
     public void manifestDebuggable(@NonNull Path apk) {
         try (Archive archive = Archives.open(apk)) {
             ManifestData manifestData = getManifestData(archive);
-            out.println(String.valueOf(manifestData.getDebuggable()));
+            boolean debuggable =
+                    manifestData.getDebuggable() != null ? manifestData.getDebuggable() : false;
+            out.println(String.valueOf(debuggable));
         } catch (SAXException | ParserConfigurationException e) {
             throw new RuntimeException(e);
         } catch (IOException e){
