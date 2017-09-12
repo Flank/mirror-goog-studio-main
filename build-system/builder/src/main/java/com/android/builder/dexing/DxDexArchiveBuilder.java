@@ -18,6 +18,7 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.dx.cf.code.SimException;
 import com.android.dx.cf.direct.DirectClassFile;
 import com.android.dx.cf.direct.StdAttributeFactory;
 import com.android.dx.dex.cf.CfTranslator;
@@ -25,6 +26,7 @@ import com.android.dx.dex.file.ClassDefItem;
 import com.android.dx.dex.file.DexFile;
 import com.android.dx.util.ByteArray;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
+import com.android.ide.common.blame.parser.DexParser;
 import com.android.utils.PathUtils;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -85,14 +87,7 @@ class DxDexArchiveBuilder extends DexArchiveBuilder {
                 dex(classFileEntry.getRelativePath(), byteArray, outputDexArchive);
             }
         } catch (RuntimeException | IOException e) {
-            if (classFileEntry != null) {
-                LOGGER.log(
-                        Level.SEVERE,
-                        String.format(
-                                "Error while processing %s", classFileEntry.getRelativePath()),
-                        e);
-            }
-            throw DexArchiveBuilderException.wrap(e);
+            throw getExceptionToRethrow(e, classFileEntry);
         }
     }
 
@@ -132,5 +127,22 @@ class DxDexArchiveBuilder extends DexArchiveBuilder {
             byte[] bytes = dexFile.toDex(null, false);
             output.addFile(ClassFileEntry.withDexExtension(relativePath), bytes, 0, bytes.length);
         }
+    }
+
+    @NonNull
+    private DexArchiveBuilderException getExceptionToRethrow(
+            @NonNull Throwable t, @Nullable ClassFileEntry entry) {
+        StringBuilder msg = new StringBuilder();
+        msg.append("Error while dexing ");
+        if (entry != null) {
+            msg.append(entry.getRelativePath().toString());
+        }
+        msg.append(System.lineSeparator());
+        if (t instanceof SimException
+                && t.getMessage().startsWith(DexParser.ERROR_INVOKE_DYNAMIC)) {
+            msg.append(DexParser.ENABLE_DESUGARING);
+        }
+
+        return new DexArchiveBuilderException(msg.toString(), t);
     }
 }
