@@ -224,6 +224,7 @@ public class JarContentsTest {
                 "com/android/tools/r8/bisect/",
                 "com/android/tools/r8/code/",
                 "com/android/tools/r8/compatdx/",
+                "com/android/tools/r8/compatproguard/",
                 "com/android/tools/r8/dex/",
                 "com/android/tools/r8/errors/",
                 "com/android/tools/r8/graph/",
