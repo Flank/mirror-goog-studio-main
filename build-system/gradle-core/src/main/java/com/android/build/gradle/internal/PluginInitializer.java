@@ -20,10 +20,10 @@ import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.builder.model.Version;
 import com.android.ide.common.util.JvmWideVariable;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.reflect.TypeToken;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import javax.annotation.concurrent.ThreadSafe;
@@ -39,18 +39,25 @@ import org.gradle.api.Project;
 public final class PluginInitializer {
 
     /**
-     * Map from a project path to the plugin version that is applied to the project. This map will
-     * be reset at the end of every build.
+     * Map from a project instance to the plugin version that is applied to the project, used for
+     * plugin version consistency check.
+     *
+     * <p>We use the project instance instead of the project path as the key because, within a
+     * build, Gradle might apply the plugin multiple times to different project instances having the
+     * same project path. Using project instances as keys helps us tracks this information better.
+     *
+     * <p>This map will be reset at the end of every build since the scope of the check is per
+     * build.
      */
     @NonNull
-    private static final ConcurrentMap<String, String> projectToPluginVersionMap =
+    private static final ConcurrentMap<Object, String> projectToPluginVersionMap =
             Verify.verifyNotNull(
                     // IMPORTANT: This variable's group, name, and type must not be changed across
                     // plugin versions.
                     new JvmWideVariable<>(
-                                    "PLUGIN_VERSION",
-                                    "ANDROID_GRADLE_PLUGIN",
-                                    new TypeToken<ConcurrentMap<String, String>>() {},
+                                    "PLUGIN_VERSION_CHECK",
+                                    "PROJECT_TO_PLUGIN_VERSION",
+                                    new TypeToken<ConcurrentMap<Object, String>>() {},
                                     ConcurrentHashMap::new)
                             .get());
 
@@ -91,25 +98,34 @@ public final class PluginInitializer {
     /** Verifies that different projects apply the same version of the plugin. */
     @VisibleForTesting
     static void verifyPluginVersion(
-            @NonNull ConcurrentMap<String, String> projectToPluginVersionMap,
+            @NonNull ConcurrentMap<Object, String> projectToPluginVersionMap,
             @NonNull Project project,
             @NonNull String pluginVersion) {
-        String projectPath = project.getProjectDir().getAbsolutePath();
         Preconditions.checkState(
-                !projectToPluginVersionMap.containsKey(projectPath),
+                !projectToPluginVersionMap.containsKey(project),
                 String.format(
-                        "Android Gradle plugin %1$s must not be applied to project %2$s"
+                        "Android Gradle plugin %1$s must not be applied to project '%2$s'"
                                 + " since version %3$s was already applied to this project",
-                        pluginVersion, projectPath, projectToPluginVersionMap.get(projectPath)));
+                        pluginVersion,
+                        project.getProjectDir().getAbsolutePath(),
+                        projectToPluginVersionMap.get(project)));
 
-        projectToPluginVersionMap.put(projectPath, pluginVersion);
+        projectToPluginVersionMap.put(project, pluginVersion);
 
         if (projectToPluginVersionMap.values().stream().distinct().count() > 1) {
-            throw new IllegalStateException(
-                    "Using multiple versions of the plugin in the same build is not allowed.\n\t"
-                            + Joiner.on("\n\t")
-                                    .withKeyValueSeparator(" is using Android Gradle plugin ")
-                                    .join(projectToPluginVersionMap));
+            StringBuilder errorMessage = new StringBuilder();
+            errorMessage.append(
+                    "Using multiple versions of the Android Gradle plugin in the same build"
+                            + " is not allowed.");
+            for (Map.Entry<Object, String> entry : projectToPluginVersionMap.entrySet()) {
+                Project fromProject = (Project) entry.getKey();
+                String toPluginVersion = entry.getValue();
+                errorMessage.append(
+                        String.format(
+                                "\n\t'%1$s' is using version %2$s",
+                                fromProject.getProjectDir().getAbsolutePath(), toPluginVersion));
+            }
+            throw new IllegalStateException(errorMessage.toString());
         }
     }
 }
