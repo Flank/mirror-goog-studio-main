@@ -38,8 +38,17 @@ public class UnitTest {
         properties.load(inputStream);
 
         for (Object key : properties.keySet()) {
-            File file = new File(properties.get(key).toString());
-            assertTrue(file.getPath(), file.exists());
+            String value = properties.get(key).toString();
+            if (key.equals("android_custom_package")) {
+                // Check R class exists.
+                try {
+                    getClass().getClassLoader().loadClass(value + ".R");
+                } catch (ClassNotFoundException e) {
+                    throw new AssertionError("Expected R class in package " + value, e);
+                }
+            } else {
+                assertTrue(key + " = " + value + " exists", new File(value).exists());
+            }
         }
     }
 
