@@ -21,7 +21,10 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.google.common.collect.Iterables;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitivity;
@@ -65,9 +68,17 @@ public class StreamBasedTask extends AndroidBuilderTask {
     protected void registerConsumedAndReferencedStreamInputs() {
         Preconditions.checkNotNull(consumedInputStreams, "Consumed input streams not set.");
         Preconditions.checkNotNull(referencedInputStreams, "Referenced input streams not set.");
+        List<String> inputNames =
+                new ArrayList<>(consumedInputStreams.size() + referencedInputStreams.size());
         for (TransformStream stream :
                 Iterables.concat(consumedInputStreams, referencedInputStreams)) {
             getInputs().files(stream.getAsFileTree()).withPathSensitivity(PathSensitivity.RELATIVE);
+
+            inputNames.add(stream.getName());
         }
+
+        // See http://b/65585567.
+        Collections.sort(inputNames);
+        getInputs().property("transformInputNames", inputNames);
     }
 }

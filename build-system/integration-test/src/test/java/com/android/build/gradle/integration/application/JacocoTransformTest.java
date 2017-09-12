@@ -24,10 +24,11 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
+import java.io.IOException;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -49,38 +50,50 @@ public class JacocoTransformTest {
     public Adb adb = new Adb();
 
     @Rule
-    public final GradleTestProject mProject =
+    public final GradleTestProject project =
             GradleTestProject.builder().fromTestApp(TEST_APP).create();
 
     @Before
     public void enableCodeCoverage() throws Exception {
         Files.append(
                 "\nandroid.buildTypes.debug.testCoverageEnabled true\n",
-                mProject.getBuildFile(), Charsets.UTF_8);
+                project.getBuildFile(),
+                Charsets.UTF_8);
     }
 
     @Test
     public void addAndRemoveClass() throws Exception {
+        project.execute("assembleDebug");
+        assertThat(project.getApk("debug")).doesNotContainClass(CLASS_FULL_TYPE);
 
-        mProject.execute("assembleDebug");
-        assertThat(mProject.getApk("debug")).doesNotContainClass(CLASS_FULL_TYPE);
-
-        TemporaryProjectModification.doTest(mProject,
+        TemporaryProjectModification.doTest(
+                project,
                 modifiedProject -> {
                     modifiedProject.addFile(CLASS_SRC_LOCATION, CLASS_CONTENT);
-                    mProject.execute("assembleDebug");
-                    assertThat(mProject.getApk("debug")).containsClass(CLASS_FULL_TYPE);
+                    project.execute("assembleDebug");
+                    assertThat(project.getApk("debug")).containsClass(CLASS_FULL_TYPE);
                 });
-        mProject.execute("assembleDebug");
-        assertThat(mProject.getApk("debug")).doesNotContainClass(CLASS_FULL_TYPE);
+        project.execute("assembleDebug");
+        assertThat(project.getApk("debug")).doesNotContainClass(CLASS_FULL_TYPE);
+    }
+
+    /** Regression test for http://b/65573026. */
+    @Test
+    public void testDisablingAndEnablingJacoco() throws IOException, InterruptedException {
+        TestFileUtils.appendToFile(
+                project.getBuildFile(), "\nandroid.buildTypes.debug.testCoverageEnabled false\n");
+        project.executor().run("assembleDebug");
+
+        TestFileUtils.appendToFile(
+                project.getBuildFile(), "\nandroid.buildTypes.debug.testCoverageEnabled true\n");
+        project.executor().run("assembleDebug");
     }
 
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
         adb.exclusiveAccess();
-        mProject.executor().run("connectedCheck");
-        assertThat(mProject.file("build/reports/coverage/debug/index.html"))
-                .exists();
+        project.executor().run("connectedCheck");
+        assertThat(project.file("build/reports/coverage/debug/index.html")).exists();
     }
 }
