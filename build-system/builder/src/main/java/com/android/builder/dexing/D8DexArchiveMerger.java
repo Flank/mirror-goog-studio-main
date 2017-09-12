@@ -18,17 +18,23 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.blame.parser.DexParser;
 import com.android.tools.r8.CompilationException;
 import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
 import com.android.tools.r8.errors.CompilationError;
+import com.android.tools.r8.errors.DexOverflowException;
+import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
 
 final class D8DexArchiveMerger implements DexArchiveMerger {
+
+    private static final String ERROR_MULTIDEX =
+            "Cannot fit requested classes in a single dex file";
 
     @NonNull private final OutputStream errorStream;
     private final int minSdkVersion;
@@ -55,6 +61,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
         }
 
         D8Command.Builder builder = D8Command.builder();
+        builder.setEnableDesugaring(false);
 
         for (Path input : inputs) {
             try (DexArchive archive = DexArchives.fromInput(input)) {
@@ -62,7 +69,7 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
                     builder.addDexProgramData(dexArchiveEntry.getDexFileContent());
                 }
             } catch (IOException e) {
-                throw new DexArchiveMergerException(e);
+                throw getExceptionToRethrow(e, input);
             }
         }
         try {
@@ -72,14 +79,20 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
             builder.setMinApiLevel(minSdkVersion).setMode(compilationMode).setOutputPath(outputDir);
             D8.run(builder.build());
         } catch (CompilationException | IOException | CompilationError e) {
-            DexArchiveMergerException exception = new DexArchiveMergerException(e);
-            try {
-                errorStream.write(e.getMessage().getBytes());
-            } catch (IOException ex) {
-                System.err.println(e.getMessage());
-                exception.addSuppressed(ex);
-            }
-            throw exception;
+            throw getExceptionToRethrow(e, inputs);
         }
+    }
+
+    // TODO (gavra, b/67624381): replace this with error handling through the D8 API
+    @NonNull
+    private DexArchiveMergerException getExceptionToRethrow(
+            @NonNull Throwable t, @NonNull Iterable<Path> inputs) {
+        StringBuilder msg = new StringBuilder("Error while merging dex archives: ");
+        msg.append(Joiner.on(", ").join(inputs));
+        msg.append(System.lineSeparator());
+        if (t instanceof DexOverflowException && t.getMessage().startsWith(ERROR_MULTIDEX)) {
+            msg.append(DexParser.DEX_LIMIT_EXCEEDED_ERROR);
+        }
+        return new DexArchiveMergerException(msg.toString(), t);
     }
 }

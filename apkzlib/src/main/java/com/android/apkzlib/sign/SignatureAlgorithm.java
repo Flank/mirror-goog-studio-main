@@ -23,26 +23,17 @@ import javax.annotation.Nonnull;
  * Signature algorithm.
  */
 public enum SignatureAlgorithm {
-    /**
-     * RSA algorithm.
-     */
-    RSA("RSA", 0, "withRSA"),
+    /** RSA algorithm. */
+    RSA("RSA", 1, "withRSA"),
 
-    /**
-     * ECDSA algorithm.
-     */
+    /** ECDSA algorithm. */
     ECDSA("EC", 18, "withECDSA"),
 
-    /**
-     * DSA algorithm.
-     */
-    DSA("DSA", 0, "withDSA");
+    /** DSA algorithm. */
+    DSA("DSA", 1, "withDSA");
 
-    /**
-     * Name of the private key as reported by {@code PrivateKey}.
-     */
-    @Nonnull
-    public final String keyAlgorithm;
+    /** Name of the private key as reported by {@code PrivateKey}. */
+    @Nonnull public final String keyAlgorithm;
 
     /**
      * Minimum SDK version that allows this signature.

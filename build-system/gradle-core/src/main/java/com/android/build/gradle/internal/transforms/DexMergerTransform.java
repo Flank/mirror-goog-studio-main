@@ -223,11 +223,10 @@ public class DexMergerTransform extends Transform {
 
             // now wait for all merge tasks completion
             mergeTasks.forEach(ForkJoinTask::join);
-
-        } catch (IOException e) {
-            throw new TransformException(e);
         } catch (Exception e) {
-            throw new TransformException(Throwables.getRootCause(e));
+            // Print the error always, even without --stacktrace
+            logger.error(null, Throwables.getStackTraceAsString(e));
+            throw new TransformException(e);
         } finally {
             if (output != null) {
                 try {

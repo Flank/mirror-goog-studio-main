@@ -17,6 +17,8 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
+import com.android.ide.common.blame.parser.DexParser;
+import com.android.tools.r8.ApiLevelException;
 import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
@@ -28,6 +30,9 @@ import java.util.Iterator;
 import java.util.stream.Stream;
 
 final class D8DexArchiveBuilder extends DexArchiveBuilder {
+
+    private static final String INVOKE_CUSTOM =
+            "Invoke-customs are only supported starting with Android O";
 
     private final int minSdkVersion;
     @NonNull private final CompilationMode compilationMode;
@@ -53,6 +58,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                     D8Command.builder()
                             .setMode(compilationMode)
                             .setMinApiLevel(minSdkVersion)
+                            .setEnableDesugaring(false)
                             .setOutputMode(outputMode);
 
             while (data.hasNext()) {
@@ -62,7 +68,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
             builder.setOutputPath(output);
             D8.run(builder.build(), MoreExecutors.newDirectExecutorService());
         } catch (Throwable e) {
-            throw new DexArchiveBuilderException(e);
+            throw getExceptionToRethrow(e);
         }
     }
 
@@ -73,5 +79,18 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
         } catch (IOException ex) {
             throw new DexArchiveBuilderException(ex);
         }
+    }
+
+    // TODO (gavra, b/67624381): replace this with error handling through the D8 API
+    @NonNull
+    private DexArchiveBuilderException getExceptionToRethrow(@NonNull Throwable t) {
+        StringBuilder msg = new StringBuilder();
+        msg.append("Error while dexing.");
+        msg.append(System.lineSeparator());
+        if (t instanceof ApiLevelException && t.getMessage().startsWith(INVOKE_CUSTOM)) {
+            msg.append(DexParser.ENABLE_DESUGARING);
+        }
+
+        return new DexArchiveBuilderException(msg.toString(), t);
     }
 }

@@ -38,7 +38,9 @@ public class BuildToolsTest {
     private static final List<String> JAVAC_TASKS =
             ImmutableList.<String>builder()
                     .addAll(COMMON_TASKS)
+                    .add(":transformClassesWithPreDexForDebug")
                     .add(":transformClassesWithPreDexForRelease")
+                    .add(":transformDexWithDexForDebug")
                     .add(":transformDexWithDexForRelease")
                     .build();
 
@@ -90,7 +92,7 @@ public class BuildToolsTest {
                         + "'\n"
                         + "}\n");
 
-        project.execute("assemble");
+        project.executor().withUseDexArchive(false).run("assemble");
 
         String otherBuildToolsVersion = AndroidBuilder.MIN_BUILD_TOOLS_REV.toString();
         // Sanity check:
@@ -109,7 +111,7 @@ public class BuildToolsTest {
                         + "'\n"
                         + "}\n");
 
-        GradleBuildResult result = project.executor().run("assemble");
+        GradleBuildResult result = project.executor().withUseDexArchive(false).run("assemble");
 
         assertThat(result.getInputChangedTasks()).containsAllIn(JAVAC_TASKS);
     }

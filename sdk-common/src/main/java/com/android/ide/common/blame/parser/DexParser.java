@@ -48,12 +48,12 @@ public class DexParser implements PatternAwareOutputParser {
                     + "See https://developer.android.com/studio/write/java8-support.html for "
                     + "details. Alternatively, increase the minSdkVersion to 26 or above.\n";
 
-    static final String DEX_TOOL_NAME = "Dex";
-
-    static final String DEX_LIMIT_EXCEEDED_ERROR =
+    public static final String DEX_LIMIT_EXCEEDED_ERROR =
             "The number of method references in a .dex file cannot exceed 64K.\n"
                     + "Learn how to resolve this issue at "
                     + "https://developer.android.com/tools/building/multidex.html";
+
+    static final String DEX_TOOL_NAME = "Dex";
 
     static final String COULD_NOT_CONVERT_BYTECODE_TO_DEX =
             "Error converting bytecode to dex:\nCause: %s";
@@ -115,8 +115,7 @@ public class DexParser implements PatternAwareOutputParser {
             return true;
         }
 
-        if (line.startsWith("trouble writing output: Too many method references")
-                || line.startsWith("Cannot fit requested classes in a single dex file.")) {
+        if (line.startsWith("trouble writing output: Too many method references")) {
             StringBuilder original1 = new StringBuilder(line).append('\n');
             String nextLine = reader.readLine();
             while (!Strings.isNullOrEmpty(nextLine)) {

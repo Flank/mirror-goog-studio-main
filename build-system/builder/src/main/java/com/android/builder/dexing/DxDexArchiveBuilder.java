@@ -132,7 +132,7 @@ class DxDexArchiveBuilder extends DexArchiveBuilder {
         StringBuilder msg = new StringBuilder();
         msg.append("Error while dexing ");
         if (entry != null) {
-            msg.append(entry.getRelativePath().toString());
+            msg.append(entry.getRelativePath());
         }
         msg.append(System.lineSeparator());
         if (t instanceof SimException
