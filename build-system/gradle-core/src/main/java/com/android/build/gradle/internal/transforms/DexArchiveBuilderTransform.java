@@ -44,6 +44,7 @@ import com.android.builder.dexing.ClassFileInputs;
 import com.android.builder.dexing.DexArchive;
 import com.android.builder.dexing.DexArchiveBuilder;
 import com.android.builder.dexing.DexArchiveBuilderConfig;
+import com.android.builder.dexing.DexArchiveBuilderException;
 import com.android.builder.dexing.DexArchives;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
@@ -58,6 +59,7 @@ import com.android.ide.common.process.ProcessOutput;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -66,8 +68,10 @@ import com.google.common.collect.Multimap;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -196,20 +200,12 @@ public class DexArchiveBuilderTransform extends Transform {
 
         logger.verbose("Task is incremental : %b ", transformInvocation.isIncremental());
 
-        ProcessOutputHandler outputHandler =
-                new ParsingProcessOutputHandler(
-                        new ToolOutputParser(new DexParser(), Message.Kind.ERROR, logger),
-                        new ToolOutputParser(new DexParser(), logger),
-                        errorReporter);
-
         if (!transformInvocation.isIncremental()) {
             outputProvider.deleteAll();
         }
 
-        ProcessOutput processOutput = null;
         Multimap<QualifiedContent, File> cacheableItems = HashMultimap.create();
-        try (Closeable ignored = processOutput = outputHandler.createOutput()) {
-
+        try {
             for (TransformInput input : transformInvocation.getInputs()) {
                 for (DirectoryInput dirInput : input.getDirectoryInputs()) {
                     logger.verbose("Dir input %s", dirInput.getFile().toString());
@@ -272,15 +268,8 @@ public class DexArchiveBuilderTransform extends Transform {
             Thread.currentThread().interrupt();
             throw new TransformException(e);
         } catch (Exception e) {
+            logger.error(null, Throwables.getStackTraceAsString(e));
             throw new TransformException(e);
-        } finally {
-            if (processOutput != null) {
-                try {
-                    outputHandler.handleOutput(processOutput);
-                } catch (ProcessException e) {
-                    // ignore this one
-                }
-            }
         }
     }
 
@@ -399,42 +388,7 @@ public class DexArchiveBuilderTransform extends Transform {
         @Override
         public void run() {
             try {
-                DexArchiveBuilder dexArchiveBuilder =
-                        getDexArchiveBuilder(
-                                dexConversionParameters.minSdkVersion,
-                                dexConversionParameters.dexAdditionalParameters,
-                                dexConversionParameters.inBufferSize,
-                                dexConversionParameters.outBufferSize,
-                                dexConversionParameters.dexer,
-                                dexConversionParameters.isDebuggable);
-
-                Path inputPath = dexConversionParameters.input.getFile().toPath();
-                Predicate<Path> bucketFilter = dexConversionParameters::belongsToThisBucket;
-
-                boolean hasIncrementalInfo =
-                        dexConversionParameters.isDirectoryBased()
-                                && dexConversionParameters.isIncremental;
-                Predicate<Path> toProcess =
-                        hasIncrementalInfo
-                                ? path -> {
-                                    Map<File, Status> changedFiles =
-                                            ((DirectoryInput) dexConversionParameters.input)
-                                                    .getChangedFiles();
-
-                                    File resolved = inputPath.resolve(path).toFile();
-                                    Status status = changedFiles.get(resolved);
-                                    return status == Status.ADDED || status == Status.CHANGED;
-                                }
-                                : path -> true;
-
-                bucketFilter = bucketFilter.and(toProcess);
-
-                try (ClassFileInput input = ClassFileInputs.fromPath(inputPath)) {
-                    dexArchiveBuilder.convert(
-                            input.entries(bucketFilter),
-                            Paths.get(new URI(dexConversionParameters.output)),
-                            dexConversionParameters.isDirectoryBased());
-                }
+                launchProcessing(dexConversionParameters, System.out, System.err);
             } catch (Exception e) {
                 throw new BuildException(e.getMessage(), e);
             }
@@ -447,14 +401,16 @@ public class DexArchiveBuilderTransform extends Transform {
             int inBufferSize,
             int outBufferSize,
             DexerTool dexer,
-            boolean isDebuggable)
+            boolean isDebuggable,
+            OutputStream outStream,
+            OutputStream errStream)
             throws IOException {
 
         DexArchiveBuilder dexArchiveBuilder;
         switch (dexer) {
             case DX:
                 boolean optimizedDex = !dexAdditionalParameters.contains("--no-optimize");
-                DxContext dxContext = new DxContext(System.out, System.err);
+                DxContext dxContext = new DxContext(outStream, errStream);
                 DexArchiveBuilderConfig config =
                         new DexArchiveBuilderConfig(
                                 dxContext,
@@ -516,12 +472,78 @@ public class DexArchiveBuilderTransform extends Transform {
             } else {
                 executor.execute(
                         () -> {
-                            new DexConversionWorkAction(parameters).run();
+                            ProcessOutputHandler outputHandler =
+                                    new ParsingProcessOutputHandler(
+                                            new ToolOutputParser(
+                                                    new DexParser(), Message.Kind.ERROR, logger),
+                                            new ToolOutputParser(new DexParser(), logger),
+                                            errorReporter);
+                            ProcessOutput output = null;
+                            try (Closeable ignored = output = outputHandler.createOutput()) {
+                                launchProcessing(
+                                        parameters,
+                                        output.getStandardOutput(),
+                                        output.getErrorOutput());
+                            } finally {
+                                if (output != null) {
+                                    try {
+                                        outputHandler.handleOutput(output);
+                                    } catch (ProcessException e) {
+                                        // ignore this one
+                                    }
+                                }
+                            }
                             return null;
                         });
             }
         }
         return dexArchives.build();
+    }
+
+    private static void launchProcessing(
+            @NonNull DexConversionParameters dexConversionParameters,
+            @NonNull OutputStream outStream,
+            @NonNull OutputStream errStream)
+            throws IOException, URISyntaxException {
+        DexArchiveBuilder dexArchiveBuilder =
+                getDexArchiveBuilder(
+                        dexConversionParameters.minSdkVersion,
+                        dexConversionParameters.dexAdditionalParameters,
+                        dexConversionParameters.inBufferSize,
+                        dexConversionParameters.outBufferSize,
+                        dexConversionParameters.dexer,
+                        dexConversionParameters.isDebuggable,
+                        outStream,
+                        errStream);
+
+        Path inputPath = dexConversionParameters.input.getFile().toPath();
+        Predicate<Path> bucketFilter = dexConversionParameters::belongsToThisBucket;
+
+        boolean hasIncrementalInfo =
+                dexConversionParameters.isDirectoryBased() && dexConversionParameters.isIncremental;
+        Predicate<Path> toProcess =
+                hasIncrementalInfo
+                        ? path -> {
+                            Map<File, Status> changedFiles =
+                                    ((DirectoryInput) dexConversionParameters.input)
+                                            .getChangedFiles();
+
+                            File resolved = inputPath.resolve(path).toFile();
+                            Status status = changedFiles.get(resolved);
+                            return status == Status.ADDED || status == Status.CHANGED;
+                        }
+                        : path -> true;
+
+        bucketFilter = bucketFilter.and(toProcess);
+
+        try (ClassFileInput input = ClassFileInputs.fromPath(inputPath)) {
+            dexArchiveBuilder.convert(
+                    input.entries(bucketFilter),
+                    Paths.get(new URI(dexConversionParameters.output)),
+                    dexConversionParameters.isDirectoryBased());
+        } catch (DexArchiveBuilderException ex) {
+            throw new DexArchiveBuilderException("Failed to process " + inputPath.toString(), ex);
+        }
     }
 
     @NonNull
