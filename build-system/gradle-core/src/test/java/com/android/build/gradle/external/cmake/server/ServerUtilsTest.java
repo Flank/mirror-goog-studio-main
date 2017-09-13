@@ -17,10 +17,11 @@
 package com.android.build.gradle.external.cmake.server;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.*;
 
 import com.android.annotations.NonNull;
 import com.android.testutils.TestResources;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonSyntaxException;
 import java.io.File;
 import java.io.IOException;
@@ -113,6 +114,40 @@ public class ServerUtilsTest {
         assertThat(compileCommand.file).isEqualTo("file.cc");
     }
 
+    @Test
+    public void testValidCodeModel() throws IOException {
+        assertThat(
+                        ServerUtils.isCodeModelValid(
+                                getCodeModelFromString(getValidCodeModelResponseString())))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidCodeModelTargetMissingArtifact() throws IOException {
+        assertThat(
+                        ServerUtils.isCodeModelValid(
+                                getCodeModelFromString(
+                                        getValidCodeModelTargetMissingArtifactResponseString())))
+                .isTrue();
+    }
+
+    @Test
+    public void testValidCodeModelTargetMissingFileGroup() throws IOException {
+        assertThat(
+                        ServerUtils.isCodeModelValid(
+                                getCodeModelFromString(
+                                        getValidCodeModelTargetMissingFileGroupResponseString())))
+                .isTrue();
+    }
+
+    @Test
+    public void testInvalidCodeModel() throws IOException {
+        assertThat(
+                        ServerUtils.isCodeModelValid(
+                                getCodeModelFromString(getInvalidCodeModelResponseString())))
+                .isFalse();
+    }
+
     /**
      * Returns the test file given the test folder and file name.
      *
@@ -136,5 +171,155 @@ public class ServerUtilsTest {
         return (compileCommand.directory != null)
                 && (compileCommand.command != null)
                 && (compileCommand.file != null);
+    }
+
+    /**
+     * Returns a valid code model response string.
+     *
+     * @return code model json response string
+     */
+    private String getValidCodeModelResponseString() {
+        return "{\"configurations\": [{\n"
+                + "\"name\": \"\",\n"
+                + "\"projects\": [{\n"
+                + "\"buildDirectory\": \"/tmp/build/Source/CursesDialog/form\",\n"
+                + "\"name\": \"CMAKE_FORM\",\n"
+                + "\"sourceDirectory\": \"/home/code/src/cmake/Source/CursesDialog/form\",\n"
+                + "\"targets\": [{\n"
+                + "\"artifacts\": [\"/tmp/build/Source/CursesDialog/form/libcmForm.a\"],\n"
+                + "\"buildDirectory\": \"/tmp/build/Source/CursesDialog/form\",\n"
+                + "\"fileGroups\": [{\n"
+                + "\"compileFlags\": \"  -std=gnu11\",\n"
+                + "\"defines\": [\"CURL_STATICLIB\", \"LIBARCHIVE_STATIC\"],\n"
+                + "\"includePath\": [{\n"
+                + "\"path\": \"/tmp/build/Utilities\"\n"
+                + "}],\n"
+                + "\"isGenerated\": false,\n"
+                + "\"language\": \"C\",\n"
+                + "\"sources\": [\"fld_arg.c\"]\n"
+                + "}],\n"
+                + "\"fullName\": \"libcmForm.a\",\n"
+                + "\"linkerLanguage\": \"C\",\n"
+                + "\"name\": \"cmForm\",\n"
+                + "\"sourceDirectory\": \"/home/code/src/cmake/Source/CursesDialog/form\",\n"
+                + "\"type\": \"STATIC_LIBRARY\"\n"
+                + "}]\n"
+                + "}]\n"
+                + "}],\n"
+                + "\"cookie\": \"\",\n"
+                + "\"inReplyTo\": \"codemodel\",\n"
+                + "\"type\": \"reply\"\n"
+                + "}";
+    }
+
+    /**
+     * Returns a valid code model response string.
+     *
+     * @return code model json response string
+     */
+    private String getValidCodeModelTargetMissingArtifactResponseString() {
+        return "{\"configurations\": [{\n"
+                + "\"name\": \"\",\n"
+                + "\"projects\": [{\n"
+                + "\"buildDirectory\": \"/tmp/build/Source/CursesDialog/form\",\n"
+                + "\"name\": \"CMAKE_FORM\",\n"
+                + "\"sourceDirectory\": \"/home/code/src/cmake/Source/CursesDialog/form\",\n"
+                + "\"targets\": [{\n"
+                + "\"buildDirectory\": \"/tmp/build/Source/CursesDialog/form\",\n"
+                + "\"fileGroups\": [{\n"
+                + "\"compileFlags\": \"  -std=gnu11\",\n"
+                + "\"defines\": [\"CURL_STATICLIB\", \"LIBARCHIVE_STATIC\"],\n"
+                + "\"includePath\": [{\n"
+                + "\"path\": \"/tmp/build/Utilities\"\n"
+                + "}],\n"
+                + "\"isGenerated\": false,\n"
+                + "\"language\": \"C\",\n"
+                + "\"sources\": [\"fld_arg.c\"]\n"
+                + "}],\n"
+                + "\"fullName\": \"libcmForm.a\",\n"
+                + "\"linkerLanguage\": \"C\",\n"
+                + "\"name\": \"cmForm\",\n"
+                + "\"sourceDirectory\": \"/home/code/src/cmake/Source/CursesDialog/form\",\n"
+                + "\"type\": \"STATIC_LIBRARY\"\n"
+                + "}]\n"
+                + "}]\n"
+                + "}],\n"
+                + "\"cookie\": \"\",\n"
+                + "\"inReplyTo\": \"codemodel\",\n"
+                + "\"type\": \"reply\"\n"
+                + "}";
+    }
+
+    /**
+     * Returns a valid code model response string.
+     *
+     * @return code model json response string
+     */
+    private String getValidCodeModelTargetMissingFileGroupResponseString() {
+        return "{\"configurations\": [{\n"
+                + "\"name\": \"\",\n"
+                + "\"projects\": [{\n"
+                + "\"buildDirectory\": \"/tmp/build/Source/CursesDialog/form\",\n"
+                + "\"name\": \"CMAKE_FORM\",\n"
+                + "\"sourceDirectory\": \"/home/code/src/cmake/Source/CursesDialog/form\",\n"
+                + "\"targets\": [{\n"
+                + "\"artifacts\": [\"/tmp/build/Source/CursesDialog/form/libcmForm.a\"],\n"
+                + "\"buildDirectory\": \"/tmp/build/Source/CursesDialog/form\",\n"
+                + "\"fullName\": \"libcmForm.a\",\n"
+                + "\"linkerLanguage\": \"C\",\n"
+                + "\"name\": \"cmForm\",\n"
+                + "\"sourceDirectory\": \"/home/code/src/cmake/Source/CursesDialog/form\",\n"
+                + "\"type\": \"STATIC_LIBRARY\"\n"
+                + "}]\n"
+                + "}]\n"
+                + "}],\n"
+                + "\"cookie\": \"\",\n"
+                + "\"inReplyTo\": \"codemodel\",\n"
+                + "\"type\": \"reply\"\n"
+                + "}";
+    }
+
+    /**
+     * Returns a invalid code model response string.
+     *
+     * @return code model json response string
+     */
+    private String getInvalidCodeModelResponseString() {
+        return "{\"configurations\": [{\n"
+                + "\"name\": \"\",\n"
+                + "\"projects\": [{\n"
+                + "\"name\": \"CMAKE_FORM\",\n"
+                + "\"sourceDirectory\": \"/home/code/src/cmake/Source/CursesDialog/form\",\n"
+                + "\"targets\": [{\n"
+                + "\"artifacts\": [\"/tmp/build/Source/CursesDialog/form/libcmForm.a\"],\n"
+                + "\"buildDirectory\": \"/tmp/build/Source/CursesDialog/form\",\n"
+                + "\"fileGroups\": [{\n"
+                + "\"compileFlags\": \"  -std=gnu11\",\n"
+                + "\"defines\": [\"CURL_STATICLIB\", \"LIBARCHIVE_STATIC\"],\n"
+                + "\"includePath\": [{\n"
+                + "\"path\": \"/tmp/build/Utilities\"\n"
+                + "}],\n"
+                + "\"isGenerated\": false,\n"
+                + "\"language\": \"C\",\n"
+                + "\"sources\": [\"fld_arg.c\"]\n"
+                + "}],\n"
+                + "\"fullName\": \"libcmForm.a\",\n"
+                + "\"linkerLanguage\": \"C\",\n"
+                + "\"name\": \"cmForm\",\n"
+                + "\"sourceDirectory\": \"/home/code/src/cmake/Source/CursesDialog/form\",\n"
+                + "\"type\": \"STATIC_LIBRARY\"\n"
+                + "}]\n"
+                + "}]\n"
+                + "}],\n"
+                + "\"cookie\": \"\",\n"
+                + "\"inReplyTo\": \"codemodel\",\n"
+                + "\"type\": \"reply\"\n"
+                + "}";
+    }
+
+    @NonNull
+    private CodeModel getCodeModelFromString(@NonNull String codeModelString) {
+        Gson gson = new GsonBuilder().create();
+        return gson.fromJson(codeModelString, CodeModel.class);
     }
 }

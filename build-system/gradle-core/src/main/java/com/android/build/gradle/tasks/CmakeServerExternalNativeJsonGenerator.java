@@ -131,11 +131,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     }
 
     @NonNull
-    private static String getCmakeInfoString(@NonNull Server cmakeServer) {
+    private static String getCmakeInfoString(@NonNull Server cmakeServer) throws IOException {
         return String.format(
                 "Cmake path: %s, version: %s",
                 cmakeServer.getCmakePath(),
-                CmakeUtils.getVersion(cmakeServer.getCmakePath()).toString());
+                CmakeUtils.getVersion(new File(cmakeServer.getCmakePath())).toString());
     }
 
     @NonNull
@@ -183,18 +183,23 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         // - perform a handshake
         // - configure and compute.
         // Create the NativeBuildConfigValue and write the required JSON file.
-        PrintWriter serverLogWriter =
-                getCmakeServerLogWriter(getOutputFolder(getJsonFolder(), abi));
-        Server cmakeServer = createServerAndConnect(abi, serverLogWriter);
+        PrintWriter serverLogWriter = null;
 
-        doHandshake(outputJsonDir, cmakeServer);
-        ConfigureCommandResult configureCommandResult =
-                doConfigure(abi, abiPlatformVersion, cmakeServer);
-        doCompute(cmakeServer);
+        try {
+            serverLogWriter = getCmakeServerLogWriter(getOutputFolder(getJsonFolder(), abi));
+            Server cmakeServer = createServerAndConnect(abi, serverLogWriter);
 
-        serverLogWriter.close();
-        generateAndroidGradleBuild(abi, cmakeServer);
-        return configureCommandResult.interactiveMessages;
+            doHandshake(outputJsonDir, cmakeServer);
+            ConfigureCommandResult configureCommandResult =
+                    doConfigure(abi, abiPlatformVersion, cmakeServer);
+            doCompute(cmakeServer);
+            generateAndroidGradleBuild(abi, cmakeServer);
+            return configureCommandResult.interactiveMessages;
+        } finally {
+            if (serverLogWriter != null) {
+                serverLogWriter.close();
+            }
+        }
     }
 
     /** Returns PrintWriter object to write CMake server logs. */
@@ -417,6 +422,10 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         for (Configuration config : codeModel.configurations) {
             for (Project project : config.projects) {
                 for (Target target : project.targets) {
+                    // Ignore targets that aren't valid.
+                    if (!canAddTargetToNativeLibrary(target)) {
+                        continue;
+                    }
                     NativeLibraryValue nativeLibraryValue = new NativeLibraryValue();
                     nativeLibraryValue.abi = abi;
                     nativeLibraryValue.buildCommand =
@@ -454,6 +463,19 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             } // project
         }
         return nativeBuildConfigValue;
+    }
+
+    /**
+     * Helper function that returns true if the Target object is valid to be added to native
+     * library.
+     */
+    private static boolean canAddTargetToNativeLibrary(@NonNull Target target) {
+        // If the target has no artifacts or filegroups, the target will be get ignored, so mark
+        // it valid.
+        if ((target.artifacts == null) || (target.fileGroups == null)) {
+            return false;
+        }
+        return true;
     }
 
     /**
