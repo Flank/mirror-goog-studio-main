@@ -2788,12 +2788,19 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
             List<UExpression> arguments = call.getValueArguments();
             PsiParameterList parameterList = method.getParameterList();
             PsiParameter[] parameters = parameterList.getParameters();
+
             List<UAnnotation> annotations = null;
+            int j = 0;
+            if (parameters.length > 0 && "$receiver".equals(parameters[0].getName())) {
+                // Kotlin extension method.
+                // TODO: Find out if there's a better way to look this up!
+                j++;
+            }
             for (int i = 0, n = Math.min(parameters.length, arguments.size());
                     i < n;
-                    i++) {
+                    i++, j++) {
                 UExpression argument = arguments.get(i);
-                PsiParameter parameter = parameters[i];
+                PsiParameter parameter = parameters[j];
                 annotations = JavaUAnnotation.wrap(
                         filterRelevantAnnotations(evaluator,
                                 evaluator.getAllAnnotations(parameter, true)));

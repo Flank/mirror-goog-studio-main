@@ -3455,6 +3455,39 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testExtensionMethods() {
+        if (skipKotlinTests()) {
+            return;
+        }
+
+        // Regression test for https://issuetracker.google.com/65602862
+        lint().files(
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.app.Activity\n" +
+                        "import android.content.Context\n" +
+                        "import android.content.res.Resources\n" +
+                        "import android.support.annotation.AttrRes\n" +
+                        "import android.support.annotation.ColorInt\n" +
+                        "\n" +
+                        "class TestActivity: Activity() {\n" +
+                        "\n" +
+                        "    @ColorInt\n" +
+                        "    fun Context.getColor(@AttrRes attrId: Int, @ColorInt defaultColor: Int) = theme.getColor(attrId, defaultColor)\n" +
+                        "\n" +
+                        "    @ColorInt\n" +
+                        "    fun Resources.Theme.getColor(@AttrRes attrId: Int, @ColorInt defaultColor: Int): Int {\n" +
+                        "        return 0;\n" +
+                        "    }\n" +
+                        "}"),
+                mSupportClasspath,
+                mSupportJar)
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expectClean();
+    }
+
     public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
     private TestFile mSupportJar = base64gzip(SUPPORT_JAR_PATH,
             SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);
