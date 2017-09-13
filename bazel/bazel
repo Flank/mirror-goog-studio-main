@@ -9,7 +9,7 @@ import multiprocessing
 
 
 def main():
-  workspace = find_workspace(os.getcwd())
+  workspace = find_workspace(os.path.dirname(os.path.realpath(__file__)))
   if not workspace:
     sys.exit('Must run %s within a workspace.' % os.path.basename(sys.argv[0]))
   if sys.platform.startswith('linux'):
