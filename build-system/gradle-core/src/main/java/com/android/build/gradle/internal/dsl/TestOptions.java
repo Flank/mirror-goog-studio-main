@@ -46,7 +46,7 @@ public class TestOptions {
     /**
      * Options for controlling unit tests execution.
      *
-     * @since 1.1
+     * @since 1.1.0
      */
     @NonNull private final UnitTestOptions unitTests;
 
@@ -57,7 +57,7 @@ public class TestOptions {
     /**
      * Configures unit test options.
      *
-     * @since 1.2
+     * @since 1.2.0
      */
     public void unitTests(Closure closure) {
         ConfigureUtil.configure(closure, unitTests);
@@ -66,7 +66,7 @@ public class TestOptions {
     /**
      * Configures unit test options.
      *
-     * @since 1.2
+     * @since 1.2.0
      */
     @NonNull
     public UnitTestOptions getUnitTests() {
@@ -102,6 +102,25 @@ public class TestOptions {
         this.animationsDisabled = animationsDisabled;
     }
 
+    /**
+     * Specifies whether to use on-device test orchestration.
+     *
+     * <p>If you wat to <a
+     * href="https://developer.android.com/training/testing/junit-runner.html#using-android-test-orchestrator">use
+     * Android Test Orchestrator</a>, you need to specify <code>'ANDROID_TEST_ORCHESTRATOR'</code>,
+     * as shown below. By default, this property is set to <code>"HOST"</code>, which disables
+     * on-device orchestration.
+     *
+     * <pre>
+     * android {
+     *   testOptions {
+     *     execution 'ANDROID_TEST_ORCHESTRATOR'
+     *   }
+     * }
+     * </pre>
+     *
+     * @since 3.0.0
+     */
     @NonNull
     public String getExecution() {
         return Verify.verifyNotNull(
@@ -137,7 +156,7 @@ public class TestOptions {
          * <p>See <a href="https://developer.android.com/studio/test/index.html">Test Your App</a>
          * for details.
          *
-         * @since 1.1
+         * @since 1.1.0
          */
         public boolean isReturnDefaultValues() {
             return returnDefaultValues;
@@ -148,21 +167,24 @@ public class TestOptions {
         }
 
         /**
-         * Whether Android resources, assets and manifests are used by unit tests.
+         * Enables unit tests to use Android resources, assets, and manifests.
          *
-         * <p>If set, Android resources, assets and manifest merging will be done before unit tests
-         * are run. When enabled, tests can look for a file called {@code
-         * com/android/tools/test_config.properties} on the classpath. This will be a java
-         * properties file, with the following keys:
+         * <p>If you set this property to <code>true</code>, the plugin performs resource, asset,
+         * and manifest merging before running your unit tests. Your tests can then inspect a file
+         * called {@code com/android/tools/test_config.properties} on the classpath, which is a Java
+         * properties file with the following keys:
          *
          * <ul>
-         *   <li>{@code android_merged_assets} - absolute path to the merged assets directory.
-         *   <li>{@code android_merged_manifest} - absolute path to the merged manifest file.
-         *   <li>{@code android_merged_resources} - absolute path to the merged resources directory.
-         *   <li>{@code android_sdk_resources} - absolute path to the resources of the compile SDK.
+         *   <li><code>android_merged_assets</code>: the absolute path to the merged assets
+         *       directory.
+         *   <li><code>android_merged_manifest</code> the absolute path to the merged manifest file.
+         *   <li><code>android_merged_resources</code>: the absolute path to the merged resources
+         *       directory.
+         *   <li><code>android_sdk_resources</code>: the absolute path to the resources of the
+         *       compile SDK.
          * </ul>
          *
-         * @since 2.4
+         * @since 3.0.0
          */
         public boolean isIncludeAndroidResources() {
             return includeAndroidResources;
@@ -192,7 +214,7 @@ public class TestOptions {
          * }
          * </pre>
          *
-         * @since 1.2
+         * @since 1.2.0
          */
         public void all(final Closure<Test> configClosure) {
             //noinspection Convert2Lambda - DSL docs generator can't handle lambdas.
@@ -213,7 +235,7 @@ public class TestOptions {
          * created after the build scripts are evaluated, so users have to "register" their
          * configuration closures first and we can only apply them later.
          *
-         * @since 1.2
+         * @since 1.2.0
          */
         public void applyConfiguration(@NonNull Test task) {
             this.testTasks.add(task);
