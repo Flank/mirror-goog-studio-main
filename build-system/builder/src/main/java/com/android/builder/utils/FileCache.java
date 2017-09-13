@@ -30,6 +30,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.concurrent.Callable;
@@ -229,7 +230,7 @@ public class FileCache {
         File cachedFile = getCachedFile(cacheEntryDir);
 
         // If the cache is hit, copy the cached file to the output file. The cached file should have
-        // been guarded with a READ lock when this callable is invoked (see method
+        // been guarded with a READ or WRITE lock when this callable is invoked (see method
         // queryCacheEntry). Note that as stated in the contract of this method, we don't guard the
         // output file with an WRITE lock.
         Callable<Void> actionIfCacheHit =
@@ -781,60 +782,6 @@ public class FileCache {
             }
 
             /**
-             * Adds the path of a file/directory as an input parameter. If a parameter with the same
-             * name exists, the file/directory's path is overwritten.
-             *
-             * <p>Note that this method is used to indicate that the path of an input file/directory
-             * affects the output. Depending on your specific use case, consider adding other
-             * properties of the file/directory such as its hash, size, or timestamp as part of the
-             * inputs as well.
-             *
-             * @see #putFilePathLengthTimestamp(String, File)
-             */
-            public Builder putFilePath(@NonNull String name, @NonNull File file) {
-                parameters.put(name, file.getPath());
-                return this;
-            }
-
-            /**
-             * Adds the hash of a file's contents as an input parameter. If a parameter with the
-             * same name exists, the file's hash is overwritten.
-             *
-             * <p>Note that this method is used to indicate that the contents of an input file
-             * affect the output. Also, by using this method, you are assuming that the hash of a
-             * file represents its contents, so beware of accidental hash collisions when two
-             * different files with different contents end up having the same hash (although it is
-             * unlikely to happen, it is possible). Depending on the specific use case, consider
-             * adding other properties of the file such as its path, name, size, or timestamp as
-             * part of the inputs as well.
-             *
-             * @param file the file to be hashed (must not be a directory)
-             * @see #putFilePathLengthTimestamp(String, File)
-             */
-            public Builder putFileHash(@NonNull String name, @NonNull File file)
-                    throws IOException {
-                Preconditions.checkArgument(file.isFile(), file + " is not a file.");
-
-                parameters.put(name, Files.asByteSource(file).hash(Hashing.sha256()).toString());
-                return this;
-            }
-
-            /**
-             * Adds a file's path, length and timestamp as input parameters.
-             *
-             * <p>This is much faster than calculating the file hash and approximates it well enough
-             * for files that we know are not supposed to change often.
-             */
-            public Builder putFilePathLengthTimestamp(@NonNull String name, @NonNull File file) {
-                Preconditions.checkArgument(file.isFile(), file + " is not a file.");
-
-                putFilePath(name + ".path", file);
-                putLong(name + ".length", file.length());
-                putLong(name + ".timestamp", file.lastModified());
-                return this;
-            }
-
-            /**
              * Adds an input parameter with a String value. If a parameter with the same name
              * exists, the parameter's value is overwritten.
              */
@@ -859,6 +806,45 @@ public class FileCache {
             public Builder putLong(@NonNull String name, long value) {
                 parameters.put(name, String.valueOf(value));
                 return this;
+            }
+
+            /**
+             * Adds one or multiple input parameters containing one or multiple properties of a
+             * regular file (not a directory). If a parameter with the same name exists, the
+             * parameter's value is overwritten.
+             */
+            public Builder putFile(
+                    @NonNull String name,
+                    @NonNull File file,
+                    @NonNull FileProperties fileProperties) {
+                Preconditions.checkArgument(file.isFile(), file + " is not a file.");
+                switch (fileProperties) {
+                    case HASH:
+                        putString(name, getFileHash(file));
+                        break;
+                    case PATH_HASH:
+                        putString(name + ".path", file.getPath());
+                        putString(name + ".hash", getFileHash(file));
+                        break;
+                    case PATH_SIZE_TIMESTAMP:
+                        putString(name + ".path", file.getPath());
+                        putLong(name + ".size", file.length());
+                        putLong(name + ".timestamp", file.lastModified());
+                        break;
+                    default:
+                        throw new RuntimeException("switch statement misses cases");
+                }
+                return this;
+            }
+
+            /** Returns the hash of the file's contents. */
+            @NonNull
+            private static String getFileHash(@NonNull File file) {
+                try {
+                    return Files.asByteSource(file).hash(Hashing.sha256()).toString();
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
             }
 
             /**
@@ -906,19 +892,16 @@ public class FileCache {
         /** Command used for testing only. */
         TEST,
 
-        /** The predex-library command. */
+        /** Pre-dex a library. */
         PREDEX_LIBRARY,
-
-        /** The prepare-library command. */
-        PREPARE_LIBRARY,
 
         /** Mockable jars used for unit testing. */
         GENERATE_MOCKABLE_JAR,
 
-        /** Pre-dexing library to a dex archive. */
+        /** Pre-dex a library to a dex archive. */
         PREDEX_LIBRARY_TO_DEX_ARCHIVE,
 
-        /** Desugar library. */
+        /** Desugar a library. */
         DESUGAR_LIBRARY,
 
         /** Extract the AAPT2 JNI libraries so they can be loaded. */
@@ -929,6 +912,41 @@ public class FileCache {
 
         /** Fix stack frames. */
         FIX_STACK_FRAMES,
+    }
+
+    /**
+     * Properties of a regular file (not a directory) to be used when constructing the cache inputs.
+     */
+    public enum FileProperties {
+
+        /**
+         * The properties include the hash of a regular file (not a directory).
+         *
+         * <p>This is the recommended way of constructing the cache inputs for a file. Clients can
+         * consider using {@link #PATH_HASH} to also add a path to the cache inputs (typically for
+         * debugging purposes).
+         */
+        HASH,
+
+        /**
+         * The properties include the path and hash of a regular file (not a directory).
+         *
+         * <p>This option is similar to {@link #HASH} except that a path is added to the cache
+         * inputs, typically for debugging purposes (e.g., to find out what file a cache entry is
+         * created from).
+         */
+        PATH_HASH,
+
+        /**
+         * The properties include the path, size, and timestamp of a regular file (not a directory).
+         *
+         * <p>WARNING: Although this option is faster than using {@link #HASH}, it is not as safe.
+         * The main reason is that, due to the granularity of filesystem timestamps, timestamps may
+         * actually not change between two consecutive writes. This will lead to incorrect cache
+         * entries. This option should only be used after careful consideration and with knowledge
+         * of its limitations. Otherwise, {@link #HASH} should be used instead.
+         */
+        PATH_SIZE_TIMESTAMP,
     }
 
     /**

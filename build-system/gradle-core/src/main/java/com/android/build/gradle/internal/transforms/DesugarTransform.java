@@ -78,17 +78,8 @@ public class DesugarTransform extends Transform {
 
     private enum FileCacheInputParams {
 
-        /** Path of an input file. */
-        FILE_PATH,
-
-        /** Relative path of an input file exploded from an aar file. */
-        EXPLODED_AAR_FILE_PATH,
-
-        /** Name of an input file that is an instant-run.jar file. */
-        INSTANT_RUN_JAR_FILE_NAME,
-
-        /** Hash of an input file. */
-        FILE_HASH,
+        /** The input file. */
+        FILE,
 
         /** Version of the plugin containing Desugar used to generate the output. */
         PLUGIN_VERSION,
@@ -506,19 +497,11 @@ public class DesugarTransform extends Transform {
         FileCache.Inputs.Builder buildCacheInputs =
                 new FileCache.Inputs.Builder(FileCache.Command.DESUGAR_LIBRARY);
 
-        if (input.toString().contains("exploded-aar")) {
-            buildCacheInputs.putString(
-                    FileCacheInputParams.EXPLODED_AAR_FILE_PATH.name(),
-                    input.toString().substring(input.toString().lastIndexOf("exploded-aar")));
-        } else if (Objects.equals(input.toString(), "instant-run.jar")) {
-            buildCacheInputs.putString(
-                    FileCacheInputParams.INSTANT_RUN_JAR_FILE_NAME.name(), input.toString());
-        } else {
-            buildCacheInputs.putFilePath(FileCacheInputParams.FILE_PATH.name(), input.toFile());
-        }
-
         buildCacheInputs
-                .putFileHash(FileCacheInputParams.FILE_HASH.name(), input.toFile())
+                .putFile(
+                        FileCacheInputParams.FILE.name(),
+                        input.toFile(),
+                        FileCache.FileProperties.PATH_HASH)
                 .putString(
                         FileCacheInputParams.PLUGIN_VERSION.name(),
                         Version.ANDROID_GRADLE_PLUGIN_VERSION)
