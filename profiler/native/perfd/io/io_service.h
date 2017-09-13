@@ -30,9 +30,13 @@ class IoServiceImpl final : public proto::IoService::Service {
   explicit IoServiceImpl(IoCache *io_cache, IoSpeedCache *io_speed_cache)
       : io_cache_(*io_cache), io_speed_cache_(*io_speed_cache) {}
 
-  grpc::Status GetData(grpc::ServerContext *context,
-                       const proto::IoDataRequest *request,
-                       proto::IoDataResponse *response) override;
+  grpc::Status GetSpeedData(grpc::ServerContext *context,
+                            const proto::SpeedDataRequest *request,
+                            proto::SpeedDataResponse *response) override;
+
+  grpc::Status GetFileData(grpc::ServerContext *context,
+                           const proto::FileDataRequest *request,
+                           proto::FileDataResponse *response) override;
 
   grpc::Status StartMonitoringApp(grpc::ServerContext *context,
                                   const proto::IoStartRequest *request,
@@ -46,11 +50,9 @@ class IoServiceImpl final : public proto::IoService::Service {
   IoCache &io_cache_;
   IoSpeedCache &io_speed_cache_;
 
-  void AddSpeedData(const proto::IoDataRequest *request,
+  void AddSpeedData(const proto::SpeedDataRequest *request,
                     profiler::proto::IoType type,
-                    proto::IoDataResponse *response);
-  void AddFileData(const proto::IoDataRequest *request,
-                   proto::IoDataResponse *response);
+                    proto::SpeedDataResponse *response);
 };
 
 }  // namespace profiler
