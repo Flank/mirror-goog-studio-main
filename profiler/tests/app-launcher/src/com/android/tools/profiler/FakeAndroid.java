@@ -46,6 +46,9 @@ public class FakeAndroid implements SimpleWebServer.RequestHandler {
         SimpleWebServer webServer = new SimpleWebServer(webPort, app);
         webServer.start();
         app.block();
+
+        //Prevent the test from shutting down to early.
+        webServer.join();
     }
 
     private synchronized void block() {
@@ -118,6 +121,22 @@ public class FakeAndroid implements SimpleWebServer.RequestHandler {
             }
             if (param.getKey().equals("load-dex")) {
                 loadDex(param.getValue());
+            }
+            if (param.getKey().equals("trigger-method")) {
+                String[] data = param.getValue().split(",");
+                Activity activity = ActivityThread.currentActivityThread().getActivity(data[0]);
+                if (activity != null) {
+                    try {
+                        activity.getClass().getMethod(data[1]).invoke(activity);
+                    } catch (NoSuchMethodException
+                            | InvocationTargetException
+                            | IllegalAccessException ex) {
+                        ex.printStackTrace(System.out);
+                        return ex.toString();
+                    }
+                } else {
+                    return "Activity not found: " + param.getValue();
+                }
             }
             if (param.getKey().equals("launch-activity")) {
                 try {

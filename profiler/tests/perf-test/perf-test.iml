@@ -18,5 +18,14 @@
       </library>
     </orderEntry>
     <orderEntry type="module" module-name="transform" scope="TEST" />
+    <orderEntry type="module-library" scope="TEST">
+      <library name="truth-0.28">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/m2/repository/com/google/truth/truth/0.28/truth-0.28.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>

@@ -51,6 +51,10 @@ namespace profiler {
 class FileCache final {
  public:
   FileCache();
+  // Make the path of file cache based on whether it is for test, because
+  // non-testing path is not available in test environment.
+  FileCache(bool use_test_dir_path);
+  FileCache(std::unique_ptr<FileSystem> fs, bool use_test_dir_path);
   FileCache(std::unique_ptr<FileSystem> fs);
   ~FileCache();
 
@@ -95,6 +99,7 @@ class FileCache final {
   std::unique_ptr<FileSystem> fs_;
   std::shared_ptr<Dir> cache_partial_;
   std::shared_ptr<Dir> cache_complete_;
+  bool use_test_dir_;
 
   std::atomic_bool is_janitor_running_;
   std::thread janitor_thread_;

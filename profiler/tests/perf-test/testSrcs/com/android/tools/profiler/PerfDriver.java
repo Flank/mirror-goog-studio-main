@@ -77,6 +77,10 @@ public class PerfDriver {
         return myMockApp;
     }
 
+    public PerfdDriver getPerfdDriver() {
+        return myPerfdDriver;
+    }
+
     public GrpcUtils getGrpc() {
         return myGrpc;
     }
@@ -97,8 +101,8 @@ public class PerfDriver {
         }
         myMockApp.start();
         myPerfdDriver.start();
-
         //Block until we are in a state for the test to continue.
+        assertTrue(myPerfdDriver.waitForInput("Server listening on"));
         assertTrue(myMockApp.waitForInput("Test Framework Server Listening"));
         myMockApp.setProperty(
                 "profiler.service.address", String.format("%s:%d", PerfDriver.LOCAL_HOST, myPort));

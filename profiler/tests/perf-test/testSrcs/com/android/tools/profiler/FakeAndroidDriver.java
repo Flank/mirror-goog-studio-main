@@ -18,34 +18,48 @@ public class FakeAndroidDriver extends ProcessRunner {
 
     public FakeAndroidDriver(String address, int port, int communicationPort) {
         super(
-            ART_PATH,
-            "--64",
-            "--verbose",
-            String.format("-Dservice.address=%s:%d", address, port),
-            String.format("-Dapp.communication.port=%d", communicationPort),
-            "-Djava.library.path="
-                + ProcessRunner.getProcessPath("agent.location")
-                + ":"
-                + ProcessRunner.getProcessPath("perfa.dir.location"),
-            "-cp",
-            ProcessRunner.getProcessPath("perfa.dex.location"),
-            "-Xbootclasspath:"
-                + ProcessRunner.getProcessPath("android-mock.dex.location")
-                + ":"
-                + String.format(
-                "%s%s:",
-                ProcessRunner.getProcessPath("art.deps.location"),
-                "core-libart-hostdex.jar")
-                + String.format(
-                "%s%s",
-                ProcessRunner.getProcessPath("art.deps.location"),
-                "core-oj-hostdex.jar"),
-            "-Xcompiler-option",
-            "--debuggable",
-            "-Ximage:"
-                + ProcessRunner.getProcessPath("art.boot.location")
-                + "core-core-libart-hostdex.art",
-            "com.android.tools.profiler.FakeAndroid");
+                ART_PATH,
+                "--64",
+                "--verbose",
+                String.format("-Dservice.address=%s:%d", address, port),
+                String.format("-Dapp.communication.port=%d", communicationPort),
+                "-Djava.library.path="
+                        + ProcessRunner.getProcessPath("agent.location")
+                        + ":"
+                        + ProcessRunner.getProcessPath("perfa.dir.location")
+                        + ":"
+                        + ProcessRunner.getProcessPath("art.lib64.location"),
+                "-cp",
+                ProcessRunner.getProcessPath("perfa.dex.location"),
+                "-Xbootclasspath:"
+                        + ProcessRunner.getProcessPath("android-mock.dex.location")
+                        + ":"
+                        + String.format(
+                                "%s%s:",
+                                ProcessRunner.getProcessPath("art.deps.location"),
+                                "core-libart-hostdex.jar")
+                        + String.format(
+                                "%s%s:",
+                                ProcessRunner.getProcessPath("art.deps.location"),
+                                "core-oj-hostdex.jar")
+                        + String.format(
+                                "%s%s:",
+                                ProcessRunner.getProcessPath("art.deps.location"),
+                                "bouncycastle-hostdex.jar")
+                        + String.format(
+                                "%s%s:",
+                                ProcessRunner.getProcessPath("art.deps.location"),
+                                "conscrypt-hostdex.jar")
+                        + String.format(
+                                "%s%s",
+                                ProcessRunner.getProcessPath("art.deps.location"),
+                                "okhttp-hostdex.jar"),
+                "-Xcompiler-option",
+                "--debuggable",
+                "-Ximage:"
+                        + ProcessRunner.getProcessPath("art.boot.location")
+                        + "core-core-libart-hostdex.art",
+                "com.android.tools.profiler.FakeAndroid");
         myCommunicationPort = communicationPort;
         myAddress = address;
     }
@@ -59,6 +73,10 @@ public class FakeAndroidDriver extends ProcessRunner {
 
         //Block until we verify the activity has been created.
         assertTrue(waitForInput("ActivityThread Created"));
+    }
+
+    public void triggerMethod(String activityClass, String methodName) {
+        sendRequest("trigger-method", String.format("%s,%s", activityClass, methodName));
     }
 
     public void setProperty(String propertyKey, String propertyValue) {
@@ -80,7 +98,7 @@ public class FakeAndroidDriver extends ProcessRunner {
             assertEquals("SUCCESS", in.readLine());
             in.close();
         } catch (IOException ex) {
-            Assert.fail("Failed to start activity: " + ex);
+            Assert.fail(String.format("Failed to send request (%s): %s", request, ex));
         }
     }
 }

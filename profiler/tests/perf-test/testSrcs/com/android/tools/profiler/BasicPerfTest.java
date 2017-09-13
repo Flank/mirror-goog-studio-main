@@ -16,7 +16,7 @@
 
 package com.android.tools.profiler;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.profiler.proto.EventProfiler.ActivityDataResponse;
 import java.util.Arrays;
@@ -47,6 +47,6 @@ public class BasicPerfTest {
 
         // Verify that the activity we launched was created.
         ActivityDataResponse response = grpc.getActivity(grpc.getProcessId());
-        assertEquals(response.getData(0).getName(), "My Activity");
+        assertThat(response.getData(0).getName()).isEqualTo("My Activity");
     }
 }

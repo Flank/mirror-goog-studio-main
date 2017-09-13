@@ -49,12 +49,19 @@ java_library(
         "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar",
         "//tools/base/profiler/transform",
         "//tools/idea/.idea/libraries:JUnit4",
+        "//tools/idea/.idea/libraries:truth",
     ],
 )
 
 perf_test(
     name = "AllTest",
-    srcs = glob(["testSrcs/**/BasicPerfTest.java"]),
+    srcs = [
+        "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
+        "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
+    ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
-    deps = [":tests"],
+    deps = [
+        ":tests",
+        "//tools/idea/.idea/libraries:truth",
+    ],
 )

@@ -39,7 +39,8 @@ class Daemon {
     // |config_path| is a string that points to a file that can be parsed by
     // profiler::proto::AgentConfig. If the |config_path| is empty, the file
     // will fail to load and an empty config will be used.
-    explicit Utilities(const std::string& config_path) : config_(config_path) {}
+    explicit Utilities(const std::string& config_path, bool is_testing_profiler)
+        : config_(config_path), file_cache_(is_testing_profiler) {}
 
     // Returns a const reference to the daemon's clock, which is used to produce
     // all timestamps in the deamon.
@@ -68,7 +69,8 @@ class Daemon {
   // |config_path| is a string that points to a file that can be parsed by
   // profiler::proto::AgentConfig. If the |config_path| is empty, the file
   // will fail to load and an empty config will be used.
-  Daemon(const std::string& config_path) : utilities_(config_path) {}
+  Daemon(const std::string& config_path, bool is_testing_profiler)
+      : utilities_(config_path, is_testing_profiler) {}
 
   // Registers profiler |component| to the daemon, in particular, the
   // component's public and internal services to daemon's server |builder|.

@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <algorithm>
 #include <climits>
+#include <iostream>
 #include <mutex>
 
 #include "utils/current_process.h"
@@ -46,12 +47,22 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-FileCache::FileCache()
-    : FileCache(unique_ptr<FileSystem>(new DiskFileSystem())) {}
+FileCache::FileCache() : FileCache(false) {}
 
-FileCache::FileCache(unique_ptr<FileSystem> fs) : fs_(std::move(fs)) {
-  // Since we're restarting perfd, nuke any leftover cache from a previous run
-  auto cache_root = fs_->NewDir(CurrentProcess::dir() + "cache/");
+FileCache::FileCache(bool use_test_dir_path)
+    : FileCache(unique_ptr<FileSystem>(new DiskFileSystem()),
+                                       use_test_dir_path) {}
+
+FileCache::FileCache(unique_ptr<FileSystem> fs)
+    : FileCache(std::move(fs), false) {}
+
+FileCache::FileCache(unique_ptr<FileSystem> fs, bool use_test_dir_path)
+    : fs_(std::move(fs)), use_test_dir_(use_test_dir_path) {
+  // Since we're restarting perfd, nuke any leftover cache from a previous run.
+  // Use TEST_TMPDIR that is set up by bazel if configured.
+  auto parent_dir = fs_->GetDir(
+      (use_test_dir_ ? getenv("TEST_TMPDIR") : CurrentProcess::dir()));
+  auto cache_root = parent_dir->NewDir("cache");
   cache_partial_ = cache_root->NewDir("partial");
   cache_complete_ = cache_root->NewDir("complete");
 
@@ -88,6 +99,11 @@ shared_ptr<File> FileCache::Complete(const std::string &cache_id) {
   auto file_to = cache_complete_->GetFile(cache_id);
   file_from->MoveContentsTo(file_to);
 
+  // There is some time gap between connection tracking and file cache complete.
+  // Print a message to make test wait before we fetch response payload.
+  if (use_test_dir_) {
+    std::cout << "Complete in cache " << cache_id << std::endl;
+  }
   return file_to;
 }
 

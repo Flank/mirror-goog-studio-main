@@ -71,6 +71,8 @@ public class SimpleWebServer implements Runnable {
 
     private RequestHandler handler;
 
+    private Thread myThread;
+
     public interface RequestHandler {
 
         String onRequest(List<QueryParam> queryParams);
@@ -82,10 +84,23 @@ public class SimpleWebServer implements Runnable {
         this.handler = handler;
     }
 
+    public int getPort() {
+        return port;
+    }
+
     /** This method starts the web server listening to the specified port. */
     public void start() {
         isRunning = true;
-        new Thread(this).start();
+        myThread = new Thread(this);
+        myThread.start();
+    }
+
+    public void join() {
+        try {
+            myThread.join();
+        } catch (InterruptedException ex) {
+            // do nothing.
+        }
     }
 
     /** This method stops the web server */
@@ -134,7 +149,7 @@ public class SimpleWebServer implements Runnable {
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.startsWith("GET /")) {
+                if (line.startsWith("GET /") || line.startsWith("POST /")) {
                     int argStart = line.indexOf('?');
                     int argEnd = line.indexOf(' ', argStart);
                     if (argStart == -1) {

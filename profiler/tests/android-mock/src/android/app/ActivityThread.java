@@ -54,4 +54,14 @@ public class ActivityThread {
         currentApplication().registerActivity(activity);
         mActivities.put(activity, record);
     }
+
+    public Activity getActivity(String activityClass) {
+        for (ActivityRecord record : mActivities.values()) {
+            if (record.activity != null
+                    && record.activity.getClass().getName().equals(activityClass)) {
+                return record.activity;
+            }
+        }
+        return null;
+    }
 }

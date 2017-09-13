@@ -1,10 +1,9 @@
 package com.android.tools.profiler;
 
-import static org.junit.Assert.assertEquals;
-
 import com.android.tools.profiler.proto.EventProfiler.ActivityDataResponse;
 import com.android.tools.profiler.proto.EventProfiler.EventDataRequest;
 import com.android.tools.profiler.proto.EventServiceGrpc;
+import com.android.tools.profiler.proto.NetworkServiceGrpc;
 import com.android.tools.profiler.proto.Profiler;
 import com.android.tools.profiler.proto.ProfilerServiceGrpc;
 import io.grpc.ManagedChannel;
@@ -19,6 +18,7 @@ public class GrpcUtils {
     private final ManagedChannel myChannel;
     private final ProfilerServiceGrpc.ProfilerServiceBlockingStub myProfilerServiceStub;
     private final EventServiceGrpc.EventServiceBlockingStub myEventServiceStub;
+    private final NetworkServiceGrpc.NetworkServiceBlockingStub myNetworkServiceStub;
 
     /**
      * Connect to perfd using a socket and port, currently abstract sockets are not supported.
@@ -27,6 +27,7 @@ public class GrpcUtils {
         myChannel = connectGrpc(socket, port);
         myProfilerServiceStub = ProfilerServiceGrpc.newBlockingStub(myChannel);
         myEventServiceStub = EventServiceGrpc.newBlockingStub(myChannel);
+        myNetworkServiceStub = NetworkServiceGrpc.newBlockingStub(myChannel);
     }
 
     public ProfilerServiceGrpc.ProfilerServiceBlockingStub getProfilerStub() {
@@ -35,6 +36,10 @@ public class GrpcUtils {
 
     public EventServiceGrpc.EventServiceBlockingStub getEventStub() {
         return myEventServiceStub;
+    }
+
+    public NetworkServiceGrpc.NetworkServiceBlockingStub getNetworkStub() {
+        return myNetworkServiceStub;
     }
 
     private ManagedChannel connectGrpc(String socket, int port) {

@@ -57,6 +57,7 @@ def perf_test(name, srcs, test_app, deps = []):
               "-Dinstrumented.app.dex.location=$(location :" + name + "_transform-app)",
               "-Dart.deps.location=prebuilts/tools/linux-x86_64/art/framework/",
               "-Dart.boot.location=prebuilts/tools/linux-x86_64/art/framework/x86_64/",
+              "-Dart.lib64.location=prebuilts/tools/linux-x86_64/art/lib64",
               "-Dprofiler.service.location=$(location //tools/base/profiler/tests/perf-test:profiler-service)",
               "-Dperfa.dir.location=/tools/base/profiler/native/perfa",
               "-Dperfa.location=$(location //tools/base/profiler/native/perfa:libperfa.so)",

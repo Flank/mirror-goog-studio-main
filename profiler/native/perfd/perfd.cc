@@ -34,6 +34,7 @@
 
 // TODO: Move the flag to the agent config to be set by Studio.
 const bool is_io_profiling_enabled = false;
+const char* const kProfilerTest = "-profiler_test";
 
 int main(int argc, char** argv) {
   // If directed by command line argument, establish a communication channel
@@ -41,6 +42,7 @@ int main(int argc, char** argv) {
   // over.  When this argument is used, the program is usually invoked by from
   // GenericComponent's ProfilerServiceImpl::AttachAgent().
   const char* config_path = profiler::kConfigFileDefaultPath;
+  bool is_testing_profiler = false;
   for (int i = 1; i < argc; i++) {
     if (i + 1 < argc && strncmp(argv[i], profiler::kConnectCmdLineArg,
                                 strlen(profiler::kConnectCmdLineArg)) == 0) {
@@ -60,11 +62,13 @@ int main(int argc, char** argv) {
           ((tokenized_word = strtok(nullptr, "=")) != nullptr)) {
         config_path = tokenized_word;
       }
+    } else if (strncmp(argv[i], kProfilerTest, strlen(kProfilerTest)) == 0) {
+      is_testing_profiler = true;
     }
   }
 
   profiler::Trace::Init();
-  profiler::Daemon daemon(config_path);
+  profiler::Daemon daemon(config_path, is_testing_profiler);
 
   profiler::GenericComponent generic_component{&daemon.utilities()};
   daemon.RegisterComponent(&generic_component);

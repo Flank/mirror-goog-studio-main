@@ -50,7 +50,9 @@ public class ProfilerTransformMain {
             byte[] buffer = new byte[1024 * 16]; //16kb
             ZipEntry entry;
             while ((entry = inputStream.getNextEntry()) != null) {
-                outputStream.putNextEntry(entry);
+                // Creates a new entry with same name, because the size of jar zip entry may be
+                // changed after transformation.
+                outputStream.putNextEntry(new ZipEntry(entry.getName()));
                 // If the entry is a class file, lets transform it.
                 if (entry.getName().endsWith(".class")) {
                     transform.accept(inputStream, outputStream);
