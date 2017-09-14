@@ -339,7 +339,9 @@ public class LibraryTaskManager extends TaskManager {
             extractAnnotationsTask = null;
         }
 
-        final boolean instrumented = variantConfig.getBuildType().isTestCoverageEnabled();
+        final boolean instrumented =
+                variantConfig.getBuildType().isTestCoverageEnabled()
+                        && !variantScope.getInstantRunBuildContext().isInInstantRunMode();
 
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_POST_COMPILATION_TASK,
