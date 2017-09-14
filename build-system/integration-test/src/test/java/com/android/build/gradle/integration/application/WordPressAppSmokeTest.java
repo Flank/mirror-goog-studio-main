@@ -27,6 +27,7 @@ import com.android.builder.model.AndroidProject;
 import java.io.IOException;
 import java.util.Map;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -44,6 +45,7 @@ public class WordPressAppSmokeTest {
     }
 
     @Test
+    @Ignore("issuetracker.google.com/65646366")
     public void build() throws Exception {
         GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
                 project.model().withLoggingLevel(LoggingLevel.DEBUG).getMulti();
@@ -62,8 +64,4 @@ public class WordPressAppSmokeTest {
 
         project.executor().withLoggingLevel(LoggingLevel.DEBUG).run("assembleVanillaDebug");
     }
-
-
-
-
 }

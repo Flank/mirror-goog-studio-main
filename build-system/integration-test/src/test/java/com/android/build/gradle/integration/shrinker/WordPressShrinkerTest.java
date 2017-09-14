@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -51,6 +52,7 @@ public class WordPressShrinkerTest {
     }
 
     @Test
+    @Ignore("issuetracker.google.com/65646366")
     public void compareKeptClasses() throws Exception {
         GradleBuildResult result = project.executor().run("clean", "assembleVanillaRelease");
         assertThat(result.getTask(":WordPress:transformClassesAndResourcesWithProguardForRelease"))
