@@ -61,8 +61,6 @@ public class PlaceholderEncoder {
             Node childNode = childNodes.item(i);
             if (childNode instanceof Element) {
                 visit((Element) childNode);
-            } else if (childNode instanceof Attr) {
-                handleAttribute((Attr) childNode);
             }
         }
     }
