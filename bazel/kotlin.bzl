@@ -140,7 +140,7 @@ def kotlin_test(name, srcs, deps=[], runtime_deps=[], visibility=None, **kwargs)
       name = name + ".test",
       runtime_deps = [
           ":" + name + ".testlib",
-      ],
+      ] + runtime_deps,
       **kwargs
   )
 
