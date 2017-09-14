@@ -38,9 +38,9 @@ iml_module(
         "//tools/idea/.idea/libraries:gson",
         "//tools/base/sdklib:studio.sdklib[module]",
         "//tools/idea/.idea/libraries:mockito[test]",
-        "//tools/base/third_party:com.google.truth_truth[test]",
         "//tools/base/sdk-common:studio.sdk-common[module]",
         "//tools/base/testutils:studio.testutils[module, test]",
+        "//tools/idea/.idea/libraries:truth[test]",
     ],
 )
 
