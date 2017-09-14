@@ -42,6 +42,8 @@ public class AttributeModelTest extends TestCase {
     protected void setUp() throws Exception {
         super.setUp();
         MockitoAnnotations.initMocks(this);
+        Mockito.when(mXmlAttribute.getId()).thenReturn(new XmlNode.NodeKey("Id"));
+        Mockito.when(mXmlAttribute.printPosition()).thenReturn("Position");
     }
 
     public void testGetters() {
@@ -76,7 +78,12 @@ public class AttributeModelTest extends TestCase {
         assertTrue(booleanValidator.validates(mergingReport, mXmlAttribute, "True"));
 
         assertFalse(booleanValidator.validates(mergingReport, mXmlAttribute, "foo"));
-        verify(mXmlAttribute).printPosition();
+        verify(mXmlAttribute)
+                .addMessage(
+                        mergingReport,
+                        MergingReport.Record.Severity.ERROR,
+                        "Attribute Id at Position has an illegal value=(foo), "
+                                + "expected 'true' or 'false'");
     }
 
     public void testMultiValuesValidator() {
@@ -88,6 +95,12 @@ public class AttributeModelTest extends TestCase {
         assertTrue(multiValueValidator.validates(mergingReport, mXmlAttribute, "doh !"));
 
         assertFalse(multiValueValidator.validates(mergingReport, mXmlAttribute, "oh no !"));
+        verify(mXmlAttribute)
+                .addMessage(
+                        mergingReport,
+                        MergingReport.Record.Severity.ERROR,
+                        "Invalid value for attribute Id at Position, value=(oh no !), "
+                                + "acceptable values are (foo,bar,doh !)");
     }
 
     public void testSeparatedValuesValidator() {
@@ -106,6 +119,12 @@ public class AttributeModelTest extends TestCase {
         assertFalse(separatedValuesValidator.validates(mergingReport, mXmlAttribute, ""));
         assertFalse(separatedValuesValidator.validates(mergingReport, mXmlAttribute, ",,"));
         assertFalse(separatedValuesValidator.validates(mergingReport, mXmlAttribute, "foo, bar"));
+        verify(mXmlAttribute)
+                .addMessage(
+                        mergingReport,
+                        MergingReport.Record.Severity.ERROR,
+                        "Invalid value for attribute Id at Position, value=(foo, bar), "
+                                + "acceptable delimiter-separated values are (foo,bar,doh !)");
     }
 
     public void testIntegerValueValidator() {
@@ -117,6 +136,11 @@ public class AttributeModelTest extends TestCase {
                 "123456789123456789"));
         assertFalse(integerValueValidator.validates(mergingReport, mXmlAttribute,
                 "0xFFFFFFFFFFFFFFFF"));
+        verify(mXmlAttribute)
+                .addMessage(
+                        mergingReport,
+                        MergingReport.Record.Severity.ERROR,
+                        "Attribute Id at Position must be an integer, found 0xFFFFFFFFFFFFFFFF");
     }
 
     public void testStrictMergingPolicy() {
