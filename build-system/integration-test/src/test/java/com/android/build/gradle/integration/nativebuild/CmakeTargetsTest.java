@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
+import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.NativeAndroidProject;
@@ -76,11 +77,9 @@ public class CmakeTargetsTest {
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThatApk(apk).hasVersionCode(1);
         assertThatApk(apk).contains("lib/armeabi-v7a/liblibrary1.so");
-        assertThatApk(apk).contains("lib/armeabi/liblibrary1.so");
         assertThatApk(apk).contains("lib/x86/liblibrary1.so");
         assertThatApk(apk).contains("lib/x86_64/liblibrary1.so");
         assertThatApk(apk).contains("lib/armeabi-v7a/liblibrary2.so");
-        assertThatApk(apk).contains("lib/armeabi/liblibrary2.so");
         assertThatApk(apk).contains("lib/x86/liblibrary2.so");
         assertThatApk(apk).contains("lib/x86_64/liblibrary2.so");
 
@@ -111,7 +110,6 @@ public class CmakeTargetsTest {
         assertThatApk(apk).doesNotContain("lib/x86/liblibrary1.so");
         assertThatApk(apk).doesNotContain("lib/x86_64/liblibrary1.so");
         assertThatApk(apk).contains("lib/armeabi-v7a/liblibrary2.so");
-        assertThatApk(apk).contains("lib/armeabi/liblibrary2.so");
         assertThatApk(apk).contains("lib/x86/liblibrary2.so");
         assertThatApk(apk).contains("lib/x86_64/liblibrary2.so");
 
@@ -123,7 +121,8 @@ public class CmakeTargetsTest {
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("project");
-        assertThat(model.getArtifacts()).hasSize(28);
+        assertThat(model.getArtifacts())
+                .hasSize(NdkHelper.getNdkInfo().getDefaultAbis().size() * 4);
         assertThat(model.getFileExtensions()).hasSize(1);
 
         for (File file : model.getBuildFiles()) {
@@ -140,6 +139,7 @@ public class CmakeTargetsTest {
         }
 
         assertThat(model).hasArtifactGroupsNamed("debug", "release");
-        assertThat(model).hasArtifactGroupsOfSize(14);
+        assertThat(model)
+                .hasArtifactGroupsOfSize(NdkHelper.getNdkInfo().getDefaultAbis().size() * 2);
     }
 }

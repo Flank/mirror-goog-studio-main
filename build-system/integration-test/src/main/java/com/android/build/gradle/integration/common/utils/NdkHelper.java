@@ -19,7 +19,10 @@ package com.android.build.gradle.integration.common.utils;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.internal.ndk.DefaultNdkInfo;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.ndk.NdkInfo;
 import com.android.repository.Revision;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -72,5 +75,10 @@ public class NdkHelper {
         } else {
             return ndkMaxSupported;
         }
+    }
+
+    @NonNull
+    public static NdkInfo getNdkInfo() {
+        return new DefaultNdkInfo(GradleTestProject.ANDROID_NDK_HOME);
     }
 }

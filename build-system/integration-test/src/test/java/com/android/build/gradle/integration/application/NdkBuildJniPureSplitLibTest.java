@@ -81,6 +81,7 @@ public class NdkBuildJniPureSplitLibTest {
     private void checkSo() throws IOException {
         GradleTestProject app = project.getSubproject("app");
         assertThat(app.getApk("armeabi-v7a", GradleTestProject.ApkType.DEBUG, "free")).contains("lib/armeabi-v7a/libhello-jni.so");
-        assertThat(app.getApk("mips", GradleTestProject.ApkType.DEBUG, "paid")).contains("lib/mips/libhello-jni.so");
+        assertThat(app.getApk("x86", GradleTestProject.ApkType.DEBUG, "paid"))
+                .contains("lib/x86/libhello-jni.so");
     }
 }

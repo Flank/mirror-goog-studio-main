@@ -56,7 +56,6 @@ public class CmakeStlMatrixTest {
     @Parameterized.Parameters(name = "stl = {0}")
     public static Collection<Object[]> data() {
         return ImmutableList.of(
-                new Object[] {"system"},
                 new Object[] {"c++_shared"},
                 new Object[] {"gnustl_shared"},
                 new Object[] {"stlport_shared"},
@@ -86,7 +85,7 @@ public class CmakeStlMatrixTest {
                         + "        defaultConfig {\n"
                         + "          externalNativeBuild {\n"
                         + "              cmake {\n"
-                        + "                abiFilters.addAll(\"armeabi-v7a\", \"armeabi\", \"x86\");\n"
+                        + "                abiFilters.addAll(\"armeabi-v7a\", \"x86\");\n"
                         + "                cFlags.addAll(\"-DTEST_C_FLAG\", \"-DTEST_C_FLAG_2\")\n"
                         + "                cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
                         + "                targets.addAll(\"hello-jni\")\n"
@@ -122,14 +121,11 @@ public class CmakeStlMatrixTest {
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         TruthHelper.assertThatApk(apk).hasVersionCode(1);
         TruthHelper.assertThatApk(apk).contains("lib/armeabi-v7a/libhello-jni.so");
-        TruthHelper.assertThatApk(apk).contains("lib/armeabi/libhello-jni.so");
         TruthHelper.assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/armeabi-v7a/libhello-jni.so");
         TruthHelper.assertThatNativeLib(lib).isStripped();
 
-        lib = ZipHelper.extractFile(apk, "lib/armeabi/libhello-jni.so");
-        TruthHelper.assertThatNativeLib(lib).isStripped();
 
         lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
         TruthHelper.assertThatNativeLib(lib).isStripped();
@@ -142,7 +138,6 @@ public class CmakeStlMatrixTest {
                 .run("clean", "assembleDebug");
         Apk apk = project.getApk("debug");
         TruthHelper.assertThatApk(apk).doesNotContain("lib/armeabi-v7a/libhello-jni.so");
-        TruthHelper.assertThatApk(apk).doesNotContain("lib/armeabi/libhello-jni.so");
         TruthHelper.assertThatApk(apk).contains("lib/x86/libhello-jni.so");
 
         File lib = ZipHelper.extractFile(apk, "lib/x86/libhello-jni.so");
@@ -157,7 +152,7 @@ public class CmakeStlMatrixTest {
                 .containsExactly(NativeBuildSystem.CMAKE.getName());
         TruthHelper.assertThat(model.getBuildFiles()).hasSize(1);
         TruthHelper.assertThat(model.getName()).isEqualTo("project");
-        int abiCount = 3;
+        int abiCount = 2;
         TruthHelper.assertThat(model.getArtifacts()).hasSize(abiCount * 2);
         TruthHelper.assertThat(model.getFileExtensions()).hasSize(1);
 
@@ -182,7 +177,7 @@ public class CmakeStlMatrixTest {
     public void checkClean() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
-        TruthHelper.assertThat(model).hasBuildOutputCountEqualTo(6);
+        TruthHelper.assertThat(model).hasBuildOutputCountEqualTo(4);
         TruthHelper.assertThat(model).allBuildOutputsExist();
         // CMake .o files are kept in -B folder which is under .externalNativeBuild/
         TruthHelper.assertThat(model)
@@ -205,7 +200,7 @@ public class CmakeStlMatrixTest {
     public void checkCleanAfterAbiSubset() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug", "assembleRelease");
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
-        TruthHelper.assertThat(model).hasBuildOutputCountEqualTo(6);
+        TruthHelper.assertThat(model).hasBuildOutputCountEqualTo(4);
 
         List<File> allBuildOutputs = Lists.newArrayList();
         for (NativeArtifact artifact : model.getArtifacts()) {

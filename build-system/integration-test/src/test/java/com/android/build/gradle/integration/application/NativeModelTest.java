@@ -30,6 +30,7 @@ import com.android.build.gradle.external.gson.NativeSourceFileValue;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.NativeBuildSystem;
@@ -77,6 +78,8 @@ public class NativeModelTest {
         NO_CMAKE_DIR
     }
 
+    private static int DEFAULT_ABI_COUNT = NdkHelper.getNdkInfo().getDefaultAbis().size();
+
     private enum Config {
         ANDROID_MK_FILE_C_CLANG(
                 "  apply plugin: 'com.android.application'\n"
@@ -105,10 +108,10 @@ public class NativeModelTest {
                 false,
                 1,
                 2,
-                7,
+                DEFAULT_ABI_COUNT,
                 Compiler.CLANG,
                 NativeBuildSystem.NDK_BUILD,
-                14,
+                DEFAULT_ABI_COUNT * 2,
                 "relative/path"),
         NDK_BUILD_JOBS_FLAG(
                 "apply plugin: 'com.android.application'\n"
@@ -141,10 +144,10 @@ public class NativeModelTest {
                 false,
                 1,
                 2,
-                7,
+                DEFAULT_ABI_COUNT,
                 Compiler.CLANG,
                 NativeBuildSystem.NDK_BUILD,
-                14,
+                DEFAULT_ABI_COUNT * 2,
                 "ABSOLUTE_PATH"),
         ANDROID_MK_FILE_CPP_CLANG(
                 " apply plugin: 'com.android.application'\n"
@@ -172,10 +175,10 @@ public class NativeModelTest {
                 true,
                 1,
                 2,
-                7,
+                DEFAULT_ABI_COUNT,
                 Compiler.CLANG,
                 NativeBuildSystem.NDK_BUILD,
-                14,
+                DEFAULT_ABI_COUNT * 2,
                 ".externalNativeBuild"),
         ANDROID_MK_GOOGLE_TEST(
                 "apply plugin: 'com.android.application'\n"
@@ -212,7 +215,7 @@ public class NativeModelTest {
                 true,
                 4,
                 2,
-                7,
+                DEFAULT_ABI_COUNT,
                 Compiler.IRRELEVANT,
                 NativeBuildSystem.NDK_BUILD,
                 0,
@@ -243,10 +246,10 @@ public class NativeModelTest {
                 true,
                 1,
                 2,
-                7,
+                DEFAULT_ABI_COUNT,
                 Compiler.GCC,
                 NativeBuildSystem.NDK_BUILD,
-                14,
+                DEFAULT_ABI_COUNT * 2,
                 ".externalNativeBuild"),
         ANDROID_MK_FILE_CPP_GCC_VIA_APPLICATION_MK(
                 "apply plugin: 'com.android.application'\n"
@@ -273,10 +276,10 @@ public class NativeModelTest {
                 true,
                 1,
                 2,
-                7,
+                DEFAULT_ABI_COUNT,
                 Compiler.GCC,
                 NativeBuildSystem.NDK_BUILD,
-                14,
+                DEFAULT_ABI_COUNT * 2,
                 ".externalNativeBuild"),
         ANDROID_MK_CUSTOM_BUILD_TYPE(
                 "apply plugin: 'com.android.application'\n"
@@ -312,10 +315,10 @@ public class NativeModelTest {
                 true,
                 1,
                 3,
-                7,
+                DEFAULT_ABI_COUNT,
                 Compiler.IRRELEVANT,
                 NativeBuildSystem.NDK_BUILD,
-                21,
+                DEFAULT_ABI_COUNT * 3,
                 ".externalNativeBuild"),
         CMAKELISTS_FILE_CPP(
                 "apply plugin: 'com.android.application'\n"
@@ -343,10 +346,10 @@ public class NativeModelTest {
                 true,
                 1,
                 2,
-                7,
+                DEFAULT_ABI_COUNT,
                 Compiler.IRRELEVANT,
                 NativeBuildSystem.CMAKE,
-                14,
+                DEFAULT_ABI_COUNT * 2,
                 "ABSOLUTE_PATH"),
         CMAKELISTS_ARGUMENTS(
                 "apply plugin: 'com.android.application'\n"
@@ -366,7 +369,7 @@ public class NativeModelTest {
                         + "          cmake {\n"
                         + "            arguments \"-DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG\"\n"
                         + "            cFlags \"-DTEST_C_FLAG\"\n"
-                        + "            abiFilters \"armeabi-v7a\", \"armeabi\"\n"
+                        + "            abiFilters \"armeabi-v7a\", \"x86_64\"\n"
                         + "          }\n"
                         + "        }\n"
                         + "    }\n"
@@ -405,10 +408,10 @@ public class NativeModelTest {
                 false,
                 1,
                 2,
-                7,
+                DEFAULT_ABI_COUNT,
                 Compiler.IRRELEVANT,
                 NativeBuildSystem.CMAKE,
-                14,
+                DEFAULT_ABI_COUNT * 2,
                 ".externalNativeBuild"),
         CMAKELISTS_ARGUMENTS_WITH_CMAKE_VERSION(
                 "apply plugin: 'com.android.application'\n"
@@ -429,7 +432,7 @@ public class NativeModelTest {
                         + "          cmake {\n"
                         + "            arguments \"-DCMAKE_CXX_FLAGS=-DTEST_CPP_FLAG\", \"-DCMAKE_ANDROID_NDK=TEST_NDK_PATH\", \"-DCMAKE_PROGRAM_PATH=TEST_PATH_TO_SEARCH\", \"-DCMAKE_ANDROID_NDK_TOOLCHAIN_VERSION=clang\"\n"
                         + "            cFlags \"-DTEST_C_FLAG\"\n"
-                        + "            abiFilters \"armeabi-v7a\", \"armeabi\"\n"
+                        + "            abiFilters \"armeabi-v7a\", \"x86_64\"\n"
                         + "          }\n"
                         + "        }\n"
                         + "    }\n"
@@ -611,7 +614,7 @@ public class NativeModelTest {
 
     @Test
     public void checkUpToDate() throws Exception {
-        File jsonFile = getJsonFile("debug", "armeabi");
+        File jsonFile = getJsonFile("debug", "x86_64");
 
         // Initially, JSON file doesn't exist
         assertThat(jsonFile).doesNotExist();
@@ -704,7 +707,7 @@ public class NativeModelTest {
         if (config.buildSystem == NativeBuildSystem.NDK_BUILD) {
             project.model().getSingle(NativeAndroidProject.class);
             NativeBuildConfigValue buildConfig =
-                    getNativeBuildConfigValue(getJsonFile("debug", "armeabi"));
+                    getNativeBuildConfigValue(getJsonFile("debug", "x86_64"));
             for (String cleanCommand : buildConfig.cleanCommands) {
                 assertThat(cleanCommand).doesNotContain("-j");
             }
@@ -716,8 +719,8 @@ public class NativeModelTest {
         // Sync
         project.model().getSingle(NativeAndroidProject.class);
 
-        File debugJson = getJsonFile("debug", "armeabi");
-        File releaseJson = getJsonFile("release", "armeabi");
+        File debugJson = getJsonFile("debug", "x86_64");
+        File releaseJson = getJsonFile("release", "x86_64");
 
         NativeBuildConfigValue debug = getNativeBuildConfigValue(debugJson);
         NativeBuildConfigValue release = getNativeBuildConfigValue(releaseJson);
@@ -729,9 +732,9 @@ public class NativeModelTest {
         Set<String> releaseOnlyFlags = Sets.newHashSet(releaseFlags);
         releaseOnlyFlags.removeAll(debugFlags);
         assertThat(releaseOnlyFlags)
-        // TODO Put '.named' back when this test source file is translated from groovy to java
+                // TODO Put '.named' back when this test source file is translated from groovy to java
                 //.named("release only build flags")
-                .containsAllOf("-DNDEBUG", "-Os");
+                .containsAllOf("-DNDEBUG", "-O2");
 
         // Look at flags that are only in debug build. Should at least contain -O0
         Set<String> debugOnlyFlags = Sets.newHashSet(debugFlags);

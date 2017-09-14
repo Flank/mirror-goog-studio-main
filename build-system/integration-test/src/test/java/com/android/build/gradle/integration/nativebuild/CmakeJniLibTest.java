@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
+import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
@@ -106,7 +107,8 @@ public class CmakeJniLibTest {
         assertThat(model).isNotNull();
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("lib");
-        assertThat(model.getArtifacts()).hasSize(14);
+        assertThat(model.getArtifacts())
+                .hasSize(NdkHelper.getNdkInfo().getDefaultAbis().size() * 2);
         assertThat(model.getFileExtensions()).hasSize(1);
 
         for (File file : model.getBuildFiles()) {

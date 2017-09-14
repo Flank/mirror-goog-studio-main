@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
+import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
@@ -129,7 +130,8 @@ public class NdkBuildJniLibTest {
         assertThat(model).isNotNull();
         assertThat(model.getBuildFiles()).hasSize(1);
         assertThat(model.getName()).isEqualTo("lib");
-        assertThat(model.getArtifacts()).hasSize(14);
+        assertThat(model.getArtifacts())
+                .hasSize(2 * NdkHelper.getNdkInfo().getDefaultAbis().size());
         assertThat(model.getFileExtensions()).hasSize(1);
 
         for (File file : model.getBuildFiles()) {
