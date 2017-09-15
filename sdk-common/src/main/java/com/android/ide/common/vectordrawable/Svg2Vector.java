@@ -294,6 +294,13 @@ public class Svg2Vector {
                 extractGradientNode(svgTree, gradientNode);
                 gradientNode.fillPresentationAttributes("gradientType", "linear");
                 svgTree.setHasGradient(true);
+            } else if ("radialGradient".equals(nodeName)) {
+                SvgGradientNode gradientNode =
+                        new SvgGradientNode(svgTree, currentNode, nodeName + i);
+                processIdName(svgTree, gradientNode);
+                extractGradientNode(svgTree, gradientNode);
+                gradientNode.fillPresentationAttributes("gradientType", "radial");
+                svgTree.setHasGradient(true);
             } else {
                 // For other fancy tags, like <switch>, they can contain children too.
                 // Report the unsupported nodes.
@@ -1007,9 +1014,13 @@ public class Svg2Vector {
     private static final String aaptBound = "xmlns:aapt=\"http://schemas.android.com/aapt\"\n";
 
     private static String getSizeString(float w, float h, float scaleFactor) {
-        String size = "        android:width=\"" + (int) (w * scaleFactor) + "dp\"\n" +
-                      "        android:height=\"" + (int) (h * scaleFactor) + "dp\"\n";
-        return size;
+        return "        android:width=\""
+                + (int) (w * scaleFactor)
+                + "dp\"\n"
+                + "        android:height=\""
+                + (int) (h * scaleFactor)
+                + "dp\"\n";
+
     }
 
     private static void writeFile(OutputStream outStream, SvgTree svgTree) throws IOException {
@@ -1051,18 +1062,23 @@ public class Svg2Vector {
      * @return the error messages, which contain things like all the tags VectorDrawable don't
      *     support or exception message.
      */
-    public static String parseSvgToXml(File inputSVG, OutputStream outStream) {
-        // Write all the error message during parsing into SvgTree. and return here as getErrorLog().
+    @NonNull
+    public static String parseSvgToXml(@NonNull File inputSVG, @NonNull OutputStream outStream) {
+        // Write all the error message during parsing into SvgTree and return here as getErrorLog().
         // We will also log the exceptions here.
         String errorLog;
         try {
             SvgTree svgTree = parse(inputSVG);
-            errorLog = svgTree.getErrorLog();
             if (svgTree.getHasLeafNode()) {
                 writeFile(outStream, svgTree);
             }
+            errorLog = svgTree.getErrorLog();
         } catch (Exception e) {
-            errorLog = "EXCEPTION in parsing " + inputSVG.getName() + ":\n" + e.getMessage();
+            errorLog = "Error while parsing " + inputSVG.getName();
+            String errorDetail = e.getLocalizedMessage();
+            if (errorDetail != null) {
+                errorLog += ":\n" + errorDetail;
+            }
         }
         return errorLog;
     }

@@ -786,11 +786,28 @@ class VdPath extends VdElement {
                 } else if (mTileMode.equals("repeat")) {
                     tile = MultipleGradientPaint.CycleMethod.REPEAT;
                 }
-                LinearGradientPaint gradient =
-                        new LinearGradientPaint(
-                                mStartX, mStartY, mEndX, mEndY, mFractions, mGradientColors, tile);
-                g.setPaint(gradient);
-
+                if (mGradientType.equals("linear")) {
+                    LinearGradientPaint gradient =
+                            new LinearGradientPaint(
+                                    mStartX,
+                                    mStartY,
+                                    mEndX,
+                                    mEndY,
+                                    mFractions,
+                                    mGradientColors,
+                                    tile);
+                    g.setPaint(gradient);
+                } else {
+                    RadialGradientPaint radialGradientPaint =
+                            new RadialGradientPaint(
+                                    mCenterX,
+                                    mCenterY,
+                                    mGradientRadius,
+                                    mFractions,
+                                    mGradientColors,
+                                    tile);
+                    g.setPaint(radialGradientPaint);
+                }
                 if (fill) {
                     g.fill(path2d);
                 } else {

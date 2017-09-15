@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" height="64" width="64">
+  <defs>
+    <radialGradient id="grad1" cx="50%" cy="50%" r="50%" fx="50%" fy="50%" spreadMethod="repeat" gradientTransform="translate(1,5)">
+      <stop offset="0%" style="stop-color:rgb(255,255,0);stop-opacity:1" />
+      <stop offset="40%" style="stop-color:rgb(255,0,255);stop-opacity:1" />
+      <stop offset="70%" style="stop-color:rgb(123,225,200);stop-opacity:1" />
+    </radialGradient>
+  </defs>
+  <g transform="scale(1,1.4) translate(10,15) " >
+    <circle cx="12" cy="12" r="22" fill="url(#grad1)"/>
+  </g>
+</svg>
+

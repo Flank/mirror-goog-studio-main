@@ -664,6 +664,155 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_gradient_linear_x_y_numbers");
     }
 
+    public void testSvgGradientRadialCoordinates() throws Exception {
+        checkSvgConversion("test_gradient_radial_coordinates");
+    }
+
+    public void testSvgGradientRadialNoCoordinates() throws Exception {
+        checkSvgConversion("test_gradient_radial_no_coordinates");
+    }
+
+    public void testSvgGradientRadialNoStops() throws Exception {
+        checkVectorConversion(
+                "test_gradient_radial_no_stops", FileType.SVG, false, "has no stop info");
+    }
+
+    public void testSvgGradientRadialNoUnits() throws Exception {
+        checkSvgConversion("test_gradient_radial_no_units");
+    }
+
+    public void testSvgGradientRadialObjectBoundingBox() throws Exception {
+        checkSvgConversion("test_gradient_radial_object_bounding_box");
+    }
+
+    public void testSvgGradientRadialOneStop() throws Exception {
+        checkSvgConversion("test_gradient_radial_one_stop");
+    }
+
+    public void testSvgGradientRadialOverlappingStops() throws Exception {
+        checkSvgConversion("test_gradient_radial_overlapping_stops");
+    }
+
+    public void testSvgGradientRadialRNegative() throws Exception {
+        checkSvgConversion("test_gradient_radial_r_negative");
+    }
+
+    public void testSvgGradientRadialRZero() throws Exception {
+        checkSvgConversion("test_gradient_radial_r_zero");
+    }
+
+    public void testSvgGradientRadialSpreadPad() throws Exception {
+        checkSvgConversion("test_gradient_radial_spread_pad");
+    }
+
+    public void testSvgGradientRadialSpreadReflect() throws Exception {
+        checkSvgConversion("test_gradient_radial_spread_reflect");
+    }
+
+    public void testSvgGradientRadialSpreadRepeat() throws Exception {
+        checkSvgConversion("test_gradient_radial_spread_repeat");
+    }
+
+    public void testSvgGradientRadialStopOpacity() throws Exception {
+        checkSvgConversion("test_gradient_radial_stop_opacity");
+    }
+
+    public void testSvgGradientRadialStopOpacityFraction() throws Exception {
+        checkSvgConversion("test_gradient_radial_stop_opacity_fraction");
+    }
+
+    public void testSvgGradientRadialStroke() throws Exception {
+        checkSvgConversion("test_gradient_radial_stroke");
+    }
+
+    public void testSvgGradientRadialThreeStops() throws Exception {
+        checkSvgConversion("test_gradient_radial_three_stops");
+    }
+
+    public void testSvgGradientRadialUserSpaceOnUse() throws Exception {
+        checkSvgConversion("test_gradient_radial_user_space_on_use");
+    }
+
+    public void testSvgGradientRadialTransformTranslate() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_translate");
+    }
+
+    public void testSvgGradientRadialTransformTranslateUserSpace() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_translate_userspace");
+    }
+
+    public void testSvgGradientRadialTransformTranslateScale() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_translate_scale");
+    }
+
+    public void testSvgGradientRadialTransformScaleTranslate() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_scale_translate");
+    }
+
+    public void testSvgGradientRadialTransformMatrix() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_matrix");
+    }
+
+    public void testSvgGradientRadialTransformRotate() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_rotate");
+    }
+
+    public void testSvgGradientRadialTransformRotateScale() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_rotate_scale");
+    }
+
+    public void testSvgGradientRadialTransformRotateScaleTranslate() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_rotate_scale_translate");
+    }
+
+    public void testSvgGradientRadialTransformRotateTranslate() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_rotate_translate");
+    }
+
+    public void testSvgGradientRadialTransformRotateTranslateScale() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_rotate_translate_scale");
+    }
+
+    public void testSvgGradientRadialTransformScale() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_scale");
+    }
+
+    public void testSvgGradientRadialTransformScaleRotate() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_scale_rotate");
+    }
+
+    public void testSvgGradientRadialTransformScaleRotateTranslate() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_scale_rotate_translate");
+    }
+
+    public void testSvgGradientRadialTransformScaleTranslateRotate() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_scale_translate_rotate");
+    }
+
+    public void testSvgGradientRadialTransformTranslateRotate() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_translate_rotate");
+    }
+
+    public void testSvgGradientRadialTransformTranslateRotateScale() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_translate_rotate_scale");
+    }
+
+    public void testSvgGradientRadialTransformTranslateScaleRotate() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_translate_scale_rotate");
+    }
+
+    public void testSvgGradientRadialTransformTranslateGroupScaleTranslate() throws Exception {
+        checkSvgConversion("test_gradient_radial_transform_translate_group_scale_translate");
+    }
+
+    public void testSvgGradientRadialUnitsAsNumbers() throws Exception {
+        checkSvgConversion("test_gradient_radial_units_as_numbers");
+    }
+
+    public void testSvgGradientRadialCoordinatesNegativePercentage() throws Exception {
+        checkSvgConversion("test_gradient_radial_coordinates_negative_percentage");
+    }
+
     // XML files start here.
     public void testXmlIconSizeOpacity() throws Exception {
         checkXmlConversion("ic_size_opacity");
