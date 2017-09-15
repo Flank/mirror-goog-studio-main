@@ -730,6 +730,8 @@ public final class SdkConstants {
             "android.support.design.widget.CoordinatorLayout"; //$NON-NLS-1$
     public static final String CLASS_APP_BAR_LAYOUT =
             "android.support.design.widget.AppBarLayout"; //$NON-NLS-1$
+    public static final String CLASS_BOTTOM_NAVIGATION_VIEW =
+            "android.support.design.widget.BottomNavigationView"; //$NON-NLS-1$
     public static final String CLASS_FLOATING_ACTION_BUTTON =
             "android.support.design.widget.FloatingActionButton"; //$NON-NLS-1$
     public static final String CLASS_COLLAPSING_TOOLBAR_LAYOUT =
@@ -1108,6 +1110,7 @@ public final class SdkConstants {
     /* Android Support Tag Constants */
     public static final String COORDINATOR_LAYOUT = CLASS_COORDINATOR_LAYOUT;
     public static final String APP_BAR_LAYOUT = CLASS_APP_BAR_LAYOUT;
+    public static final String BOTTOM_NAVIGATION_VIEW = CLASS_BOTTOM_NAVIGATION_VIEW;
     public static final String FLOATING_ACTION_BUTTON = CLASS_FLOATING_ACTION_BUTTON;
     public static final String COLLAPSING_TOOLBAR_LAYOUT = CLASS_COLLAPSING_TOOLBAR_LAYOUT;
     public static final String NAVIGATION_VIEW = CLASS_NAVIGATION_VIEW;
