@@ -81,7 +81,6 @@ public final class MovieList {
         for (int index = 0; index < title.length; ++index) {
             list.add(
                     buildMovieInfo(
-                            "category",
                             title[index],
                             description,
                             studio[index],
@@ -93,15 +92,18 @@ public final class MovieList {
         return list;
     }
 
-    private static Movie buildMovieInfo(String category, String title,
-            String description, String studio, String videoUrl, String cardImageUrl,
+    private static Movie buildMovieInfo(
+            String title,
+            String description,
+            String studio,
+            String videoUrl,
+            String cardImageUrl,
             String backgroundImageUrl) {
         Movie movie = new Movie();
         movie.setId(count++);
         movie.setTitle(title);
         movie.setDescription(description);
         movie.setStudio(studio);
-        movie.setCategory(category);
         movie.setCardImageUrl(cardImageUrl);
         movie.setBackgroundImageUrl(backgroundImageUrl);
         movie.setVideoUrl(videoUrl);

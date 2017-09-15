@@ -36,11 +36,15 @@ class PlaybackVideoFragment : VideoSupportFragment() {
         mMediaPlayerGlue = MediaPlayerGlue(<#if minApiLevel lt 23>activity<#else>context</#if>)
         mMediaPlayerGlue.host = glueHost
         mMediaPlayerGlue.setMode(MediaPlayerGlue.NO_REPEAT)
-        mMediaPlayerGlue.setPlayerCallback(object : PlaybackGlue.PlayerCallback() {
-            override fun onReadyForPlayback() {
-                mMediaPlayerGlue.play()
-            }
-        })
+        mMediaPlayerGlue.addPlayerCallback(object : PlaybackGlue.PlayerCallback() {
+                    override fun onPreparedStateChanged(glue: PlaybackGlue?) {
+                        glue?.let {
+                            if (it.isPrepared) {
+                                it.play()
+                            }
+                        }
+                    }
+                })
         mMediaPlayerGlue.setTitle(title)
         mMediaPlayerGlue.setArtist(description)
         mMediaPlayerGlue.setVideoUrl(videoUrl)

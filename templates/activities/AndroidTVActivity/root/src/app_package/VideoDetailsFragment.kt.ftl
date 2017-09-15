@@ -182,30 +182,35 @@ class ${detailsFragment} : DetailsFragment() {
         mPresenterSelector.addClassPresenter(ListRow::class.java, ListRowPresenter())
     }
 
-    fun convertDpToPixel(context: Context, dp: Int): Int {
+    private fun convertDpToPixel(context: Context, dp: Int): Int {
         val density = context.applicationContext.resources.displayMetrics.density
         return Math.round(dp.toFloat() * density)
     }
 
     private inner class ItemViewClickedListener : OnItemViewClickedListener {
-        override fun onItemClicked(itemViewHolder: Presenter.ViewHolder?, item: Any?,
-                                   rowViewHolder: RowPresenter.ViewHolder, row: Row) {
+        override fun onItemClicked(
+                itemViewHolder: Presenter.ViewHolder?,
+                item: Any?,
+                rowViewHolder: RowPresenter.ViewHolder,
+                row: Row) {
             if (item is Movie) {
                 Log.d(TAG, "Item: " + item.toString())
                 val intent = Intent(<#if minApiLevel lt 23>activity<#else>context</#if>, ${detailsActivity}::class.java)
                 intent.putExtra(resources.getString(R.string.movie), mSelectedMovie)
 
-                val bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                        activity,
-                        (itemViewHolder?.view as ImageCardView).mainImageView,
-                        ${detailsActivity}.SHARED_ELEMENT_NAME).toBundle()
+                val bundle =
+                        ActivityOptionsCompat.makeSceneTransitionAnimation(
+                            activity,
+                            (itemViewHolder?.view as ImageCardView).mainImageView,
+                            ${detailsActivity}.SHARED_ELEMENT_NAME)
+                        .toBundle()
                 activity.startActivity(intent, bundle)
             }
         }
     }
 
     companion object {
-        private val TAG = "${truncate(detailsFragment,23)}";
+        private val TAG = "${truncate(detailsFragment,23)}"
 
         private val ACTION_WATCH_TRAILER = 1L
         private val ACTION_RENT = 2L

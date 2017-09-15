@@ -22,7 +22,6 @@ import android.support.v17.leanback.media.PlaybackGlue;
 
 /** Handles video playback with media controls. */
 public class PlaybackVideoFragment extends VideoSupportFragment {
-    private static final String TAG = "PlaybackVideoFragment";
 
     private MediaPlayerGlue mMediaPlayerGlue;
 
@@ -30,8 +29,8 @@ public class PlaybackVideoFragment extends VideoSupportFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final Movie movie = (Movie) getActivity()
-                .getIntent().getSerializableExtra(DetailsActivity.MOVIE);
+        final Movie movie =
+                (Movie) getActivity().getIntent().getSerializableExtra(DetailsActivity.MOVIE);
 
         VideoSupportFragmentGlueHost glueHost =
                 new VideoSupportFragmentGlueHost(PlaybackVideoFragment.this);
@@ -39,13 +38,15 @@ public class PlaybackVideoFragment extends VideoSupportFragment {
         mMediaPlayerGlue = new MediaPlayerGlue(getActivity());
         mMediaPlayerGlue.setHost(glueHost);
         mMediaPlayerGlue.setMode(MediaPlayerGlue.NO_REPEAT);
-        mMediaPlayerGlue.setPlayerCallback(new PlaybackGlue.PlayerCallback() {
-            @Override
-            public void onReadyForPlayback() {
-                mMediaPlayerGlue.play();
-
-            }
-        });
+        mMediaPlayerGlue.addPlayerCallback(
+                new PlaybackGlue.PlayerCallback() {
+                    @Override
+                    public void onPreparedStateChanged(PlaybackGlue glue) {
+                        if (glue.isPrepared()) {
+                            glue.play();
+                        }
+                    }
+                });
         mMediaPlayerGlue.setTitle(movie.getTitle());
         mMediaPlayerGlue.setArtist(movie.getDescription());
         mMediaPlayerGlue.setVideoUrl(movie.getVideoUrl());

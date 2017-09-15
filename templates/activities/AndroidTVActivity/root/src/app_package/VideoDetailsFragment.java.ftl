@@ -18,7 +18,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v17.leanback.app.DetailsFragment;
 import android.support.v17.leanback.app.DetailsFragmentBackgroundController;
 import android.support.v17.leanback.widget.Action;
@@ -216,25 +215,30 @@ public class ${detailsFragment} extends DetailsFragment {
         mPresenterSelector.addClassPresenter(ListRow.class, new ListRowPresenter());
     }
 
-    public int convertDpToPixel(Context context, int dp) {
+    private int convertDpToPixel(Context context, int dp) {
         float density = context.getResources().getDisplayMetrics().density;
         return Math.round((float) dp * density);
     }
 
     private final class ItemViewClickedListener implements OnItemViewClickedListener {
         @Override
-        public void onItemClicked(Presenter.ViewHolder itemViewHolder, Object item,
-                                  RowPresenter.ViewHolder rowViewHolder, Row row) {
+        public void onItemClicked(
+                Presenter.ViewHolder itemViewHolder,
+                Object item,
+                RowPresenter.ViewHolder rowViewHolder,
+                Row row) {
 
             if (item instanceof Movie) {
                 Log.d(TAG, "Item: " + item.toString());
                 Intent intent = new Intent(getActivity(), ${detailsActivity}.class);
                 intent.putExtra(getResources().getString(R.string.movie), mSelectedMovie);
 
-                Bundle bundle = ActivityOptionsCompat.makeSceneTransitionAnimation(
-                        getActivity(),
-                        ((ImageCardView) itemViewHolder.view).getMainImageView(),
-                        ${detailsActivity}.SHARED_ELEMENT_NAME).toBundle();
+                Bundle bundle =
+                        ActivityOptionsCompat.makeSceneTransitionAnimation(
+                            getActivity(),
+                            ((ImageCardView) itemViewHolder.view).getMainImageView(),
+                            ${detailsActivity}.SHARED_ELEMENT_NAME)
+                        .toBundle();
                 getActivity().startActivity(intent, bundle);
             }
         }

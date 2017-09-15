@@ -14,11 +14,7 @@
 
 package ${packageName};
 
-import android.util.Log;
-
 import java.io.Serializable;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /*
  * Movie class represents video entity with title, description, image thumbs and video url.
@@ -32,7 +28,6 @@ public class Movie implements Serializable {
     private String cardImageUrl;
     private String videoUrl;
     private String studio;
-    private String category;
 
     public Movie() {
     }
@@ -92,15 +87,6 @@ public class Movie implements Serializable {
     public void setCardImageUrl(String cardImageUrl) {
         this.cardImageUrl = cardImageUrl;
     }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
 
     @Override
     public String toString() {
