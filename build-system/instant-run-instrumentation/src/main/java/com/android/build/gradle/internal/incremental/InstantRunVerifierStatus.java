@@ -56,6 +56,7 @@ public enum InstantRunVerifierStatus {
     METHOD_ANNOTATION_CHANGE,
     METHOD_DELETED,
     METHOD_ADDED,
+    ABSTRACT_METHOD_CHANGE,
 
     // changes in fields.
     FIELD_ADDED,

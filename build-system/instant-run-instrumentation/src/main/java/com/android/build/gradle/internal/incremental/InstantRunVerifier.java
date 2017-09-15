@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.incremental;
 
+import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.ABSTRACT_METHOD_CHANGE;
 import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.CLASS_ANNOTATION_CHANGE;
 import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.COMPATIBLE;
 import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.FIELD_ADDED;
@@ -332,6 +333,11 @@ public class InstantRunVerifier {
             return METHOD_ANNOTATION_CHANGE;
         }
 
+        // check for abstract/concrete implementation change.
+        if (!checkAccessCompatibility(methodNode.access, updatedMethod.access)) {
+            return ABSTRACT_METHOD_CHANGE;
+        }
+
         // the method exist in both classes, check if the original method was disabled for
         // instantRun or contained calls to blacklisted APIs. If either of these conditions
         // is true, and the method implementation has changed, a restart is needed.
@@ -365,6 +371,26 @@ public class InstantRunVerifier {
         return COMPATIBLE;
     }
 
+    /**
+     * check that access mode of a method is compatible between two versions of the method.
+     *
+     * @param oldMethodAccess the old version access modes
+     * @param newMethodAccess the new version access modes.
+     * @return true if the modes are InstantRun compatible or false if a coldswap should be
+     *     generated.
+     */
+    private static boolean checkAccessCompatibility(int oldMethodAccess, int newMethodAccess) {
+        if (newMethodAccess == oldMethodAccess) {
+            return true;
+        }
+        boolean oldMethodAbstract = (oldMethodAccess & Opcodes.ACC_ABSTRACT) != 0;
+        boolean newMethodAbstract = (newMethodAccess & Opcodes.ACC_ABSTRACT) != 0;
+
+        if (oldMethodAbstract == !newMethodAbstract) return false;
+
+        // other access changes like public -> package private are ok.
+        return true;
+    }
     @Nullable
     private static MethodNode findMethod(@NonNull ClassNode classNode,
             @NonNull  String name,
