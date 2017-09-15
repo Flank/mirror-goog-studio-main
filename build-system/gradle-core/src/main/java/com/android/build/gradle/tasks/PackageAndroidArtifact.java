@@ -211,9 +211,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
     }
 
     protected File aaptIntermediateFolder;
-    protected String versionName;
-    protected int versionCode;
-    protected String applicationId;
 
     protected AaptGeneration aaptGeneration;
 
@@ -241,22 +238,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     public void setDebugBuild(boolean debugBuild) {
         this.debugBuild = debugBuild;
-    }
-
-    @Input
-    @Optional
-    public String getVersionName() {
-        return versionName;
-    }
-
-    @Input
-    public int getVersionCode() {
-        return versionCode;
-    }
-
-    @Input
-    public String getApplicationId() {
-        return applicationId;
     }
 
     @Nested
@@ -910,9 +891,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
                     new File(
                             packagingScope.getIncrementalDir("PackageAndroidArtifact"),
                             "aapt-temp");
-            packageAndroidArtifact.versionName = packagingScope.getVersionName();
-            packageAndroidArtifact.versionCode = packagingScope.getVersionCode();
-            packageAndroidArtifact.applicationId = packagingScope.getApplicationId();
 
             packageAndroidArtifact.instantRunSupportDir =
                     packagingScope.getInstantRunSupportDir();
