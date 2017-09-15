@@ -148,7 +148,7 @@ public class BuildToolInfo {
 
         /** OS Path to aapt2 that supports daemon mode. */
         // TODO(imorlowska): figure out which build tools will include the daemon mode.
-        DAEMON_AAPT2("26.0.1");
+        DAEMON_AAPT2("26.0.2");
 
         /**
          * min revision this element was introduced.
