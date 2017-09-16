@@ -73,7 +73,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Version;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
@@ -242,7 +241,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         // We run by default in headless mode, so the JVM doesn't steal focus.
         System.setProperty("java.awt.headless", "true");
 
-        PluginInitializer.initialize(project);
         project.getPluginManager().apply(AndroidBasePlugin.class);
 
         TaskInputHelper.enableBypass();
@@ -253,6 +251,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         checkPathForErrors();
         checkModulesForErrors();
 
+        PluginInitializer.initialize(project, projectOptions);
         ProfilerInitializer.init(project, projectOptions);
         threadRecorder = ThreadRecorder.get();
 
@@ -287,22 +286,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         checkGradleVersion();
 
         sdkHandler = new SdkHandler(project, getLogger());
-
-        if (gradle.getParent() != null || !gradle.getIncludedBuilds().isEmpty()) {
-            String version = gradle.getGradleVersion();
-            if (version.startsWith("4.1") || version.startsWith("4.2")) {
-                // Putting a warning because it might actually work if the included build is using
-                // plugin 2.3 or just java plugins.
-                extraModelInfo.reportWarning(
-                        SyncIssue.TYPE_GENERIC,
-                        "A composite "
-                                + project.getName()
-                                + " setup has been detected.\n"
-                                + "Composite builds are not fully supported and are likely to break when using Gradle 4.1 or 4.2.\n"
-                                + "Support with later versions of Gradle is unknown.");
-            }
-        }
-
         if (!gradle.getStartParameter().isOffline()
                 && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD)
                 && !projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE)) {

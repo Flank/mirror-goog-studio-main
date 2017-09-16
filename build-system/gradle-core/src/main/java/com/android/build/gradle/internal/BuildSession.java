@@ -28,9 +28,9 @@ interface BuildSession {
     /**
      * Notifies the {@link BuildSessionImpl} singleton object when a new build starts.
      *
-     * <p>This method must be called immediately whenever a new build starts. (It may be called more
-     * than once in a build; if so, subsequent calls simply return immediately since the build has
-     * already started.)
+     * <p>This method must be called immediately whenever a new build starts (for each plugin
+     * version). It may be called more than once in a build; if so, subsequent calls simply return
+     * immediately since the build has already started.
      */
     void initialize(@NonNull Gradle gradle);
 

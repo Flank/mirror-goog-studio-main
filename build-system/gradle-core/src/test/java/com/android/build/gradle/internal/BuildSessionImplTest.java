@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -129,5 +130,39 @@ public class BuildSessionImplTest {
         singleton.initialize(gradle);
         buildListener.buildFinished(null);
         assertThat(counter.get()).isEqualTo(10);
+    }
+
+    @Test
+    public void testIgnoreCorruptedBuildState() {
+        // Create the BuildSessionImpl singleton object
+        BuildSession singleton = BuildSessionImpl.createBuildSessionSingleton(fakePluginVersion);
+
+        // Simulate starting a build
+        Gradle gradle = mock(Gradle.class);
+        singleton.initialize(gradle);
+        ArgumentCaptor<BuildListener> captor = ArgumentCaptor.forClass(BuildListener.class);
+        verify(gradle).addBuildListener(captor.capture());
+        BuildListener buildListener = captor.getValue();
+
+        // Register an action to be executed when the build is finished, let that action throw an
+        // exception
+        singleton.executeOnceWhenBuildFinished(
+                BuildSessionImplTest.class.getName(),
+                "actionThrowingException",
+                () -> {
+                    throw new RuntimeException("Some error");
+                });
+
+        // Let the build finish, an exception should be thrown and build state should be corrupted
+        try {
+            buildListener.buildFinished(null);
+            fail("Expected RuntimeException");
+        } catch (RuntimeException e) {
+            assertThat(e).hasMessage("Some error");
+        }
+
+        // Check that the next build ignores this corrupted state
+        singleton.initialize(gradle);
+        buildListener.buildFinished(null);
     }
 }

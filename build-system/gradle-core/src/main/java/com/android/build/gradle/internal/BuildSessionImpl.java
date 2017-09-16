@@ -23,6 +23,7 @@ import com.android.annotations.concurrency.GuardedBy;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.Version;
 import com.android.utils.JvmWideVariable;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.reflect.TypeToken;
@@ -51,8 +52,8 @@ import org.gradle.api.invocation.Gradle;
  * although it may execute sub-builds (for sub-projects) or included builds in parallel.
  *
  * <p>To ensure proper usage, the {@link #initialize(Gradle)} method must be called immediately
- * whenever a new build starts. (It may be called more than once in a build; if so, subsequent calls
- * simply return immediately since the build has already started.)
+ * whenever a new build starts (for each plugin version). It may be called more than once in a
+ * build; if so, subsequent calls simply return immediately since the build has already started.
  */
 @ThreadSafe
 public final class BuildSessionImpl implements BuildSession {
@@ -99,10 +100,28 @@ public final class BuildSessionImpl implements BuildSession {
         return singleton;
     }
 
-    /** Whether a new build has started. */
-    @GuardedBy("this")
-    private boolean buildStarted = false;
+    /** State of the build. */
+    private enum BuildState {
 
+        /** The build has started. */
+        STARTED,
+
+        /**
+         * The build is almost finished except that the actions registered to be executed at the end
+         * of the build have not yet been executed.
+         */
+        FINISHING,
+
+        /** The build is finished. */
+        FINISHED,
+    }
+
+    /** The state of the current build. */
+    @GuardedBy("this")
+    @NonNull
+    private BuildState buildState = BuildState.FINISHED;
+
+    /** The actions to be executed at the end of the current build. */
     @GuardedBy("this")
     @NonNull
     private LinkedHashMap<String, Runnable> buildFinishedActions = new LinkedHashMap<>();
@@ -110,11 +129,14 @@ public final class BuildSessionImpl implements BuildSession {
     @Override
     public synchronized void initialize(@NonNull Gradle gradle) {
         // If the build has already started, return immediately
-        if (buildStarted) {
+        if (buildState == BuildState.STARTED) {
             return;
         }
 
-        buildStarted = true;
+        // If buildState is FINISHING, it may have been caused by a Ctrl-C, but we won't deal with
+        // it for now and will consider it as FINISHED.
+        // If buildState is FINISHED, let's start a new build.
+        buildState = BuildState.STARTED;
 
         // Register a handler to execute at the end of the build. We need to use the "root" Gradle
         // object to get to the end of both regular builds and composite builds.
@@ -146,25 +168,29 @@ public final class BuildSessionImpl implements BuildSession {
     @Override
     public synchronized void executeOnceWhenBuildFinished(
             @NonNull String actionGroup, @NonNull String actionName, @NonNull Runnable action) {
+        Preconditions.checkState(buildState == BuildState.STARTED);
+
         buildFinishedActions.putIfAbsent(actionGroup + ":" + actionName, action);
     }
 
-    // We don't need to synchronize this method as it should be executed only once per build
-    @SuppressWarnings({"FieldAccessNotGuarded", "GuardedBy"})
-    private void buildFinished() {
-        // Note: If this method is not executed fully (e.g., due to an exception or Ctrl-C occurring
-        // in this method or in a previous method also registered with Gradle to be run at the end
-        // of the build), it may result in a corrupted state, which might affect the next build.
-        // However, the chance of it happening is probably negligible.
-        Preconditions.checkState(
-                buildStarted, "buildStarted must be true when buildFinished() is called.");
+    private synchronized void buildFinished() {
+        Preconditions.checkState(buildState == BuildState.STARTED);
 
+        buildState = BuildState.FINISHING;
         try {
             buildFinishedActions.values().forEach(Runnable::run);
         } finally {
+            // If an exception occurred, it may affect the next build, but we won't deal with it
+            // for now
             buildFinishedActions.clear();
-            buildStarted = false;
+            buildState = BuildState.FINISHED;
         }
+    }
+
+    @Override
+    public String toString() {
+        //noinspection FieldAccessNotGuarded
+        return MoreObjects.toStringHelper(this).add("buildState", buildState.name()).toString();
     }
 
     /**
