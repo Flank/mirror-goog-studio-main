@@ -36,12 +36,9 @@ import java.util.List;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /** Assemble tests for rsSupportMode. */
-// see http://b/65828750
-@Ignore
 public class RsSupportModeTest {
     @ClassRule
     public static GradleTestProject project =
