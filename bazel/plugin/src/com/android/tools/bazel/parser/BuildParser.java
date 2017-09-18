@@ -213,6 +213,7 @@ public class BuildParser {
      *      PRIMARY % EXPRESSION
      */
     private Expression parseExpression() {
+        while (token.kind == Kind.NEWLINE) consume();
         Expression expression = parsePrimary();
         while (token.kind == Kind.NEWLINE) consume();
         switch (token.kind) {
