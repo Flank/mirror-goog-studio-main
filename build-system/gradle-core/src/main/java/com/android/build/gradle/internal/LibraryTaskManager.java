@@ -81,6 +81,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.CopySpec;
+import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.BuildException;
@@ -313,6 +314,7 @@ public class LibraryTaskManager extends TaskManager {
         final AndroidZip bundle =
                 project.getTasks().create(variantScope.getTaskName("bundle"), AndroidZip.class);
         libVariantData.addTask(TaskContainer.TaskKind.PACKAGE_ANDROID_ARTIFACT, bundle);
+        bundle.setDuplicatesStrategy(DuplicatesStrategy.FAIL);
 
         bundle.from(variantScope.getGlobalScope().getOutput(TaskOutputType.LINT_JAR));
 
