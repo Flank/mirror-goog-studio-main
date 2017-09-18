@@ -108,10 +108,9 @@ public interface AndroidConfig {
      *
      * <p>To specify the version of the <a
      * href="https://developer.android.com/studio/releases/build-tools.html">SDK Build Tools</a>
-     * that the Android plugin should use, use {@link
-     * com.android.build.gradle.BaseExtension#getBuildToolsVersion} instead.
-     *
-     * @hide
+     * that the Android plugin should use, use <a
+     * href="com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:buildToolsVersion">buildToolsVersion</a>
+     * instead.
      */
     @Internal
     Revision getBuildToolsRevision();
@@ -160,7 +159,7 @@ public interface AndroidConfig {
      * <pre>
      * android {
      *     ...
-     *     variantFilter { variant ->
+     *     variantFilter { variant -&gt;
      *
      *         def buildTypeName = variant.buildType*.name
      *         def flavorName = variant.flavors*.name
@@ -212,8 +211,9 @@ public interface AndroidConfig {
     /**
      * Specifies the names of product flavor dimensions for this project.
      *
-     * <p>To configure flavor dimensions, use {@link
-     * com.android.build.gradle.BaseExtension#flavorDimensions}. To learn more, read <a
+     * <p>To configure flavor dimensions, use <a
+     * href="com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:flavorDimensions(java.lang.String[])">
+     * <code>flavorDimensions</code></a>. To learn more, read <a
      * href="https://developer.android.com/studio/build/build-variants.html#flavor-dimensions">combine
      * multiple product flavors</a>.
      */
@@ -371,11 +371,11 @@ public interface AndroidConfig {
      * href="https://developer.android.com/studio/build/configure-apk-splits.html">building multiple
      * APKs</a> or APK splits.
      *
-     * <p>To generate APK splits, you need to also set {@link
-     * com.android.build.gradle.BaseExtension#getGeneratePureSplits generatePureSplits} to <code>
-     *  true</code>. However, generating APK splits is an incubating feature, which requires you to
-     * set {@link com.android.build.gradle.internal.dsl.BaseFlavor#minSdkVersion(int)} to <code>21
-     * </code> or higher, and is currently supported only when publishing <a
+     * <p>To generate APK splits, you need to also set <a
+     * href="com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:generatePureSplits">generatePureSplits</a>
+     * to <code>true</code>. However, generating APK splits is an incubating feature, which requires
+     * you to set {@link com.android.build.gradle.internal.dsl.BaseFlavor#minSdkVersion(int)} to
+     * <code>21</code> or higher, and is currently supported only when publishing <a
      * href="https://d.android.com/instant-apps">Android Instant Apps</a>.
      *
      * @see com.android.build.gradle.internal.dsl.Splits
@@ -421,65 +421,28 @@ public interface AndroidConfig {
      * href="https://developer.android.com/studio/build/build-variants.html#build-types">configuring
      * build types</a>: add them to the <code>productFlavors</code> block of your module's <code>
      * build.gradle</code> file and configure the settings you want. Product flavors support the
-     * same properties as the {@link com.android.build.gradle.BaseExtension#getDefaultConfig}
-     * block—this is because <code>defaultConfig</code> defines a {@link ProductFlavor} object that
-     * the plugin uses as the base configuration for all other flavors. Each flavor you configure
-     * can then override any of the default values in <code>defaultConfig</code>, such as the <a
+     * same properties as the {@link com.android.build.gradle.internal.dsl.DefaultConfig}
+     * block--this is because <code>defaultConfig</code> defines a {@link
+     * com.android.build.gradle.internal.dsl.ProductFlavor} object that the plugin uses as the base
+     * configuration for all other flavors. Each flavor you configure can then override any of the
+     * default values in <code>defaultConfig</code>, such as the <a
      * href="https://d.android.com/studio/build/application-id.html"><code>applicationId</code></a>.
      *
-     * <p>When using Android plugin 3.0.0 and higher, <em>each flavor must belong to a {@link
-     * com.android.build.gradle.BaseExtension#flavorDimensions} value</em>. By default, when you
-     * specify only one dimension, all flavors you configure belong to that dimension. If you
-     * specify more than one flavor dimension, you need to manually assign each flavor to a
-     * dimension, as shown below. To learn more about flavor dimensions, read <a
-     * href="https://developer.android.com/studio/build/build-variants.html#flavor-dimensions">
-     * Combine multiple product flavors</a>.
-     *
-     * <pre>
-     * android {
-     *     ...
-     *     // Specifies the flavor dimensions you want to use. The order in which you
-     *     // list each dimension determines its priority, from highest to lowest,
-     *     // when Gradle merges variant sources and configurations. You must assign
-     *     // each product flavor you configure to one of the flavor dimensions.
-     *     flavorDimensions 'api', 'version'
-     *
-     *     productFlavors {
-     *       demo {
-     *         // Assigns this product flavor to the 'version' flavor dimension.
-     *         dimension 'version'
-     *         ...
-     *     }
-     *
-     *       full {
-     *         dimension 'version'
-     *         ...
-     *       }
-     *
-     *       minApi24 {
-     *         // Assigns this flavor to the 'api' dimension.
-     *         dimension 'api'
-     *         minSdkVersion '24'
-     *         versionNameSuffix "-minApi24"
-     *         ...
-     *       }
-     *
-     *       minApi21 {
-     *         dimension "api"
-     *         minSdkVersion '21'
-     *         versionNameSuffix "-minApi21"
-     *         ...
-     *       }
-     *    }
-     * }
-     * </pre>
+     * <p>When using Android plugin 3.0.0 and higher, <em>each flavor must belong to a <a
+     * href="com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:flavorDimensions(java.lang.String[])">
+     * <code>flavorDimensions</code></a> value</em>. By default, when you specify only one
+     * dimension, all flavors you configure belong to that dimension. If you specify more than one
+     * flavor dimension, you need to manually assign each flavor to a dimension. To learn more, read
+     * <a
+     * href="https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration.html#variant_aware">
+     * Use Flavor Dimensions for variant-aware dependency management</a>.
      *
      * <p>When you configure product flavors, the Android plugin automatically combines them with
      * your {@link com.android.build.gradle.internal.dsl.BuildType} configurations to <a
      * href="https://developer.android.com/studio/build/build-variants.html">create build
      * variants</a>. If the plugin creates certain build variants that you don't want, you can <a
      * href="https://developer.android.com/studio/build/build-variants.html#filter-variants">filter
-     * variants</a> using {@link com.android.build.gradle.internal.api.VariantFilter}.
+     * variants</a>.
      *
      * @see com.android.build.gradle.internal.dsl.ProductFlavor
      */
@@ -507,7 +470,8 @@ public interface AndroidConfig {
 
     /**
      * Encapsulates signing configurations that you can apply to {@link
-     * com.android.build.gradle.internal.dsl.BuildType} and {@link ProductFlavor} configurations.
+     * com.android.build.gradle.internal.dsl.BuildType} and {@link
+     * com.android.build.gradle.internal.dsl.ProductFlavor} configurations.
      *
      * <p>Android requires that all APKs be digitally signed with a certificate before they can be
      * installed onto a device. When deploying a debug version of your project from Android Studio,
