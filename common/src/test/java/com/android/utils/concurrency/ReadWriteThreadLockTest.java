@@ -33,8 +33,6 @@ import org.junit.rules.TemporaryFolder;
 /** Test cases for {@link ReadWriteThreadLock}. */
 public class ReadWriteThreadLockTest {
 
-    @Rule public TemporaryFolder testFolder = new TemporaryFolder();
-
     /** Type of lock. */
     private enum LockType {
         READ,

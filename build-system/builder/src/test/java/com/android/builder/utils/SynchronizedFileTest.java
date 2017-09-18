@@ -28,11 +28,11 @@ import com.google.common.base.Throwables;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -78,6 +78,11 @@ public class SynchronizedFileTest {
                 synchronizedFile =
                         SynchronizedFile.getInstanceWithSingleProcessLocking(fileToSynchronize);
             }
+        }
+
+        @After
+        public void tearDown() throws IOException {
+            FileUtils.deletePath(testDir.getRoot());
         }
 
         @Test
@@ -167,16 +172,24 @@ public class SynchronizedFileTest {
 
         @Test
         public void testLockFile() throws Exception {
+            fileToSynchronize = testDir.newFile();
             File lockFile =
                     new File(
                             fileToSynchronize.getParentFile(),
                             fileToSynchronize.getName() + ".lock");
             assertThat(lockFile).doesNotExist();
 
-            synchronizedFile.read((File) -> true);
             if (lockingScope == SynchronizedFile.LockingScope.MULTI_PROCESS) {
+                synchronizedFile =
+                        SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
+                assertThat(lockFile).exists();
+                synchronizedFile.read((File) -> true);
                 assertThat(lockFile).exists();
             } else {
+                synchronizedFile =
+                        SynchronizedFile.getInstanceWithSingleProcessLocking(fileToSynchronize);
+                assertThat(lockFile).doesNotExist();
+                synchronizedFile.read((File) -> true);
                 assertThat(lockFile).doesNotExist();
             }
         }
@@ -323,6 +336,11 @@ public class SynchronizedFileTest {
             fileToSynchronize = testDir.newFile();
         }
 
+        @After
+        public void tearDown() throws IOException {
+            FileUtils.deletePath(testDir.getRoot());
+        }
+
         @Test
         public void testGetInstance_ParentDirectoryDoesNotExist() throws Exception {
             fileToSynchronize = FileUtils.join(testDir.getRoot(), "foo", "bar");
@@ -331,38 +349,6 @@ public class SynchronizedFileTest {
                 fail("Expected IllegalArgumentException");
             } catch (IllegalArgumentException e) {
                 assertThat(e.getMessage()).contains("does not exist");
-            }
-        }
-
-        @Test
-        public void testGetInstance_UnexpectedLockFileFound() throws Exception {
-            File lockFile =
-                    new File(fileToSynchronize.getParent(), fileToSynchronize.getName() + ".lock");
-
-            // It's okay that the lock file does not exist
-            SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
-
-            // It's okay that the lock file exists and it's empty
-            Files.touch(lockFile);
-            SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
-
-            // It's NOT okay that the lock file exists and it's not empty
-            Files.write("Some text", lockFile, StandardCharsets.UTF_8);
-            try {
-                SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
-                fail("Expected IllegalArgumentException");
-            } catch (IllegalArgumentException e) {
-                assertThat(e.getMessage()).contains("Unexpected lock file found");
-            }
-
-            // It's NOT okay that the lock file exists as a directory
-            FileUtils.delete(fileToSynchronize);
-            FileUtils.mkdirs(fileToSynchronize);
-            try {
-                SynchronizedFile.getInstanceWithMultiProcessLocking(fileToSynchronize);
-                fail("Expected IllegalArgumentException");
-            } catch (IllegalArgumentException e) {
-                assertThat(e.getMessage()).contains("Unexpected lock file found");
             }
         }
 

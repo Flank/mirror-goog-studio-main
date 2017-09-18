@@ -17,20 +17,22 @@
 package com.android.builder.utils;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.Immutable;
-import com.android.utils.FileUtils;
 import com.android.utils.concurrency.ReadWriteProcessLock;
 import com.android.utils.concurrency.ReadWriteThreadLock;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.base.Verify;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.concurrent.ExecutionException;
 
 /**
- * A file whose access from multiple threads or processes is synchronized.
+ * Utility to synchronize access to a file from multiple threads or processes.
  *
  * <p>When multiple threads or processes access the same file, they would require some form of
  * synchronization. This class provides a simple way for the clients to add synchronization
@@ -52,10 +54,6 @@ import java.util.concurrent.ExecutionException;
  * multiple instances of {@code SynchronizedFile} for the same physical file, and as long as they
  * refer to the same physical file, access to them will be synchronized.
  *
- * <p>Internally, this class normalizes the file's path to detect same physical files via equals().
- * Therefore, the client does not need to normalize the file's path when constructing a {@code
- * SynchronizedFile}.
- *
  * <p>Once the {@code SynchronizedFile} is constructed, the client can read or write to the file as
  * follows.
  *
@@ -69,7 +67,7 @@ import java.util.concurrent.ExecutionException;
  * is similar to a {@link java.util.concurrent.locks.ReadWriteLock}.
  *
  * <p>Additionally, this class provides the {@link #createIfAbsent(ExceptionConsumer)} method for
- * the client to safely create the file if it does not yet exist.
+ * the client to atomically create the file if it does not yet exist.
  *
  * <p>Note that we often use the term "process", although the term "JVM" would be more correct since
  * there could exist multiple JVMs in a process.
@@ -109,31 +107,72 @@ public final class SynchronizedFile {
 
     @NonNull private static final String LOCK_FILE_EXTENSION = ".lock";
 
+    /** The file whose access will be synchronized. */
     @NonNull private final File fileToSynchronize;
 
+    /** The scope of the locking facility. */
     @NonNull private final LockingScope lockingScope;
 
+    /** The lock used for {@link LockingScope#MULTI_PROCESS} synchronization. */
+    @Nullable private final ReadWriteProcessLock readWriteProcessLock;
+
+    /** The lock used for {@link LockingScope#SINGLE_PROCESS} synchronization. */
+    @Nullable private final ReadWriteThreadLock readWriteThreadLock;
+
+    /**
+     * Returns a {@code SynchronizedFile} instance for the given file and the given locking scope.
+     *
+     * <p>This constructor is private. Clients should use static factory method provided by this
+     * class to create a {@code SynchronizedFile} instance.
+     */
     private SynchronizedFile(@NonNull File fileToSynchronize, @NonNull LockingScope lockingScope) {
+        // Normalize the file's path first
+        try {
+            fileToSynchronize = fileToSynchronize.getCanonicalFile();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
         this.fileToSynchronize = fileToSynchronize;
         this.lockingScope = lockingScope;
+
+        if (lockingScope == LockingScope.MULTI_PROCESS) {
+            // Use a lock file that is unique to the file being synchronized
+            File lockFile =
+                    new File(
+                            fileToSynchronize.getParent(),
+                            fileToSynchronize.getName() + LOCK_FILE_EXTENSION);
+
+            this.readWriteProcessLock = new ReadWriteProcessLock(lockFile.toPath());
+            this.readWriteThreadLock = null;
+        } else {
+            this.readWriteProcessLock = null;
+            this.readWriteThreadLock = new ReadWriteThreadLock(fileToSynchronize.toPath());
+        }
     }
 
     /**
-     * Returns a {@code SynchronizedFile} instance where synchronization takes effect for threads
-     * both within the same process and across different processes.
+     * Returns a {@code SynchronizedFile} instance for the given file, where synchronization on the
+     * same file takes effect for threads both within the same process and across different
+     * processes (two files are the same if they refer to the same physical file).
      *
      * <p>Inter-process synchronization is provided via {@link ReadWriteProcessLock}, which requires
      * a lock file to be created. This lock file is different from the file being synchronized and
-     * will be placed next to that file. Note that currently it is not possible for the underlying
-     * locking mechanism to delete these lock files. The client may delete the lock files only when
-     * the locking mechanism is no longer in use.
+     * will be placed next to that file under the same parent directory.
      *
-     * <p>This method will normalize the file's path first, so the client does not need to normalize
-     * the file's path in advance.
+     * <p>The file being synchronized and the lock file may or may not exist when this method is
+     * called. The lock file will be created if it does not yet exist and will not be deleted after
+     * this method is called.
      *
-     * <p>The file being synchronized may or may not already exist. However, in order for the lock
-     * file to be created, the parent directory of the file being synchronized must exist when this
-     * method is called.
+     * <p>In order for the lock file to be created (if it does not yet exist), the parent directory
+     * of the file being synchronized and the lock file must exist when this method is called.
+     *
+     * <p>IMPORTANT: The lock file must be used solely for synchronization purposes. The client of
+     * this class must not access (read, write, or delete) the lock file. The client may delete the
+     * lock file only when the locking mechanism is no longer in use.
+     *
+     * <p>This method will normalize the file's path first to detect same physical files via
+     * equals(), so the client does not need to normalize the file's path in advance.
      *
      * <p>Note: If the file is never accessed by more than one process at a time, the client should
      * use the {@link #getInstanceWithSingleProcessLocking(File)} method instead since there will be
@@ -142,62 +181,32 @@ public final class SynchronizedFile {
      * @param fileToSynchronize the file whose access will be synchronized; it may not yet exist,
      *     but its parent directory must exist
      * @see #getInstanceWithSingleProcessLocking(File)
-     * @throws IllegalArgumentException if the parent directory of file being synchronized does not
-     *     exist, or a regular file with the same path as the lock file accidentally exists next to
-     *     the file being synchronized
      */
     @NonNull
     public static SynchronizedFile getInstanceWithMultiProcessLocking(
             @NonNull File fileToSynchronize) {
-        // Normalize the file path first
-        try {
-            fileToSynchronize = fileToSynchronize.getCanonicalFile();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-
-        Preconditions.checkArgument(
-                FileUtils.parentDirExists(fileToSynchronize),
-                "Parent directory of " + fileToSynchronize.getAbsolutePath() + " does not exist");
-
-        File lockFile =
-                new File(
-                        fileToSynchronize.getParent(),
-                        fileToSynchronize.getName() + LOCK_FILE_EXTENSION);
-        Preconditions.checkArgument(
-                !lockFile.exists() || (lockFile.isFile() && lockFile.length() == 0),
-                "Unexpected lock file found: "
-                        + lockFile.getAbsolutePath()
-                        + " with length="
-                        + lockFile.length());
-
         return new SynchronizedFile(fileToSynchronize, LockingScope.MULTI_PROCESS);
     }
 
     /**
-     * Returns a {@code SynchronizedFile} instance where synchronization takes effect for threads
-     * within the same process but not for threads across different processes.
+     * Returns a {@code SynchronizedFile} instance for the given file, where synchronization on the
+     * same file takes effect for threads within the same process but not for threads across
+     * different processes (two files are the same if they refer to the same physical file).
      *
-     * <p>This method will normalize the file's path first, so the client does not need to normalize
-     * the file's path in advance.
+     * <p>The file being synchronized may or may not exist when this method is called.
+     *
+     * <p>This method will normalize the file's path first to detect same physical files via
+     * equals(), so the client does not need to normalize the file's path in advance.
      *
      * <p>Note: If the file may be accessed by more than one process at a time, the client must use
      * the {@link #getInstanceWithMultiProcessLocking(File)} method instead.
      *
-     * @param fileToSynchronize the file whose access should be synchronized, which may not yet
-     *     exist
+     * @param fileToSynchronize the file whose access will be synchronized, which may not yet exist
      * @see #getInstanceWithMultiProcessLocking(File)
      */
     @NonNull
     public static SynchronizedFile getInstanceWithSingleProcessLocking(
             @NonNull File fileToSynchronize) {
-        // Normalize the file path first
-        try {
-            fileToSynchronize = fileToSynchronize.getCanonicalFile();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-
         return new SynchronizedFile(fileToSynchronize, LockingScope.SINGLE_PROCESS);
     }
 
@@ -239,23 +248,10 @@ public final class SynchronizedFile {
     private <V> V doActionWithMultiProcessLocking(
             @NonNull LockingType lockingType, @NonNull ExceptionFunction<File, V> action)
             throws ExecutionException {
-        // Use a lock file that is unique to the (physical) file being synchronized (note that
-        // fileToSynchronize has already been normalized earlier)
-        File lockFile =
-                new File(
-                        fileToSynchronize.getParent(),
-                        fileToSynchronize.getName() + LOCK_FILE_EXTENSION);
-
-        // ReadWriteProcessLock does not require the lock file to be normalized since internally it
-        // will normalize it. Plus, fileToSynchronize, and therefore lockFile, are already
-        // normalized, so we don't need to normalize it here.
-        // Also, the parent directory of fileToSynchronize and lockFile should already exist, as
-        // required by SynchronizedFile#getInstanceWithMultiProcessLocking(File).
-        ReadWriteProcessLock readWriteProcessLock = new ReadWriteProcessLock(lockFile);
         ReadWriteProcessLock.Lock lock =
                 lockingType == LockingType.SHARED
-                        ? readWriteProcessLock.readLock()
-                        : readWriteProcessLock.writeLock();
+                        ? Verify.verifyNotNull(readWriteProcessLock).readLock()
+                        : Verify.verifyNotNull(readWriteProcessLock).writeLock();
         try {
             lock.lock();
         } catch (IOException e) {
@@ -279,13 +275,10 @@ public final class SynchronizedFile {
     private <V> V doActionWithSingleProcessLocking(
             @NonNull LockingType lockingType, @NonNull ExceptionFunction<File, V> action)
             throws ExecutionException {
-        // ReadWriteThreadLock requires the lock file to be normalized. However, since
-        // fileToSynchronize is already normalized, we don't need to normalize it here.
-        ReadWriteThreadLock readWriteThreadLock = new ReadWriteThreadLock(fileToSynchronize);
         ReadWriteThreadLock.Lock lock =
                 lockingType == LockingType.SHARED
-                        ? readWriteThreadLock.readLock()
-                        : readWriteThreadLock.writeLock();
+                        ? Verify.verifyNotNull(readWriteThreadLock).readLock()
+                        : Verify.verifyNotNull(readWriteThreadLock).writeLock();
         lock.lock();
         try {
             return action.accept(fileToSynchronize);
@@ -297,7 +290,8 @@ public final class SynchronizedFile {
     }
 
     /**
-     * Executes an action that creates the file if it does not yet exist.
+     * Executes an action that creates the file if it does not yet exist. This method is performed
+     * atomically.
      *
      * <p>This method throws a {@link RuntimeException} if the file does not exist but the action
      * does not create the file.
@@ -355,6 +349,14 @@ public final class SynchronizedFile {
                 throw new RuntimeException(exception);
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+                .add("fileToSynchronize", fileToSynchronize)
+                .add("lockingScope", lockingScope)
+                .toString();
     }
 
     /**

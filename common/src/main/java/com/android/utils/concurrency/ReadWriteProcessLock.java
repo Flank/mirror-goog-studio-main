@@ -17,17 +17,21 @@
 package com.android.utils.concurrency;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.Immutable;
-import com.android.utils.FileUtils;
 import com.android.utils.JvmWideVariable;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Verify;
 import com.google.common.reflect.TypeToken;
-import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -36,7 +40,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * A lock similar to {@link ReentrantReadWriteLock} used to synchronize threads both within the same
- * JVM and across different JVMs, even in the event of duplicate class loadings.
+ * JVM and across different JVMs, even when classes (including this class) are loaded multiple times
+ * by different class loaders.
  *
  * <p>Typically, there exists only one JVM in a process. Therefore, we call this class {@code
  * ReadWriteProcessLock}, although in a multi-JVM process, this is not strictly correct. Also, from
@@ -65,16 +70,16 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * }
  * }</pre>
  *
- * <p>The key usage difference between {@code ReadWriteProcessLock} and a regular Java lock such as
- * {@link ReentrantReadWriteLock} is that {@code ReadWriteProcessLock} is itself not a lock object
- * (which threads and processes are directly synchronized on), but only a proxy to the actual lock
- * object (a lock file in this case). Therefore, there could be multiple instances of {@code
- * ReadWriteProcessLock} on the same lock file.
+ * <p>The key usage differences between {@code ReadWriteProcessLock} and a regular Java lock such as
+ * {@link ReentrantReadWriteLock} are:
  *
- * <p>Two lock files are considered the same if they refer to the same physical file. Internally,
- * this class normalizes the lock file's path to detect same physical files via equals(). Therefore,
- * the client does not need to normalize the lock file's path when constructing a {@code
- * ReadWriteProcessLock}.
+ * <ol>
+ *   <li>{@code ReadWriteProcessLock} is itself not a lock object (which threads and processes are
+ *       directly synchronized on), but a proxy to the actual lock object (a lock file in this
+ *       case). Therefore, there could be multiple instances of {@code ReadWriteProcessLock} on the
+ *       same lock file.
+ *   <li>Two lock files are considered the same if they refer to the same physical file.
+ * </ol>
  *
  * <p>This lock is not reentrant.
  *
@@ -82,23 +87,17 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public final class ReadWriteProcessLock {
 
-    @NonNull
-    private final ReadWriteProcessLock.Lock readLock = new ReadWriteProcessLock.ReadLock();
-
-    @NonNull
-    private final ReadWriteProcessLock.Lock writeLock = new ReadWriteProcessLock.WriteLock();
-
     /**
      * Map from a lock file to a {@link FileChannel}, used to make sure that there is only one
      * instance of {@code FileChannel} per lock file within the current process.
      */
     @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
     @NonNull
-    private static final ConcurrentMap<File, FileChannel> fileChannelMap =
+    private static final ConcurrentMap<Path, FileChannel> fileChannelMap =
             new JvmWideVariable<>(
                             ReadWriteProcessLock.class,
                             "fileChannelMap",
-                            new TypeToken<ConcurrentMap<File, FileChannel>>() {},
+                            new TypeToken<ConcurrentMap<Path, FileChannel>>() {},
                             ConcurrentHashMap::new)
                     .get();
 
@@ -108,11 +107,11 @@ public final class ReadWriteProcessLock {
      */
     @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
     @NonNull
-    private static final ConcurrentMap<File, FileLock> fileLockMap =
+    private static final ConcurrentMap<Path, FileLock> fileLockMap =
             new JvmWideVariable<>(
                             ReadWriteProcessLock.class,
                             "fileLockMap",
-                            new TypeToken<ConcurrentMap<File, FileLock>>() {},
+                            new TypeToken<ConcurrentMap<Path, FileLock>>() {},
                             ConcurrentHashMap::new)
                     .get();
 
@@ -122,16 +121,23 @@ public final class ReadWriteProcessLock {
      */
     @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
     @NonNull
-    private static final ConcurrentMap<File, AtomicInteger> numOfReadingActionsMap =
+    private static final ConcurrentMap<Path, AtomicInteger> numOfReadingActionsMap =
             new JvmWideVariable<>(
                             ReadWriteProcessLock.class,
                             "numOfReadingActionsMap",
-                            new TypeToken<ConcurrentMap<File, AtomicInteger>>() {},
+                            new TypeToken<ConcurrentMap<Path, AtomicInteger>>() {},
                             ConcurrentHashMap::new)
                     .get();
 
+    /** The lock used for reading. */
+    @NonNull private final ReadWriteProcessLock.Lock readLock = new ReadWriteProcessLock.ReadLock();
+
+    /** The lock used for writing. */
+    @NonNull
+    private final ReadWriteProcessLock.Lock writeLock = new ReadWriteProcessLock.WriteLock();
+
     /** The lock file, used solely for synchronization purposes. */
-    @NonNull private final File lockFile;
+    @NonNull private final Path lockFile;
 
     /**
      * Lock used to synchronize threads within the current process.
@@ -157,45 +163,82 @@ public final class ReadWriteProcessLock {
      * processes will be synchronized on the same lock file (two lock files are the same if they
      * refer to the same physical file).
      *
-     * <p>It is strongly recommended that the lock file is used solely for synchronization purposes.
-     * The client of this class should not access (read, write, or delete) the lock file. The lock
-     * file may or may not exist when this method is called. However, it will be created and will
-     * not be deleted once the client starts using the locking mechanism provided by this class. The
-     * client may delete the lock files only when the locking mechanism is no longer in use.
+     * <p>The lock file may or may not exist when this constructor is called. It will be created if
+     * it does not yet exist and will not be deleted after this constructor is called.
      *
-     * <p>This method will normalize the lock file's path first to detect same physical files via
-     * equals(), so the client does not need to normalize the file's path in advance.
+     * <p>In order for the lock file to be created (if it does not yet exist), the parent directory
+     * of the lock file must exist when this constructor is called.
      *
-     * <p>The lock file may not yet exist. In order for the lock file to be created, the parent
-     * directory of the lock file must exist when this method is called.
+     * <p>IMPORTANT: The lock file must be used solely for synchronization purposes. The client of
+     * this class must not access (read, write, or delete) the lock file. The client may delete the
+     * lock file only when the locking mechanism is no longer in use.
+     *
+     * <p>This constructor will normalize the lock file's path first to detect same physical files
+     * via equals(), so the client does not need to normalize the file's path in advance.
      *
      * @param lockFile the lock file, used solely for synchronization purposes; it may not yet
      *     exist, but its parent directory must exist
-     * @throws IllegalArgumentException if the parent directory of lock file does not exist, or a
-     *     regular file with the same path as the lock file accidentally exists
+     * @throws IllegalArgumentException if the parent directory of the lock file does not exist, or
+     *     if a directory or a regular (non-empty) file with the same path as the lock file
+     *     accidentally exists
      */
-    public ReadWriteProcessLock(@NonNull File lockFile) {
-        // Normalize the lock file's path first
+    public ReadWriteProcessLock(@NonNull Path lockFile) {
         try {
-            lockFile = lockFile.getCanonicalFile();
+            lockFile = createAndNormalizeLockFile(lockFile);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-
-        Preconditions.checkArgument(
-                FileUtils.parentDirExists(lockFile),
-                "Parent directory of " + lockFile.getAbsolutePath() + " does not exist");
-        Preconditions.checkArgument(
-                !lockFile.exists() || (lockFile.isFile() && lockFile.length() == 0),
-                "Unexpected lock file found: "
-                        + lockFile.getAbsolutePath()
-                        + " with length="
-                        + lockFile.length());
 
         this.lockFile = lockFile;
         this.readWriteThreadLock = new ReadWriteThreadLock(lockFile);
         this.numOfReadingActions =
                 numOfReadingActionsMap.computeIfAbsent(lockFile, (any) -> new AtomicInteger(0));
+    }
+
+    /**
+     * Creates the lock file if it does not yet exist and normalizes its path.
+     *
+     * @return the normalized path to an existing lock file
+     */
+    @NonNull
+    @VisibleForTesting
+    static Path createAndNormalizeLockFile(@NonNull Path lockFilePath) throws IOException {
+        // Create the lock file if it does not yet exist
+        if (!Files.exists(lockFilePath)) {
+            // This is needed for Files.exist() and Files.createFile() below to work properly
+            lockFilePath = lockFilePath.normalize();
+
+            Preconditions.checkArgument(
+                    Files.exists(Verify.verifyNotNull(lockFilePath.getParent())),
+                    "Parent directory of " + lockFilePath.toAbsolutePath() + " does not exist");
+            try {
+                Files.createFile(lockFilePath);
+            } catch (FileAlreadyExistsException e) {
+                // It's okay if the file has already been created (although we checked that the file
+                // did not exist before creating the file, it is still possible that the file was
+                // immediately created after the check by some other thread/process).
+            }
+        }
+
+        // Normalize the lock file's path with Path.toRealPath() (Path.normalize() does not resolve
+        // symbolic links)
+        lockFilePath = lockFilePath.toRealPath();
+
+        // Make sure that no directory with the same path as the lock file accidentally exists
+        Preconditions.checkArgument(
+                !Files.isDirectory(lockFilePath),
+                lockFilePath.toAbsolutePath() + " is a directory.");
+
+        // Make sure that no regular (non-empty) file with the same path as the lock file
+        // accidentally exists
+        long lockFileSize = Files.size(lockFilePath);
+        Preconditions.checkArgument(
+                lockFileSize == 0,
+                String.format(
+                        "File '%1$s' with size=%2$d cannot be used as a lock file.",
+                        lockFilePath.toAbsolutePath(), lockFileSize));
+
+        return lockFilePath;
     }
 
     /** Returns the lock used for reading. */
@@ -292,7 +335,7 @@ public final class ReadWriteProcessLock {
 
         FileChannel fileChannel =
                 FileChannel.open(
-                        lockFile.toPath(),
+                        lockFile,
                         StandardOpenOption.READ,
                         StandardOpenOption.WRITE,
                         StandardOpenOption.CREATE);
@@ -301,7 +344,7 @@ public final class ReadWriteProcessLock {
             fileLock = fileChannel.lock(0L, Long.MAX_VALUE, shared);
         } catch (OverlappingFileLockException e) {
             throw new RuntimeException(
-                    "Unable to acquire a file lock for " + lockFile.getAbsolutePath(), e);
+                    "Unable to acquire a file lock for " + lockFile.toAbsolutePath(), e);
         }
 
         fileChannelMap.put(lockFile, fileChannel);
@@ -325,6 +368,11 @@ public final class ReadWriteProcessLock {
 
         fileChannelMap.remove(lockFile);
         fileLockMap.remove(lockFile);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this).add("lockFile", lockFile).toString();
     }
 
     public interface Lock {
