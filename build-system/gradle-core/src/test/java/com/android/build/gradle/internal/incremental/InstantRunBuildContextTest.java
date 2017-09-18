@@ -1041,6 +1041,44 @@ public class InstantRunBuildContextTest {
         assertThat(update.getLastBuild().getArtifacts()).hasSize(3);
     }
 
+    @Test
+    public void testEscapingCharacters() throws Exception {
+        InstantRunBuildContext buildContext =
+                new InstantRunBuildContext(
+                        idAllocator,
+                        true,
+                        AaptGeneration.AAPT_V2_JNI,
+                        new AndroidVersion(23, null),
+                        null,
+                        null,
+                        true);
+        buildContext.addChangedFile(FileType.MAIN, new File("ma'in.apk"));
+        buildContext.addChangedFile(FileType.SPLIT, new File("sp'lit.apk"));
+        File buildInfo = createBuildInfo(buildContext);
+
+        // check xml format for the file paths.
+        buildContext =
+                new InstantRunBuildContext(
+                        idAllocator,
+                        true,
+                        AaptGeneration.AAPT_V2_JNI,
+                        new AndroidVersion(23, null),
+                        null,
+                        null,
+                        true);
+        buildContext.loadFromXmlFile(buildInfo);
+        assertThat(buildContext.getPreviousBuilds()).hasSize(1);
+        Build build = buildContext.getPreviousBuilds().iterator().next();
+
+        assertThat(build.getArtifacts()).hasSize(2);
+        InstantRunBuildContext.Artifact mainArtifact = build.getArtifacts().get(0);
+        assertThat(mainArtifact.getType()).isEqualTo(FileType.SPLIT_MAIN);
+        assertThat(mainArtifact.getLocation().getName()).isEqualTo("ma'in.apk");
+        InstantRunBuildContext.Artifact splitArtifact = build.getArtifacts().get(1);
+        assertThat(splitArtifact.getType()).isEqualTo(FileType.SPLIT);
+        assertThat(splitArtifact.getLocation().getName()).isEqualTo("sp'lit.apk");
+    }
+
     private static List<Element> getElementsByName(Node parent, String nodeName) {
         ImmutableList.Builder<Element> builder = ImmutableList.builder();
         NodeList childNodes = parent.getChildNodes();

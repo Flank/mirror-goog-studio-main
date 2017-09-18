@@ -225,8 +225,7 @@ public class InstantRunBuildContext {
         public Node toXml(@NonNull Document document) {
             Element artifact = document.createElement(TAG_ARTIFACT);
             artifact.setAttribute(ATTR_TYPE, fileType.name());
-            artifact.setAttribute(
-                    ATTR_LOCATION, XmlUtils.toXmlAttributeValue(location.getAbsolutePath()));
+            artifact.setAttribute(ATTR_LOCATION, location.getAbsolutePath());
             return artifact;
         }
 
