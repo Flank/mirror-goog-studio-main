@@ -14,22 +14,19 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.fixtures
+package com.android.build.api.artifact
 
-import com.android.build.gradle.internal.api.sourcesets.FilesProvider
-import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.Buildable
+import org.gradle.api.Incubating
 import java.io.File
 
-class FakeFilesProvider : FilesProvider {
-
-    override fun file(file: Any) = File(file.toString())
-
-    override fun files(vararg files: Any): ConfigurableFileCollection {
-        return FakeConfigurableFileCollection(*files)
-    }
-
-    override fun fileTree(args: Map<String, *>): ConfigurableFileTree {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+/**
+ * A Iterable<File> that implements [Buildable]
+ *
+ * [BuildableArtifact] can be used as Task inputs.
+ */
+@Incubating
+interface BuildableArtifact : Iterable<File>, Buildable {
+    val files : Set<File>
+    fun isEmpty() : Boolean
 }

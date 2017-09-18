@@ -126,6 +126,7 @@ kotlin_test(
         "//tools/base/third_party:org.antlr_antlr-runtime",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-test",
         "//tools/base/third_party:org.jsoup_jsoup",
         "//tools/base/third_party:org.mockito_mockito-core",
         "//tools/base/third_party:org.ow2.asm_asm",
