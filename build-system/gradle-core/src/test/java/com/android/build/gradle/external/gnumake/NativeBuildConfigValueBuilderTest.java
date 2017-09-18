@@ -32,7 +32,7 @@ package com.android.build.gradle.external.gnumake;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.external.gson.NativeBuildConfigValue;
+import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
 import com.android.build.gradle.truth.NativeBuildConfigValueSubject;
 import com.google.common.truth.Truth;
 import com.google.gson.Gson;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.external.gson;
+package com.android.build.gradle.internal.cxx.json;
 
 import com.android.annotations.Nullable;
 import java.io.File;
@@ -22,9 +22,13 @@ import java.io.File;
 /**
  * Value type to be used with Gson.
  */
-public class NativeToolchainValue {
+public class NativeSourceFolderValue {
     @Nullable
-    public File cCompilerExecutable;
+    public File src;
     @Nullable
-    public File cppCompilerExecutable;
+    public String cFlags;
+    @Nullable
+    public String cppFlags;
+    @Nullable
+    public File workingDirectory;
 }

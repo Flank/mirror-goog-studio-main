@@ -17,10 +17,10 @@ package com.android.build.gradle.external.gnumake;
 
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.external.gson.NativeBuildConfigValue;
-import com.android.build.gradle.external.gson.NativeLibraryValue;
-import com.android.build.gradle.external.gson.NativeSourceFileValue;
-import com.android.build.gradle.external.gson.NativeToolchainValue;
+import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
+import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
+import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
+import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.utils.NativeSourceFileExtensions;
 import com.android.utils.NdkUtils;
 import com.google.common.collect.ListMultimap;

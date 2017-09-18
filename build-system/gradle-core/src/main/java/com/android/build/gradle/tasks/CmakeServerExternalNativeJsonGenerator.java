@@ -39,11 +39,12 @@ import com.android.build.gradle.external.cmake.server.ServerFactory;
 import com.android.build.gradle.external.cmake.server.ServerUtils;
 import com.android.build.gradle.external.cmake.server.Target;
 import com.android.build.gradle.external.cmake.server.receiver.ServerReceiver;
-import com.android.build.gradle.external.gson.NativeBuildConfigValue;
-import com.android.build.gradle.external.gson.NativeLibraryValue;
-import com.android.build.gradle.external.gson.NativeSourceFileValue;
-import com.android.build.gradle.external.gson.NativeToolchainValue;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
+import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
+import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
+import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
+import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
@@ -369,7 +370,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     private void generateAndroidGradleBuild(@NonNull String abi, @NonNull Server cmakeServer)
             throws IOException {
         NativeBuildConfigValue nativeBuildConfigValue = getNativeBuildConfigValue(abi, cmakeServer);
-        ExternalNativeBuildTaskUtils.writeNativeBuildConfigValueToJsonFile(
+        AndroidBuildGradleJsons.writeNativeBuildConfigValueToJsonFile(
                 getOutputJson(getJsonFolder(), abi), nativeBuildConfigValue);
     }
 

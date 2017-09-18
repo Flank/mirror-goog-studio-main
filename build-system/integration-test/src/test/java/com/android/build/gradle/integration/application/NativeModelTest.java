@@ -24,14 +24,14 @@ import static com.android.build.gradle.integration.common.fixture.app.HelloWorld
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.external.gson.NativeBuildConfigValue;
-import com.android.build.gradle.external.gson.NativeLibraryValue;
-import com.android.build.gradle.external.gson.NativeSourceFileValue;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.NdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValue;
+import com.android.build.gradle.internal.cxx.json.NativeLibraryValue;
+import com.android.build.gradle.internal.cxx.json.NativeSourceFileValue;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.NativeBuildSystem;
 import com.android.builder.model.AndroidProject;

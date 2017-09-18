@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,36 +14,28 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.external.gson;
+package com.android.build.gradle.internal.cxx.json;
 
 import com.android.annotations.Nullable;
 import java.io.File;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Value type to be used with Gson.
  */
-public class NativeLibraryValue {
+public class NativeBuildConfigValue {
     @Nullable
-    public String buildCommand;
+    public Collection<File> buildFiles;
     @Nullable
-    public String buildType;
+    public List<String> cleanCommands;
     @Nullable
-    public String toolchain;
+    public Map<String, NativeLibraryValue> libraries;
     @Nullable
-    public String groupName;
+    public Map<String, NativeToolchainValue> toolchains;
     @Nullable
-    public String abi;
+    public Collection<String> cFileExtensions;
     @Nullable
-    public String artifactName;
-    @Nullable
-    public Collection<NativeSourceFolderValue> folders;
-    @Nullable
-    public Collection<NativeSourceFileValue> files;
-    @Nullable
-    public Collection<File> exportedHeaders;
-    @Nullable
-    public File output;
-    @Nullable
-    public Collection<File> runtimeFiles;
+    public Collection<String> cppFileExtensions;
 }

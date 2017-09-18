@@ -23,9 +23,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.external.cmake.CmakeUtils;
-import com.android.build.gradle.external.gson.NativeBuildConfigValue;
-import com.android.build.gradle.external.gson.NativeLibraryValue;
-import com.android.build.gradle.external.gson.PlainFileGsonTypeAdaptor;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.options.BooleanOption;
@@ -43,15 +40,9 @@ import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.utils.ILogger;
 import com.google.common.base.Charsets;
-import com.google.common.base.Joiner;
-import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.io.FileBackedOutputStream;
-import com.google.common.io.Files;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
@@ -102,46 +93,6 @@ public class ExternalNativeBuildTaskUtils {
         return outputs;
     }
 
-    /**
-     * Deserialize a JSON file into NativeBuildConfigValue. Emit task-specific exception if there is
-     * an issue.
-     */
-    @NonNull
-    static NativeBuildConfigValue getNativeBuildConfigValue(
-            @NonNull File json,
-            @NonNull String groupName) throws IOException {
-        checkArgument(!Strings.isNullOrEmpty(groupName),
-                "group name missing in", json);
-
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(File.class, new PlainFileGsonTypeAdaptor())
-                .create();
-        List<String> lines = Files.readLines(json, Charsets.UTF_8);
-        NativeBuildConfigValue config = gson.fromJson(Joiner.on("\n").join(lines),
-                NativeBuildConfigValue.class);
-        if (config.libraries == null) {
-            return config;
-        }
-        for (NativeLibraryValue library : config.libraries.values()) {
-            library.groupName = groupName;
-        }
-        return config;
-    }
-
-    /**
-     * Deserialize a JSON files into NativeBuildConfigValue.
-     */
-    @NonNull
-    public static Collection<NativeBuildConfigValue> getNativeBuildConfigValues(
-            @NonNull Collection<File> jsons,
-            @NonNull String groupName) throws IOException {
-        List<NativeBuildConfigValue> configValues = Lists.newArrayList();
-        for (File json : jsons) {
-            configValues.add(getNativeBuildConfigValue(json, groupName));
-        }
-        return configValues;
-    }
-
     /** Return true if we should regenerate out-of-date JSON files. */
     public static boolean shouldRegenerateOutOfDateJsons(@NonNull ProjectOptions options) {
         return options.get(BooleanOption.IDE_BUILD_MODEL_ONLY)
@@ -153,33 +104,6 @@ public class ExternalNativeBuildTaskUtils {
     public static boolean isExternalNativeBuildEnabled(@NonNull CoreExternalNativeBuild config) {
         return (config.getNdkBuild().getPath() != null)
                 || (config.getCmake().getPath() != null);
-    }
-
-    public static class ExternalNativeBuildProjectPathResolution {
-        @Nullable
-        public final String errorText;
-        @Nullable
-        public final NativeBuildSystem buildSystem;
-        @Nullable
-        public final File makeFile;
-        @Nullable public final File externalNativeBuildDir;
-
-        private ExternalNativeBuildProjectPathResolution(
-                @Nullable NativeBuildSystem buildSystem,
-                @Nullable File makeFile,
-                @Nullable File externalNativeBuildDir,
-                @Nullable String errorText) {
-            checkArgument(makeFile == null || buildSystem != null,
-                    "Expected path and buildSystem together, no taskClass");
-            checkArgument(makeFile != null || buildSystem == null,
-                    "Expected path and buildSystem together, no path");
-            checkArgument(makeFile == null || errorText == null,
-                    "Expected path or error but both existed");
-            this.buildSystem = buildSystem;
-            this.makeFile = makeFile;
-            this.externalNativeBuildDir = externalNativeBuildDir;
-            this.errorText = errorText;
-        }
     }
 
     /**
@@ -213,26 +137,6 @@ public class ExternalNativeBuildTaskUtils {
                 externalProjectPaths.get(buildSystem),
                 getExternalNativeBuildPath(config).get(buildSystem),
                 null);
-    }
-
-    /**
-     * Writes the given object as JSON to the given json file.
-     *
-     * @throws IOException I/O failure
-     */
-    public static void writeNativeBuildConfigValueToJsonFile(
-            @NonNull File outputJson, @NonNull NativeBuildConfigValue nativeBuildConfigValue)
-            throws IOException {
-        Gson gson =
-                new GsonBuilder()
-                        .registerTypeAdapter(File.class, new PlainFileGsonTypeAdaptor())
-                        .disableHtmlEscaping()
-                        .setPrettyPrinting()
-                        .create();
-
-        FileWriter jsonWriter = new FileWriter(outputJson);
-        gson.toJson(nativeBuildConfigValue, jsonWriter);
-        jsonWriter.close();
     }
 
     /**
@@ -467,6 +371,33 @@ public class ExternalNativeBuildTaskUtils {
         return new File(sdkHandler.getSdkFolder(), SdkConstants.FD_CMAKE);
     }
 
+    public static class ExternalNativeBuildProjectPathResolution {
+        @Nullable public final String errorText;
+        @Nullable public final NativeBuildSystem buildSystem;
+        @Nullable public final File makeFile;
+        @Nullable public final File externalNativeBuildDir;
+
+        private ExternalNativeBuildProjectPathResolution(
+                @Nullable NativeBuildSystem buildSystem,
+                @Nullable File makeFile,
+                @Nullable File externalNativeBuildDir,
+                @Nullable String errorText) {
+            checkArgument(
+                    makeFile == null || buildSystem != null,
+                    "Expected path and buildSystem together, no taskClass");
+            checkArgument(
+                    makeFile != null || buildSystem == null,
+                    "Expected path and buildSystem together, no path");
+            checkArgument(
+                    makeFile == null || errorText == null,
+                    "Expected path or error but both existed");
+            this.buildSystem = buildSystem;
+            this.makeFile = makeFile;
+            this.externalNativeBuildDir = externalNativeBuildDir;
+            this.errorText = errorText;
+        }
+    }
+
     /**
      * A process output handler that receives STDOUT and STDERR progressively (as it is happening)
      * and logs the output line-by-line to Gradle. This class also collected precise byte-for-byte
@@ -539,11 +470,11 @@ public class ExternalNativeBuildTaskUtils {
 
             private class ProgressiveLoggingOutputStream extends OutputStream {
                 private static final int INITIAL_BUFFER_SIZE = 256;
+                private final boolean logToInfo;
+                private final FileBackedOutputStream individualOutput;
                 @NonNull
                 byte[] buffer = new byte[INITIAL_BUFFER_SIZE];
                 int nextByteIndex = 0;
-                private final boolean logToInfo;
-                private final FileBackedOutputStream individualOutput;
 
                 ProgressiveLoggingOutputStream(
                         boolean logToInfo, FileBackedOutputStream individualOutput) {

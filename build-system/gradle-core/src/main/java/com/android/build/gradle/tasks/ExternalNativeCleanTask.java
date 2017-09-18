@@ -19,9 +19,10 @@ package com.android.build.gradle.tasks;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.external.gson.NativeBuildConfigValue;
-import com.android.build.gradle.external.gson.NativeLibraryValue;
 import com.android.build.gradle.internal.core.Abi;
+import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
+import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
+import com.android.build.gradle.internal.cxx.json.NativeLibraryValueMini;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -37,7 +38,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -74,23 +74,17 @@ public class ExternalNativeCleanTask extends AndroidBuilderTask {
             }
         }
 
-        Collection<NativeBuildConfigValue> configValueList = ExternalNativeBuildTaskUtils
-                .getNativeBuildConfigValues(
-                        existingJsons, checkNotNull(getVariantName()));
+        List<NativeBuildConfigValueMini> configValueList =
+                AndroidBuildGradleJsons.getNativeBuildMiniConfigs(existingJsons);
         List<String> cleanCommands = Lists.newArrayList();
         List<String> targetNames = Lists.newArrayList();
-        for (NativeBuildConfigValue config : configValueList) {
-            if (config.libraries == null) {
-                continue;
+        for (NativeBuildConfigValueMini config : configValueList) {
+            cleanCommands.addAll(config.cleanCommands);
+            Set<String> targets = Sets.newHashSet();
+            for (NativeLibraryValueMini library : config.libraries.values()) {
+                targets.add(String.format("%s %s", library.artifactName, library.abi));
             }
-            if (config.cleanCommands != null) {
-                cleanCommands.addAll(config.cleanCommands);
-                Set<String> targets = Sets.newHashSet();
-                for (NativeLibraryValue library : config.libraries.values()) {
-                    targets.add(String.format("%s %s", library.artifactName, library.abi));
-                }
-                targetNames.add(Joiner.on(",").join(targets));
-            }
+            targetNames.add(Joiner.on(",").join(targets));
         }
         diagnostic("about to execute %s clean commands", cleanCommands.size());
         executeProcessBatch(cleanCommands, targetNames);

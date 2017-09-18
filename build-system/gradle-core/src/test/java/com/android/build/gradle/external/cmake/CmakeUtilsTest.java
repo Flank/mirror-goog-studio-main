@@ -20,7 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.external.cmake.server.CodeModel;
-import com.android.build.gradle.external.gson.NativeToolchainValue;
+import com.android.build.gradle.internal.cxx.json.NativeToolchainValue;
 import com.android.repository.Revision;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

@@ -25,10 +25,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.external.cmake.CmakeUtils;
-import com.android.build.gradle.external.gson.NativeBuildConfigValue;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
+import com.android.build.gradle.internal.cxx.json.AndroidBuildGradleJsons;
+import com.android.build.gradle.internal.cxx.json.NativeBuildConfigValueMini;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeCmakeOptions;
 import com.android.build.gradle.internal.dsl.CoreExternalNativeNdkBuildOptions;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
@@ -52,8 +53,13 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
+import com.google.gson.Gson;
+import com.google.gson.stream.JsonReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -153,8 +159,7 @@ public abstract class ExternalNativeJsonGenerator {
         }
 
         // Now check whether the JSON is out-of-date with respect to the build files it declares.
-        NativeBuildConfigValue config = ExternalNativeBuildTaskUtils
-                .getNativeBuildConfigValue(json, groupName);
+        NativeBuildConfigValueMini config = AndroidBuildGradleJsons.getNativeBuildMiniConfig(json);
         if (config.buildFiles != null) {
             long jsonLastModified = java.nio.file.Files.getLastModifiedTime(
                     json.toPath()).toMillis();
@@ -296,6 +301,7 @@ public abstract class ExternalNativeJsonGenerator {
                     // JSON. If any of these change later the JSON will be regenerated.
                     diagnostic("write command file %s", commandFile.getAbsolutePath());
                     Files.write(currentBuildCommand, commandFile, Charsets.UTF_8);
+
                 } else {
                     diagnostic("JSON '%s' was up-to-date", expectedJson);
                 }
@@ -326,6 +332,7 @@ public abstract class ExternalNativeJsonGenerator {
 
         throw (ProcessException) firstException;
     }
+
 
     /**
      * Derived class implements this method to post-process build output. Ndk-build uses this to
@@ -398,11 +405,11 @@ public abstract class ExternalNativeJsonGenerator {
     }
 
     @NonNull
-    public Collection<NativeBuildConfigValue> readExistingNativeBuildConfigurations()
-            throws IOException {
+    public Collection<JsonReader> streamExistingNativeBuildConfigurations()
+            throws FileNotFoundException {
         List<File> files = getNativeBuildConfigurationsJsons();
         diagnostic("reading %s JSON files", files.size());
-        List<NativeBuildConfigValue> result = Lists.newArrayList();
+        List<JsonReader> result = Lists.newArrayList();
         List<File> existing = Lists.newArrayList();
         for (File file : files) {
             if (file.exists()) {
@@ -412,16 +419,25 @@ public abstract class ExternalNativeJsonGenerator {
                 // If the tool didn't create the JSON file then create fallback with the
                 // information we have so the user can see partial information in the UI.
                 diagnostic("using fallback JSON for %s", file.getAbsolutePath());
-                NativeBuildConfigValue fallback = new NativeBuildConfigValue();
+                NativeBuildConfigValueMini fallback = new NativeBuildConfigValueMini();
                 fallback.buildFiles = Lists.newArrayList(makefile);
-                result.add(fallback);
+
+                String jsonText = new Gson().toJson(fallback);
+                result.add(new JsonReader(new StringReader(new Gson().toJson(fallback))));
             }
         }
 
-        result.addAll(ExternalNativeBuildTaskUtils.getNativeBuildConfigValues(
-                existing,
-                variantName));
+        for (File json : existing) {
+            JsonReader reader = new JsonReader(new FileReader(json));
+            result.add(reader);
+        }
         return result;
+    }
+
+    /** @return the variant name for this generator */
+    @NonNull
+    public String getVariantName() {
+        return variantName;
     }
 
     /** Return ABIs that are available on the platform. */
