@@ -347,6 +347,7 @@ public class JarContentsTest {
                 "desugar_deploy.jar:com/google/devtools/build/android/desugar/",
                 "desugar_deploy.jar:com/google/devtools/common/",
                 "desugar_deploy.jar:com/google/devtools/common/options/",
+                "desugar_deploy.jar:com/google/devtools/common/options/processor/",
                 "desugar_deploy.jar:com/google/thirdparty/",
                 "desugar_deploy.jar:com/google/thirdparty/publicsuffix/",
                 "desugar_deploy.jar:META-INF/",
