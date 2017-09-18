@@ -23,6 +23,7 @@
       <module fileurl="file://$PROJECT_DIR$/chunkio/chunkio.iml" filepath="$PROJECT_DIR$/chunkio/chunkio.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/chunkio-processor/chunkio-processor.iml" filepath="$PROJECT_DIR$/chunkio-processor/chunkio-processor.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/common/common.iml" filepath="$PROJECT_DIR$/common/common.iml" group="base" />
+      <module fileurl="file://$PROJECT_DIR$/common/common-tests.iml" filepath="$PROJECT_DIR$/common/common-tests.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" filepath="$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" group="databinding" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon-base.iml" filepath="$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon-base.iml" group="databinding" />
       <module fileurl="file://$PROJECT_DIR$/ddmlib/ddmlib.iml" filepath="$PROJECT_DIR$/ddmlib/ddmlib.iml" group="base" />
