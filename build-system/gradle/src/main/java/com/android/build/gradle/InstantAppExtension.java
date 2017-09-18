@@ -17,6 +17,7 @@
 package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
 import com.android.build.gradle.internal.ExtraModelInfo;
@@ -64,5 +65,11 @@ class InstantAppExtension extends BaseExtension {
     @Override
     public String getCompileSdkVersion() {
         return "android-26";
+    }
+
+    @Nullable
+    @Override
+    public String getTestBuildType() {
+        return null;
     }
 }

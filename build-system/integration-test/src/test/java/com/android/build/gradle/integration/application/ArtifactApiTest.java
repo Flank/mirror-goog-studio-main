@@ -1,14 +1,15 @@
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
+import static com.android.builder.model.AndroidProject.ARTIFACT_UNIT_TEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -24,6 +25,8 @@ import com.android.builder.model.level2.DependencyGraphs;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -33,6 +36,7 @@ import org.junit.Test;
 public class ArtifactApiTest {
 
     private static final int DEFAULT_EXTRA_JAVA_ARTIFACTS = 1;
+    private static final String CUSTOM_ARTIFACT_NAME = "__test__";
 
     @ClassRule
     public static GradleTestProject project =
@@ -56,7 +60,7 @@ public class ArtifactApiTest {
         // check the Artifact Meta Data
         Collection<ArtifactMetaData> extraArtifacts = model.getOnlyModel().getExtraArtifacts();
         assertNotNull("Extra artifact collection null-check", extraArtifacts);
-        TruthHelper.assertThat(extraArtifacts).hasSize((int) DEFAULT_EXTRA_JAVA_ARTIFACTS + 2);
+        assertThat(extraArtifacts).hasSize((int) DEFAULT_EXTRA_JAVA_ARTIFACTS + 2);
 
         // query to validate presence
         ArtifactMetaData metaData =
@@ -64,7 +68,7 @@ public class ArtifactApiTest {
 
         // get the custom one.
         ArtifactMetaData extraArtifactMetaData =
-                ModelHelper.getArtifactMetaData(extraArtifacts, "__test__");
+                ModelHelper.getArtifactMetaData(extraArtifacts, CUSTOM_ARTIFACT_NAME);
         assertFalse("custom extra meta data is Test check", extraArtifactMetaData.isTest());
         assertEquals(
                 "custom extra meta data type check",
@@ -74,36 +78,46 @@ public class ArtifactApiTest {
 
     @Test
     public void checkBuildTypesContainExtraSourceProviderArtifacts() {
+        final AndroidProject androidProject = model.getOnlyModel();
+
+        // get the tested build types as it impacts the number of sourcesets.
+        String testedBuildType = ModelHelper.findTestedBuildType(androidProject);
+
         // check the extra source provider on the build Types.
-        for (BuildTypeContainer btContainer : model.getOnlyModel().getBuildTypes()) {
-            String name = btContainer.getBuildType().getName();
+        for (BuildTypeContainer btContainer : androidProject.getBuildTypes()) {
+            final String buildTypeName = btContainer.getBuildType().getName();
+            String name = "Extra source provider containers for build type: " + buildTypeName;
             Collection<SourceProviderContainer> extraSourceProviderContainers =
                     btContainer.getExtraSourceProviders();
-            assertNotNull(
-                    "Extra source provider containers for build type '" + name + "' null-check",
-                    extraSourceProviderContainers);
-            assertEquals(
-                    "Extra source provider containers for build type size '" + name + "' check",
-                    (long) DEFAULT_EXTRA_JAVA_ARTIFACTS + 1,
-                    extraSourceProviderContainers.size());
 
-            SourceProviderContainer sourceProviderContainer =
-                    extraSourceProviderContainers.iterator().next();
-            assertNotNull(
-                    "Extra artifact source provider for " + name + " null check",
-                    sourceProviderContainer);
+            assertThat(extraSourceProviderContainers).named(name).isNotNull();
+            final Set<String> extraSourceProviderNames =
+                    extraSourceProviderContainers
+                            .stream()
+                            .map(SourceProviderContainer::getArtifactName)
+                            .collect(Collectors.toSet());
 
-            assertEquals(
-                    "Extra artifact source provider for " + name + " name check",
-                    "__test__",
-                    sourceProviderContainer.getArtifactName());
+            if (buildTypeName.equals(testedBuildType)) {
+                assertThat(extraSourceProviderNames)
+                        .named(name)
+                        .containsExactly(
+                                CUSTOM_ARTIFACT_NAME, ARTIFACT_UNIT_TEST, ARTIFACT_ANDROID_TEST);
 
-            assertEquals(
-                    "Extra artifact source provider for " + name + " value check",
-                    "buildType:" + name,
-                    sourceProviderContainer.getSourceProvider().getManifestFile().getPath());
+            } else {
+                assertThat(extraSourceProviderNames)
+                        .named(name)
+                        .containsExactly(CUSTOM_ARTIFACT_NAME, ARTIFACT_UNIT_TEST);
+            }
+
+            SourceProviderContainer extraSourceProvideContainer =
+                    ModelHelper.getSourceProviderContainer(
+                            extraSourceProviderContainers, CUSTOM_ARTIFACT_NAME);
+            name = "Extra artifact source provider for " + buildTypeName;
+            assertThat(extraSourceProvideContainer).named(name).isNotNull();
+            assertThat(extraSourceProvideContainer.getSourceProvider().getManifestFile().getPath())
+                    .named(name)
+                    .isEqualTo("buildType:" + buildTypeName);
         }
-
     }
 
     @Test
@@ -129,14 +143,14 @@ public class ArtifactApiTest {
 
             SourceProviderContainer sourceProviderContainer =
                     ModelHelper.getSourceProviderContainer(
-                            extraSourceProviderContainers, "__test__");
+                            extraSourceProviderContainers, CUSTOM_ARTIFACT_NAME);
             assertNotNull(
                     "Custom source provider container for " + name + " null check",
                     sourceProviderContainer);
 
             assertEquals(
                     "Custom artifact source provider for " + name + " name check",
-                    "__test__",
+                    CUSTOM_ARTIFACT_NAME,
                     sourceProviderContainer.getArtifactName());
 
             assertEquals(
@@ -154,11 +168,11 @@ public class ArtifactApiTest {
         for (Variant variant : model.getOnlyModel().getVariants()) {
             String name = variant.getName();
             Collection<JavaArtifact> javaArtifacts = variant.getExtraJavaArtifacts();
-            TruthHelper.assertThat(javaArtifacts).hasSize((int) DEFAULT_EXTRA_JAVA_ARTIFACTS + 1);
+            assertThat(javaArtifacts).hasSize((int) DEFAULT_EXTRA_JAVA_ARTIFACTS + 1);
             JavaArtifact javaArtifact =
                     javaArtifacts
                             .stream()
-                            .filter(e -> e.getName().equals("__test__"))
+                            .filter(e -> e.getName().equals(CUSTOM_ARTIFACT_NAME))
                             .findFirst()
                             .orElseThrow(AssertionError::new);
             assertEquals("assemble:" + name, javaArtifact.getAssembleTaskName());
@@ -170,7 +184,7 @@ public class ArtifactApiTest {
             assertEquals("provider:" + name, variantSourceProvider.getManifestFile().getPath());
 
             DependencyGraphs graph = javaArtifact.getDependencyGraphs();
-            TruthHelper.assertThat(helper.on(graph).withType(JAVA).asList()).isNotEmpty();
+            assertThat(helper.on(graph).withType(JAVA).asList()).isNotEmpty();
         }
 
     }
@@ -179,8 +193,7 @@ public class ArtifactApiTest {
     public void backwardsCompatible() throws Exception {
         // ATTENTION Author and Reviewers - please make sure required changes to the build file
         // are backwards compatible before updating this test.
-        TruthHelper.assertThat(
-                        TestFileUtils.sha1NormalizedLineEndings(project.file("build.gradle")))
+        assertThat(TestFileUtils.sha1NormalizedLineEndings(project.file("build.gradle")))
                 .isEqualTo("075b7b983ad2d77a378536f181f3cf17a758380c");
     }
 }
