@@ -302,14 +302,16 @@ public class DexMergerTransform extends Transform {
                 processDirectories(
                         output, outputProvider, isIncremental, directoryInputs, mergeAllInputs));
 
-        if (mergeAllInputs) {
-            subTasks.addAll(
-                    processNonExternalJarsTogether(
-                            output, outputProvider, isIncremental, nonExternalJars));
-        } else {
-            subTasks.addAll(
-                    processNonExternalJarsSeparately(
-                            output, outputProvider, isIncremental, nonExternalJars));
+        if (!nonExternalJars.isEmpty()) {
+            if (mergeAllInputs) {
+                subTasks.addAll(
+                        processNonExternalJarsTogether(
+                                output, outputProvider, isIncremental, nonExternalJars));
+            } else {
+                subTasks.addAll(
+                        processNonExternalJarsSeparately(
+                                output, outputProvider, isIncremental, nonExternalJars));
+            }
         }
 
         subTasks.addAll(processExternalJars(output, outputProvider, isIncremental, externalLibs));
@@ -401,16 +403,21 @@ public class DexMergerTransform extends Transform {
             boolean isIncremental,
             @NonNull Collection<JarInput> inputs)
             throws IOException {
+
+        if (inputs.isEmpty()) {
+            return ImmutableList.of();
+        }
+
         Map<Status, List<JarInput>> byStatus =
                 inputs.stream().collect(Collectors.groupingBy(JarInput::getStatus));
-        for (Status s : Status.values()) {
-            byStatus.putIfAbsent(s, ImmutableList.of());
-        }
 
         if (isIncremental && byStatus.keySet().equals(Collections.singleton(Status.NOTCHANGED))) {
             return ImmutableList.of();
         }
 
+        for (Status s : Status.values()) {
+            byStatus.putIfAbsent(s, ImmutableList.of());
+        }
         Set<? super Scope> allScopes =
                 inputs.stream()
                         .map(JarInput::getScopes)

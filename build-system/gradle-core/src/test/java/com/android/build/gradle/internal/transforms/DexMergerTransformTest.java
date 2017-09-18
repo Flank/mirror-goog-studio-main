@@ -26,6 +26,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.Context;
+import com.android.build.api.transform.Format;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
@@ -177,6 +178,54 @@ public class DexMergerTransformTest {
 
         // make sure we do not create classes.dex
         assertThat(out.resolve("externalLibs/classes.dex")).doesNotExist();
+    }
+
+    @Test
+    public void test_native_deletedExternalLib_mergedTogether() throws Exception {
+
+        // create fake 100 directory inputs to force the merging together of the
+        // non external libraries.
+        Set<TransformInput> inputs = new HashSet<>();
+        for (int i = 0; i < 100; i++) {
+            inputs.add(
+                    TransformTestHelper.directoryBuilder(tmpDir.newFolder())
+                            .setScope(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                            .build());
+        }
+
+        inputs.addAll(
+                getTransformInputs(
+                        NUM_INPUTS,
+                        QualifiedContent.Scope.EXTERNAL_LIBRARIES,
+                        "Prefix",
+                        Status.REMOVED));
+
+        outputProvider =
+                new TestTransformOutputProvider(out) {
+                    @NonNull
+                    @Override
+                    public File getContentLocation(
+                            @NonNull String name,
+                            @NonNull Set<QualifiedContent.ContentType> types,
+                            @NonNull Set<? super QualifiedContent.Scope> scopes,
+                            @NonNull Format format) {
+                        // simulates implementation checks.
+                        com.google.common.base.Preconditions.checkState(!scopes.isEmpty());
+                        com.google.common.base.Preconditions.checkState(!types.isEmpty());
+                        return super.getContentLocation(name, types, scopes, format);
+                    }
+                };
+
+        getTransform(DexingType.NATIVE_MULTIDEX)
+                .transform(
+                        TransformTestHelper.invocationBuilder()
+                                .setInputs(inputs)
+                                .setTransformOutputProvider(outputProvider)
+                                .setIncremental(true)
+                                .build());
+
+        // make sure we do not merge non existing libraries
+        assertThat(out.resolve("nonExternalJars").toFile()).doesNotExist();
     }
 
     @Test
