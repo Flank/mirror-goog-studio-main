@@ -16,9 +16,11 @@
 
 package com.android.build.gradle.integration.common.utils;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
+import static com.android.builder.model.AndroidProject.ARTIFACT_UNIT_TEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -44,6 +46,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -124,17 +127,23 @@ public class ModelHelper {
                 "main", defaultConfig.getSourceProvider())
                 .test();
 
-        // test the main instrumentTest source provider
-        SourceProviderContainer testSourceProviders = getSourceProviderContainer(
-                defaultConfig.getExtraSourceProviders(), ARTIFACT_ANDROID_TEST);
+        // test the main androidTest source provider
+        SourceProviderContainer androidTestSourceProviders =
+                getSourceProviderContainer(
+                        defaultConfig.getExtraSourceProviders(), ARTIFACT_ANDROID_TEST);
 
-        new SourceProviderHelper(model.getName(), projectDir,
-                ANDROID_TEST.getPrefix(), testSourceProviders.getSourceProvider())
+        new SourceProviderHelper(
+                        model.getName(),
+                        projectDir,
+                        ANDROID_TEST.getPrefix(),
+                        androidTestSourceProviders.getSourceProvider())
                 .test();
 
         // test the source provider for the build types
         Collection<BuildTypeContainer> buildTypes = model.getBuildTypes();
-        assertEquals("Build Type Count", 2, buildTypes.size());
+        assertThat(buildTypes).named("build types").hasSize(2);
+
+        String testedBuildType = findTestedBuildType(model);
 
         for (BuildTypeContainer btContainer : model.getBuildTypes()) {
             new SourceProviderHelper(
@@ -144,8 +153,21 @@ public class ModelHelper {
                     btContainer.getSourceProvider())
                     .test();
 
-            // For every build type there's the unit test source provider.
-            assertEquals(1, btContainer.getExtraSourceProviders().size());
+            // For every build type there's the unit test source provider and the android test
+            // one (optional).
+            final Set<String> extraSourceProviderNames =
+                    btContainer
+                            .getExtraSourceProviders()
+                            .stream()
+                            .map(SourceProviderContainer::getArtifactName)
+                            .collect(Collectors.toSet());
+
+            if (btContainer.getBuildType().getName().equals(testedBuildType)) {
+                assertThat(extraSourceProviderNames)
+                        .containsExactly(ARTIFACT_ANDROID_TEST, ARTIFACT_UNIT_TEST);
+            } else {
+                assertThat(extraSourceProviderNames).containsExactly(ARTIFACT_UNIT_TEST);
+            }
         }
     }
 
@@ -197,18 +219,32 @@ public class ModelHelper {
         return getDebugVariant(project).getMainArtifact();
     }
 
-    @NonNull
-    public static AndroidArtifact getAndroidTestArtifact(@NonNull AndroidProject project) {
+    public static AndroidArtifact getAndroidTestArtifact(
+            @NonNull AndroidProject project, @NonNull String variantName) {
         return getAndroidArtifact(
-                getDebugVariant(project).getExtraAndroidArtifacts(),
-                AndroidProject.ARTIFACT_ANDROID_TEST);
+                getVariant(project.getVariants(), variantName).getExtraAndroidArtifacts(),
+                ARTIFACT_ANDROID_TEST);
     }
 
+    public static JavaArtifact getUnitTestArtifact(
+            @NonNull AndroidProject project, @NonNull String variantName) {
+        return getJavaArtifact(
+                getVariant(project.getVariants(), variantName).getExtraJavaArtifacts(),
+                ARTIFACT_UNIT_TEST);
+    }
+
+    /** deprecated Use {@link #getAndroidTestArtifact(AndroidProject, String)} */
+    @Deprecated
+    @NonNull
+    public static AndroidArtifact getAndroidTestArtifact(@NonNull AndroidProject project) {
+        return getAndroidTestArtifact(project, "debug");
+    }
+
+    /** @deprecated Use {@link #getUnitTestArtifact(AndroidProject, String)} */
+    @Deprecated
     @NonNull
     public static JavaArtifact getUnitTestArtifact(@NonNull AndroidProject project) {
-        return getJavaArtifact(
-                getDebugVariant(project).getExtraJavaArtifacts(),
-                AndroidProject.ARTIFACT_UNIT_TEST);
+        return getUnitTestArtifact(project, "debug");
     }
 
     /**
@@ -284,10 +320,27 @@ public class ModelHelper {
     public static ProductFlavorContainer getProductFlavor(
             @NonNull Collection<ProductFlavorContainer> items,
             @NonNull String name) {
-        return searchForExistingItem(items, name, flavor -> flavor.getProductFlavor().getName(),
-                "ArtifactMetaData");
+        return searchForExistingItem(
+                items,
+                name,
+                flavor -> flavor.getProductFlavor().getName(),
+                "ProductFlavorContainer");
     }
 
+    @Nullable
+    public static String findTestedBuildType(@NonNull AndroidProject project) {
+        return project.getVariants()
+                .stream()
+                .filter(
+                        variant ->
+                                getOptionalAndroidArtifact(
+                                                variant.getExtraAndroidArtifacts(),
+                                                ARTIFACT_ANDROID_TEST)
+                                        != null)
+                .map(Variant::getBuildType)
+                .findAny()
+                .orElse(null);
+    }
 
     /**
      * Returns the generates sources commands for all projects for the debug variant.

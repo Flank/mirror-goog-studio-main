@@ -31,11 +31,12 @@ public class BuildTypeData extends VariantDimensionData {
     private AndroidTask<DefaultTask> assembleTask;
 
     BuildTypeData(
-            @NonNull  CoreBuildType buildType,
-            @NonNull  Project project,
-            @NonNull  DefaultAndroidSourceSet sourceSet,
+            @NonNull CoreBuildType buildType,
+            @NonNull Project project,
+            @NonNull DefaultAndroidSourceSet sourceSet,
+            @Nullable DefaultAndroidSourceSet androidTestSourceSet,
             @Nullable DefaultAndroidSourceSet unitTestSourceSet) {
-        super(sourceSet, null, unitTestSourceSet, project);
+        super(sourceSet, androidTestSourceSet, unitTestSourceSet, project);
 
         this.buildType = buildType;
 
