@@ -113,6 +113,9 @@ public class CheckAll {
                     "simpleManifestMergingTask", // Not an Android project.
                     "externalBuildPlugin", // Not an Android Project.
                     "lintCustomRules", // contains integ test for lint itself
-                    "compositeBuild" // broken composite build project.
-                    );
+                    "compositeBuild", // broken composite build project.
+
+                    // see http://b/65828750
+                    "extractRsEnabledAnnotations",
+                    "rsSupportMode");
 }

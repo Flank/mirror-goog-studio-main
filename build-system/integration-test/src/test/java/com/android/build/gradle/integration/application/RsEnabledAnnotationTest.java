@@ -23,9 +23,12 @@ import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 
 /** Integration test for extracting RS enabled annotations. */
+// see http://b/65828750
+@Ignore
 public class RsEnabledAnnotationTest {
     @ClassRule
     public static GradleTestProject project =
@@ -40,7 +43,6 @@ public class RsEnabledAnnotationTest {
     public static void cleanUp() {
         project = null;
     }
-
 
     @Test
     public void checkExtractAnnotation() throws IOException {
