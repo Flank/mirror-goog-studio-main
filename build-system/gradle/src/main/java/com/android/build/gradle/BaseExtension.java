@@ -93,8 +93,6 @@ import org.gradle.internal.reflect.Instantiator;
  *       Apps</a>.
  * </ul>
  *
- * </ul>
- *
  * <p>The following applies the Android plugin to an app's module-level <code>build.gradle</code>
  * file:
  *
@@ -1053,7 +1051,8 @@ public abstract class BaseExtension implements AndroidConfig {
      *
      * <p>You can install the Android NDK by either <a
      * href="https://developer.android.com/studio/intro/update.html#sdk-manager">using the SDK
-     * manager</a> or downloading <a href="">the standalone NDK package</a>.
+     * manager</a> or downloading <a href="https://developer.android.com/ndk/downloads/index.html">
+     * the standalone NDK package</a>.
      */
     public File getNdkDirectory() {
         return sdkHandler.getNdkFolder();

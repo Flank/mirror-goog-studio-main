@@ -105,9 +105,9 @@ public class TestOptions {
     /**
      * Specifies whether to use on-device test orchestration.
      *
-     * <p>If you wat to <a
+     * <p>If you want to <a
      * href="https://developer.android.com/training/testing/junit-runner.html#using-android-test-orchestrator">use
-     * Android Test Orchestrator</a>, you need to specify <code>'ANDROID_TEST_ORCHESTRATOR'</code>,
+     * Android Test Orchestrator</a>, you need to specify <code>"ANDROID_TEST_ORCHESTRATOR"</code>,
      * as shown below. By default, this property is set to <code>"HOST"</code>, which disables
      * on-device orchestration.
      *

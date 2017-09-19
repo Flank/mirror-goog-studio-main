@@ -372,10 +372,11 @@ public interface AndroidConfig {
      * APKs</a> or APK splits.
      *
      * <p>To generate APK splits, you need to also set <a
-     * href="com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:generatePureSplits">generatePureSplits</a>
-     * to <code>true</code>. However, generating APK splits is an incubating feature, which requires
-     * you to set {@link com.android.build.gradle.internal.dsl.BaseFlavor#minSdkVersion(int)} to
-     * <code>21</code> or higher, and is currently supported only when publishing <a
+     * href="com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:generatePureSplits">
+     * <code>generatePureSplits</code></a> to <code>true</code>. However, generating APK splits is
+     * an incubating feature, which requires you to set {@link
+     * com.android.build.gradle.internal.dsl.BaseFlavor#minSdkVersion(int)} to <code>21</code> or
+     * higher, and is currently supported only when publishing <a
      * href="https://d.android.com/instant-apps">Android Instant Apps</a>.
      *
      * @see com.android.build.gradle.internal.dsl.Splits

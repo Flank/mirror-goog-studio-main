@@ -64,7 +64,7 @@ public class AppExtension extends TestedExtension {
      * build variable into the manifest</a>:
      *
      * <pre>
-     * android.applicationVariants.all { variant ->
+     * android.applicationVariants.all { variant -&gt;
      *     def mergedFlavor = variant.getMergedFlavor()
      *     // Defines the value of a build variable you can use in the manifest.
      *     mergedFlavor.manifestPlaceholders = [hostName:"www.example.com/${variant.versionName}"]
