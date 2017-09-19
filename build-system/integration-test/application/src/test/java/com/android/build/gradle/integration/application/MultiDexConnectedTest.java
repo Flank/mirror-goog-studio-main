@@ -16,14 +16,12 @@
 
 package com.android.build.gradle.integration.application;
 
+import com.android.build.gradle.integration.application.MultiDexTest.MainDexListTool;
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.utils.DexInProcessHelper;
-import com.google.common.collect.Lists;
-import java.util.List;
-import org.junit.Before;
+import com.android.build.gradle.options.BooleanOption;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -38,29 +36,26 @@ public class MultiDexConnectedTest {
 
     @Rule public Adb adb = new Adb();
 
-    @Parameterized.Parameters(name = "dexInProcess = {0}")
-    public static List<Boolean> data() {
-        return Lists.newArrayList(true, false);
+    @Parameterized.Parameters(name = "mainDexListTool = {0}")
+    public static Object[] data() {
+        return MainDexListTool.values();
     }
 
-    @Parameterized.Parameter public boolean dexInProcess;
-
-    @Before
-    public void disableDexInProcess() throws Exception {
-        if (!dexInProcess) {
-            DexInProcessHelper.disableDexInProcess(project.getBuildFile());
-        }
-    }
+    @Parameterized.Parameter public MainDexListTool tool;
 
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
-        project.execute(
-                "assembleIcsDebug",
-                "assembleIcsDebugAndroidTest",
-                "assembleLollipopDebug",
-                "assembleLollipopDebugAndroidTest");
+        project.executor()
+                .with(BooleanOption.ENABLE_D8_MAIN_DEX_LIST, tool == MainDexListTool.D8)
+                .run(
+                        "assembleIcsDebug",
+                        "assembleIcsDebugAndroidTest",
+                        "assembleLollipopDebug",
+                        "assembleLollipopDebugAndroidTest");
         adb.exclusiveAccess();
-        project.execute("connectedCheck");
+        project.executor()
+                .with(BooleanOption.ENABLE_D8_MAIN_DEX_LIST, tool == MainDexListTool.D8)
+                .run("connectedCheck");
     }
 }

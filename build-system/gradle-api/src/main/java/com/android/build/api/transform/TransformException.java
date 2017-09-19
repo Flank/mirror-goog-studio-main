@@ -28,4 +28,8 @@ public class TransformException extends Exception {
     public TransformException(String s) {
         super(s);
     }
+
+    public TransformException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

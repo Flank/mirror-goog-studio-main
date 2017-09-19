@@ -43,6 +43,7 @@ import com.android.tools.ir.client.InstantRunArtifactType;
 import com.android.tools.ir.client.InstantRunBuildInfo;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
@@ -433,6 +434,41 @@ public class DesugarAppTest {
                         .with(BooleanOption.ENABLE_BUILD_CACHE, false)
                         .run("assembleDebug");
         assertThat(result.getNotUpToDateTasks()).contains(":transformClassesWithDesugarForDebug");
+    }
+
+    @Test
+    public void testLegacyMultidexForDesugaredTypes() throws IOException, InterruptedException {
+        enableDesugar();
+        TestFileUtils.addMethod(
+                FileUtils.join(project.getMainSrcDir(), "com/example/helloworld/HelloWorld.java"),
+                "Runnable r = () -> { };");
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android.buildTypes.debug.multiDexKeepProguard file('rules')\n"
+                        + "android.defaultConfig.multiDexEnabled true\n"
+                        + "android.defaultConfig.minSdkVersion 20");
+        // just keep the HelloWorld, the lambda one should be inferred
+        Files.write(
+                project.getBuildFile().toPath().resolveSibling("rules"),
+                "-keep class **HelloWorld".getBytes());
+
+        getProjectExecutor().run("assembleDebug");
+
+        ImmutableMap<String, DexBackedClassDef> classes =
+                project.getApk(GradleTestProject.ApkType.DEBUG)
+                        .getMainDexFile()
+                        .orElseThrow(AssertionError::new)
+                        .getClasses();
+
+        long helloWorldClasses =
+                classes.keySet()
+                        .stream()
+                        .filter(t -> t.startsWith("Lcom/example/helloworld/HelloWorld"))
+                        .count();
+        assertThat(helloWorldClasses)
+                .named("original and synthesized classes count in the main dex ")
+                .isEqualTo(2);
     }
 
     private void enableDesugar() throws IOException {

@@ -38,7 +38,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -114,7 +113,7 @@ public class StableApiTest {
         // ATTENTION REVIEWER: if this needs to be changed, please make sure changes to api-list.txt
         // are backwards compatible.
         assertEquals(
-                "f483e41bc0e810e66ccca54033498c3d2e805a7d",
+                "1807c47ee07972bd8eeeab6873b776d770ce7a8b",
                 Hashing.sha1()
                         .hashString(
                                 Resources.toString(STABLE_API_URL, Charsets.UTF_8)

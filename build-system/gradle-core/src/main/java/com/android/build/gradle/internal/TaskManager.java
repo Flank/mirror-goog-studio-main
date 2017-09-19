@@ -125,6 +125,7 @@ import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.BuiltInShrinkerTransform;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
+import com.android.build.gradle.internal.transforms.D8MainDexListTransform;
 import com.android.build.gradle.internal.transforms.DesugarTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransformBuilder;
@@ -2282,9 +2283,12 @@ public abstract class TaskManager {
             // from above and compute the main class list.
             Transform multiDexTransform;
             if (usingIncrementalDexing(variantScope)) {
-                multiDexTransform = new MainDexListTransform(
-                        variantScope,
-                        extension.getDexOptions());
+                if (projectOptions.get(BooleanOption.ENABLE_D8_MAIN_DEX_LIST)) {
+                    multiDexTransform = new D8MainDexListTransform(variantScope);
+                } else {
+                    multiDexTransform =
+                            new MainDexListTransform(variantScope, extension.getDexOptions());
+                }
             } else {
                 multiDexTransform = new MultiDexTransform(variantScope, extension.getDexOptions());
             }

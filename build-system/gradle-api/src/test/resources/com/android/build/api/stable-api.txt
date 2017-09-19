@@ -67,6 +67,7 @@ com.android.build.api.transform.Transform.transform: void (com.android.build.api
 com.android.build.api.transform.TransformException
 com.android.build.api.transform.TransformException.<init>: com.android.build.api.transform.TransformException (java.lang.String)
 com.android.build.api.transform.TransformException.<init>: com.android.build.api.transform.TransformException (java.lang.Throwable)
+com.android.build.api.transform.TransformException.<init>: com.android.build.api.transform.TransformException (java.lang.String, java.lang.Throwable)
 com.android.build.api.transform.TransformInput
 com.android.build.api.transform.TransformInput.getDirectoryInputs: java.util.Collection<com.android.build.api.transform.DirectoryInput> ()
 com.android.build.api.transform.TransformInput.getJarInputs: java.util.Collection<com.android.build.api.transform.JarInput> ()
