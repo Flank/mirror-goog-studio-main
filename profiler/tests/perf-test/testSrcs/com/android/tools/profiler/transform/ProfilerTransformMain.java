@@ -16,6 +16,7 @@
 
 package com.android.tools.profiler.transform;
 
+import com.android.testutils.TestResources;
 import com.android.tools.profiler.ProfilerTransform;
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,6 +47,11 @@ public class ProfilerTransformMain {
             JarInputStream inputStream = new JarInputStream(new FileInputStream(inputJar));
             JarOutputStream outputStream =
                 new JarOutputStream(new FileOutputStream(outputJar), inputStream.getManifest());
+            String propertiesFile = "/tools/base/profiler/tests/perf-test/profiler.properties";
+            System.setProperty(
+                    "android.profiler.properties",
+                    TestResources.getFile(ProfilerTransformMain.class, propertiesFile)
+                            .getAbsolutePath());
             ProfilerTransform transform = new ProfilerTransform();
             byte[] buffer = new byte[1024 * 16]; //16kb
             ZipEntry entry;

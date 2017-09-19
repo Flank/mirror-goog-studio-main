@@ -28,9 +28,11 @@ java_binary(
         "testSrcs/com/android/tools/profiler/transform/ProfilerTransformMain.java",
     ],
     main_class = "com.android.tools.profiler.transform.ProfilerTransformMain",
+    resources = ["profiler.properties"],
     runtime_deps = ["//tools/base/profiler/transform"],
     deps = [
         "//tools/base/profiler/transform",
+        "//tools/base/testutils:studio.testutils",
     ],
 )
 
@@ -48,6 +50,7 @@ java_library(
         "//tools/base/profiler:netty-grpc-jar",
         "//tools/base/profiler:studio-profiler-grpc-1.0-jarjar",
         "//tools/base/profiler/transform",
+        "//tools/base/testutils:studio.testutils",
         "//tools/idea/.idea/libraries:JUnit4",
         "//tools/idea/.idea/libraries:truth",
     ],
@@ -58,6 +61,7 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
         "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
+        "testSrcs/com/android/tools/profiler/network/OkHttpTest.java",
     ],
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [

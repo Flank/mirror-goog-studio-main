@@ -3,7 +3,7 @@ load("//tools/base/bazel:android.bzl", "dex_library")
 def perf_test(name, srcs, test_app, deps = []):
     native.genrule(
       name = name + "_transform-app_java",
-      srcs = [test_app + "_java"],
+      srcs = [test_app + "_java_deploy.jar"],
       outs = [name + "_transform-app_java.jar"],
       cmd = select({
           "//tools/base/bazel:darwin": "cp ./$< ./$@",

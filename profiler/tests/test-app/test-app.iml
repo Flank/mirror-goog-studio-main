@@ -8,5 +8,16 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="android-mock" />
+    <orderEntry type="module-library">
+      <library name="okhttp">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/m2/repository/com/squareup/okhttp3/okhttp/3.3.0/okhttp-3.3.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/m2/repository/com/squareup/okhttp/okhttp/2.5.0/okhttp-2.5.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/../../../../../prebuilts/tools/common/m2/repository/com/squareup/okio/okio/1.6.0/okio-1.6.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
