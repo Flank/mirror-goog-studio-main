@@ -67,8 +67,9 @@ class NativeAndroidProjectBuilder {
      * once.
      */
     void addJson(@NonNull JsonReader reader, @NonNull String variantName) throws IOException {
-        JsonStreamingParser parser = new JsonStreamingParser(reader, this, variantName);
-        parser.parse();
+        try (JsonStreamingParser parser = new JsonStreamingParser(reader, this, variantName)) {
+            parser.parse();
+        }
     }
 
     /**

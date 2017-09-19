@@ -42,9 +42,10 @@ public class AndroidBuildGradleJsons {
     @NonNull
     public static NativeBuildConfigValueMini parseToMiniConfig(@NonNull JsonReader reader)
             throws IOException {
-        MiniConfigBuildingParser parser = new MiniConfigBuildingParser(reader);
-        parser.parse();
-        return parser.miniConfig;
+        try (MiniConfigBuildingParser parser = new MiniConfigBuildingParser(reader)) {
+            parser.parse();
+            return parser.miniConfig;
+        }
     }
 
     /**

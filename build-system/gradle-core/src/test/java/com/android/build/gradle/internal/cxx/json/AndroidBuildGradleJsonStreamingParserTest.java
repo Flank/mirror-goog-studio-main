@@ -162,9 +162,10 @@ public class AndroidBuildGradleJsonStreamingParserTest {
     }
 
     private void checkTextParsesWithStreamer(String text) {
-        try {
-            new AndroidBuildGradleJsonStreamingParser(
-                    new JsonReader(new StringReader(text))) {}.parse();
+        try (AndroidBuildGradleJsonStreamingParser parser =
+                new AndroidBuildGradleJsonStreamingParser(
+                        new JsonReader(new StringReader(text))) {}; ) {
+            parser.parse();
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);

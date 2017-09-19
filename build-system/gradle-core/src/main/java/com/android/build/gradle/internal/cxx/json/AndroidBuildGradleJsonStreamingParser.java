@@ -19,13 +19,14 @@ package com.android.build.gradle.internal.cxx.json;
 import com.android.annotations.NonNull;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
  * General purpose parser for android_build_gradle.json file. This parser is streaming so that the
  * entire Json file is never held in memory all at once.
  */
-public abstract class AndroidBuildGradleJsonStreamingParser {
+public abstract class AndroidBuildGradleJsonStreamingParser implements Closeable {
 
     @NonNull private final JsonReader reader;
 
@@ -345,4 +346,9 @@ public abstract class AndroidBuildGradleJsonStreamingParser {
     protected void visitCppFileExtensions(@NonNull String buildFile) {}
 
     protected void visitLibraryRuntimeFile(@NonNull String runtimeFile) {}
+
+    @Override
+    public void close() throws IOException {
+        reader.close();
+    }
 }
