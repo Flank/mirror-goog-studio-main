@@ -32,17 +32,7 @@ public class CheckAllRunner extends FilterableParameterized {
 
         public ThreadPoolScheduler() {
             int cpus = Runtime.getRuntime().availableProcessors();
-            int threads;
-            if (TestUtils.runningFromBazel()) {
-                if (cpus > 20) {
-                    // Use the same number as shards in other integration tests.
-                    threads = 8;
-                } else {
-                    threads = 2;
-                }
-            } else {
-                threads = cpus / 2;
-            }
+            int threads = Math.min(cpus / 4, 8);
             executor = Executors.newFixedThreadPool(threads);
         }
 
