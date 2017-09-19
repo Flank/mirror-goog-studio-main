@@ -133,10 +133,54 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     }
 
     /**
-     * Fall-backs to use during variant-aware dependency resolution in case a dependency does not
-     * have the current build type.
+     * Specifies a sorted list of build types that the plugin should try to use when a direct
+     * variant match with a local module dependency is not possible.
      *
-     * @return the names of build types to use, in descending priority order
+     * <p>Android plugin 3.0.0 and higher try to match each variant of your module with the same one
+     * from its dependencies. For example, when you build a "freeDebug" version of your app, the
+     * plugin tries to match it with "freeDebug" versions of the local library modules the app
+     * depends on.
+     *
+     * <p>However, there may be situations in which <b>your app includes build types that a
+     * dependency does not</b>. For example, consider if your app includes a "stage" build type, but
+     * a dependency includes only a "debug" and "release" build type. When the plugin tries to build
+     * the "stage" version of your app, it won't know which version of the dependency to use, and
+     * you'll see an error message similar to the following:
+     *
+     * <pre>
+     * Error:Failed to resolve: Could not resolve project :mylibrary.
+     * Required by:
+     *     project :app
+     * </pre>
+     *
+     * <p>In this situation, you can use <code>matchingFallbacks</code> to specify alternative
+     * matches for the app's "stage" build type, as shown below:
+     *
+     * <pre>
+     * // In the app's build.gradle file.
+     * android {
+     *     buildTypes {
+     *         release {
+     *             // Because the dependency already includes a "release" build type,
+     *             // you don't need to provide a list of fallbacks here.
+     *         }
+     *         stage {
+     *             // Specifies a sorted list of fallback build types that the
+     *             // plugin should try to use when a dependency does not include a
+     *             // "stage" build type. You may specify as many fallbacks as you
+     *             // like, and the plugin selects the first build type that's
+     *             // available in the dependency.
+     *             matchingFallbacks = ['debug', 'qa', 'release']
+     *         }
+     *     }
+     * }
+     * </pre>
+     *
+     * <p>Note that there is no issue when a library dependency includes a build type that your app
+     * does not. That's because the plugin simply never requests that build type from the
+     * dependency.
+     *
+     * @return the names of product flavors to use, in descending priority order
      */
     public List<String> getMatchingFallbacks() {
         if (matchingFallbacks == null) {
@@ -157,6 +201,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         return externalNativeBuildOptions;
     }
 
+    /** {@inheritDoc} */
     @Override
     @NonNull
     public JackOptions getJackOptions() {
@@ -454,16 +499,33 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     }
 
     /**
-     * Configure Jack options for this build type.
+     * The Jack toolchain is deprecated.
+     *
+     * <p>If you want to use Java 8 language features, use the improved support included in the
+     * default toolchain. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
+     *
+     * @deprecated For more information, read <a
+     *     href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     *     features</a>
      */
+    @Deprecated
     public void jackOptions(@NonNull Action<JackOptions> action) {
         action.execute(jackOptions);
     }
 
     /**
-     * Whether the experimental Jack toolchain should be used.
+     * The Jack toolchain is deprecated.
      *
-     * @deprecated use getJackOptions().isEnabled() instead.
+     * <p>If you want to use Java 8 language features, use the improved support included in the
+     * default toolchain. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
+     *
+     * @deprecated For more information, read <a
+     *     href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     *     features</a>
      */
     @Deprecated
     @Nullable
@@ -550,15 +612,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         this.useProguard = useProguard;
     }
 
-    /**
-     * Whether to crunch PNGs.
-     *
-     * <p>This will reduce the size of the APK if PNGs resources are not already optimally
-     * compressed, at the cost of extra time to build.
-     *
-     * <p>PNG crunching is enabled by default in the release build type and disabled by default in
-     * the debug build type.
-     */
+    /** {@inheritDoc} */
     @Override
     public Boolean isCrunchPngs() {
         return crunchPngs;

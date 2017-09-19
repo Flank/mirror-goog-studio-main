@@ -35,9 +35,7 @@ import org.junit.Test;
 public class LibraryIntermediateArtifactPublishingTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder()
-                    .fromTestApp(HelloWorldLibraryApp.forStablePlugin())
-                    .create();
+            GradleTestProject.builder().fromTestApp(HelloWorldLibraryApp.create()).create();
 
     @Before
     public void setUp() throws IOException {

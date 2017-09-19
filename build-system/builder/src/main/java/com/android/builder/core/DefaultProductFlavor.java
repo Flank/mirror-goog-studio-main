@@ -121,7 +121,7 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         mDimension = dimension;
     }
 
-    /** Name of the dimension this product flavor belongs to. */
+    /** {@inheritDoc} */
     @Nullable
     @Override
     public String getDimension() {
@@ -345,15 +345,18 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     /**
      * Test instrumentation runner custom arguments.
      *
-     * e.g. <code>[key: "value"]</code> will give
-     * <code>adb shell am instrument -w <b>-e key value</b> com.example</code>...".
+     * <p>e.g. <code>[key: "value"]</code> will give <code>
+     * adb shell am instrument -w <b>-e key value</b> com.example</code>...".
      *
-     * <p>See <a href="http://developer.android.com/guide/topics/manifest/instrumentation-element.html">
+     * <p>See <a
+     * href="http://developer.android.com/guide/topics/manifest/instrumentation-element.html">
      * instrumentation</a>.
      *
      * <p>Test runner arguments can also be specified from the command line:
      *
-     * <p><pre>
+     * <p>
+     *
+     * <pre>
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.size=medium
      * ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.foo=bar
      * </pre>
@@ -515,14 +518,201 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
     /** map of dimension -> request */
     private Map<String, DimensionRequest> missingDimensionSelections;
 
+    /**
+     * Specifies a flavor that the plugin should try to use from a given dimension in a dependency.
+     *
+     * <p>Android plugin 3.0.0 and higher try to match each variant of your module with the same one
+     * from its dependencies. For example, consider if both your app and its dependencies include a
+     * "tier" <a href="/studio/build/build-variants.html#flavor-dimensions">flavor dimension</a>,
+     * with flavors "free" and "paid". When you build a "freeDebug" version of your app, the plugin
+     * tries to match it with "freeDebug" versions of the local library modules the app depends on.
+     *
+     * <p>However, there may be situations in which <b>a library dependency includes a flavor
+     * dimension that your app does not</b>. For example, consider if a library dependency includes
+     * flavors for a "minApi" dimension, but your app includes flavors for only the "tier"
+     * dimension. So, when you want to build the "freeDebug" version of your app, the plugin doesn't
+     * know whether to use the "minApi23Debug" or "minApi18Debug" version of the dependency, and
+     * you'll see an error message similar to the following:
+     *
+     * <pre>
+     * Error:Failed to resolve: Could not resolve project :mylibrary.
+     * Required by:
+     *     project :app
+     * </pre>
+     *
+     * <p>In this type of situation, use <code>missingDimensionStrategy</code> in the <a
+     * href="com.android.build.gradle.internal.dsl.DefaultConfig.html"><code>defaultConfig</code>
+     * </a> block to specify the default flavor the plugin should select from each missing
+     * dimension, as shown in the sample below. You can also override your selection in the <a
+     * href="com.android.build.gradle.internal.dsl.ProductFlavor.html"><code>productFlavors</code>
+     * </a> block, so each flavor can specify a different matching strategy for a missing dimension.
+     * (Tip: you can also use this property if you simply want to change the matching strategy for a
+     * dimension that exists in both the app and its dependencies.)
+     *
+     * <pre>
+     * // In the app's build.gradle file.
+     * android {
+     *     defaultConfig{
+     *     // Specifies a flavor that the plugin should try to use from
+     *     // a given dimension. The following tells the plugin that, when encountering
+     *     // a dependency that includes a "minApi" dimension, it should select the
+     *     // "minApi18" flavor.
+     *     missingDimensionStrategy 'minApi', 'minApi18'
+     *     // You should specify a missingDimensionStrategy property for each
+     *     // dimension that exists in a local dependency but not in your app.
+     *     missingDimensionStrategy 'abi', 'x86'
+     *     }
+     *     flavorDimensions 'tier'
+     *     productFlavors {
+     *         free {
+     *             dimension 'tier'
+     *             // You can override the default selection at the product flavor
+     *             // level by configuring another missingDimensionStrategy property
+     *             // for the "minApi" dimension.
+     *             missingDimensionStrategy 'minApi', 'minApi23'
+     *         }
+     *         paid {}
+     *     }
+     * }
+     * </pre>
+     *
+     * @param dimension
+     * @param requestedValue
+     */
     public void missingDimensionStrategy(String dimension, String requestedValue) {
         missingDimensionStrategy(dimension, ImmutableList.of(requestedValue));
     }
 
+    /**
+     * Specifies a sorted list of flavors that the plugin should try to use from a given dimension
+     * in a dependency.
+     *
+     * <p>Android plugin 3.0.0 and higher try to match each variant of your module with the same one
+     * from its dependencies. For example, consider if both your app and its dependencies include a
+     * "tier" <a href="/studio/build/build-variants.html#flavor-dimensions">flavor dimension</a>,
+     * with flavors "free" and "paid". When you build a "freeDebug" version of your app, the plugin
+     * tries to match it with "freeDebug" versions of the local library modules the app depends on.
+     *
+     * <p>However, there may be situations in which <b>a library dependency includes a flavor
+     * dimension that your app does not</b>. For example, consider if a library dependency includes
+     * flavors for a "minApi" dimension, but your app includes flavors for only the "tier"
+     * dimension. So, when you want to build the "freeDebug" version of your app, the plugin doesn't
+     * know whether to use the "minApi23Debug" or "minApi18Debug" version of the dependency, and
+     * you'll see an error message similar to the following:
+     *
+     * <pre>
+     * Error:Failed to resolve: Could not resolve project :mylibrary.
+     * Required by:
+     *     project :app
+     * </pre>
+     *
+     * <p>In this type of situation, use <code>missingDimensionStrategy</code> in the <a
+     * href="com.android.build.gradle.internal.dsl.DefaultConfig.html"><code>defaultConfig</code>
+     * </a> block to specify the default flavor the plugin should select from each missing
+     * dimension, as shown in the sample below. You can also override your selection in the <a
+     * href="com.android.build.gradle.internal.dsl.ProductFlavor.html"><code>productFlavors</code>
+     * </a> block, so each flavor can specify a different matching strategy for a missing dimension.
+     * (Tip: you can also use this property if you simply want to change the matching strategy for a
+     * dimension that exists in both the app and its dependencies.)
+     *
+     * <pre>
+     * // In the app's build.gradle file.
+     * android {
+     *     defaultConfig{
+     *     // Specifies a sorted list of flavors that the plugin should try to use from
+     *     // a given dimension. The following tells the plugin that, when encountering
+     *     // a dependency that includes a "minApi" dimension, it should select the
+     *     // "minApi18" flavor. You can include additional flavor names to provide a
+     *     // sorted list of fallbacks for the dimension.
+     *     missingDimensionStrategy 'minApi', 'minApi18', 'minApi23'
+     *     // You should specify a missingDimensionStrategy property for each
+     *     // dimension that exists in a local dependency but not in your app.
+     *     missingDimensionStrategy 'abi', 'x86', 'arm64'
+     *     }
+     *     flavorDimensions 'tier'
+     *     productFlavors {
+     *         free {
+     *             dimension 'tier'
+     *             // You can override the default selection at the product flavor
+     *             // level by configuring another missingDimensionStrategy property
+     *             // for the "minApi" dimension.
+     *             missingDimensionStrategy 'minApi', 'minApi23', 'minApi18'
+     *         }
+     *         paid {}
+     *     }
+     * }
+     * </pre>
+     *
+     * @param dimension
+     * @param requestedValues
+     */
     public void missingDimensionStrategy(String dimension, String... requestedValues) {
         missingDimensionStrategy(dimension, ImmutableList.copyOf(requestedValues));
     }
 
+    /**
+     * Specifies a sorted list of flavors that the plugin should try to use from a given dimension
+     * in a dependency.
+     *
+     * <p>Android plugin 3.0.0 and higher try to match each variant of your module with the same one
+     * from its dependencies. For example, consider if both your app and its dependencies include a
+     * "tier" <a href="/studio/build/build-variants.html#flavor-dimensions">flavor dimension</a>,
+     * with flavors "free" and "paid". When you build a "freeDebug" version of your app, the plugin
+     * tries to match it with "freeDebug" versions of the local library modules the app depends on.
+     *
+     * <p>However, there may be situations in which <b>a library dependency includes a flavor
+     * dimension that your app does not</b>. For example, consider if a library dependency includes
+     * flavors for a "minApi" dimension, but your app includes flavors for only the "tier"
+     * dimension. So, when you want to build the "freeDebug" version of your app, the plugin doesn't
+     * know whether to use the "minApi23Debug" or "minApi18Debug" version of the dependency, and
+     * you'll see an error message similar to the following:
+     *
+     * <pre>
+     * Error:Failed to resolve: Could not resolve project :mylibrary.
+     * Required by:
+     *     project :app
+     * </pre>
+     *
+     * <p>In this type of situation, use <code>missingDimensionStrategy</code> in the <a
+     * href="com.android.build.gradle.internal.dsl.DefaultConfig.html"><code>defaultConfig</code>
+     * </a> block to specify the default flavor the plugin should select from each missing
+     * dimension, as shown in the sample below. You can also override your selection in the <a
+     * href="com.android.build.gradle.internal.dsl.ProductFlavor.html"><code>productFlavors</code>
+     * </a> block, so each flavor can specify a different matching strategy for a missing dimension.
+     * (Tip: you can also use this property if you simply want to change the matching strategy for a
+     * dimension that exists in both the app and its dependencies.)
+     *
+     * <pre>
+     * // In the app's build.gradle file.
+     * android {
+     *     defaultConfig{
+     *     // Specifies a sorted list of flavors that the plugin should try to use from
+     *     // a given dimension. The following tells the plugin that, when encountering
+     *     // a dependency that includes a "minApi" dimension, it should select the
+     *     // "minApi18" flavor. You can include additional flavor names to provide a
+     *     // sorted list of fallbacks for the dimension.
+     *     missingDimensionStrategy 'minApi', 'minApi18', 'minApi23'
+     *     // You should specify a missingDimensionStrategy property for each
+     *     // dimension that exists in a local dependency but not in your app.
+     *     missingDimensionStrategy 'abi', 'x86', 'arm64'
+     *     }
+     *     flavorDimensions 'tier'
+     *     productFlavors {
+     *         free {
+     *             dimension 'tier'
+     *             // You can override the default selection at the product flavor
+     *             // level by configuring another missingDimensionStrategy property
+     *             // for the "minApi" dimension.
+     *             missingDimensionStrategy 'minApi', 'minApi23', 'minApi18'
+     *         }
+     *         paid {}
+     *     }
+     * }
+     * </pre>
+     *
+     * @param dimension
+     * @param requestedValues
+     */
     public void missingDimensionStrategy(String dimension, List<String> requestedValues) {
         if (requestedValues.isEmpty()) {
             throw new RuntimeException("List of requested values cannot be empty");

@@ -55,6 +55,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
+import org.junit.Assume;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -89,7 +90,6 @@ public class DesugarAppTest {
     public DesugarAppTest(@NonNull Boolean enableGradleWorkers) {
         this.enableGradleWorkers = enableGradleWorkers;
     }
-
 
     @Test
     public void noTaskIfNoJava8Set() throws IOException, InterruptedException {
@@ -163,6 +163,30 @@ public class DesugarAppTest {
         for (String klass : Iterables.concat(classes, TRY_WITH_RESOURCES_RUNTIME)) {
             assertThat(apk).containsClass(klass);
         }
+    }
+
+    @Test
+    public void testNonDesugaredLibraryDependency()
+            throws IOException, InterruptedException, ProcessException {
+        // see b/65543679 for details
+        Assume.assumeFalse(enableGradleWorkers);
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "dependencies {\n"
+                        + "    compile fileTree(dir: 'libs', include: ['*.jar'])\n"
+                        + "}");
+        List<String> classes = createLibToDesugarAndGetClasses();
+        GradleBuildResult result = getProjectExecutor().expectFailure().run("assembleDebug");
+        assertThat(result.getStderr())
+                .contains(
+                        "The dependency contains Java 8 bytecode. Please enable desugaring by "
+                                + "adding the following to build.gradle\n"
+                                + "android {\n"
+                                + "    compileOptions {\n"
+                                + "        sourceCompatibility 1.8\n"
+                                + "        targetCompatibility 1.8\n"
+                                + "    }\n"
+                                + "}\n");
     }
 
     @Test

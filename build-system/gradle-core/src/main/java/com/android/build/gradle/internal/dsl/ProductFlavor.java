@@ -26,7 +26,37 @@ import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 import org.gradle.internal.reflect.Instantiator;
 
-/** DSL object for product flavors */
+/**
+ * Encapsulates all product flavors properties for this project.
+ *
+ * <p>Product flavors represent different versions of your project that you expect to co-exist on a
+ * single device, the Google Play store, or repository. For example, you can configure 'demo' and
+ * 'full' product flavors for your app, and each of those flavors can specify different features,
+ * device requirements, resources, and application ID's--while sharing common source code and
+ * resources. So, product flavors allow you to output different versions of your project by simply
+ * changing only the components and settings that are different between them.
+ *
+ * <p>Configuring product flavors is similar to <a
+ * href="https://developer.android.com/studio/build/build-variants.html#build-types">configuring
+ * build types</a>: add them to the <code>productFlavors</code> block of your module's <code>
+ * build.gradle</code> file and configure the settings you want. Product flavors support the same
+ * properties as the {@link com.android.build.gradle.BaseExtension#getDefaultConfig} block—this is
+ * because <code>defaultConfig</code> defines a {@link ProductFlavor} object that the plugin uses as
+ * the base configuration for all other flavors. Each flavor you configure can then override any of
+ * the default values in <code>defaultConfig</code>, such as the <a
+ * href="https://d.android.com/studio/build/application-id.html"><code>applicationId</code></a>.
+ *
+ * <p>When using Android plugin 3.0.0 and higher, <a
+ * href="com.android.build.gradle.internal.dsl.ProductFlavor.html#com.android.build.gradle.internal.dsl.ProductFlavor:dimension"><em>each
+ * flavor must belong to a <code>dimension</code></a></em>.
+ *
+ * <p>When you configure product flavors, the Android plugin automatically combines them with your
+ * {@link com.android.build.gradle.internal.dsl.BuildType} configurations to <a
+ * href="https://developer.android.com/studio/build/build-variants.html">create build variants</a>.
+ * If the plugin creates certain build variants that you don't want, you can <a
+ * href="https://developer.android.com/studio/build/build-variants.html#filter-variants">filter
+ * variants using <code>android.variantFilter</code></a>.
+ */
 public class ProductFlavor extends BaseFlavor {
 
     public ProductFlavor(
@@ -53,8 +83,63 @@ public class ProductFlavor extends BaseFlavor {
     }
 
     /**
-     * Fall-backs to use during variant-aware dependency resolution in case a dependency does not
-     * have the current product flavor.
+     * Specifies a sorted list of product flavors that the plugin should try to use when a direct
+     * variant match with a local module dependency is not possible.
+     *
+     * <p>Android plugin 3.0.0 and higher try to match each variant of your module with the same one
+     * from its dependencies. For example, when you build a "freeDebug" version of your app, the
+     * plugin tries to match it with "freeDebug" versions of the local library modules the app
+     * depends on.
+     *
+     * <p>However, there may be situations in which, for a given flavor dimension that exists in
+     * both the app and its library dependencies, <b>your app includes flavors that a dependency
+     * does not</b>. For example, consider if both your app and its library dependencies include a
+     * "tier" flavor dimension. However, the "tier" dimension in the app includes "free" and "paid"
+     * flavors, but one of its dependencies includes only "demo" and "paid" flavors for the same
+     * dimension. When the plugin tries to build the "free" version of your app, it won't know which
+     * version of the dependency to use, and you'll see an error message similar to the following:
+     *
+     * <pre>
+     * Error:Failed to resolve: Could not resolve project :mylibrary.
+     * Required by:
+     *     project :app
+     * </pre>
+     *
+     * <p>In this situation, you should use <code>matchingFallbacks</code> to specify alternative
+     * matches for the app's "free" product flavor, as shown below:
+     *
+     * <pre>
+     * // In the app's build.gradle file.
+     * android {
+     *     flavorDimensions 'tier'
+     *     productFlavors {
+     *         paid {
+     *             dimension 'tier'
+     *             // Because the dependency already includes a "paid" flavor in its
+     *             // "tier" dimension, you don't need to provide a list of fallbacks
+     *             // for the "paid" flavor.
+     *         }
+     *         free {
+     *             dimension 'tier'
+     *             // Specifies a sorted list of fallback flavors that the plugin
+     *             // should try to use when a dependency's matching dimension does
+     *             // not include a "free" flavor. You may specify as many
+     *             // fallbacks as you like, and the plugin selects the first flavor
+     *             // that's available in the dependency's "tier" dimension.
+     *             matchingFallbacks = ['demo', 'trial']
+     *         }
+     *     }
+     * }
+     * </pre>
+     *
+     * <p>Note that, for a given flavor dimension that exists in both the app and its library
+     * dependencies, there is no issue when a library includes a product flavor that your app does
+     * not. That's because the plugin simply never requests that flavor from the dependency.
+     *
+     * <p>If instead you are trying to resolve an issue in which <b>a library dependency includes a
+     * flavor dimension that your app does not</b>, use <a
+     * href="com.android.build.gradle.internal.dsl.DefaultConfig.html#com.android.build.gradle.internal.dsl.DefaultConfig:missingDimensionStrategy(java.lang.String,
+     * java.lang.String)"> <code>missingDimensionStrategy</code></a>.
      *
      * @return the names of product flavors to use, in descending priority order
      */

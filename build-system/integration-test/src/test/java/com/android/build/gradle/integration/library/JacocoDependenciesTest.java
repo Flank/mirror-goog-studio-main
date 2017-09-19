@@ -29,16 +29,20 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.build.gradle.integration.instant.InstantRunTestUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
+import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
+import com.android.testutils.apk.SplitApks;
 import com.android.testutils.truth.MoreTruth;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.io.IOException;
 import java.util.Optional;
+import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -114,6 +118,21 @@ public class JacocoDependenciesTest {
                         + "  }\n"
                         + "}\n");
         assertAgentMavenCoordinates("org.jacoco:org.jacoco.agent:0.7.5.201505241946:runtime@jar");
+    }
+
+    @Test
+    public void checkJacocoDisabledForInstantRun() throws Exception {
+        project.executor().withInstantRun(new AndroidVersion(21)).run("app:assembleDebug");
+        AndroidProject model = project.model().getMulti().getModelMap().get(":app");
+
+        SplitApks apks =
+                InstantRunTestUtils.getCompiledColdSwapChange(
+                        InstantRunTestUtils.getInstantRunModel(model));
+
+        DexBackedClassDef libClass =
+                apks.getAllClasses().get("Lcom/example/android/multiproject/library/PersonView;");
+        libClass.getFields()
+                .forEach(f -> assertThat(f.getName().toLowerCase()).doesNotContain("jacocodata"));
     }
 
     private void assertAgentMavenCoordinates(@NonNull String expected) throws IOException {

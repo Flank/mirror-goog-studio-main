@@ -48,12 +48,12 @@ public class PluginInitializerTest {
         // Initialize the plugin version map once. (NOTE: the group or name of the variable must be
         // different from the one used in PluginInitializer since that variable may currently be
         // used by running integration tests.)
-        ConcurrentMap<String, String> projectToPluginVersionMap =
+        ConcurrentMap<Object, String> projectToPluginVersionMap =
                 Verify.verifyNotNull(
                         new JvmWideVariable<>(
-                                        "PLUGIN_VERSION_TEST",
-                                        "ANDROID_GRADLE_PLUGIN",
-                                        new TypeToken<ConcurrentMap<String, String>>() {},
+                                        "PLUGIN_VERSION_CHECK_TEST",
+                                        "PROJECT_TO_PLUGIN_VERSION",
+                                        new TypeToken<ConcurrentMap<Object, String>>() {},
                                         ConcurrentHashMap::new)
                                 .get());
 
@@ -95,7 +95,7 @@ public class PluginInitializerTest {
         } catch (IllegalStateException e) {
             assertThat(e.getMessage())
                     .contains(
-                            "Using multiple versions of the plugin in the same build"
+                            "Using multiple versions of the Android Gradle plugin in the same build"
                                     + " is not allowed.");
         }
 
@@ -127,10 +127,19 @@ public class PluginInitializerTest {
         simulateRunningBuild(
                 projectToPluginVersionMap, project1, Version.ANDROID_GRADLE_PLUGIN_VERSION);
         simulateRunningBuild(projectToPluginVersionMap, project2, "1.2.3");
+
+        // Load the plugin twice for different project instances having the same project path,
+        // expect success (regression test for bug 65502981)
+        Project sameProject1 = mock(Project.class);
+        when(sameProject1.getProjectDir()).thenReturn(new File("project1"));
+        simulateRunningBuild(
+                projectToPluginVersionMap, project1, Version.ANDROID_GRADLE_PLUGIN_VERSION);
+        simulateRunningBuild(
+                projectToPluginVersionMap, sameProject1, Version.ANDROID_GRADLE_PLUGIN_VERSION);
     }
 
     private static void simulateRunningBuild(
-            @NonNull ConcurrentMap<String, String> projectToPluginVersionMap,
+            @NonNull ConcurrentMap<Object, String> projectToPluginVersionMap,
             @NonNull Project project,
             @NonNull String pluginVersion) {
         PluginInitializer.verifyPluginVersion(projectToPluginVersionMap, project, pluginVersion);

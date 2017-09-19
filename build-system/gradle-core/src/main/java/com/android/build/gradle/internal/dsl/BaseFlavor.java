@@ -310,36 +310,38 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
     }
 
     /**
-     * Adds a new ProGuard configuration file.
+     * Specifies a ProGuard configuration file that the plugin should use.
      *
-     * <p><code>proguardFile getDefaultProguardFile('proguard-android.txt')</code>
-     *
-     * <p>There are 2 default rules files
+     * <p>There are two ProGuard rules files that ship with the Android plugin and are used by
+     * default:
      *
      * <ul>
      *   <li>proguard-android.txt
      *   <li>proguard-android-optimize.txt
      * </ul>
      *
-     * <p>They are located in the SDK. Using <code>getDefaultProguardFile(String filename)</code>
-     * will return the full path to the files. They are identical except for enabling optimizations.
+     * <p><code>proguard-android-optimize.txt</code> is identical to <code>proguard-android.txt
+     * </code>, exccept with optimizations enabled. You can use <code>
+     * getDefaultProguardFile(String filename)</code> to return the full path of each file.
      */
     public void proguardFile(@NonNull Object proguardFile) {
         getProguardFiles().add(project.file(proguardFile));
     }
 
     /**
-     * Adds new ProGuard configuration files.
+     * Specifies ProGuard configuration files that the plugin should use.
      *
-     * <p>There are 2 default rules files
+     * <p>There are two ProGuard rules files that ship with the Android plugin and are used by
+     * default:
      *
      * <ul>
      *   <li>proguard-android.txt
      *   <li>proguard-android-optimize.txt
      * </ul>
      *
-     * <p>They are located in the SDK. Using <code>getDefaultProguardFile(String filename)</code>
-     * will return the full path to the files. They are identical except for enabling optimizations.
+     * <p><code>proguard-android-optimize.txt</code> is identical to <code>proguard-android.txt
+     * </code>, exccept with optimizations enabled. You can use <code>
+     * getDefaultProguardFile(String filename)</code> to return the full path of each file.
      */
     public void proguardFiles(@NonNull Object... files) {
         for (Object file : files) {
@@ -350,15 +352,17 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
     /**
      * Sets the ProGuard configuration files.
      *
-     * <p>There are 2 default rules files
+     * <p>There are two ProGuard rules files that ship with the Android plugin and are used by
+     * default:
      *
      * <ul>
      *   <li>proguard-android.txt
      *   <li>proguard-android-optimize.txt
      * </ul>
      *
-     * <p>They are located in the SDK. Using <code>getDefaultProguardFile(String filename)</code>
-     * will return the full path to the files. They are identical except for enabling optimizations.
+     * <p><code>proguard-android-optimize.txt</code> is identical to <code>proguard-android.txt
+     * </code>, exccept with optimizations enabled. You can use <code>
+     * getDefaultProguardFile(String filename)</code> to return the full path of the files.
      */
     public void setProguardFiles(@NonNull Iterable<?> proguardFileIterable) {
         getProguardFiles().clear();
@@ -510,11 +514,8 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
         addResourceConfigurations(config);
     }
 
-    /**
-     * Options for configuring jack.
-     *
-     * <p>See <a href="https://developer.android.com/studio/build/jack.html">Jack and Jill</a>
-     */
+    /** {@inheritDoc} */
+    @Deprecated
     @Override
     @NonNull
     public JackOptions getJackOptions() {
@@ -522,18 +523,25 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
     }
 
     /**
-     * Configure Jack options for this product flavor.
+     * The Jack toolchain is deprecated.
      *
-     * <p>See <a href="https://developer.android.com/studio/build/jack.html">Jack and Jill</a>
+     * <p>If you want to use Java 8 language features, use the improved support included in the
+     * default toolchain. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
      */
+    @Deprecated
     public void jackOptions(@NonNull Action<JackOptions> action) {
         action.execute(jackOptions);
     }
 
     /**
-     * Replaced by the {@code jackOptions.enabled} property.
+     * The Jack toolchain is deprecated.
      *
-     * @deprecated use {@code getJackOptions().isEnabled()} instead.
+     * <p>If you want to use Java 8 language features, use the improved support included in the
+     * default toolchain. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
      */
     @Deprecated
     @Nullable
@@ -544,11 +552,12 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
     }
 
     /**
-     * Whether the experimental Jack toolchain should be used.
+     * The Jack toolchain is deprecated.
      *
-     * <p>See <a href="https://developer.android.com/studio/build/jack.html">Jack and Jill</a>
-     *
-     * @deprecated use getJack.setEnabled instead.
+     * <p>If you want to use Java 8 language features, use the improved support included in the
+     * default toolchain. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
      */
     @Deprecated
     public void setUseJack(Boolean useJack) {
@@ -557,11 +566,12 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
     }
 
     /**
-     * Whether the experimental Jack toolchain should be used.
+     * The Jack toolchain is deprecated.
      *
-     * <p>See <a href="https://developer.android.com/studio/build/jack.html">Jack and Jill</a>
-     *
-     * @deprecated use getJack.setEnabled instead.
+     * <p>If you want to use Java 8 language features, use the improved support included in the
+     * default toolchain. To learn more, read <a
+     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
+     * features</a>.
      */
     @Deprecated
     public void useJack(Boolean useJack) {

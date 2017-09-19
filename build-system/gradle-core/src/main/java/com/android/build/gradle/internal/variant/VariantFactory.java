@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.variant;
 
-import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -95,15 +94,7 @@ public interface VariantFactory {
      */
     void validateModel(@NonNull VariantModel model);
 
-    default void preVariantWork(Project project) {
-        if (project.getPluginManager().hasPlugin(ANDROID_APT_PLUGIN_NAME)) {
-            project.getLogger()
-                    .warn(
-                            "WARNING: android-apt plugin is incompatible with future version of Android "
-                                    + "Gradle plugin.  Please use 'annotationProcessor' configuration "
-                                    + "instead.");
-        }
-    }
+    void preVariantWork(Project project);
 
     void createDefaultComponents(
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,

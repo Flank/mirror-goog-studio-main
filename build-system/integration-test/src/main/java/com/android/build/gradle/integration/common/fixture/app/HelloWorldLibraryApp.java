@@ -29,7 +29,7 @@ public class HelloWorldLibraryApp extends MultiModuleTestProject implements Test
         return new HelloWorldLibraryApp(true);
     }
 
-    public static HelloWorldLibraryApp forStablePlugin() {
+    public static HelloWorldLibraryApp create() {
         return new HelloWorldLibraryApp(false);
     }
 

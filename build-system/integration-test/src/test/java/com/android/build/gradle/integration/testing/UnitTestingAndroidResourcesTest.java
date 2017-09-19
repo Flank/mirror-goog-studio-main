@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.apkzlib.utils.IOExceptionFunction;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
@@ -13,16 +14,24 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.options.BooleanOption;
+import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.Variant;
+import com.android.utils.SdkUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.io.IOException;
 import java.io.Reader;
+import java.io.UncheckedIOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -157,7 +166,22 @@ public class UnitTestingAndroidResourcesTest {
         try (Reader reader = Files.newBufferedReader(configFile)) {
             properties.load(reader);
         }
-        properties.forEach((name, value) -> assertThat(Paths.get(value.toString())).exists());
+        properties.forEach(
+                (name, value) -> {
+                    if (name.equals("android_custom_package")) {
+                        try (URLClassLoader cl =
+                                makeClassloader(debug.getMainArtifact(), debugUnitTest)) {
+                            cl.loadClass(value + ".R");
+                        } catch (ClassNotFoundException e) {
+                            throw new AssertionError(
+                                    "expected R class at " + name + " = " + value, e);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    } else {
+                        assertThat(Paths.get(value.toString())).exists();
+                    }
+                });
     }
 
     @Nullable
@@ -174,5 +198,20 @@ public class UnitTestingAndroidResourcesTest {
             }
         }
         return null;
+    }
+
+    private static URLClassLoader makeClassloader(
+            @NonNull AndroidArtifact main, @NonNull JavaArtifact test) {
+        ImmutableList.Builder<File> files = ImmutableList.builder();
+        files.add(main.getClassesFolder(), main.getJavaResourcesFolder());
+        files.addAll(main.getAdditionalClassesFolders());
+        files.add(test.getClassesFolder(), test.getJavaResourcesFolder());
+        files.addAll(test.getAdditionalClassesFolders());
+        List<URL> urls =
+                files.build()
+                        .stream()
+                        .map(IOExceptionFunction.asFunction(SdkUtils::fileToUrl))
+                        .collect(Collectors.toList());
+        return new URLClassLoader(urls.toArray(new URL[urls.size()]));
     }
 }

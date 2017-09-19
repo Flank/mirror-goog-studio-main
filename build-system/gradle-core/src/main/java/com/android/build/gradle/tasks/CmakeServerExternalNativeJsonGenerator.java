@@ -50,6 +50,7 @@ import com.android.ide.common.process.ProcessException;
 import com.google.common.primitives.UnsignedInts;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -141,6 +142,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     @Override
     List<String> getCacheArguments(@NonNull String abi, int abiPlatformVersion) {
         List<String> cacheArguments = getCommonCacheArguments(abi, abiPlatformVersion);
+        cacheArguments.add("-DCMAKE_SYSTEM_NAME=Android");
         cacheArguments.add(String.format("-DCMAKE_ANDROID_ARCH_ABI=%s", abi));
         cacheArguments.add(String.format("-DCMAKE_SYSTEM_VERSION=%s", abiPlatformVersion));
         // Generates the compile_commands json file that will help us get the compiler executable
@@ -181,13 +183,26 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         // - perform a handshake
         // - configure and compute.
         // Create the NativeBuildConfigValue and write the required JSON file.
-        Server cmakeServer = createServerAndConnect();
+        PrintWriter serverLogWriter =
+                getCmakeServerLogWriter(getOutputFolder(getJsonFolder(), abi));
+        Server cmakeServer = createServerAndConnect(abi, serverLogWriter);
+
         doHandshake(outputJsonDir, cmakeServer);
         ConfigureCommandResult configureCommandResult =
                 doConfigure(abi, abiPlatformVersion, cmakeServer);
         doCompute(cmakeServer);
+
+        serverLogWriter.close();
         generateAndroidGradleBuild(abi, cmakeServer);
         return configureCommandResult.interactiveMessages;
+    }
+
+    /** Returns PrintWriter object to write CMake server logs. */
+    @NonNull
+    private static PrintWriter getCmakeServerLogWriter(@NonNull File outputFolder)
+            throws IOException {
+        File serverLog = new File(outputFolder, "cmake_server_log.txt");
+        return new PrintWriter(serverLog.getAbsoluteFile(), "UTF-8");
     }
 
     /**
@@ -198,15 +213,15 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
      *     to create or connect to Cmake server.
      */
     @NonNull
-    private Server createServerAndConnect() throws IOException {
+    private Server createServerAndConnect(@NonNull String abi, @NonNull PrintWriter writer)
+            throws IOException {
         // Create a new cmake server for the given Cmake and configure the given project.
         ServerReceiver serverReceiver =
                 new ServerReceiver()
                         .setMessageReceiver(
-                                message ->
-                                        System.err.print("CMAKE SERVER: " + message.message + "\n"))
+                                message -> writer.println("CMAKE SERVER: " + message.message))
                         .setDiagnosticReceiver(
-                                message -> System.err.print("CMAKE SERVER: " + message + "\n"));
+                                message -> writer.println("CMAKE SERVER: " + message));
         Server cmakeServer = ServerFactory.create(getCmakeBinFolder(), serverReceiver);
         if (cmakeServer == null) {
             throw new RuntimeException(
@@ -219,6 +234,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                     "Unable to connect to Cmake server located at: "
                             + getCmakeBinFolder().getAbsolutePath());
         }
+
 
         return cmakeServer;
     }
@@ -286,6 +302,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             @NonNull String abi, int abiPlatformVersion, @NonNull Server cmakeServer)
             throws IOException {
         List<String> cacheArgumentsList = getCacheArguments(abi, abiPlatformVersion);
+        cacheArgumentsList.addAll(getBuildArguments());
         ConfigureCommandResult configureCommandResult =
                 cmakeServer.configure(
                         cacheArgumentsList.toArray(new String[cacheArgumentsList.size()]));

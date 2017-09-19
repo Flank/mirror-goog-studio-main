@@ -132,8 +132,11 @@ public interface SyncIssue {
      */
     int TYPE_UNNAMED_FLAVOR_DIMENSION = 26;
 
+    /** An incompatible plugin is used. */
+    int TYPE_INCOMPATIBLE_PLUGIN = 27;
+
     /** Highest number assigned to types of {@link SyncIssue}s. */
-    int TYPE_MAX = 26; // increment when adding new types.
+    int TYPE_MAX = 27; // increment when adding new types.
 
     /** Returns the severity of the issue. */
     int getSeverity();

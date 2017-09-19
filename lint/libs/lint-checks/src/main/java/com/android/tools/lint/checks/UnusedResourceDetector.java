@@ -507,14 +507,14 @@ public class UnusedResourceDetector extends ResourceXmlDetector implements UastS
                 String bindingClass = null;
                 while (data != null) {
                     bindingClass = data.getAttribute(ATTR_CLASS);
-                    if (bindingClass != null) {
+                    if (bindingClass != null && !bindingClass.isEmpty()) {
                         int dot = bindingClass.lastIndexOf('.');
                         bindingClass = bindingClass.substring(dot + 1);
                         break;
                     }
                     data = getNextTagByName(data, TAG_DATA);
                 }
-                if (bindingClass == null) {
+                if (bindingClass == null || bindingClass.isEmpty()) {
                     // See ResourceBundle#getFullBindingClass
                     bindingClass = toClassName(resourceName) + "Binding";
                 }

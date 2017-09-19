@@ -16,10 +16,14 @@
 
 package com.android.build.gradle.internal.variant;
 
+import static com.android.build.gradle.tasks.factory.AbstractCompilesUtil.ANDROID_APT_PLUGIN_NAME;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.model.SyncIssue;
+import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
 /** Common superclass for all {@link VariantFactory} implementations. */
@@ -39,5 +43,20 @@ public abstract class BaseVariantFactory implements VariantFactory {
         this.androidBuilder = androidBuilder;
         this.instantiator = instantiator;
         this.extension = extension;
+    }
+
+    @Override
+    public void preVariantWork(Project project) {
+        if (project.getPluginManager().hasPlugin(ANDROID_APT_PLUGIN_NAME)) {
+            globalScope
+                    .getAndroidBuilder()
+                    .getErrorReporter()
+                    .handleSyncError(
+                            "android-apt",
+                            SyncIssue.TYPE_INCOMPATIBLE_PLUGIN,
+                            "android-apt plugin is incompatible with the Android Gradle plugin.  "
+                                    + "Please use 'annotationProcessor' configuration "
+                                    + "instead.");
+        }
     }
 }

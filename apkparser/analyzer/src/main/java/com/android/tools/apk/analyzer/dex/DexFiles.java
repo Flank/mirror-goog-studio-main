@@ -21,6 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.jf.dexlib2.Opcodes;
 import org.jf.dexlib2.dexbacked.DexBackedDexFile;
+import org.jf.dexlib2.dexbacked.raw.HeaderItem;
+import org.jf.dexlib2.util.DexUtil;
 
 public final class DexFiles {
     private DexFiles() {}
@@ -32,6 +34,18 @@ public final class DexFiles {
 
     @NonNull
     public static DexBackedDexFile getDexFile(@NonNull byte[] contents) {
-        return new DexBackedDexFile(Opcodes.forApi(15), contents);
+        try {
+            return new DexBackedDexFile(Opcodes.forApi(15), contents);
+        } catch (DexUtil.UnsupportedFile e) {
+            // TODO: b/65186612: remove this hack once dexlib2 supports version 38
+            if (HeaderItem.getVersion(contents, 0) == 38) {
+                contents[4] = '0';
+                contents[5] = '3';
+                contents[6] = '7';
+                return new DexBackedDexFile(Opcodes.forApi(15), contents);
+            } else {
+                throw e;
+            }
+        }
     }
 }
