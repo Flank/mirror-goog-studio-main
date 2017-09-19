@@ -27,7 +27,3 @@ android {
         addDefaultAdapters = true
     }
 }
-
-dependencies {
-    compile "com.android.support:support-v4:${rootProject.supportLibVersion}"
-}

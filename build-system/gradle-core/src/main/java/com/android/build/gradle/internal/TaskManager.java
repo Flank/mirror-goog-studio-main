@@ -3441,12 +3441,6 @@ public abstract class TaskManager {
         project.getDependencies()
                 .add(
                         "api",
-                        SdkConstants.DATA_BINDING_LIB_ARTIFACT
-                                + ":"
-                                + dataBindingBuilder.getLibraryVersion(version));
-        project.getDependencies()
-                .add(
-                        "api",
                         SdkConstants.DATA_BINDING_BASELIB_ARTIFACT
                                 + ":"
                                 + dataBindingBuilder.getBaseLibraryVersion(version));
@@ -3462,6 +3456,12 @@ public abstract class TaskManager {
                             version);
         }
         if (options.getAddDefaultAdapters()) {
+            project.getDependencies()
+                    .add(
+                            "api",
+                            SdkConstants.DATA_BINDING_LIB_ARTIFACT
+                                    + ":"
+                                    + dataBindingBuilder.getLibraryVersion(version));
             project.getDependencies()
                     .add(
                             "api",

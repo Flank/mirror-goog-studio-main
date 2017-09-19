@@ -41,6 +41,7 @@ public class BazelIntegrationTestsSuite {
     public static final Path DATA_DIR;
     public static final Path OFFLINE_REPO;
     public static final Path PREBUILTS_REPO;
+    public static final Path DATA_BINDING_RUNTIME_REPO;
     public static final Path NDK_IN_TMP;
     public static final Path GRADLE_USER_HOME;
 
@@ -49,6 +50,8 @@ public class BazelIntegrationTestsSuite {
             DATA_DIR = Files.createTempDirectory("data");
             OFFLINE_REPO = DATA_DIR.resolve("offlineRepo").toAbsolutePath();
             PREBUILTS_REPO = DATA_DIR.resolve("prebuiltsRepo").toAbsolutePath();
+            DATA_BINDING_RUNTIME_REPO =
+                    DATA_DIR.resolve("data_binding_runtime_repo").toAbsolutePath();
             NDK_IN_TMP = DATA_DIR.resolve("ndk").toAbsolutePath();
             GRADLE_USER_HOME = Files.createTempDirectory("gradleUserHome");
 
@@ -65,6 +68,7 @@ public class BazelIntegrationTestsSuite {
     public static void unzipOfflineRepo() throws Exception {
         unzip(OFFLINE_REPO, "tools/base/bazel/offline_repo_repo.zip");
         unzip(PREBUILTS_REPO, "tools/base/build-system/integration-test/prebuilts_repo_repo.zip");
+        unzip(DATA_BINDING_RUNTIME_REPO, "tools/data-binding/data_binding_runtime_repo.zip");
     }
 
     /**

@@ -52,6 +52,7 @@ java_test(
         "//tools/base/build-system:gradle-distrib",
         "//tools/base/build-system/integration-test:prebuilts_repo_repo.zip",
         "//tools/base/build-system/integration-test:test-projects/commonBuildScript.gradle",
+        "//tools/data-binding:data_binding_runtime_repo.zip",
     ],
     jvm_flags = [
         "-Dtest.suite.jar=tests.jar",

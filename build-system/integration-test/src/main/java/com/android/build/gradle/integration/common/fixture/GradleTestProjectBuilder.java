@@ -120,6 +120,21 @@ public final class GradleTestProjectBuilder {
         return fromTestApp(app);
     }
 
+    /** Create GradleTestProject from a data binding integration test. */
+    public GradleTestProjectBuilder fromDataBindingIntegrationTest(@NonNull String project) {
+        AndroidTestApp app = new EmptyTestApp();
+        name = project;
+        // compute the root folder of the checkout, based on test-projects.
+        File parentDir = TestUtils.getWorkspaceFile("tools/data-binding/integration-tests");
+
+        File projectDir = new File(parentDir, project);
+        if (!projectDir.exists()) {
+            throw new RuntimeException("Project " + project + " not found in " + projectDir + ".");
+        }
+        addAllFiles(app, projectDir);
+        return fromTestApp(app);
+    }
+
     /** Add a new file to the project. */
     public GradleTestProjectBuilder addFile(@NonNull TestSourceFile file) {
         return addFiles(Lists.newArrayList(file));

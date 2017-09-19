@@ -66,6 +66,8 @@ class GradleW {
         File homeDir = new File(outDir, "_home").getAbsoluteFile();
         File repoDir = new File(outDir, "_repo").getAbsoluteFile();
         File initScript = new File(outDir, "init.script").getAbsoluteFile();
+        // gradle tries to write into .m2 so we pass it a tmp one.
+        File tmpLocalMaven = new File(outDir, "_tmp_local_maven").getAbsoluteFile();
         createInitScript(initScript, repoDir);
         for (File repo : repos) {
             unzip(repo, repoDir);
@@ -83,14 +85,18 @@ class GradleW {
                 projectConnection
                         .newBuild()
                         .setEnvironmentVariables(env)
-                        .withArguments("--offline", "--init-script", initScript.getAbsolutePath(),
-                                "--debug", "--stacktrace")
+                        .withArguments(
+                                "--offline",
+                                "--init-script",
+                                initScript.getAbsolutePath(),
+                                "-Dmaven.repo.local=" + tmpLocalMaven.getAbsolutePath())
                         .forTasks(tasks.toArray(new String[tasks.size()]));
         launcher.setStandardOutput(System.out);
         launcher.setStandardError(System.err);
 
         launcher.run();
-        Files.move(new File(buildDir, outPath).toPath(), outFile.toPath());
+        File source = new File(buildDir, outPath);
+        Files.copy(source.toPath(), outFile.toPath());
     }
 
     private static void createInitScript(File initScript, File repoDir) throws IOException {

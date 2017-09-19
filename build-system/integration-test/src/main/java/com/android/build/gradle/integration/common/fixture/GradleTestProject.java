@@ -209,7 +209,7 @@ public final class GradleTestProject implements TestRule {
     public static final String PLAY_SERVICES_VERSION = "9.6.1";
     public static final String SUPPORT_LIB_VERSION = "25.3.1";
     public static final String TEST_SUPPORT_LIB_VERSION = "0.5";
-    public static final int SUPPORT_LIB_MIN_SDK = 9;
+    public static final int SUPPORT_LIB_MIN_SDK = 14;
 
     private static final String COMMON_HEADER = "commonHeader.gradle";
     private static final String COMMON_LOCAL_REPO = "commonLocalRepo.gradle";
@@ -644,6 +644,7 @@ public final class GradleTestProject implements TestRule {
                 return ImmutableList.<Path>builder()
                         .add(BazelIntegrationTestsSuite.OFFLINE_REPO)
                         .add(BazelIntegrationTestsSuite.PREBUILTS_REPO)
+                        .add(BazelIntegrationTestsSuite.DATA_BINDING_RUNTIME_REPO)
                         .build();
             }
         },

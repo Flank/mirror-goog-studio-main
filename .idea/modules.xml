@@ -25,7 +25,7 @@
       <module fileurl="file://$PROJECT_DIR$/common/common.iml" filepath="$PROJECT_DIR$/common/common.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/common/common-tests.iml" filepath="$PROJECT_DIR$/common/common-tests.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" filepath="$PROJECT_DIR$/../data-binding/baseLibrary/db-baseLibrary.iml" group="databinding" />
-      <module fileurl="file://$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon-base.iml" filepath="$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon-base.iml" group="databinding" />
+      <module fileurl="file://$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" filepath="$PROJECT_DIR$/../data-binding/compilerCommon/db-compilerCommon.iml" group="databinding" />
       <module fileurl="file://$PROJECT_DIR$/ddmlib/ddmlib.iml" filepath="$PROJECT_DIR$/ddmlib/ddmlib.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/testing-infrastructure/device-pool/device-provider/device-provider.iml" filepath="$PROJECT_DIR$/testing-infrastructure/device-pool/device-provider/device-provider.iml" group="base/build-system" />
       <module fileurl="file://$PROJECT_DIR$/devicelib/devicelib.iml" filepath="$PROJECT_DIR$/devicelib/devicelib.iml" group="base" />
