@@ -233,6 +233,7 @@ public class JarContentsTest {
                 "com/android/tools/r8/com/google/common/collect/",
                 "com/android/tools/r8/com/google/common/escape/",
                 "com/android/tools/r8/com/google/common/eventbus/",
+                "com/android/tools/r8/com/google/common/graph/",
                 "com/android/tools/r8/com/google/common/hash/",
                 "com/android/tools/r8/com/google/common/html/",
                 "com/android/tools/r8/com/google/common/io/",
