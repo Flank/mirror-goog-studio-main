@@ -101,7 +101,6 @@ import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.AttributeMatchingStrategy;
 import org.gradle.api.attributes.AttributesSchema;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.model.ObjectFactory;
 
 /**
@@ -953,15 +952,11 @@ public class VariantManager implements VariantModel {
         }
 
         if (variantConfig.getRenderscriptSupportModeEnabled()) {
-            File renderScriptSupportJar = androidBuilder.getRenderScriptSupportJar();
-
-            final ConfigurableFileCollection fileCollection = project.files(renderScriptSupportJar);
             project.getDependencies()
-                    .add(variantDep.getCompileClasspath().getName(), fileCollection);
-            project.getDependencies()
-                    .add(variantDep.getRuntimeClasspath().getName(), fileCollection);
+                    .add(
+                            variantDep.getCompileClasspath().getName(),
+                            project.files(androidBuilder.getRenderScriptSupportJar()));
         }
-
 
         return variantData;
     }
