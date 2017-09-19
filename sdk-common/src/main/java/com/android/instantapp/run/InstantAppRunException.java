@@ -80,7 +80,7 @@ public class InstantAppRunException extends Exception {
      * Represents the possible errors while side loading or running an instant app. This can be used
      * to an automatic retry.
      */
-    enum ErrorType {
+    public enum ErrorType {
         READ_IAPK_TIMEOUT,
         READ_IAPK_FAILED,
         NO_GOOGLE_ACCOUNT,
