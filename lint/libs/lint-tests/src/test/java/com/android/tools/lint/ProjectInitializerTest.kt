@@ -303,6 +303,7 @@ res/values/strings.xml:4: Error: string1 has already been defined in this folder
         @Language("XML")
         val descriptor = """
             <project>
+            <sdk dir='${TestUtils.getSdk()}'/>
             <module name="Foo:App" android="true" library="true">
               <unknown file="foo.Bar" />
               <resource file="res/values/strings.xml" />
@@ -316,7 +317,7 @@ res/values/strings.xml:4: Error: string1 has already been defined in this folder
 
         MainTest.checkDriver("""
 app: Error: No .class files were found in project "Foo:App", so none of the classfile based checks could be run. Does the project need to be built first? [LintError]
-project.xml:3: Error: Unexpected tag unknown [LintError]
+project.xml:4: Error: Unexpected tag unknown [LintError]
   <unknown file="foo.Bar" />
   ~~~~~~~~~~~~~~~~~~~~~~~~~~
 2 errors, 0 warnings
