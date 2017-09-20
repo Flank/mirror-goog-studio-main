@@ -15,7 +15,7 @@ def singlejar(name, jars, jar_name=None, **kwargs):
   )
 
 def _fileset_impl(ctx):
-  srcs = set(order="compile")
+  srcs = depset(order="postorder")
   for src in ctx.attr.srcs:
     srcs += src.files
 

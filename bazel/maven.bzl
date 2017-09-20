@@ -2,33 +2,33 @@ load(":functions.bzl", "explicit_target", "create_option_file")
 
 def _maven_pom_impl(ctx):
   # Contains both *.jar and *.aar files.
-  jars = set()
+  jars = depset()
   # classfied jars. Sources are in clsjars["sources"]
-  clsjars = {} # classifier -> set(jars)
-  clsjars["sources"] = set()
+  clsjars = {} # classifier -> depset(jars)
+  clsjars["sources"] = depset()
 
   if ctx.attr.library:
     if ctx.attr.file:
       fail("Cannot set both file and library for a maven_pom.")
-    jars = jars | set([jar.class_jar for jar in ctx.attr.library.java.outputs.jars])
+    jars = jars | depset([jar.class_jar for jar in ctx.attr.library.java.outputs.jars])
     clsjars["sources"] = clsjars["sources"] | ctx.attr.library.java.source_jars
     for classifier, library in zip(ctx.attr.classifiers, ctx.attr.classified_libraries):
       if classifier not in clsjars:
-        clsjars[classifier] = set()
-      clsjars[classifier] += set([jar.class_jar for jar in library.java.outputs.jars])
+        clsjars[classifier] = depset()
+      clsjars[classifier] += depset([jar.class_jar for jar in library.java.outputs.jars])
 
   if ctx.attr.file:
     if ctx.attr.library or ctx.attr.classified_libraries:
       fail("Cannot set both file and library for a maven_pom.")
     jars = jars | ctx.attr.file.files
 
-  parent_poms = set([], order="compile")
+  parent_poms = depset([], order="postorder")
   parent_jars = {}
-  parent_clsjars = {} # pom -> classifier -> set(jars)
+  parent_clsjars = {} # pom -> classifier -> depset(jars)
 
-  deps_poms = set([], order="compile")
+  deps_poms = depset([], order="postorder")
   deps_jars = {}
-  deps_clsjars = {} # pom -> classifier -> set(jars)
+  deps_clsjars = {} # pom -> classifier -> depset(jars)
 
   # Transitive deps through the parent attribute
   if ctx.attr.parent:

@@ -4,7 +4,7 @@ load(":kotlin.bzl", "kotlin_jar")
 load(":utils.bzl", "fileset", "java_jarjar", "singlejar")
 
 def _form_jar_impl(ctx):
-  all_deps = set(ctx.files.deps)
+  all_deps = depset(ctx.files.deps)
   for this_dep in ctx.attr.deps:
     if hasattr(this_dep, "java"):
       # All the transitive dependencies are needed to compile forms
@@ -147,8 +147,8 @@ def _iml_module_impl(ctx):
 
   module_jars = dict()
   module_runtime = dict()
-  transitive_runtime_deps = set()
-  transitive_data = set()
+  transitive_runtime_deps = depset()
+  transitive_data = depset()
 
   for this_dep in ctx.attr.deps:
     if hasattr(this_dep, "java"):
@@ -162,8 +162,8 @@ def _iml_module_impl(ctx):
   for name in names:
     module_jars[name] = ctx.file.production_jar
     module_runtime[name] = transitive_runtime_deps
-  transitive_data += set(ctx.files.iml_files + ctx.files.data)
-  transitive_runtime_deps += set([ctx.file.production_jar])
+  transitive_data += depset(ctx.files.iml_files + ctx.files.data)
+  transitive_runtime_deps += depset([ctx.file.production_jar])
 
 
   return struct(
@@ -322,7 +322,7 @@ def iml_module(name,
     visibility = ["//visibility:public"],
     iml_files = iml_files,
     production_jar = name,
-    deps = [dep + "_module" for dep in module_deps] + list(set(test_deps + main_deps + runtime_deps)),
+    deps = [dep + "_module" for dep in module_deps] + list(depset(test_deps + main_deps + runtime_deps)),
     data = bundle_data
   )
 
@@ -333,8 +333,8 @@ def _iml_project_impl(ctx):
 
   module_jars = dict()
   module_runtime = dict()
-  transitive_data = set()
-  transitive_runtime_deps = set()
+  transitive_data = depset()
+  transitive_runtime_deps = depset()
   for dep in ctx.attr.modules:
     if hasattr(dep, "module"):
       module_jars.update(dep.module.module_jars)

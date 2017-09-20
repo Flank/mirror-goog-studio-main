@@ -12,7 +12,7 @@ def _jni_library_impl(ctx):
   # If two targets in deps share the same files (e.g. in the data attribute)
   # they would be included mulitple times in the same path in the zip, so
   # dedupe the files.
-  deduped_inputs = set(inputs)
+  deduped_inputs = depset(inputs)
   zipper_args = ["c", ctx.outputs.zip.path]
   for cpu, file in deduped_inputs:
     # "lib/" is the JNI directory looked for in android

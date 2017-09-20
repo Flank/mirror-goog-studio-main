@@ -1,7 +1,7 @@
 load(":functions.bzl", "create_java_compiler_args")
 
 def _groovy_jar_impl(ctx):
-  all_deps = set(ctx.files.deps)
+  all_deps = depset(ctx.files.deps)
   for this_dep in ctx.attr.deps:
     if hasattr(this_dep, "java"):
       # Groovy needs the class to be loadable so it cannot work with ijars and needs the full jars.
