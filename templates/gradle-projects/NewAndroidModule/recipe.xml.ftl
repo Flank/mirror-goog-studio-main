@@ -103,10 +103,10 @@
                 to="${destination}/mipmap-anydpi-v26/ic_launcher.xml" />
         <copy from="root/res/drawable/ic_launcher_background.xml"
                 to="${destination}/drawable/ic_launcher_background.xml" />
+        <copy from="root/res/drawable/ic_launcher_foreground.xml"
+                to="${destination}/drawable/ic_launcher_foreground.xml" />
         <copy from="root/res/mipmap-anydpi-v26/ic_launcher_round.xml"
                 to="${destination}/mipmap-anydpi-v26/ic_launcher_round.xml" />
-        <@copyMipmap destination=escapeXmlAttribute(destination)
-                            icon="ic_launcher_foreground.png" />
     </#if>
     <#if buildApi gte 25 && targetApi gte 25>
         <@copyMipmap destination=escapeXmlAttribute(destination)
