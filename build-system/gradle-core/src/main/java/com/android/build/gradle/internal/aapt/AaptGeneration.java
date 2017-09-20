@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.aapt;
 
+import android.databinding.tool.util.Preconditions;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -29,6 +30,12 @@ public enum AaptGeneration {
 
     public static AaptGeneration fromProjectOptions(@NonNull ProjectOptions projectOptions) {
         if (projectOptions.get(BooleanOption.ENABLE_AAPT2)) {
+            Preconditions.check(
+                    !(projectOptions.get(BooleanOption.ENABLE_IN_PROCESS_AAPT2)
+                            && projectOptions.get(BooleanOption.ENABLE_DAEMON_MODE_AAPT2)),
+                    "Both JNI and Daemon mode versions of AAPT2 cannot be enabled at the same time."
+                            + "Please disable one of them (e.g. android.enableAapt2jni=false)");
+
             if (projectOptions.get(BooleanOption.ENABLE_IN_PROCESS_AAPT2)) {
                 return AAPT_V2_JNI;
             } else if (projectOptions.get(BooleanOption.ENABLE_DAEMON_MODE_AAPT2)) {
