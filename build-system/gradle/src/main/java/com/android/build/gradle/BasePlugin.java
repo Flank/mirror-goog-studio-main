@@ -630,6 +630,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
         extension.disableWrite();
 
+        taskManager.configureCustomLintChecks(new TaskContainerAdaptor(project.getTasks()));
+
         ProcessProfileWriter.getProject(project.getPath())
                 .setCompileSdk(extension.getCompileSdkVersion())
                 .setBuildToolsVersion(extension.getBuildToolsRevision().toString())
