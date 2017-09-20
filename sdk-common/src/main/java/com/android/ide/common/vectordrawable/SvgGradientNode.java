@@ -43,6 +43,28 @@ public class SvgGradientNode extends SvgNode {
 
     private GradientUsage mGradientUsage;
 
+    private static class GradientCoordResult {
+        private final double mValue;
+        // When the gradientUnits is set to "userSpaceOnUse", we usually use the coordinate values
+        // as it is. But if the coordinate value is a percentage, we still need to multiply this
+        // percentage with the viewport's bounding box, in a similar way as gradientUnits is set
+        // to "objectBoundingBox".
+        private final boolean mIsPercentage;
+
+        public GradientCoordResult(double value, boolean isPercentage) {
+            mValue = value;
+            mIsPercentage = isPercentage;
+        }
+
+        public double getValue() {
+            return mValue;
+        }
+
+        public boolean isPercentage() {
+            return mIsPercentage;
+        }
+    }
+
     protected enum GradientUsage {
         FILL,
         STROKE
@@ -106,16 +128,18 @@ public class SvgGradientNode extends SvgNode {
     }
 
     /** Parses the gradient coordinate value given as a percentage or a length. Returns a double. */
-    private double getGradientCoordinate(String x, double defaultValue) {
+    private GradientCoordResult getGradientCoordinate(String x, double defaultValue) {
+        boolean isPercentage = false;
         if (!mVdAttributesMap.containsKey(x)) {
-            return defaultValue;
+            return new GradientCoordResult(defaultValue, isPercentage);
         }
         double val = defaultValue;
         String vdValue = mVdAttributesMap.get(x).trim();
         if (x.equals("r") && vdValue.startsWith("-")) {
-            return defaultValue;
+            return new GradientCoordResult(defaultValue, isPercentage);
         }
         if (vdValue.endsWith("%")) {
+            isPercentage = true;
             try {
                 val = Double.parseDouble(vdValue.substring(0, vdValue.length() - 1));
             } catch (NumberFormatException e) {
@@ -137,7 +161,7 @@ public class SvgGradientNode extends SvgNode {
                                 SvgTree.SvgLogLevel.ERROR);
             }
         }
-        return val;
+        return new GradientCoordResult(val, isPercentage);
     }
 
     /** Writes the XML defining the gradient within a path. */
@@ -223,17 +247,20 @@ public class SvgGradientNode extends SvgNode {
                 if (index == 2) {
                     defaultValue = 1;
                 }
-                double value = getGradientCoordinate(s, defaultValue);
+                GradientCoordResult result = getGradientCoordinate(s, defaultValue);
 
-                if (index % 2 == 0) {
-                    value = value * width + startX;
-                } else {
-                    value = value * height + startY;
+                double coordValue = result.getValue();
+                if (!isUserSpaceOnUse || result.isPercentage()) {
+                    if (index % 2 == 0) {
+                        coordValue = coordValue * width + startX;
+                    } else {
+                        coordValue = coordValue * height + startY;
+                    }
                 }
                 // In case no transforms are applied, original coordinates are also stored in
                 // transformedBounds.
-                gradientBounds[index] = value;
-                transformedBounds[index] = value;
+                gradientBounds[index] = coordValue;
+                transformedBounds[index] = coordValue;
 
                 // We need mVdAttributesMap to contain all coordinates regardless if they are
                 // specified in the SVG in order to write the default value to the VD XML.
@@ -247,12 +274,21 @@ public class SvgGradientNode extends SvgNode {
         } else {
             gradientBounds = new double[2];
             transformedBounds = new double[2];
-            double cx = getGradientCoordinate("cx", .5);
-            cx = width * cx + startX;
-            double cy = getGradientCoordinate("cy", .5);
-            cy = height * cy + startY;
-            double r = getGradientCoordinate("r", .5);
-            r *= Math.max(height, width);
+            GradientCoordResult cxResult = getGradientCoordinate("cx", .5);
+            double cx = cxResult.getValue();
+            if (!isUserSpaceOnUse || cxResult.isPercentage()) {
+                cx = width * cx + startX;
+            }
+            GradientCoordResult cyResult = getGradientCoordinate("cy", .5);
+            double cy = cyResult.getValue();
+            if (!isUserSpaceOnUse || cyResult.isPercentage()) {
+                cy = height * cy + startY;
+            }
+            GradientCoordResult rResult = getGradientCoordinate("r", .5);
+            double r = rResult.getValue();
+            if (!isUserSpaceOnUse || rResult.isPercentage()) {
+                r *= Math.max(height, width);
+            }
 
             gradientBounds[0] = cx;
             transformedBounds[0] = cx;
