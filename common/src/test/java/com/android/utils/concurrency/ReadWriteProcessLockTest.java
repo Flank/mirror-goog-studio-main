@@ -131,7 +131,7 @@ public class ReadWriteProcessLockTest {
                 ReadWriteProcessLock.createAndNormalizeLockFile(lockFile.toPath()).toFile();
         assertThat(normalizedLockFile).exists();
         assertThat(normalizedLockFile).isNotEqualTo(lockFile);
-        assertThat(normalizedLockFile).isEqualTo(new File(testFolder.getRoot(), "lockfile"));
+        assertThat(normalizedLockFile).isEqualTo(lockFile.getCanonicalFile());
 
         // Check that an exception is thrown if a directory with the same path as the lock file
         // accidentally exists
