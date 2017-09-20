@@ -1104,6 +1104,23 @@ abstract class LintClient {
                     val rules = ArrayList<File>(4)
                     addLintJarsFromDependencies(rules, variant.mainArtifact.dependencies.libraries,
                             mutableSetOf())
+
+                    // Locally packaged jars
+                    project.gradleProjectModel?.buildFolder?.let {
+                        // Soon we'll get these paths via the builder-model so we
+                        // don't need to have a hardcoded path (b/66166521)
+                        val lintFolder = File(it, "intermediates${File.separator}lint")
+                        if (lintFolder.exists()) {
+                            lintFolder.listFiles()?.forEach { lintJar ->
+                                // Note that currently there will just be a single one
+                                // for now (b/66164808), and it will always be named lint.jar.
+                                if (lintJar.path.endsWith(DOT_JAR)) {
+                                    rules.add(lintJar)
+                                }
+                            }
+                        }
+                    }
+
                     if (!rules.isEmpty()) {
                         return rules
                     }

@@ -342,6 +342,8 @@ public class GradleModelMocker {
             when(artifact.getDependencyGraphs()).thenThrow(new RuntimeException());
         }
 
+        when(project.getBuildFolder()).thenReturn(new File(projectDir, "build"));
+
         Collection<AndroidArtifactOutput> outputs = Lists.newArrayList();
         outputs.add(createAndroidArtifactOutput("", ""));
         for (Map.Entry<String, String> entry : splits.entries()) {
