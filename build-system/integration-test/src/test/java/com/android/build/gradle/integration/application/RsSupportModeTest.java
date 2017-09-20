@@ -51,7 +51,9 @@ public class RsSupportModeTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        model = project.executeAndReturnModel("clean", "assembleDebug");
+        model =
+                project.executeAndReturnModel(
+                        "clean", "assembleDebug", "assembleX86DebugAndroidTest");
     }
 
     @AfterClass

@@ -523,6 +523,13 @@ public class VariantManager implements VariantModel {
                         variantDep.getRuntimeClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
             }
 
+            if (testedVariantData.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
+                project.getDependencies()
+                        .add(
+                                variantDep.getCompileClasspath().getName(),
+                                project.files(androidBuilder.getRenderScriptSupportJar()));
+            }
+
             switch (variantType) {
                 case ANDROID_TEST:
                     taskManager.createAndroidTestVariantTasks(tasks, (TestVariantData) variantData);
