@@ -1,5 +1,4 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
-load("//tools/base/bazel:groovy.bzl", "groovy_jar")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "kotlin_jar")
 
 java_library(

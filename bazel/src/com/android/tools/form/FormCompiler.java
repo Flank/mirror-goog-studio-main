@@ -27,9 +27,6 @@ import com.intellij.uiDesigner.compiler.NestedFormLoader;
 import com.intellij.uiDesigner.compiler.Utils;
 import com.intellij.uiDesigner.lw.CompiledClassPropertiesProvider;
 import com.intellij.uiDesigner.lw.LwRootContainer;
-
-import org.jetbrains.org.objectweb.asm.ClassWriter;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -40,7 +37,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.jetbrains.org.objectweb.asm.ClassWriter;
 
 public class FormCompiler extends JarOutputCompiler implements NestedFormLoader {
 
@@ -48,6 +49,7 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
     private InstrumentationClassFinder mFinder;
     private final HashMap<String, LwRootContainer> mCache = new HashMap<>();
     private final List<File> mForms = new ArrayList<>();
+    private final Map<String, File> mOtherForms = new HashMap<>();
 
     public FormCompiler() {
         super("formc");
@@ -70,13 +72,19 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
         addUrlsTo(System.getProperty("sun.boot.class.path"), urls);
         addUrlsTo(classPath.replaceAll(":", File.pathSeparator), urls);
 
+        Pattern formPattern = Pattern.compile("(.*)=(.*\\.form)");
         for (String file : files) {
             if (file.endsWith(".jar")) {
                 addUrlsTo(file, urls);
                 Unzipper unzipper = new Unzipper();
                 unzipper.unzip(new File(file), outDir);
             } else if (file.endsWith(".form")) {
-                mForms.add(new File(file));
+                Matcher matcher = formPattern.matcher(file);
+                if (matcher.matches()) {
+                    mOtherForms.put(matcher.group(1).toLowerCase(), new File(matcher.group(2)));
+                } else {
+                    mForms.add(new File(file));
+                }
             }
         }
 
@@ -189,13 +197,21 @@ public class FormCompiler extends JarOutputCompiler implements NestedFormLoader 
         InputStream stream = null;
         String lowerFormFilePath = formFilePath.toLowerCase();
         // Try to find the nested form:
-        for (File file : mForms) {
-            String name = file.getAbsolutePath().replace(File.separatorChar, '/').toLowerCase();
-            if (name.endsWith(lowerFormFilePath)) {
-                stream = new FileInputStream(file);
-                break;
+        File other = mOtherForms.get(lowerFormFilePath);
+        if (other != null) {
+            stream = new FileInputStream(other);
+        }
+
+        if (stream == null) {
+            for (File file : mForms) {
+                String name = file.getAbsolutePath().replace(File.separatorChar, '/').toLowerCase();
+                if (name.endsWith(lowerFormFilePath)) {
+                    stream = new FileInputStream(file);
+                    break;
+                }
             }
         }
+
         if (stream == null) {
             stream = mFinder.getLoader().getResourceAsStream(formFilePath);
         }

@@ -2,7 +2,7 @@ load("//tools/base/bazel:maven.bzl", "maven_repo")
 
 java_library(
     name = "utils",
-    srcs = glob(["src/**/utils/*.java"]),
+    srcs = glob(["src/com/android/tools/utils/*.java"]),
     visibility = [
         "//tools/base/bazel/sdk:__pkg__",
         "//tools/base/build-system/instant-run-instrumentation:__pkg__",
@@ -11,7 +11,7 @@ java_library(
 
 java_binary(
     name = "jasmin-compiler",
-    srcs = glob(["src/com/android/tools/jasmin/JasminCompiler.java"]),
+    srcs = ["src/com/android/tools/jasmin/JasminCompiler.java"],
     main_class = "com.android.tools.jasmin.JasminCompiler",
     visibility = ["//visibility:public"],
     deps = [
@@ -22,7 +22,7 @@ java_binary(
 
 java_library(
     name = "groovy-compiler",
-    srcs = glob(["src/**/groovy/*.java"]),
+    srcs = glob(["src/com/android/tools/groovy/*.java"]),
     # Note that version 2.3 of groovy, embeds timestamps into the generated classes
     # making it unsuitable for bazel or any other reasonable tool.
     # TODO: Update and use the prebuilts dependency
@@ -266,8 +266,8 @@ java_binary(
 
 java_binary(
     name = "antlr",
-    srcs = glob(["src/**/antlr/**"]),
-    main_class = "com.android.tools.utils.antlr.AntlrCompiler",
+    srcs = ["src/com/android/tools/binaries/AntlrCompiler.java"],
+    main_class = "com.android.tools.binaries.AntlrCompiler",
     visibility = ["//visibility:public"],
     deps = [
         ":utils",

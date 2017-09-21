@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.tools.utils.antlr;
+package com.android.tools.binaries;
 
 import com.android.tools.utils.JarOutputCompiler;
 import com.google.common.collect.Iterables;

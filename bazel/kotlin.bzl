@@ -3,6 +3,30 @@ load(":functions.bzl", "explicit_target")
 load(":maven.bzl", "maven_pom")
 load(":utils.bzl", "singlejar")
 
+
+def kotlin_impl(ctx, roots, java_srcs, kotlin_srcs, kotlin_deps, package_prefixes, kotlin_jar):
+  merged = []
+  for root in roots:
+    if root in package_prefixes:
+      root += ":" + package_prefixes[root]
+    merged += [ctx.label.package + "/" + root]
+
+  kotlin_deps = list(kotlin_deps) + ctx.files._kotlin
+  args, option_files = create_java_compiler_args_srcs(ctx, merged, kotlin_jar.path,
+                                                 kotlin_deps)
+
+  ctx.action(
+    inputs = java_srcs + kotlin_srcs + option_files + kotlin_deps,
+    outputs = [kotlin_jar],
+    mnemonic = "kotlinc",
+    arguments = args,
+    executable = ctx.executable._kotlinc,
+  )
+  return java_common.create_provider(
+      compile_time_jars = [kotlin_jar],
+      runtime_jars = [kotlin_jar],
+    )
+
 def _kotlin_jar_impl(ctx):
 
   class_jar = ctx.outputs.class_jar
@@ -16,9 +40,8 @@ def _kotlin_jar_impl(ctx):
   merged = [src.path for src in ctx.files.srcs]
   if ctx.attr.package_prefixes:
     merged = [ a + ":" + b if b else a for (a,b) in zip(merged, ctx.attr.package_prefixes)]
-  content = "\n".join(merged)
 
-  args, option_files = create_java_compiler_args_srcs(ctx, content, class_jar.path,
+  args, option_files = create_java_compiler_args_srcs(ctx, merged, class_jar.path,
                                                  all_deps)
 
   ctx.action(

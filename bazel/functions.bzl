@@ -21,7 +21,8 @@ def create_java_compiler_args_srcs(ctx, srcs, path, deps):
   args += ["-o", path]
 
   # Source files
-  source_file = create_option_file(ctx, path + ".lst", srcs)
+  srcs_lines =  "\n".join(srcs)
+  source_file = create_option_file(ctx, path + ".lst", srcs_lines)
   option_files += [source_file]
   args += ["@" + source_file.path]
 
@@ -31,7 +32,7 @@ def create_java_compiler_args_srcs(ctx, srcs, path, deps):
 def create_java_compiler_args(ctx, path, deps):
   return create_java_compiler_args_srcs(
       ctx,
-      "\n".join([src.path for src in ctx.files.srcs]),
+      [src.path for src in ctx.files.srcs],
       path,
       deps)
 
