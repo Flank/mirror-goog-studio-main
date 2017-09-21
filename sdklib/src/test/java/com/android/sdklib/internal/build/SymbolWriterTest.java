@@ -120,6 +120,7 @@ public class SymbolWriterTest {
         );
     }
 
+    @Test
     public void test2() throws Exception {
         check(
             // Package
