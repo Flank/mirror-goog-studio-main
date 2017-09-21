@@ -663,11 +663,13 @@ public interface AndroidConfig {
         public void execute(Dependency dependency) {
             if (!warningPrintedAlready) {
                 warningPrintedAlready = true;
-                System.out.println(String.format(
-                        DEPRECATED_CONFIG_WARNING,
-                        configuration.getName(),
-                        project.getPath(),
-                        replacement));
+                project.getLogger()
+                        .quiet(
+                                String.format(
+                                        DEPRECATED_CONFIG_WARNING,
+                                        configuration.getName(),
+                                        project.getPath(),
+                                        replacement));
             }
         }
     }
