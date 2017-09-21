@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.test.report;
 
 import org.gradle.api.tasks.testing.TestResult;
-import org.gradle.reporting.DurationFormatter;
 
 public abstract class TestResultModel {
     public static final DurationFormatter DURATION_FORMATTER = new DurationFormatter();
