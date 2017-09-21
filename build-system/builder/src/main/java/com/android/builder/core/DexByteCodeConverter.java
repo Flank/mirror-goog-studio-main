@@ -153,6 +153,7 @@ public class DexByteCodeConverter {
         }
     }
 
+    @SuppressWarnings("GuardedBy")
     private void dexInProcess(
             @NonNull final DexProcessBuilder builder,
             @NonNull final DexOptions dexOptions,
@@ -179,6 +180,7 @@ public class DexByteCodeConverter {
         }
     }
 
+    @SuppressWarnings("GuardedBy")
     private void dexOutOfProcess(
             @NonNull final DexProcessBuilder builder,
             @NonNull final DexOptions dexOptions,
