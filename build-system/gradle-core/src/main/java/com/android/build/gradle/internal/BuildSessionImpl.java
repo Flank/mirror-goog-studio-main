@@ -150,7 +150,7 @@ public final class BuildSessionImpl implements BuildSession {
     }
 
     // We don't need to synchronize this method as it should be executed only once per build
-    @SuppressWarnings("FieldAccessNotGuarded")
+    @SuppressWarnings({"FieldAccessNotGuarded", "GuardedBy"})
     private void buildFinished() {
         // Note: If this method is not executed fully (e.g., due to an exception or Ctrl-C occurring
         // in this method or in a previous method also registered with Gradle to be run at the end
