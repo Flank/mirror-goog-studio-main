@@ -342,6 +342,10 @@ public class GradleVersionTest {
         assertTrue(GradleVersion.parse("1.0.0").compareTo("1.0.0-SNAPSHOT") > 0);
         assertTrue(GradleVersion.parse("1.0.0-alpha2").compareTo("1.0.0-alpha1") > 0);
         assertTrue(GradleVersion.parse("1.0.0-beta1").compareTo("1.0.0-alpha2") > 0);
+        assertTrue(GradleVersion.parse("1.0.0-beta1").compareTo("1.0.0-alpha9") > 0);
+        assertTrue(GradleVersion.parse("1.0.0-beta1").compareTo("1.0.0-alpha9-1") > 0);
+        assertTrue(GradleVersion.parse("1.0.0-alpha9-2").compareTo("1.0.0-alpha9-1") > 0);
+        assertTrue(GradleVersion.parse("1.0.0-alpha9-1").compareTo("1.0.0-alpha9-2") < 0);
         assertTrue(GradleVersion.parse("1.0.0-rc1").compareTo("1.0.0-alpha2") > 0);
         assertTrue(GradleVersion.parse("2.0.0-alpha1").compareTo("1.0.0-alpha1") > 0);
 
@@ -508,5 +512,10 @@ public class GradleVersionTest {
         assertTrue(version.isAtLeast(2, 3, 0, "alpha", 8, false));
         assertFalse(version.isAtLeast(2, 3, 0, "beta", 2, false));
         assertFalse(version.isAtLeast(2, 3, 0, "rc", 1, false));
+
+        version = GradleVersion.parse("1.0.0-beta8-2");
+        assertTrue(version.isAtLeast(1, 0, 0, "alpha", 1, false));
+        assertTrue(version.isAtLeast(1, 0, 0, "beta", 8, false));
+        assertFalse(version.isAtLeast(1, 0, 0, "beta", 9, false));
     }
 }
