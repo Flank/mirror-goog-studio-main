@@ -1085,6 +1085,7 @@ public class FileCacheTest {
      * Performs a few steps common to the concurrency tests for {@link
      * FileCache#createFileInCacheIfAbsent(FileCache.Inputs, ExceptionConsumer)}.
      */
+    @SuppressWarnings("ReturnValueIgnored")  // uses dubious type Function<File, Void>
     private static void prepareConcurrencyTestForCreateFileInCacheIfAbsent(
             @NonNull ConcurrencyTester<File, Void> tester,
             @NonNull FileCache[] fileCaches,
