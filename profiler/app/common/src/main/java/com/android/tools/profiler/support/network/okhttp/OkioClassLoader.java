@@ -23,4 +23,8 @@ public class OkioClassLoader {
     public static Class<?> loadClass(String className) throws ClassNotFoundException {
         return myClassLoader.loadClass(className);
     }
+
+    public static void setClassLoader(ClassLoader classLoader) {
+        myClassLoader = classLoader;
+    }
 }
