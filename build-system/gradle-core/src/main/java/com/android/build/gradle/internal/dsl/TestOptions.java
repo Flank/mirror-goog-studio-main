@@ -23,12 +23,14 @@ import com.android.utils.HelpfulEnumConverter;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import groovy.lang.Closure;
+import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DomainObjectSet;
 import org.gradle.api.internal.DefaultDomainObjectSet;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.internal.reflect.Instantiator;
 import org.gradle.util.ConfigureUtil;
+
 /** Options for running tests. */
 @SuppressWarnings("unused") // Exposed in the DSL.
 public class TestOptions {
@@ -50,8 +52,9 @@ public class TestOptions {
      */
     @NonNull private final UnitTestOptions unitTests;
 
-    public TestOptions(Instantiator instantiator) {
-        this.unitTests = instantiator.newInstance(UnitTestOptions.class);
+    @Inject
+    public TestOptions(ObjectFactory objectFactory) {
+        this.unitTests = objectFactory.newInstance(UnitTestOptions.class);
     }
 
     /**

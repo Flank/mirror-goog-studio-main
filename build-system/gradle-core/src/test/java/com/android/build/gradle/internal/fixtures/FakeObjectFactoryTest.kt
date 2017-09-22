@@ -17,26 +17,25 @@
 package com.android.build.gradle.internal.fixtures
 
 import com.google.common.truth.Truth
-import org.gradle.internal.reflect.Instantiator
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.ExpectedException
 
-class FakeInstantiatorTest {
+class FakeObjectFactoryTest {
 
     @get:Rule
     val exception: ExpectedException = ExpectedException.none()
 
     @Test
     fun noParam() {
-        val instance = FakeInstantiator().newInstance(TestClass::class.java)
+        val instance = FakeObjectFactory().newInstance(TestClass::class.java)
 
         Truth.assertThat(instance.foo).named("Foo property").isNull()
     }
 
     @Test
     fun correctParam() {
-        val instance = FakeInstantiator().newInstance(TestClass::class.java, "value")
+        val instance = FakeObjectFactory().newInstance(TestClass::class.java, "value")
 
         Truth.assertThat(instance.foo).named("Foo property").isEqualTo("value")
     }
@@ -44,18 +43,18 @@ class FakeInstantiatorTest {
     @Test
     fun wrongParam() {
         exception.expect(RuntimeException::class.java)
-        FakeInstantiator().newInstance(TestClass::class.java, "value1", "value1")
+        FakeObjectFactory().newInstance(TestClass::class.java, "value1", "value1")
     }
 
     @Test
     fun superTypeSupport() {
-        val instantiator = FakeInstantiator()
+        val objectFactory = FakeObjectFactory()
 
         // create a TestClassChild on its own
-        val testClassChild = instantiator.newInstance(TestClassChild::class.java)
+        val testClassChild = objectFactory.newInstance(TestClassChild::class.java)
 
         // create another one using the first one as param
-        instantiator.newInstance(TestClassChild::class.java, testClassChild)
+        objectFactory.newInstance(TestClassChild::class.java, testClassChild)
     }
 }
 

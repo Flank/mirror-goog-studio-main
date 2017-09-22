@@ -17,15 +17,15 @@
 package com.android.build.gradle.internal.fixtures
 
 import org.gradle.api.Action
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.api.plugins.ExtraPropertiesExtension
 import org.gradle.api.reflect.TypeOf
-import org.gradle.internal.reflect.Instantiator
 
-class FakeExtensionContainer(private val instantiator: Instantiator): ExtensionContainer {
+class FakeExtensionContainer(private val objectFactory: ObjectFactory): ExtensionContainer {
 
     override fun <T : Any?> create(name: String, type: Class<T>, vararg constructionArguments: Any): T {
-        return instantiator.newInstance(type, *constructionArguments)
+        return objectFactory.newInstance(type, *constructionArguments)
     }
 
     override fun <T : Any?> add(p0: Class<T>?, p1: String?, p2: T) {

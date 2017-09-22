@@ -23,23 +23,22 @@ import com.android.ide.common.signing.KeystoreHelper;
 import com.android.prefs.AndroidLocation;
 import java.io.File;
 import org.gradle.api.NamedDomainObjectFactory;
-import org.gradle.internal.reflect.Instantiator;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.tooling.BuildException;
 
-/**
- * Factory to create SigningConfig object using an {@link Instantiator} to add the DSL methods.
- */
+/** Factory to create SigningConfig object using an {@link ObjectFactory} to add the DSL methods. */
 public class SigningConfigFactory implements NamedDomainObjectFactory<SigningConfig> {
 
-    private final Instantiator instantiator;
+    private final ObjectFactory objectFactory;
 
-    public SigningConfigFactory(Instantiator instantiator) {
-        this.instantiator = instantiator;
+    public SigningConfigFactory(ObjectFactory objectFactory) {
+        this.objectFactory = objectFactory;
     }
 
+    @Override
     @NonNull
     public SigningConfig create(@NonNull String name) {
-        SigningConfig signingConfig = instantiator.newInstance(SigningConfig.class, name);
+        SigningConfig signingConfig = objectFactory.newInstance(SigningConfig.class, name);
         if (BuilderConstants.DEBUG.equals(name)) {
             try {
                 signingConfig.initWith(

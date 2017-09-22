@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.api.BaseVariantImpl;
 import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.ide.common.build.ApkData;
 import com.google.common.collect.ImmutableList;
-import org.gradle.internal.reflect.Instantiator;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * Factory for the {@link BaseVariantOutput} for each variant output that will be added to the
@@ -34,19 +34,19 @@ import org.gradle.internal.reflect.Instantiator;
 public class VariantOutputFactory {
 
     @NonNull private final Class<? extends BaseVariantOutput> targetClass;
-    @NonNull private final Instantiator instantiator;
+    @NonNull private final ObjectFactory objectFactory;
     @Nullable private final BaseVariantImpl variantPublicApi;
     @NonNull private final TaskContainer taskContainer;
     @NonNull private final AndroidConfig androidConfig;
 
     public VariantOutputFactory(
             @NonNull Class<? extends BaseVariantOutput> targetClass,
-            @NonNull Instantiator instantiator,
+            @NonNull ObjectFactory objectFactory,
             @NonNull AndroidConfig androidConfig,
             @Nullable BaseVariantImpl variantPublicApi,
             @NonNull TaskContainer taskContainer) {
         this.targetClass = targetClass;
-        this.instantiator = instantiator;
+        this.objectFactory = objectFactory;
         this.variantPublicApi = variantPublicApi;
         this.taskContainer = taskContainer;
         this.androidConfig = androidConfig;
@@ -54,7 +54,7 @@ public class VariantOutputFactory {
 
     public VariantOutput create(ApkData apkData) {
         BaseVariantOutput variantOutput =
-                instantiator.newInstance(targetClass, apkData, taskContainer);
+                objectFactory.newInstance(targetClass, apkData, taskContainer);
         androidConfig.getBuildOutputs().add(variantOutput);
         if (variantPublicApi != null) {
             variantPublicApi.addOutputs(ImmutableList.of(variantOutput));

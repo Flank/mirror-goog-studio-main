@@ -37,7 +37,6 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Collection;
 import java.util.Map;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.internal.reflect.Instantiator;
 
 public class MultiTypeVariantFactory extends BaseVariantFactory {
     @NonNull private final Map<VariantType, BaseVariantFactory> delegates;
@@ -45,17 +44,14 @@ public class MultiTypeVariantFactory extends BaseVariantFactory {
     public MultiTypeVariantFactory(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidConfig extension) {
-        super(globalScope, androidBuilder, instantiator, extension);
+        super(globalScope, androidBuilder, extension);
         delegates =
                 ImmutableMap.of(
                         VariantType.FEATURE,
-                        new FeatureVariantFactory(
-                                globalScope, androidBuilder, instantiator, extension),
+                        new FeatureVariantFactory(globalScope, androidBuilder, extension),
                         VariantType.LIBRARY,
-                        new LibraryVariantFactory(
-                                globalScope, androidBuilder, instantiator, extension));
+                        new LibraryVariantFactory(globalScope, androidBuilder, extension));
     }
 
     @NonNull

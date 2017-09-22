@@ -45,7 +45,7 @@ class SealableMap<K,V> private constructor(
         fun <K,V> wrap(originMap: MutableMap<K,V>, errorReporter: EvalIssueReporter) =
                 SealableMap(
                         originMap,
-                        { throw RuntimeException("Calling instantiator on a wrapped SealableMap") },
+                        { throw RuntimeException("Calling objectFactory on a wrapped SealableMap") },
                         { collection -> collection },
                         errorReporter)
 

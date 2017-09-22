@@ -16,6 +16,10 @@
 
 package com.android.build.gradle.internal.fixtures
 
+import org.gradle.api.Named
+import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.Property
 import org.gradle.internal.reflect.Instantiator
 import org.gradle.internal.reflect.JavaReflectionUtil
 import java.lang.reflect.Constructor
@@ -26,7 +30,7 @@ import java.lang.reflect.Constructor
  * This just calls the constructor directly.
  *
  */
-class FakeInstantiator: Instantiator {
+class FakeObjectFactory : ObjectFactory {
 
     override fun <T : Any?> newInstance(theClass: Class<out T>, vararg constructorParams: Any?): T {
         @Suppress("UNCHECKED_CAST")
@@ -41,6 +45,18 @@ class FakeInstantiator: Instantiator {
         }
 
         throw RuntimeException("Failed to find matching constructor for $actualParamsTypes")
+    }
+
+    override fun <T : Any?> property(p0: Class<T>?): Property<T> {
+        TODO("not implemented")
+    }
+
+    override fun <T : Named?> named(p0: Class<T>?, p1: String?): T {
+        TODO("not implemented")
+    }
+
+    override fun <T : Any?> listProperty(p0: Class<T>?): ListProperty<T> {
+        TODO("not implemented")
     }
 
     private fun getParamTypes(params: Array<out Any?>): Array<Class<*>?> {

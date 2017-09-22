@@ -122,10 +122,10 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.LogLevel;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.StopExecutionException;
-import org.gradle.internal.reflect.Instantiator;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Base class for all Android plugins */
@@ -153,8 +153,6 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
 
     private DataBindingBuilder dataBindingBuilder;
 
-    private Instantiator instantiator;
-
     private VariantFactory variantFactory;
 
     private ToolingModelBuilderRegistry registry;
@@ -169,9 +167,8 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
 
     private boolean hasCreatedTasks = false;
 
-    BasePlugin(@NonNull Instantiator instantiator, @NonNull ToolingModelBuilderRegistry registry) {
+    BasePlugin(@NonNull ToolingModelBuilderRegistry registry) {
         ClasspathVerifier.checkClasspathSanity();
-        this.instantiator = instantiator;
         this.registry = registry;
         creator = "Android Gradle " + Version.ANDROID_GRADLE_PLUGIN_VERSION;
         NonFinalPluginExpiry.verifyRetirementAge();
@@ -183,7 +180,6 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
     protected abstract BaseExtension createExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
@@ -198,7 +194,6 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
     @NonNull
     protected abstract VariantFactory createVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig);
 
@@ -291,7 +286,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
             PluginDelegate<E> delegate =
                     new PluginDelegate<>(
                             project.getPath(),
-                            instantiator,
+                            project.getObjects(),
                             project.getExtensions(),
                             project.getConfigurations(),
                             projectWrapper,
@@ -446,11 +441,12 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
     }
 
     private void configureExtension() {
+        ObjectFactory objectFactory = project.getObjects();
         final NamedDomainObjectContainer<BuildType> buildTypeContainer =
                 project.container(
                         BuildType.class,
                         new BuildTypeFactory(
-                                instantiator,
+                                objectFactory,
                                 project,
                                 extraModelInfo.getSyncIssueHandler(),
                                 extraModelInfo.getDeprecationReporter()));
@@ -458,12 +454,12 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                 project.container(
                         ProductFlavor.class,
                         new ProductFlavorFactory(
-                                instantiator,
+                                objectFactory,
                                 project,
                                 project.getLogger(),
                                 extraModelInfo.getDeprecationReporter()));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
-                project.container(SigningConfig.class, new SigningConfigFactory(instantiator));
+                project.container(SigningConfig.class, new SigningConfigFactory(objectFactory));
 
         final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs =
                 project.container(BaseVariantOutput.class);
@@ -474,7 +470,6 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                 createExtension(
                         project,
                         projectOptions,
-                        instantiator,
                         androidBuilder,
                         sdkHandler,
                         buildTypeContainer,
@@ -506,7 +501,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                         registry,
                         buildCache);
 
-        variantFactory = createVariantFactory(globalScope, instantiator, androidBuilder, extension);
+        variantFactory = createVariantFactory(globalScope, androidBuilder, extension);
 
         taskManager =
                 createTaskManager(
@@ -618,6 +613,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                                 () -> createAndroidTasks(false)));
     }
 
+
     private void checkGradleVersion() {
         String currentVersion = project.getGradle().getGradleVersion();
         if (GRADLE_MIN_VERSION.compareTo(currentVersion) > 0) {
@@ -707,7 +703,6 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                                     androidBuilder,
                                     extension,
                                     variantFactory,
-                                    instantiator,
                                     project.getObjects());
                     for (VariantScope variantScope : variantManager.getVariantScopes()) {
                         BaseVariantData variantData = variantScope.getVariantData();

@@ -25,6 +25,7 @@ import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.LibraryVariantData;
 import com.android.builder.core.AndroidBuilder;
+import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.bundling.Zip;
@@ -45,6 +46,7 @@ public class LibraryVariantImpl extends BaseVariantImpl implements LibraryVarian
     @Nullable
     private UnitTestVariant unitTestVariant = null;
 
+    @Inject
     public LibraryVariantImpl(
             @NonNull LibraryVariantData variantData,
             @NonNull ObjectFactory objectFactory,

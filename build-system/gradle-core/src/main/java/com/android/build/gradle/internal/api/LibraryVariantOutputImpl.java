@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.tasks.AndroidZip;
 import com.android.ide.common.build.ApkData;
 import java.io.File;
+import javax.inject.Inject;
 import org.gradle.api.tasks.bundling.Zip;
 
 /**
@@ -33,6 +34,7 @@ import org.gradle.api.tasks.bundling.Zip;
  */
 public class LibraryVariantOutputImpl extends BaseVariantOutputImpl implements LibraryVariantOutput {
 
+    @Inject
     public LibraryVariantOutputImpl(
             @NonNull ApkData apkData, @NonNull TaskContainer taskContainer) {
         super(apkData, taskContainer);

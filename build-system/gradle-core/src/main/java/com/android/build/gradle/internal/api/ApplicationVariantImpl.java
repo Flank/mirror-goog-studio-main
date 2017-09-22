@@ -25,6 +25,7 @@ import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.ApplicationVariantData;
 import com.android.builder.core.AndroidBuilder;
+import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.model.ObjectFactory;
 
@@ -46,6 +47,7 @@ public class ApplicationVariantImpl extends ApkVariantImpl implements Applicatio
     @Nullable
     private UnitTestVariant unitTestVariant = null;
 
+    @Inject
     public ApplicationVariantImpl(
             @NonNull ApplicationVariantData variantData,
             @NonNull ObjectFactory objectFactory,

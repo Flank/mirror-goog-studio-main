@@ -47,8 +47,8 @@ import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.logging.Logger
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.plugins.ExtensionContainer
-import org.gradle.internal.reflect.Instantiator
 import java.io.File
 
 /**
@@ -76,7 +76,7 @@ interface TypedPluginDelegate<E: BaseExtension2> {
  */
 class PluginDelegate<out E: BaseExtension2>(
         projectPath: String,
-        private val instantiator: Instantiator,
+        private val objectFactory: ObjectFactory,
         private val extensionContainer: ExtensionContainer,
         private val configurationContainer: ConfigurationContainer,
         private val containerFactory: ContainerFactory,
@@ -118,7 +118,7 @@ class PluginDelegate<out E: BaseExtension2>(
                 configurationContainer,
                 filesProvider,
                 containerFactory,
-                instantiator,
+                objectFactory,
                 deprecationReporter,
                 issueReporter,
                 logger)

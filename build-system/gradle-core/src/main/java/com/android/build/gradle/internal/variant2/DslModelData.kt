@@ -34,9 +34,9 @@ import com.android.build.gradle.internal.api.dsl.sealing.SealableNamedDomainObje
 import com.android.build.gradle.internal.api.sourcesets.AndroidSourceSetFactory
 import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.utils.StringHelper
@@ -47,7 +47,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.artifacts.Dependency
 import org.gradle.api.logging.Logger
-import org.gradle.internal.reflect.Instantiator
+import org.gradle.api.model.ObjectFactory
 import java.util.function.BinaryOperator
 import java.util.stream.Collectors
 
@@ -90,7 +90,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
         private val configurationContainer: ConfigurationContainer,
         filesProvider: FilesProvider,
         containerFactory: ContainerFactory,
-        instantiator: Instantiator, //FIXME replace with ObjectFactory in 4.2
+        objectFactory: ObjectFactory,
         private val deprecationReporter: DeprecationReporter,
         private val issueReporter: EvalIssueReporter,
         private val logger: Logger): DslModelData, Sealable {
@@ -105,7 +105,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
     internal val _productFlavors: NamedDomainObjectContainer<ProductFlavorImpl> =
             containerFactory.createContainer(
                     ProductFlavorImpl::class.java,
-                    ProductFlavorFactory(instantiator, deprecationReporter, issueReporter))
+                    ProductFlavorFactory(objectFactory, deprecationReporter, issueReporter))
 
     // sealable container for product flavors
     override val productFlavors: SealableNamedDomainObjectContainer<ProductFlavor, ProductFlavorImpl> =
@@ -118,7 +118,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
     internal val _buildTypes: NamedDomainObjectContainer<BuildTypeImpl> =
             containerFactory.createContainer(
                     BuildTypeImpl::class.java,
-                    BuildTypeFactory(instantiator, deprecationReporter, issueReporter))
+                    BuildTypeFactory(objectFactory, deprecationReporter, issueReporter))
 
     // sealable container for build type
     override val buildTypes: SealableNamedDomainObjectContainer<BuildType, BuildTypeImpl> =
@@ -131,7 +131,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
     internal val _signingConfigs: NamedDomainObjectContainer<SigningConfigImpl> =
             containerFactory.createContainer(
                     SigningConfigImpl::class.java,
-                    SigningConfigFactory(instantiator, deprecationReporter, issueReporter))
+                    SigningConfigFactory(objectFactory, deprecationReporter, issueReporter))
 
     // sealable container for signing config
     override val signingConfigs: SealableNamedDomainObjectContainer<SigningConfig, SigningConfigImpl> =
@@ -178,7 +178,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 AndroidSourceSetFactory(
                         filesProvider,
                         mainVariantType == VariantType.LIBRARY,
-                        instantiator,
+                        objectFactory,
                         deprecationReporter,
                         issueReporter))
 

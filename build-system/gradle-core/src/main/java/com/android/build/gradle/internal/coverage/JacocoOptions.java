@@ -16,12 +16,16 @@
 
 package com.android.build.gradle.internal.coverage;
 
+import javax.inject.Inject;
 import org.gradle.api.logging.Logging;
 
 /**
  * DSL object for configuring JaCoCo settings.
  */
 public class JacocoOptions {
+
+    @Inject
+    public JacocoOptions() {}
 
     @SuppressWarnings("MethodMayBeStatic")
     @Deprecated

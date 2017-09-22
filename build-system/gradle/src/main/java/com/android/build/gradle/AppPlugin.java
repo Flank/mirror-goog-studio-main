@@ -41,14 +41,13 @@ import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.internal.reflect.Instantiator;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'application' projects. */
 public class AppPlugin extends BasePlugin<AppExtensionImpl> implements Plugin<Project> {
     @Inject
-    public AppPlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
-        super(instantiator, registry);
+    public AppPlugin(ToolingModelBuilderRegistry registry) {
+        super(registry);
     }
 
     @Override
@@ -61,7 +60,6 @@ public class AppPlugin extends BasePlugin<AppExtensionImpl> implements Plugin<Pr
     protected BaseExtension createExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
@@ -75,7 +73,6 @@ public class AppPlugin extends BasePlugin<AppExtensionImpl> implements Plugin<Pr
                         AppExtension.class,
                         project,
                         projectOptions,
-                        instantiator,
                         androidBuilder,
                         sdkHandler,
                         buildTypeContainer,
@@ -125,11 +122,9 @@ public class AppPlugin extends BasePlugin<AppExtensionImpl> implements Plugin<Pr
     @Override
     protected ApplicationVariantFactory createVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig) {
-        return new ApplicationVariantFactory(
-                globalScope, instantiator, androidBuilder, androidConfig);
+        return new ApplicationVariantFactory(globalScope, androidBuilder, androidConfig);
     }
 
 

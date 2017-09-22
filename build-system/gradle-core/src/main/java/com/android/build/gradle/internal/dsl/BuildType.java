@@ -35,9 +35,10 @@ import com.google.common.collect.Iterables;
 import java.io.Serializable;
 import java.util.List;
 import java.util.function.Supplier;
+import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.internal.reflect.Instantiator;
+import org.gradle.api.model.ObjectFactory;
 
 /** DSL object to configure build types. */
 @SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue", "Convert2Lambda"})
@@ -87,26 +88,28 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     private Boolean crunchPngs;
     private boolean isCrunchPngsDefault = true;
 
+    @Inject
     public BuildType(
             @NonNull String name,
             @NonNull Project project,
-            @NonNull Instantiator instantiator,
+            @NonNull ObjectFactory objectFactory,
             @NonNull EvalIssueReporter issueReporter,
             @NonNull DeprecationReporter deprecationReporter) {
         super(name);
         this.project = project;
         this.issueReporter = issueReporter;
         this.deprecationReporter = deprecationReporter;
-        jackOptions = instantiator.newInstance(JackOptions.class, deprecationReporter);
+
+        jackOptions = objectFactory.newInstance(JackOptions.class, deprecationReporter);
         javaCompileOptions =
-                instantiator.newInstance(
+                objectFactory.newInstance(
                         com.android.build.gradle.internal.dsl.JavaCompileOptions.class,
-                        instantiator);
-        shaderOptions = instantiator.newInstance(ShaderOptions.class);
-        ndkConfig = instantiator.newInstance(NdkOptions.class);
-        externalNativeBuildOptions = instantiator.newInstance(ExternalNativeBuildOptions.class,
-                instantiator);
-        postprocessingOptions = instantiator.newInstance(PostprocessingOptions.class, project);
+                        objectFactory);
+        shaderOptions = objectFactory.newInstance(ShaderOptions.class);
+        ndkConfig = objectFactory.newInstance(NdkOptions.class);
+        externalNativeBuildOptions =
+                objectFactory.newInstance(ExternalNativeBuildOptions.class, objectFactory);
+        postprocessingOptions = objectFactory.newInstance(PostprocessingOptions.class, project);
     }
 
     @VisibleForTesting

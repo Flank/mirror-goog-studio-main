@@ -19,18 +19,18 @@ package com.android.build.gradle.internal.api.sourcesets
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.internal.reflect.Instantiator
+import org.gradle.api.model.ObjectFactory
 
 class AndroidSourceSetFactory(
             private val filesProvider: FilesProvider,
             private val publishPackage: Boolean,
-            private val instantiator: Instantiator,
+            private val objectFactory: ObjectFactory,
             private val deprecationReporter: DeprecationReporter,
             private val issueReporter: EvalIssueReporter)
         : NamedDomainObjectFactory<DefaultAndroidSourceSet> {
 
     override fun create(name: String): DefaultAndroidSourceSet {
-        return instantiator.newInstance(DefaultAndroidSourceSet::class.java,
+        return objectFactory.newInstance(DefaultAndroidSourceSet::class.java,
                 name, filesProvider, publishPackage, deprecationReporter, issueReporter)
     }
 }

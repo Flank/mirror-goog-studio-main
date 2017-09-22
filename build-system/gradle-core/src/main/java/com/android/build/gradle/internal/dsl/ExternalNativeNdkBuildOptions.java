@@ -22,6 +22,7 @@ import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 
 /**
  * DSL object for per-variant ndk-build options, such as ndk-build arguments and compiler flags.
@@ -40,6 +41,9 @@ public class ExternalNativeNdkBuildOptions implements CoreExternalNativeNdkBuild
     private final Set<String> abiFilters = Sets.newHashSet();
     @NonNull
     private final Set<String> targets = Sets.newHashSet();
+
+    @Inject
+    public ExternalNativeNdkBuildOptions() {}
 
     /** {@inheritDoc} */
     @NonNull

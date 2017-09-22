@@ -29,6 +29,7 @@ import com.google.common.collect.Lists;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.Project;
 
 /** DSL object for configuring postprocessing: removing dead code, obfuscating etc. */
@@ -50,6 +51,7 @@ public class PostprocessingOptions {
 
     @Nullable private CodeShrinker codeShrinker;
 
+    @Inject
     public PostprocessingOptions(@NonNull Project project) {
         this(
                 project,

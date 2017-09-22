@@ -22,9 +22,10 @@ import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.builder.model.BaseConfig;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
-import org.gradle.internal.reflect.Instantiator;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * Encapsulates all product flavors properties for this project.
@@ -59,13 +60,14 @@ import org.gradle.internal.reflect.Instantiator;
  */
 public class ProductFlavor extends BaseFlavor {
 
+    @Inject
     public ProductFlavor(
             @NonNull String name,
             @NonNull Project project,
-            @NonNull Instantiator instantiator,
+            @NonNull ObjectFactory objectFactory,
             @NonNull Logger logger,
             @NonNull DeprecationReporter deprecationReporter) {
-        super(name, project, instantiator, logger, deprecationReporter);
+        super(name, project, objectFactory, logger, deprecationReporter);
     }
 
     private ImmutableList<String> matchingFallbacks;

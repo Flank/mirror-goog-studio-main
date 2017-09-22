@@ -18,9 +18,10 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
+import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
-import org.gradle.internal.reflect.Instantiator;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * DSL object to configure external native builds using <a href="https://cmake.org/">CMake</a> or <a
@@ -48,9 +49,10 @@ public class ExternalNativeBuild implements CoreExternalNativeBuild {
     private NdkBuildOptions ndkBuild;
     private CmakeOptions cmake;
 
-    public ExternalNativeBuild(@NonNull Instantiator instantiator, @NonNull Project project) {
-        ndkBuild = instantiator.newInstance(NdkBuildOptions.class, project);
-        cmake = instantiator.newInstance(CmakeOptions.class, project);
+    @Inject
+    public ExternalNativeBuild(@NonNull ObjectFactory objectFactory, @NonNull Project project) {
+        ndkBuild = objectFactory.newInstance(NdkBuildOptions.class, project);
+        cmake = objectFactory.newInstance(CmakeOptions.class, project);
     }
 
     /**

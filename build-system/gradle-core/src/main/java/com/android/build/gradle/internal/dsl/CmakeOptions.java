@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.model.CoreCmakeOptions;
 import java.io.File;
+import javax.inject.Inject;
 import org.gradle.api.Project;
 
 /**
@@ -47,6 +48,7 @@ public class CmakeOptions implements CoreCmakeOptions {
     // CMake version to use. If it's null, it'll default to the CMake shipped with the SDK
     @Nullable private String version;
 
+    @Inject
     public CmakeOptions(@NonNull Project project) {
         this.project = project;
     }

@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.dsl;
 
+import javax.inject.Inject;
+
 /**
  * DSL object for configuring databinding options.
  */
@@ -24,6 +26,9 @@ public class DataBindingOptions implements com.android.builder.model.DataBinding
     private boolean enabled = false;
     private boolean addDefaultAdapters = true;
     private boolean enabledForTests = false;
+
+    @Inject
+    public DataBindingOptions() {}
 
     /**
      * The version of data binding to use.

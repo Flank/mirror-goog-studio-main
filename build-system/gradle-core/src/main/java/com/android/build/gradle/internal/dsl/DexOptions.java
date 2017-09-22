@@ -20,6 +20,7 @@ import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
 import com.android.builder.core.DefaultDexOptions;
 import java.util.Arrays;
+import javax.inject.Inject;
 
 /**
  * DSL object for configuring dx options.
@@ -29,6 +30,7 @@ public class DexOptions extends DefaultDexOptions {
 
     private final DeprecationReporter deprecationReporter;
 
+    @Inject
     public DexOptions(DeprecationReporter deprecationReporter) {
         this.deprecationReporter = deprecationReporter;
     }

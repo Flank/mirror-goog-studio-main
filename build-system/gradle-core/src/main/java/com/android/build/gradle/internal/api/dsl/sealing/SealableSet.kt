@@ -48,7 +48,7 @@ class SealableSet<T> private constructor(
         fun <T> wrap(wrappedList: MutableSet<T>, errorReporter: EvalIssueReporter) =
                 SealableSet(
                         wrappedList,
-                        { throw RuntimeException("Calling instantiator on a WrappedSealableSet") },
+                        { throw RuntimeException("Calling objectFactory on a WrappedSealableSet") },
                         { collection -> collection },
                         errorReporter)
 

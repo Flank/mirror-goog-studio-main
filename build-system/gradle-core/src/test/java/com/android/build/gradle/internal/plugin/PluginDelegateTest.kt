@@ -23,8 +23,8 @@ import com.android.build.gradle.internal.fixtures.FakeConfigurationContainer
 import com.android.build.gradle.internal.fixtures.FakeContainerFactory
 import com.android.build.gradle.internal.fixtures.FakeExtensionContainer
 import com.android.build.gradle.internal.fixtures.FakeFilesProvider
-import com.android.build.gradle.internal.fixtures.FakeInstantiator
 import com.android.build.gradle.internal.fixtures.FakeLogger
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.buildTypes
 import com.android.build.gradle.internal.fixtures.configure
 import com.android.build.gradle.internal.fixtures.getAndroidTestVariant
@@ -33,7 +33,6 @@ import com.android.build.gradle.internal.fixtures.getLibVariant
 import com.android.build.gradle.internal.fixtures.getNamed
 import com.android.build.gradle.internal.fixtures.getUnitTestVariant
 import com.android.build.gradle.options.ProjectOptions
-import com.android.builder.core.BuilderConstants
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth
 import org.junit.Test
@@ -41,7 +40,7 @@ import org.junit.Test
 /** Tests for the [PluginDelegate] */
 class PluginDelegateTest {
 
-    private var fakeInstantiator = FakeInstantiator()
+    private var fakeObjectFactory = FakeObjectFactory()
 
     @Test
     fun `basic variants for library plugin`() {
@@ -175,8 +174,8 @@ class PluginDelegateTest {
 
         return PluginDelegate<T>(
                 ":fake",
-                fakeInstantiator,
-                FakeExtensionContainer(fakeInstantiator),
+                fakeObjectFactory,
+                FakeExtensionContainer(fakeObjectFactory),
                 FakeConfigurationContainer(),
                 FakeContainerFactory(),
                 FakeFilesProvider(),

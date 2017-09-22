@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.model.CoreNdkBuildOptions;
 import java.io.File;
+import javax.inject.Inject;
 import org.gradle.api.Project;
 
 /**
@@ -44,6 +45,7 @@ public class NdkBuildOptions implements CoreNdkBuildOptions {
 
     @Nullable private File buildStagingDirectory;
 
+    @Inject
     public NdkBuildOptions(@NonNull Project project) {
         this.project = project;
     }

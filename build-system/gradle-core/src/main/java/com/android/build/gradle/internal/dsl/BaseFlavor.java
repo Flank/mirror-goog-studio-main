@@ -34,7 +34,7 @@ import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
-import org.gradle.internal.reflect.Instantiator;
+import org.gradle.api.model.ObjectFactory;
 
 /** Base DSL object used to configure product flavors. */
 public abstract class BaseFlavor extends DefaultProductFlavor implements CoreProductFlavor {
@@ -58,19 +58,19 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
     public BaseFlavor(
             @NonNull String name,
             @NonNull Project project,
-            @NonNull Instantiator instantiator,
+            @NonNull ObjectFactory objectFactory,
             @NonNull Logger logger,
             @NonNull DeprecationReporter deprecationReporter) {
-        super(name, instantiator.newInstance(VectorDrawablesOptions.class));
+        super(name, objectFactory.newInstance(VectorDrawablesOptions.class));
         this.project = project;
         this.logger = logger;
         this.deprecationReporter = deprecationReporter;
-        ndkConfig = instantiator.newInstance(NdkOptions.class);
+        ndkConfig = objectFactory.newInstance(NdkOptions.class);
         externalNativeBuildOptions =
-                instantiator.newInstance(ExternalNativeBuildOptions.class, instantiator);
-        jackOptions = instantiator.newInstance(JackOptions.class, deprecationReporter);
-        javaCompileOptions = instantiator.newInstance(JavaCompileOptions.class, instantiator);
-        shaderOptions = instantiator.newInstance(ShaderOptions.class);
+                objectFactory.newInstance(ExternalNativeBuildOptions.class, objectFactory);
+        jackOptions = objectFactory.newInstance(JackOptions.class, deprecationReporter);
+        javaCompileOptions = objectFactory.newInstance(JavaCompileOptions.class, objectFactory);
+        shaderOptions = objectFactory.newInstance(ShaderOptions.class);
     }
 
     /** Encapsulates per-variant configurations for the NDK, such as ABI filters. */

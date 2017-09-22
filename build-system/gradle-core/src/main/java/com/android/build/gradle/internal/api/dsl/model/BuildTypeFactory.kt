@@ -19,10 +19,10 @@ package com.android.build.gradle.internal.api.dsl.model
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.internal.reflect.Instantiator
+import org.gradle.api.model.ObjectFactory
 
 class BuildTypeFactory(
-            private val instantiator: Instantiator,
+            private val objectFactory: ObjectFactory,
             private val deprecationReporter: DeprecationReporter,
             private val issueReporter: EvalIssueReporter)
         : NamedDomainObjectFactory<BuildTypeImpl> {
@@ -33,7 +33,7 @@ class BuildTypeFactory(
                 deprecationReporter,
                 issueReporter)
 
-        return instantiator.newInstance(BuildTypeImpl::class.java,
+        return objectFactory.newInstance(BuildTypeImpl::class.java,
                 name,
                 VariantPropertiesImpl(issueReporter),
                 BuildTypeOrProductFlavorImpl(deprecationReporter, issueReporter, { buildTypeOrVariant.postprocessing }),
