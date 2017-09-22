@@ -4,6 +4,8 @@ apply plugin: 'jacoco-tools-base'
 apply plugin: 'clone-artifacts'
 apply plugin: 'antlr'
 
+//apply plugin: 'java-gradle-plugin'
+
 configurations {
     provided
     includeInJar

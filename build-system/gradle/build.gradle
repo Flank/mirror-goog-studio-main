@@ -7,6 +7,8 @@ apply plugin: 'idea'
 apply plugin: 'jacoco-tools-base'
 apply plugin: 'license-report'
 
+//apply plugin: 'java-gradle-plugin'
+
 licenseReport {
     whiteList = ['org.jetbrains.trove4j:trove4j:20160824']
 }

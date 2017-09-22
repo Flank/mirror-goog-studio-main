@@ -55,6 +55,7 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.EmptyFileVisitor;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.FileTree;
 import org.gradle.api.file.FileVisitDetails;
 import org.gradle.api.file.RelativePath;
 import org.gradle.api.logging.LogLevel;
@@ -67,6 +68,7 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 
 /**
@@ -101,6 +103,14 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     public void setVariant(BaseVariantData variant) {
         this.variant = variant;
+    }
+
+    @Override
+    @PathSensitive(PathSensitivity.NAME_ONLY)
+    @InputFiles
+    @SkipWhenEmpty
+    public FileTree getSource() {
+        return super.getSource();
     }
 
     /** Boot classpath: typically android.jar */
