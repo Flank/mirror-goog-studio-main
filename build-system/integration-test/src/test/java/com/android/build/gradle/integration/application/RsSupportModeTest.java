@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.JAVA;
-import static org.junit.Assert.assertTrue;
 
 import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
@@ -29,7 +29,6 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.builder.model.level2.DependencyGraphs;
 import com.android.builder.model.level2.Library;
-import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -44,7 +43,6 @@ public class RsSupportModeTest {
     public static GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("rsSupportMode")
-                    .addGradleProperties("android.useDeprecatedNdk=true")
                     .create();
 
     private static ModelContainer<AndroidProject> model;
@@ -74,7 +72,7 @@ public class RsSupportModeTest {
         DependencyGraphs graph = mainArtifact.getDependencyGraphs();
 
         List<Library> libraries = helper.on(graph).withType(JAVA).asLibraries();
-        Truth.assertThat(libraries).isNotEmpty();
+        assertThat(libraries).isNotEmpty();
 
         boolean foundSupportJar = false;
         for (Library lib : libraries) {
@@ -85,6 +83,8 @@ public class RsSupportModeTest {
             }
         }
 
-        assertTrue("Found suppport jar check", foundSupportJar);
+        assertThat(foundSupportJar).isTrue();
+        assertThat(project.getApk(GradleTestProject.ApkType.DEBUG, "x86"))
+                .containsClass("Landroid/support/v8/renderscript/RenderScript;");
     }
 }
