@@ -48,7 +48,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                 return;
             }
 
-            OutputMode outputMode = isIncremental ? OutputMode.FilePerClass : OutputMode.Indexed;
+            OutputMode outputMode = isIncremental ? OutputMode.FilePerInputClass : OutputMode.Indexed;
             D8Command.Builder builder =
                     D8Command.builder()
                             .setMode(compilationMode)

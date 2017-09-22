@@ -235,6 +235,7 @@ public class JarContentsTest {
                 "com/android/tools/",
                 "com/android/tools/aapt2/",
                 "com/android/tools/r8/",
+                "com/android/tools/r8/annotations/",
                 "com/android/tools/r8/bisect/",
                 "com/android/tools/r8/code/",
                 "com/android/tools/r8/com/",
