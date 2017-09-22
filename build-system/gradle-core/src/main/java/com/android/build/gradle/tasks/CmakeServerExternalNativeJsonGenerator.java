@@ -286,8 +286,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         handshakeRequest.cookie = "gradle-cmake-cookie";
         handshakeRequest.generator = getGenerator(getBuildArguments());
         handshakeRequest.protocolVersion = cmakeServerProtocolVersion;
-        handshakeRequest.buildDirectory = outputDir.getParentFile().getPath();
-        handshakeRequest.sourceDirectory = getMakefile().getParentFile().getPath();
+        handshakeRequest.buildDirectory = normalizeFilePath(outputDir.getParentFile());
+        handshakeRequest.sourceDirectory = normalizeFilePath(getMakefile().getParentFile());
 
         return handshakeRequest;
     }
@@ -625,9 +625,10 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
         // Include the original android toolchain
         tempAndroidToolchain.append(
-                String.format("include(%s)\n", getToolChainFile().getAbsolutePath()));
+                String.format("include(%s)", normalizeFilePath(getToolChainFile()))
+                        + System.lineSeparator());
         // Overwrite the CMAKE_SYSTEM_VERSION to 1 so we skip CMake's Android toolchain.
-        tempAndroidToolchain.append("set(CMAKE_SYSTEM_VERSION 1)\n");
+        tempAndroidToolchain.append("set(CMAKE_SYSTEM_VERSION 1)" + System.lineSeparator());
 
         File toolchainFile = getTempToolchainFile();
         try {
@@ -650,5 +651,21 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     private File getTempToolchainFile() {
         String tempAndroidToolchainFile = "pre-ndk-r15-wrapper-android.toolchain.cmake";
         return new File(getObjFolder(), tempAndroidToolchainFile);
+    }
+
+    /**
+     * Returns the normalized path for the given file. The normalized path for Unix is the default
+     * string returned by getPath. For Microsoft Windows, getPath returns a path with "\\" (example:
+     * "C:\\Android\\Sdk") while Vanilla-CMake prefers a forward slash (example "C:/Android/Sdk"),
+     * without the forward slash, CMake would mix backward slash and forward slash causing compiler
+     * issues. This function replaces the backward slashes with forward slashes for Microsoft
+     * Windows.
+     */
+    @NonNull
+    private static String normalizeFilePath(@NonNull File file) {
+        if (isWindows()) {
+            return (file.getPath().replace("\\", "/"));
+        }
+        return file.getPath();
     }
 }

@@ -57,6 +57,8 @@ import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 
@@ -82,6 +84,9 @@ public class SdkHandler {
     private File cmakePathInLocalProp = null;
     private SdkLibData sdkLibData = SdkLibData.dontDownload();
     private boolean isRegularSdk = true;
+
+    // Regex pattern to find quotes
+    private static final Pattern PATTERN_FIND_QUOTES = Pattern.compile("\"([^\"]*)\"");
 
     public static void setTestSdkFolder(File testSdkFolder) {
         sTestSdkFolder = testSdkFolder;
@@ -342,7 +347,17 @@ public class SdkHandler {
         // cmake folder.
         String cmakeProperty = properties.getProperty("cmake.dir");
         if (cmakeProperty != null) {
-            cmakePathInLocalProp = new File(cmakeProperty);
+            // cmake.dir can be specified one of two ways
+            // 1. cmake.dir="value"
+            // 2. cmake.dir=value
+            // Inorder to create a file, we just need the value without the quotes, so if the CMake
+            // directory's value is within quotes, extract that value.
+            Matcher m = PATTERN_FIND_QUOTES.matcher(cmakeProperty);
+            if (m.find()) {
+                cmakePathInLocalProp = new File(m.group(1));
+            } else {
+                cmakePathInLocalProp = new File(cmakeProperty);
+            }
         }
     }
 
