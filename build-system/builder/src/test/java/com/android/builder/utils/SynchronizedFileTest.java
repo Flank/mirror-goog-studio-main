@@ -80,11 +80,6 @@ public class SynchronizedFileTest {
             }
         }
 
-        @After
-        public void tearDown() throws IOException {
-            FileUtils.deletePath(testDir.getRoot());
-        }
-
         @Test
         public void testRead() throws Exception {
             boolean fileExists = synchronizedFile.read(File::exists);
@@ -334,11 +329,6 @@ public class SynchronizedFileTest {
         @Before
         public void setUp() throws IOException {
             fileToSynchronize = testDir.newFile();
-        }
-
-        @After
-        public void tearDown() throws IOException {
-            FileUtils.deletePath(testDir.getRoot());
         }
 
         @Test

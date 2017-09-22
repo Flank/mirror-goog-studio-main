@@ -48,11 +48,6 @@ public class ReadWriteProcessLockTest {
         WRITE
     }
 
-    @After
-    public void tearDown() throws IOException {
-        FileUtils.deletePath(testFolder.getRoot());
-    }
-
     @Test
     public void testLockFileBeforeAndAfter() throws IOException {
         // Case 1: lock file already existed, and is not deleted
@@ -126,7 +121,6 @@ public class ReadWriteProcessLockTest {
 
         // Check that the lock file's path is normalized
         lockFile = FileUtils.join(testFolder.getRoot(), "dir", "..", "lockfile");
-        assertThat(lockFile).doesNotExist();
         File normalizedLockFile =
                 ReadWriteProcessLock.createAndNormalizeLockFile(lockFile.toPath()).toFile();
         assertThat(normalizedLockFile).exists();
