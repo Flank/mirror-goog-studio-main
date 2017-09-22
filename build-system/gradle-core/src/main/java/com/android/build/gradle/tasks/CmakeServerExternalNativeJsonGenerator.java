@@ -559,8 +559,12 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             }
         }
 
-        toolchainValue.cCompilerExecutable = cCompilerExecutable;
-        toolchainValue.cppCompilerExecutable = cppCompilerExecutable;
+        if (cCompilerExecutable != null) {
+            toolchainValue.cCompilerExecutable = cCompilerExecutable;
+        }
+        if (cppCompilerExecutable != null) {
+            toolchainValue.cppCompilerExecutable = cppCompilerExecutable;
+        }
 
         int toolchainHash = CmakeUtils.getToolchainHash(toolchainValue);
         String toolchainHashString = UnsignedInts.toString(toolchainHash);
