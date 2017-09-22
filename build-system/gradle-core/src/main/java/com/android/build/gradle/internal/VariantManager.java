@@ -980,8 +980,10 @@ public class VariantManager implements VariantModel {
             final ConfigurableFileCollection fileCollection = project.files(renderScriptSupportJar);
             project.getDependencies()
                     .add(variantDep.getCompileClasspath().getName(), fileCollection);
-            project.getDependencies()
-                    .add(variantDep.getRuntimeClasspath().getName(), fileCollection);
+            if (variantType == VariantType.DEFAULT || variantType == VariantType.FEATURE) {
+                project.getDependencies()
+                        .add(variantDep.getRuntimeClasspath().getName(), fileCollection);
+            }
         }
 
 
