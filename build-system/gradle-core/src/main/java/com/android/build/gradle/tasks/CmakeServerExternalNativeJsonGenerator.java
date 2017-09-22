@@ -412,8 +412,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 getNativeToolchains(
                         abi,
                         cmakeServer,
-                        nativeBuildConfigValue.cFileExtensions,
-                        nativeBuildConfigValue.cppFileExtensions);
+                        nativeBuildConfigValue.cppFileExtensions,
+                        nativeBuildConfigValue.cFileExtensions);
 
         String toolchainHashString = getOnlyToolchainName(nativeBuildConfigValue.toolchains);
 
@@ -560,8 +560,12 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             }
         }
 
-        toolchainValue.cCompilerExecutable = cCompilerExecutable;
-        toolchainValue.cppCompilerExecutable = cppCompilerExecutable;
+        if (cCompilerExecutable != null) {
+            toolchainValue.cCompilerExecutable = cCompilerExecutable;
+        }
+        if (cppCompilerExecutable != null) {
+            toolchainValue.cppCompilerExecutable = cppCompilerExecutable;
+        }
 
         int toolchainHash = CmakeUtils.getToolchainHash(toolchainValue);
         String toolchainHashString = UnsignedInts.toString(toolchainHash);

@@ -38,6 +38,7 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.NativeAndroidProject;
 import com.android.builder.model.NativeArtifact;
 import com.android.builder.model.NativeSettings;
+import com.android.builder.model.NativeToolchain;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -578,6 +579,14 @@ public class NativeModelTest {
 
         for (File file : model.getBuildFiles()) {
             assertThat(file).isFile();
+        }
+
+        for (NativeToolchain nativeToolchain : model.getToolChains()) {
+            assertThat(nativeToolchain.getName()).isNotNull();
+            boolean compilerExecPresent =
+                    (nativeToolchain.getCCompilerExecutable() != null
+                            || nativeToolchain.getCppCompilerExecutable() != null);
+            assertThat(compilerExecPresent).isTrue();
         }
 
         for (NativeArtifact artifact : model.getArtifacts()) {
