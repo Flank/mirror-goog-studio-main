@@ -33,10 +33,9 @@ import com.intellij.psi.PsiMethodCallExpression;
 import java.util.Collections;
 import java.util.List;
 
-/** Makes sure that detectors are called from lint testing infrastructure */
+/** Makes sure that legacy PSI detectors are called from lint testing infrastructure */
 @SuppressWarnings("MethodMayBeStatic")
 public class CompatibilityCheckTest extends LintDetectorTest { // NOTE: Not AbstractCheckTest
-    /** Mismatched style and class names */
     public static final Issue TEST_ISSUE = Issue.create(
             "CompatibilityCheckTest",
             "Not applicable",
@@ -60,7 +59,7 @@ public class CompatibilityCheckTest extends LintDetectorTest { // NOTE: Not Abst
         return Collections.singletonList(TEST_ISSUE);
     }
 
-    public void test() throws Exception {
+    public void testInvoked() throws Exception {
         String expected = ""
                 + "src/test/pkg/Test.java:5: Warning: Detector appears to be used [CompatibilityCheckTest]\n"
                 + "    public void test() { foo(); }\n"
