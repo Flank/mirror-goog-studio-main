@@ -266,11 +266,11 @@ baseline.xml: Information: 1 error was filtered out because it is listed in the 
 project.xml:5: Error: test.jar (relative to ROOT) does not exist [LintError]
 <classpath jar="test.jar" />
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-res/values/strings.xml:4: Error: string1 has already been defined in this folder [DuplicateDefinition]
+res${File.separatorChar}values${File.separatorChar}strings.xml:4: Error: string1 has already been defined in this folder [DuplicateDefinition]
     <string name="string1">String 2</string>
             ~~~~~~~~~~~~~~
-    res/values/strings.xml:3: Previously defined here
-../Library/AndroidManifest.xml:9: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]
+    res${File.separatorChar}values${File.separatorChar}strings.xml:3: Previously defined here
+..${File.separatorChar}Library${File.separatorChar}AndroidManifest.xml:9: Error: Permission name SEND_SMS is not unique (appears in both foo.permission.SEND_SMS and bar.permission.SEND_SMS) [UniquePermission]
     <permission android:name="bar.permission.SEND_SMS"
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     AndroidManifest.xml:9: Previous permission here

@@ -80,7 +80,7 @@ public class CmakeVanillaBasicProjectTest {
                         + "                cppFlags.addAll(\"-DTEST_CPP_FLAG\")\n"
                         + "                targets.addAll(\"hello-jni\")\n"
                         + "                arguments \"-DCMAKE_PROGRAM_PATH="
-                        + cmakeBinFolder.getAbsolutePath()
+                        + cmakeBinFolder.getAbsolutePath().replace("\\", "\\\\")
                         + "\"\n"
                         + "              }\n"
                         + "          }\n"

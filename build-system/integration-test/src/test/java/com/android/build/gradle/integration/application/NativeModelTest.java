@@ -482,14 +482,16 @@ public class NativeModelTest {
             }
 
             this.buildGradle =
-                    this.buildGradle.replace("TEST_NDK_PATH", TestUtils.getNdk().getAbsolutePath());
+                    this.buildGradle.replace("TEST_NDK_PATH",
+                            escapeWindowsCharacters(TestUtils.getNdk().getAbsolutePath()));
             // Set the correct CMAKE_PROGRAM_PATH so CMake can look for ninja at the right path.
             if (buildGradle.contains("TEST_PATH_TO_SEARCH")) {
                 File cmakeBinFolder =
                         new File(GradleTestProject.getCmakeVersionFolder(cmakeVersion), "bin");
                 this.buildGradle =
                         this.buildGradle.replace(
-                                "TEST_PATH_TO_SEARCH", cmakeBinFolder.getAbsolutePath());
+                                "TEST_PATH_TO_SEARCH",
+                                escapeWindowsCharacters(cmakeBinFolder.getAbsolutePath()));
             }
 
             GradleTestProject project =
@@ -554,7 +556,8 @@ public class NativeModelTest {
             File tempOutputDirectory = temporaryFolder.newFolder("absolute_path");
             config.buildGradle =
                     config.buildGradle.replace(
-                            "ABSOLUTE_PATH", tempOutputDirectory.getAbsolutePath());
+                            "ABSOLUTE_PATH",
+                            escapeWindowsCharacters(tempOutputDirectory.getAbsolutePath()));
             config.nativeBuildOutputPath = tempOutputDirectory.getAbsolutePath();
         }
 
@@ -686,7 +689,7 @@ public class NativeModelTest {
     }
 
     static NativeBuildConfigValue getNativeBuildConfigValue(File json)
-            throws FileNotFoundException {
+            throws IOException {
         Gson gson =
                 new GsonBuilder()
                         .registerTypeAdapter(
@@ -703,8 +706,9 @@ public class NativeModelTest {
                                     }
                                 })
                         .create();
-        return gson.fromJson(new FileReader(json),
-                NativeBuildConfigValue.class);
+        try (FileReader fr = new FileReader(json)) {
+            return gson.fromJson(fr, NativeBuildConfigValue.class);
+        }
     }
 
     /**
@@ -906,5 +910,8 @@ public class NativeModelTest {
         }
 
         return outputDir;
+    }
+    private static String escapeWindowsCharacters(String path) {
+        return path.replace("\\", "\\\\");
     }
 }

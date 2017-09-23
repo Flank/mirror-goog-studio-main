@@ -400,7 +400,8 @@ public class AvdManagerTest extends TestCase {
         Map<String, String> hardwareProperties = AvdManager.parseIniFile(new FileOpFileWrapper(
           new File(newFolder, "hardware-qemu.ini"), mFileOp, false), null);
         assertEquals(newName, hardwareProperties.get("avd.name"));
-        assertEquals(mAvdFolder.getParent() + "/" + newName + ".avd/sdcard.img",
+        assertEquals(mAvdFolder.getParentFile().getAbsolutePath() + File.separator
+                        + newName + ".avd/sdcard.img",
                      hardwareProperties.get("hw.sdCard.path"));
 
         // Quick check that the original AVD directory still exists

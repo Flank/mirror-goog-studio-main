@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.InstallException;
 import com.android.instantapp.utils.InstantAppTests;
+import com.android.utils.FileUtils;
 import com.google.common.collect.Lists;
 import java.io.File;
 import org.junit.Test;
@@ -42,12 +43,14 @@ public class PostOInstallerTest {
         File apk2 = new File("path/to/apk2");
         File apk3 = new File("apk3");
         assertEquals(
-                "$ adb install-multiple -r --option1 --option2 apk1 path/to/apk2 ",
+                "$ adb install-multiple -r --option1 --option2 apk1 " +
+                        FileUtils.join("path", "to", "apk2") + " ",
                 getAdbInstallCommand(
                         Lists.newArrayList(apk1, apk2),
                         Lists.newArrayList("--option1", "--option2")));
         assertEquals(
-                "$ adb install-multiple -r -t --ephemeral apk1 path/to/apk2 apk3 ",
+                "$ adb install-multiple -r -t --ephemeral apk1 " +
+                        FileUtils.join("path", "to", "apk2") + " apk3 ",
                 getAdbInstallCommand(
                         Lists.newArrayList(apk1, apk2, apk3),
                         Lists.newArrayList("-t", "--ephemeral")));

@@ -274,9 +274,10 @@ private class ProjectInitializer(val client: LintClient, val file: File,
 
         // Special case: if the module is a path (with an optional :suffix),
         // use this as the module directory, otherwise fall back to the default root
+        name.indexOf(':', name.lastIndexOf(File.separatorChar))
         val dir =
-                if (name.startsWith(File.separator) && name.contains(":")) {
-                    File(name.substring(0, name.indexOf(":")))
+                if (name.contains(File.separator) && name.indexOf(':', name.lastIndexOf(File.separator)) != -1) {
+                    File(name.substring(0, name.indexOf(':', name.lastIndexOf(File.separator))))
                 } else {
                     root
                 }
@@ -455,8 +456,11 @@ private class ProjectInitializer(val client: LintClient, val file: File,
         }
 
         if (!source.exists()) {
+            val relativePath = if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS)
+                dir.canonicalPath.replace(File.separator, "\\\\")
+                else dir.canonicalPath
             reportError("$path ${if (!File(path).isAbsolute) "(relative to " +
-                    "${dir.canonicalPath}) " else ""}does not exist", child)
+                    relativePath + ") " else ""}does not exist", child)
         }
         return source
     }

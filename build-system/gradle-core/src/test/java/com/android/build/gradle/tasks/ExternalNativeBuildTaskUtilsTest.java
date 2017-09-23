@@ -18,6 +18,7 @@ package com.android.build.gradle.tasks;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.SdkConstants;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.external.cmake.CmakeUtils;
 import com.android.build.gradle.internal.SdkHandler;
@@ -32,6 +33,8 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 public class ExternalNativeBuildTaskUtilsTest {
+    static final String CMAKE_FILE_NAME =
+            SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS ? "cmake.exe" : "cmake";
     File sdkFolder;
     SdkHandler sdkHandler;
 
@@ -60,7 +63,7 @@ public class ExternalNativeBuildTaskUtilsTest {
         // Go through all the cmake versions available in the test Sdk folder and get their
         // versions.
         for (File file : FileUtils.getAllFiles(new File(sdkFolder, "cmake"))) {
-            if (!file.getName().equals("cmake") || !file.canExecute()) {
+            if (!file.getName().equals(CMAKE_FILE_NAME) || !file.canExecute()) {
                 continue;
             }
             File cmakeBinFolder = new File(file.getParent());

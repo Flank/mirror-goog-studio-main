@@ -29,13 +29,15 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import javax.xml.parsers.ParserConfigurationException;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
 /** Tests for {@link ApkAnalyzerCli} */
 public class ApkAnalyzerImplTest {
+
+    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+
     private ApkAnalyzerImpl impl;
     private ByteArrayOutputStream baos;
     private AaptInvoker aaptInvoker;
@@ -43,7 +45,12 @@ public class ApkAnalyzerImplTest {
 
     @Before
     public void setUp() throws Exception {
-        baos = new ByteArrayOutputStream();
+        baos = new ByteArrayOutputStream() {
+            @Override
+            public synchronized String toString() {
+                return super.toString().replace(LINE_SEPARATOR, "\n");
+            }
+        };
         PrintStream ps = new PrintStream(baos);
         aaptInvoker = mock(AaptInvoker.class);
         apk = TestResources.getFile("/test.apk").toPath();
@@ -479,6 +486,9 @@ public class ApkAnalyzerImplTest {
 
     @Test
     public void filesCatTest() throws IOException {
+        baos = new ByteArrayOutputStream();
+        PrintStream ps = new PrintStream(baos);
+        impl = new ApkAnalyzerImpl(ps, aaptInvoker);
         impl.filesCat(apk, "META-INF/MANIFEST.MF");
         assertEquals(
                 "Manifest-Version: 1.0\r\n"

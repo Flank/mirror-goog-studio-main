@@ -37,7 +37,7 @@ public class LintCustomRuleTest {
     public void checkCustomLint() throws Exception {
         project.executor().expectFailure().run("clean", ":app:lintDebug");
         String expected =
-                "src/main/AndroidManifest.xml:11: Error: Should not specify <activity>. [UnitTestLintCheck]\n"
+                "src" + File.separator + "main" + File.separator + "AndroidManifest.xml:11: Error: Should not specify <activity>. [UnitTestLintCheck]\n"
                         + "        <activity android:name=\".MainActivity\">\n"
                         + "        ^\n"
                         + "\n"

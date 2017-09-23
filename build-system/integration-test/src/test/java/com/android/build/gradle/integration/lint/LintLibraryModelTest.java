@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.lint;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.utils.FileUtils;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
@@ -38,10 +39,10 @@ public class LintLibraryModelTest {
     public void checkLintLibraryModel() throws Exception {
         project.execute("clean", ":app:lintDebug");
         String expected =
-                "src/main/java/com/android/test/lint/lintmodel/mylibrary/MyLibrary.java:5: Warning: Assertions are unreliable in Dalvik and unimplemented in ART. Use BuildConfig.DEBUG conditional checks instead. [Assert]\n"
+                FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "lintmodel", "mylibrary", "MyLibrary.java") + ":5: Warning: Assertions are unreliable in Dalvik and unimplemented in ART. Use BuildConfig.DEBUG conditional checks instead. [Assert]\n"
                         + "       assert arg > 5;\n"
                         + "       ~~~~~~\n"
-                        + "src/main/java/com/android/test/lint/javalib/JavaLib.java:4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
+                        + FileUtils.join("src", "main", "java", "com", "android", "test", "lint", "javalib", "JavaLib.java") + ":4: Warning: Do not hardcode \"/sdcard/\"; use Environment.getExternalStorageDirectory().getPath() instead [SdCardPath]\n"
                         + "    public static final String SD_CARD = \"/sdcard/something\";\n"
                         + "                                         ~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 2 warnings";
