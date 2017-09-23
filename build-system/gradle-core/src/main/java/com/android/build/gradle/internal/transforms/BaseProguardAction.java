@@ -153,8 +153,8 @@ public abstract class BaseProguardAction extends ProguardConfigurable {
         configuration.printConfiguration = file;
     }
 
-    protected void inJar(@NonNull File jarFile) {
-        inputJar(configuration.programJars, jarFile, null);
+    protected void inJar(@NonNull File jarFile, @Nullable List<String> filter) {
+        inputJar(configuration.programJars, jarFile, filter);
     }
 
     protected void outJar(@NonNull File file) {
