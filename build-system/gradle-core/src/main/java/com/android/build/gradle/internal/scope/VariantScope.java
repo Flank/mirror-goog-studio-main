@@ -139,6 +139,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getInstantRunSplitApkOutputFolder();
 
     @NonNull
+    File getDefaultInstantRunApkLocation();
+
+    @NonNull
     FileCollection getJavaClasspath(
             @NonNull AndroidArtifacts.ConsumedConfigType configType,
             @NonNull ArtifactType classesType);

@@ -271,6 +271,19 @@ public final class InstantRunTestUtils {
         return new SplitApks(apks);
     }
 
+    public static InstantRunApk getMainApk(InstantRun instantRunModel) throws Exception {
+        List<InstantRunArtifact> artifacts = loadContext(instantRunModel).getArtifacts();
+        InstantRunArtifact myArt =
+                Iterables.getOnlyElement(
+                        artifacts
+                                .stream()
+                                .filter(
+                                        artifact ->
+                                                artifact.type == InstantRunArtifactType.SPLIT_MAIN)
+                                .collect(Collectors.toList()));
+        return new InstantRunApk(myArt.file.toPath(), myArt.type);
+    }
+
     public static void printBuildInfoFile(@Nullable InstantRun instantRunModel) {
         if (instantRunModel == null) {
             System.err.println("Cannot print build info file as model is null");

@@ -804,6 +804,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
+    public File getDefaultInstantRunApkLocation() {
+        return FileUtils.join(globalScope.getIntermediatesDir(), "instant-run-apk");
+    }
+
+    @NonNull
+    @Override
     public File getInstantRunPastIterationsFolder() {
         return new File(globalScope.getIntermediatesDir(), "/builds/" + getVariantConfiguration().getDirName());
     }
@@ -1542,11 +1548,15 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     public File getApkLocation() {
         String override = globalScope.getProjectOptions().get(StringOption.IDE_APK_LOCATION);
+        File defaultLocation =
+                getInstantRunBuildContext().isInInstantRunMode()
+                        ? getDefaultInstantRunApkLocation()
+                        : getDefaultApkLocation();
 
         File baseDirectory =
                 override != null && variantData.getType() != VariantType.FEATURE
                         ? globalScope.getProject().file(override)
-                        : getDefaultApkLocation();
+                        : defaultLocation;
 
         return new File(baseDirectory, getVariantConfiguration().getDirName());
     }

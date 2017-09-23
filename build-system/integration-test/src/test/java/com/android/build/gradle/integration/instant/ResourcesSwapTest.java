@@ -32,7 +32,6 @@ import com.android.builder.model.InstantRun;
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.logcat.LogCatMessage;
 import com.android.sdklib.AndroidVersion;
-import com.android.testutils.apk.Apk;
 import com.android.tools.ir.client.InstantRunArtifact;
 import com.android.tools.ir.client.InstantRunArtifactType;
 import com.android.tools.ir.client.InstantRunClient;
@@ -74,9 +73,11 @@ public class ResourcesSwapTest {
                 InstantRunTestUtils.getInstantRunModel(mProject.model().getSingle().getOnlyModel());
 
         InstantRunTestUtils.doInitialBuild(mProject, new AndroidVersion(21, null));
-        Apk apk = mProject.getApk("debug");
+        InstantRunApk apk = InstantRunTestUtils.getMainApk(instantRunModel);
         assertThat(apk).contains("assets/movie.mp4");
         assertThat(apk).contains("classes.dex");
+
+        assertThat(mProject.getApk(GradleTestProject.ApkType.DEBUG)).doesNotExist();
 
         TestFileUtils.appendToFile(asset, " upgraded");
 
