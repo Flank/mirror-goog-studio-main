@@ -440,15 +440,32 @@ public class ModelBuilder implements ToolingModelBuilder {
                                     AndroidArtifacts.ArtifactScope.ALL,
                                     AndroidArtifacts.ArtifactType.MANIFEST_METADATA);
 
-            // there should really be only one.
-            ResolvedArtifactResult result = Iterables.getOnlyElement(apkArtifacts.getArtifacts());
-            String variant = ArtifactDependencyGraph.getVariant(result);
+            // while there should be single result, if the variant matching is broken, then
+            // we need to support this.
+            if (apkArtifacts.getArtifacts().size() == 1) {
+                ResolvedArtifactResult result =
+                        Iterables.getOnlyElement(apkArtifacts.getArtifacts());
+                String variant = ArtifactDependencyGraph.getVariant(result);
 
-            return ImmutableList.of(
-                    new TestedTargetVariantImpl(testConfig.getTargetProjectPath(), variant));
-        } else {
-            return ImmutableList.of();
+                return ImmutableList.of(
+                        new TestedTargetVariantImpl(testConfig.getTargetProjectPath(), variant));
+            } else if (!apkArtifacts.getFailures().isEmpty()) {
+                VariantScope variantScope = variantData.getScope();
+
+                // probably there was an error...
+                syncIssues.addAll(
+                        new DependencyFailureHandler()
+                                .addErrors(
+                                        variantScope.getGlobalScope().getProject().getPath()
+                                                + "@"
+                                                + variantScope.getFullVariantName()
+                                                + "/testTarget",
+                                        apkArtifacts.getFailures())
+                                .collectIssues());
+            }
         }
+
+        return ImmutableList.of();
     }
 
     private JavaArtifactImpl createUnitTestsJavaArtifact(
