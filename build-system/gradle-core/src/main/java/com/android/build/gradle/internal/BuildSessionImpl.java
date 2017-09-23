@@ -188,6 +188,7 @@ public final class BuildSessionImpl implements BuildSession {
     }
 
     @Override
+    @SuppressWarnings("GuardedBy")
     public String toString() {
         //noinspection FieldAccessNotGuarded
         return MoreObjects.toStringHelper(this).add("buildState", buildState.name()).toString();
