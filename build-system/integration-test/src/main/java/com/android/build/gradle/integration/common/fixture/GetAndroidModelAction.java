@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture;
 
+import com.android.annotations.NonNull;
 import com.android.builder.model.level2.GlobalLibraryMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -44,24 +45,26 @@ public class GetAndroidModelAction<T> implements BuildAction<GetAndroidModelActi
     public static final class ModelContainer<T> implements Serializable {
         private static final long serialVersionUID = 1L;
 
-        private final Map<String, T> modelMap;
-        private final GlobalLibraryMap globalLibraryMap;
+        @NonNull private final Map<String, T> modelMap;
+        @NonNull private final GlobalLibraryMap globalLibraryMap;
 
         public ModelContainer(
-                Map<String, T> modelMap,
-                GlobalLibraryMap globalLibraryMap) {
+                @NonNull Map<String, T> modelMap, @NonNull GlobalLibraryMap globalLibraryMap) {
             this.modelMap = modelMap;
             this.globalLibraryMap = globalLibraryMap;
         }
 
+        @NonNull
         public Map<String, T> getModelMap() {
             return modelMap;
         }
 
+        @NonNull
         public GlobalLibraryMap getGlobalLibraryMap() {
             return globalLibraryMap;
         }
 
+        @NonNull
         public T getOnlyModel() {
             return Iterables.getOnlyElement(modelMap.values());
         }

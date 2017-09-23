@@ -3,6 +3,8 @@ package com.android.build.gradle.integration.common.fixture.app;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.TestProject;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
 import java.io.File;
@@ -87,4 +89,46 @@ public class MultiModuleTestProject implements TestProject {
     private static String convertGradlePathToDirectory(String gradlePath) {
         return gradlePath.replace(":", "/");
     }
+
+    @NonNull
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private BiMap<String, AndroidTestApp> projects = HashBiMap.create();
+
+        @NonNull
+        public Builder subproject(@NonNull String name, @NonNull AndroidTestApp testProject) {
+            projects.put(name, testProject);
+            return this;
+        }
+
+        @NonNull
+        public Builder dependency(@NonNull AndroidTestApp from, @NonNull AndroidTestApp to) {
+            return dependency("implementation", from, to);
+        }
+
+        @NonNull
+        public Builder dependency(
+                @NonNull String configuration,
+                @NonNull AndroidTestApp from,
+                @NonNull AndroidTestApp to) {
+            String snippet =
+                    "\ndependencies {\n    "
+                            + configuration
+                            + " project('"
+                            + projects.inverse().get(to)
+                            + "')\n}\n";
+            from.replaceFile(from.getFile("build.gradle", "").appendContent(snippet));
+            return this;
+        }
+
+        @NonNull
+        public MultiModuleTestProject build() {
+            return new MultiModuleTestProject(projects);
+        }
+    }
+
 }

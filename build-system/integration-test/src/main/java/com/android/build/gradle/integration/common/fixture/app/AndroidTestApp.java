@@ -49,4 +49,7 @@ public interface AndroidTestApp extends TestProject {
      * Remove a source file from the test app.
      */
     boolean removeFile(TestSourceFile file);
+
+    /** Replaces a source file, searching by path and name. */
+    void replaceFile(TestSourceFile file);
 }

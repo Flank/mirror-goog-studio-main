@@ -80,6 +80,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     }
 
     /** Do not fail if there are sync issues */
+    @NonNull
     public BuildModel ignoreSyncIssues() {
         Preconditions.checkState(modelLevel != AndroidProject.MODEL_LEVEL_0_ORIGINAL,
                 "Studio 1 was not aware of sync issues.");
@@ -87,6 +88,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
         return this;
     }
 
+    @NonNull
     public BuildModel ignoreSyncIssueWarnings() {
         Preconditions.checkState(
                 modelLevel != AndroidProject.MODEL_LEVEL_0_ORIGINAL,
@@ -149,7 +151,7 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
 
         // ensure there was only one project
         assertThat(container.getModelMap())
-                .named("Quering GradleTestProject.getModel() with multi-project settings")
+                .named("Querying GradleTestProject.getModel() with multi-project settings")
                 .hasSize(1);
 
         return container;
