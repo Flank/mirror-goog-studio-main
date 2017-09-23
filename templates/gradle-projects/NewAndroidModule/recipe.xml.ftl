@@ -103,8 +103,8 @@
                 to="${destination}/mipmap-anydpi-v26/ic_launcher.xml" />
         <copy from="root/res/drawable/ic_launcher_background.xml"
                 to="${destination}/drawable/ic_launcher_background.xml" />
-        <copy from="root/res/drawable-v24/ic_launcher_foreground.xml"
-                to="${destination}/drawable-v24/ic_launcher_foreground.xml" />
+        <copy from="root/res/drawable/ic_launcher_foreground.xml"
+                to="${destination}/drawable/ic_launcher_foreground.xml" />
         <copy from="root/res/mipmap-anydpi-v26/ic_launcher_round.xml"
                 to="${destination}/mipmap-anydpi-v26/ic_launcher_round.xml" />
     </#if>
