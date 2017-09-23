@@ -18,16 +18,20 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import java.io.BufferedInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -40,6 +44,9 @@ import org.junit.runners.Parameterized;
  *
  * <p>It compares the existing (Merge jar -> Proguard -> dx call) with the New Shrinker based
  * implementation.
+ *
+ * <p>It also checks that the componentClasses.jar files produced by new implementation only contain
+ * .class files.
  */
 @RunWith(FilterableParameterized.class)
 public class NewMultiDexMainDexListTest {
@@ -94,11 +101,10 @@ public class NewMultiDexMainDexListTest {
     private void checkBuild() throws Exception {
 
         project.executor().withUseDexArchive(false).run(testProject.assembleTask);
-
         Set<String> mainDexList = getMainDexList();
 
         project.executor().withUseDexArchive(true).run(testProject.assembleTask);
-
+        assertOnlyClassesInComponentClassesJar();
         Set<String> mainDexList2 = getMainDexList();
 
         assertThat(mainDexList2).containsExactlyElementsIn(mainDexList);
@@ -114,6 +120,24 @@ public class NewMultiDexMainDexListTest {
                 .stream()
                 .filter(line -> !line.isEmpty())
                 .collect(Collectors.toSet());
+    }
+
+    private void assertOnlyClassesInComponentClassesJar() throws Exception {
+        Path jar =
+                project.getSubproject(testProject.appProjectDirectory)
+                        .getIntermediatesDir()
+                        .toPath()
+                        .resolve(
+                                "multi-dex/"
+                                        + testProject.variantDirPath
+                                        + "/componentClasses.jar");
+        try (ZipInputStream zipInputStream =
+                new ZipInputStream(new BufferedInputStream(Files.newInputStream(jar)))) {
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                assertThat(entry.getName()).endsWith(SdkConstants.DOT_CLASS);
+            }
+        }
     }
 
     private enum Project {

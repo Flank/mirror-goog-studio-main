@@ -37,6 +37,7 @@ import com.android.multidex.MainDexListBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -44,6 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -60,6 +62,8 @@ import proguard.ParseException;
  * from them.
  */
 public class MainDexListTransform extends BaseProguardAction {
+
+    private static final List<String> MAIN_DEX_LIST_FILTER = ImmutableList.of("**.class");
 
     // Inputs
     @NonNull
@@ -217,7 +221,7 @@ public class MainDexListTransform extends BaseProguardAction {
         // handle inputs
         libraryJar(findShrinkedAndroidJar());
         for (File input : inputs) {
-            inJar(input);
+            inJar(input, MAIN_DEX_LIST_FILTER);
         }
 
         // outputs.
