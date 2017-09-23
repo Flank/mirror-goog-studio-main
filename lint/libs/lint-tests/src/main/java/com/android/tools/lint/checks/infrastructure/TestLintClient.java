@@ -802,9 +802,10 @@ public class TestLintClient extends LintCliClient {
             LintFix.ReplaceString replaceFix = (LintFix.ReplaceString) fix;
             String oldPattern = replaceFix.oldPattern;
             String oldString = replaceFix.oldString;
-            String contents = readFile(location.getFile()).toString();
-            Position start = location.getStart();
-            Position end = location.getEnd();
+            Location rangeLocation = replaceFix.range != null ? replaceFix.range : location;
+            String contents = readFile(rangeLocation.getFile()).toString();
+            Position start = rangeLocation.getStart();
+            Position end = rangeLocation.getEnd();
             assert start != null;
             assert end != null;
             String locationRange = contents.substring(start.getOffset(), end.getOffset());
