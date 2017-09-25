@@ -216,15 +216,10 @@ public class Queries {
         return snapshot.findInstance(id2);
     }
 
+    @Deprecated
     @NonNull
     public static Collection<RootObj> getRoots(@NonNull Snapshot snapshot) {
-        HashSet<RootObj> result = new HashSet<RootObj>();
-
-        for (Heap heap : snapshot.mHeaps) {
-            result.addAll(heap.mRoots);
-        }
-
-        return result;
+        return snapshot.getGCRoots();
     }
 
     @NonNull

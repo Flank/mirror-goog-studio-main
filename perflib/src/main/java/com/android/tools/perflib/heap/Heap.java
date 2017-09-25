@@ -33,10 +33,6 @@ public class Heap {
     @NonNull
     private final String mName;
 
-    //  Root objects such as interned strings, jni locals, etc
-    @NonNull
-    ArrayList<RootObj> mRoots = new ArrayList<RootObj>();
-
     //  List of threads
     @NonNull
     TIntObjectHashMap<ThreadObj> mThreads = new TIntObjectHashMap<ThreadObj>();
@@ -65,11 +61,6 @@ public class Heap {
     @NonNull
     public String getName() {
         return mName;
-    }
-
-    public final void addRoot(@NonNull RootObj root) {
-        root.mIndex = mRoots.size();
-        mRoots.add(root);
     }
 
     public final void addThread(ThreadObj thread, int serialNumber) {

@@ -24,8 +24,6 @@ public class RootObj extends Instance {
 
     RootType mType = RootType.UNKNOWN;
 
-    int mIndex;
-
     int mThread;
 
     public RootObj(RootType type) {

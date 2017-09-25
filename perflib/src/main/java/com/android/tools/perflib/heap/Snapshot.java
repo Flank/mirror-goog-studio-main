@@ -96,6 +96,10 @@ public class Snapshot extends Capture {
     @NonNull
     Heap mCurrentHeap;
 
+    //  Root objects such as interned strings, jni locals, etc
+    @NonNull
+    ArrayList<RootObj> mRoots = new ArrayList<RootObj>();
+
     //  List stack traces, which are lists of stack frames
     @NonNull
     TIntObjectHashMap<StackTrace> mTraces = new TIntObjectHashMap<StackTrace>();
@@ -215,8 +219,7 @@ public class Snapshot extends Capture {
 
     @NonNull
     public Collection<RootObj> getGCRoots() {
-        // Roots are always in the default heap.
-        return mHeaps.get(DEFAULT_HEAP_ID).mRoots;
+        return mRoots;
     }
 
     public final void addStackFrame(@NonNull StackFrame theFrame) {
@@ -246,7 +249,7 @@ public class Snapshot extends Capture {
     }
 
     public final void addRoot(@NonNull RootObj root) {
-        mCurrentHeap.addRoot(root);
+        mRoots.add(root);
         root.setHeap(mCurrentHeap);
     }
 
