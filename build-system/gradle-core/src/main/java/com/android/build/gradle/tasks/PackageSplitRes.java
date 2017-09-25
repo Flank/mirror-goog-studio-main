@@ -113,7 +113,7 @@ public class PackageSplitRes extends AndroidBuilderTask {
     public String getOutputFileNameForSplit(final ApkData apkData, boolean isSigned) {
         String archivesBaseName = (String) getProject().getProperties().get("archivesBaseName");
         String apkName = archivesBaseName + "-" + apkData.getBaseName();
-        return apkName + (isSigned ? "-unsigned" : "") + SdkConstants.DOT_ANDROID_PACKAGE;
+        return apkName + (isSigned ? "" : "-unsigned") + SdkConstants.DOT_ANDROID_PACKAGE;
     }
 
     // ----- ConfigAction -----

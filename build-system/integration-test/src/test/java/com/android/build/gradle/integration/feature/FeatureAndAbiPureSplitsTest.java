@@ -20,6 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
+import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantAppProjectBuildOutput;
@@ -96,7 +97,7 @@ public class FeatureAndAbiPureSplitsTest {
                         "feature_a-debug.apk",
                         "feature_a-x86-debug.apk",
                         "feature_a-armeabi-v7a-debug.apk",
-                        "feature_a-hdpi-debug-unsigned.apk");
+                        "feature_a-hdpi-debug.apk");
         List<String> foundFileNames = new ArrayList<>();
         debug.getFeatureOutputs()
                 .forEach(outputFile -> foundFileNames.add(outputFile.getOutputFile().getName()));
@@ -151,6 +152,65 @@ public class FeatureAndAbiPureSplitsTest {
         assertThat(foundSplitNames).containsExactlyElementsIn(expectedSplitNames);
     }
 
+    @Test
+    public void buildSigned() throws Exception {
+        // Add signing configuration to the release variant.
+        String signingConfig =
+                "\n"
+                        + "android {\n"
+                        + "    signingConfigs {\n"
+                        + "        myConfig {\n"
+                        + "            storeFile file(\"../debug.keystore\")\n"
+                        + "            storePassword \"android\"\n"
+                        + "            keyAlias \"androiddebugkey\"\n"
+                        + "            keyPassword \"android\"\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "    buildTypes {\n"
+                        + "        release {\n"
+                        + "            signingConfig signingConfigs.myConfig\n"
+                        + "            proguardFile getDefaultProguardFile('proguard-android.txt')\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n";
+        TestFileUtils.appendToFile(
+                sProject.getSubproject(":baseFeature").getBuildFile(), signingConfig);
+        TestFileUtils.appendToFile(
+                sProject.getSubproject(":feature_a").getBuildFile(), signingConfig);
+
+        // Build the instantapp.
+        sProject.executor()
+                .with(AaptGeneration.AAPT_V2_JNI)
+                .run("clean", ":bundle:assembleRelease");
+
+        Map<String, InstantAppProjectBuildOutput> models =
+                sProject.model().getMulti(InstantAppProjectBuildOutput.class);
+        assertThat(models).hasSize(1);
+
+        InstantAppProjectBuildOutput instantAppModule = models.get(":bundle");
+        assertThat(instantAppModule).isNotNull();
+        assertThat(instantAppModule.getInstantAppVariantsBuildOutput()).hasSize(1);
+        InstantAppVariantBuildOutput release =
+                getReleaseVariant(instantAppModule.getInstantAppVariantsBuildOutput());
+        assertThat(release.getApplicationId()).isEqualTo("com.example.android.multiproject");
+        assertThat(release.getOutput().getOutputFile().getName()).isEqualTo("bundle-release.zip");
+        assertThat(release.getFeatureOutputs()).hasSize(7);
+
+        List<String> expectedFileNames =
+                ImmutableList.of(
+                        "baseFeature-release.apk",
+                        "baseFeature-x86-release.apk",
+                        "baseFeature-armeabi-v7a-release.apk",
+                        "feature_a-release.apk",
+                        "feature_a-x86-release.apk",
+                        "feature_a-armeabi-v7a-release.apk",
+                        "feature_a-hdpi-release.apk");
+        List<String> foundFileNames = new ArrayList<>();
+        release.getFeatureOutputs()
+                .forEach(outputFile -> foundFileNames.add(outputFile.getOutputFile().getName()));
+        assertThat(foundFileNames).containsExactlyElementsIn(expectedFileNames);
+    }
+
     private static String getQuotedValue(String line) {
         int afterQuote = line.indexOf('"') + 1;
         return line.substring(afterQuote, line.indexOf('"', afterQuote));
@@ -160,6 +220,14 @@ public class FeatureAndAbiPureSplitsTest {
             Collection<InstantAppVariantBuildOutput> outputs) {
         return outputs.stream()
                 .filter(output -> output.getName().equals("debug"))
+                .findFirst()
+                .get();
+    }
+
+    private static InstantAppVariantBuildOutput getReleaseVariant(
+            Collection<InstantAppVariantBuildOutput> outputs) {
+        return outputs.stream()
+                .filter(output -> output.getName().equals("release"))
                 .findFirst()
                 .get();
     }
