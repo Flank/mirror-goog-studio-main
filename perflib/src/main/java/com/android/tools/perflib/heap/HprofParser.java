@@ -82,13 +82,13 @@ class HprofParser {
 
     private static final int ROOT_THREAD_OBJECT = 0x08;
 
-    private static final int ROOT_CLASS_DUMP = 0x20;
+    private static final int CLASS_DUMP = 0x20;
 
-    private static final int ROOT_INSTANCE_DUMP = 0x21;
+    private static final int INSTANCE_DUMP = 0x21;
 
-    private static final int ROOT_OBJECT_ARRAY_DUMP = 0x22;
+    private static final int OBJECT_ARRAY_DUMP = 0x22;
 
-    private static final int ROOT_PRIMITIVE_ARRAY_DUMP = 0x23;
+    private static final int PRIMITIVE_ARRAY_DUMP = 0x23;
 
     /**
      * Android format addition
@@ -101,7 +101,7 @@ class HprofParser {
      *
      * Format: u1: Tag value (0xFE) u4: heap ID ID: heap name string ID
      */
-    private static final int ROOT_HEAP_DUMP_INFO = 0xfe;
+    private static final int HEAP_DUMP_INFO = 0xfe;
 
     private static final int ROOT_INTERNED_STRING = 0x89;
 
@@ -117,7 +117,7 @@ class HprofParser {
 
     private static final int ROOT_UNREACHABLE = 0x90;
 
-    private static final int ROOT_PRIMITIVE_ARRAY_NODATA = 0xc3;
+    private static final int PRIMITIVE_ARRAY_NODATA = 0xc3;
 
     @NonNull
     private final DataBuffer mInput;
@@ -355,30 +355,30 @@ class HprofParser {
                     length -= loadThreadObject();
                     break;
 
-                case ROOT_CLASS_DUMP:
+                case CLASS_DUMP:
                     length -= loadClassDump();
                     break;
 
-                case ROOT_INSTANCE_DUMP:
+                case INSTANCE_DUMP:
                     length -= loadInstanceDump();
                     break;
 
-                case ROOT_OBJECT_ARRAY_DUMP:
+                case OBJECT_ARRAY_DUMP:
                     length -= loadObjectArrayDump();
                     break;
 
-                case ROOT_PRIMITIVE_ARRAY_DUMP:
+                case PRIMITIVE_ARRAY_DUMP:
                     length -= loadPrimitiveArrayDump();
                     break;
 
-                case ROOT_PRIMITIVE_ARRAY_NODATA:
+                case PRIMITIVE_ARRAY_NODATA:
                     System.err.println("+--- PRIMITIVE ARRAY NODATA DUMP");
                     length -= loadPrimitiveArrayDump();
 
                     throw new IllegalArgumentException(
                             "Don't know how to load a nodata array");
 
-                case ROOT_HEAP_DUMP_INFO:
+                case HEAP_DUMP_INFO:
                     int heapId = mInput.readInt();
                     long heapNameId = readId();
                     String heapName = mStrings.get(heapNameId);
