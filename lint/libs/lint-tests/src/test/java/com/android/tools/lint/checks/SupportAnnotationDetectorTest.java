@@ -3488,6 +3488,32 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testRangeInKotlin() {
+        if (skipKotlinTests()) {
+            return;
+        }
+
+        // Regression test for https://issuetracker.google.com/66892728
+        lint().files(
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.support.annotation.FloatRange\n" +
+                        "import android.util.Log\n" +
+                        "\n" +
+                        "fun foo(@FloatRange(from = 0.0, to = 25.0) radius: Float) {\n" +
+                        "    bar(radius)\n" +
+                        "}\n" +
+                        "\n" +
+                        "fun bar(@FloatRange(from = 0.0, to = 25.0) radius: Float) {\n" +
+                        "    Log.d(\"AppLog\", \"Radius:\" + radius)\n" +
+                        "}"),
+                mSupportClasspath,
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
     public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
     private TestFile mSupportJar = base64gzip(SUPPORT_JAR_PATH,
             SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);

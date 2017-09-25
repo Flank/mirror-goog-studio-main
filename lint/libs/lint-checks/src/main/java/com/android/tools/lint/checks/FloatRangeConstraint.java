@@ -26,8 +26,6 @@ import static com.android.tools.lint.checks.SupportAnnotationDetector.FLOAT_RANG
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiAnnotationMemberValue;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.ULiteralExpression;
@@ -38,23 +36,6 @@ class FloatRangeConstraint extends RangeConstraint {
     final double to;
     final boolean fromInclusive;
     final boolean toInclusive;
-
-    @NonNull
-    public static FloatRangeConstraint create(@NonNull PsiAnnotation annotation) {
-        assert FLOAT_RANGE_ANNOTATION.equals(annotation.getQualifiedName());
-        PsiAnnotationMemberValue fromValue = annotation.findDeclaredAttributeValue(ATTR_FROM);
-        PsiAnnotationMemberValue toValue = annotation.findDeclaredAttributeValue(ATTR_TO);
-        PsiAnnotationMemberValue fromInclusiveValue = annotation
-                .findDeclaredAttributeValue(ATTR_FROM_INCLUSIVE);
-        PsiAnnotationMemberValue toInclusiveValue = annotation
-                .findDeclaredAttributeValue(ATTR_TO_INCLUSIVE);
-
-        double from = getDoubleValue(fromValue, Double.NEGATIVE_INFINITY);
-        double to = getDoubleValue(toValue, Double.POSITIVE_INFINITY);
-        boolean fromInclusive = getBooleanValue(fromInclusiveValue, true);
-        boolean toInclusive = getBooleanValue(toInclusiveValue, true);
-        return new FloatRangeConstraint(from, to, fromInclusive, toInclusive);
-    }
 
     @NonNull
     public static FloatRangeConstraint create(@NonNull UAnnotation annotation) {
@@ -104,26 +85,9 @@ class FloatRangeConstraint extends RangeConstraint {
                 (toInclusive && value <= to || !toInclusive && value < to);
     }
 
-    @Nullable
-    @Override
-    public Boolean isValid(@NonNull UExpression argument) {
-        Number number = guessSize(argument);
-        if (number != null) {
-            double value = number.doubleValue();
-            return isValid(value);
-        }
-        return null;
-    }
-
     @NonNull
     public String describe() {
-        return describe(null);
-    }
-
-    @NonNull
-    @Override
-    public String describe(@Nullable UExpression argument) {
-        return describe(argument, null);
+        return describe(null, null);
     }
 
     @NonNull
@@ -136,12 +100,6 @@ class FloatRangeConstraint extends RangeConstraint {
         StringBuilder sb = new StringBuilder(20);
 
         String valueString = null;
-        if (actualValue == null && argument != null) {
-            Number number = guessSize(argument);
-            if (number != null) {
-                actualValue = number.doubleValue();
-            }
-        }
         if (argument instanceof ULiteralExpression) {
             // Use source text instead to avoid rounding errors involved in conversion, e.g
             //    Error: Value must be > 2.5 (was 2.490000009536743) [Range]
@@ -269,6 +227,6 @@ class FloatRangeConstraint extends RangeConstraint {
 
     @Override
     public String toString() {
-        return describe(null);
+        return describe(null, null);
     }
 }
