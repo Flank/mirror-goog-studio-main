@@ -252,7 +252,7 @@ public class DominatorsTest extends TestCase {
         }
         assertEquals(43687, totalInstanceCount);
 
-        assertEquals(42839, mSnapshot.getReachableInstances().size());
+        assertEquals(42868, mSnapshot.getReachableInstances().size());
 
         // An object reachable via two GC roots, a JNI global and a Thread.
         Instance instance = mSnapshot.findInstance(0xB0EDFFA0);

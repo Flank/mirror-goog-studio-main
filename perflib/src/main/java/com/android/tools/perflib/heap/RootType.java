@@ -33,7 +33,8 @@ public enum RootType {
     FINALIZING(13, "finalizing"),
     JAVA_LOCAL(14, "java local"),
     NATIVE_STACK(15, "native stack"),
-    JAVA_STATIC(16, "java static");
+    JAVA_STATIC(16, "java static"),
+    THREAD_OBJECT(17, "thread object");
 
     private final int mType;
 

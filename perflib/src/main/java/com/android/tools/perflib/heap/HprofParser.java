@@ -488,8 +488,11 @@ class HprofParser {
         int threadSerialNumber = mInput.readInt();
         int stackSerialNumber = mInput.readInt();
         ThreadObj thread = new ThreadObj(id, stackSerialNumber);
+        StackTrace stack = mSnapshot.getStackTrace(stackSerialNumber);
+        RootObj root = new RootObj(RootType.THREAD_OBJECT, id, threadSerialNumber, stack);
 
         mSnapshot.addThread(thread, threadSerialNumber);
+        mSnapshot.addRoot(root);
 
         return mIdSize + 4 + 4;
     }
