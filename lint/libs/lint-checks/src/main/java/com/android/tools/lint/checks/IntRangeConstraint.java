@@ -23,25 +23,12 @@ import static com.android.tools.lint.checks.SupportAnnotationDetector.INT_RANGE_
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiAnnotationMemberValue;
 import org.jetbrains.uast.UAnnotation;
-import org.jetbrains.uast.UExpression;
 
 class IntRangeConstraint extends RangeConstraint {
 
     final long from;
     final long to;
-
-    @NonNull
-    public static IntRangeConstraint create(@NonNull PsiAnnotation annotation) {
-        assert INT_RANGE_ANNOTATION.equals(annotation.getQualifiedName());
-        PsiAnnotationMemberValue fromValue = annotation.findDeclaredAttributeValue(ATTR_FROM);
-        PsiAnnotationMemberValue toValue = annotation.findDeclaredAttributeValue(ATTR_TO);
-        long from = getLongValue(fromValue, Long.MIN_VALUE);
-        long to = getLongValue(toValue, Long.MAX_VALUE);
-        return new IntRangeConstraint(from, to);
-    }
 
     @NonNull
     public static IntRangeConstraint create(@NonNull UAnnotation annotation) {
@@ -75,36 +62,18 @@ class IntRangeConstraint extends RangeConstraint {
         return value >= from && value <= to;
     }
 
-    @Nullable
-    @Override
-    public Boolean isValid(@NonNull UExpression argument) {
-        Number literalValue = guessSize(argument);
-        if (literalValue != null) {
-            long value = literalValue.longValue();
-            return value >= from && value <= to;
-        }
-
-        return null;
-    }
-
     @NonNull
     public String describe() {
         return describe(null);
     }
 
     @NonNull
-    @Override
-    public String describe(@Nullable UExpression argument) {
-        return describe(argument, null);
-    }
-
-    @NonNull
     public String describe(long argument) {
-        return describe(null, argument);
+        return describe(Long.valueOf(argument));
     }
 
     @NonNull
-    private String describe(@Nullable UExpression argument, @Nullable Long actualValue) {
+    private String describe(@Nullable Long actualValue) {
         StringBuilder sb = new StringBuilder(20);
 
         // If we have an actual value, don't describe the full range, only describe
@@ -138,11 +107,6 @@ class IntRangeConstraint extends RangeConstraint {
 
         if (actualValue != null) {
             sb.append(" (is ").append(actualValue).append(')');
-        } else if (argument != null) {
-            Number actual = guessSize(argument);
-            if (actual != null) {
-                sb.append(" (is ").append(Integer.toString(actual.intValue())).append(')');
-            }
         }
         return sb.toString();
     }
