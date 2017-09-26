@@ -28,13 +28,21 @@ java_binary(
 
 filegroup(
     name = "build-tools/latest",
-    srcs = [":build-tools/26.0.0"],
+    srcs = [":build-tools/26.0.2"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "build-tools/minimum",
     srcs = [":build-tools/25.0.0"],
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "build-tools/26.0.2",
+    srcs = glob(
+        include = ["*/build-tools/26.0.2/**"],
+    ),
     visibility = ["//visibility:public"],
 )
 
