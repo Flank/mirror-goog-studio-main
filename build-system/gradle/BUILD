@@ -52,6 +52,7 @@ kotlin_test(
         "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
         "//prebuilts/studio/sdk:build-tools/25.0.0",
         "//prebuilts/studio/sdk:build-tools/26.0.0",
+        "//prebuilts/studio/sdk:build-tools/26.0.2",
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/android-24",
         "//prebuilts/studio/sdk:platforms/latest",
