@@ -444,9 +444,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         }
 
         if (variantData.getType() == VariantType.LIBRARY) {
-            globalScope
-                    .getErrorHandler()
-                    .reportError(Type.GENERIC, "Resource shrinker cannot be used for libraries.");
+            if (!getProject().getPlugins().hasPlugin("com.android.feature")) {
+                globalScope
+                        .getErrorHandler()
+                        .reportError(
+                                Type.GENERIC, "Resource shrinker cannot be used for libraries.");
+            }
             return false;
         }
 
