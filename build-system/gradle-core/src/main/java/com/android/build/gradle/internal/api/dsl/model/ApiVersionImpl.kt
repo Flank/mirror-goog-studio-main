@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl.extension
+package com.android.build.gradle.internal.api.dsl.model
 
-import com.android.builder.model.AdbOptions
-import com.android.builder.testing.api.DeviceProvider
-import com.android.builder.testing.api.TestServer
-import org.gradle.api.Action
+import com.android.annotations.concurrency.Immutable
+import com.android.build.api.dsl.ApiVersion
 
-/** Partial extension properties for modules that contain on-device tests  */
-interface OnDeviceTestModule {
-    /** Adb options.  */
-    val adbOptions: AdbOptions
+@Immutable
+data class ApiVersionImpl(override val apiLevel: Int,
+        override val codename: String?): ApiVersion {
 
-    fun adbOptions(action: Action<AdbOptions>)
+    companion object {
+        fun of(apiLevel: Int): ApiVersion = ApiVersionImpl(apiLevel, null)
 
-    /** List of device providers  */
-    var deviceProviders: List<DeviceProvider>
+        fun of(codename: String): ApiVersion = ApiVersionImpl(1, codename)
+    }
 
-    /** List of remote CI servers.  */
-    var testServers: List<TestServer>
+    override val apiString: String
+        get() = if (codename != null) "android-$codename" else "android-$apiLevel"
 }

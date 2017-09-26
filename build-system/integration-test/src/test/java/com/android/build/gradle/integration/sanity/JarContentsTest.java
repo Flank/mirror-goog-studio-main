@@ -478,6 +478,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/annotations/",
                 "com/android/build/gradle/internal/api/",
                 "com/android/build/gradle/internal/api/dsl/",
+                "com/android/build/gradle/internal/api/dsl/extensions/",
                 "com/android/build/gradle/internal/api/dsl/model/",
                 "com/android/build/gradle/internal/api/dsl/options/",
                 "com/android/build/gradle/internal/api/dsl/sealing/",

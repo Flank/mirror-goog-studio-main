@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl.extension
+package com.android.build.api.dsl.options
 
-@Suppress("DEPRECATION")
-/** 'android' extension 'com.android.test' projects.  */
-interface TestExtension : BuildProperties, VariantAwareProperties, OnDeviceTestProperties, AndroidExtension {
+import com.android.build.api.dsl.InitializableObject
 
-    /** The Gradle path of the project that this test project tests.  */
-    var targetProjectPath: String
-
-    // --- DEPRECATED
-
-    @Deprecated("This is deprecated, test module can now test all flavors.")
-    var targetVariant: String
-}
+/** DSL object for configuring postprocessing: removing dead code, obfuscating etc.  */
+interface PostprocessingFilesOptions
+    : PostprocessingFiles, InitializableObject<PostprocessingFilesOptions>

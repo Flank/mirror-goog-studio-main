@@ -17,6 +17,7 @@
 package com.android.build.api.dsl.extension
 
 import com.android.build.api.dsl.model.BuildType
+import com.android.build.api.dsl.model.DefaultConfig
 import com.android.build.api.dsl.model.ProductFlavor
 import com.android.build.api.dsl.options.SigningConfig
 import com.android.build.api.dsl.variant.Variant
@@ -25,13 +26,10 @@ import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 
-/** Partial extension properties for modules that have flavors  */
-interface VariantBasedModule {
-
-    /** Default config, shared by all flavors.  */
-    var defaultConfig: ProductFlavor
-
-    fun defaultConfig(action: Action<ProductFlavor>)
+/** Partial extension properties for modules that have variants made of [ProductFlavor] and
+ * [BuildType]
+ */
+interface VariantAwareProperties : DefaultConfig {
 
     /** Build types used by this project.  */
     val buildTypes: NamedDomainObjectContainer<BuildType>
@@ -39,7 +37,7 @@ interface VariantBasedModule {
     fun buildTypes(action: Action<NamedDomainObjectContainer<BuildType>>)
 
     /** List of flavor dimensions.  */
-    var flavorDimensionList: List<String>
+    var flavorDimensions: MutableList<String>
 
     /** All product flavors used by this project.  */
     val productFlavors: NamedDomainObjectContainer<ProductFlavor>
@@ -51,14 +49,25 @@ interface VariantBasedModule {
 
     fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
 
-    /** Name of the variant to publish.  */
-    var defaultPublishConfig: String
-
     /** Filter to determine which variants to build.  */
+    var variantFilters: MutableList<Action<VariantFilter>>
+
+    @Deprecated("User variantFilter property")
     fun variantFilter(action: Action<VariantFilter>)
 
     /**
      * a Callback object to register callbacks for variants
      */
     val variants: VariantCallbacks
+
+    @Deprecated("Use flavorDimensions")
+    var flavorDimensionList: MutableList<String>
+
+    /** Default config, shared by all flavors.  */
+    @Deprecated("Use properties on extension itself")
+    val defaultConfig: DefaultConfig
+
+    @Deprecated("Use properties on extension itself")
+    fun defaultConfig(action: Action<DefaultConfig>)
+
 }

@@ -17,11 +17,10 @@
 package com.android.build.api.dsl.extension
 
 import com.android.build.api.dsl.variant.ApplicationVariant
-import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 
 /** 'android' extension 'com.android.application' projects.  */
-interface AppExtension : BuildModule, VariantBasedModule, EmbeddedTestModule, ApkModule, AndroidExtension {
+interface AppExtension : BuildProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, ApkProperties, AndroidExtension {
 
     /**
      * Returns the list of Application variants. Since the collections is built after evaluation, it

@@ -20,7 +20,9 @@ import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 import org.gradle.api.Named
 
-abstract class SealableObject(protected val issueReporter: EvalIssueReporter) {
+abstract class SealableObject(protected val issueReporter: EvalIssueReporter, private val name: String?) {
+
+    constructor(issueReporter: EvalIssueReporter): this(issueReporter, null)
 
     private var sealed: Boolean = false
 
@@ -28,10 +30,10 @@ abstract class SealableObject(protected val issueReporter: EvalIssueReporter) {
         if (sealed) {
             // get the name of the class
             val className = this.javaClass.name
-            val itemName = if (this is Named) " named '${this.name}" else ""
+            val itemNameStr = computeName()
             issueReporter.reportError(
                     SyncIssue.TYPE_GENERIC,
-                    "Attempting to seal object of type ${className}${itemName} after it's been sealed.")
+                    "Attempting to seal object$itemNameStr of type $className after it's been sealed.")
         }
 
         sealed = true
@@ -43,11 +45,11 @@ abstract class SealableObject(protected val issueReporter: EvalIssueReporter) {
         if (sealed) {
             // get the name of the class
             val className = this.javaClass.name
-            val itemName = if (this is Named) " named '${this.name}" else ""
+            val itemNameStr = computeName()
             // FIXME better error message and custom TYPE.
             issueReporter.reportError(
                     SyncIssue.TYPE_GENERIC,
-                    "Attempting to modify object of type ${className}${itemName} after it's been sealed.",
+                    "Attempting to modify object$itemNameStr of type $className after it's been sealed.",
                     className)
 
             return false
@@ -55,4 +57,10 @@ abstract class SealableObject(protected val issueReporter: EvalIssueReporter) {
 
         return true
     }
+
+    private fun computeName(): String {
+        val itemName = name ?: if (this is Named) this.name else null
+        return if (itemName != null) " '$itemName'" else ""
+    }
+
 }

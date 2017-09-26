@@ -17,11 +17,13 @@
 package com.android.build.api.dsl.extension
 
 import com.android.build.api.dsl.variant.LibraryVariant
-import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 
 /** 'android' extension 'com.android.library' projects.  */
-interface LibraryExtension : BuildModule, VariantBasedModule, EmbeddedTestModule, AndroidExtension {
+interface LibraryExtension : BuildProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, AndroidExtension {
+
+    /** Name of the variant to publish.  */
+    var defaultPublishConfig: String
 
     /** Aidl files to package in the aar.  */
     var aidlPackageWhiteList: Collection<String>

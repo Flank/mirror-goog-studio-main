@@ -18,6 +18,7 @@ package com.android.build.api.dsl.model
 
 import com.android.build.api.dsl.InitializableObject
 import com.android.build.api.dsl.options.PostprocessingOptions
+import org.gradle.api.Named
 
 /**
  * a Build Type. This is only the configuration of the build type.
@@ -26,7 +27,7 @@ import com.android.build.api.dsl.options.PostprocessingOptions
  * It does not include the sources or the dependencies. Those are available on the container or
  * in the artifact info.
  */
-interface BuildType : BuildTypeOrProductFlavor, FallbackStrategy, BuildTypeOrVariant, InitializableObject<BuildType> {
+interface BuildType : BuildTypeOrProductFlavor, BuildTypeOrVariant, VariantProperties, FallbackStrategy, InitializableObject<BuildType>, Named {
 
     /**
      * Whether to crunch PNGs.

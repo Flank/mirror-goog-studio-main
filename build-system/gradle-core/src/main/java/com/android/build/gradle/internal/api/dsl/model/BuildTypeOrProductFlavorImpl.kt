@@ -1,0 +1,129 @@
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.build.gradle.internal.api.dsl.model
+
+import com.android.build.api.dsl.model.BuildTypeOrProductFlavor
+import com.android.build.api.dsl.options.PostprocessingFiles
+import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
+import com.android.builder.errors.DeprecationReporter
+import com.android.builder.errors.EvalIssueReporter
+
+class BuildTypeOrProductFlavorImpl(
+            private val deprecationReporter: DeprecationReporter,
+            issueReporter: EvalIssueReporter,
+            private val postprocessingFiles: () -> PostprocessingFiles)
+        : SealableObject(issueReporter), BuildTypeOrProductFlavor {
+
+    override var applicationIdSuffix: String? = null
+        set(value) {
+            if (checkSeal()) {
+                field = value
+            }
+        }
+    override var versionNameSuffix: String? = null
+        set(value) {
+            if (checkSeal()) {
+                field = value
+            }
+        }
+
+    @Suppress("OverridingDeprecatedMember")
+    override fun proguardFile(proguardFile: Any) {
+        deprecationReporter.reportDeprecatedUsage(
+                "Postprocessing.proguardFiles",
+                "proguardFile()",
+                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+        postprocessingFiles.invoke().proguardFiles.add(proguardFile)
+    }
+
+    @Suppress("OverridingDeprecatedMember")
+    override fun proguardFiles(vararg files: Any) {
+        deprecationReporter.reportDeprecatedUsage(
+                "Postprocessing.proguardFiles",
+                "proguardFiles()",
+                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+        postprocessingFiles.invoke().proguardFiles.addAll(files.toMutableList())
+    }
+
+    @Suppress("OverridingDeprecatedMember")
+    override fun setProguardFiles(proguardFileIterable: Iterable<Any>) {
+        deprecationReporter.reportDeprecatedUsage(
+                "Postprocessing.proguardFiles",
+                "setProguardFiles()",
+                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+        postprocessingFiles.invoke().proguardFiles.addAll(proguardFileIterable.toMutableList())
+    }
+
+    @Suppress("OverridingDeprecatedMember")
+    override fun testProguardFile(proguardFile: Any) {
+        deprecationReporter.reportDeprecatedUsage(
+                "Postprocessing.testProguardFiles",
+                "testProguardFile()",
+                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+        postprocessingFiles.invoke().testProguardFiles.add(proguardFile)
+    }
+
+    @Suppress("OverridingDeprecatedMember")
+    override fun testProguardFiles(vararg proguardFiles: Any) {
+        deprecationReporter.reportDeprecatedUsage(
+                "Postprocessing.testProguardFiles",
+                "testProguardFiles()",
+                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+        postprocessingFiles.invoke().testProguardFiles.addAll(proguardFiles.toMutableList())
+    }
+
+    @Suppress("OverridingDeprecatedMember")
+    override fun setTestProguardFiles(files: Iterable<Any>) {
+        deprecationReporter.reportDeprecatedUsage(
+                "Postprocessing.testProguardFiles",
+                "setTestProguardFiles()",
+                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+        postprocessingFiles.invoke().testProguardFiles.addAll(files.toMutableList())
+    }
+
+    @Suppress("OverridingDeprecatedMember")
+    override fun consumerProguardFile(proguardFile: Any) {
+        deprecationReporter.reportDeprecatedUsage(
+                "Postprocessing.consumerProguardFiles",
+                "consumerProguardFile()",
+                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+        postprocessingFiles.invoke().consumerProguardFiles.add(proguardFile)
+    }
+
+    @Suppress("OverridingDeprecatedMember")
+    override fun consumerProguardFiles(vararg proguardFiles: Any) {
+        deprecationReporter.reportDeprecatedUsage(
+                "Postprocessing.consumerProguardFiles",
+                "consumerProguardFiles()",
+                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+        postprocessingFiles.invoke().consumerProguardFiles.addAll(proguardFiles.toMutableList())
+    }
+
+    @Suppress("OverridingDeprecatedMember")
+    override fun setConsumerProguardFiles(proguardFileIterable: Iterable<Any>) {
+        deprecationReporter.reportDeprecatedUsage(
+                "Postprocessing.consumerProguardFiles",
+                "setConsumerProguardFile()",
+                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+        postprocessingFiles.invoke().consumerProguardFiles.addAll(proguardFileIterable.toMutableList())
+    }
+
+    fun initWith(that: BuildTypeOrProductFlavorImpl) {
+        applicationIdSuffix = that.applicationIdSuffix
+        versionNameSuffix = that.versionNameSuffix
+    }
+}

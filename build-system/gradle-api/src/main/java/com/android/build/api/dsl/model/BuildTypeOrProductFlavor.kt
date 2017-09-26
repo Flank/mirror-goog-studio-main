@@ -16,22 +16,15 @@
 
 package com.android.build.api.dsl.model
 
-import com.android.build.api.dsl.options.ExternalNativeBuildOptions
-import com.android.build.api.dsl.options.JavaCompileOptions
-import com.android.build.api.dsl.options.NdkOptions
-import com.android.build.api.dsl.options.ShaderOptions
-import org.gradle.api.Action
-import org.gradle.api.Named
-
 /** Properties common to Build Type and Product flavor.  */
-interface BuildTypeOrProductFlavor : VariantProperties, Named {
+interface BuildTypeOrProductFlavor {
 
     /**
      * Returns the application id suffix applied to this base config.
      *
      * @return the application id
      */
-    val applicationIdSuffix: String?
+    var applicationIdSuffix: String?
     /**
      * Returns the version name suffix of this flavor or null if none have been set. This is only
      * the value set on this product flavor, not necessarily the actual version name suffix used.
@@ -49,7 +42,7 @@ interface BuildTypeOrProductFlavor : VariantProperties, Named {
     fun proguardFiles(vararg files: Any)
 
     @Deprecated("Use postprocessingOptions")
-    fun setProguardFiles(proguardFileIterable: Iterable<*>)
+    fun setProguardFiles(proguardFileIterable: Iterable<Any>)
 
     @Deprecated("Use postprocessingOptions")
     fun testProguardFile(proguardFile: Any)
@@ -58,7 +51,7 @@ interface BuildTypeOrProductFlavor : VariantProperties, Named {
     fun testProguardFiles(vararg proguardFiles: Any)
 
     @Deprecated("Use postprocessingOptions")
-    fun setTestProguardFiles(files: Iterable<*>)
+    fun setTestProguardFiles(files: Iterable<Any>)
 
     @Deprecated("Use postprocessingOptions")
     fun consumerProguardFile(proguardFile: Any)
@@ -67,5 +60,5 @@ interface BuildTypeOrProductFlavor : VariantProperties, Named {
     fun consumerProguardFiles(vararg proguardFiles: Any)
 
     @Deprecated("Use postprocessingOptions")
-    fun setConsumerProguardFiles(proguardFileIterable: Iterable<*>)
+    fun setConsumerProguardFiles(proguardFileIterable: Iterable<Any>)
 }

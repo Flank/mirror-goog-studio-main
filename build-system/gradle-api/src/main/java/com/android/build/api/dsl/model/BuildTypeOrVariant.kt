@@ -20,7 +20,7 @@ import com.android.build.api.dsl.options.PostprocessingOptions
 import org.gradle.api.Action
 
 /** properties common to build types and variants  */
-interface BuildTypeOrVariant : VariantProperties {
+interface BuildTypeOrVariant {
 
     /** Whether the build type is configured to generate a debuggable apk.  */
     var debuggable: Boolean

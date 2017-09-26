@@ -19,7 +19,6 @@ package com.android.build.api.dsl.extension
 import com.android.build.api.dsl.options.AaptOptions
 import com.android.build.api.dsl.options.CompileOptions
 import com.android.build.api.dsl.options.DexOptions
-import com.android.build.api.dsl.options.ExternalNativeBuildOptions
 import com.android.build.api.dsl.options.LintOptions
 import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.build.api.transform.SecondaryFile
@@ -29,13 +28,17 @@ import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.FileCollection
 
-/** Partial extension properties for modules that build  */
-interface BuildModule {
-    /** Build tools version.  */
-    var buildToolsVersion: String
+/** Partial extension properties for modules that build a variant aware android artifact  */
+interface BuildProperties {
+    /** Build tools version. If null, uses the default value  */
+    var buildToolsVersion: String?
 
     /** Compile SDK version.  */
-    var compileSdkVersion: String
+    var compileSdkVersion: String?
+
+    /** @see [compileSdkVersion]
+     */
+    fun setCompileSdkVersion(apiLevel: Int)
 
     /**
      * Configures source sets.
@@ -65,7 +68,7 @@ interface BuildModule {
     fun useLibrary(name: String, required: Boolean)
 
     /** A prefix to be used when creating new resources. Used by Android Studio.  */
-    var resourcePrefix: String
+    var resourcePrefix: String?
 
     /** Registers a Transform.  */
     fun registerTransform(transform: Transform)
@@ -88,11 +91,6 @@ interface BuildModule {
 
     /** Dex options.  */
     val dexOptions: DexOptions
-
-    fun externalNativeBuildOptions(action: Action<ExternalNativeBuildOptions>)
-
-    /** External native build options.  */
-    val externalNativeBuild: ExternalNativeBuildOptions
 
     /** Lint options.  */
     val lintOptions: LintOptions

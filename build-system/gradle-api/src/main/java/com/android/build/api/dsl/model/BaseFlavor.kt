@@ -16,13 +16,11 @@
 
 package com.android.build.api.dsl.model
 
-import com.android.build.api.dsl.options.InstrumentationOptions
-import com.android.build.api.dsl.options.PostprocessingFiles
-import com.android.build.api.dsl.options.VectorDrawablesOptions
+import com.android.build.api.dsl.options.PostprocessingFilesOptions
 import org.gradle.api.Action
 
 /** Base DSL object used to configure product flavors.  */
-interface BaseFlavor : BuildTypeOrProductFlavor, ProductFlavorOrVariant {
+interface BaseFlavor {
 
     /**
      * Returns whether to enable unbundling mode for embedded wear app.
@@ -67,10 +65,10 @@ interface BaseFlavor : BuildTypeOrProductFlavor, ProductFlavorOrVariant {
     fun missingDimensionStrategy(dimension: String, requestedValues: List<String>)
 
     /** Configures the post-processing options with the given action.  */
-    fun postprocessing(action: Action<PostprocessingFiles>)
+    fun postprocessing(action: Action<PostprocessingFilesOptions>)
 
     /** Returns the post-processing option  */
-    val postprocessing: PostprocessingFiles
+    val postprocessing: PostprocessingFilesOptions
 
     // --- DEPRECATED
 

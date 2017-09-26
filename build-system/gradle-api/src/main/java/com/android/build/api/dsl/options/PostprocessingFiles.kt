@@ -20,7 +20,7 @@ import com.android.build.api.dsl.InitializableObject
 import java.io.File
 
 /** DSL object for configuring postprocessing: removing dead code, obfuscating etc.  */
-interface PostprocessingFiles : InitializableObject<PostprocessingFiles> {
+interface PostprocessingFiles {
 
     /**
      * The ProGuard configuration files.

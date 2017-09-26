@@ -17,9 +17,10 @@
 package com.android.build.api.dsl.model
 
 import com.android.build.api.dsl.InitializableObject
+import org.gradle.api.Named
 
 /** DSL object for product flavors  */
-interface ProductFlavor : BaseFlavor, FallbackStrategy, InitializableObject<ProductFlavor> {
+interface ProductFlavor : BaseFlavor, BuildTypeOrProductFlavor, ProductFlavorOrVariant, VariantProperties, FallbackStrategy, InitializableObject<ProductFlavor>, Named {
     /** Returns the dimension name or null if the object does not have a dimension.  */
     /** Set the dimension name  */
     var dimension: String?

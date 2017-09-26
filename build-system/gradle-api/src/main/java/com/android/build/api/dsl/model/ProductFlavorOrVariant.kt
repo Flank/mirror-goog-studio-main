@@ -22,7 +22,7 @@ import com.android.build.api.dsl.options.VectorDrawablesOptions
 import org.gradle.api.Action
 
 /** properties common to product flavors and variants  */
-interface ProductFlavorOrVariant : VariantProperties {
+interface ProductFlavorOrVariant {
 
     /**
      * The application ID.
@@ -104,7 +104,7 @@ interface ProductFlavorOrVariant : VariantProperties {
      *
      * See [uses-sdk element documentation](http://developer.android.com/guide/topics/manifest/uses-sdk-element.html).
      */
-    fun targetSdkVersion(targetSdkVersion: String?)
+    fun targetSdkVersion(targetSdkVersion: String)
 
     /**
      * Returns the maxSdkVersion. This is only the value set on this produce flavor.
@@ -130,7 +130,7 @@ interface ProductFlavorOrVariant : VariantProperties {
      * 'values-en' and 'values-fr' resources from the app and its dependencies. Gradle does not
      * package 'values-ja' resources in the final APK.
      */
-    val resConfigs: Collection<String>
+    var resConfigs: MutableList<String>
 
     /**
      * Returns the renderscript target api. This is only the value set on this product flavor. TODO:

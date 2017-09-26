@@ -22,9 +22,8 @@ import com.android.builder.model.TestOptions
 import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
 
-@Suppress("DEPRECATION")
 /** Partial extension properties for modules that contain tests  */
-interface EmbeddedTestModule : OnDeviceTestModule, JacocoModule {
+interface EmbeddedTestProperties {
     /** Return the name of the BuildType for testing.  */
     var testBuildType: String
 

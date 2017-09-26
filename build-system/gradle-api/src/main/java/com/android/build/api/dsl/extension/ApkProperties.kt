@@ -21,7 +21,7 @@ import com.android.build.api.dsl.options.Splits
 import org.gradle.api.Action
 
 /** Partial extension properties for modules that generate APKs  */
-interface ApkModule {
+interface ApkProperties {
 
     /** Packaging options.  */
     val packagingOptions: PackagingOptions

@@ -17,7 +17,7 @@
 package com.android.build.api.dsl.extension
 
 /** 'android' extension 'com.android.feature' projects.  */
-interface FeatureExtension : LibraryExtension, ApkModule {
+interface FeatureExtension : LibraryExtension, ApkProperties {
     /** Whether the feature module is the base feature.  */
     var baseFeature: Boolean
 

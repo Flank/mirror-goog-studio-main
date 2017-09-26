@@ -14,7 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl.model
+package com.android.build.api.dsl.extension
 
-/** DSL object for the defaultConfig object.  */
-interface DefaultConfig : BaseFlavor, BuildTypeOrProductFlavor, ProductFlavorOrVariant, VariantProperties
+import com.android.builder.model.AdbOptions
+import com.android.builder.testing.api.DeviceProvider
+import com.android.builder.testing.api.TestServer
+import org.gradle.api.Action
+
+/** Partial extension properties for modules that contain on-device tests  */
+interface OnDeviceTestProperties {
+    /** Adb options.  */
+    val adbOptions: AdbOptions
+
+    fun adbOptions(action: Action<AdbOptions>)
+
+    /** List of device providers  */
+    var deviceProviders: MutableList<DeviceProvider>
+
+    /** List of remote CI servers.  */
+    var testServers: MutableList<TestServer>
+}

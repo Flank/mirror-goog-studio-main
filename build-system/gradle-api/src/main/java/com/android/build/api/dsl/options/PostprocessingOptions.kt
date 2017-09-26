@@ -19,44 +19,7 @@ package com.android.build.api.dsl.options
 import com.android.build.api.dsl.InitializableObject
 
 /** DSL object for configuring postprocessing: removing dead code, obfuscating etc.  */
-interface PostprocessingOptions : InitializableObject<PostprocessingOptions> {
-
-    /**
-     * The ProGuard configuration files.
-     *
-     * There are 2 default rules files
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
-     *
-     *
-     * They are located in the SDK. Using `getDefaultProguardFile(String filename)`
-     * will return the full path to the files. They are identical except for enabling optimizations.
-     */
-    var proguardFiles: MutableList<Any>
-
-    /**
-     * Specifies proguard rule files to be used when processing test code.
-     *
-     *
-     * Test code needs to be processed to apply the same obfuscation as was done to main code.
-     */
-    var testProguardFiles: MutableList<Any>
-
-    /**
-     * Specifies proguard rule files to be included in the published AAR.
-     *
-     *
-     * This proguard rule file will then be used by any application project that consume the AAR
-     * (if proguard is enabled).
-     *
-     *
-     * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
-     *
-     * This is only valid for Library project. This is ignored in Application project.
-     */
-    var consumerProguardFiles: MutableList<Any>
-
+interface PostprocessingOptions : PostprocessingFiles, InitializableObject<PostprocessingOptions> {
 
     // FIXME fix isXXX properties
 

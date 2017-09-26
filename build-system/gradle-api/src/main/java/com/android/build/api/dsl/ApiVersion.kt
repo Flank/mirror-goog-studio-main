@@ -41,7 +41,7 @@ interface ApiVersion {
      *
      * @see .getCodename
      */
-    val apiLevel: Int
+    val apiLevel: Int?
 
     /**
      * Returns the version code name if applicable, null otherwise.
