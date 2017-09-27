@@ -133,7 +133,6 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
     @Test
     public void testInfoLoggingInteractiveMessage() {
         ILogger mockLogger = Mockito.mock(ILogger.class);
-        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
 
         String message = "CMake random info";
         String infoMessageString1 =
@@ -146,7 +145,8 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         InteractiveMessage interactiveMessage1 =
                 getInteractiveMessageFromString(infoMessageString1);
 
-        cmakeServerStrategy.logInteractiveMessage(mockLogger, interactiveMessage1);
+        CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
+                mockLogger, interactiveMessage1);
         Mockito.verify(mockLogger, times(1)).info(message);
 
         message = "CMake error but should be logged as info";
@@ -160,7 +160,8 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         InteractiveMessage interactiveMessage2 =
                 getInteractiveMessageFromString(infoMessageString2);
 
-        cmakeServerStrategy.logInteractiveMessage(mockLogger, interactiveMessage2);
+        CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
+                mockLogger, interactiveMessage2);
         Mockito.verify(mockLogger, times(1)).info(message);
 
         message = "CMake warning but should be logged as info";
@@ -174,7 +175,8 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         InteractiveMessage interactiveMessage3 =
                 getInteractiveMessageFromString(infoMessageString3);
 
-        cmakeServerStrategy.logInteractiveMessage(mockLogger, interactiveMessage3);
+        CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
+                mockLogger, interactiveMessage3);
         Mockito.verify(mockLogger, times(1)).info(message);
 
         message = "CMake info";
@@ -189,15 +191,14 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         InteractiveMessage interactiveMessage4 =
                 getInteractiveMessageFromString(infoMessageString4);
 
-        cmakeServerStrategy.logInteractiveMessage(mockLogger, interactiveMessage4);
+        CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
+                mockLogger, interactiveMessage4);
         Mockito.verify(mockLogger, times(1)).info(message);
     }
 
     @Test
     public void testWarningInMessageLoggingInteractiveMessage() {
         ILogger mockLogger = Mockito.mock(ILogger.class);
-        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
-
         String message = "CMake Warning some random warining :|";
 
         String warningMessageString =
@@ -210,15 +211,14 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         InteractiveMessage interactiveMessage =
                 getInteractiveMessageFromString(warningMessageString);
 
-        cmakeServerStrategy.logInteractiveMessage(mockLogger, interactiveMessage);
+        CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
+                mockLogger, interactiveMessage);
         Mockito.verify(mockLogger, times(1)).warning(message);
     }
 
     @Test
     public void testWarningInTitleLoggingInteractiveMessage() {
         ILogger mockLogger = Mockito.mock(ILogger.class);
-        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
-
         String message = "CMake warning some random warning :(";
 
         String warningMessageString =
@@ -232,15 +232,14 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         InteractiveMessage interactiveMessage =
                 getInteractiveMessageFromString(warningMessageString);
 
-        cmakeServerStrategy.logInteractiveMessage(mockLogger, interactiveMessage);
+        CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
+                mockLogger, interactiveMessage);
         Mockito.verify(mockLogger, times(1)).warning(message);
     }
 
     @Test
     public void testErrorInMessageLoggingInteractiveMessage() {
         ILogger mockLogger = Mockito.mock(ILogger.class);
-        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
-
         String message = "CMake Error some random error :(";
 
         String errorMessageString =
@@ -252,15 +251,14 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         + "\"type\":\"message\"}";
         InteractiveMessage interactiveMessage = getInteractiveMessageFromString(errorMessageString);
 
-        cmakeServerStrategy.logInteractiveMessage(mockLogger, interactiveMessage);
+        CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
+                mockLogger, interactiveMessage);
         Mockito.verify(mockLogger, times(1)).error(null, message);
     }
 
     @Test
     public void testErrorInTitleLoggingInteractiveMessage() {
         ILogger mockLogger = Mockito.mock(ILogger.class);
-        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
-
         String message = "CMake error some random error :(";
 
         String errorMessageString =
@@ -273,20 +271,21 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                         + "\"type\":\"message\"}";
         InteractiveMessage interactiveMessage = getInteractiveMessageFromString(errorMessageString);
 
-        cmakeServerStrategy.logInteractiveMessage(mockLogger, interactiveMessage);
+        CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
+                mockLogger, interactiveMessage);
         Mockito.verify(mockLogger, times(1)).error(null, message);
     }
 
     @Test
     public void testParseValidFileFromCompileCommands() throws IOException {
-        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
         File compileCommandsTestFile =
                 getCompileCommandsTestFile("compile_commands_valid_multiple_compilation.json");
         List<CompileCommand> compileCommands =
                 ServerUtils.getCompilationDatabase(compileCommandsTestFile);
 
         String flags =
-                cmakeServerStrategy.getAndroidGradleFileLibFlags("x86", "file.cc", compileCommands);
+                CmakeServerExternalNativeJsonGenerator.getAndroidGradleFileLibFlags(
+                        "file.cc", compileCommands);
         assertThat(flags).isNotNull();
         assertThat(flags)
                 .isEqualTo("-Irelative -DSOMEDEF=\"With spaces, quotes and \\-es.\" -c -o file.o ");
@@ -294,15 +293,14 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
 
     @Test
     public void testParseInvalidFileFromCompileCommands() throws IOException {
-        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
         File compileCommandsTestFile =
                 getCompileCommandsTestFile("compile_commands_valid_multiple_compilation.json");
         List<CompileCommand> compileCommands =
                 ServerUtils.getCompilationDatabase(compileCommandsTestFile);
 
         String flags =
-                cmakeServerStrategy.getAndroidGradleFileLibFlags(
-                        "x86", "invalid-file.cc", compileCommands);
+                CmakeServerExternalNativeJsonGenerator.getAndroidGradleFileLibFlags(
+                        "invalid-file.cc", compileCommands);
         assertThat(flags).isNull();
     }
 
@@ -342,7 +340,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
      * @param testFileName - test file name
      * @return test file
      */
-    private File getCompileCommandsTestFile(@NonNull String testFileName) {
+    private static File getCompileCommandsTestFile(@NonNull String testFileName) {
         final String compileCommandsTestFileDir =
                 "/com/android/build/gradle/external/cmake/compile_commands/";
         return TestResources.getFile(

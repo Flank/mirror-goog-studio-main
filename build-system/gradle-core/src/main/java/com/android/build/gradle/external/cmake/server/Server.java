@@ -109,6 +109,15 @@ public interface Server {
     CacheResult cache() throws IOException;
 
     /**
+     * Requests files used by CMake as part of the build system itself.
+     *
+     * @return CmakeInputsResult
+     * @throws IOException I/O failure
+     */
+    @NonNull
+    CmakeInputsResult cmakeInputs() throws IOException;
+
+    /**
      * Request to get the state of Cmake (after a successful handshake).
      *
      * @return global settings of Cmake's state
@@ -123,7 +132,7 @@ public interface Server {
      * @return full path to the compiler and compiler executable. If compiler executable is not
      *     found this function returns null.
      */
-    @Nullable
+    @NonNull
     String getCCompilerExecutable();
 
     /**
@@ -132,7 +141,7 @@ public interface Server {
      * @return full path to the compiler and compiler executable. If compiler executable is not
      *     found this function returns null.
      */
-    @Nullable
+    @NonNull
     String getCppCompilerExecutable();
 
     /** Returns to the path of the Cmake executable. */

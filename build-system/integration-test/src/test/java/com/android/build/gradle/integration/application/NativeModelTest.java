@@ -51,7 +51,6 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -645,6 +644,12 @@ public class NativeModelTest {
         assertThat(nativeProject.getBuildFiles()).isNotEmpty();
         for (File buildFile : nativeProject.getBuildFiles()) {
             assertThat(buildFile).exists();
+            // Build files could have more than just CMakeLists.txt which might be read-only (e.g.
+            // android.toolchain.cmake) which cannot be edited. So only update CMakeLists.txt
+            // file(s).
+            if (!buildFile.getName().equals("CMakeLists.txt")) {
+                continue;
+            }
             spinTouch(buildFile, originalTimeStamp);
             project.model().getSingle(NativeAndroidProject.class);
             long newTimeStamp = getHighestResolutionTimeStamp(jsonFile);

@@ -24,6 +24,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.external.cmake.CmakeUtils;
+import com.android.build.gradle.external.cmake.server.BuildFiles;
+import com.android.build.gradle.external.cmake.server.CmakeInputsResult;
 import com.android.build.gradle.external.cmake.server.CodeModel;
 import com.android.build.gradle.external.cmake.server.CompileCommand;
 import com.android.build.gradle.external.cmake.server.ComputeResult;
@@ -51,6 +53,8 @@ import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.process.ProcessException;
 import com.android.utils.ILogger;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.common.primitives.UnsignedInts;
 import java.io.File;
 import java.io.IOException;
@@ -59,11 +63,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.apache.commons.io.FileUtils;
-import org.jetbrains.annotations.Contract;
 
 /**
  * This strategy uses the Vanilla-CMake that supports Cmake server version 1.0 to configure the
@@ -109,22 +114,13 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 cppFlags,
                 nativeBuildConfigurationsJsons);
 
-        if (androidBuilder != null) {
-            logPreviewWarning(androidBuilder);
-        }
+        logPreviewWarning(androidBuilder);
     }
 
     private static void logPreviewWarning(@NonNull AndroidBuilder androidBuilder) {
         String previewWarning =
                 "Support for CMake 3.7 and higher is a preview feature. To report a bug, see https://developer.android.com/studio/report-bugs.html";
         androidBuilder.getLogger().warning(previewWarning);
-    }
-
-    /** @return Returns the default generator supported. */
-    @Contract(pure = true)
-    @NonNull
-    private static String getDefaultGenerator() {
-        return "Ninja";
     }
 
     /**
@@ -141,10 +137,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                             "Invalid number %d of toolchains. Only one toolchain should be present.",
                             toolchains.size()));
         }
-        for (String key : toolchains.keySet()) {
-            return key;
-        }
-        return null;
+        return toolchains.keySet().iterator().next();
     }
 
     @NonNull
@@ -191,7 +184,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         try {
             serverLogWriter = getCmakeServerLogWriter(getOutputFolder(getJsonFolder(), abi));
             ILogger logger = LoggerWrapper.getLogger(CmakeServerExternalNativeJsonGenerator.class);
-            Server cmakeServer = createServerAndConnect(abi, serverLogWriter, logger);
+            Server cmakeServer = createServerAndConnect(serverLogWriter, logger);
 
             doHandshake(outputJsonDir, cmakeServer);
             ConfigureCommandResult configureCommandResult =
@@ -233,8 +226,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
      */
     @NonNull
     private Server createServerAndConnect(
-            @NonNull String abi, @NonNull PrintWriter serverLogWriter, @NonNull ILogger logger)
-            throws IOException {
+            @NonNull PrintWriter serverLogWriter, @NonNull ILogger logger) throws IOException {
         // Create a new cmake server for the given Cmake and configure the given project.
         ServerReceiver serverReceiver =
                 new ServerReceiver()
@@ -325,7 +317,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     private void doHandshake(@NonNull File outputDir, @NonNull Server cmakeServer)
             throws IOException {
         List<ProtocolVersion> supportedProtocolVersions = cmakeServer.getSupportedVersion();
-        if (supportedProtocolVersions == null || supportedProtocolVersions.size() <= 0) {
+        if (supportedProtocolVersions == null || supportedProtocolVersions.isEmpty()) {
             throw new RuntimeException(
                     String.format(
                             "Gradle does not support the Cmake server version. %s",
@@ -425,7 +417,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             int startIndex = argument.indexOf(generatorArgument) + generatorArgument.length();
             return argument.substring(startIndex, argument.length());
         }
-        return getDefaultGenerator();
+        // Return the default generator, i.e., "Ninja"
+        return "Ninja";
     }
 
     /**
@@ -459,9 +452,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         NativeBuildConfigValue nativeBuildConfigValue = createDefaultNativeBuildConfigValue();
 
         // Build file
-        nativeBuildConfigValue.buildFiles.add(getMakefile());
+        assert nativeBuildConfigValue.buildFiles != null;
+        nativeBuildConfigValue.buildFiles.addAll(getBuildFiles(abi, cmakeServer));
 
         // Clean commands
+        assert nativeBuildConfigValue.cleanCommands != null;
         nativeBuildConfigValue.cleanCommands.add(
                 CmakeUtils.getCleanCommand(
                         getCmakeExecutable(), getOutputFolder(getJsonFolder(), abi)));
@@ -473,8 +468,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                             "Invalid code model received from Cmake server: \n%s\n%s",
                             getObjectToString(codeModel), getCmakeInfoString(cmakeServer)));
         }
+
         // C and Cpp extensions
+        assert nativeBuildConfigValue.cFileExtensions != null;
         nativeBuildConfigValue.cFileExtensions.addAll(CmakeUtils.getCExtensionSet(codeModel));
+        assert nativeBuildConfigValue.cppFileExtensions != null;
         nativeBuildConfigValue.cppFileExtensions.addAll(CmakeUtils.getCppExtensionSet(codeModel));
 
         // toolchains
@@ -528,6 +526,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
                     nativeLibraryValue.toolchain = toolchainHashString;
                     String libraryName = target.name + "-" + config.name + "-" + abi;
+                    assert nativeBuildConfigValue.libraries != null;
                     nativeBuildConfigValue.libraries.put(libraryName, nativeLibraryValue);
                 } // target
             } // project
@@ -546,6 +545,65 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             return false;
         }
         return true;
+    }
+
+    /**
+     * Returns the list of build files used by CMake as part of the build system. Temporary files
+     * are currently ignored.
+     */
+    @NonNull
+    private List<File> getBuildFiles(@NonNull String abi, @NonNull Server cmakeServer)
+            throws IOException {
+        CmakeInputsResult cmakeInputsResult = cmakeServer.cmakeInputs();
+        if (!ServerUtils.isCmakeInputsResultValid(cmakeInputsResult)) {
+            throw new RuntimeException(
+                    String.format(
+                            "Invalid cmakeInputs result received from Cmake server: \n%s\n%s",
+                            getObjectToString(cmakeInputsResult), getCmakeInfoString(cmakeServer)));
+        }
+
+        // Ideally we should see the build files within cmakeInputs response, but in the weird case
+        // that we don't, return the default make file.
+        if (cmakeInputsResult.buildFiles == null) {
+            List<File> buildFiles = Lists.newArrayList();
+            buildFiles.add(getMakefile());
+            return buildFiles;
+        }
+
+        // The sources listed might be duplicated, so remove the duplicates.
+        Set<String> buildSources = Sets.newHashSet();
+        for (BuildFiles buildFile : cmakeInputsResult.buildFiles) {
+            if (buildFile.isTemporary || buildFile.isCMake || buildFile.sources == null) {
+                continue;
+            }
+            Collections.addAll(buildSources, buildFile.sources);
+        }
+
+        // The path to the build file source might be relative, so use the absolute path using
+        // source directory information.
+        File sourceDirectory = null;
+        if (cmakeInputsResult.sourceDirectory != null) {
+            sourceDirectory = new File(cmakeInputsResult.sourceDirectory);
+        }
+
+        List<File> buildFiles = Lists.newArrayList();
+        File preNDKr15ToolchainFile = getTempToolchainFile(getOutputFolder(getJsonFolder(), abi));
+
+        for (String source : buildSources) {
+            File sourceFile =
+                    (sourceDirectory != null)
+                            ? new File(sourceDirectory, source)
+                            : new File(source);
+            // Ignore the toolchain file created to support pre NDKr15, because, even if the user
+            // updates the file, it'll be overwritten by Gradle during the next sync. So we don't
+            // need to watch this file.
+            if (preNDKr15ToolchainFile.getName().equals(sourceFile.getName())) {
+                continue;
+            }
+            buildFiles.add(sourceFile);
+        }
+
+        return buildFiles;
     }
 
     /**
@@ -614,18 +672,18 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                     }
                 }
             } else {
-                if (cmakeServer.getCCompilerExecutable() != null) {
+                if (!cmakeServer.getCCompilerExecutable().isEmpty()) {
                     cCompilerExecutable = new File(cmakeServer.getCCompilerExecutable());
                 }
-                if (cmakeServer.getCppCompilerExecutable() != null) {
+                if (!cmakeServer.getCppCompilerExecutable().isEmpty()) {
                     cppCompilerExecutable = new File(cmakeServer.getCppCompilerExecutable());
                 }
             }
         } catch (IOException e) {
-            if (cmakeServer.getCCompilerExecutable() != null) {
+            if (!cmakeServer.getCCompilerExecutable().isEmpty()) {
                 cCompilerExecutable = new File(cmakeServer.getCCompilerExecutable());
             }
-            if (cmakeServer.getCppCompilerExecutable() != null) {
+            if (!cmakeServer.getCppCompilerExecutable().isEmpty()) {
                 cppCompilerExecutable = new File(cmakeServer.getCppCompilerExecutable());
             }
         }
@@ -667,16 +725,13 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
      */
     private String getAndroidGradleFileLibFlags(@NonNull String abi, @NonNull String fileName)
             throws IOException {
-        return getAndroidGradleFileLibFlags(abi, fileName, getCompileCommands(abi));
+        return getAndroidGradleFileLibFlags(fileName, getCompileCommands(abi));
     }
 
     /** Helper function that returns the flags used to compile a given file. */
     @VisibleForTesting
-    String getAndroidGradleFileLibFlags(
-            @NonNull String abi,
-            @NonNull String fileName,
-            @NonNull List<CompileCommand> compileCommands)
-            throws IOException {
+    static String getAndroidGradleFileLibFlags(
+            @NonNull String fileName, @NonNull List<CompileCommand> compileCommands) {
         String flags = null;
 
         // Get the path of the given file name so we can compare it with the file specified within
@@ -703,6 +758,22 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         return flags;
     }
 
+    /** Returns the toolchain file to be used. */
+    @NonNull
+    private File getToolchainFile(@NonNull String abi) {
+        // NDK versions r15 and above have the fix in android.toolchain.cmake to work with CMake
+        // version 3.7+, but if the user has NDK r14 or below, we add the (hacky) fix
+        // programmatically.
+        if (getNdkHandler().getRevision() != null
+                && getNdkHandler().getRevision().getMajor() >= 15) {
+            // Add our toolchain file.
+            // Note: When setting this flag, Cmake's android toolchain would end up calling our
+            // toolchain via ndk-cmake-hooks, but our toolchains will (ideally) be executed only
+            // once.
+            return getToolChainFile();
+        }
+        return getPreNDKr15WrapperToolchainFile(getOutputFolder(getJsonFolder(), abi));
+    }
 
     /**
      * Returns a pre-ndk-r15-wrapper android toolchain cmake file for NDK r14 and below that has a
@@ -716,11 +787,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                         "# This toolchain file was generated by Gradle to support NDK versions r14 and below.\n");
 
         // Include the original android toolchain
-        tempAndroidToolchain.append(
-                String.format("include(%s)", normalizeFilePath(getToolChainFile()))
-                        + System.lineSeparator());
+        tempAndroidToolchain
+                .append(String.format("include(%s)", normalizeFilePath(getToolChainFile())))
+                .append(System.lineSeparator());
         // Overwrite the CMAKE_SYSTEM_VERSION to 1 so we skip CMake's Android toolchain.
-        tempAndroidToolchain.append("set(CMAKE_SYSTEM_VERSION 1)" + System.lineSeparator());
+        tempAndroidToolchain.append("set(CMAKE_SYSTEM_VERSION 1)").append(System.lineSeparator());
 
         File toolchainFile = getTempToolchainFile(outputFolder);
         try {
@@ -759,21 +830,5 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             return (file.getPath().replace("\\", "/"));
         }
         return file.getPath();
-    }
-
-    /** Returns the toolchain file to be used. */
-    @NonNull
-    private File getToolchainFile(@NonNull String abi) {
-        // NDK versions r15 and above have the fix in android.toolchain.cmake to work with CMake
-        // version 3.7+, but if the user has NDK r14 or below, we add the (hacky) fix
-        // programmatically.
-        if (getNdkHandler().getRevision().getMajor() >= 15) {
-            // Add our toolchain file.
-            // Note: When setting this flag, Cmake's android toolchain would end up calling our
-            // toolchain via ndk-cmake-hooks, but our toolchains will (ideally) be executed only
-            // once.
-            return getToolChainFile();
-        }
-        return getPreNDKr15WrapperToolchainFile(getOutputFolder(getJsonFolder(), abi));
     }
 }

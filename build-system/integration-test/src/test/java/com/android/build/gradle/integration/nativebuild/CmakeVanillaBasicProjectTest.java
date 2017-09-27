@@ -144,7 +144,7 @@ public class CmakeVanillaBasicProjectTest {
         project.model().getSingle(); // Make sure we can successfully get AndroidProject
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
         assertThat(model.getBuildSystems()).containsExactly(NativeBuildSystem.CMAKE.getName());
-        assertThat(model.getBuildFiles()).hasSize(1);
+        assertThat(model.getBuildFiles()).isNotEmpty();
         assertThat(model.getName()).isEqualTo("project");
         int abiCount = 3;
         assertThat(model.getArtifacts()).hasSize(abiCount * 2);

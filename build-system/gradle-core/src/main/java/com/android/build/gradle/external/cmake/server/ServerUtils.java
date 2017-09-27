@@ -27,7 +27,7 @@ import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
 
-/** Utilility class for Cmake server. */
+/** Utility class for Cmake server. */
 public class ServerUtils {
     /**
      * Parses the compile commands json to create the compilation database.
@@ -94,12 +94,13 @@ public class ServerUtils {
     }
 
     /**
-     * Validates the given reponse to configure command from Cmake server
+     * Validates the given response to configure command from Cmake server
      *
      * @return true if the given ConfigureResult is valid
      */
-    public static boolean isConfigureResultValid(@NonNull ConfigureResult configureResult) {
-        return (configureResult.type != null
+    public static boolean isConfigureResultValid(ConfigureResult configureResult) {
+        return (configureResult != null
+                && configureResult.type != null
                 && configureResult.inReplyTo != null
                 && configureResult.type.equals("reply")
                 && configureResult.inReplyTo.equals("configure"));
@@ -130,6 +131,18 @@ public class ServerUtils {
                 && codeModel.type.equals("reply")
                 && codeModel.configurations != null
                 && isCodeModelConfigurationsValid(codeModel.configurations));
+    }
+
+    /**
+     * Validates if the response to cmake inputs from Cmake server is valid
+     *
+     * @return true if the given cmake Inputs has all the fields that are required by gradle to work
+     *     as expected.
+     */
+    public static boolean isCmakeInputsResultValid(@NonNull CmakeInputsResult cmakeInputsResult) {
+        return (cmakeInputsResult.type != null
+                && cmakeInputsResult.inReplyTo != null
+                && cmakeInputsResult.inReplyTo.equals("cmakeInputs"));
     }
 
     /**
@@ -167,6 +180,11 @@ public class ServerUtils {
     private static boolean isCodeModelProjectValid(Project project) {
         if (project == null || project.buildDirectory == null || project.sourceDirectory == null) {
             return false;
+        }
+
+        // A project with empty targets is considered to be valid.
+        if (project.targets == null) {
+            return true;
         }
 
         for (Target target : project.targets) {
