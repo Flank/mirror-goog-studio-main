@@ -16,8 +16,10 @@
 
 package com.android.build.api.dsl.variant
 
+import com.android.build.api.dsl.extension.VariantOrExtensionProperties
 import com.android.build.api.dsl.model.BuildTypeOrVariant
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
 import com.android.build.api.dsl.model.VariantProperties
 
-interface Variant : VariantProperties, ProductFlavorOrVariant, BuildTypeOrVariant
+interface Variant : VariantProperties, ProductFlavorOrVariant, BuildTypeOrVariant,
+        VariantOrExtensionProperties, CommonVariantProperties

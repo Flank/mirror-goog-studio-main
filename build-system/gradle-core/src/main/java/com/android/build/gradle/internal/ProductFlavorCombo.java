@@ -76,17 +76,6 @@ public class ProductFlavorCombo<T extends DimensionAware & Named> {
     }
 
     /**
-     * Return the name of the combined list of flavors.
-     */
-    @NonNull
-    public static String getFlavorComboName(List<? extends Named> flavorList) {
-        return StringHelper.combineAsCamelCase(
-                flavorList.stream()
-                        .map(namedObject -> namedObject.getName())
-                        .collect(Collectors.toList()));
-    }
-
-    /**
      * Creates a list containing all combinations of ProductFlavors of the given dimensions.
      * @param flavorDimensions The dimensions each product flavor can belong to.
      * @param productFlavors An iterable of all ProductFlavors in the project..
@@ -127,19 +116,6 @@ public class ProductFlavorCombo<T extends DimensionAware & Named> {
                     0, flavorDimensions, map);
         }
         return result;
-    }
-
-    /**
-     * Remove all null reference from an array and create an ImmutableList it.
-     */
-    private static ImmutableList<ProductFlavor> filterNullFromArray(ProductFlavor[] flavors) {
-        ImmutableList.Builder<ProductFlavor> builder = ImmutableList.builder();
-        for (ProductFlavor flavor : flavors) {
-            if (flavor != null) {
-                builder.add(flavor);
-            }
-        }
-        return builder.build();
     }
 
     private static <S extends DimensionAware & Named> void createProductFlavorCombinations(

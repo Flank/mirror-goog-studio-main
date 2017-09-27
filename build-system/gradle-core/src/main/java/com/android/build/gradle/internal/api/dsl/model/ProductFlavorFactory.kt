@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.api.dsl.model
 
-import com.android.build.api.dsl.model.ProductFlavor
 import com.android.builder.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.NamedDomainObjectFactory
@@ -26,9 +25,9 @@ class ProductFlavorFactory(
             private val instantiator: Instantiator,
             private val deprecationReporter: DeprecationReporter,
             private val issueReporter: EvalIssueReporter)
-        : NamedDomainObjectFactory<ProductFlavor> {
+        : NamedDomainObjectFactory<ProductFlavorImpl> {
 
-    override fun create(name: String): ProductFlavor {
+    override fun create(name: String): ProductFlavorImpl {
         return instantiator.newInstance(ProductFlavorImpl::class.java,
                 name, deprecationReporter, issueReporter)
     }

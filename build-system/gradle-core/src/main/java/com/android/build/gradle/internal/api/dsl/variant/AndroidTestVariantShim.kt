@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl.variant
+package com.android.build.gradle.internal.api.dsl.variant
 
-interface UnitTestVariant : Variant {
-    val testedVariant: Variant
+import com.android.build.api.dsl.variant.AndroidTestVariant
+import com.android.build.gradle.internal.variant2.AndroidTestVariantImpl
 
-}
+/** shim implementation of [AndroidTestVariant] that delegates to an internal object */
+internal class AndroidTestVariantShim internal constructor(internalObject: AndroidTestVariantImpl)
+    : AndroidTestVariant by internalObject

@@ -17,16 +17,13 @@
 package com.android.build.gradle.internal.api.dsl.extensions
 
 import com.android.build.api.dsl.extension.BuildProperties
-import com.android.build.api.dsl.options.AaptOptions
-import com.android.build.api.dsl.options.CompileOptions
-import com.android.build.api.dsl.options.DexOptions
-import com.android.build.api.dsl.options.LintOptions
 import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.build.api.transform.Transform
 import com.android.build.gradle.internal.api.dsl.sealing.SealableNamedDomainObjectContainer
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
+import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
+import com.android.build.gradle.internal.variant2.DslModelData
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.DataBindingOptions
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
@@ -35,8 +32,9 @@ class BuildPropertiesImpl(
         issueReporter: EvalIssueReporter):
         SealableObject(issueReporter), BuildProperties {
 
-    override val sourceSets: SealableNamedDomainObjectContainer<AndroidSourceSet> =
-            SealableNamedDomainObjectContainer(dslModelData.sourceSets, issueReporter)
+    override val sourceSets: SealableNamedDomainObjectContainer<AndroidSourceSet, DefaultAndroidSourceSet> =
+            SealableNamedDomainObjectContainer(
+                    dslModelData.sourceSets, DefaultAndroidSourceSet::class.java, issueReporter)
 
     override fun sourceSets(action: Action<NamedDomainObjectContainer<AndroidSourceSet>>) {
         action.execute(sourceSets)
@@ -80,41 +78,6 @@ class BuildPropertiesImpl(
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val transformsDependencies: List<List<Any>>
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-
-    override fun aaptOptions(action: Action<AaptOptions>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override val aaptOptions: AaptOptions
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-
-    override fun compileOptions(action: Action<CompileOptions>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override val compileOptions: CompileOptions
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-
-    override fun dexOptions(action: Action<DexOptions>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override val dexOptions: DexOptions
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-
-    override val lintOptions: LintOptions
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-
-    override fun lintOptions(action: Action<LintOptions>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override val dataBinding: DataBindingOptions
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-
-    override fun dataBinding(action: Action<DataBindingOptions>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
 
     override fun seal() {
         super.seal()

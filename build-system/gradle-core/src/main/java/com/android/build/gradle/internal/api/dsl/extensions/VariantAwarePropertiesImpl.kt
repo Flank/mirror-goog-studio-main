@@ -23,10 +23,14 @@ import com.android.build.api.dsl.model.DefaultConfig
 import com.android.build.api.dsl.model.ProductFlavor
 import com.android.build.api.dsl.options.SigningConfig
 import com.android.build.api.variant.VariantFilter
+import com.android.build.gradle.internal.api.dsl.model.BuildTypeImpl
 import com.android.build.gradle.internal.api.dsl.model.DefaultConfigImpl
+import com.android.build.gradle.internal.api.dsl.model.ProductFlavorImpl
+import com.android.build.gradle.internal.api.dsl.options.SigningConfigImpl
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableNamedDomainObjectContainer
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
+import com.android.build.gradle.internal.variant2.DslModelData
 import com.android.builder.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
@@ -34,22 +38,27 @@ import org.gradle.api.NamedDomainObjectContainer
 
 class VariantAwarePropertiesImpl(
             dslModelData: DslModelData,
-            private val _defaultConfig: DefaultConfigImpl,
             private val deprecationReporter: DeprecationReporter,
             issueReporter: EvalIssueReporter)
         : SealableObject(issueReporter),
         VariantAwareProperties,
-        DefaultConfig by _defaultConfig {
+        DefaultConfig by dslModelData.defaultConfig {
 
-    override val productFlavors: SealableNamedDomainObjectContainer<ProductFlavor> =
-            SealableNamedDomainObjectContainer(dslModelData.productFlavors, issueReporter)
-    override val buildTypes: SealableNamedDomainObjectContainer<BuildType> =
-            SealableNamedDomainObjectContainer(dslModelData.buildTypes, issueReporter)
-    override val signingConfigs: SealableNamedDomainObjectContainer<SigningConfig> =
-            SealableNamedDomainObjectContainer(dslModelData.singingConfigs, issueReporter)
+    override val productFlavors: SealableNamedDomainObjectContainer<ProductFlavor, ProductFlavorImpl> =
+            SealableNamedDomainObjectContainer(
+                    dslModelData.productFlavors, ProductFlavorImpl::class.java, issueReporter)
+    override val buildTypes: SealableNamedDomainObjectContainer<BuildType, BuildTypeImpl> =
+            SealableNamedDomainObjectContainer(
+                    dslModelData.buildTypes, BuildTypeImpl::class.java, issueReporter)
+    override val signingConfigs: SealableNamedDomainObjectContainer<SigningConfig, SigningConfigImpl> =
+            SealableNamedDomainObjectContainer(
+                    dslModelData.signingConfigs, SigningConfigImpl::class.java, issueReporter)
+
+    private val _defaultConfig = dslModelData.defaultConfig
 
     private val _flavorDimensions: SealableList<String> = SealableList.new(issueReporter)
     private val _variantFilters: SealableList<Action<VariantFilter>> = SealableList.new(issueReporter)
+    private val _postVariants: SealableList<Action<Void>> = SealableList.new(issueReporter)
 
     override var variantFilters: MutableList<Action<VariantFilter>>
         get() = _variantFilters
@@ -78,11 +87,30 @@ class VariantAwarePropertiesImpl(
     override val variants: VariantCallbacks
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
+    override fun variantFilter(action: Action<VariantFilter>) {
+        if (checkSeal()) {
+            _variantFilters.add(action)
+        }
+    }
+
+    override var postVariants: MutableList<Action<Void>>
+        get() = _postVariants
+        set(value) {
+            _postVariants.reset(value)
+        }
+
+    override fun postVariant(action: Action<Void>) {
+        if (checkSeal()) {
+            _postVariants.add(action)
+        }
+    }
+
     override fun seal() {
         super.seal()
         _defaultConfig.seal()
         _flavorDimensions.seal()
         _variantFilters.seal()
+        _postVariants.seal()
 
         productFlavors.seal()
         buildTypes.seal()
@@ -90,15 +118,6 @@ class VariantAwarePropertiesImpl(
     }
 
     // DEPRECATED
-
-    @Suppress("OverridingDeprecatedMember")
-    override fun variantFilter(action: Action<VariantFilter>) {
-        deprecationReporter.reportDeprecatedUsage(
-                "android.variantFilters",
-                "android.variantFilter()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
-        _variantFilters.add(action)
-    }
 
     @Suppress("OverridingDeprecatedMember")
     override var flavorDimensionList: MutableList<String>

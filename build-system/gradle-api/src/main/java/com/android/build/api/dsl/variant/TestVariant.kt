@@ -16,4 +16,5 @@
 
 package com.android.build.api.dsl.variant
 
+/** variant for separate test projects */
 interface TestVariant : Variant

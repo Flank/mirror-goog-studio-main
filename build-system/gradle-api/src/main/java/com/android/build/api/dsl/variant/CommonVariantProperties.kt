@@ -16,7 +16,20 @@
 
 package com.android.build.api.dsl.variant
 
-interface UnitTestVariant : Variant {
-    val testedVariant: Variant
+import com.android.build.api.sourcesets.AndroidSourceSet
 
+/** common variant properties to all variants */
+interface CommonVariantProperties {
+
+    val buildTypeName: String
+    val flavorNames: List<String>
+
+    /**
+     * Base source sets for the build type, default config, and product flavors
+     * The list is immutable and the sourcesets themselves have been sealed
+     */
+    val baseSourceSets: List<AndroidSourceSet>
+
+    val variantSourceSet: AndroidSourceSet
+    val multiFlavorSourceSet: AndroidSourceSet?
 }

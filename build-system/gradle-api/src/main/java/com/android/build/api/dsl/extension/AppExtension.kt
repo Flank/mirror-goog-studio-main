@@ -16,18 +16,10 @@
 
 package com.android.build.api.dsl.extension
 
-import com.android.build.api.dsl.variant.ApplicationVariant
 import org.gradle.api.DomainObjectSet
 
 /** 'android' extension 'com.android.application' projects.  */
-interface AppExtension : BuildProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, ApkProperties, AndroidExtension {
-
-    /**
-     * Returns the list of Application variants. Since the collections is built after evaluation, it
-     * should be used with [DomainObjectSet.all] to process future items.
-     */
-    @Deprecated("Use variants property")
-    val applicationVariants: DomainObjectSet<ApplicationVariant>
+interface AppExtension : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, ApkProperties, AndroidExtension {
 
     /**
      * Returns the list of build output. Since the collections is built after evaluation, it should

@@ -20,13 +20,16 @@ import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 import org.gradle.api.Named
 
-abstract class SealableObject(protected val issueReporter: EvalIssueReporter, private val name: String?) {
+abstract class SealableObject(
+            protected val issueReporter: EvalIssueReporter,
+            private val name: String?)
+        : Sealable {
 
     constructor(issueReporter: EvalIssueReporter): this(issueReporter, null)
 
     private var sealed: Boolean = false
 
-    open fun seal() {
+    override fun seal() {
         if (sealed) {
             // get the name of the class
             val className = this.javaClass.name

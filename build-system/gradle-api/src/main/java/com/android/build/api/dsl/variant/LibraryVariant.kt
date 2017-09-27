@@ -16,4 +16,7 @@
 
 package com.android.build.api.dsl.variant
 
-interface LibraryVariant : Variant
+interface LibraryVariant : Variant {
+    val androidTestVariant: AndroidTestVariant
+    val unitTestVariant: UnitTestVariant
+}

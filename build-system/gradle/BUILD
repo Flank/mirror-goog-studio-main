@@ -34,6 +34,7 @@ kotlin_library(
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/data-binding:tools.compilerCommon",
     ],
 )

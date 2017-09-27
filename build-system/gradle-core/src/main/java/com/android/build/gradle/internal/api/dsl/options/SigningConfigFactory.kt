@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.api.dsl.options
 
-import com.android.build.api.dsl.options.SigningConfig
 import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
@@ -34,9 +33,9 @@ class SigningConfigFactory(
             private val instantiator: Instantiator,
             private val deprecationReporter: DeprecationReporter,
             private val issueReporter: EvalIssueReporter)
-        : NamedDomainObjectFactory<SigningConfig> {
+        : NamedDomainObjectFactory<SigningConfigImpl> {
 
-    override fun create(name: String): SigningConfig {
+    override fun create(name: String): SigningConfigImpl {
         val newInstance = instantiator.newInstance(SigningConfigImpl::class.java,
                 name, deprecationReporter, issueReporter)
 

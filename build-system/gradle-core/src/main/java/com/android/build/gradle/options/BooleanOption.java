@@ -49,6 +49,8 @@ public enum BooleanOption implements Option<Boolean> {
     BUILD_ONLY_TARGET_ABI("android.buildOnlyTargetAbi", true),
     KEEP_TIMESTAMPS_IN_APK("android.keepTimestampsInApk"),
 
+    ENABLE_NEW_DSL_AND_API("android.enable.new.dsl"),
+
     IDE_INVOKED_FROM_IDE(AndroidProject.PROPERTY_INVOKED_FROM_IDE),
     IDE_BUILD_MODEL_ONLY(AndroidProject.PROPERTY_BUILD_MODEL_ONLY),
     IDE_BUILD_MODEL_ONLY_ADVANCED(AndroidProject.PROPERTY_BUILD_MODEL_ONLY_ADVANCED),

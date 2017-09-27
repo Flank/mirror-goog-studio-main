@@ -14,9 +14,16 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl.variant
+package com.android.build.gradle.internal.api.dsl.extensions
 
-interface UnitTestVariant : Variant {
-    val testedVariant: Variant
+import com.android.build.api.dsl.extension.BuildProperties
+import com.android.build.api.dsl.extension.VariantAwareProperties
+import com.android.build.api.dsl.extension.VariantOrExtensionProperties
+import com.android.build.gradle.internal.api.dsl.sealing.Sealable
+
+/** internal common interface to app, library, feature, test (basically variant-aware building extension) */
+interface BaseExtension2 : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, Sealable {
+
+    val variantExtensionProperties: VariantOrExtensionPropertiesImpl
 
 }

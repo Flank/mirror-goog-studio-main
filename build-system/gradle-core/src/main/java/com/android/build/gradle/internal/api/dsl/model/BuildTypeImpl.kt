@@ -22,6 +22,7 @@ import com.android.build.api.dsl.model.BuildTypeOrVariant
 import com.android.build.api.dsl.model.FallbackStrategy
 import com.android.build.api.dsl.model.VariantProperties
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
+import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 
@@ -30,7 +31,7 @@ class BuildTypeImpl(
         private val deprecationReporter: DeprecationReporter,
         private val variantProperties: VariantPropertiesImpl,
         private val buildTypeOrProductFlavor: BuildTypeOrProductFlavorImpl,
-        private val buildTypeOrVariant: BuildTypeOrVariantImpl,
+        internal val buildTypeOrVariant: BuildTypeOrVariantImpl,
         private val fallbackStrategy: FallbackStrategyImpl,
         issueReporter: EvalIssueReporter)
     : SealableObject(issueReporter),
@@ -42,8 +43,18 @@ class BuildTypeImpl(
 
     override fun getName() = named
 
-    override var crunchPngs: Boolean = false
+    @Suppress("OverridingDeprecatedMember")
+    override var crunchPngsDefault: Boolean = name != BuilderConstants.DEBUG
+        get() {
+            deprecationReporter.reportObsoleteUsage(
+                    "BuildType.crunchPngsDefault",
+                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+            return field
+        }
         set(value) {
+            deprecationReporter.reportObsoleteUsage(
+                    "BuildType.crunchPngsDefault",
+                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
             if (checkSeal()) {
                 field = value
             }
@@ -58,8 +69,6 @@ class BuildTypeImpl(
             buildTypeOrProductFlavor.initWith(buildType.buildTypeOrProductFlavor)
             buildTypeOrVariant.initWith(buildType.buildTypeOrVariant)
             fallbackStrategy.initWith(buildType.fallbackStrategy)
-
-            crunchPngs = that.crunchPngs
         }
     }
 
@@ -71,7 +80,6 @@ class BuildTypeImpl(
         buildTypeOrVariant.seal()
         fallbackStrategy.seal()
     }
-
 
     // --- DEPRECATED ---
 
@@ -125,11 +133,6 @@ class BuildTypeImpl(
     override fun isUseProguard(): Boolean? {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
-    @Suppress("OverridingDeprecatedMember")
-    override var crunchPngsDefault: Boolean
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-        set(value) {}
 
     @Suppress("OverridingDeprecatedMember")
     override fun isCrunchPngsDefault(): Boolean {

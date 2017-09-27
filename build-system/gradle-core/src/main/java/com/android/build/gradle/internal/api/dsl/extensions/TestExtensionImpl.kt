@@ -17,17 +17,16 @@
 package com.android.build.gradle.internal.api.dsl.extensions
 
 import com.android.build.api.dsl.extension.ApkProperties
-import com.android.build.api.dsl.extension.AppExtension
 import com.android.build.api.dsl.extension.BuildProperties
 import com.android.build.api.dsl.extension.EmbeddedTestProperties
 import com.android.build.api.dsl.extension.OnDeviceTestProperties
+import com.android.build.api.dsl.extension.TestExtension
 import com.android.build.api.dsl.extension.VariantAwareProperties
 import com.android.build.api.dsl.extension.VariantOrExtensionProperties
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.errors.EvalIssueReporter
-import org.gradle.api.DomainObjectSet
 
-class AppExtensionImpl(
+class TestExtensionImpl(
             private val buildProperties: BuildPropertiesImpl,
             override val variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             private val variantAwareProperties: VariantAwarePropertiesImpl,
@@ -36,7 +35,7 @@ class AppExtensionImpl(
             private val onDeviceTestProperties: OnDeviceTestPropertiesImpl,
             issueReporter: EvalIssueReporter)
         : SealableObject(issueReporter),
-        AppExtension,
+        TestExtension,
         BaseExtension2,
         BuildProperties by buildProperties,
         VariantOrExtensionProperties by variantExtensionProperties,
@@ -56,6 +55,18 @@ class AppExtensionImpl(
         onDeviceTestProperties.seal()
     }
 
-    override val buildOutputs: DomainObjectSet<*>
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override var targetProjectPath: String? = null
+        set(value) {
+            if (checkSeal()) {
+                field = value
+            }
+        }
+
+    @Suppress("OverridingDeprecatedMember")
+    override var targetVariant: String? = null
+        set(value) {
+            if (checkSeal()) {
+                field = value
+            }
+        }
 }

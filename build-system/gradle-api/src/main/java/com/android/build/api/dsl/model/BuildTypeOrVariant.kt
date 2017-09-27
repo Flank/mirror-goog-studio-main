@@ -84,6 +84,19 @@ interface BuildTypeOrVariant {
      */
     var embedMicroApp: Boolean
 
+    /**
+     * Whether to crunch PNGs.
+     *
+     * This will reduce the size of the APK if PNGs resources are not already optimally
+     * compressed, at the cost of extra time to build.
+     *
+     *
+     * PNG crunching is enabled by default in the release build type and disabled by default in
+     * the debug build type.
+     */
+    /** Sets whether to crunch PNGs  */
+    var crunchPngs: Boolean
+
     /** Configures the post-processing options with the given action.  */
     fun postprocessing(action: Action<PostprocessingOptions>)
 

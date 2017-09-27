@@ -43,6 +43,17 @@ import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.ToolingRegistryProvider;
 import com.android.build.gradle.internal.VariantManager;
+import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
+import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl;
+import com.android.build.gradle.internal.api.dsl.extensions.VariantAwarePropertiesImpl;
+import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl;
+import com.android.build.gradle.internal.api.dsl.model.BaseFlavorImpl;
+import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrProductFlavorImpl;
+import com.android.build.gradle.internal.api.dsl.model.DefaultConfigImpl;
+import com.android.build.gradle.internal.api.dsl.model.FallbackStrategyImpl;
+import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImpl;
+import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl;
+import com.android.build.gradle.internal.api.dsl.variant.SealableVariant;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
@@ -64,6 +75,9 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
+import com.android.build.gradle.internal.variant2.DslModelData;
+import com.android.build.gradle.internal.variant2.VariantBuilder;
+import com.android.build.gradle.internal.variant2.VariantFactory2;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -71,6 +85,8 @@ import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.errors.DeprecationReporter;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
@@ -102,6 +118,7 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -122,10 +139,8 @@ import org.gradle.api.tasks.StopExecutionException;
 import org.gradle.internal.reflect.Instantiator;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
-/**
- * Base class for all Android plugins
- */
-public abstract class BasePlugin implements ToolingRegistryProvider {
+/** Base class for all Android plugins */
+public abstract class BasePlugin<E extends BaseExtension2> implements ToolingRegistryProvider {
 
     @VisibleForTesting
     public static final GradleVersion GRADLE_MIN_VERSION =
@@ -137,7 +152,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
     private TaskManager taskManager;
 
-    private Project project;
+    protected Project project;
 
     private ProjectOptions projectOptions;
 
@@ -157,7 +172,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
     private LoggerWrapper loggerWrapper;
 
-    private ExtraModelInfo extraModelInfo;
+    protected ExtraModelInfo extraModelInfo;
 
     private String creator;
 
@@ -174,7 +189,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
 
         ModelBuilder.clearCaches();
     }
-
 
     @NonNull
     protected abstract BaseExtension createExtension(
@@ -241,12 +255,11 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         // We run by default in headless mode, so the JVM doesn't steal focus.
         System.setProperty("java.awt.headless", "true");
 
-        project.getPluginManager().apply(AndroidBasePlugin.class);
-
-        TaskInputHelper.enableBypass();
-
         this.project = project;
         this.projectOptions = new ProjectOptions(project);
+
+        project.getPluginManager().apply(AndroidBasePlugin.class);
+
         ExecutionConfigurationUtil.setThreadPoolSize(projectOptions);
         checkPathForErrors();
         checkModulesForErrors();
@@ -260,23 +273,48 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                 .setAndroidPlugin(getAnalyticsPluginType())
                 .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST);
 
-        threadRecorder.record(
-                ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE,
-                project.getPath(),
-                null,
-                this::configureProject);
+        if (!projectOptions.get(BooleanOption.ENABLE_NEW_DSL_AND_API)) {
+            TaskInputHelper.enableBypass();
 
-        threadRecorder.record(
-                ExecutionType.BASE_PLUGIN_PROJECT_BASE_EXTENSION_CREATION,
-                project.getPath(),
-                null,
-                this::configureExtension);
+            threadRecorder.record(
+                    ExecutionType.BASE_PLUGIN_PROJECT_CONFIGURE,
+                    project.getPath(),
+                    null,
+                    this::configureProject);
 
-        threadRecorder.record(
-                ExecutionType.BASE_PLUGIN_PROJECT_TASKS_CREATION,
-                project.getPath(),
-                null,
-                this::createTasks);
+            threadRecorder.record(
+                    ExecutionType.BASE_PLUGIN_PROJECT_BASE_EXTENSION_CREATION,
+                    project.getPath(),
+                    null,
+                    this::configureExtension);
+
+            threadRecorder.record(
+                    ExecutionType.BASE_PLUGIN_PROJECT_TASKS_CREATION,
+                    project.getPath(),
+                    null,
+                    this::createTasks);
+        } else {
+            // configure project
+
+            // Apply the Java and Jacoco plugins.
+            project.getPlugins().apply(JavaBasePlugin.class);
+            project.getPlugins().apply(JacocoPlugin.class);
+
+            // configure extension
+            configureNewExtension();
+
+            // create basic tasks?
+            // FIXME dependency should be setup using BuildableArtifacts
+
+            // after evaluate callbacks
+            project.afterEvaluate(
+                    p ->
+                            threadRecorder.record(
+                                    ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
+                                    p.getPath(),
+                                    null,
+                                    this::afterEvaluateCallback));
+        }
     }
 
     private void configureProject() {
@@ -552,6 +590,86 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
                                 project.getPath(),
                                 null,
                                 () -> createAndroidTasks(false)));
+    }
+
+    private DslModelData dslModelData = null;
+    private E newExtension = null;
+
+    @NonNull
+    protected abstract E createNewExtension(
+            @NonNull BuildPropertiesImpl buildProperties,
+            @NonNull VariantOrExtensionPropertiesImpl variantExtensionProperties,
+            @NonNull VariantAwarePropertiesImpl variantAwareProperties);
+
+    @NonNull
+    protected abstract List<VariantFactory2<E>> getVariantFactories();
+
+    private void configureNewExtension() {
+        // FIXME we don't want to keep this around in this form.
+        extraModelInfo = new ExtraModelInfo(projectOptions, project.getLogger());
+        // FIXME, split in different implementations
+        EvalIssueReporter issueReporter = extraModelInfo;
+        DeprecationReporter deprecationReporter = extraModelInfo;
+
+        // create the default config implementation
+        BaseFlavorImpl baseFlavor = new BaseFlavorImpl(deprecationReporter, issueReporter);
+        DefaultConfigImpl defaultConfig =
+                new DefaultConfigImpl(
+                        new VariantPropertiesImpl(issueReporter),
+                        new BuildTypeOrProductFlavorImpl(
+                                deprecationReporter, issueReporter, baseFlavor::getPostprocessing),
+                        new ProductFlavorOrVariantImpl(issueReporter),
+                        new FallbackStrategyImpl(deprecationReporter, issueReporter),
+                        baseFlavor,
+                        issueReporter);
+
+        dslModelData =
+                new DslModelData(
+                        project, defaultConfig, instantiator, extraModelInfo, extraModelInfo);
+
+        newExtension =
+                createNewExtension(
+                        new BuildPropertiesImpl(dslModelData, issueReporter),
+                        new VariantOrExtensionPropertiesImpl(issueReporter),
+                        new VariantAwarePropertiesImpl(
+                                dslModelData, deprecationReporter, issueReporter));
+    }
+
+    private void afterEvaluateCallback() {
+
+        // callback for the afterEvaluate
+        // FIXME implement
+
+        // seal the DSL.
+        newExtension.seal();
+
+        dslModelData.afterEvaluateCompute(true /*FIXME*/, null);
+
+        // compute the variants
+        List<SealableVariant> variants =
+                new VariantBuilder<>(
+                                dslModelData,
+                                newExtension,
+                                getVariantFactories(),
+                                extraModelInfo,
+                                extraModelInfo)
+                        .generateVariants();
+
+        // run the variant API
+        for (SealableVariant variant : variants) {
+            // FIXME implement
+        }
+
+        // post-variant API
+        // FIXME implement
+
+        // seal the variants
+        for (SealableVariant variant : variants) {
+            variant.seal();
+        }
+
+        // create the tasks
+        // FIXME implement
     }
 
     private void checkGradleVersion() {

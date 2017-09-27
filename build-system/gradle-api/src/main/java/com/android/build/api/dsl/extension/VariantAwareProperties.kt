@@ -52,13 +52,17 @@ interface VariantAwareProperties : DefaultConfig {
     /** Filter to determine which variants to build.  */
     var variantFilters: MutableList<Action<VariantFilter>>
 
-    @Deprecated("User variantFilter property")
     fun variantFilter(action: Action<VariantFilter>)
 
     /**
      * a Callback object to register callbacks for variants
      */
     val variants: VariantCallbacks
+
+    /** post variant callbacks  */
+    var postVariants: MutableList<Action<Void>>
+
+    fun postVariant(action: Action<Void>)
 
     @Deprecated("Use flavorDimensions")
     var flavorDimensionList: MutableList<String>

@@ -30,19 +30,6 @@ import org.gradle.api.Named
 interface BuildType : BuildTypeOrProductFlavor, BuildTypeOrVariant, VariantProperties, FallbackStrategy, InitializableObject<BuildType>, Named {
 
     /**
-     * Whether to crunch PNGs.
-     *
-     * This will reduce the size of the APK if PNGs resources are not already optimally
-     * compressed, at the cost of extra time to build.
-     *
-     *
-     * PNG crunching is enabled by default in the release build type and disabled by default in
-     * the debug build type.
-     */
-    /** Sets whether to crunch PNGs  */
-    var crunchPngs: Boolean
-
-    /**
      * @see PostprocessingOptions.isObfuscate
      * @see PostprocessingOptions.isRemoveUnusedCode
      * @see .getPostprocessing

@@ -43,10 +43,13 @@ class ProductFlavorImpl(
 
     override fun getName() = named
 
-    override var dimension: String? = null
+    internal var _dimension: String? = null
+
+    override var dimension: String?
+        get() = _dimension
         set(value) {
             if (checkSeal()) {
-                field = value
+                _dimension = value
             }
         }
 

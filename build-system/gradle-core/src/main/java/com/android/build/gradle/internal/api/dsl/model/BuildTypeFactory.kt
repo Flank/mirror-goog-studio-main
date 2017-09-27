@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.api.dsl.model
 
-import com.android.build.api.dsl.model.BuildType
 import com.android.builder.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.NamedDomainObjectFactory
@@ -26,9 +25,9 @@ class BuildTypeFactory(
             private val instantiator: Instantiator,
             private val deprecationReporter: DeprecationReporter,
             private val issueReporter: EvalIssueReporter)
-        : NamedDomainObjectFactory<BuildType> {
+        : NamedDomainObjectFactory<BuildTypeImpl> {
 
-    override fun create(name: String): BuildType {
+    override fun create(name: String): BuildTypeImpl {
         return instantiator.newInstance(BuildTypeImpl::class.java,
                 name, deprecationReporter, issueReporter)
     }

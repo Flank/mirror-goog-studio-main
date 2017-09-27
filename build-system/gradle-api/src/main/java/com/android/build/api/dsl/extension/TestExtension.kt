@@ -18,13 +18,13 @@ package com.android.build.api.dsl.extension
 
 @Suppress("DEPRECATION")
 /** 'android' extension 'com.android.test' projects.  */
-interface TestExtension : BuildProperties, VariantAwareProperties, OnDeviceTestProperties, AndroidExtension {
+interface TestExtension : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, OnDeviceTestProperties, ApkProperties, AndroidExtension {
 
     /** The Gradle path of the project that this test project tests.  */
-    var targetProjectPath: String
+    var targetProjectPath: String?
 
     // --- DEPRECATED
 
     @Deprecated("This is deprecated, test module can now test all flavors.")
-    var targetVariant: String
+    var targetVariant: String?
 }

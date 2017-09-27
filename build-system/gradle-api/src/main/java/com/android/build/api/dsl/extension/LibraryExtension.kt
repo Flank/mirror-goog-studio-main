@@ -16,24 +16,14 @@
 
 package com.android.build.api.dsl.extension
 
-import com.android.build.api.dsl.variant.LibraryVariant
-import org.gradle.api.DomainObjectSet
-
 /** 'android' extension 'com.android.library' projects.  */
-interface LibraryExtension : BuildProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, AndroidExtension {
+interface LibraryExtension : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, AndroidExtension {
 
     /** Name of the variant to publish.  */
     var defaultPublishConfig: String
 
     /** Aidl files to package in the aar.  */
     var aidlPackageWhiteList: Collection<String>
-
-    /**
-     * Returns the list of library variants. Since the collections is built after evaluation, it
-     * should be used with [DomainObjectSet.all] to process future items.
-     */
-    @Deprecated("Use variants property")
-    val libraryVariants: DomainObjectSet<LibraryVariant>
 
     // --- DEPRECATED
 

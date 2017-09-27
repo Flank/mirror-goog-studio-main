@@ -16,34 +16,30 @@
 
 package com.android.build.gradle.internal.api.dsl.extensions
 
-import com.android.build.api.dsl.extension.ApkProperties
-import com.android.build.api.dsl.extension.AppExtension
 import com.android.build.api.dsl.extension.BuildProperties
 import com.android.build.api.dsl.extension.EmbeddedTestProperties
+import com.android.build.api.dsl.extension.LibraryExtension
 import com.android.build.api.dsl.extension.OnDeviceTestProperties
 import com.android.build.api.dsl.extension.VariantAwareProperties
 import com.android.build.api.dsl.extension.VariantOrExtensionProperties
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.errors.EvalIssueReporter
-import org.gradle.api.DomainObjectSet
 
-class AppExtensionImpl(
+class LibraryExtensionImpl(
             private val buildProperties: BuildPropertiesImpl,
             override val variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             private val variantAwareProperties: VariantAwarePropertiesImpl,
-            private val apkPropertiesImpl: ApkPropertiesImpl,
             private val embeddedTestProperties: EmbeddedTestPropertiesImpl,
             private val onDeviceTestProperties: OnDeviceTestPropertiesImpl,
             issueReporter: EvalIssueReporter)
         : SealableObject(issueReporter),
-        AppExtension,
+        LibraryExtension,
         BaseExtension2,
         BuildProperties by buildProperties,
         VariantOrExtensionProperties by variantExtensionProperties,
         VariantAwareProperties by variantAwareProperties,
-        ApkProperties by apkPropertiesImpl,
         EmbeddedTestProperties by embeddedTestProperties,
-        OnDeviceTestProperties by onDeviceTestProperties {
+        OnDeviceTestProperties by onDeviceTestProperties{
 
     override fun seal() {
         super.seal()
@@ -51,11 +47,23 @@ class AppExtensionImpl(
         buildProperties.seal()
         variantExtensionProperties.seal()
         variantAwareProperties.seal()
-        apkPropertiesImpl.seal()
         embeddedTestProperties.seal()
         onDeviceTestProperties.seal()
     }
 
-    override val buildOutputs: DomainObjectSet<*>
+    override var defaultPublishConfig: String = "release"
+        set(value) {
+            if (checkSeal()) {
+                field = value
+            }
+        }
+
+    override var aidlPackageWhiteList: Collection<String>
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        set(value) {}
+
+    @Suppress("OverridingDeprecatedMember")
+    override var packageBuildConfig: Boolean
+        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        set(value) {}
 }

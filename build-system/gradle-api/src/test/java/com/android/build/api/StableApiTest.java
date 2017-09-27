@@ -33,6 +33,7 @@ import com.google.common.truth.Truth;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -69,6 +70,7 @@ public class StableApiTest {
                         .split(Resources.toString(API_LIST_URL, Charsets.UTF_8));
 
         //System.err.println("####################");
+        //Collections.sort(apiElements);
         //for (String apiElement : apiElements) {
         //    System.err.println(apiElement);
         //}
@@ -82,7 +84,7 @@ public class StableApiTest {
         // ATTENTION REVIEWER: if this needs to be changed, please make sure changes to api-list.txt
         // are backwards compatible.
         assertEquals(
-                "b08b45e1c06115e4332404d95391c0990f73c103",
+                "fea1b5441e550ad70c4b444c36e8d59218be40e5",
                 Hashing.sha1()
                         .hashString(
                                 Resources.toString(API_LIST_URL, Charsets.UTF_8)

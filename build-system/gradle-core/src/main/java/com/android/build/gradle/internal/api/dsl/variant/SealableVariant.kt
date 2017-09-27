@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.api.dsl.variant
+package com.android.build.gradle.internal.api.dsl.variant
 
-interface UnitTestVariant : Variant {
-    val testedVariant: Variant
+import com.android.build.api.dsl.variant.Variant
+import com.android.build.gradle.internal.api.dsl.sealing.Sealable
+import com.android.builder.core.VariantType
 
+/** Base internal impl variants */
+interface SealableVariant: Variant, Sealable {
+    val variantType: VariantType
 }

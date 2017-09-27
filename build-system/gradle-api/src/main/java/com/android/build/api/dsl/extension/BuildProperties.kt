@@ -16,14 +16,9 @@
 
 package com.android.build.api.dsl.extension
 
-import com.android.build.api.dsl.options.AaptOptions
-import com.android.build.api.dsl.options.CompileOptions
-import com.android.build.api.dsl.options.DexOptions
-import com.android.build.api.dsl.options.LintOptions
 import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.build.api.transform.SecondaryFile
 import com.android.build.api.transform.Transform
-import com.android.builder.model.DataBindingOptions
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.FileCollection
@@ -76,31 +71,6 @@ interface BuildProperties {
     val transforms: List<Transform>
 
     val transformsDependencies: List<List<Any>>
-
-    fun aaptOptions(action: Action<AaptOptions>)
-
-    /** Options for aapt, tool for packaging resources.  */
-    val aaptOptions: AaptOptions
-
-    fun compileOptions(action: Action<CompileOptions>)
-
-    /** Compile options.  */
-    val compileOptions: CompileOptions
-
-    fun dexOptions(action: Action<DexOptions>)
-
-    /** Dex options.  */
-    val dexOptions: DexOptions
-
-    /** Lint options.  */
-    val lintOptions: LintOptions
-
-    fun lintOptions(action: Action<LintOptions>)
-
-    /** Data Binding options.  */
-    val dataBinding: DataBindingOptions
-
-    fun dataBinding(action: Action<DataBindingOptions>)
 
     // --- DEPRECATED
 
