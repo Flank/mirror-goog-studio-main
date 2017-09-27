@@ -897,6 +897,58 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
+    public void testNavigationRes() throws Exception {
+        String expected = "" +
+                "src/test/pkg/Flow.java:16: Error: Expected resource of type navigation [ResourceType]\n" +
+                "        nav(string); // ERROR\n" +
+                "            ~~~~~~\n" +
+                "src/test/pkg/Flow.java:17: Error: Expected resource of type navigation [ResourceType]\n" +
+                "        nav(R.string.my_string); // ERROR\n" +
+                "            ~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/Flow.java:18: Error: Expected resource of type string [ResourceType]\n" +
+                "        str(R.navigation.my_navigation); // ERROR\n" +
+                "            ~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "3 errors, 0 warnings\n";
+        lint().files(
+                java("" +
+                        "package test.pkg;\n" +
+                        "import android.content.res.Resources;\n" +
+                        "import android.support.annotation.NavigationRes;\n" +
+                        "import android.support.annotation.StringRes;\n" +
+                        "import android.support.annotation.StyleRes;\n" +
+                        "\n" +
+                        "import java.util.Random;\n" +
+                        "\n" +
+                        "@SuppressWarnings(\"UnusedDeclaration\")\n" +
+                        "public class Flow {\n" +
+                        // Fully qualified name because @NavigationRes is not yet
+                        // in the support library bundled with this test
+                        "    public void nav(@android.support.annotation.NavigationRes int id) { }\n" +
+                        "    public void str(@StringRes int id) { }\n" +
+                        "    public void test(@StringRes int string, @android.support.annotation.NavigationRes int navigation) {\n" +
+                        "        nav(navigation); // OK\n" +
+                        "        str(string); // OK\n" +
+                        "        nav(string); // ERROR\n" +
+                        "        nav(R.string.my_string); // ERROR\n" +
+                        "        str(R.navigation.my_navigation); // ERROR\n" +
+                        "    }\n" +
+                        "}"),
+                java("" +
+                        "package test.pkg;\n" +
+                        "public final class R {\n" +
+                        "    public static final class navigation {\n" +
+                        "        public static final int my_navigation = 0x7f020057;\n" +
+                        "    }\n" +
+                        "    public static final class string {\n" +
+                        "        public static final int my_string =0x7f0a000e;\n" +
+                        "    }\n" +
+                        "}\n"),
+                mSupportClasspath,
+                mSupportJar)
+                .run()
+                .expect(expected);
+    }
+
     public void testTypes2() throws Exception {
         assertEquals(""
                 + "src/test/pkg/ActivityType.java:5: Error: Expected resource of type drawable [ResourceType]\n"

@@ -105,6 +105,7 @@ public class ResourceEvaluator {
     public static final String STYLE_RES_ANNOTATION = "android.support.annotation.StyleRes";
     public static final String TRANSITION_RES_ANNOTATION = "android.support.annotation.TransitionRes";
     public static final String XML_RES_ANNOTATION = "android.support.annotation.XmlRes";
+    public static final String NAVIGATION_RES_ANNOTATION = "android.support.annotation.NavigationRes";
 
     private final JavaEvaluator evaluator;
 
@@ -620,6 +621,8 @@ public class ResourceEvaluator {
                 return ResourceType.LAYOUT;
             case MENU_RES_ANNOTATION:
                 return ResourceType.MENU;
+            case NAVIGATION_RES_ANNOTATION:
+                return ResourceType.NAVIGATION;
             case PLURALS_RES_ANNOTATION:
                 return ResourceType.PLURALS;
             case RAW_RES_ANNOTATION:

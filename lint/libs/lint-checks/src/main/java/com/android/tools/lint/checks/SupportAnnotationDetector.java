@@ -64,6 +64,7 @@ import static com.android.tools.lint.detector.api.ResourceEvaluator.INTEGER_RES_
 import static com.android.tools.lint.detector.api.ResourceEvaluator.INTERPOLATOR_RES_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.LAYOUT_RES_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.MENU_RES_ANNOTATION;
+import static com.android.tools.lint.detector.api.ResourceEvaluator.NAVIGATION_RES_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.PLURALS_RES_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.PX_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.RAW_RES_ANNOTATION;
@@ -541,6 +542,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 case INTERPOLATOR_RES_ANNOTATION:
                 case LAYOUT_RES_ANNOTATION:
                 case MENU_RES_ANNOTATION:
+                case NAVIGATION_RES_ANNOTATION:
                 case PLURALS_RES_ANNOTATION:
                 case RAW_RES_ANNOTATION:
                 case STRING_RES_ANNOTATION:
