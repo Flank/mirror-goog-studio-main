@@ -56,6 +56,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
 import org.junit.Assume;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -381,6 +382,7 @@ public class DesugarAppTest {
         }
     }
 
+    @Ignore("TODO(imorlowska): delete?")
     @Test
     public void testFailureIfOldDxAndMinSdk24Plus() throws IOException, InterruptedException {
         enableDesugar();
