@@ -63,11 +63,11 @@ public class UnitTestingAndroidResourcesTest {
     public static Object[][] data() {
         return new Object[][] {
             {Plugin.APPLICATION, null, AaptGeneration.AAPT_V1},
-            {Plugin.APPLICATION, null, AaptGeneration.AAPT_V2_JNI},
+            {Plugin.APPLICATION, null, AaptGeneration.AAPT_V2_DAEMON_MODE},
             {Plugin.LIBRARY, LibrarySetup.BYPASS_MERGE, AaptGeneration.AAPT_V1},
             {Plugin.LIBRARY, LibrarySetup.MERGE, AaptGeneration.AAPT_V1},
-            {Plugin.LIBRARY, LibrarySetup.BYPASS_MERGE, AaptGeneration.AAPT_V2_JNI},
-            {Plugin.LIBRARY, LibrarySetup.MERGE, AaptGeneration.AAPT_V2_JNI},
+            {Plugin.LIBRARY, LibrarySetup.BYPASS_MERGE, AaptGeneration.AAPT_V2_DAEMON_MODE},
+            {Plugin.LIBRARY, LibrarySetup.MERGE, AaptGeneration.AAPT_V2_DAEMON_MODE},
         };
     }
 
