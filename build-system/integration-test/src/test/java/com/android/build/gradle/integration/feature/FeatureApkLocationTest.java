@@ -49,7 +49,7 @@ public class FeatureApkLocationTest {
     public void build() throws Exception {
         // Call the task to publish the base feature application ID.
         sProject.executor()
-                .with(AaptGeneration.AAPT_V2_JNI)
+                .withEnabledAapt2(true)
                 .with(StringOption.IDE_APK_LOCATION, sTempFolder.getRoot().getAbsolutePath())
                 .run("clean", ":bundle:assembleRelease");
 

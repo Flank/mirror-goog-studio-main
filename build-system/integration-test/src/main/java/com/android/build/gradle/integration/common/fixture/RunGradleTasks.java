@@ -275,7 +275,7 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
      * {@link #withNewResourceProcessing(boolean)} with the {@code false} parameter.
      */
     public RunGradleTasks withEnabledAapt2(boolean enableAapt2) {
-        with(enableAapt2 ? AaptGeneration.AAPT_V2_JNI : AaptGeneration.AAPT_V1);
+        with(enableAapt2 ? AaptGeneration.AAPT_V2_DAEMON_MODE : AaptGeneration.AAPT_V1);
         return this;
     }
 
@@ -296,11 +296,19 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 with(BooleanOption.ENABLE_AAPT2, true);
                 with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
                 with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false);
+                with(BooleanOption.ENABLE_DAEMON_MODE_AAPT2, false);
                 break;
             case AAPT_V2_JNI:
                 with(BooleanOption.ENABLE_AAPT2, true);
                 with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
                 with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true);
+                with(BooleanOption.ENABLE_DAEMON_MODE_AAPT2, false);
+                break;
+            case AAPT_V2_DAEMON_MODE:
+                with(BooleanOption.ENABLE_AAPT2, true);
+                with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
+                with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false);
+                with(BooleanOption.ENABLE_DAEMON_MODE_AAPT2, true);
                 break;
             default:
                 throw new IllegalArgumentException("Unknown AAPT Generation");

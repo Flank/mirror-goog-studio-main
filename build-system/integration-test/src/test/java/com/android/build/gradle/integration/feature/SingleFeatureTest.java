@@ -47,7 +47,7 @@ public class SingleFeatureTest {
     public void build() throws Exception {
         // Build all the things.
         sProject.executor()
-                .with(AaptGeneration.AAPT_V2_JNI)
+                .withEnabledAapt2(true)
                 .run("assemble");
 
         // Check the feature module output contents.

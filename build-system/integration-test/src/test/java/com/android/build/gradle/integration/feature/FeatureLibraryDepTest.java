@@ -54,7 +54,7 @@ public class FeatureLibraryDepTest {
     @Test
     public void build() throws Exception {
         // Build all the things.
-        sProject.executor().with(AaptGeneration.AAPT_V2_JNI).run("clean", "assemble");
+        sProject.executor().withEnabledAapt2(true).run("clean", "assemble");
 
         // Check the library class was not packaged in the feature APK.
         Apk apk = sProject.getSubproject("feature").getFeatureApk(GradleTestProject.ApkType.DEBUG);

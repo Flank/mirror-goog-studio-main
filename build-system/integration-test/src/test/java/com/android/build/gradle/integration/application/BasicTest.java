@@ -174,7 +174,7 @@ public class BasicTest {
     @Test
     public void testBuildOutputModel() throws Exception {
         project.executor()
-                .with(AaptGeneration.AAPT_V2_JNI)
+                .withEnabledAapt2(true)
                 .run("assemble", "assembleDebugAndroidTest", "testDebugUnitTest");
 
         // get the initial minimalistic model.
