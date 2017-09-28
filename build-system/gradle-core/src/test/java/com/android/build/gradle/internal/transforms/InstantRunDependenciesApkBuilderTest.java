@@ -104,7 +104,7 @@ public class InstantRunDependenciesApkBuilderTest {
                         FileCache.getInstanceWithSingleProcessLocking(fileCacheDirectory.getRoot()),
                         packagingScope,
                         coreSigningConfig,
-                        AaptGeneration.AAPT_V2_JNI,
+                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         supportDirectory.newFolder("instant-run"),

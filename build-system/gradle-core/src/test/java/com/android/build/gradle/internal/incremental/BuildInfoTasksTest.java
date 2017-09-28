@@ -73,7 +73,7 @@ public class BuildInfoTasksTest {
         InstantRunBuildContext context =
                 new InstantRunBuildContext(
                         true,
-                        AaptGeneration.AAPT_V2_JNI,
+                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,
@@ -91,7 +91,7 @@ public class BuildInfoTasksTest {
         InstantRunBuildContext context =
                 new InstantRunBuildContext(
                         true,
-                        AaptGeneration.AAPT_V2_JNI,
+                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AndroidVersion(23, null),
                         null,
                         null,

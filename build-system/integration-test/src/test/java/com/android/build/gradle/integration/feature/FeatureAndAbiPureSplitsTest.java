@@ -54,7 +54,7 @@ public class FeatureAndAbiPureSplitsTest {
     @Test
     public void buildAndCheckModel() throws Exception {
         // Build all the things.
-        sProject.executor().with(AaptGeneration.AAPT_V2_JNI).run("clean", "assembleDebug");
+        sProject.executor().withEnabledAapt2(true).run("clean", "assembleDebug");
 
         Map<String, AndroidProject> projectModels = sProject.model().getMulti().getModelMap();
         AndroidProject instantAppProject = projectModels.get(":bundle");
@@ -180,7 +180,7 @@ public class FeatureAndAbiPureSplitsTest {
 
         // Build the instantapp.
         sProject.executor()
-                .with(AaptGeneration.AAPT_V2_JNI)
+                .withEnabledAapt2(true)
                 .run("clean", ":bundle:assembleRelease");
 
         Map<String, InstantAppProjectBuildOutput> models =

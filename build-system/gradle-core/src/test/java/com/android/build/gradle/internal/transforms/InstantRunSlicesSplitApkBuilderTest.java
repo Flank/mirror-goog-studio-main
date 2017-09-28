@@ -106,7 +106,7 @@ public class InstantRunSlicesSplitApkBuilderTest {
                         fileCache,
                         packagingScope,
                         coreSigningConfig,
-                        AaptGeneration.AAPT_V2_JNI,
+                        AaptGeneration.AAPT_V2_DAEMON_MODE,
                         new AaptOptions(null, false, null),
                         outputDirectory.getRoot(),
                         supportDirectory.newFolder("instant-run"),

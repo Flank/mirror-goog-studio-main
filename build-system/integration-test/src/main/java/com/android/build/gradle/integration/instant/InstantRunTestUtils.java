@@ -87,7 +87,7 @@ public final class InstantRunTestUtils {
             AndroidVersion androidVersion, @NonNull InstantRun instantRunModel) throws Exception {
         InstantRunBuildContext context =
                 new InstantRunBuildContext(
-                        true, AaptGeneration.AAPT_V2_JNI, androidVersion, null, null, true);
+                        true, AaptGeneration.AAPT_V2_DAEMON_MODE, androidVersion, null, null, true);
         context.loadFromXml(Files.toString(instantRunModel.getInfoFile(), Charsets.UTF_8));
         return context;
     }

@@ -127,7 +127,7 @@ import java.util.zip.ZipFile;
 public class AndroidBuilder {
 
     /** Minimal supported version of build tools. */
-    public static final Revision MIN_BUILD_TOOLS_REV = new Revision(25, 0, 0);
+    public static final Revision MIN_BUILD_TOOLS_REV = new Revision(26, 0, 2);
 
     /**
      * Default version of build tools that will be used if the user does not specify.

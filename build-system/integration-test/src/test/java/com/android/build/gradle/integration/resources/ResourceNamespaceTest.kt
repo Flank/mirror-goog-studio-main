@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.MinimalSubProject
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject
 import com.android.build.gradle.integration.common.truth.TruthHelper.assertThat
+import com.android.build.gradle.options.BooleanOption
 import com.android.testutils.apk.Dex
 import org.junit.Rule
 import org.junit.Test
@@ -160,17 +161,20 @@ class ResourceNamespaceTest {
 
     @Test
     fun smokeTest() {
-        project.executor().run(
-                ":lib:assembleDebug",
-                ":lib:assembleDebugAndroidTest",
-                ":baseFeature:assembleDebug",
-                ":baseFeature:assembleDebugAndroidTest",
-                ":otherFeature:bundleDebug",
-                ":otherFeature:assembleDebugAndroidTest",
-                // TODO: Fix resource dependencies when linking against the base feature.
-                //":otherFeature:assembleDebug",
-                ":app:assembleDebug",
-                ":app:assembleDebugAndroidTest")
+        project.executor()
+                .with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true)
+                .with(BooleanOption.ENABLE_DAEMON_MODE_AAPT2, false)
+                .run(
+                    ":lib:assembleDebug",
+                    ":lib:assembleDebugAndroidTest",
+                    ":baseFeature:assembleDebug",
+                    ":baseFeature:assembleDebugAndroidTest",
+                    ":otherFeature:bundleDebug",
+                    ":otherFeature:assembleDebugAndroidTest",
+                    // TODO: Fix resource dependencies when linking against the base feature.
+                    //":otherFeature:assembleDebug",
+                    ":app:assembleDebug",
+                    ":app:assembleDebugAndroidTest")
 
         val dotDrawablePath = "res/drawable/com.example.lib\$dot.xml"
 
