@@ -246,7 +246,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     }
 
     /** Processes an interactive message received by the CMake server. */
-    private void receiveInteractiveMessage(
+    static void receiveInteractiveMessage(
             @NonNull PrintWriter writer,
             @NonNull ILogger logger,
             @NonNull InteractiveMessage message) {
@@ -258,12 +258,14 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
      * Logs info/warning/error for the given interactive message. Throws a RunTimeException in case
      * of an 'error' message type.
      */
-    private void logInteractiveMessage(
+    @VisibleForTesting
+    static void logInteractiveMessage(
             @NonNull ILogger logger, @NonNull InteractiveMessage message) {
         // CMake error/warining prefix strings. The CMake errors and warnings are part of the
-        // message type "message" even though CMake is reporting errors/warnings. Hence we would
-        // need to parse the output message to figure out if we need to log them as error or
-        // warning.
+        // message type "message" even though CMake is reporting errors/warnings (Note: They could
+        // have a title that says if it's an error or warning, we check that first before checking
+        // the prefix of the message string). Hence we would need to parse the output message to
+        // figure out if we need to log them as error or warning.
         final String CMAKE_ERROR_PREFIX = "CMake Error";
         final String CMAKE_WARNING_PREFIX = "CMake Warning";
 
@@ -275,12 +277,14 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             throw new RuntimeException("CMake server sync operations failed.");
         }
 
-        if (message.message.startsWith(CMAKE_ERROR_PREFIX)) {
+        if ((message.title != null && message.title.equals("Error"))
+                || message.message.startsWith(CMAKE_ERROR_PREFIX)) {
             logger.error(null, message.message);
             return;
         }
 
-        if (message.message.startsWith(CMAKE_WARNING_PREFIX)) {
+        if ((message.title != null && message.title.equals("Warning"))
+                || message.message.startsWith(CMAKE_WARNING_PREFIX)) {
             logger.warning(message.message);
             return;
         }
