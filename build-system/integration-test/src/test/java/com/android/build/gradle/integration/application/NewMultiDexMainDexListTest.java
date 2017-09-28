@@ -29,6 +29,7 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,6 +82,7 @@ public class NewMultiDexMainDexListTest {
     }
 
     @Test
+    @Ignore("issuetracker.google.com/65646366")
     public void checkNewAndOldGiveSameResults() throws Exception {
         checkBuild();
         TestFileUtils.appendToFile(
