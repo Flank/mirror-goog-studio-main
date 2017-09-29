@@ -126,10 +126,16 @@ public class ManifestMerger2Test {
                 "89_remove_uses_permission_sdk_23.xml",
                 "90_main_and_library_placeholder_replacement.xml",
                 "91_tools_in_lib_but_not_main.xml",
+                "92_do_not_duplicate_xmlns_when_injecting_into_added_application_node.xml"
             };
 
     private static final Set<String> DATA_FILES_NO_TOOLS_REMOVAL =
             new HashSet<>(Arrays.asList("91_tools_in_lib_but_not_main.xml"));
+
+    private static final Set<String> DATA_FILES_DEBUGGABLE =
+            new HashSet<>(
+                    Arrays.asList(
+                            "92_do_not_duplicate_xmlns_when_injecting_into_added_application_node.xml"));
 
 
     @Parameterized.Parameters(name = "{0}")
@@ -153,6 +159,9 @@ public class ManifestMerger2Test {
         optionalFeatures.add(ManifestMerger2.Invoker.Feature.KEEP_INTERMEDIARY_STAGES);
         if (!DATA_FILES_NO_TOOLS_REMOVAL.contains(fileName)) {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.REMOVE_TOOLS_DECLARATIONS);
+        }
+        if (DATA_FILES_DEBUGGABLE.contains(fileName)) {
+            optionalFeatures.add(ManifestMerger2.Invoker.Feature.DEBUGGABLE);
         }
 
         StdLogger stdLogger = new StdLogger(StdLogger.Level.VERBOSE);
