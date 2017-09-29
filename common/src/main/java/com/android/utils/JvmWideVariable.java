@@ -24,6 +24,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.reflect.TypeParameter;
 import com.google.common.reflect.TypeToken;
 import java.lang.management.ManagementFactory;
 import java.lang.reflect.GenericArrayType;
@@ -510,6 +511,7 @@ public final class JvmWideVariable<T> {
      *
      * @see #executeCallableSynchronously(Callable)
      */
+    @SuppressWarnings("UnusedReturnValue")
     @Nullable
     public <V> V executeSupplierSynchronously(@NonNull Supplier<V> action) {
         try {
@@ -524,6 +526,7 @@ public final class JvmWideVariable<T> {
      *
      * @see #executeCallableSynchronously(Callable)
      */
+    @SuppressWarnings("unused")
     public void executeRunnableSynchronously(@NonNull Runnable action) {
         executeSupplierSynchronously(
                 () -> {
@@ -563,6 +566,57 @@ public final class JvmWideVariable<T> {
                 .add("fullName", fullName)
                 .add("unregistered", unregistered)
                 .toString();
+    }
+
+    /**
+     * Returns a unique JVM-wide object per given key. (Two keys are the same if one equals() the
+     * other.)
+     *
+     * <p>If this method is called on a new key, it will create and return a new object. If this
+     * method is called on an existing key, it will return the previously created object.
+     *
+     * <p>The key consists of the following:
+     *
+     * <ol>
+     *   <li>The name of the class where the object is used. Note that we use the class name, not
+     *       the class instance, so that the key is shared across class loaders.
+     *   <li>The name of the variable that the object is assigned to
+     *   <li>The type of the user-specified key
+     *   <li>The type of the returned object
+     *   <li>The user-specified key
+     * </ol>
+     *
+     * @param definingClass the class where the object is used
+     * @param variableName the name of the variable that the object is assigned to
+     * @param keyType the type of the user-specified key, which must be loaded by the bootstrap
+     *     class loader
+     * @param valueType the type of the returned object, which must be loaded by the bootstrap class
+     *     loader
+     * @param key the user-specified key
+     * @param newObjectSupplier the supplier that produces a new object for a new key. It is called
+     *     only when the key is new. The supplied value must not be null.
+     */
+    @NonNull
+    public static <K, V> V getJvmWideObjectPerKey(
+            @NonNull Class<?> definingClass,
+            @NonNull String variableName,
+            @NonNull TypeToken<K> keyType,
+            @NonNull TypeToken<V> valueType,
+            @NonNull K key,
+            @NonNull Supplier<V> newObjectSupplier) {
+        ConcurrentMap<K, V> keyToObjectMap =
+                Verify.verifyNotNull(
+                        new JvmWideVariable<>(
+                                        definingClass,
+                                        variableName,
+                                        new TypeToken<ConcurrentMap<K, V>>() {}.where(
+                                                        new TypeParameter<K>() {}, keyType)
+                                                .where(new TypeParameter<V>() {}, valueType),
+                                        ConcurrentHashMap::new)
+                                .get());
+
+        return keyToObjectMap.computeIfAbsent(
+                key, (any) -> Verify.verifyNotNull(newObjectSupplier.get()));
     }
 
     /** The MBean object, as required by a standard MBean implementation. */

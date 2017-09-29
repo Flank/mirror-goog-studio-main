@@ -17,9 +17,10 @@
 package com.android.testutils.concurrency;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
+import com.google.common.base.Verify;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -32,6 +33,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -132,9 +134,9 @@ public final class InterProcessConcurrencyTester {
         MIXED
     }
 
-    @NonNull private List<Class> classInvocationList = Lists.newLinkedList();
+    @NonNull private List<Class> classInvocationList = new LinkedList<>();
 
-    @NonNull private List<String[]> argsList = Lists.newLinkedList();
+    @NonNull private List<String[]> argsList = new LinkedList<>();
 
     /**
      * Adds a new invocation of the class under test's main() method to this {@link
@@ -207,33 +209,31 @@ public final class InterProcessConcurrencyTester {
         // until the server closes that socket.
 
         // First, open the server socket
-        ServerSocket serverSocket = new ServerSocket(0);
-        int serverSocketPort = serverSocket.getLocalPort();
+        ServerSocket serverSocket = openServerSocket();
 
         // Execute each invocation in a separate process. For each class under test, we create a new
         // thread that will launch a new process which will execute the main() method of that class.
         // The launched thread will block until the corresponding process exits.
-        List<Runnable> runnables = Lists.newLinkedList();
+        List<Runnable> runnables = new LinkedList<>();
         for (int i = 0; i < classInvocationList.size(); i++) {
             Class classUnderTest = classInvocationList.get(i);
             String[] args = argsList.get(i);
-            runnables.add(() -> launchProcess(classUnderTest, args, serverSocketPort));
+            runnables.add(() -> launchProcess(classUnderTest, args, serverSocket.getLocalPort()));
         }
         Map<Thread, Optional<Throwable>> threads = executeRunnablesInThreads(runnables);
 
         // Wait for all the processes to start execution
-        LinkedList<Socket> startedProcesses = Lists.newLinkedList();
-        serverSocket.setSoTimeout(0); // A timeout of 0 is interpreted as infinite timeout
+        Queue<Socket> startedProcesses = new LinkedList<>();
         while (startedProcesses.size() < runnables.size()) {
-            startedProcesses.add(serverSocket.accept());
+            startedProcesses.add(acceptSocketOnEvent(serverSocket, ProcessEvent.PROCESS_STARTED));
         }
         while (!startedProcesses.isEmpty()) {
-            closeSocket(startedProcesses.removeFirst());
+            processCanResume(startedProcesses.remove());
         }
 
         // Begin to monitor how the actions are executed
         int remainingActions = classInvocationList.size();
-        LinkedList<Socket> runningActions = Lists.newLinkedList();
+        Queue<Socket> runningActions = new LinkedList<>();
         int maxConcurrentActions = 0;
 
         // To prevent the actions from *accidentally* running sequentially, when an action is going
@@ -248,17 +248,17 @@ public final class InterProcessConcurrencyTester {
             // actions, the running actions could block new actions and prevent them from starting
             // (e.g., when the actions are not allowed to run concurrently). To avoid waiting
             // indefinitely, we need to set a timeout.
-            Socket startedAction = null;
+            Socket startedAction;
             if (runningActions.isEmpty()) {
-                serverSocket.setSoTimeout(0); // A timeout of 0 is interpreted as infinite timeout
-                startedAction = serverSocket.accept();
+                // The method below always returns a non-null object, blocking to wait if necessary
+                startedAction = acceptSocketOnEvent(serverSocket, ProcessEvent.ACTION_STARTED);
             } else {
-                serverSocket.setSoTimeout((int) timeoutToStartAction.toMillis());
-                try {
-                    startedAction = serverSocket.accept();
-                } catch (SocketTimeoutException e) {
-                    // This exception means no action has started, which we will handle below.
-                }
+                // The method below returns null if no action has started after the specified time
+                startedAction =
+                        acceptSocketOnEvent(
+                                serverSocket,
+                                ProcessEvent.ACTION_STARTED,
+                                (int) timeoutToStartAction.toMillis());
             }
 
             // If a new action has started, do not let it finish. Instead, we keep waiting for more
@@ -276,21 +276,21 @@ public final class InterProcessConcurrencyTester {
                 // start. Since we cannot distinguish these two cases, we let all the running
                 // actions finish and repeat the loop.
                 while (!runningActions.isEmpty()) {
-                    closeSocket(runningActions.removeFirst());
+                    processCanResume(runningActions.remove());
                 }
             }
         }
 
         // Let all the running actions finish
         while (!runningActions.isEmpty()) {
-            closeSocket(runningActions.removeFirst());
+            processCanResume(runningActions.remove());
         }
 
         // Wait for all the threads (and processes) to finish
         waitForThreadsToFinish(threads);
 
         // Close the server socket
-        serverSocket.close();
+        closeServerSocket(serverSocket);
 
         // Determine the running pattern based on maxConcurrentActions
         Preconditions.checkState(
@@ -318,7 +318,7 @@ public final class InterProcessConcurrencyTester {
      */
     private static void launchProcess(
             @NonNull Class classUnderTest, String[] args, int serverSocketPort) {
-        List<String> commandAndArgs = Lists.newLinkedList();
+        List<String> commandAndArgs = new LinkedList<>();
         commandAndArgs.add(FileUtils.join(System.getProperty("java.home"), "bin", "java"));
         commandAndArgs.add("-cp");
         commandAndArgs.add(System.getProperty("java.class.path"));
@@ -328,9 +328,12 @@ public final class InterProcessConcurrencyTester {
         // with the main process
         commandAndArgs.add(String.valueOf(serverSocketPort));
 
+        ProcessBuilder processBuilder = new ProcessBuilder(commandAndArgs);
+        processBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         Process process;
         try {
-            process = new ProcessBuilder(commandAndArgs).start();
+            process = processBuilder.start();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -409,6 +412,25 @@ public final class InterProcessConcurrencyTester {
     }
 
     /**
+     * Events sent between client processes (which are executing the actions under test) and the
+     * main process.
+     */
+    private enum ProcessEvent {
+
+        /** A client process notifies the main process that it has started execution. */
+        PROCESS_STARTED,
+
+        /**
+         * A client process notifies the main process that it starts executing the action under
+         * test.
+         */
+        ACTION_STARTED,
+
+        /** The main process notifies a client process that it can resume execution. */
+        PROCESS_CAN_RESUME,
+    }
+
+    /**
      * Class to be used by client processes (which are executing the actions under test) to notify
      * the main process of events happening in the client processes.
      */
@@ -428,36 +450,93 @@ public final class InterProcessConcurrencyTester {
 
         /**
          * Notifies the main process that the current client process has started execution. This
-         * method will block until the main process closes the corresponding socket.
+         * method will block until the main process notifies the client process that it can resume
+         * execution.
          */
         public void processStarted() throws IOException {
-            Socket socket = new Socket("localhost", serverSocketPort);
-            new DataOutputStream(socket.getOutputStream()).writeUTF("PROCESS_STARTED");
-            new DataInputStream(socket.getInputStream()).readUTF();
-            socket.close();
+            notifyMainProcess(ProcessEvent.PROCESS_STARTED);
         }
 
         /**
          * Notifies the main process that the current client process starts executing the action
-         * under test. This method will block until the main process closes the corresponding
-         * socket.
+         * under test. This method will block until the main process notifies the client process
+         * that it can resume execution.
          */
         public void actionStarted() throws IOException {
-            Socket socket = new Socket("localhost", serverSocketPort);
-            new DataOutputStream(socket.getOutputStream()).writeUTF("ACTION_STARTED");
-            new DataInputStream(socket.getInputStream()).readUTF();
-            socket.close();
+            notifyMainProcess(ProcessEvent.ACTION_STARTED);
+        }
+
+        private void notifyMainProcess(@NonNull ProcessEvent processEvent) throws IOException {
+            try (Socket socket = new Socket("localhost", serverSocketPort);
+                    DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream());
+                    DataInputStream inputStream = new DataInputStream(socket.getInputStream())) {
+                outputStream.writeUTF(processEvent.name());
+
+                // The method call below will block
+                Preconditions.checkState(
+                        ProcessEvent.valueOf(inputStream.readUTF())
+                                == ProcessEvent.PROCESS_CAN_RESUME);
+            }
         }
     }
 
+    /** Opens a server socket for client processes to communicate with the main process. */
+    @NonNull
+    private static ServerSocket openServerSocket() throws IOException {
+        return new ServerSocket(0);
+    }
+
     /**
-     * Closes a socket, thereby unblocking the corresponding client process and allowing it to
-     * resume execution. See {@link MainProcessNotifier#processStarted()} and {@link
-     * MainProcessNotifier#actionStarted()}.
+     * Accepts a socket opened by a client process on the given event, blocking to wait until there
+     * is one.
      */
-    private void closeSocket(@NonNull Socket socket) throws IOException {
-        new DataInputStream(socket.getInputStream()).readUTF();
-        new DataOutputStream(socket.getOutputStream()).writeUTF("OK");
+    @NonNull
+    private static Socket acceptSocketOnEvent(
+            @NonNull ServerSocket serverSocket, @NonNull ProcessEvent processEvent)
+            throws IOException {
+        // A timeout of 0 is interpreted as infinite timeout
+        return Verify.verifyNotNull(acceptSocketOnEvent(serverSocket, processEvent, 0));
+    }
+
+    /**
+     * Accepts a socket opened by a client process on the given event, returning null if there is
+     * none after the specified time.
+     */
+    @SuppressWarnings({
+        "resource",
+        "IOResourceOpenedButNotSafelyClosed",
+        "SocketOpenedButNotSafelyClosed"
+    })
+    @Nullable
+    private static Socket acceptSocketOnEvent(
+            @NonNull ServerSocket serverSocket,
+            @NonNull ProcessEvent processEvent,
+            int millisTimeout)
+            throws IOException {
+        serverSocket.setSoTimeout(millisTimeout);
+        Socket socket;
+        try {
+            socket = serverSocket.accept();
+        } catch (SocketTimeoutException e) {
+            return null;
+        }
+
+        DataInputStream inputStream = new DataInputStream(socket.getInputStream());
+        Preconditions.checkState(ProcessEvent.valueOf(inputStream.readUTF()) == processEvent);
+
+        return socket;
+    }
+
+    /** Notifies the client process that it can resume execution. Also closes the client socket. */
+    private static void processCanResume(@NonNull Socket socket) throws IOException {
+        try (DataOutputStream outputStream = new DataOutputStream(socket.getOutputStream())) {
+            outputStream.writeUTF(ProcessEvent.PROCESS_CAN_RESUME.name());
+        }
         socket.close();
+    }
+
+    /** Closes the server socket. */
+    private static void closeServerSocket(@NonNull ServerSocket serverSocket) throws IOException {
+        serverSocket.close();
     }
 }

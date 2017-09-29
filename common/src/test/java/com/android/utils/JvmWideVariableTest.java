@@ -28,6 +28,9 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.junit.Test;
 
@@ -504,5 +507,105 @@ public class JvmWideVariableTest {
 
         sameVariable.unregister();
         variable2.unregister();
+    }
+
+    @Test
+    public void testGetJvmWideObjectPerKey() {
+        AtomicInteger object =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        JvmWideVariableTest.class,
+                        "name",
+                        TypeToken.of(String.class),
+                        TypeToken.of(AtomicInteger.class),
+                        "key",
+                        () -> new AtomicInteger(1));
+        assertThat(object.get()).isEqualTo(1);
+
+        AtomicInteger sameObject =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        JvmWideVariableTest.class,
+                        "name",
+                        TypeToken.of(String.class),
+                        TypeToken.of(AtomicInteger.class),
+                        "key",
+                        () -> new AtomicInteger(-1));
+        assertThat(sameObject).isSameAs(object);
+        assertThat(sameObject.get()).isEqualTo(1);
+
+        AtomicInteger object2 =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        JvmWideVariableTest.class,
+                        "name",
+                        TypeToken.of(String.class),
+                        TypeToken.of(AtomicInteger.class),
+                        "key2",
+                        () -> new AtomicInteger(2));
+        assertThat(object2).isNotSameAs(object);
+        assertThat(object2.get()).isEqualTo(2);
+
+        AtomicInteger object3 =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        JvmWideVariableTest.class,
+                        "name2",
+                        TypeToken.of(String.class),
+                        TypeToken.of(AtomicInteger.class),
+                        "key",
+                        () -> new AtomicInteger(3));
+        assertThat(object3).isNotSameAs(object);
+        assertThat(object3).isNotSameAs(object2);
+        assertThat(object3.get()).isEqualTo(3);
+
+        AtomicBoolean object4 =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        JvmWideVariableTest.class,
+                        "name2",
+                        TypeToken.of(String.class),
+                        TypeToken.of(AtomicBoolean.class),
+                        "key",
+                        () -> new AtomicBoolean(true));
+        assertThat(object4).isNotSameAs(object);
+        assertThat(object4).isNotSameAs(object2);
+        assertThat(object4).isNotSameAs(object3);
+        assertThat(object4.get()).isEqualTo(true);
+
+        try {
+            //noinspection InstantiationOfUtilityClass
+            JvmWideVariable.getJvmWideObjectPerKey(
+                    JvmWideVariableTest.class,
+                    "foo",
+                    TypeToken.of(FooCounter.class),
+                    TypeToken.of(AtomicReference.class),
+                    new FooCounter(),
+                    AtomicReference::new);
+            fail("Expected VerifyException");
+        } catch (VerifyException e) {
+            assertThat(e.getMessage()).contains("must be loaded by the bootstrap class loader");
+        }
+
+        try {
+            JvmWideVariable.getJvmWideObjectPerKey(
+                    JvmWideVariableTest.class,
+                    "foo",
+                    TypeToken.of(String.class),
+                    TypeToken.of(FooCounter.class),
+                    "key",
+                    FooCounter::new);
+            fail("Expected VerifyException");
+        } catch (VerifyException e) {
+            assertThat(e.getMessage()).contains("must be loaded by the bootstrap class loader");
+        }
+
+        try {
+            JvmWideVariable.getJvmWideObjectPerKey(
+                    JvmWideVariableTest.class,
+                    "foo",
+                    TypeToken.of(String.class),
+                    TypeToken.of(AtomicReference.class),
+                    "key",
+                    () -> null);
+            fail("Expected VerifyException");
+        } catch (VerifyException e) {
+            assertThat(e.getMessage()).contains("expected a non-null reference");
+        }
     }
 }
