@@ -29,6 +29,7 @@ import com.android.ide.common.xml.XmlFormatStyle;
 import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.utils.ILogger;
 import com.android.utils.Pair;
+import com.android.utils.XmlUtils;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -631,40 +632,6 @@ public class ManifestMerger2 {
     }
 
     /**
-     * Find an appropriate namespace prefix to use for Android attributes.  If this
-     * element already has some prefix that points to ANDROID_URI, use that.  Otherwise,
-     * we need to find a prefix to use --- try variations of ANDROID_NS_NAME_PREFIX until
-     * we find one that's unused.
-     *
-     * The node must be part of some document.
-     *
-     * @param node Node where we want the Android namespace to be available
-     * @param namespace Namespace name (conventionally a URI)
-     * @param preferredPrefix Prefix we'd prefer to use
-     * @return String namespace prefix
-     */
-    private static String findOrInstallNamespacePrefix(Element node,
-            String namespace,
-            String preferredPrefix) {
-        String prefix = node.lookupPrefix(namespace);
-        if (prefix == null) {
-            prefix = preferredPrefix;
-            String existingMapping = node.lookupNamespaceURI(prefix);
-            // Seems prettier to start with "android2" if "android" is taken.
-            for (int i = 2; existingMapping != null && i >= 2; ++i) {
-                prefix = String.format("%s%d", preferredPrefix, i);
-                existingMapping = node.lookupNamespaceURI(prefix);
-            }
-            if (existingMapping != null) {
-                throw new IllegalStateException("could not allocate namespace prefix");
-            }
-            Element root = node.getOwnerDocument().getDocumentElement();
-            root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:" + prefix, namespace);
-        }
-        return prefix;
-    }
-
-    /**
      * Set an Android-namespaced XML attribute on the given node.
      *
      * @param node Node in which to set the attribute; must be part of a document
@@ -672,9 +639,9 @@ public class ManifestMerger2 {
      * @param value value of the attribute
      */
     private static void setAndroidAttribute(Element node, String localName, String value) {
-        String prefix = findOrInstallNamespacePrefix(node,
-                SdkConstants.ANDROID_URI,
-                SdkConstants.ANDROID_NS_NAME);
+        String prefix =
+                XmlUtils.lookupNamespacePrefix(
+                        node, SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME, true);
         node.setAttributeNS(SdkConstants.ANDROID_URI, prefix + ":" + localName, value);
     }
 
