@@ -52,12 +52,11 @@ def main():
         'use Visual C++ 2015 Build Tools which you can find at:\n' +
         'http://landinghub.visualstudio.com/visual-cpp-build-tools')
     define_env(env, 'BAZEL_PYTHON', 'C:\\python_27_amd64\\files\\python.exe')
-    define_env(env, 'BAZEL_SH', 'C:\\tools\\msys64\\usr\\bin\\bash.exe')
     # Bazel for windows requires a couple of extra env vars be set
     # SYSTEMROOT must be defined to run a win .exe; otherwise, subprocess.call
     # will hang.
     env['SYSTEMROOT'] = 'C:\\Windows'
-    env['TMP'] = 'C:\\Windows\\Temp'
+    env['TMP'] = os.environ.get('TMP','')
 
   else: # Linux
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
