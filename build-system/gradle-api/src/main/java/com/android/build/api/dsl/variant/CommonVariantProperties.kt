@@ -21,6 +21,8 @@ import com.android.build.api.sourcesets.AndroidSourceSet
 /** common variant properties to all variants */
 interface CommonVariantProperties {
 
+    val name: String
+
     val buildTypeName: String
     val flavorNames: List<String>
 

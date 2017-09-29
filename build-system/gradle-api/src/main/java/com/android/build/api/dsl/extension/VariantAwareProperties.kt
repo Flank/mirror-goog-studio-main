@@ -21,9 +21,8 @@ import com.android.build.api.dsl.model.DefaultConfig
 import com.android.build.api.dsl.model.ProductFlavor
 import com.android.build.api.dsl.options.SigningConfig
 import com.android.build.api.dsl.variant.Variant
-import com.android.build.api.variant.VariantFilter
+import com.android.build.api.dsl.variant.VariantFilter
 import org.gradle.api.Action
-import org.gradle.api.DomainObjectSet
 import org.gradle.api.NamedDomainObjectContainer
 
 /** Partial extension properties for modules that have variants made of [ProductFlavor] and
@@ -49,20 +48,25 @@ interface VariantAwareProperties : DefaultConfig {
 
     fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
 
-    /** Filter to determine which variants to build.  */
+    /** variant filters */
     var variantFilters: MutableList<Action<VariantFilter>>
 
+    /** registers a new variant filter */
     fun variantFilter(action: Action<VariantFilter>)
 
-    /**
-     * a Callback object to register callbacks for variants
-     */
-    val variants: VariantCallbacks
+    /** pre variant callbacks  */
+    var preVariantCallbacks: MutableList<Action<Void>>
+    /** register a pre variant callbacks  */
+    fun preVariantCallback(action: Action<Void>)
+
+    /** Callback object to register callbacks for variants */
+    val variants: VariantCallbackHandler<Variant>
 
     /** post variant callbacks  */
-    var postVariants: MutableList<Action<Void>>
+    var postVariants: MutableList<Action<List<Variant>>>
 
-    fun postVariant(action: Action<Void>)
+    /** register a post-variant callback */
+    fun postVariantCallback(action: Action<List<Variant>>)
 
     @Deprecated("Use flavorDimensions")
     var flavorDimensionList: MutableList<String>

@@ -17,6 +17,8 @@
 package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.extension.EmbeddedTestProperties
+import com.android.build.api.dsl.extension.VariantCallbackHandler
+import com.android.build.api.dsl.variant.Variant
 import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeFactory
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeImpl
@@ -25,6 +27,7 @@ import com.android.build.gradle.internal.api.dsl.model.ProductFlavorFactory
 import com.android.build.gradle.internal.api.dsl.model.ProductFlavorImpl
 import com.android.build.gradle.internal.api.dsl.options.SigningConfigFactory
 import com.android.build.gradle.internal.api.dsl.options.SigningConfigImpl
+import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.api.sourcesets.AndroidSourceSetFactory
 import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
 import com.android.builder.core.BuilderConstants
@@ -33,9 +36,16 @@ import com.android.builder.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 import com.android.utils.StringHelper
+import com.google.common.collect.ArrayListMultimap
+import com.google.common.collect.ListMultimap
+import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.internal.reflect.Instantiator
+
+internal interface ActionRegister {
+    fun register(predicate: VariantPredicate, action: Action<Variant>)
+}
 
 /**
  * Internal Store for items we want to control outside of the DSL classes.
@@ -45,7 +55,7 @@ class DslModelData(
         val defaultConfig: DefaultConfigImpl,
         instantiator: Instantiator, //FIXME replace with ObjectFactory in 4.2
         deprecationReporter: DeprecationReporter,
-        private val issueReporter: EvalIssueReporter) {
+        issueReporter: EvalIssueReporter): SealableObject(issueReporter), ActionRegister {
 
     // FIXME, provide an interface to create container so that it can be tested.
     val sourceSets: NamedDomainObjectContainer<DefaultAndroidSourceSet> = project.container(
@@ -66,6 +76,10 @@ class DslModelData(
 
     private val _flavorData: MutableMap<String, DimensionData<ProductFlavorImpl>> = mutableMapOf()
     private val _buildTypeData: MutableMap<String, DimensionData<BuildTypeImpl>> = mutableMapOf()
+
+    // map of (predicate, List<callbacks>).
+    private val variantCallbacks: ListMultimap<VariantPredicate, Action<Variant>> =
+            ArrayListMultimap.create()
 
     private lateinit var _defaultConfigData: DimensionData<DefaultConfigImpl>
     private var afterEvaluatedComputation = false
@@ -147,6 +161,40 @@ class DslModelData(
         }
 
         afterEvaluatedComputation = true
+    }
+
+    /**
+     * Runs the user callback for the given variants.
+     *
+     * @param variants the variants to run the user callbacks on
+     */
+    fun runVariantCallbacks(variants: List<Variant>) {
+        // all callbacks are associated with a predicate that verifies whether the variants must
+        // run on the associated actions.
+        val predicates = variantCallbacks.keySet()
+
+        // For each variant, test against all predicates and if each succeed then get the
+        // list of callback for the predicate and run all the callbacks.
+        for (variant in variants) {
+            for (predicate in predicates) {
+                if (predicate.accept(variant)) {
+                    val actions = variantCallbacks[predicate]
+                    for (action in actions) {
+                        action.execute(variant)
+                    }
+                }
+            }
+        }
+    }
+
+    fun createVariantCallbackHandler(): VariantCallbackHandler<Variant> {
+        return VariantCallbackHandlerImpl(this, issueReporter)
+    }
+
+    override fun register(predicate: VariantPredicate, action: Action<Variant>) {
+        if (checkSeal()) {
+            variantCallbacks.put(predicate, action)
+        }
     }
 
     private fun computeDefaultConfigData(hasTests: Boolean) {

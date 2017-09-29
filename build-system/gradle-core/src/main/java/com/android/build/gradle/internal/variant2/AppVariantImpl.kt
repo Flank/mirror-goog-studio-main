@@ -47,7 +47,7 @@ class AppVariantImpl(
         private val buildTypeOrVariant: BuildTypeOrVariantImpl,
         private val variantExtensionProperties: VariantOrExtensionPropertiesImpl,
         private val commonVariantProperties: CommonVariantPropertiesImpl,
-        private val variantMap: Map<VariantType, Map<Variant, Variant>>,
+        private val variantDispatcher: Map<VariantType, Map<Variant, Variant>>,
         issueReporter: EvalIssueReporter)
     : SealableObject(issueReporter),
         ApplicationVariant,
@@ -58,14 +58,13 @@ class AppVariantImpl(
         VariantOrExtensionProperties by variantExtensionProperties,
         CommonVariantProperties by commonVariantProperties {
 
-    override val androidTestVariant: AndroidTestVariant
-        get() = variantMap[VariantType.ANDROID_TEST]!![this] as AndroidTestVariant
+    override val androidTestVariant: AndroidTestVariant?
+        get() = variantDispatcher[VariantType.ANDROID_TEST]?.get(this) as AndroidTestVariant?
 
-    override val unitTestVariant: UnitTestVariant
-        get() = variantMap[VariantType.UNIT_TEST]!![this] as UnitTestVariant
+    override val unitTestVariant: UnitTestVariant?
+        get() = variantDispatcher[VariantType.UNIT_TEST]?.get(this) as UnitTestVariant?
 
-    val shim: ApplicationVariant
-        get() = ApplicationVariantShim(this)
+    override fun createShim(): Variant = ApplicationVariantShim(this)
 
     override fun seal() {
         super.seal()

@@ -25,6 +25,7 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.api.dsl.variant.Variant;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -636,9 +637,11 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
     }
 
     private void afterEvaluateCallback() {
-
         // callback for the afterEvaluate
-        // FIXME implement
+        List<Action<Void>> preVariantActions = newExtension.getPreVariantCallbacks();
+        for (Action<Void> action : preVariantActions) {
+            action.execute(null);
+        }
 
         // seal the DSL.
         newExtension.seal();
@@ -646,27 +649,31 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
         dslModelData.afterEvaluateCompute(true /*FIXME*/, null);
 
         // compute the variants
-        List<SealableVariant> variants =
+        VariantBuilder<E> builder =
                 new VariantBuilder<>(
-                                dslModelData,
-                                newExtension,
-                                getVariantFactories(),
-                                extraModelInfo,
-                                extraModelInfo)
-                        .generateVariants();
+                        dslModelData,
+                        newExtension,
+                        getVariantFactories(),
+                        extraModelInfo,
+                        extraModelInfo);
+        builder.generateVariants();
+        List<SealableVariant> variants = builder.getVariants();
+        List<Variant> variantShims = builder.getShims();
 
         // run the variant API
-        for (SealableVariant variant : variants) {
-            // FIXME implement
-        }
+        dslModelData.runVariantCallbacks(variantShims);
 
         // post-variant API
-        // FIXME implement
+        for (Action<List<Variant>> action : newExtension.getPostVariants()) {
+            action.execute(variantShims);
+        }
 
         // seal the variants
         for (SealableVariant variant : variants) {
             variant.seal();
         }
+        // and additional data
+        dslModelData.seal();
 
         // create the tasks
         // FIXME implement

@@ -17,14 +17,14 @@
 package com.android.build.gradle.internal.api.dsl.extensions
 
 import com.android.build.api.dsl.extension.VariantAwareProperties
-import com.android.build.api.dsl.extension.VariantCallbacks
+import com.android.build.api.dsl.extension.VariantCallbackHandler
 import com.android.build.api.dsl.model.BuildType
 import com.android.build.api.dsl.model.DefaultConfig
 import com.android.build.api.dsl.model.ProductFlavor
 import com.android.build.api.dsl.options.SigningConfig
-import com.android.build.api.variant.VariantFilter
+import com.android.build.api.dsl.variant.Variant
+import com.android.build.api.dsl.variant.VariantFilter
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeImpl
-import com.android.build.gradle.internal.api.dsl.model.DefaultConfigImpl
 import com.android.build.gradle.internal.api.dsl.model.ProductFlavorImpl
 import com.android.build.gradle.internal.api.dsl.options.SigningConfigImpl
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
@@ -58,9 +58,12 @@ class VariantAwarePropertiesImpl(
 
     private val _flavorDimensions: SealableList<String> = SealableList.new(issueReporter)
     private val _variantFilters: SealableList<Action<VariantFilter>> = SealableList.new(issueReporter)
-    private val _postVariants: SealableList<Action<Void>> = SealableList.new(issueReporter)
+    private val _preVariants: SealableList<Action<Void>> = SealableList.new(issueReporter)
+    private val _postVariants: SealableList<Action<List<Variant>>> = SealableList.new(issueReporter)
+    private val _variants: VariantCallbackHandler<Variant> =
+            VariantCallbackHandlerShim(dslModelData.createVariantCallbackHandler())
 
-    override var variantFilters: MutableList<Action<VariantFilter>>
+    override var variantFilters:MutableList<Action<VariantFilter>>
         get() = _variantFilters
         set(value) {
             _variantFilters.reset(value)
@@ -84,8 +87,20 @@ class VariantAwarePropertiesImpl(
         action.execute(signingConfigs)
     }
 
-    override val variants: VariantCallbacks
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+    override var preVariantCallbacks: MutableList<Action<Void>>
+        get() = _preVariants
+        set(value) {
+            _preVariants.reset(value)
+        }
+
+    override fun preVariantCallback(action: Action<Void>) {
+        if (checkSeal()) {
+            _preVariants.add(action)
+        }
+    }
+
+    override val variants: VariantCallbackHandler<Variant>
+        get() = _variants
 
     override fun variantFilter(action: Action<VariantFilter>) {
         if (checkSeal()) {
@@ -93,13 +108,13 @@ class VariantAwarePropertiesImpl(
         }
     }
 
-    override var postVariants: MutableList<Action<Void>>
+    override var postVariants: MutableList<Action<List<Variant>>>
         get() = _postVariants
         set(value) {
             _postVariants.reset(value)
         }
 
-    override fun postVariant(action: Action<Void>) {
+    override fun postVariantCallback(action: Action<List<Variant>>) {
         if (checkSeal()) {
             _postVariants.add(action)
         }
@@ -109,6 +124,7 @@ class VariantAwarePropertiesImpl(
         super.seal()
         _defaultConfig.seal()
         _flavorDimensions.seal()
+        _preVariants.seal()
         _variantFilters.seal()
         _postVariants.seal()
 

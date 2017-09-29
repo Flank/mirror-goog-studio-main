@@ -35,11 +35,13 @@ import com.android.builder.core.VariantType
 import com.android.builder.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
+import com.android.utils.ImmutableCollectors
 import com.android.utils.StringHelper
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableList
 import com.google.common.collect.ListMultimap
 import com.google.common.collect.Lists
+import com.google.common.collect.Maps
 import org.gradle.api.Named
 import java.io.File
 import java.util.stream.Collectors
@@ -51,9 +53,27 @@ class VariantBuilder<in E: BaseExtension2>(
         private val deprecationReporter: DeprecationReporter,
         private val issueReporter: EvalIssueReporter) {
 
-    fun generateVariants(): List<SealableVariant> {
-        val variants= mutableListOf<SealableVariant>()
+    private var generated: Boolean = false
+    private val _variants: MutableList<SealableVariant> = mutableListOf()
+    private val _shims: MutableMap<Variant, Variant> = Maps.newIdentityHashMap()
 
+    val variants: List<SealableVariant>
+        get() {
+            if (!generated) {
+                throw RuntimeException("VariantBuilder.generateVariants() not called")
+            }
+            return _variants
+        }
+
+    val shims: List<Variant>
+        get() {
+            if (!generated) {
+                throw RuntimeException("VariantBuilder.generateVariants() not called")
+            }
+            return ImmutableList.copyOf(_shims.values)
+        }
+
+    fun generateVariants() {
         // compute the flavor combinations
         val flavorCombinations = computeFlavorCombo()
 
@@ -61,19 +81,17 @@ class VariantBuilder<in E: BaseExtension2>(
         // Also need to merge the different items
         if (flavorCombinations.isEmpty()) {
             for (buildType in dslModelData.buildTypes) {
-                variants.addAll(createVariant(buildType, null))
+                createVariant(buildType, null)
             }
 
         } else {
             for (buildType in dslModelData.buildTypes) {
                 for (flavorCombo in flavorCombinations) {
-                    variants.addAll(createVariant(buildType, flavorCombo))
+                    createVariant(buildType, flavorCombo)
                 }
 
             }
         }
-
-        return variants
     }
 
     private fun computeFlavorCombo(): List<FlavorCombination> {
@@ -113,8 +131,22 @@ class VariantBuilder<in E: BaseExtension2>(
         return createCombinations(flavorDimensions, dslModelData.productFlavors, issueReporter)
     }
 
-    private fun createVariant(buildType: BuildTypeImpl, flavorCombo: FlavorCombination?)
-            : Collection<SealableVariant> {
+    private fun createVariant(buildType: BuildTypeImpl, flavorCombo: FlavorCombination?) {
+        // check if we have to run this at all via the externally-provided filter
+        val filterObject = VariantFilterImpl(
+                buildType.name,
+                flavorCombo?.flavorNames ?: ImmutableList.of(),
+                issueReporter)
+        for (filter in extension.variantFilters) {
+            filter.execute(filterObject)
+            if (filterObject.ignoresAll) {
+                return
+            }
+        }
+
+        // seal so that people get notified if they try to change this too late.
+        filterObject.seal()
+
         val items = mutableListOf<Any>()
 
         // merge just the default config + flavors into ProductFlavorOrVariant
@@ -124,13 +156,13 @@ class VariantBuilder<in E: BaseExtension2>(
         }
 
         @Suppress("UNCHECKED_CAST")
-        val productFlavorOrVariant = computeProductFlavorOrVariant(
+        val productFlavorOrVariant = mergeProductFlavorOrVariant(
                 items as MutableList<ProductFlavorOrVariant>)
 
         // add build type and merge it all into VariantProperties
         items.add(buildType)
         @Suppress("UNCHECKED_CAST")
-        val variantProperties = computeVariantProperties(items as MutableList<VariantProperties>)
+        val variantProperties = mergeVariantProperties(items as MutableList<VariantProperties>)
 
         @Suppress("UNCHECKED_CAST")
         val appIdSuffixFromFlavors = combineSuffixes(
@@ -145,61 +177,84 @@ class VariantBuilder<in E: BaseExtension2>(
                 null)
 
         // buildTypOrVariant can just be cloned from the BuildType delegate
-        val buildTypOrVariant = computeBuildTypeOrVariant(buildType)
+        val buildTypOrVariant = cloneBuildTypeOrVariant(buildType)
 
         // variantExtensionProperties is cloned from the extension's delegate
-        val variantExtensionProperties = computeVariantExtensionProperties(
+        val variantExtensionProperties = cloneVariantOrExtensionProperties(
                 extension.variantExtensionProperties)
 
         val variantDispatcher = mutableMapOf<VariantType, Map<Variant, Variant>>()
+        val createdVariantMap = mutableMapOf<VariantType, Variant>()
 
-        val createdVariantMap = mutableMapOf<VariantType, SealableVariant>()
         for (factory in factories) {
+            val generatedType = factory.generatedType
+
+            if (!generatedType.isForTesting) {
+                if (filterObject.ignoresProd) {
+                    continue
+                }
+            } else {
+                if ((generatedType == VariantType.ANDROID_TEST && filterObject.ignoresAndroidTest)
+                        || (generatedType == VariantType.UNIT_TEST && filterObject.ignoresUnitTest)) {
+                    continue
+                }
+            }
 
             // Internal variant properties. Due to the variant name
             // this is made up of flavor/build type, extension, etc...
             val variantName = computeVariantName(
-                    buildType.name, flavorCombo?.name, factory.generatedType, factory.testTarget)
+                    buildType.name, flavorCombo?.name, generatedType, factory.testTarget)
 
-            val internalVariantProperties = computeCommonVariantPropertiesImpl(
+            val commonVariantProperties = computeCommonVariantPropertiesImpl(
                     variantName, flavorCombo, buildType)
 
-            // compute the application ID
-            val appId = factory.computeApplicationId(
-                    productFlavorOrVariant,
-                    appIdSuffixFromFlavors)
-            // set it back in the merged flavor delegate.
-
+            // compute the application ID and feed it back into the delegate that holds it
             // FIXME I think we need to handle the case where there is no appId but there are
             // suffixes, in which case we would have to read the manifest which we really shouldn't...
-            productFlavorOrVariant.applicationId = appId
+            productFlavorOrVariant.applicationId = factory.computeApplicationId(
+                    productFlavorOrVariant,
+                    appIdSuffixFromFlavors)
 
+            // FIXME do same for versionName
+
+            // FIXME we want to copy these items for each variant
             val variant = factory.createVariant(
                     extension,
                     variantProperties,
                     productFlavorOrVariant,
                     buildTypOrVariant,
                     variantExtensionProperties,
-                    internalVariantProperties,
+                    commonVariantProperties,
                     variantDispatcher)
 
             val variantType = variant.variantType
 
+
+            // add variant to map
+            _variants.add(variant)
+
+            // get shim and put it in main map and intermediate map for dispatcher
+            val shim = variant.createShim()
+            _shims[variant] = shim
+
+            // put the main variant in the map
             if (createdVariantMap[variantType] != null) {
                 throw RuntimeException("More than one VariantFactory with same type $variantType")
             }
             createdVariantMap.put(variantType, variant)
         }
 
+        // setup the variant dispatcher linking the variants together.
+        // The key is the internal variant but the result must be the shim
         for (factory in factories) {
-            val generatedVariant = createdVariantMap[factory.generatedType] ?: throw RuntimeException("factory with no generated variant with type ${factory.generatedType}")
+            val generatedVariant = createdVariantMap[factory.generatedType] ?: continue
 
             val testTargetType = factory.testTarget
             if (testTargetType != null) {
                 val testVariant = createdVariantMap[testTargetType]
                 if (testVariant != null) {
                     val testMap = variantDispatcher.computeIfAbsent(testTargetType, { _ -> mutableMapOf() }) as MutableMap
-                    testMap[generatedVariant] = testVariant
+                    testMap[generatedVariant] = _shims[testVariant]!! // shim must be present
                 }
             }
 
@@ -207,15 +262,13 @@ class VariantBuilder<in E: BaseExtension2>(
                 val testedVariant = createdVariantMap[testedByType]
                 if (testedVariant != null) {
                     val testedMap = variantDispatcher.computeIfAbsent(testedByType, { _ -> mutableMapOf() }) as MutableMap
-                    testedMap[generatedVariant] = testedVariant
+                    testedMap[generatedVariant] = _shims[testedVariant]!! // shim must be present
                 }
             }
         }
-
-        return createdVariantMap.values
     }
 
-    private fun computeVariantProperties(items: List<VariantProperties>): VariantPropertiesImpl {
+    private fun mergeVariantProperties(items: List<VariantProperties>): VariantPropertiesImpl {
         val variantProperties = VariantPropertiesImpl(issueReporter)
 
         takeLastNonNull(variantProperties, items, SET_MULTIDEX_ENABLED, GET_MULTIDEX_ENABLED)
@@ -224,7 +277,7 @@ class VariantBuilder<in E: BaseExtension2>(
         return variantProperties
     }
 
-    private fun computeProductFlavorOrVariant(items: List<ProductFlavorOrVariant>): ProductFlavorOrVariantImpl {
+    private fun mergeProductFlavorOrVariant(items: List<ProductFlavorOrVariant>): ProductFlavorOrVariantImpl {
         val productFlavorOrVariant = ProductFlavorOrVariantImpl(issueReporter)
 
         // merge the default-config + flavors in there.
@@ -232,29 +285,7 @@ class VariantBuilder<in E: BaseExtension2>(
         return productFlavorOrVariant
     }
 
-    private fun combineSuffixes(
-            items: MutableList<BuildTypeOrProductFlavor>,
-            getter: (BuildTypeOrProductFlavor) -> String?,
-            separator: Char?): String? {
-        val suffixes: MutableList<String> = items.stream().map(getter).filter({ it != null }).collect(Collectors.toList())
-
-        if (suffixes.isEmpty()) {
-            return null
-        }
-
-        val sb = StringBuilder()
-        for (suffix in suffixes) {
-            if (separator == null || suffix[0] == separator) {
-                sb.append(suffix)
-            } else {
-                sb.append(separator).append(suffix)
-            }
-        }
-
-        return sb.toString()
-    }
-
-    private fun computeBuildTypeOrVariant(buildType: BuildTypeImpl): BuildTypeOrVariantImpl {
+    private fun cloneBuildTypeOrVariant(that: BuildTypeImpl): BuildTypeOrVariantImpl {
         // values here don't matter, we're going to run initWith
         val buildTypeOrVariant = BuildTypeOrVariantImpl(
                 "Variant",
@@ -264,16 +295,16 @@ class VariantBuilder<in E: BaseExtension2>(
                 deprecationReporter,
                 issueReporter)
 
-        buildTypeOrVariant.initWith(buildType.buildTypeOrVariant)
+        buildTypeOrVariant.initWith(that.buildTypeOrVariant)
 
         return buildTypeOrVariant
     }
 
-    private fun computeVariantExtensionProperties(
-            variantExtensionProperties: VariantOrExtensionPropertiesImpl): VariantOrExtensionPropertiesImpl {
+    private fun cloneVariantOrExtensionProperties(
+            that: VariantOrExtensionPropertiesImpl): VariantOrExtensionPropertiesImpl {
         val prop = VariantOrExtensionPropertiesImpl(issueReporter)
 
-        prop.initWith(variantExtensionProperties)
+        prop.initWith(that)
         return prop
     }
 
@@ -309,15 +340,10 @@ class VariantBuilder<in E: BaseExtension2>(
             multiFlavorSourceSet = allSourceSets.create(it)
         }
 
-        val flavorNames: List<String> = if (flavors.isEmpty()) {
-            ImmutableList.of()
-        } else {
-            flavors.stream().map(Named::getName).collect(Collectors.toList())
-        }
-
         return CommonVariantPropertiesImpl(
+                variantName,
                 buildType.name,
-                flavorNames,
+                flavorCombo?.flavorNames ?: ImmutableList.of(),
                 sourceSets,
                 variantSourceSet,
                 multiFlavorSourceSet,
@@ -346,7 +372,9 @@ private fun <T, V> takeLastNonNull(outObject: T, inList: List<T>, setter: (T,V) 
  * @param name the optional name of the combination. Only valid for 2+ flavors
  * @param flavors the list of flavors
  */
-private class FlavorCombination(val name: String?, val flavors: ImmutableList<ProductFlavorImpl>)
+private class FlavorCombination(val name: String?, val flavors: ImmutableList<ProductFlavorImpl>) {
+    val flavorNames: List<String> = flavors.stream().map(Named::getName).collect(ImmutableCollectors.toImmutableList())
+}
 
 /**
  * Creates a list containing all combinations of ProductFlavors of the given dimensions.
@@ -448,6 +476,29 @@ private fun createFlavorCombinations(
         flavorAccumulator.removeAt(index + 1)
     }
 }
+
+private fun combineSuffixes(
+        items: MutableList<BuildTypeOrProductFlavor>,
+        getter: (BuildTypeOrProductFlavor) -> String?,
+        separator: Char?): String? {
+    val suffixes: MutableList<String> = items.stream().map(getter).filter({ it != null }).collect(Collectors.toList())
+
+    if (suffixes.isEmpty()) {
+        return null
+    }
+
+    val sb = StringBuilder()
+    for (suffix in suffixes) {
+        if (separator == null || suffix[0] == separator) {
+            sb.append(suffix)
+        } else {
+            sb.append(separator).append(suffix)
+        }
+    }
+
+    return sb.toString()
+}
+
 
 private fun computeMultiFlavorName(flavors: List<ProductFlavorImpl>): String {
     var first = true

@@ -20,7 +20,9 @@ import com.android.build.api.dsl.variant.Variant
 import com.android.build.gradle.internal.api.dsl.sealing.Sealable
 import com.android.builder.core.VariantType
 
-/** Base internal impl variants */
+/** Base interface for internal impl variants */
 interface SealableVariant: Variant, Sealable {
     val variantType: VariantType
+
+    fun createShim(): Variant
 }

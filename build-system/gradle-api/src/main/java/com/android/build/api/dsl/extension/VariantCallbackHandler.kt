@@ -19,15 +19,23 @@ package com.android.build.api.dsl.extension
 import com.android.build.api.dsl.variant.Variant
 import org.gradle.api.Action
 
-interface VariantCallbacks {
+interface VariantCallbackHandler<T: Variant> {
 
-    fun all(action: Action<Variant>)
+    fun all(action: Action<T>)
+
+    fun withName(name: String, action: Action<T>)
+
+    fun withName(name: String) : VariantCallbackHandler<T>
 
     fun <S : Variant> withType(variantClass: Class<S>, action: Action<S>)
 
-    fun withName(name: String, action: Action<Variant>)
+    fun <S : Variant> withType(variantClass: Class<S>) : VariantCallbackHandler<S>
 
-    fun withBuildType(name: String, action: Action<Variant>)
+    fun withBuildType(name: String, action: Action<T>)
 
-    fun withProductFlavor(name: String, action: Action<Variant>)
+    fun withBuildType(name: String) : VariantCallbackHandler<T>
+
+    fun withProductFlavor(name: String, action: Action<T>)
+
+    fun withProductFlavor(name: String) : VariantCallbackHandler<T>
 }

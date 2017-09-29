@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableList
 
 /** propertie for variants that are not coming from the user model */
 class CommonVariantPropertiesImpl(
+        override val name: String,
         override val buildTypeName: String,
         flavorNames: List<String>,
         sourceSets: List<AndroidSourceSet>,
@@ -37,5 +38,8 @@ class CommonVariantPropertiesImpl(
 
     override fun seal() {
         super.seal()
+
+        // FIXME seal source sets
+
     }
 }

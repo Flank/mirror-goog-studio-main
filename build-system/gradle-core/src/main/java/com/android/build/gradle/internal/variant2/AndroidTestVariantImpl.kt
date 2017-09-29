@@ -55,8 +55,7 @@ class AndroidTestVariantImpl(
     override val testedVariant: Variant
         get() = variantMap[VariantType.DEFAULT]!![this] as Variant // guaranteed to be in the map
 
-    val shim: AndroidTestVariant
-        get() = AndroidTestVariantShim(this)
+    override fun createShim(): Variant = AndroidTestVariantShim(this)
 
     override fun seal() {
         super.seal()
