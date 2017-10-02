@@ -219,7 +219,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -977,8 +976,7 @@ public abstract class TaskManager {
 
     public AndroidTask<MergeSourceSetFolders> createMergeAssetsTask(
             @NonNull TaskFactory tasks,
-            @NonNull VariantScope scope,
-            @Nullable BiConsumer<AndroidTask<MergeSourceSetFolders>, File> consumer) {
+            @NonNull VariantScope scope) {
         final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
         File outputDir =
                 variantConfiguration.isBundled()
@@ -994,10 +992,6 @@ public abstract class TaskManager {
 
         // register the output
         scope.addTaskOutput(MERGED_ASSETS, outputDir, mergeAssetsTask.getName());
-
-        if (consumer != null) {
-            consumer.accept(mergeAssetsTask, outputDir);
-        }
 
         mergeAssetsTask.dependsOn(tasks,
                 scope.getAssetGenTask());
@@ -1868,7 +1862,7 @@ public abstract class TaskManager {
         createMergeResourcesTask(tasks, variantScope, true);
 
         // Add a task to merge the assets folders
-        createMergeAssetsTask(tasks, variantScope, null);
+        createMergeAssetsTask(tasks, variantScope);
 
         // Add a task to create the BuildConfig class
         createBuildConfigTask(tasks, variantScope);

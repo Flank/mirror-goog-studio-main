@@ -170,7 +170,7 @@ public class LibraryTaskManager extends TaskManager {
                 ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
                 projectPath,
                 variantName,
-                () -> createMergeAssetsTask(tasks, variantScope, null));
+                () -> createMergeAssetsTask(tasks, variantScope));
 
         // Add a task to create the BuildConfig class
         recorder.record(

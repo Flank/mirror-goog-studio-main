@@ -145,7 +145,7 @@ public class ApplicationTaskManager extends TaskManager {
                 ExecutionType.APP_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createMergeAssetsTask(tasks, variantScope, null));
+                () -> createMergeAssetsTask(tasks, variantScope));
 
         // Add a task to create the BuildConfig class
         recorder.record(
