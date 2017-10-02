@@ -1,3 +1,4 @@
+SomeAnnotation
 Test2
 Test2: int aField
 Test2: AnotherClass aClassField

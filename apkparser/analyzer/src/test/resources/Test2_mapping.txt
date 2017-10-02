@@ -1,5 +1,6 @@
 AnotherClass -> a:
     void <init>() -> <init>
+SomeAnnotation -> SomeAnnotation:
 Test2 -> Test2:
     int aField -> aField
     AnotherClass aClassField -> aClassField

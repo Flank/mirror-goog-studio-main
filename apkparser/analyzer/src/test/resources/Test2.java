@@ -1,11 +1,13 @@
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Collections;
 import java.util.List;
 
 // javac -source 1.6 -target 1.6 Test2.java
-// java -jar proguard.jar @Test2.pro -libraryjars ../../../../../../prebuilts/studio/jdk/linux/jre/lib/rt.jar -injars Test2.class:AnotherClass.class:TestSubclass.class::RemovedSubclass.class -outjars Test2.jar
+// java -jar proguard.jar @Test2.pro -libraryjars ../../../../../../prebuilts/studio/jdk/linux/jre/lib/rt.jar -injars Test2.class:AnotherClass.class:TestSubclass.class:RemovedSubclass.class:SomeAnnotation.class -outjars Test2.jar
 // dx --dex --output=Test2.dex Test2.jar
-// rm AnotherClass.class Test2.class TestSubclass.class RemovedSubclass.class Test2.jar
+// rm AnotherClass.class Test2.class TestSubclass.class RemovedSubclass.class SomeAnnotation.class Test2.jar
 public class Test2 {
 
     private int aField;
@@ -36,6 +38,7 @@ class TestSubclass extends Test2 {
     }
 }
 
+@SomeAnnotation
 class AnotherClass {
 
     public Boolean aBooleanField;
@@ -46,3 +49,6 @@ class AnotherClass {
 
     AnotherClass(int a, TestSubclass b) {}
 }
+
+@Retention(RetentionPolicy.RUNTIME)
+@interface SomeAnnotation {}

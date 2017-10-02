@@ -43,6 +43,21 @@ public class DexReferencesTest {
                         + "    LTest2;-><init>()V: \n"
                         + "      LTestSubclass;-><init>()V: \n",
                 sb.toString());
+
+        root = references.getReferenceTreeFor(new ImmutableTypeReference("LSomeAnnotation;"));
+        sb.setLength(0);
+        dumpTree(sb, root, 0);
+        assertEquals(
+                "LSomeAnnotation;: \n"
+                        + "  La;: \n"
+                        + "    LTest2;-><init>()V: \n"
+                        + "      LTestSubclass;-><init>()V: \n"
+                        + "    LTest2;->aClassField:La;: \n"
+                        + "      LTest2;-><init>()V: \n"
+                        + "        LTestSubclass;-><init>()V: \n",
+                sb.toString());
+
+
     }
 
     private static void dumpTree(StringBuffer sb, @NonNull DexElementNode node, int depth) {

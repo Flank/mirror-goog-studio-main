@@ -61,6 +61,9 @@ public class FilteredTreeModelTest {
                         + "        <init>(): 0,1\n"
                         + "      Boolean: 0,1\n"
                         + "        java.lang.Boolean valueOf(boolean): 0,1\n"
+                        + "      annotation: 0,0\n"
+                        + "        RetentionPolicy: 0,0\n"
+                        + "          java.lang.annotation.RetentionPolicy RUNTIME: 0,0\n"
                         + "    util: 0,1\n"
                         + "      Collections: 0,1\n"
                         + "        java.util.List emptyList(): 0,1\n"
@@ -75,7 +78,8 @@ public class FilteredTreeModelTest {
                         + "    java.util.List getAnotherList(): 1,1\n"
                         + "    java.util.List getList(): 0,1\n"
                         + "  a: 1,1\n"
-                        + "    <init>(): 1,1\n",
+                        + "    <init>(): 1,1\n"
+                        + "  SomeAnnotation: 0,0\n",
                 sb.toString());
     }
 
@@ -99,13 +103,17 @@ public class FilteredTreeModelTest {
                         + "      Integer: 0,1\n"
                         + "      Object: 0,1\n"
                         + "      Boolean: 0,1\n"
+                        + "      annotation: 0,0\n"
+                        + "        RetentionPolicy: 0,0\n"
+                        + "          java.lang.annotation.RetentionPolicy RUNTIME: 0,0\n"
                         + "    util: 0,1\n"
                         + "      Collections: 0,1\n"
                         + "  Test2: 3,3\n"
                         + "    a aClassField: 0,0\n"
                         + "    int aField: 0,0\n"
                         + "  TestSubclass: 2,3\n"
-                        + "  a: 1,1\n",
+                        + "  a: 1,1\n"
+                        + "  SomeAnnotation: 0,0\n",
                 sb.toString());
     }
 
@@ -134,7 +142,8 @@ public class FilteredTreeModelTest {
                         + "    <init>(): 1,1\n"
                         + "    java.util.List getAnotherList(): 1,1\n"
                         + "  a: 1,1\n"
-                        + "    <init>(): 1,1\n",
+                        + "    <init>(): 1,1\n"
+                        + "  SomeAnnotation: 0,0\n",
                 sb.toString());
     }
 
@@ -161,6 +170,8 @@ public class FilteredTreeModelTest {
                         + "        <init>(): 0,1\n"
                         + "      Boolean: 0,1\n"
                         + "        java.lang.Boolean valueOf(boolean): 0,1\n"
+                        + "      annotation: 0,0\n"
+                        + "        RetentionPolicy: 0,0\n"
                         + "    util: 0,1\n"
                         + "      Collections: 0,1\n"
                         + "        java.util.List emptyList(): 0,1\n"
@@ -173,7 +184,8 @@ public class FilteredTreeModelTest {
                         + "    java.util.List getAnotherList(): 1,1\n"
                         + "    java.util.List getList(): 0,1\n"
                         + "  a: 1,1\n"
-                        + "    <init>(): 1,1\n",
+                        + "    <init>(): 1,1\n"
+                        + "  SomeAnnotation: 0,0\n",
                 sb.toString());
     }
 
@@ -212,6 +224,9 @@ public class FilteredTreeModelTest {
                         + "        <init>(): 0,1\n"
                         + "      Boolean: 0,1\n"
                         + "        java.lang.Boolean valueOf(boolean): 0,1\n"
+                        + "      annotation: 0,0\n"
+                        + "        RetentionPolicy: 0,0\n"
+                        + "          java.lang.annotation.RetentionPolicy RUNTIME: 0,0\n"
                         + "    util: 0,1\n"
                         + "      Collections: 0,1\n"
                         + "        java.util.List emptyList(): 0,1\n"
@@ -226,7 +241,8 @@ public class FilteredTreeModelTest {
                         + "    java.util.List getAnotherList(): 1,1\n"
                         + "    java.util.List getList(): 0,1\n"
                         + "  AnotherClass: 1,1\n"
-                        + "    <init>(): 1,1\n",
+                        + "    <init>(): 1,1\n"
+                        + "  SomeAnnotation: 0,0\n",
                 sb.toString());
 
         options.setShowRemovedNodes(true);
@@ -242,6 +258,9 @@ public class FilteredTreeModelTest {
                         + "        <init>(): 0,1\n"
                         + "      Boolean: 0,1\n"
                         + "        java.lang.Boolean valueOf(boolean): 0,1\n"
+                        + "      annotation: 0,0\n"
+                        + "        RetentionPolicy: 0,0\n"
+                        + "          java.lang.annotation.RetentionPolicy RUNTIME: 0,0\n"
                         + "    util: 0,1\n"
                         + "      Collections: 0,1\n"
                         + "        java.util.List emptyList(): 0,1\n"
@@ -258,6 +277,7 @@ public class FilteredTreeModelTest {
                         + "  AnotherClass: 1,1\n"
                         + "    <init>(): 1,1\n"
                         + "    AnotherClass(int,TestSubclass): 0,0\n"
+                        + "  SomeAnnotation: 0,0\n"
                         + "  RemovedSubclass: 0,0\n",
                 sb.toString());
     }

@@ -6,6 +6,11 @@
   *;
 }
 
+-keepattributes *Annotation*
+
+
+-keep class SomeAnnotation
+
 -keep class TestSubclass {
   *;
 }

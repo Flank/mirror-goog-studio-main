@@ -16,18 +16,16 @@
 package com.android.tools.apk.analyzer.dex;
 
 import com.android.annotations.NonNull;
-import com.android.tools.apk.analyzer.dex.tree.DexElementNode;
-import com.android.tools.apk.analyzer.dex.tree.DexElementNodeFactory;
+import com.android.tools.apk.analyzer.dex.tree.*;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import java.util.*;
-import org.jf.dexlib2.dexbacked.DexBackedClassDef;
-import org.jf.dexlib2.dexbacked.DexBackedDexFile;
-import org.jf.dexlib2.dexbacked.DexBackedMethod;
-import org.jf.dexlib2.dexbacked.DexBackedMethodImplementation;
+import org.jf.dexlib2.dexbacked.*;
 import org.jf.dexlib2.dexbacked.reference.DexBackedFieldReference;
 import org.jf.dexlib2.dexbacked.reference.DexBackedMethodReference;
 import org.jf.dexlib2.dexbacked.reference.DexBackedTypeReference;
+import org.jf.dexlib2.iface.Annotation;
+import org.jf.dexlib2.iface.AnnotationElement;
 import org.jf.dexlib2.iface.instruction.DualReferenceInstruction;
 import org.jf.dexlib2.iface.instruction.Instruction;
 import org.jf.dexlib2.iface.instruction.ReferenceInstruction;
@@ -35,6 +33,7 @@ import org.jf.dexlib2.iface.reference.FieldReference;
 import org.jf.dexlib2.iface.reference.MethodReference;
 import org.jf.dexlib2.iface.reference.Reference;
 import org.jf.dexlib2.iface.reference.TypeReference;
+import org.jf.dexlib2.iface.value.*;
 import org.jf.dexlib2.immutable.reference.*;
 
 public class DexReferences {
@@ -47,15 +46,10 @@ public class DexReferences {
     }
 
     /**
-     * We need to go through all the data available in a dex file for methods, fields and classes
-     * and gather all possible references from one to the others. Currently that means: - method ->
-     * return type - method -> parameter types - method -> any type/field/method reference found in
-     * bytecode - class -> superclass - class -> implemented interfaces - field -> field type
+     * Goes through all the classes, methods, and fields, and gathers all possible references from
+     * one type/method/field to another.
      *
-     * <p>TODO: we currently don't check annotations TODO: check if bytecode of exception handlers
-     * is included
-     *
-     * @param a dex file
+     * @param files dex file
      */
     private void gatherBackReferences(@NonNull DexBackedDexFile[] files) {
 
@@ -75,10 +69,10 @@ public class DexReferences {
             //loop through all methods referenced in the dex file, mapping the following:
             for (int i = 0, m = file.getMethodCount(); i < m; i++) {
                 MethodReference methodReference = new DexBackedMethodReference(file, i);
-                //- method to return type
+                //- return type => method
                 ImmutableReference typeRef = typesByName.get(methodReference.getReturnType());
                 addReference(typeRef, methodReference, immutableReferencesBin);
-                //- method to all parameter types
+                //- all parameter types => method
                 for (CharSequence parameterType : methodReference.getParameterTypes()) {
                     typeRef = typesByName.get(parameterType.toString());
                     addReference(typeRef, methodReference, immutableReferencesBin);
@@ -87,46 +81,125 @@ public class DexReferences {
 
             //loop through all classes defined in the dex file, mapping the following:
             for (DexBackedClassDef classDef : file.getClasses()) {
-                //- class to superclass
+                //- superclass => class
                 ImmutableReference typeRef = typesByName.get(classDef.getSuperclass());
                 addReference(typeRef, classDef, immutableReferencesBin);
-                //- class to all implemented interfaces
+                //- all implemented interfaces => class
                 for (String iface : classDef.getInterfaces()) {
                     typeRef = typesByName.get(iface);
                     addReference(typeRef, classDef, immutableReferencesBin);
                 }
-                //loop through all the methods defined in this class,
+                //map annotations => class
+                for (Annotation annotation : classDef.getAnnotations()) {
+                    addAnnotation(immutableReferencesBin, typesByName, classDef, annotation);
+                }
+                //loop through all the methods defined in this class
                 for (DexBackedMethod method : classDef.getMethods()) {
                     //if the method has an implementation, loop through the bytecode
-                    //mapping this method to any references that exist in dex instructions.
+                    //mapping any references that exist in dex instructions to the method.
                     //Fortunately, dexlib2 marks every bytecode instruction that accepts
-                    //a reference with one of the 2 interfaces: ReferenceInstruction
-                    //or DualReferenceInstructions.
+                    //a reference with one or two interfaces: ReferenceInstruction
+                    //and DualReferenceInstruction.
                     DexBackedMethodImplementation impl = method.getImplementation();
                     if (impl != null) {
                         for (Instruction instruction : impl.getInstructions()) {
                             if (instruction instanceof ReferenceInstruction) {
                                 Reference reference =
                                         ((ReferenceInstruction) instruction).getReference();
-                                addReference(reference, method, immutableReferencesBin);
+                                addReferenceAndEnclosingClass(
+                                        immutableReferencesBin, typesByName, method, reference);
                             }
                             if (instruction instanceof DualReferenceInstruction) {
                                 Reference reference =
                                         ((DualReferenceInstruction) instruction).getReference2();
-                                addReference(reference, method, immutableReferencesBin);
+                                addReferenceAndEnclosingClass(
+                                        immutableReferencesBin, typesByName, method, reference);
                             }
                         }
+                    }
+                    //map annotations => method
+                    for (Annotation annotation : method.getAnnotations()) {
+                        addAnnotation(immutableReferencesBin, typesByName, method, annotation);
+                    }
+                }
+                for (DexBackedField field : classDef.getFields()) {
+                    //map annotations => field
+                    for (Annotation annotation : field.getAnnotations()) {
+                        addAnnotation(immutableReferencesBin, typesByName, field, annotation);
                     }
                 }
             }
 
             //loop through all fields referenced in this dex file, creating
-            //a mapping from the field to its type
+            //a mapping from the field type => field
             for (int i = 0, m = file.getFieldCount(); i < m; i++) {
                 FieldReference fieldRef = new DexBackedFieldReference(file, i);
                 ImmutableReference typeRef = typesByName.get(fieldRef.getType());
                 addReference(typeRef, fieldRef, immutableReferencesBin);
             }
+        }
+    }
+
+    private void addAnnotation(
+            Map<Reference, ImmutableReference> immutableReferencesBin,
+            Map<String, ImmutableTypeReference> typesByName,
+            Reference ref,
+            Annotation annotation) {
+        ImmutableReference typeRef = typesByName.get(annotation.getType());
+        addReference(typeRef, ref, immutableReferencesBin);
+        Set<? extends AnnotationElement> elements = annotation.getElements();
+        for (AnnotationElement element : elements) {
+            EncodedValue value = element.getValue();
+            addEncodedValue(immutableReferencesBin, typesByName, ref, value);
+        }
+    }
+
+    private void addEncodedValue(
+            Map<Reference, ImmutableReference> immutableReferencesBin,
+            Map<String, ImmutableTypeReference> typesByName,
+            Reference ref,
+            EncodedValue value) {
+        if (value instanceof AnnotationEncodedValue) {
+            ImmutableTypeReference typeRef =
+                    typesByName.get(((AnnotationEncodedValue) value).getType());
+            addReference(typeRef, ref, immutableReferencesBin);
+            for (AnnotationElement element : ((AnnotationEncodedValue) value).getElements()) {
+                addEncodedValue(immutableReferencesBin, typesByName, ref, element.getValue());
+            }
+        } else if (value instanceof ArrayEncodedValue) {
+            for (EncodedValue encodedValue : ((ArrayEncodedValue) value).getValue()) {
+                addEncodedValue(immutableReferencesBin, typesByName, ref, encodedValue);
+            }
+        } else if (value instanceof EnumEncodedValue) {
+            addReferenceAndEnclosingClass(
+                    immutableReferencesBin,
+                    typesByName,
+                    ref,
+                    ((EnumEncodedValue) value).getValue());
+        } else if (value instanceof TypeEncodedValue) {
+            ImmutableTypeReference typeRef = typesByName.get(((TypeEncodedValue) value).getValue());
+            addReference(typeRef, ref, immutableReferencesBin);
+        }
+    }
+
+    private void addReferenceAndEnclosingClass(
+            Map<Reference, ImmutableReference> immutableReferencesBin,
+            Map<String, ImmutableTypeReference> typesByName,
+            Reference ref,
+            Reference memberReference) {
+        addReference(memberReference, ref, immutableReferencesBin);
+
+        //also map enclosing class of referenced method/field => this reference
+        if (memberReference instanceof MethodReference) {
+            addReference(
+                    typesByName.get(((MethodReference) memberReference).getDefiningClass()),
+                    ref,
+                    immutableReferencesBin);
+        } else if (memberReference instanceof FieldReference) {
+            addReference(
+                    typesByName.get(((FieldReference) memberReference).getDefiningClass()),
+                    ref,
+                    immutableReferencesBin);
         }
     }
 
@@ -146,6 +219,20 @@ public class DexReferences {
         if (immutableRef2 == null) {
             immutableRef2 = ImmutableReferenceFactory.of(ref2);
             immutableReferencesBin.put(immutableRef2, immutableRef2);
+        }
+
+        if (immutableRef1 instanceof TypeReference) {
+            String definingType2 = null;
+            if (immutableRef2 instanceof MethodReference) {
+                definingType2 = ((MethodReference) immutableRef2).getDefiningClass();
+            } else if (immutableRef2 instanceof FieldReference) {
+                definingType2 = ((FieldReference) immutableRef2).getDefiningClass();
+            }
+            //we don't want to map a class => member of that class
+            //as it only creates noise
+            if (((TypeReference) immutableRef1).getType().equals(definingType2)) {
+                return;
+            }
         }
 
         referenceReferences.put(immutableRef1, immutableRef2);
@@ -181,5 +268,25 @@ public class DexReferences {
                 createReferenceTree(newNode, ref);
             }
         }
+        node.sort(NODE_COMPARATOR);
     }
+
+    private static final Comparator<DexElementNode> NODE_COMPARATOR =
+            Comparator.comparing(
+                    o -> {
+                        if (o instanceof DexClassNode) {
+                            return o.getName();
+                        } else if (o instanceof DexMethodNode) {
+                            assert o.getReference() != null;
+                            return ((MethodReference) o.getReference()).getDefiningClass()
+                                    + " "
+                                    + o.getName();
+                        } else if (o instanceof DexFieldNode) {
+                            assert o.getReference() != null;
+                            return ((FieldReference) o.getReference()).getDefiningClass()
+                                    + " "
+                                    + o.getName();
+                        }
+                        return "";
+                    });
 }
