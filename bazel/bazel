@@ -57,6 +57,7 @@ def main():
     # will hang.
     env['SYSTEMROOT'] = 'C:\\Windows'
     env['TMP'] = os.environ.get('TMP','')
+    env['PATH'] = os.environ.get('PATH','')
 
   else: # Linux
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
