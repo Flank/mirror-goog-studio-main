@@ -283,7 +283,7 @@ bool SimpleperfManager::WaitForSimpleperf(
 
   // Make sure simpleperf exited normally.
   if (!WIFEXITED(status)) {
-    string msg = "Simpleperf did not exist as expected. Logfile:" +
+    string msg = "Simpleperf did not exit as expected. Logfile:" +
                  ongoing_recording.log_file_path;
     Log::D("%s", msg.c_str());
     error->append("\n");
