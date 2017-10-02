@@ -21,6 +21,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
@@ -29,6 +30,7 @@ import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
+import com.android.builder.model.TestOptions;
 import com.android.resources.Density;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
@@ -39,6 +41,7 @@ import com.google.wireless.android.sdk.stats.ApiVersion;
 import com.google.wireless.android.sdk.stats.DeviceInfo;
 import com.google.wireless.android.sdk.stats.GradleBuildSplits;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
+import com.google.wireless.android.sdk.stats.TestRun;
 import java.util.Locale;
 
 /**
@@ -183,6 +186,28 @@ public class AnalyticsUtil {
                 return GradleBuildVariant.DexMergerTool.D8_MERGER;
         }
         throw new AssertionError("Unrecognized type " + dexMerger);
+    }
+
+    @NonNull
+    public static GradleBuildVariant.CodeShrinkerTool toProto(@NonNull CodeShrinker codeShrinker) {
+        switch (codeShrinker) {
+            case PROGUARD:
+                return GradleBuildVariant.CodeShrinkerTool.PROGUARD;
+            case ANDROID_GRADLE:
+                return GradleBuildVariant.CodeShrinkerTool.ANDROID_GRADLE_SHRINKER;
+        }
+        throw new AssertionError("Unrecognized type " + codeShrinker);
+    }
+
+    @NonNull
+    public static TestRun.TestExecution toProto(@NonNull TestOptions.Execution execution) {
+        switch (execution) {
+            case HOST:
+                return TestRun.TestExecution.HOST;
+            case ANDROID_TEST_ORCHESTRATOR:
+                return TestRun.TestExecution.ANDROID_TEST_ORCHESTRATOR;
+        }
+        throw new AssertionError("Unrecognized type " + execution);
     }
 
     @NonNull

@@ -1219,7 +1219,18 @@ public class VariantManager implements VariantModel {
                                 .setUseLegacyMultidex(variantConfig.isLegacyMultiDexMode())
                                 .setVariantType(variantData.getType().getAnalyticsVariantType())
                                 .setDexBuilder(AnalyticsUtil.toProto(variantScope.getDexer()))
-                                .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()));
+                                .setDexMerger(AnalyticsUtil.toProto(variantScope.getDexMerger()))
+                                .setTestExecution(
+                                        AnalyticsUtil.toProto(
+                                                globalScope
+                                                        .getExtension()
+                                                        .getTestOptions()
+                                                        .getExecutionEnum()));
+
+                if (variantScope.getCodeShrinker() != null) {
+                    profileBuilder.setCodeShrinker(
+                            AnalyticsUtil.toProto(variantScope.getCodeShrinker()));
+                }
 
                 if (variantConfig.getTargetSdkVersion().getApiLevel() > 0) {
                     profileBuilder.setTargetSdkVersion(
