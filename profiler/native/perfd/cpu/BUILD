@@ -8,6 +8,7 @@ cc_library(
         "cpu_service.cc",
         "cpu_usage_sampler.cc",
         "procfs_files.cc",
+        "simpleperf.cc",
         "simpleperf_manager.cc",
         "thread_monitor.cc",
     ],
@@ -18,6 +19,7 @@ cc_library(
         "cpu_service.h",
         "cpu_usage_sampler.h",
         "procfs_files.h",
+        "simpleperf.h",
         "simpleperf_manager.h",
         "thread_monitor.h",
         "threads_sample.h",
@@ -38,6 +40,7 @@ cc_test(
     name = "perfd_cpu_tests",
     srcs = [
         "cpu_usage_sampler_test.cc",
+        "simpleperf_manager_test.cc",
     ],
     copts = [
         "-Itools/base/profiler/native",

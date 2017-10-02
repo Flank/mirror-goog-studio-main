@@ -16,10 +16,8 @@
  */
 #include "simpleperf_manager.h"
 
-#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -35,29 +33,11 @@ using std::string;
 
 namespace profiler {
 
-const char *SimpleperfManager::kSimpleperfExecutable = "simpleperf";
-
 SimpleperfManager::~SimpleperfManager() {
   string error;
   for (auto const &record : profiled_) {
     StopSimpleperf(record.second, &error);
   }
-}
-
-bool SimpleperfManager::EnableProfiling(std::string *error) const {
-  // By default, linuxSE disallow profiling. This enables it.
-  // simpleperf already has CTS tests ensuring the following command running
-  // successfully.
-  string enable_profiling_output;
-  BashCommandRunner enable_profiling("setprop");
-  bool enable_profiling_result =
-      enable_profiling.Run("security.perf_harden 0", &enable_profiling_output);
-  if (!enable_profiling_result) {
-    error->append("\n");
-    error->append("Unable to setprop to enable profiling.");
-    return false;
-  }
-  return true;
 }
 
 bool SimpleperfManager::StartProfiling(const std::string &app_name,
@@ -83,7 +63,11 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
   }
   Log::D("%s app has pid:%d", app_name.c_str(), pid);
 
-  if (!EnableProfiling(error)) return false;
+  if (!simpleperf_.EnableProfiling()) {
+    error->append("\n");
+    error->append("Unable to setprop to enable profiling.");
+    return false;
+  }
 
   // Build entry to keep track of what is being profiled.
   OnGoingProfiling entry;
@@ -106,27 +90,10 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
       break;  // Useless but make the compiler happy.
     }
     case 0: {  // Child Process
-      //  Redirect stdout and stderr to a file (useful is perf crashes).
-      int fd = open(entry.log_file_path.c_str(), O_RDWR | O_CREAT | O_CLOEXEC,
-                    S_IRUSR | S_IRGRP | S_IROTH);
-      dup2(fd, fileno(stdout));
-      dup2(fd, fileno(stderr));
-      close(fd);
-
-      std::stringstream string_pid;
-      string_pid << pid;
-
-      int one_sec_in_us = 1000000;
-      std::stringstream samples_per_sec;
-      samples_per_sec << one_sec_in_us / sampling_interval_us;
-
-      string app_pkg_name = ProcessManager::GetPackageNameFromAppName(app_name);
-      string simpleperf_bin = (CurrentProcess::dir() + kSimpleperfExecutable);
-
-      execlp(simpleperf_bin.c_str(), simpleperf_bin.c_str(), "record", "--app",
-             app_pkg_name.c_str(), "--call-graph", "dwarf", "-o",
-             entry.raw_trace_path.c_str(), "-p", string_pid.str().c_str(), "-f",
-             samples_per_sec.str().c_str(), "--exit-with-parent", NULL);
+      simpleperf_.Record(CurrentProcess::dir(), pid,
+                         ProcessManager::GetPackageNameFromAppName(app_name),
+                         entry.raw_trace_path, sampling_interval_us,
+                         entry.log_file_path);
       exit(EXIT_FAILURE);
       break;  // Useless break but makes compiler happy.
     }
@@ -185,7 +152,7 @@ bool SimpleperfManager::StopProfiling(const std::string &app_name,
 
   // Make sure pid is what is expected
   if (current_pid != ongoing_recording.pid) {
-    // Looks like the app was restarted. Simple perf died as a result.
+    // Looks like the app was restarted. Simpleperf died as a result.
     string msg = "Recorded pid and current app pid do not match: Aborting";
     error->append("\n");
     error->append(msg);
@@ -195,7 +162,7 @@ bool SimpleperfManager::StopProfiling(const std::string &app_name,
 
   // Make sure simpleperf is still running.
   if (!pm.IsPidAlive(ongoing_recording.simpleperf_pid)) {
-    string msg = "Simple perf died while profiling. Logfile :" +
+    string msg = "Simpleperf died while profiling. Logfile :" +
                  ongoing_recording.log_file_path;
     Log::D("%s", msg.c_str());
     *error = msg;
@@ -215,13 +182,12 @@ bool SimpleperfManager::StopProfiling(const std::string &app_name,
 
 bool SimpleperfManager::StopSimpleperf(
     const OnGoingProfiling &ongoing_recording, string *error) const {
-  // Ask simple perf to stop profiling this app.
+  // Ask simpleperf to stop profiling this app.
   Log::D("Sending SIGTERM to simpleperf(%d).",
          ongoing_recording.simpleperf_pid);
-  BashCommandRunner kill_simpleperf("kill");
-  std::stringstream string_pid;
-  string_pid << ongoing_recording.simpleperf_pid;
-  bool kill_simpleperf_result = kill_simpleperf.Run(string_pid.str(), error);
+  bool kill_simpleperf_result =
+      simpleperf_.KillSimpleperf(ongoing_recording.simpleperf_pid);
+
   if (!kill_simpleperf_result) {
     string msg = "Failed to send SIGTERM to simpleperf";
     error->append("\n");
@@ -241,22 +207,11 @@ void SimpleperfManager::CleanUp(
 
 bool SimpleperfManager::ConvertRawToProto(
     const OnGoingProfiling &ongoing_recording, string *error) const {
-  string simpleperf_binary_abspath =
-      CurrentProcess::dir() + kSimpleperfExecutable;
-  BashCommandRunner simpleperf_report(simpleperf_binary_abspath);
-  std::stringstream parameters;
-  parameters << "report-sample ";
-  parameters << "--protobuf ";
-  parameters << "--show-callchain ";
-  parameters << "-i ";
-  parameters << ongoing_recording.raw_trace_path;
-  parameters << " ";
-  parameters << "-o ";
-  parameters << ongoing_recording.trace_path;
-
   string output;
-  bool report_result = simpleperf_report.Run(parameters.str(), &output);
-  if (!report_result) {
+  bool report_sample_result = simpleperf_.ReportSample(
+      CurrentProcess::dir(), ongoing_recording.raw_trace_path,
+      ongoing_recording.trace_path, &output);
+  if (!report_sample_result) {
     string msg = "Unable to generate simpleperf report:" + output;
     Log::D("%s", msg.c_str());
     error->append("\n");

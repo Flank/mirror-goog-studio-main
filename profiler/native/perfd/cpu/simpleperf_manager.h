@@ -21,6 +21,7 @@
 #include <mutex>
 #include <string>
 
+#include "perfd/cpu/simpleperf.h"
 #include "utils/clock.h"
 
 namespace profiler {
@@ -45,7 +46,8 @@ struct OnGoingProfiling {
 
 class SimpleperfManager {
  public:
-  explicit SimpleperfManager(const Clock &clock) : clock_(clock) {}
+  explicit SimpleperfManager(const Clock &clock, const Simpleperf &simpleperf)
+      : clock_(clock), simpleperf_(simpleperf) {}
   ~SimpleperfManager();
 
   // Returns true if profiling of app |app_name| was started successfully.
@@ -55,16 +57,15 @@ class SimpleperfManager {
   bool StartProfiling(const std::string &app_name, int sampling_interval_us,
                       std::string *trace_path, std::string *error);
   bool StopProfiling(const std::string &app_name, std::string *error);
+  // Returns true if the app is currently being profiled by a simpleperf
+  // process.
+  bool IsProfiling(const std::string &app_name);
 
  private:
   const Clock &clock_;
-  static const char *kSimpleperfExecutable;
   std::map<std::string, OnGoingProfiling> profiled_;
   std::mutex start_stop_mutex_;  // Protects simpleperf start/stop
-
-  // Make sure profiling is enabled on the platform (otherwise LinuxSE prevents
-  // it). Returns true on success.
-  bool EnableProfiling(std::string *error) const;
+  const Simpleperf &simpleperf_;
 
   // Generate the filename pattern used for trace and log (a name guaranteed
   // not to collide and without an extension).
@@ -84,10 +85,6 @@ class SimpleperfManager {
 
   bool StopSimpleperf(const OnGoingProfiling &ongoing_recording,
                       std::string *error) const;
-
-  // Returns true if the app is currently being profiled by a simple perf
-  // process.
-  bool IsProfiling(const std::string &app_name);
 };
 }
 
