@@ -229,6 +229,54 @@ public class IncrementalFileMergerTests {
         assertEquals(ImmutableList.of("i0"), afterIncState.inputsFor("foo"));
     }
 
+    @Test
+    public void addAndRemoveInputContributingToExistingFile() {
+        IncrementalFileMergerTestInput i0 = new IncrementalFileMergerTestInput("i0");
+        i0.add("untouched_file", FileStatus.NEW);
+        i0.add("touched_file_after_i1", FileStatus.NEW);
+
+        IncrementalFileMergerTestOutput out = new IncrementalFileMergerTestOutput();
+
+        IncrementalFileMergerState afterInitialState =
+                IncrementalFileMerger.merge(
+                        ImmutableList.of(i0), out, new IncrementalFileMergerState());
+
+        // After merging, we should get both files created in the output.
+        assertEquals(0, out.removed.size());
+        assertEquals(0, out.updated.size());
+        assertEquals(2, out.created.size());
+        assertEquals(ImmutableList.of(i0), out.created.get("untouched_file"));
+        assertEquals(ImmutableList.of(i0), out.created.get("touched_file_after_i1"));
+        out.created.clear();
+
+        i0 = new IncrementalFileMergerTestInput("i0");
+        IncrementalFileMergerTestInput i1 = new IncrementalFileMergerTestInput("i1");
+        i1.add("touched_file_after_i1", FileStatus.NEW);
+
+        IncrementalFileMergerState afterAdd1State =
+                IncrementalFileMerger.merge(ImmutableList.of(i0, i1), out, afterInitialState);
+
+        // After adding i1, we should get an update on the touched_file_after_i1.
+        assertEquals(0, out.removed.size());
+        assertEquals(1, out.updated.size());
+        assertEquals(0, out.created.size());
+        assertEquals(
+                Pair.of(ImmutableList.of("i0"), ImmutableList.of(i0, i1)),
+                out.updated.get("touched_file_after_i1"));
+        out.updated.clear();
+
+        IncrementalFileMergerState afterRemovingI1State =
+                IncrementalFileMerger.merge(ImmutableList.of(i0), out, afterAdd1State);
+
+        // After removing i1, we should get an update on the touched_file_after_i1.
+        assertEquals(0, out.removed.size());
+        assertEquals(1, out.updated.size());
+        assertEquals(0, out.created.size());
+        assertEquals(
+                Pair.of(ImmutableList.of("i0", "i1"), ImmutableList.of(i0)),
+                out.updated.get("touched_file_after_i1"));
+    }
+
     private void randomTest(
             int inputCount,
             int initialFiles,
