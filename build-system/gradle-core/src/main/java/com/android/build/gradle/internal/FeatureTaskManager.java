@@ -41,6 +41,7 @@ import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransiti
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeManifests;
@@ -57,7 +58,6 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionTyp
 import java.io.File;
 import java.util.Set;
 import java.util.function.Supplier;
-import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
@@ -118,10 +118,25 @@ public class FeatureTaskManager extends TaskManager {
 
         // FIXME: This is currently disabled due to b/62301277.
         if (extension.getDataBinding().isEnabled() && !extension.getBaseFeature()) {
-            throw new GradleException(
-                    "Currently, data binding does not work for non-base feature modules.\n"
-                            + "Please, move data binding code to the base feature module.\n"
-                            + "See https://issuetracker.google.com/63814741 for details");
+            if (projectOptions.get(BooleanOption.ENABLE_EXPERIMENTAL_FEATURE_DATABINDING)) {
+                androidBuilder
+                        .getIssueReporter()
+                        .reportWarning(
+                                SyncIssue.TYPE_GENERIC,
+                                "Data binding support for non-base features is experimental "
+                                        + "and is not supported.");
+            } else {
+                androidBuilder
+                        .getIssueReporter()
+                        .reportError(
+                                SyncIssue.TYPE_GENERIC,
+                                "Currently, data binding does not work for non-base features. "
+                                        + "Move data binding code to the base feature module.\n"
+                                        + "See https://issuetracker.google.com/63814741.\n"
+                                        + "To enable data binding with non-base features, set the "
+                                        + "android.enableExperimentalFeatureDatabinding property "
+                                        + "to true.");
+            }
         }
 
         createAnchorTasks(tasks, variantScope);
