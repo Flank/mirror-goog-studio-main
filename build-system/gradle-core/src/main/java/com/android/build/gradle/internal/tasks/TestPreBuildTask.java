@@ -116,7 +116,7 @@ public class TestPreBuildTask extends AndroidVariantTask {
                                     String.format(
                                             "Conflict with dependency '%s:%s' in project '%s'. Resolved versions for"
                                                     + " app (%s) and test app (%s) differ. See"
-                                                    + " http://g.co/androidstudio/app-test-app-conflict"
+                                                    + " https://d.android.com/r/tools/test-apk-dependency-conflicts.html"
                                                     + " for details.",
                                             moduleId.getGroup(),
                                             moduleId.getModule(),
