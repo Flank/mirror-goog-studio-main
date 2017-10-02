@@ -30,7 +30,6 @@ import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.core.VariantType;
 import com.android.builder.model.SourceProvider;
 import com.android.ide.common.res2.AssetMerger;
 import com.android.ide.common.res2.AssetSet;
@@ -375,10 +374,14 @@ public class MergeSourceSetFolders extends IncrementalTask {
         }
     }
 
-    public static class MergeAssetConfigAction extends ConfigAction {
+    public static class MergeAssetBaseConfigAction extends ConfigAction {
 
-        public MergeAssetConfigAction(@NonNull VariantScope scope, @NonNull File outputDir) {
+        final boolean includeDependencies;
+
+        public MergeAssetBaseConfigAction(
+                @NonNull VariantScope scope, @NonNull File outputDir, boolean includeDependencies) {
             super(scope, outputDir);
+            this.includeDependencies = includeDependencies;
         }
 
         @NonNull
@@ -414,12 +417,36 @@ public class MergeSourceSetFolders extends IncrementalTask {
                 mergeAssetsTask.ignoreAssets = options.getIgnoreAssets();
             }
 
-            if (!variantConfig.getType().equals(VariantType.LIBRARY)) {
+            if (includeDependencies) {
                 mergeAssetsTask.libraries = scope.getArtifactCollection(
                         RUNTIME_CLASSPATH, ALL, ASSETS);
             }
 
             mergeAssetsTask.setOutputDir(outputDir);
+        }
+    }
+
+    public static class MergeAppAssetConfigAction extends MergeAssetBaseConfigAction {
+        public MergeAppAssetConfigAction(@NonNull VariantScope scope, @NonNull File outputDir) {
+            super(scope, outputDir, true);
+        }
+
+        @NonNull
+        @Override
+        public String getName() {
+            return scope.getTaskName("merge", "Assets");
+        }
+    }
+
+    public static class LibraryAssetConfigAction extends MergeAssetBaseConfigAction {
+        public LibraryAssetConfigAction(@NonNull VariantScope scope, @NonNull File outputDir) {
+            super(scope, outputDir, false);
+        }
+
+        @NonNull
+        @Override
+        public String getName() {
+            return scope.getTaskName("package", "Assets");
         }
     }
 

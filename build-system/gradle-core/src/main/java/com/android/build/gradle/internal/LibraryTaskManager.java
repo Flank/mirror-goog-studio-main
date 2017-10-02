@@ -59,6 +59,7 @@ import com.android.build.gradle.tasks.AidlCompile;
 import com.android.build.gradle.tasks.AndroidZip;
 import com.android.build.gradle.tasks.ExtractAnnotations;
 import com.android.build.gradle.tasks.MergeResources;
+import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.core.AndroidBuilder;
@@ -171,7 +172,10 @@ public class LibraryTaskManager extends TaskManager {
                 ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
                 projectPath,
                 variantName,
-                () -> createMergeAssetsTask(tasks, variantScope));
+                () -> {
+                    createMergeAssetsTask(tasks, variantScope);
+                    createLibraryAssetsTask(tasks, variantScope);
+                });
 
         // Add a task to create the BuildConfig class
         recorder.record(
@@ -536,12 +540,7 @@ public class LibraryTaskManager extends TaskManager {
                 });
 
         bundle.dependsOn(
-                mergeProguardFilesTask.getName(),
-                // The below dependencies are redundant in a normal build as
-                // generateSources depends on them. When generateSourcesOnly is injected they are
-                // needed explicitly, as bundle no longer depends on compileJava
-                variantScope.getAidlCompileTask().getName(),
-                variantScope.getMergeAssetsTask().getName());
+                mergeProguardFilesTask.getName(), variantScope.getAidlCompileTask().getName());
         bundle.dependsOn(variantScope.getNdkBuildable());
 
         Preconditions.checkNotNull(variantScope.getOutputScope().getMainSplit());
@@ -575,6 +574,9 @@ public class LibraryTaskManager extends TaskManager {
                 FileUtils.join(
                         intermediatesDir,
                         StringHelper.toStrings(ANNOTATIONS, variantDirectorySegments)));
+        bundle.from(
+                variantScope.getOutput(TaskOutputType.LIBRARY_ASSETS),
+                prependToCopyPath(SdkConstants.FD_ASSETS));
 
         variantScope.addTaskOutput(
                 TaskOutputType.AAR,
@@ -725,6 +727,29 @@ public class LibraryTaskManager extends TaskManager {
                             excludeFile,
                             dataBindingFolder);
                 });
+    }
+
+    public AndroidTask<MergeSourceSetFolders> createLibraryAssetsTask(
+            @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+        final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
+        File outputDir =
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        "packagedAssets",
+                        variantConfiguration.getDirName());
+
+        AndroidTask<MergeSourceSetFolders> mergeAssetsTask =
+                androidTasks.create(
+                        tasks,
+                        new MergeSourceSetFolders.LibraryAssetConfigAction(scope, outputDir));
+
+        // register the output
+        scope.addTaskOutput(TaskOutputType.LIBRARY_ASSETS, outputDir, mergeAssetsTask.getName());
+
+        mergeAssetsTask.dependsOn(tasks, scope.getAssetGenTask());
+        scope.setMergeAssetsTask(mergeAssetsTask);
+
+        return mergeAssetsTask;
     }
 
     @NonNull

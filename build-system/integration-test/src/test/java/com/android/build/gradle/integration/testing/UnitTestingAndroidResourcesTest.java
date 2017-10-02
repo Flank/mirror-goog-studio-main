@@ -141,7 +141,7 @@ public class UnitTestingAndroidResourcesTest {
         runGradleTasks.run("clean");
 
         // Check that the model contains the generated file
-        AndroidProject model = project.model().getSingle().getOnlyModel();
+        AndroidProject model = project.model().getMulti().getModelMap().get(":");
         Variant debug = ModelHelper.getVariant(model.getVariants(), "debug");
         JavaArtifact debugUnitTest =
                 ModelHelper.getJavaArtifact(
@@ -182,6 +182,16 @@ public class UnitTestingAndroidResourcesTest {
                         assertThat(Paths.get(value.toString())).exists();
                     }
                 });
+
+        // Check the tests see the assets from dependencies, even in the library case where they
+        // would not otherwise be merged.
+        List<String> filenames =
+                Files.walk(Paths.get(properties.getProperty("android_merged_assets")))
+                        .filter(Files::isRegularFile)
+                        .map(path -> path.getFileName().toString())
+                        .collect(Collectors.toList());
+
+        assertThat(filenames).containsExactly("foo.txt", "bar.txt");
     }
 
     @Nullable

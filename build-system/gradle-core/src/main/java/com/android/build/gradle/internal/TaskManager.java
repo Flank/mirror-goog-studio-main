@@ -979,16 +979,15 @@ public abstract class TaskManager {
             @NonNull VariantScope scope) {
         final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
         File outputDir =
-                variantConfiguration.isBundled()
-                        ? new File(scope.getBaseBundleDir(), FD_ASSETS)
-                        : FileUtils.join(
-                                globalScope.getIntermediatesDir(),
-                                FD_ASSETS,
-                                variantConfiguration.getDirName());
+                FileUtils.join(
+                        globalScope.getIntermediatesDir(),
+                        FD_ASSETS,
+                        variantConfiguration.getDirName());
 
         AndroidTask<MergeSourceSetFolders> mergeAssetsTask =
                 androidTasks.create(
-                        tasks, new MergeSourceSetFolders.MergeAssetConfigAction(scope, outputDir));
+                        tasks,
+                        new MergeSourceSetFolders.MergeAppAssetConfigAction(scope, outputDir));
 
         // register the output
         scope.addTaskOutput(MERGED_ASSETS, outputDir, mergeAssetsTask.getName());

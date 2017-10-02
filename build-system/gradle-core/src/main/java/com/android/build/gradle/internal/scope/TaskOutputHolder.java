@@ -111,6 +111,7 @@ public interface TaskOutputHolder {
         // packaged JNI for AAR publishing
         LIBRARY_AND_LOCAL_JARS_JNI,
 
+        LIBRARY_ASSETS,
         MERGED_ASSETS,
         MOCKABLE_JAR,
 
