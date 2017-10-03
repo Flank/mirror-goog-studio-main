@@ -11,6 +11,12 @@ new_local_repository(
 )
 
 new_local_repository(
+    name = 'slicer_repo',
+    build_file = 'tools/base/profiler/native/external/slicer.BUILD',
+    path = 'external/dexter/slicer'
+)
+
+new_local_repository(
     name = 'AntennaPod',
     build_file = 'tools/base/build-system/integration-test/AntennaPod.BUILD',
     path = 'external/AntennaPod'
@@ -68,6 +74,11 @@ bind(
 bind(
     name = "gmock_main",
     actual = "@gmock_repo//:gmock_main"
+)
+
+bind(
+    name = "slicer",
+    actual = "@slicer_repo//:slicer"
 )
 
 bind(

@@ -21,9 +21,9 @@ cc_binary(
     linkshared = 1,
     visibility = ["//visibility:public"],
     deps = [
+        "//external:slicer",
         "//prebuilts/studio/jdk:jni_headers",
         "//tools/base/profiler/native/agent",
-        "//tools/base/profiler/native/dex/slicer",
         "//tools/base/profiler/native/utils:profiler_utils",
         "//tools/base/profiler/proto:profiler_cc_proto",
     ],
