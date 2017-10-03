@@ -297,14 +297,12 @@ public class MergeManifests extends ManifestProcessorTask {
         if (featureManifests != null) {
             final Set<ResolvedArtifactResult> featureArtifacts = featureManifests.getArtifacts();
             for (ResolvedArtifactResult artifact : featureArtifacts) {
-                File manifest = artifact.getFile();
+                File directory = artifact.getFile();
 
                 Collection<BuildOutput> splitOutputs =
-                        BuildOutputs.load(
-                                VariantScope.TaskOutputType.MERGED_MANIFESTS,
-                                manifest.getParentFile());
+                        BuildOutputs.load(VariantScope.TaskOutputType.MERGED_MANIFESTS, directory);
                 if (splitOutputs.isEmpty()) {
-                    throw new GradleException("Could not load manifest from " + manifest);
+                    throw new GradleException("Could not load manifest from " + directory);
                 }
 
                 providers.add(
