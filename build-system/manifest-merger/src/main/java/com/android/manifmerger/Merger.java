@@ -168,6 +168,7 @@ public class Merger {
                 for (MergingReport.Record record : merge.getLoggingRecords()) {
                     System.err.println(record);
                 }
+                return 1;
             }
         } catch (ManifestMerger2.MergeFailureException e) {
             logger.error(e, "Exception while merging manifests");

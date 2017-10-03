@@ -21,7 +21,10 @@ import static com.android.manifmerger.PlaceholderHandler.KeyBasedValueResolver;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourceFile;
+import com.google.common.base.Charsets;
 import com.google.common.base.Optional;
+import com.google.common.io.Files;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -93,6 +96,14 @@ public class TestUtils {
 
         return XmlLoader.load(selectors, NO_PROPERTY_RESOLVER, location, input,
                 XmlDocument.Type.LIBRARY, Optional.<String>absent() /* mainManifestPackageName */);
+    }
+
+    /** Utility method to save a {@link String} XML into a file. */
+    static File inputAsFile(@NonNull String testName, @NonNull String input) throws IOException {
+        File tmpFile = File.createTempFile(testName, ".xml");
+        tmpFile.deleteOnExit();
+        Files.asCharSink(tmpFile, Charsets.UTF_8).write(input);
+        return tmpFile;
     }
 
 }

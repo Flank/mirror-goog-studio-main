@@ -286,4 +286,51 @@ public class MergerTest extends TestCase {
         }
         assertTrue(outFile.delete());
     }
+
+    public void testMergeSuccess() throws IOException, ManifestMerger2.MergeFailureException {
+
+        final String input =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    package=\"com.example.test\">\n"
+                        + "\n"
+                        + "    <application android:label=\"app\"/>\n"
+                        + "\n"
+                        + "</manifest>";
+        File tmpFile = TestUtils.inputAsFile("testMergeSuccess", input);
+        assertTrue(tmpFile.exists());
+
+        final String[] args = {"--main", tmpFile.toString()};
+        Merger merger = new Merger();
+        // check that return value 0 for successful merge
+        assertEquals(0, merger.process(args));
+        assertTrue(tmpFile.delete());
+    }
+
+    public void testMergeFailure() throws IOException, ManifestMerger2.MergeFailureException {
+
+        final String input =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.test\">\n"
+                        + "\n"
+                        + "    <application android:label=\"app\">\n"
+                        + "        <activity>\n"
+                        + "            <intent-filter/>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>";
+        File tmpFile = TestUtils.inputAsFile("testMergeFailure", input);
+        assertTrue(tmpFile.exists());
+
+        final String[] args = {"--main", tmpFile.toString()};
+        Merger merger = new Merger();
+        // check that return value 1 for failed merge
+        assertEquals(1, merger.process(args));
+        assertTrue(tmpFile.delete());
+    }
 }
