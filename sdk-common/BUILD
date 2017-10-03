@@ -45,6 +45,7 @@ iml_module(
         "//tools/base/ddmlib:studio.ddmlib[module]",
         "//tools/idea/.idea/libraries:Guava",
         "//tools/base/sdk-common/lib:aia-manifest-proto-1.0-jarjar",
+        "//tools/idea/.idea/libraries:equalsverifier[test]",
     ],
 )
 
@@ -117,6 +118,7 @@ kotlin_test(
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.jimfs_jimfs",
         "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
         "//tools/base/third_party:org.easymock_easymock",
         "//tools/base/third_party:org.mockito_mockito-core",
     ],

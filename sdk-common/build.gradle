@@ -26,6 +26,7 @@ dependencies {
     testCompile libs.jimfs
     testCompile libs.mockito_core
     testCompile libs.truth
+    testCompile libs.equalsverifier
 }
 
 protobuf {
