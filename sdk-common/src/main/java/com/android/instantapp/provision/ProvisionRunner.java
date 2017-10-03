@@ -266,12 +266,7 @@ public class ProvisionRunner {
                         product,
                         hardware);
 
-        if (myMetadata.isSupportedDevice(deviceInfo)) {
-            return deviceInfo;
-        }
-        throw new ProvisionException(
-                ProvisionException.ErrorType.DEVICE_NOT_SUPPORTED,
-                "Detected device is: " + deviceInfo);
+        return deviceInfo;
     }
 
     /**
