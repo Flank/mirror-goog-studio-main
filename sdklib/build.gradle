@@ -185,6 +185,7 @@ task initSdkForConnectedTests(type: JavaExec) {
             'system-images;android-19;default;x86',
             'tools',
             'platform-tools',
+            'build-tools;26.0.2',
             'build-tools;25.0.0',
             'platforms;android-25',
             'platforms;android-24',
