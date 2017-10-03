@@ -21,6 +21,8 @@ import static org.mockito.internal.verification.VerificationModeFactory.times;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.build.gradle.external.cmake.server.CompileCommand;
+import com.android.build.gradle.external.cmake.server.ServerUtils;
 import com.android.build.gradle.external.cmake.server.receiver.InteractiveMessage;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.core.Abi;
@@ -30,11 +32,13 @@ import com.android.repository.Revision;
 import com.android.repository.api.ConsoleProgressIndicator;
 import com.android.repository.api.LocalPackage;
 import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.testutils.TestResources;
 import com.android.testutils.TestUtils;
 import com.android.utils.ILogger;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -273,11 +277,42 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         Mockito.verify(mockLogger, times(1)).error(null, message);
     }
 
+    @Test
+    public void testParseValidFileFromCompileCommands() throws IOException {
+        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
+        File compileCommandsTestFile =
+                getCompileCommandsTestFile("compile_commands_valid_multiple_compilation.json");
+        List<CompileCommand> compileCommands =
+                ServerUtils.getCompilationDatabase(compileCommandsTestFile);
+
+        String flags =
+                cmakeServerStrategy.getAndroidGradleFileLibFlags("x86", "file.cc", compileCommands);
+        assertThat(flags).isNotNull();
+        assertThat(flags)
+                .isEqualTo("-Irelative -DSOMEDEF=\"With spaces, quotes and \\-es.\" -c -o file.o ");
+    }
+
+    @Test
+    public void testParseInvalidFileFromCompileCommands() throws IOException {
+        CmakeServerExternalNativeJsonGenerator cmakeServerStrategy = getCMakeServerGenerator();
+        File compileCommandsTestFile =
+                getCompileCommandsTestFile("compile_commands_valid_multiple_compilation.json");
+        List<CompileCommand> compileCommands =
+                ServerUtils.getCompilationDatabase(compileCommandsTestFile);
+
+        String flags =
+                cmakeServerStrategy.getAndroidGradleFileLibFlags(
+                        "x86", "invalid-file.cc", compileCommands);
+        assertThat(flags).isNull();
+    }
+
+    /** Returns InteractiveMessage object from the given message string. */
     private static InteractiveMessage getInteractiveMessageFromString(@NonNull String messageStr) {
         Gson gson = new GsonBuilder().create();
         return gson.fromJson(messageStr, InteractiveMessage.class);
     }
 
+    /** Returns a default CmakeServerExternalNativeJsonGenerator. */
     private CmakeServerExternalNativeJsonGenerator getCMakeServerGenerator() {
         Mockito.when(ndkHandler.getRevision()).thenReturn(new Revision(15));
         return new CmakeServerExternalNativeJsonGenerator(
@@ -298,5 +333,19 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                 cFlags,
                 cppFlags,
                 nativeBuildConfigurationsJsons);
+    }
+
+    /**
+     * Returns the test file given the test folder and file name.
+     *
+     * @param testFileName - test file name
+     * @return test file
+     */
+    private File getCompileCommandsTestFile(@NonNull String testFileName) {
+        final String compileCommandsTestFileDir =
+                "/com/android/build/gradle/external/cmake/compile_commands/";
+        return TestResources.getFile(
+                CmakeServerExternalNativeJsonGeneratorTest.class,
+                compileCommandsTestFileDir + testFileName);
     }
 }
