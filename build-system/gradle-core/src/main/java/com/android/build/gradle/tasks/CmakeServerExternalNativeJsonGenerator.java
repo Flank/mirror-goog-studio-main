@@ -55,6 +55,8 @@ import com.google.common.primitives.UnsignedInts;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -638,21 +640,38 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     }
 
     /**
-     * Returns the flags used to compile a given file
+     * Returns the flags used to compile a given file.
      *
      * @param abi - ABI for which compiler flags for the given json file needs to be returned
      * @param fileName - file name
      * @return flags used to compile a give CXX/C file
      */
-    @Nullable
     private String getAndroidGradleFileLibFlags(@NonNull String abi, @NonNull String fileName)
             throws IOException {
-        List<CompileCommand> compileCommands = getCompileCommands(abi);
+        return getAndroidGradleFileLibFlags(abi, fileName, getCompileCommands(abi));
+    }
+
+    /** Helper function that returns the flags used to compile a given file. */
+    @VisibleForTesting
+    String getAndroidGradleFileLibFlags(
+            @NonNull String abi,
+            @NonNull String fileName,
+            @NonNull List<CompileCommand> compileCommands)
+            throws IOException {
         String flags = null;
+
+        // Get the path of the given file name so we can compare it with the file specified within
+        // CompileCommand.
+        Path fileNamePath = Paths.get(fileName);
+
+        // Search for the CompileCommand for the given file and parse the flags used to compile the
+        // file.
         for (CompileCommand compileCommand : compileCommands) {
-            if (compileCommand.command == null
-                    || compileCommand.file == null
-                    || !compileCommand.file.equals(fileName)) {
+            if (compileCommand.command == null || compileCommand.file == null) {
+                continue;
+            }
+
+            if (fileNamePath.compareTo(Paths.get(compileCommand.file)) != 0) {
                 continue;
             }
 
@@ -664,6 +683,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         }
         return flags;
     }
+
 
     /**
      * Returns a pre-ndk-r15-wrapper android toolchain cmake file for NDK r14 and below that has a
