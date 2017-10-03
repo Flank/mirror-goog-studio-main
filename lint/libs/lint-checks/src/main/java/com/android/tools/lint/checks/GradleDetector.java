@@ -1082,12 +1082,14 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
         }
 
         BlacklistedDeps blacklistedDeps = blacklisted.get(context.getProject());
-        List<Library> path = blacklistedDeps.checkDependency(groupId, artifactId, true);
-        if (path != null) {
-            String message = getBlacklistedDependencyMessage(context, path);
-            if (message != null) {
-                LintFix fix = fix().name("Delete dependency").replace().all().build();
-                report(context, statementCookie, DUPLICATE_CLASSES, message, fix);
+        if (blacklistedDeps != null) {
+            List<Library> path = blacklistedDeps.checkDependency(groupId, artifactId, true);
+            if (path != null) {
+                String message = getBlacklistedDependencyMessage(context, path);
+                if (message != null) {
+                    LintFix fix = fix().name("Delete dependency").replace().all().build();
+                    report(context, statementCookie, DUPLICATE_CLASSES, message, fix);
+                }
             }
         }
 
@@ -1913,6 +1915,9 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
      */
     private void checkBlacklistedDependencies(@NonNull Context context, Project project) {
         BlacklistedDeps blacklistedDeps = blacklisted.get(project);
+        if (blacklistedDeps == null) {
+            return;
+        }
         List<List<Library>> dependencies = blacklistedDeps.getBlacklistedDependencies();
         if (!dependencies.isEmpty()) {
             for (List<Library> path : dependencies) {
