@@ -159,12 +159,6 @@ public class DaggerTest {
         doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
     }
 
-    @Test
-    @Category(DeviceTests.class)
-    public void hotSwap_dalvik() throws Exception {
-        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesDalvik()));
-    }
-
     private void doTestHotSwap(IDevice iDevice) throws Exception {
         HotSwapTester tester =
                 new HotSwapTester(

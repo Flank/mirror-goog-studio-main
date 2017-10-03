@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.AndroidVersionMatcher.thatUsesArt;
-import static com.android.build.gradle.integration.common.utils.AndroidVersionMatcher.thatUsesDalvik;
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 
 import com.android.annotations.NonNull;
@@ -85,11 +84,6 @@ public class ConnectedColdSwapTest {
     @Before
     public void activityClass() throws Exception {
         createActivityClass("Logger.getLogger(\"coldswaptest\").warning(\"coldswaptest_before\");\n");
-    }
-
-    @Test
-    public void dalvikTest() throws Exception {
-        doTest(adb.getDevice(thatUsesDalvik()));
     }
 
     @Test

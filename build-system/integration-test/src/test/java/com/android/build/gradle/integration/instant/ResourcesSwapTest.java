@@ -92,12 +92,6 @@ public class ResourcesSwapTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void swapResourcesDeviceTest_dalvik() throws Exception {
-        doDeviceTest(adb.getDevice(AndroidVersionMatcher.thatUsesDalvik()));
-    }
-
-    @Test
-    @Category(DeviceTests.class)
     public void swapResourcesDeviceTest_art() throws Exception {
         doDeviceTest(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
     }

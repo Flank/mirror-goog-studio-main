@@ -130,12 +130,6 @@ public class HotSwapTest {
         doHotSwapChangeTest(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
     }
 
-    @Test
-    @Category(DeviceTests.class)
-    public void dalvikHotSwapChangeTest() throws Exception {
-        doHotSwapChangeTest(adb.getDevice(AndroidVersionMatcher.thatUsesDalvik()));
-    }
-
     private void doHotSwapChangeTest(@NonNull IDevice device) throws Exception {
         HotSwapTester tester =
                 new HotSwapTester(

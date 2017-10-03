@@ -140,12 +140,6 @@ public class ButterKnifeTest {
 
     @Test
     @Category(DeviceTests.class)
-    public void hotSwap_dalvik() throws Exception {
-        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesDalvik()));
-    }
-
-    @Test
-    @Category(DeviceTests.class)
     public void hotSwap_art() throws Exception {
         doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
     }

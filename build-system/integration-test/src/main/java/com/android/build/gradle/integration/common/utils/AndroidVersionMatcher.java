@@ -24,10 +24,6 @@ import org.hamcrest.Matcher;
 
 public class AndroidVersionMatcher {
 
-    public static Matcher<AndroidVersion> thatUsesDalvik() {
-        return atMost(19);
-    }
-
     public static Matcher<AndroidVersion> thatUsesArt() {
         return atLeast(21);
     }
