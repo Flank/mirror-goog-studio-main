@@ -1,4 +1,4 @@
-# How to Bazel
+# Building and Testing with Bazel
 
 This directory contains the core files to run studio-master-dev tests using
 bazel.
@@ -19,6 +19,12 @@ ln -s <workspace>/tools/base/bazel ~/bin/bazel
 
 Then no matter where you are in the workspace, bazel will find the right
 platform-specific binary and run it.
+
+__macOS users:___ You may run into a clang error after reinstalling or updating XCode.
+To resolve this error, clear bazel of previous configurations with the following command:
+```
+$ bazel clean --expunge
+```
 
 ## Running all the tests
 

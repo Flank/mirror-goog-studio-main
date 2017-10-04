@@ -54,7 +54,7 @@ See https://source.android.com/source/using-repo for more information about how 
 
 ## Building
 
-To build Android Studio, see http://tools.android.com/build/studio
+To build Android Studio, see [Building Android Studio](studio.md)
 
 To build the Android Gradle plugin, see
 [Building the Android Gradle Plugin](build-system/README.md).
