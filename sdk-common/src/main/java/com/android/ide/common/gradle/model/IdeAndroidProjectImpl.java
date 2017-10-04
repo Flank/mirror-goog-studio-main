@@ -109,7 +109,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
         myFlavorDimensions =
                 copyNewProperty(
                         () -> ImmutableList.copyOf(project.getFlavorDimensions()),
-                        Collections.emptyList());
+                        Collections.<String>emptyList());
         myCompileTarget = project.getCompileTarget();
         myBootClassPath = ImmutableList.copyOf(project.getBootClasspath());
         myNativeToolchains =

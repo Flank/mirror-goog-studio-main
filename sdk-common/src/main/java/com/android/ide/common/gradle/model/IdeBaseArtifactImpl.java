@@ -94,7 +94,8 @@ public abstract class IdeBaseArtifactImpl extends IdeModel implements IdeBaseArt
         myMultiFlavorSourceProvider =
                 createSourceProvider(modelCache, artifact.getMultiFlavorSourceProvider());
         myAdditionalClassFolders =
-                copyNewProperty(artifact::getAdditionalClassesFolders, Collections.emptySet());
+                copyNewProperty(
+                        artifact::getAdditionalClassesFolders, Collections.<File>emptySet());
         myLevel2Dependencies = dependenciesFactory.create(artifact, modelVersion);
         myHashCode = calculateHashCode();
     }

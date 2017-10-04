@@ -49,7 +49,7 @@ public abstract class IdeVariantOutput extends IdeModel implements VariantOutput
         myFilterTypes =
                 copyNewProperty(
                         () -> ImmutableList.copyOf(output.getFilterTypes()),
-                        Collections.emptyList());
+                        Collections.<String>emptyList());
         myFilters = copyFilters(output, modelCache);
         myMainOutputFile =
                 copyNewProperty(
