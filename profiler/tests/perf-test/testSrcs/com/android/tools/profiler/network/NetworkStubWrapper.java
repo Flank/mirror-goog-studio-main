@@ -22,13 +22,15 @@ import com.android.tools.profiler.proto.NetworkServiceGrpc.NetworkServiceBlockin
 
 /** Wrapper of stub calls that is shared among tests. */
 final class NetworkStubWrapper {
+    private static final int TIMEOUT_MS = 5000;
+    private static final int SLEEP_TIME_MS = 200;
     private final NetworkServiceBlockingStub myNetworkStub;
 
     NetworkStubWrapper(NetworkServiceBlockingStub networkStub) {
         myNetworkStub = networkStub;
     }
 
-    public NetworkProfiler.HttpRangeResponse getAllHttpRange(int processId) {
+    NetworkProfiler.HttpRangeResponse getAllHttpRange(int processId) {
         return myNetworkStub.getHttpRange(
                 NetworkProfiler.HttpRangeRequest.newBuilder()
                         .setProcessId(processId)
@@ -37,11 +39,34 @@ final class NetworkStubWrapper {
                         .build());
     }
 
-    public NetworkProfiler.HttpDetailsResponse getHttpDetails(long connId, Type type) {
+    NetworkProfiler.HttpDetailsResponse getHttpDetails(long connId, Type type) {
         return myNetworkStub.getHttpDetails(
                 NetworkProfiler.HttpDetailsRequest.newBuilder()
                         .setConnId(connId)
                         .setType(type)
                         .build());
+    }
+
+    /**
+     * Returns payload id after repeatedly fetch it until it is non-empty or time out, otherwise,
+     * returns empty string. Because there is some time gap between connection tracking and payload
+     * track complete, it need some time to set the payload id.
+     */
+    String getResponsePayloadId(long connectionId) {
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime < TIMEOUT_MS + SLEEP_TIME_MS) {
+            NetworkProfiler.HttpDetailsResponse responseBodyDetails =
+                    getHttpDetails(connectionId, Type.RESPONSE_BODY);
+            String payloadId = responseBodyDetails.getResponseBody().getPayloadId();
+            if (!payloadId.isEmpty()) {
+                return payloadId;
+            }
+            try {
+                Thread.sleep(SLEEP_TIME_MS);
+            } catch (InterruptedException e) {
+                e.printStackTrace(System.out);
+            }
+        }
+        return "";
     }
 }

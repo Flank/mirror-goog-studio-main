@@ -70,13 +70,8 @@ public class HttpUrlTest {
         String responseFields = responseDetails.getResponse().getFields();
         assertThat(responseFields.contains("HTTP/1.0 200 OK")).isTrue();
 
-        assertThat(driver.getPerfdDriver().waitForInput("Complete in cache " + connectionId))
-                .isTrue();
-        HttpDetailsResponse responseBodyDetails =
-                stubWrapper.getHttpDetails(connectionId, Type.RESPONSE_BODY);
-        String payloadId = responseBodyDetails.getResponseBody().getPayloadId();
+        String payloadId = stubWrapper.getResponsePayloadId(connectionId);
         assertThat(payloadId.isEmpty()).isFalse();
-
         Profiler.BytesResponse bytesResponse =
                 grpc.getProfilerStub().getBytes(BytesRequest.newBuilder().setId(payloadId).build());
         assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo(getSuccess);

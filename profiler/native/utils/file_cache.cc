@@ -18,7 +18,6 @@
 #include <unistd.h>
 #include <algorithm>
 #include <climits>
-#include <iostream>
 #include <mutex>
 
 #include "utils/current_process.h"
@@ -98,12 +97,6 @@ shared_ptr<File> FileCache::Complete(const std::string &cache_id) {
   auto file_from = cache_partial_->GetFile(cache_id);
   auto file_to = cache_complete_->GetFile(cache_id);
   file_from->MoveContentsTo(file_to);
-
-  // There is some time gap between connection tracking and file cache complete.
-  // Print a message to make test wait before we fetch response payload.
-  if (use_test_dir_) {
-    std::cout << "Complete in cache " << cache_id << std::endl;
-  }
   return file_to;
 }
 
