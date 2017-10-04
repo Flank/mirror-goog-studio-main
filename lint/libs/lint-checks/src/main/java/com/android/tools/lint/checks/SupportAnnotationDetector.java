@@ -2799,7 +2799,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 j++;
             }
             for (int i = 0, n = Math.min(parameters.length, arguments.size());
-                    i < n;
+                    j < n;
                     i++, j++) {
                 UExpression argument = arguments.get(i);
                 PsiParameter parameter = parameters[j];
