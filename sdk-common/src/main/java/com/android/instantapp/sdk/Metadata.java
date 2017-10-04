@@ -59,24 +59,6 @@ public class Metadata {
         }
     }
 
-    /**
-     * Provides the minimum supported api level for the current installed instant app sdk. The
-     * minimum accepted level is considered the lowest api level supported by at least one
-     * whitelisted device.
-     */
-    public int getMinApiLevelSupported() {
-        int minApiLevel = -1;
-        for (Device device : myEnabledDevices) {
-            for (Integer apiLevel : device.getApiLevels()) {
-                if (minApiLevel == -1 || minApiLevel > apiLevel) {
-                    minApiLevel = apiLevel;
-                }
-            }
-        }
-        // If all the api levels are accepted (which should never happen), just return the standard
-        return minApiLevel == -1 ? 16 : minApiLevel;
-    }
-
     public long getAiaCompatApiMinVersion() {
         return myLibraryCompatibility.getAiaCompatApiMinVersion();
     }

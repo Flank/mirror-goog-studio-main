@@ -84,7 +84,5 @@ public class ManifestProtoParserTest {
         }
 
         assertEquals(1, metadata.getAiaCompatApiMinVersion());
-
-        assertEquals(23, metadata.getMinApiLevelSupported());
     }
 }
