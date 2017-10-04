@@ -175,13 +175,20 @@ public class TestOptions {
          * properties file with the following keys:
          *
          * <ul>
-         *   <li><code>android_merged_assets</code>: the absolute path to the merged assets
-         *       directory.
-         *   <li><code>android_merged_manifest</code> the absolute path to the merged manifest file.
+         *   <li><code>android_sdk_home</code>: the absolute path to the Android SDK.
          *   <li><code>android_merged_resources</code>: the absolute path to the merged resources
-         *       directory.
-         *   <li><code>android_sdk_resources</code>: the absolute path to the resources of the
-         *       compile SDK.
+         *       directory, which contains all the resources from this subproject and all its
+         *       dependencies.
+         *   <li><code>android_merged_assets</code>: the absolute path to the merged assets
+         *       directory. For app subprojects, the merged assets directory contains assets from
+         *       this subproject and its dependencies. For library subprojects, the merged assets
+         *       directory contains only the assets from this subproject.
+         *   <li><code>android_merged_manifest</code>: the absolute path to the merged manifest
+         *       file. Only app subprojects merge manifests of its dependencies. So, library
+         *       subprojects won't include manifest components from their dependencies.
+         *   <li><code>android_custom_package</code>: the package name of the final R class. If you
+         *       modify the application ID in your build scripts, this package name may not match
+         *       the <code>package</code> attribute in the final app manifest.
          * </ul>
          *
          * @since 3.0.0
