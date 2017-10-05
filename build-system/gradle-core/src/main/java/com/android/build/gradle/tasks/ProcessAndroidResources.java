@@ -32,6 +32,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
+import com.android.build.gradle.internal.CombinedInput;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
@@ -1136,7 +1137,10 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Optional
     @Nullable
     public File getTextSymbolOutputFile() {
-        return new File(textSymbolOutputDir.get(), SdkConstants.R_CLASS + SdkConstants.DOT_TXT);
+        File outputDir = textSymbolOutputDir.get();
+        return outputDir != null
+                ? new File(outputDir, SdkConstants.R_CLASS + SdkConstants.DOT_TXT)
+                : null;
     }
 
     @org.gradle.api.tasks.OutputFile
@@ -1307,5 +1311,19 @@ public class ProcessAndroidResources extends IncrementalTask {
     @Input
     public boolean isNamespaced() {
         return isNamespaced;
+    }
+
+    // Workaround for https://issuetracker.google.com/67418335
+    @Override
+    @Input
+    @NonNull
+    public String getCombinedInput() {
+        return new CombinedInput(super.getCombinedInput())
+                .add("sourceOutputDir", getSourceOutputDir())
+                .add("textSymbolOutputFile", getTextSymbolOutputFile())
+                .add("symbolslWithPackageNameOutputFile", getSymbolslWithPackageNameOutputFile())
+                .add("proguardOutputFile", getProguardOutputFile())
+                .add("mainDexListProguardOutputFile", getMainDexListProguardOutputFile())
+                .toString();
     }
 }

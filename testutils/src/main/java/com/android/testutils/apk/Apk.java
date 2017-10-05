@@ -22,6 +22,9 @@ import com.android.annotations.concurrency.Immutable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Enumeration;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 @Immutable
 public class Apk extends DexAndroidArchive {
@@ -38,6 +41,24 @@ public class Apk extends DexAndroidArchive {
     @Override
     public Path getJavaResource(@NonNull String name) throws IOException {
         return getEntry(name);
+    }
+
+    /**
+     * Returns the total size of all the contents in the APK. This is usually different from the
+     * size of the APK file itself (which also contains some meta-data). This method is useful for
+     * comparing APK files where the file sizes have changed (probably due to changes in meta-data)
+     * but the contents remain the same.
+     */
+    public long getContentsSize() throws IOException {
+        long contentsSize = 0;
+        try (ZipFile zipFile = new ZipFile(this.getFile().toFile())) {
+            Enumeration entries = zipFile.entries();
+            while (entries.hasMoreElements()) {
+                ZipEntry zipEntry = (ZipEntry) entries.nextElement();
+                contentsSize += zipEntry.getCompressedSize();
+            }
+        }
+        return contentsSize;
     }
 
     @Override

@@ -15,10 +15,13 @@
  */
 package com.android.build.gradle.internal.tasks;
 
+import com.android.annotations.NonNull;
+import com.android.build.gradle.internal.CombinedInput;
 import com.android.ide.common.res2.FileStatus;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.Map;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -122,5 +125,12 @@ public abstract class IncrementalTask extends AndroidBuilderTask {
         inputs.removed(change -> changedInputs.put(change.getFile(), FileStatus.REMOVED));
 
         return changedInputs;
+    }
+
+    // Workaround for https://issuetracker.google.com/67418335
+    @Input
+    @NonNull
+    public String getCombinedInput() {
+        return new CombinedInput().add("incrementalFolder", getIncrementalFolder()).toString();
     }
 }

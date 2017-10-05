@@ -22,6 +22,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.CombinedInput;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
@@ -881,5 +882,20 @@ public class MergeResources extends IncrementalTask {
                             .getBuildType()
                             .isPseudoLocalesEnabled();
         }
+    }
+
+    // Workaround for https://issuetracker.google.com/67418335
+    @Override
+    @Input
+    @NonNull
+    public String getCombinedInput() {
+        return new CombinedInput(super.getCombinedInput())
+                .add("dataBindingLayoutInfoOutFolder", getDataBindingLayoutInfoOutFolder())
+                .add("publicFile", getPublicFile())
+                .add("blameLogFolder", getBlameLogFolder())
+                .add(
+                        "mergedNotCompiledResourcesOutputDirectory",
+                        getMergedNotCompiledResourcesOutputDirectory())
+                .toString();
     }
 }

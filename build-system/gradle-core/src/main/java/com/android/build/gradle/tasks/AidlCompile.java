@@ -22,6 +22,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.CombinedInput;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -388,5 +389,15 @@ public class AidlCompile extends IncrementalTask {
                         scope.getGlobalScope().getExtension().getAidlPackageWhiteList());
             }
         }
+    }
+
+    // Workaround for https://issuetracker.google.com/67418335
+    @Override
+    @Input
+    @NonNull
+    public String getCombinedInput() {
+        return new CombinedInput(super.getCombinedInput())
+                .add("packagedDir", getPackagedDir())
+                .toString();
     }
 }
