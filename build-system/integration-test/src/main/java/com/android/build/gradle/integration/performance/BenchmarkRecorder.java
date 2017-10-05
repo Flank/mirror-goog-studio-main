@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -56,23 +57,26 @@ public final class BenchmarkRecorder {
 
     @NonNull private final ProjectScenario projectScenario;
 
-    @NonNull private final ProfileUploader uploader;
+    @NonNull private final List<ProfileUploader> uploaders;
 
     @NonNull private final List<GradleBenchmarkResult.Builder> benchmarkResults = new ArrayList<>();
 
     public BenchmarkRecorder(
             @NonNull Logging.Benchmark benchmark, @NonNull ProjectScenario projectScenario) {
-        this(benchmark, projectScenario, GoogleStorageProfileUploader.INSTANCE);
+        this(
+                benchmark,
+                projectScenario,
+                Arrays.asList(GoogleStorageProfileUploader.INSTANCE, ActdProfileUploader.INSTANCE));
     }
 
     @VisibleForTesting
     public BenchmarkRecorder(
             @NonNull Logging.Benchmark benchmark,
             @NonNull ProjectScenario projectScenario,
-            @NonNull ProfileUploader uploader) {
+            @NonNull List<ProfileUploader> uploaders) {
         this.benchmark = benchmark;
         this.projectScenario = projectScenario;
-        this.uploader = uploader;
+        this.uploaders = uploaders;
     }
 
     public void recordBenchmarkResult(@NonNull GradleBenchmarkResult.Builder benchmarkResult) {
@@ -137,7 +141,9 @@ public final class BenchmarkRecorder {
 
         checkAllUploadsAreDistinct(results);
 
-        uploader.uploadData(results);
+        for (ProfileUploader uploader : uploaders) {
+            uploader.uploadData(results);
+        }
     }
 
     private static void checkAllUploadsAreDistinct(

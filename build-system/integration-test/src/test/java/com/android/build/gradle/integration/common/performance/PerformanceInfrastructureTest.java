@@ -31,6 +31,7 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import com.google.wireless.android.sdk.stats.GradleBuildVariant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,7 +59,7 @@ public class PerformanceInfrastructureTest {
                                 new BenchmarkRecorder(
                                         Logging.Benchmark.ANTENNA_POD,
                                         ProjectScenario.DEX_OUT_OF_PROCESS,
-                                        benchmarkResults::addAll))
+                                        Arrays.asList(benchmarkResults::addAll)))
                         .create();
 
         // Manually evaluate the project rule, so we can assert about the uploads that happen after
