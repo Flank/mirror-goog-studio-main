@@ -79,12 +79,16 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
 import org.gradle.api.artifacts.query.ArtifactResolutionQuery;
+import org.gradle.api.artifacts.result.ArtifactResolutionResult;
+import org.gradle.api.artifacts.result.ArtifactResult;
+import org.gradle.api.artifacts.result.ComponentArtifactsResult;
 import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.artifacts.result.ResolvedVariantResult;
 import org.gradle.api.component.Artifact;
 import org.gradle.internal.component.local.model.OpaqueComponentArtifactIdentifier;
 import org.gradle.jvm.JvmLibrary;
 import org.gradle.language.base.artifact.SourcesArtifact;
+import org.gradle.language.java.artifact.JavadocArtifact;
 
 /** For creating dependency graph based on {@link ResolvedArtifactResult}. */
 public class ArtifactDependencyGraph {
@@ -665,7 +669,26 @@ public class ArtifactDependencyGraph {
             Class<? extends Artifact>[] artifactTypesArray =
                     (Class<? extends Artifact>[]) new Class<?>[] {SourcesArtifact.class};
             query.withArtifacts(JvmLibrary.class, artifactTypesArray);
-            query.execute().getResolvedComponents();
+            ArtifactResolutionResult queryResult = query.execute();
+            Set<ComponentArtifactsResult> resolvedComponents = queryResult.getResolvedComponents();
+
+            // Create and execute another query to attempt javadoc resolution
+            // where sources are not available
+            Set<ComponentIdentifier> remainingToResolve = Sets.newHashSet();
+            for (ComponentArtifactsResult componentResult : resolvedComponents) {
+                Set<ArtifactResult> sourcesArtifacts =
+                        componentResult.getArtifacts(SourcesArtifact.class);
+                if (sourcesArtifacts.isEmpty()) {
+                    remainingToResolve.add(componentResult.getId());
+                }
+            }
+            if (!remainingToResolve.isEmpty()) {
+                artifactTypesArray[0] = JavadocArtifact.class;
+                query = dependencies.createArtifactResolutionQuery();
+                query.forComponents(remainingToResolve);
+                query.withArtifacts(JvmLibrary.class, artifactTypesArray);
+                query.execute().getResolvedComponents();
+            }
         } catch (Throwable t) {
             DependencyFailureHandlerKt.processDependencyThrowable(
                     t,
@@ -677,7 +700,7 @@ public class ArtifactDependencyGraph {
                                             SyncIssue.SEVERITY_WARNING,
                                             null,
                                             String.format(
-                                                    "Unable to download sources: %s",
+                                                    "Unable to download sources/javadoc: %s",
                                                     messages.get(0)),
                                             messages)));
         }
