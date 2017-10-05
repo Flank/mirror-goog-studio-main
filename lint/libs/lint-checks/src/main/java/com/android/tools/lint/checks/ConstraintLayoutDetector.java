@@ -62,7 +62,7 @@ public class ConstraintLayoutDetector extends LayoutDetector {
             "Missing Constraints in ConstraintLayout",
             "The layout editor allows you to place widgets anywhere on the canvas, and it " +
             "records the current position with designtime attributes (such as " +
-            "`layout_editor_absoluteX`.) These attributes are **not** applied at runtime, so if " +
+            "`layout_editor_absoluteX`). These attributes are **not** applied at runtime, so if " +
             "you push your layout on a device, the widgets may appear in a different location " +
             "than shown in the editor. To fix this, make sure a widget has both horizontal and " +
             "vertical constraints by dragging from the edge connections.",
@@ -194,10 +194,10 @@ public class ConstraintLayoutDetector extends LayoutDetector {
                             + "jump to the left unless you add a horizontal constraint";
                 } else if (isConstrainedHorizontally) {
                     message = "This view is not constrained vertically: at runtime it will "
-                            + "jump to the left unless you add a vertical constraint";
+                            + "jump to the top unless you add a vertical constraint";
                 } else {
-                    message = "This view is not constrained, it only has designtime positions, "
-                            + "so it will jump to (0,0) unless you add constraints";
+                    message = "This view is not constrained. It only has designtime positions, "
+                            + "so it will jump to (0,0) at runtime unless you add the constraints";
                 }
                 context.report(ISSUE, element, context.getLocation(element), message);
             }
