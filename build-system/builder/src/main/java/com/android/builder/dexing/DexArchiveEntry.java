@@ -19,8 +19,6 @@ package com.android.builder.dexing;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
-import java.nio.file.Path;
 
 /**
  * A single DEX file in a dex archive. It is uniquely identified with {@link #relativePathInArchive}
@@ -29,9 +27,9 @@ import java.nio.file.Path;
 public final class DexArchiveEntry {
 
     @NonNull private final byte[] dexFileContent;
-    @NonNull private final Path relativePathInArchive;
+    @NonNull private final String relativePathInArchive;
 
-    public DexArchiveEntry(@NonNull byte[] dexFileContent, @NonNull Path relativePathInArchive) {
+    public DexArchiveEntry(@NonNull byte[] dexFileContent, @NonNull String relativePathInArchive) {
         this.relativePathInArchive = relativePathInArchive;
         this.dexFileContent = dexFileContent;
     }
@@ -41,14 +39,13 @@ public final class DexArchiveEntry {
      * a file name that does not end in .dex.
      */
     @NonNull
-    public static Path withClassExtension(@NonNull Path dexEntryPath) {
-        String fileName = dexEntryPath.getFileName().toString();
+    public static String withClassExtension(@NonNull String dexEntryPath) {
         Preconditions.checkState(
-                fileName.endsWith(SdkConstants.DOT_DEX),
+                dexEntryPath.endsWith(SdkConstants.DOT_DEX),
                 "Dex archives: setting .CLASS extension only for .DEX files");
 
-        return dexEntryPath.resolveSibling(
-                Files.getNameWithoutExtension(fileName) + SdkConstants.DOT_CLASS);
+        return dexEntryPath.substring(0, dexEntryPath.length() - SdkConstants.DOT_DEX.length())
+                + SdkConstants.DOT_CLASS;
     }
 
     /** Returns content of this DEX file. */
@@ -63,7 +60,7 @@ public final class DexArchiveEntry {
      * @return relative path of this entry from the root of the dex archive
      */
     @NonNull
-    public Path getRelativePathInArchive() {
+    public String getRelativePathInArchive() {
         return relativePathInArchive;
     }
 }

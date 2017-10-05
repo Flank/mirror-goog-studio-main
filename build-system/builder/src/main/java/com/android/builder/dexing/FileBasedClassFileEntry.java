@@ -17,6 +17,7 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
+import com.android.utils.PathUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.Channels;
@@ -26,38 +27,38 @@ import java.nio.file.Path;
 
 final class FileBasedClassFileEntry implements ClassFileEntry {
 
-    @NonNull private final Path relativePath;
-    @NonNull private final Path path;
+    @NonNull private final String relativePath;
+    @NonNull private final Path fullPath;
 
-    public FileBasedClassFileEntry(@NonNull Path relativePath, @NonNull Path path) {
-        this.relativePath = relativePath;
-        this.path = path;
+    public FileBasedClassFileEntry(@NonNull Path rootPath, @NonNull Path fullPath) {
+        this.relativePath = PathUtils.toSystemIndependentPath(rootPath.relativize(fullPath));
+        this.fullPath = fullPath;
     }
 
     @Override
     public String name() {
-        return path.getFileName().toString();
+        return fullPath.getFileName().toString();
     }
 
     @Override
     public long getSize() throws IOException {
-        return Files.size(path);
+        return Files.size(fullPath);
     }
 
     @NonNull
     @Override
-    public Path getRelativePath() {
+    public String getRelativePath() {
         return relativePath;
     }
 
     @Override
     public byte[] readAllBytes() throws IOException {
-        return Files.readAllBytes(path);
+        return Files.readAllBytes(fullPath);
     }
 
     @Override
     public int readAllBytes(byte[] bytes) throws IOException {
-        try (SeekableByteChannel sbc = Files.newByteChannel(path);
+        try (SeekableByteChannel sbc = Files.newByteChannel(fullPath);
                 InputStream in = Channels.newInputStream(sbc)) {
             long size = sbc.size();
             if (size > bytes.length) throw new OutOfMemoryError("Required array size too large");

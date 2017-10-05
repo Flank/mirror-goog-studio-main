@@ -18,7 +18,6 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.utils.PathUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
@@ -26,7 +25,6 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
@@ -70,14 +68,14 @@ final class NonIncrementalJarDexArchive implements DexArchive {
     }
 
     @Override
-    public void addFile(@NonNull Path relativePath, byte[] bytes, int offset, int end)
+    public void addFile(@NonNull String relativePath, byte[] bytes, int offset, int end)
             throws IOException {
         Preconditions.checkNotNull(jarOutputStream, "Archive is not writeable : %s", targetPath);
         // Need to pre-compute checksum for STORED (uncompressed) entries)
         CRC32 checksum = new CRC32();
         checksum.update(bytes, offset, end);
 
-        ZipEntry zipEntry = new ZipEntry(PathUtils.toSystemIndependentPath(relativePath));
+        ZipEntry zipEntry = new ZipEntry(relativePath);
         zipEntry.setLastModifiedTime(ZERO_TIME);
         zipEntry.setLastAccessTime(ZERO_TIME);
         zipEntry.setCreationTime(ZERO_TIME);
@@ -93,7 +91,7 @@ final class NonIncrementalJarDexArchive implements DexArchive {
     }
 
     @Override
-    public void removeFile(@NonNull Path relativePath) throws IOException {
+    public void removeFile(@NonNull String relativePath) throws IOException {
         throw new UnsupportedOperationException("Not implemented");
     }
 
@@ -108,7 +106,7 @@ final class NonIncrementalJarDexArchive implements DexArchive {
             try (BufferedInputStream inputStream =
                     new BufferedInputStream(readOnlyZipFile.getInputStream(zipEntry))) {
                 byte[] content = ByteStreams.toByteArray(inputStream);
-                dexEntries.add(new DexArchiveEntry(content, Paths.get(zipEntry.getName())));
+                dexEntries.add(new DexArchiveEntry(content, zipEntry.getName()));
             }
         }
         return dexEntries;

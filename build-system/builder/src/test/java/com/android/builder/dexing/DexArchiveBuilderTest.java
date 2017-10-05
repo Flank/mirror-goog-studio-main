@@ -19,6 +19,7 @@ package com.android.builder.dexing;
 import static com.android.builder.dexing.DexArchiveTestUtil.PACKAGE;
 import static com.android.testutils.TestClassesGenerator.rewriteToVersion;
 import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.SdkConstants;
@@ -33,14 +34,12 @@ import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
-import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -128,7 +127,7 @@ public class DexArchiveBuilderTest {
         if (outputFormat == DexArchiveFormat.JAR) {
             assertThat(output).doesNotExist();
         } else {
-            Truth.assertThat(Files.list(output).count()).isEqualTo(0);
+            assertThat(Files.list(output).count()).isEqualTo(0);
         }
     }
 
@@ -169,7 +168,7 @@ public class DexArchiveBuilderTest {
 
         // remove the file, we close it to make sure it is written to disk
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
-            dexArchive.removeFile(Paths.get(PACKAGE + "/B.dex"));
+            dexArchive.removeFile(PACKAGE + "/B.dex");
         }
 
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
@@ -187,9 +186,9 @@ public class DexArchiveBuilderTest {
 
         // remove the file, we close it to make sure it is written to disk
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
-            dexArchive.removeFile(Paths.get(PACKAGE + "/A.dex"));
-            dexArchive.removeFile(Paths.get(PACKAGE + "/B.dex"));
-            dexArchive.removeFile(Paths.get(PACKAGE + "/C.dex"));
+            dexArchive.removeFile(PACKAGE + "/A.dex");
+            dexArchive.removeFile(PACKAGE + "/B.dex");
+            dexArchive.removeFile(PACKAGE + "/C.dex");
         }
 
         try (DexArchive dexArchive = DexArchives.fromInput(output)) {
@@ -214,23 +213,17 @@ public class DexArchiveBuilderTest {
 
     @Test
     public void checkDexEntriesRenaming() {
-        assertThat(DexArchiveEntry.withClassExtension(Paths.get("A.dex")))
-                .isEqualTo(Paths.get("A.class"));
-        assertThat(DexArchiveEntry.withClassExtension(Paths.get("A$a.dex")))
-                .isEqualTo(Paths.get("A$a.class"));
-        assertThat(DexArchiveEntry.withClassExtension(Paths.get("/A.dex")))
-                .isEqualTo(Paths.get("/A.class"));
-        assertThat(DexArchiveEntry.withClassExtension(Paths.get("a/A.dex")))
-                .isEqualTo(Paths.get("a/A.class"));
-        assertThat(DexArchiveEntry.withClassExtension(Paths.get("a/.dex/A.dex")))
-                .isEqualTo(Paths.get("a/.dex/A.class"));
-        assertThat(DexArchiveEntry.withClassExtension(Paths.get("a\\.dex\\A.dex")))
-                .isEqualTo(Paths.get("a\\.dex\\A.class"));
-        assertThat(DexArchiveEntry.withClassExtension(Paths.get("a\\A.dex")))
-                .isEqualTo(Paths.get("a\\A.class"));
+        assertThat(DexArchiveEntry.withClassExtension("A.dex")).isEqualTo("A.class");
+        assertThat(DexArchiveEntry.withClassExtension("A$a.dex")).isEqualTo("A$a.class");
+        assertThat(DexArchiveEntry.withClassExtension("/A.dex")).isEqualTo("/A.class");
+        assertThat(DexArchiveEntry.withClassExtension("a/A.dex")).isEqualTo("a/A.class");
+        assertThat(DexArchiveEntry.withClassExtension("a/.dex/A.dex")).isEqualTo("a/.dex/A.class");
+        assertThat(DexArchiveEntry.withClassExtension("a\\.dex\\A.dex"))
+                .isEqualTo("a\\.dex\\A.class");
+        assertThat(DexArchiveEntry.withClassExtension("a\\A.dex")).isEqualTo("a\\A.class");
 
         try {
-            DexArchiveEntry.withClassExtension(Paths.get("Failure.txt"));
+            DexArchiveEntry.withClassExtension("Failure.txt");
             fail();
         } catch (IllegalStateException e) {
             // should throw
@@ -329,7 +322,7 @@ public class DexArchiveBuilderTest {
             DexArchiveTestUtil.convertClassesToDexArchive(classesDir, output, dexerTool);
             fail("Default and static interface method should require min sdk 24.");
         } catch (DexArchiveBuilderException ignored) {
-            Truth.assertThat(Throwables.getStackTraceAsString(ignored))
+            assertThat(Throwables.getStackTraceAsString(ignored))
                     .contains("default or static interface method used without --min-sdk-version");
         }
     }
@@ -360,7 +353,7 @@ public class DexArchiveBuilderTest {
         Set<String> classesInArchive;
         File output = new File(dexArchive.getRootPath().toString());
         if (!output.exists()) {
-            Truth.assertThat(classNames).isEmpty();
+            assertThat(classNames).isEmpty();
             return;
         }
         if (outputFormat == DexArchiveFormat.JAR) {
@@ -380,15 +373,13 @@ public class DexArchiveBuilderTest {
                             .map(DexArchiveBuilderTest::getClassNameWithoutPackage)
                             .collect(Collectors.toSet());
         }
-        Truth.assertThat(classesInArchive).containsExactlyElementsIn(classNames);
+        assertThat(classesInArchive).containsExactlyElementsIn(classNames);
 
         for (DexArchiveEntry entry : dexArchive.getFiles()) {
             byte[] dexClass = entry.getDexFileContent();
-            Dex dex = new Dex(dexClass, entry.getRelativePathInArchive().toString());
+            Dex dex = new Dex(dexClass, entry.getRelativePathInArchive());
 
-            String className =
-                    getClassNameWithoutPackage(
-                            PathUtils.toSystemIndependentPath(entry.getRelativePathInArchive()));
+            String className = getClassNameWithoutPackage(entry.getRelativePathInArchive());
             assertThat(dex).containsExactlyClassesIn(DexArchiveTestUtil.getDexClasses(className));
         }
     }
