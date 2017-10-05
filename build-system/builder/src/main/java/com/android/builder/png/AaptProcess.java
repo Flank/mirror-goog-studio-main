@@ -120,7 +120,12 @@ public class AaptProcess {
             throws IOException {
 
         if (!mReady.get()) {
-            throw new RuntimeException("AAPT2 process not ready to receive commands");
+            throw new RuntimeException(
+                    String.format(
+                            "AAPT2 process not ready to receive commands. Please make sure the "
+                                    + "build tools (located at %s) are not corrupted. Check the "
+                                    + "logs for details.",
+                            mAaptLocation));
         }
         NotifierProcessOutput notifier =
                 new NotifierProcessOutput(job, mProcessOutputFacade, mLogger, processOutputHandler);
@@ -155,7 +160,12 @@ public class AaptProcess {
             @Nullable ProcessOutputHandler processOutputHandler)
             throws IOException {
         if (!mReady.get()) {
-            throw new RuntimeException("AAPT2 process not ready to receive commands");
+            throw new RuntimeException(
+                    String.format(
+                            "AAPT2 process not ready to receive commands. Please make sure the "
+                                    + "build tools (located at %s) are not corrupted. Check the "
+                                    + "logs for details.",
+                            mAaptLocation));
         }
         NotifierProcessOutput notifier =
                 new NotifierProcessOutput(job, mProcessOutputFacade, mLogger, processOutputHandler);
@@ -209,7 +219,11 @@ public class AaptProcess {
      *
      */
     public void shutdown() throws IOException, InterruptedException {
-
+        if (!mReady.get()) {
+            // Process already shutdown or has never started properly in the first place.
+            mLogger.verbose("Process (%1$s) already shutdown", hashCode());
+            return;
+        }
         mReady.set(false);
         mWriter.write("quit\n");
         mWriter.write('\n');
