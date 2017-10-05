@@ -27,7 +27,6 @@ import com.android.dx.dex.file.DexFile;
 import com.android.dx.util.ByteArray;
 import com.android.dx.util.ByteArrayAnnotatedOutput;
 import com.android.ide.common.blame.parser.DexParser;
-import com.android.utils.PathUtils;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Iterator;
@@ -91,13 +90,11 @@ class DxDexArchiveBuilder extends DexArchiveBuilder {
         }
     }
 
-    public void dex(Path relativePath, ByteArray classBytes, DexArchive output) throws IOException {
-
-        // parses the class file
-        String unixClassFile = PathUtils.toSystemIndependentPath(relativePath);
+    public void dex(String relativePath, ByteArray classBytes, DexArchive output)
+            throws IOException {
 
         // Copied from dx, from com.android.dx.command.dexer.Main
-        DirectClassFile cf = new DirectClassFile(classBytes, unixClassFile, true);
+        DirectClassFile cf = new DirectClassFile(classBytes, relativePath, true);
         cf.setAttributeFactory(StdAttributeFactory.THE_ONE);
         cf.getMagic(); // triggers the actual parsing
 

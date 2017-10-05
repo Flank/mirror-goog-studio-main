@@ -22,7 +22,6 @@ import com.android.annotations.Nullable;
 import com.android.dex.Dex;
 import com.android.dx.command.dexer.DxContext;
 import com.android.dx.merge.DexMerger;
-import com.android.utils.PathUtils;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -231,10 +230,9 @@ public final class DxDexArchiveMerger implements DexArchiveMerger {
 
             if (dexingType == DexingType.LEGACY_MULTIDEX) {
                 // check if this should go to the main dex
-                Path classFile =
+                String relativeUnixPath =
                         DexArchiveEntry.withClassExtension(entry.getRelativePathInArchive());
-                String unixClassFile = PathUtils.toSystemIndependentPath(classFile);
-                if (mainDexClasses.contains(unixClassFile)) {
+                if (mainDexClasses.contains(relativeUnixPath)) {
                     toMergeInMain.add(dex);
                     continue;
                 }

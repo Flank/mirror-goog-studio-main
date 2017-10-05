@@ -16,21 +16,20 @@
 
 package com.android.builder.dexing;
 
-import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.ZFile;
 import com.android.utils.FileUtils;
-import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
+import com.google.common.truth.Truth;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -149,39 +148,48 @@ public class ClassFileInputTest {
 
     @Test
     public void checkClassFileRenaming() {
-        assertThat(ClassFileEntry.withDexExtension(Paths.get("A.class")))
-                .isEqualTo(Paths.get("A.dex"));
-        assertThat(ClassFileEntry.withDexExtension(Paths.get("A$a.class")))
-                .isEqualTo(Paths.get("A$a.dex"));
-        assertThat(ClassFileEntry.withDexExtension(Paths.get("/A.class")))
-                .isEqualTo(Paths.get("/A.dex"));
-        assertThat(ClassFileEntry.withDexExtension(Paths.get("a/A.class")))
-                .isEqualTo(Paths.get("a/A.dex"));
-        assertThat(ClassFileEntry.withDexExtension(Paths.get("a/.class/A.class")))
-                .isEqualTo(Paths.get("a/.class/A.dex"));
-        assertThat(ClassFileEntry.withDexExtension(Paths.get("a\\class\\A.class")))
-                .isEqualTo(Paths.get("a\\class\\A.dex"));
-        assertThat(ClassFileEntry.withDexExtension(Paths.get("a\\A.class")))
-                .isEqualTo(Paths.get("a\\A.dex"));
+        assertThat(ClassFileEntry.withDexExtension("A.class")).isEqualTo("A.dex");
+        assertThat(ClassFileEntry.withDexExtension("A$a.class")).isEqualTo("A$a.dex");
+        assertThat(ClassFileEntry.withDexExtension("/A.class")).isEqualTo("/A.dex");
+        assertThat(ClassFileEntry.withDexExtension("a/A.class")).isEqualTo("a/A.dex");
+        assertThat(ClassFileEntry.withDexExtension("a/.class/A.class")).isEqualTo("a/.class/A.dex");
+        assertThat(ClassFileEntry.withDexExtension("a\\class\\A.class"))
+                .isEqualTo("a\\class\\A.dex");
+        assertThat(ClassFileEntry.withDexExtension("a\\A.class")).isEqualTo("a\\A.dex");
 
         try {
-            DexArchiveEntry.withClassExtension(Paths.get("Failure.txt"));
+            DexArchiveEntry.withClassExtension("Failure.txt");
+            fail();
         } catch (IllegalStateException e) {
             // should throw
         }
     }
 
+    @Test
+    public void checkJarEntriesNotChanged() throws IOException {
+        File jarFile = FileUtils.join(temporaryFolder.getRoot(), "input.jar");
+        List<String> fileNames = ImmutableList.of("//A.class", "/b//B.class");
+        try (ZFile zFile = new ZFile(jarFile)) {
+            for (String fileName : fileNames) {
+                zFile.add(fileName, dummyContent());
+            }
+        }
+        List<String> relativePaths =
+                ClassFileInputs.fromPath(jarFile.toPath())
+                        .entries(p -> true)
+                        .map(ClassFileEntry::getRelativePath)
+                        .collect(Collectors.toList());
+        Truth.assertThat(relativePaths).containsExactlyElementsIn(fileNames);
+    }
+
     private void validateEntries(@NonNull File rootPath, @NonNull List<String> fileNames)
             throws IOException {
-        List<String> filesRead = Lists.newArrayList();
-        ClassFileInputs.fromPath(rootPath.toPath())
-                .entries(path -> true)
-                .forEach(
-                        entry -> {
-                            String path =
-                                    PathUtils.toSystemIndependentPath(entry.getRelativePath());
-                            filesRead.add(path);
-                        });
+        List<String> filesRead =
+                ClassFileInputs.fromPath(rootPath.toPath())
+                        .entries(path -> true)
+                        .map(ClassFileEntry::getRelativePath)
+                        .collect(Collectors.toList());
+
         assertThat(filesRead).containsExactlyElementsIn(fileNames);
     }
 

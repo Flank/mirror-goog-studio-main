@@ -238,23 +238,7 @@ public class DexArchiveBuilderTransform extends Transform {
             // if we are in incremental mode, delete all removed files.
             if (transformInvocation.isIncremental()) {
                 for (TransformInput transformInput : transformInvocation.getInputs()) {
-                    for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
-                        File outputFile = getPreDexFolder(outputProvider, directoryInput);
-                        try (DexArchive output = DexArchives.fromInput(outputFile.toPath())) {
-                            for (Map.Entry<File, Status> fileStatusEntry :
-                                    directoryInput.getChangedFiles().entrySet()) {
-                                if (fileStatusEntry.getValue() == Status.REMOVED) {
-                                    Path relativePath =
-                                            directoryInput
-                                                    .getFile()
-                                                    .toPath()
-                                                    .relativize(fileStatusEntry.getKey().toPath());
-                                    output.removeFile(
-                                            ClassFileEntry.withDexExtension(relativePath));
-                                }
-                            }
-                        }
-                    }
+                    removeDeletedEntries(outputProvider, transformInput);
                 }
             }
 
@@ -270,6 +254,27 @@ public class DexArchiveBuilderTransform extends Transform {
         } catch (Exception e) {
             logger.error(null, Throwables.getStackTraceAsString(e));
             throw new TransformException(e);
+        }
+    }
+
+    private static void removeDeletedEntries(
+            @NonNull TransformOutputProvider outputProvider, @NonNull TransformInput transformInput)
+            throws IOException {
+        for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
+            File outputFile = getPreDexFolder(outputProvider, directoryInput);
+            try (DexArchive output = DexArchives.fromInput(outputFile.toPath())) {
+                for (Map.Entry<File, Status> fileStatusEntry :
+                        directoryInput.getChangedFiles().entrySet()) {
+                    if (fileStatusEntry.getValue() == Status.REMOVED) {
+                        Path relativePath =
+                                directoryInput
+                                        .getFile()
+                                        .toPath()
+                                        .relativize(fileStatusEntry.getKey().toPath());
+                        output.removeFile(ClassFileEntry.withDexExtension(relativePath.toString()));
+                    }
+                }
+            }
         }
     }
 
@@ -367,8 +372,8 @@ public class DexArchiveBuilderTransform extends Transform {
             this.isIncremental = isIncremental;
         }
 
-        public boolean belongsToThisBucket(Path path) {
-            return (Math.abs(path.toString().hashCode()) % numberOfBuckets) == buckedId;
+        public boolean belongsToThisBucket(String path) {
+            return (Math.abs(path.hashCode()) % numberOfBuckets) == buckedId;
         }
 
         public boolean isDirectoryBased() {
@@ -517,11 +522,11 @@ public class DexArchiveBuilderTransform extends Transform {
                         errStream);
 
         Path inputPath = dexConversionParameters.input.getFile().toPath();
-        Predicate<Path> bucketFilter = dexConversionParameters::belongsToThisBucket;
+        Predicate<String> bucketFilter = dexConversionParameters::belongsToThisBucket;
 
         boolean hasIncrementalInfo =
                 dexConversionParameters.isDirectoryBased() && dexConversionParameters.isIncremental;
-        Predicate<Path> toProcess =
+        Predicate<String> toProcess =
                 hasIncrementalInfo
                         ? path -> {
                             Map<File, Status> changedFiles =

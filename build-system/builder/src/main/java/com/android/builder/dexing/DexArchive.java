@@ -54,7 +54,8 @@ public interface DexArchive extends Closeable {
      * @param end the end of the buffer window.
      * @throws IOException if the dex file cannot be written.
      */
-    void addFile(@NonNull Path relativePath, byte[] bytes, int offset, int end) throws IOException;
+    void addFile(@NonNull String relativePath, byte[] bytes, int offset, int end)
+            throws IOException;
 
     /**
      * Removes the specified DEX file from the dex archive. In case the file does not exist, nothing
@@ -63,7 +64,7 @@ public interface DexArchive extends Closeable {
      * @param relativePath file to be removed from the dex archive, relative to the {@link
      *     #getRootPath()}
      */
-    void removeFile(@NonNull Path relativePath) throws IOException;
+    void removeFile(@NonNull String relativePath) throws IOException;
 
     /**
      * Returns collection of all entries, {@link DexArchiveEntry}, in this dex archive. The entries

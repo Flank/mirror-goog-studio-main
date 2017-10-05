@@ -22,7 +22,6 @@ import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.ZFile;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -50,15 +49,9 @@ final class JarClassFileInput implements ClassFileInput {
         }
     }
 
-    @NonNull
-    @Override
-    public Path getRootPath() {
-        return rootPath;
-    }
-
     @Override
     @NonNull
-    public Stream<ClassFileEntry> entries(Predicate<Path> filter) {
+    public Stream<ClassFileEntry> entries(Predicate<String> filter) {
         if (jarFile == null) {
             try {
                 jarFile = new ZFile(rootPath.toFile());
@@ -68,14 +61,11 @@ final class JarClassFileInput implements ClassFileInput {
             }
         }
 
-        Predicate<Path> newFilter = ((Predicate<Path>) classMatcher::matches).and(filter);
+        Predicate<String> newFilter = CLASS_MATCHER.and(filter);
 
         return jarFile.entries()
                 .stream()
-                .filter(
-                        entry ->
-                                newFilter.test(
-                                        Paths.get(entry.getCentralDirectoryHeader().getName())))
+                .filter(entry -> newFilter.test(entry.getCentralDirectoryHeader().getName()))
                 .map(JarClassFileInput::createEntryFromEntry);
     }
 

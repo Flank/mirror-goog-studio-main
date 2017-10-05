@@ -18,6 +18,7 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
+import com.android.utils.PathUtils;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -46,7 +47,7 @@ final class DirDexArchive implements DexArchive {
     }
 
     @Override
-    public void addFile(@NonNull Path relativePath, byte[] bytes, int offset, int end)
+    public void addFile(@NonNull String relativePath, byte[] bytes, int offset, int end)
             throws IOException {
         Path finalPath = rootDir.resolve(relativePath);
         Files.createDirectories(finalPath.getParent());
@@ -57,7 +58,7 @@ final class DirDexArchive implements DexArchive {
     }
 
     @Override
-    public void removeFile(@NonNull Path relativePath) throws IOException {
+    public void removeFile(@NonNull String relativePath) throws IOException {
         Path finalPath = rootDir.resolve(relativePath);
         if (Files.isDirectory(finalPath)) {
             FileUtils.deleteDirectoryContents(finalPath.toFile());
@@ -89,6 +90,6 @@ final class DirDexArchive implements DexArchive {
         byte[] content = Files.readAllBytes(dexFile);
         Path relativePath = getRootPath().relativize(dexFile);
 
-        return new DexArchiveEntry(content, relativePath);
+        return new DexArchiveEntry(content, PathUtils.toSystemIndependentPath(relativePath));
     }
 }

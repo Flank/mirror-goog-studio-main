@@ -19,8 +19,6 @@ package com.android.builder.dexing;
 import com.android.annotations.NonNull;
 import com.android.apkzlib.zip.StoredEntry;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 final class NoCacheJarClassFileEntry implements ClassFileEntry {
 
@@ -41,8 +39,8 @@ final class NoCacheJarClassFileEntry implements ClassFileEntry {
     }
 
     @Override
-    public Path getRelativePath() {
-        return Paths.get(entry.getCentralDirectoryHeader().getName());
+    public String getRelativePath() {
+        return entry.getCentralDirectoryHeader().getName();
     }
 
     @Override

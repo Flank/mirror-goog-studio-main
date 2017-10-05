@@ -16,12 +16,12 @@
 
 package com.android.builder.dexing;
 
+import static com.android.builder.dexing.ClassFileInput.CLASS_MATCHER;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
-import com.google.common.io.Files;
 import java.io.IOException;
-import java.nio.file.Path;
 
 /**
  * A single .class file abstraction. Relative path matches the package directory structure, and
@@ -36,7 +36,7 @@ public interface ClassFileEntry {
     long getSize() throws IOException;
 
     /** Return the relative path from the root of the archive/folder abstraction. */
-    Path getRelativePath();
+    String getRelativePath();
 
     /**
      * Read the content into a newly allocated byte[].
@@ -60,13 +60,11 @@ public interface ClassFileEntry {
      * a file name that does not end in .class.
      */
     @NonNull
-    static Path withDexExtension(@NonNull Path classFilePath) {
-        String fileName = classFilePath.getFileName().toString();
+    static String withDexExtension(@NonNull String classFilePath) {
         Preconditions.checkState(
-                fileName.endsWith(SdkConstants.DOT_CLASS),
+                CLASS_MATCHER.test(classFilePath),
                 "Dex archives: setting .DEX extension only for .CLASS files");
-
-        return classFilePath.resolveSibling(
-                Files.getNameWithoutExtension(fileName) + SdkConstants.DOT_DEX);
+        return classFilePath.substring(0, classFilePath.length() - SdkConstants.DOT_CLASS.length())
+                + SdkConstants.DOT_DEX;
     }
 }
