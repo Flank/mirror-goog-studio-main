@@ -55,46 +55,53 @@ public class AnnotationProcessorTest {
 
     public AnnotationProcessorTest() {
 
-        project = GradleTestProject.builder()
-                .fromTestApp(new MultiModuleTestProject(
-                        ImmutableMap.of(
-                                ":app", sApp,
-                                ":lib", AnnotationProcessorLib.createLibrary(),
-                                ":lib-compiler", AnnotationProcessorLib.createCompiler()
-                                )))
-                .create();
+        project =
+                GradleTestProject.builder()
+                        .fromTestApp(
+                                new MultiModuleTestProject(
+                                        ImmutableMap.of(
+                                                ":app", sApp,
+                                                ":lib",
+                                                        AnnotationProcessorLib.Companion
+                                                                .createLibrary(),
+                                                ":lib-compiler",
+                                                        AnnotationProcessorLib.Companion
+                                                                .createCompiler())))
+                        .create();
     }
     private static AndroidTestApp sApp = HelloWorldApp.noBuildFile();
     static {
         sApp.removeFile(sApp.getFile("HelloWorld.java"));
-        sApp.addFile(new TestSourceFile(
-        "src/main/java/com/example/helloworld", "HelloWorld.java",
-                "package com.example.helloworld;\n"
-                        + "\n"
-                        + "import android.app.Activity;\n"
-                        + "import android.widget.TextView;\n"
-                        + "import android.os.Bundle;\n"
-                        + "import com.example.annotation.ProvideString;\n"
-                        + "\n"
-                        + "@ProvideString\n"
-                        + "public class HelloWorld extends Activity {\n"
-                        + "    /** Called when the activity is first created. */\n"
-                        + "    @Override\n"
-                        + "    public void onCreate(Bundle savedInstanceState) {\n"
-                        + "        super.onCreate(savedInstanceState);\n"
-                        + "        TextView tv = new TextView(this);\n"
-                        + "        tv.setText(getString());\n"
-                        + "        setContentView(tv);\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static String getString() {\n"
-                        + "        return new com.example.annotation.HelloWorldStringValue().value;\n"
-                        + "    }\n"
-                        + "\n"
-                        + "    public static String getProcessor() {\n"
-                        + "        return new com.example.annotation.HelloWorldStringValue().processor;\n"
-                        + "    }\n"
-                        + "}\n"));
+        sApp.addFile(
+                new TestSourceFile(
+                        "src/main/java/com/example/helloworld",
+                        "HelloWorld.java",
+                        "package com.example.helloworld;\n"
+                                + "\n"
+                                + "import android.app.Activity;\n"
+                                + "import android.widget.TextView;\n"
+                                + "import android.os.Bundle;\n"
+                                + "import com.example.annotation.ProvideString;\n"
+                                + "\n"
+                                + "@ProvideString\n"
+                                + "public class HelloWorld extends Activity {\n"
+                                + "    /** Called when the activity is first created. */\n"
+                                + "    @Override\n"
+                                + "    public void onCreate(Bundle savedInstanceState) {\n"
+                                + "        super.onCreate(savedInstanceState);\n"
+                                + "        TextView tv = new TextView(this);\n"
+                                + "        tv.setText(getString());\n"
+                                + "        setContentView(tv);\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public static String getString() {\n"
+                                + "        return new com.example.helloworld.HelloWorldStringValue().value;\n"
+                                + "    }\n"
+                                + "\n"
+                                + "    public static String getProcessor() {\n"
+                                + "        return new com.example.helloworld.HelloWorldStringValue().processor;\n"
+                                + "    }\n"
+                                + "}\n"));
 
         sApp.removeFile(sApp.getFile("HelloWorldTest.java"));
 
@@ -173,7 +180,8 @@ public class AnnotationProcessorTest {
 
         project.executor().run("assembleDebug");
         File aptOutputFolder = project.getSubproject(":app").file("build/generated/source/apt/debug");
-        assertThat(new File(aptOutputFolder, "HelloWorldStringValue.java")).exists();
+        assertThat(new File(aptOutputFolder, "com/example/helloworld/HelloWorldStringValue.java"))
+                .exists();
 
         AndroidProject model = project.model().getMulti().getModelMap().get(":app");
         assertThat(ModelHelper.getDebugArtifact(model).getGeneratedSourceFolders())
@@ -218,9 +226,13 @@ public class AnnotationProcessorTest {
         assertThat(
                         new File(
                                 aptOutputFolder,
-                                "androidTest/debug/HelloWorldAndroidTestStringValue.java"))
+                                "androidTest/debug/com/example/helloworld/HelloWorldAndroidTestStringValue.java"))
                 .exists();
-        assertThat(new File(aptOutputFolder, "test/debug/HelloWorldTestStringValue.java")).exists();
+        assertThat(
+                        new File(
+                                aptOutputFolder,
+                                "test/debug/com/example/helloworld/HelloWorldTestStringValue.java"))
+                .exists();
     }
 
     @Test
