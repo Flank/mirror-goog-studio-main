@@ -25,7 +25,8 @@ import java.io.IOException;
 public abstract class QueueThreadContextAdapter<T> implements QueueThreadContext<T> {
 
     @Override
-    public void creation(@NonNull Thread t) throws IOException {
+    public boolean creation(@NonNull Thread t) throws IOException {
+        return true;
     }
 
     @Override

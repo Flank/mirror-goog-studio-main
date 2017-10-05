@@ -78,6 +78,10 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
                 return sInstances.get(aaptLocation);
             }
         }
+
+        public void invalidateProcessor(@NonNull String aaptLocation) {
+            sInstances.remove(aaptLocation);
+        }
     }
 
     private Aapt2QueuedResourceProcessor(
@@ -211,6 +215,10 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
             throw new ResourceCompilationException(e);
         }
         return result;
+    }
+
+    public static void invalidateProcess(@NonNull String aaptLocation) {
+        Creator.INSTANCE.invalidateProcessor(aaptLocation);
     }
 
     public static Builder builder() {

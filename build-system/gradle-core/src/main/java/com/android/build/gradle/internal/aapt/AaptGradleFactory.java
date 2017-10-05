@@ -104,7 +104,6 @@ public final class AaptGradleFactory {
                         fileCache);
             case AAPT_V2_DAEMON_MODE:
                 return new QueueableAapt2(
-                        builder.getProcessExecutor(),
                         teeOutputHandler,
                         buildTools,
                         intermediateDir,

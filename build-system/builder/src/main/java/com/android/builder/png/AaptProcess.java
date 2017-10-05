@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.internal.aapt.v2.Aapt2QueuedResourceProcessor;
 import com.android.builder.internal.aapt.v2.AaptV2CommandBuilder;
 import com.android.builder.tasks.BooleanLatch;
 import com.android.builder.tasks.Job;
@@ -186,7 +187,10 @@ public class AaptProcess {
         mLogger.verbose("AAPT2 processed(%1$d) linking job:%2$s", hashCode(), job.toString());
     }
 
-    public void waitForReady() throws InterruptedException {
+    /*
+     * @return true if process started successfully, false if it failed to start.
+     */
+    public boolean waitForReadyOrFail() throws InterruptedException {
         if (!mReadyLatch.await(TimeUnit.NANOSECONDS.convert(
                 SLAVE_AAPT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS))) {
             throw new RuntimeException(String.format(
@@ -199,9 +203,18 @@ public class AaptProcess {
 
         if (mReady.get()) {
             mLogger.verbose("Slave %1$s is ready", hashCode());
-        } else {
-            mLogger.verbose("Slave %1$s failed to start", hashCode());
+            return true;
         }
+
+        mLogger.error(
+                new RuntimeException(
+                        String.format(
+                                "AAPT slave failed to start. Please make sure the current build "
+                                        + "tools (located at %s) are not corrupted.",
+                                mAaptLocation)),
+                String.format("Slave %1$s failed to start", hashCode()));
+        Aapt2QueuedResourceProcessor.invalidateProcess(mAaptLocation);
+        return false;
     }
 
     @Override

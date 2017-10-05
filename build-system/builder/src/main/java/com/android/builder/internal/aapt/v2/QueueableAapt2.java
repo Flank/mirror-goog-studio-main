@@ -18,11 +18,11 @@ package com.android.builder.internal.aapt.v2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AbstractAapt;
 import com.android.ide.common.internal.ResourceCompilationException;
-import com.android.ide.common.process.ProcessExecutor;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.sdklib.BuildToolInfo;
@@ -51,7 +51,6 @@ public class QueueableAapt2 extends AbstractAapt {
     private static final long AUTO_THREAD_SHUTDOWN_MS = 250;
 
     @NonNull private final Aapt2QueuedResourceProcessor aapt;
-    @NonNull private final BuildToolInfo buildToolInfo;
     @NonNull private final Executor executor;
     @NonNull private final File intermediateDir;
     @NonNull private final Integer requestKey;
@@ -60,33 +59,37 @@ public class QueueableAapt2 extends AbstractAapt {
     /**
      * Creates a new entry point to the original {@code aapt2}.
      *
-     * @param processExecutor the executor for external processes
      * @param processOutputHandler the handler to process the executed process' output
      * @param buildToolInfo the build tools to use
      * @param intermediateDir directory where to store intermediate files
      * @param logger logger to use
      */
     public QueueableAapt2(
-            @NonNull ProcessExecutor processExecutor,
             @Nullable ProcessOutputHandler processOutputHandler,
             @NonNull BuildToolInfo buildToolInfo,
             @NonNull File intermediateDir,
             @NonNull ILogger logger,
             int numberOfProcesses) {
+        this(
+                processOutputHandler,
+                getAapt2ExecutablePath(buildToolInfo),
+                intermediateDir,
+                logger,
+                numberOfProcesses);
+    }
 
+    @VisibleForTesting
+    QueueableAapt2(
+            @Nullable ProcessOutputHandler processOutputHandler,
+            @NonNull String aapt2ExecutablePath,
+            @NonNull File intermediateDir,
+            @NonNull ILogger logger,
+            int numberOfProcesses) {
         Preconditions.checkArgument(
                 intermediateDir.isDirectory(),
                 "Intermediate directory needs to be a directory.\nintermediateDir: %s",
                 intermediateDir.getAbsolutePath());
 
-        Preconditions.checkArgument(
-                BuildToolInfo.PathId.DAEMON_AAPT2.isPresentIn(buildToolInfo.getRevision()),
-                "Aapt2 with daemon mode requires newer build tools.\n"
-                        + "Current version %s, minimum required %s.",
-                buildToolInfo.getRevision(),
-                BuildToolInfo.PathId.DAEMON_AAPT2.getMinRevision());
-
-        this.buildToolInfo = buildToolInfo;
         this.intermediateDir = intermediateDir;
         this.processOutputHandler = processOutputHandler;
 
@@ -100,7 +103,7 @@ public class QueueableAapt2 extends AbstractAapt {
 
         this.aapt =
                 Aapt2QueuedResourceProcessor.builder()
-                        .executablePath(getAapt2ExecutablePath())
+                        .executablePath(aapt2ExecutablePath)
                         .logger(logger)
                         .numberOfProcesses(numberOfProcesses)
                         .build();
@@ -195,7 +198,13 @@ public class QueueableAapt2 extends AbstractAapt {
                 Aapt2RenamingConventions.compilationRename(request.getInput()));
     }
 
-    private String getAapt2ExecutablePath() {
+    private static String getAapt2ExecutablePath(BuildToolInfo buildToolInfo) {
+        Preconditions.checkArgument(
+                BuildToolInfo.PathId.DAEMON_AAPT2.isPresentIn(buildToolInfo.getRevision()),
+                "Aapt2 with daemon mode requires newer build tools.\n"
+                        + "Current version %s, minimum required %s.",
+                buildToolInfo.getRevision(),
+                BuildToolInfo.PathId.DAEMON_AAPT2.getMinRevision());
         String aapt2 = buildToolInfo.getPath(BuildToolInfo.PathId.DAEMON_AAPT2);
         if (aapt2 == null || !new File(aapt2).isFile()) {
             throw new IllegalStateException("aapt2 is missing on '" + aapt2 + "'");

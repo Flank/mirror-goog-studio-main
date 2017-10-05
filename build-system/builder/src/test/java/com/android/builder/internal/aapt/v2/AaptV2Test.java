@@ -126,7 +126,6 @@ public class AaptV2Test {
                                     + daemonRevision.toShortString());
                 }
                 return new QueueableAapt2(
-                        new DefaultProcessExecutor(logger),
                         new LoggedProcessOutputHandler(logger),
                         daemonBuildToolInfo,
                         mTemporaryFolder.newFolder(),
