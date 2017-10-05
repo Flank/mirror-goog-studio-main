@@ -1607,7 +1607,7 @@ public class ApiDetector extends ResourceXmlDetector
                                     int specificApi =
                                             mApiDatabase.getMethodVersion(expressionOwner, name, desc);
                                     if (specificApi == -1) {
-                                        if (ApiLookup.isRelevantOwner(expressionOwner)) {
+                                        if (mApiDatabase.isRelevantOwner(expressionOwner)) {
                                             return;
                                         }
                                     } else if (specificApi <= minSdk) {
@@ -1692,7 +1692,7 @@ public class ApiDetector extends ResourceXmlDetector
                         }
                         int specificApi = mApiDatabase.getMethodVersion(expressionOwner, name, desc);
                         if (specificApi == -1) {
-                            if (ApiLookup.isRelevantOwner(expressionOwner)) {
+                            if (mApiDatabase.isRelevantOwner(expressionOwner)) {
                                 return;
                             }
                         } else if (specificApi <= minSdk) {

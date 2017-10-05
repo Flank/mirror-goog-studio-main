@@ -1323,8 +1323,11 @@ class LintDriver
 
                     try {
                         visitor.runClassDetectors(context)
-                    } catch (e: Exception) {
-                        client.log(e, null)
+                    } catch (throwable: Throwable) {
+                        // Process canceled etc
+                        if (!handleDetectorError(context, this, throwable)) {
+                            cancel()
+                        }
                     }
 
                     if (isCanceled) {

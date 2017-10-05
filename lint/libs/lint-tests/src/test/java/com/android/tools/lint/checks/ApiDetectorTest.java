@@ -4698,6 +4698,40 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testBrokenVirtualDispatch() {
+        // Regression test for 65549795: NewApi violations not detected on android.view.View
+        String expected = "" +
+                "src/com/google/android/apps/common/testing/sanity/lint/BrokenNewApi.java:11: Error: Call requires API level 25 (current min is 4): android.view.View#setRevealOnFocusHint [NewApi]\n" +
+                "    setRevealOnFocusHint(true); // API 25\n" +
+                "    ~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/com/google/android/apps/common/testing/sanity/lint/BrokenNewApi.java:12: Error: Call requires API level 11 (current min is 4): android.view.View#setPivotY [NewApi]\n" +
+                "    setPivotY(1.0f); // api 11\n" +
+                "    ~~~~~~~~~\n" +
+                "2 errors, 0 warnings\n";
+
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(4),
+                java("" +
+                        "package com.google.android.apps.common.testing.sanity.lint;\n" +
+                        "\n" +
+                        "import android.content.Context;\n" +
+                        "import android.view.View;\n" +
+                        "\n" +
+                        "public class BrokenNewApi extends View {\n" +
+                        "\n" +
+                        "  public BrokenNewApi(Context c) {\n" +
+                        "    super(c);\n" +
+                        "    // these should be picked up by lint but are not.\n" +
+                        "    setRevealOnFocusHint(true); // API 25\n" +
+                        "    setPivotY(1.0f); // api 11\n" +
+                        "  }\n" +
+                        "}"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect(expected);
+    }
+
     @Override
     protected boolean ignoreSystemErrors() {
         //noinspection SimplifiableIfStatement

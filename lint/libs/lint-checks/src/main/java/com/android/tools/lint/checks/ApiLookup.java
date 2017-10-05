@@ -15,9 +15,7 @@
  */
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_PKG;
 import static com.android.SdkConstants.DOT_XML;
-import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -446,12 +444,6 @@ public class ApiLookup {
         for (ApiClassOwner container : containers) {
             estimatedSize += 4; // offset entry
             estimatedSize += container.getName().length() + 20; // Container entry.
-
-            if (assertionsEnabled() && !isRelevantOwner(container.getName() + '/') &&
-                    !startsWithEquivalentPrefix(container.getName(), "android/support")) {
-                System.out.println("Warning: isRelevantOwner failed for "
-                        + container.getName() + '/');
-            }
 
             for (ApiClass cls : container.getClasses()) {
                 estimatedSize += 4; // offset entry
@@ -1272,30 +1264,8 @@ public class ApiLookup {
      * @param owner the owner to look up
      * @return true if the owner might be relevant to the API database
      */
-    public static boolean isRelevantOwner(@NonNull String owner) {
-        if (owner.startsWith("java")) {                    // includes javax/
-            return true;
-        }
-        if (startsWithEquivalentPrefix(owner, ANDROID_PKG)) {
-            return !equivalentFragmentAtOffset(owner, 7, "/support/");
-        } else if (startsWithEquivalentPrefix(owner, "org/")) {
-            if (owner.startsWith("xml", 4)
-                    || equivalentFragmentAtOffset(owner, 4, "w3c/")
-                    || equivalentFragmentAtOffset(owner, 4, "json/")
-                    || equivalentFragmentAtOffset(owner, 4, "apache/")) {
-                return true;
-            }
-        } else if (startsWithEquivalentPrefix(owner, "com/")) {
-            if (equivalentFragmentAtOffset(owner, 4, "google/")
-                    || equivalentFragmentAtOffset(owner, 4, "android/")) {
-                return true;
-            }
-        } else if (owner.startsWith("junit")
-                    || owner.startsWith("dalvik")) {
-            return true;
-        }
-
-        return false;
+    public boolean isRelevantOwner(@NonNull String owner) {
+        return findClass(owner) >= 0;
     }
 
     /**

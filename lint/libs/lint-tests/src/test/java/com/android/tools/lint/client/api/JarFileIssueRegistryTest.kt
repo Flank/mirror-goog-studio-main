@@ -48,7 +48,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         assertThat(registry3).isNull()
 
         assertEquals(1, registry1.issues.size)
-        assertEquals("AppCompatMethod", registry1.issues[0].id)
+        assertEquals("UnitTestAppCompatMethod", registry1.issues[0].id)
 
         // Access detector state. On Java 7/8 this will access the detector class after
         // the jar loader has been closed; this tests that we still have valid classes.
