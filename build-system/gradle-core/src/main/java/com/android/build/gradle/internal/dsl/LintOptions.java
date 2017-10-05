@@ -26,6 +26,7 @@ import static com.android.tools.lint.detector.api.Severity.WARNING;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.CombinedInput;
 import com.android.tools.lint.LintCliClient;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Reporter;
@@ -903,5 +904,15 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
             default:
                 return IGNORE;
         }
+    }
+
+    // Workaround for https://issuetracker.google.com/67418335
+    @Input
+    @NonNull
+    public String getCombinedInput() {
+        return new CombinedInput()
+                .add("htmlOutput", getHtmlOutput())
+                .add("xmlOutput", getXmlOutput())
+                .toString();
     }
 }
