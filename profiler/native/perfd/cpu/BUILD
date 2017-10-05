@@ -3,6 +3,7 @@ load("//tools/base/bazel:android.bzl", "ANDROID_COPTS")
 cc_library(
     name = "profiler_cpu",
     srcs = [
+        "atrace_manager.cc",
         "cpu_cache.cc",
         "cpu_collector.cc",
         "cpu_service.cc",
@@ -13,6 +14,7 @@ cc_library(
         "thread_monitor.cc",
     ],
     hdrs = [
+        "atrace_manager.h",
         "cpu_cache.h",
         "cpu_collector.h",
         "cpu_profiler_component.h",
@@ -39,6 +41,7 @@ cc_library(
 cc_test(
     name = "perfd_cpu_tests",
     srcs = [
+        "atrace_manager_test.cc",
         "cpu_usage_sampler_test.cc",
         "simpleperf_manager_test.cc",
     ],

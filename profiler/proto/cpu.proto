@@ -76,6 +76,7 @@ enum CpuProfilerType {
   UNSPECIFIED_PROFILER = 0;
   ART = 1;
   SIMPLEPERF = 2;
+  ATRACE = 3;
 }
 
 // Requests all the traces that overlap with a time range.

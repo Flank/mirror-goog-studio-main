@@ -24,6 +24,7 @@
 #include "perfd/cpu/cpu_usage_sampler.h"
 #include "perfd/cpu/simpleperf.h"
 #include "perfd/cpu/simpleperf_manager.h"
+#include "perfd/cpu/atrace_manager.h"
 #include "perfd/cpu/thread_monitor.h"
 #include "proto/cpu.grpc.pb.h"
 
@@ -38,7 +39,9 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
         clock_(clock),
         usage_sampler_(*usage_sampler),
         thread_monitor_(*thread_monitor),
-        simplerperf_manager_(clock, simpleperf_) {}
+        simplerperf_manager_(clock, simpleperf_),
+        // Number of millis to wait between atrace dumps when profiling.
+        atrace_manager_(clock, 500) {}
 
   grpc::Status GetData(grpc::ServerContext* context,
                        const profiler::proto::CpuDataRequest* request,
@@ -86,6 +89,7 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   ThreadMonitor& thread_monitor_;
   const Simpleperf simpleperf_;
   SimpleperfManager simplerperf_manager_;
+  AtraceManager atrace_manager_;
   // Absolute on-device path to the trace file. Activity manager or simpleperf
   // determines the path and populate the file with trace data.
   std::string trace_path_;
