@@ -50,14 +50,17 @@ public class AaptQueueThreadContext implements QueueThreadContext<AaptProcess> {
     }
 
     @Override
-    public void creation(@NonNull Thread t) throws IOException {
+    public boolean creation(@NonNull Thread t) throws IOException, InterruptedException {
         try {
             AaptProcess aaptProcess = new AaptProcess.Builder(aaptLocation, logger).start();
-            aaptProcess.waitForReady();
-            aaptProcesses.put(t.getName(), aaptProcess);
+            boolean ready = aaptProcess.waitForReadyOrFail();
+            if (ready) {
+                aaptProcesses.put(t.getName(), aaptProcess);
+            }
+            return ready;
         } catch (InterruptedException e) {
             logger.error(e, "Cannot start slave process");
-            e.printStackTrace();
+            throw e;
         }
     }
 

@@ -34,9 +34,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  * processes to serve those.
  */
 public abstract class QueuedResourceProcessor implements ResourceProcessor {
+    /** Maximum number of concurrent processes to launch. */
+    private static final int MAX_DEFAULT_NUMBER_DAEMON_PROCESSES = 8;
     /** Number of concurrent processes to launch. */
     protected static final int DEFAULT_NUMBER_DAEMON_PROCESSES =
-            Integer.max(5, Runtime.getRuntime().availableProcessors());
+            Integer.min(
+                    MAX_DEFAULT_NUMBER_DAEMON_PROCESSES,
+                    Runtime.getRuntime().availableProcessors());
 
     @NonNull protected final String aaptLocation;
     @NonNull protected final ILogger logger;
