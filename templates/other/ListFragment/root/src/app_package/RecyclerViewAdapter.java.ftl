@@ -65,7 +65,7 @@ public class ${adapterClassName} extends RecyclerView.Adapter<${adapterClassName
         public ViewHolder(View view) {
             super(view);
             mView = view;
-            mIdView = (TextView) view.findViewById(R.id.id);
+            mIdView = (TextView) view.findViewById(R.id.item_number);
             mContentView = (TextView) view.findViewById(R.id.content);
         }
 
