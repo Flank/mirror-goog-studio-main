@@ -55,8 +55,6 @@
     <instantiate from="root/res/layout/fragment_simple.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${fragmentLayoutName}.xml" />
 
-    <#assign ext=generateKotlin?string('kt', 'java')>
-
     <!-- Decide which activity code to add -->
     <#if hasViewPager || hasAppBar>
         <!-- kotlin android extensions cannot find views from android.R.layout.simple_list_item_1,
@@ -65,14 +63,14 @@
              <copy from="root/res/layout/list_item.xml"
                      to="${escapeXmlAttribute(resOut)}/layout/list_item.xml" />
         </#if>
-        <instantiate from="root/src/app_package/TabsAndPagerActivity.${ext}.ftl"
-                       to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ext}" />
-        <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ext}" />
+        <instantiate from="root/src/app_package/TabsAndPagerActivity.${ktOrJavaExt}.ftl"
+                       to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
+        <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
     <#else>
-        <instantiate from="root/src/app_package/DropdownActivity.${ext}.ftl"
-                       to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ext}" />
+        <instantiate from="root/src/app_package/DropdownActivity.${ktOrJavaExt}.ftl"
+                       to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
     </#if>
 
-    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ext}" />
+    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
     <open file="${escapeXmlAttribute(resOut)}/layout/${fragmentLayoutName}.xml" />
 </recipe>

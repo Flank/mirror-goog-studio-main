@@ -11,12 +11,10 @@
     <instantiate from="root/res/layout/fragment_item_list_dialog_item.xml"
                  to="${escapeXmlAttribute(resOut)}/layout/${itemLayout}.xml" />
 
-    <#assign ext=generateKotlin?string('kt', 'java')>
+    <instantiate from="root/src/app_package/ItemListDialogFragment.${ktOrJavaExt}.ftl"
+                 to="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
 
-    <instantiate from="root/src/app_package/ItemListDialogFragment.${ext}.ftl"
-                 to="${escapeXmlAttribute(srcOut)}/${className}.${ext}" />
-
-    <open file="${escapeXmlAttribute(srcOut)}/${className}.${ext}" />
+    <open file="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
 
     <merge from="root/res/values/dimens.xml"
              to="${escapeXmlAttribute(resOut)}/values/dimens.xml" />

@@ -55,16 +55,14 @@
                      to="${escapeXmlAttribute(resOut)}/layout/activity_${item_list_layout}.xml" />
     </#if>
 
-    <#assign ext=generateKotlin?string('kt', 'java')>
-
-    <instantiate from="root/src/app_package/ContentDetailActivity.${ext}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${DetailName}Activity.${ext}" />
-    <instantiate from="root/src/app_package/ContentDetailFragment.${ext}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${DetailName}Fragment.${ext}" />
-    <instantiate from="root/src/app_package/ContentListActivity.${ext}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${CollectionName}Activity.${ext}" />
+    <instantiate from="root/src/app_package/ContentDetailActivity.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${DetailName}Activity.${ktOrJavaExt}" />
+    <instantiate from="root/src/app_package/ContentDetailFragment.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${DetailName}Fragment.${ktOrJavaExt}" />
+    <instantiate from="root/src/app_package/ContentListActivity.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${CollectionName}Activity.${ktOrJavaExt}" />
     <#include "../common/recipe_dummy_content.xml.ftl" />
 
-    <open file="${escapeXmlAttribute(srcOut)}/${DetailName}Fragment.${ext}" />
+    <open file="${escapeXmlAttribute(srcOut)}/${DetailName}Fragment.${ktOrJavaExt}" />
     <open file="${escapeXmlAttribute(resOut)}/layout/fragment_${detail_name}.xml" />
 </recipe>

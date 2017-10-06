@@ -12,10 +12,8 @@
         <open file="${escapeXmlAttribute(resOut)}/layout/${escapeXmlAttribute(fragmentName)}.xml" />
     </#if>
 
-    <#assign ext=generateKotlin?string('kt', 'java')>
+    <instantiate from="root/src/app_package/BlankFragment.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
 
-    <instantiate from="root/src/app_package/BlankFragment.${ext}.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${className}.${ext}" />
-
-    <open file="${escapeXmlAttribute(srcOut)}/${className}.${ext}" />
+    <open file="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
 </recipe>

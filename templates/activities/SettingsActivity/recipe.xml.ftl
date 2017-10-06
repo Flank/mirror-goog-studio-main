@@ -28,21 +28,11 @@
     <merge from="root/res/values/pref_strings.xml.ftl"
              to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
 
-<#if generateKotlin>
-    <instantiate from="root/src/app_package/SettingsActivity.kt.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
+    <instantiate from="root/src/app_package/SettingsActivity.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
     <#if appCompatActivity>
-        <instantiate from="root/src/app_package/AppCompatPreferenceActivity.kt.ftl"
-                       to="${escapeXmlAttribute(srcOut)}/AppCompatPreferenceActivity.kt" />
+        <instantiate from="root/src/app_package/AppCompatPreferenceActivity.${ktOrJavaExt}.ftl"
+                       to="${escapeXmlAttribute(srcOut)}/AppCompatPreferenceActivity.${ktOrJavaExt}" />
     </#if>
-    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
-<#else>
-    <instantiate from="root/src/app_package/SettingsActivity.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
-    <#if appCompatActivity>
-         <instantiate from="root/src/app_package/AppCompatPreferenceActivity.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/AppCompatPreferenceActivity.java" />
-    </#if>
-    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
-</#if>
+    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
 </recipe>

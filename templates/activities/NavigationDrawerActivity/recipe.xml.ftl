@@ -56,17 +56,11 @@
     <instantiate from="root/res-buildApi22/layout/navigation_header.xml.ftl"
                    to="${escapeXmlAttribute(resOut)}/layout/${navHeaderLayoutName}.xml" />
 
-<#if generateKotlin>
-    <instantiate from="root/src-buildApi22/app_package/DrawerActivity.kt.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
 
-    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
-<#else>
-    <instantiate from="root/src-buildApi22/app_package/DrawerActivity.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
+    <instantiate from="root/src-buildApi22/app_package/DrawerActivity.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
 
-    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
-</#if>
+    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
 
     <open file="${escapeXmlAttribute(resOut)}/layout/${contentLayoutName}.xml" />
 <#else>

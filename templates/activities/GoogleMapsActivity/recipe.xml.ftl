@@ -24,13 +24,8 @@
     <merge from="root/res/values/strings.xml.ftl"
              to="${finalResOut}/values/strings.xml" />
 
-<#if generateKotlin>
-    <instantiate from="root/src/app_package/MapActivity.kt.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.kt" />
-<#else>
-    <instantiate from="root/src/app_package/MapActivity.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
-</#if>
+    <instantiate from="root/src/app_package/MapActivity.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
 
     <merge from="root/debugRes/values/google_maps_api.xml.ftl"
              to="${finalDebugResOut}/values/google_maps_api.xml" />
@@ -38,7 +33,7 @@
     <merge from="root/releaseRes/values/google_maps_api.xml.ftl"
              to="${finalReleaseResOut}/values/google_maps_api.xml" />
 
-    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.java" />
+    <open file="${escapeXmlAttribute(srcOut)}/${activityClass}.${ktOrJavaExt}" />
 
     <!-- Display the API key instructions. -->
     <open file="${finalDebugResOut}/values/google_maps_api.xml" />
