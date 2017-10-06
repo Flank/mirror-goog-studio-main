@@ -70,6 +70,7 @@ import org.jetbrains.annotations.Contract;
  * project and generate the android build JSON.
  */
 class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGenerator {
+    private static final String CMAKE_SERVER_LOG_PREFIX = "CMAKE SERVER: ";
     // Constructor
     public CmakeServerExternalNativeJsonGenerator(
             @NonNull NdkHandler ndkHandler,
@@ -107,6 +108,16 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 cFlags,
                 cppFlags,
                 nativeBuildConfigurationsJsons);
+
+        if (androidBuilder != null) {
+            logPreviewWarning(androidBuilder);
+        }
+    }
+
+    private static void logPreviewWarning(@NonNull AndroidBuilder androidBuilder) {
+        String previewWarning =
+                "Support for CMake 3.7 and higher is a preview feature. To report a bug, see https://developer.android.com/studio/report-bugs.html";
+        androidBuilder.getLogger().warning(previewWarning);
     }
 
     /** @return Returns the default generator supported. */
@@ -231,7 +242,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                                 message ->
                                         receiveInteractiveMessage(serverLogWriter, logger, message))
                         .setDiagnosticReceiver(
-                                message -> serverLogWriter.println("CMAKE SERVER: " + message));
+                                message ->
+                                        receiveDiagnosticMessage(serverLogWriter, logger, message));
         Server cmakeServer = ServerFactory.create(getCmakeBinFolder(), serverReceiver);
         if (cmakeServer == null) {
             throw new RuntimeException(
@@ -248,12 +260,12 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         return cmakeServer;
     }
 
-    /** Processes an interactive message received by the CMake server. */
+    /** Processes an interactive message received from the CMake server. */
     static void receiveInteractiveMessage(
             @NonNull PrintWriter writer,
             @NonNull ILogger logger,
             @NonNull InteractiveMessage message) {
-        writer.println("CMAKE SERVER: " + message.message);
+        writer.println(CMAKE_SERVER_LOG_PREFIX + message.message);
         logInteractiveMessage(logger, message);
     }
 
@@ -293,6 +305,13 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         }
 
         logger.info(message.message);
+    }
+
+    /** Processes an diagnostic message received by/from the CMake server. */
+    static void receiveDiagnosticMessage(
+            @NonNull PrintWriter writer, @NonNull ILogger logger, @NonNull String message) {
+        writer.println(CMAKE_SERVER_LOG_PREFIX + message);
+        logger.info(message);
     }
 
     /**

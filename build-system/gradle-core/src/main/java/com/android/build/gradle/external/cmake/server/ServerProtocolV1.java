@@ -281,7 +281,6 @@ public class ServerProtocolV1 implements Server {
         return helloResult;
     }
 
-
     // Helper functions
 
     /**
@@ -476,31 +475,37 @@ public class ServerProtocolV1 implements Server {
     }
 
     /**
-     * Reads until the expected string is found.
-     *
-     * @param expect - expected string
-     * @throws IOException I/O failure
+     * Reads until the expected string is found. Skip unexpected (or non-conforming) messages if
+     * need be until the expected string is found. Note: The CMake server sometimes writes
+     * non-conforming messages (by deviating from the general message layout: https://goo.gl/d4XMmB)
+     * to stdout, these are harmless (i.e., they don't break the build) and hence need to be
+     * ignored.
      */
-    private void readExpected(String expect) throws IOException {
-        String found = readLine();
-        if (found.equals(expect)) {
-            return;
+    private void readExpected(@NonNull String expectedString) throws IOException {
+        String line = readLine();
+        while (!line.equals(expectedString)) {
+            // Skip a blank line if there is one.
+            if (!line.isEmpty() && serverReceiver.getDiagnosticReceiver() != null) {
+                serverReceiver.getDiagnosticReceiver().receive(line);
+            }
+            line = readLine();
         }
-        // Skip a blank line if there is one.
-        if (found.isEmpty()) {
-            readExpected(expect);
-            return;
-        }
-        throw new RuntimeException(
-                String.format(
-                        "Expected '%s' from CMake server but got '%s' (%s)\n",
-                        expect, found, found.length()));
     }
 
     /**
-     * Reads a message send by Cmake server. Cmake server sends the messages wrapped within a
+     * Reads a message send by CMake server. CMake Server sends the messages wrapped within a
      * defined header and footer string, this function reads everything inbetween the header and
-     * footer and returns it.
+     * footer and returns it. General message layout we expect from CMake Server:
+     *
+     * <p>[non-conforming messages from CMake Server]
+     *
+     * <p>[== "CMake Server" ==[
+     *
+     * <p>InteractiveMessage
+     *
+     * <p>[non-conforming messages from CMake Server]
+     *
+     * <p>]== "CMake Server" ==]
      *
      * @return The string contained within the header and footer
      * @throws IOException I/O failure

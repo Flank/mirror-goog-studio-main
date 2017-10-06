@@ -81,34 +81,6 @@ public class ServerProtocolV1Test {
         assertThat(protocolVersion.minor).isEqualTo(45);
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testConnectInvalidHeader() throws IOException {
-        ServerProtocolV1 serverProtocolV1 = createUnconnectedServer();
-
-        String expectedHelloMsg =
-                "{\"supportedProtocolVersions\":[{\"major\":123,\"minor\":45}],\"type\":\"hello\"}\n";
-        Mockito.when(mockBufferedReader.readLine())
-                .thenReturn(
-                        "Bad Cmake Header",
-                        expectedHelloMsg,
-                        serverProtocolV1.CMAKE_SERVER_FOOTER_MSG);
-        final boolean connected = serverProtocolV1.connect();
-        assertThat(connected).isFalse();
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testConnectInvalidFooter() throws IOException {
-        ServerProtocolV1 serverProtocolV1 = createUnconnectedServer();
-
-        String expectedHelloMsg =
-                "{\"supportedProtocolVersions\":[{\"major\":123,\"minor\":45}],\"type\":\"hello\"}\n";
-        Mockito.when(mockBufferedReader.readLine())
-                .thenReturn(
-                        serverProtocolV1.CMAKE_SERVER_HEADER_MSG, expectedHelloMsg, "Bad footer");
-        final boolean connected = serverProtocolV1.connect();
-        assertThat(connected).isFalse();
-    }
-
     // Test handshake
     @Test
     public void testValidHandshake() throws IOException {
@@ -372,8 +344,8 @@ public class ServerProtocolV1Test {
                         cacheArguments.toArray(new String[cacheArguments.size()]));
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testConfigureInvalidHeader() throws IOException {
+    @Test
+    public void testSkipNonConfirmingMessagesBeforeHeader() throws IOException {
         ServerProtocolV1 serverProtocolV1 = createConnectedServer();
 
         List<String> cacheArguments = getCachedArgs();
@@ -382,17 +354,23 @@ public class ServerProtocolV1Test {
                 "{\"cookie\":\"\",\"inReplyTo\":\"configure\",\"type\":\"reply\"}";
         Mockito.when(mockBufferedReader.readLine())
                 .thenReturn(
-                        "Invalid header",
+                        "Non conforming message 1",
+                        "some random message",
+                        serverProtocolV1.CMAKE_SERVER_HEADER_MSG,
                         expectedConfigureMsg,
                         serverProtocolV1.CMAKE_SERVER_FOOTER_MSG);
 
         final ConfigureCommandResult configureCommandResult =
                 serverProtocolV1.configure(
                         cacheArguments.toArray(new String[cacheArguments.size()]));
+
+        assertThat(ServerUtils.isConfigureResultValid(configureCommandResult.configureResult))
+                .isTrue();
+        assertThat(configureCommandResult.interactiveMessages).isEqualTo("");
     }
 
-    @Test(expected = RuntimeException.class)
-    public void testConfigureInvalidFooter() throws IOException {
+    @Test
+    public void testSkipNonConfirmingMessagesAfterHeaderBeforeFooter() throws IOException {
         ServerProtocolV1 serverProtocolV1 = createConnectedServer();
 
         List<String> cacheArguments = getCachedArgs();
@@ -403,11 +381,17 @@ public class ServerProtocolV1Test {
                 .thenReturn(
                         serverProtocolV1.CMAKE_SERVER_HEADER_MSG,
                         expectedConfigureMsg,
-                        "invalid footer");
+                        "Non conforming message 1",
+                        "some random message",
+                        serverProtocolV1.CMAKE_SERVER_FOOTER_MSG);
 
         final ConfigureCommandResult configureCommandResult =
                 serverProtocolV1.configure(
                         cacheArguments.toArray(new String[cacheArguments.size()]));
+
+        assertThat(ServerUtils.isConfigureResultValid(configureCommandResult.configureResult))
+                .isTrue();
+        assertThat(configureCommandResult.interactiveMessages).isEqualTo("");
     }
 
     // Test compute
@@ -457,40 +441,6 @@ public class ServerProtocolV1Test {
                         serverProtocolV1.CMAKE_SERVER_HEADER_MSG,
                         expectedComputeMsg,
                         serverProtocolV1.CMAKE_SERVER_FOOTER_MSG);
-
-        ComputeResult computeResult = serverProtocolV1.compute();
-        assertThat(ServerUtils.isComputedResultValid(computeResult)).isFalse();
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testComputeInvalidHeader() throws IOException {
-        ServerProtocolV1 serverProtocolV1 = createConnectedServer();
-        configureServer(serverProtocolV1);
-
-        final String expectedComputeMsg =
-                "{\"cookie\":\"\",\"inReplyTo\":\"compute\",\"type\":\"reply\"}";
-        Mockito.when(mockBufferedReader.readLine())
-                .thenReturn(
-                        "Invalid header",
-                        expectedComputeMsg,
-                        serverProtocolV1.CMAKE_SERVER_FOOTER_MSG);
-
-        ComputeResult computeResult = serverProtocolV1.compute();
-        assertThat(ServerUtils.isComputedResultValid(computeResult)).isFalse();
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void testComputeInvalidFooter() throws IOException {
-        ServerProtocolV1 serverProtocolV1 = createConnectedServer();
-        configureServer(serverProtocolV1);
-
-        final String expectedComputeMsg =
-                "{\"cookie\":\"\",\"inReplyTo\":\"compute\",\"type\":\"reply\"}";
-        Mockito.when(mockBufferedReader.readLine())
-                .thenReturn(
-                        serverProtocolV1.CMAKE_SERVER_HEADER_MSG,
-                        expectedComputeMsg,
-                        "Invalid footer");
 
         ComputeResult computeResult = serverProtocolV1.compute();
         assertThat(ServerUtils.isComputedResultValid(computeResult)).isFalse();
