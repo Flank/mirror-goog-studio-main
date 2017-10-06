@@ -22,7 +22,6 @@ import com.android.tools.bazel.parser.ast.Build;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
-import com.intellij.openapi.diagnostic.Logger;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -32,7 +31,6 @@ import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
 public class Package {
-    private static final Logger LOG = Logger.getInstance(BuildParser.class);
 
     private final String name;
     private final Workspace workspace;
@@ -91,8 +89,6 @@ public class Package {
             String after = Files.toString(tmp, StandardCharsets.UTF_8);
             if (!before.equals(after)) {
                 listener.packageUpdated(name);
-                LOG.info("Build file changed: " + name);
-                LOG.info("idea diff " + build.getAbsolutePath() + " " + tmp.getAbsolutePath());
                 Files.copy(tmp, build);
             }
         }

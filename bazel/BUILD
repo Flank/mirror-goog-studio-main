@@ -53,63 +53,15 @@ java_binary(
     runtime_deps = [":utils"],
 )
 
-genrule(
-    name = "kotlin-compiler.genrule",
-    srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.1.0-release-112.zip"],
-    outs = ["kotlin-compiler.jar"],
-    cmd = "$(location :unzipper) $< Kotlin/kotlinc/lib/kotlin-compiler.jar:$@",
-    tools = [":unzipper"],
-)
-
-java_import(
-    name = "kotlin-compiler",
-    jars = [":kotlin-compiler.genrule"],
-)
-
-genrule(
-    name = "kotlin-runtime.genrule",
-    srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.1.0-release-112.zip"],
-    outs = [
-        "kotlin-runtime.jar",
-        "kotlin-reflect.jar",
-        "kotlin-script-runtime.jar",
-    ],
-    cmd = "$(location :unzipper) $< " +
-          "Kotlin/kotlinc/lib/kotlin-runtime.jar:$(@D)/kotlin-runtime.jar " +
-          "Kotlin/kotlinc/lib/kotlin-reflect.jar:$(@D)/kotlin-reflect.jar " +
-          "Kotlin/kotlinc/lib/kotlin-script-runtime.jar:$(@D)/kotlin-script-runtime.jar",
-    tools = [":unzipper"],
-)
-
-java_import(
-    name = "kotlin-runtime",
-    jars = [":kotlin-runtime.genrule"],
-    visibility = ["//visibility:public"],
-)
-
-genrule(
-    name = "kotlin-test.genrule",
-    srcs = ["//prebuilts/tools/common/kotlin-plugin:kotlin-plugin-1.1.0-release-112.zip"],
-    outs = ["kotlin-test.jar"],
-    cmd = "$(location :unzipper) $< Kotlin/kotlinc/lib/kotlin-test.jar:$(@D)/kotlin-test.jar",
-    tools = [":unzipper"],
-)
-
-java_import(
-    name = "kotlin-test",
-    jars = [":kotlin-test.genrule"],
-    visibility = ["//visibility:public"],
-)
-
 java_binary(
     name = "kotlinc",
     srcs = ["src/com/android/tools/kotlin/KotlinCompiler.java"],
     main_class = "com.android.tools.kotlin.KotlinCompiler",
     visibility = ["//visibility:public"],
-    runtime_deps = [":kotlin-runtime"],
+    runtime_deps = ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-runtime"],
     deps = [
-        ":kotlin-compiler",
         ":utils",
+        "//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-compiler",
     ],
 )
 
@@ -118,10 +70,24 @@ java_binary(
     srcs = ["src/com/android/tools/form/FormCompiler.java"],
     main_class = "com.android.tools.form.FormCompiler",
     visibility = ["//visibility:public"],
-    runtime_deps = [":kotlin-runtime"],
+    runtime_deps = ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-runtime"],
     deps = [
         ":utils",
         "//prebuilts/tools/common/bazel/formc-deps",
+    ],
+)
+
+java_library(
+    name = "bazel_generator",
+    srcs = glob(["src/com/android/tools/bazel/**"]),
+    visibility = ["//visibility:public"],
+    runtime_deps = [
+        "//tools/idea/.idea/libraries:JDOM",
+    ],
+    deps = [
+        "//tools/idea/.idea/libraries:Guava",
+        "//tools/idea/.idea/libraries:Trove4j",
+        "//tools/idea/build/lib:jps",
     ],
 )
 
@@ -129,6 +95,17 @@ java_import(
     name = "langtools",
     jars = ["@local_jdk//:langtools"],
     visibility = ["//visibility:public"],
+)
+
+java_binary(
+    name = "iml_to_build",
+    srcs = ["src/com/android/tools/binaries/ImlToBazel.java"],
+    main_class = "com.android.tools.binaries.ImlToBazel",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":bazel_generator",
+        ":utils",
+    ],
 )
 
 java_binary(

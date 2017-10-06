@@ -283,7 +283,7 @@ _iml_module_ = rule(
       "_zipper": attr.label(default = Label("@bazel_tools//tools/zip:zipper"), cfg = "host", executable=True),
       "_singlejar": attr.label(default = Label("//tools/base/bazel:singlejar"), cfg = "host", executable=True),
       "_kotlinc": attr.label(default = Label("//tools/base/bazel:kotlinc"), cfg = "host", executable = True),
-      "_kotlin": attr.label(default = Label("//tools/base/bazel:kotlin-runtime"), allow_files = True),
+      "_kotlin": attr.label(default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-runtime"), allow_files = True),
       "_groovyc": attr.label(default = Label("//tools/base/bazel:groovyc"), cfg = "host", executable = True),
       "_groovystub": attr.label(default = Label("//tools/base/bazel:groovy_stub_gen"), cfg = "host", executable = True),
       "_formc": attr.label(executable = True, cfg = "host", default = Label("//tools/base/bazel:formc"), allow_files = True),
@@ -366,6 +366,7 @@ def iml_module(name,
     back_target=0,
     iml_files=None,
     bundle_data=[],
+    test_main_class = None,
     back_deps=[]):
 
   prod_deps = []
@@ -425,6 +426,7 @@ def iml_module(name,
         tags = test_tags,
         test_class = test_class,
         visibility = visibility,
+        main_class = test_main_class,
     )
 
 def split_srcs(src_dirs, res_dirs, exclude):

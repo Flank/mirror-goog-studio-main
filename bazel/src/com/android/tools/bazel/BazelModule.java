@@ -17,34 +17,32 @@
 package com.android.tools.bazel;
 
 import com.android.tools.bazel.model.ImlModule;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.roots.ContentEntry;
-import com.intellij.openapi.roots.ModuleRootManager;
-import com.intellij.openapi.roots.OrderEntry;
-import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.openapi.vfs.VirtualFile;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.*;
+import org.jetbrains.jps.model.module.JpsDependencyElement;
+import org.jetbrains.jps.model.module.JpsModule;
+import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
+import org.jetbrains.jps.model.serialization.JpsModelSerializationDataService;
 
 /**
  * A collection of modules with cyclic dependencies that form a strongly connected component.
  */
 public class BazelModule {
 
-    private static final Comparator<Module> BY_NAME = Comparator.comparing(Module::getName);
+    private static final Comparator<JpsModule> BY_NAME = Comparator.comparing(JpsModule::getName);
 
-    private static final Comparator<Module> BY_NUM_ORDER_ENTRIES =
-            Comparator.comparingInt(
-                    module -> ModuleRootManager.getInstance(module).getOrderEntries().length);
+    private static final Comparator<JpsModule> BY_NUM_ORDER_ENTRIES =
+            Comparator.comparingInt(module -> module.getDependenciesList().getDependencies().size());
 
-    private SortedSet<Module> modules = new TreeSet<>(BY_NAME);
+    private SortedSet<JpsModule> modules = new TreeSet<>(BY_NAME);
 
     public ImlModule rule = null;
 
     public BazelModule() {
     }
 
-    public void add(Module module) {
+    public void add(JpsModule module) {
         modules.add(module);
     }
 
@@ -57,36 +55,45 @@ public class BazelModule {
         return modules.size() == 1;
     }
 
-    public File getBaseDir() {
-        List<VirtualFile> vfs = new LinkedList<>();
-        for (Module module : modules) {
-            VirtualFile vf = VfsUtil.findFileByIoFile(new File(module.getModuleFilePath()).getParentFile(), true);
-            vfs.add(vf);
+    public Path getBaseDir() {
+        Path common = null;
+        // Find the common ancestor of all the modules
+        for (JpsModule module : modules) {
+            File base = JpsModelSerializationDataService.getBaseDirectory(module);
+            if (base != null) {
+                Path path = base.toPath();
+                if (common == null) {
+                    common = path;
+                } else {
+                    // Move common "up" until it covers the current module
+                    while (!path.startsWith(common)) {
+                        common = common.getParent();
+                    }
+                }
+            } else {
+                System.err.println(module.getName() + " has no base directory.");
+            }
         }
-        VirtualFile file = VfsUtil.getCommonAncestor(vfs);
-        return VfsUtil.virtualToIoFile(file);
+        return common;
     }
 
-    public List<ContentEntry> getContentEntries() {
-        List<ContentEntry> entries = new LinkedList<>();
-        for (Module module : modules) {
-            final ModuleRootManager rootManager = ModuleRootManager.getInstance(module);
-            Collections.addAll(entries, rootManager.getContentEntries());
+    public List<JpsModuleSourceRoot> getSourceRoots() {
+        List<JpsModuleSourceRoot> entries = new LinkedList<>();
+        for (JpsModule module : modules) {
+            entries.addAll(module.getSourceRoots());
         }
         return entries;
-
     }
 
-    public List<OrderEntry> getOrderEntries() {
-        List<OrderEntry> entries = new LinkedList<>();
-        for (Module module : modules) {
-            final ModuleRootManager rootManager = ModuleRootManager.getInstance(module);
-            Collections.addAll(entries, rootManager.getOrderEntries());
+    public List<JpsDependencyElement> getDependencies() {
+        List<JpsDependencyElement> dependencies = new LinkedList<>();
+        for (JpsModule module : modules) {
+            dependencies.addAll(module.getDependenciesList().getDependencies());
         }
-        return entries;
+        return dependencies;
     }
 
-    public Set<Module> getModules() {
+    public Set<JpsModule> getModules() {
         return modules;
     }
 }

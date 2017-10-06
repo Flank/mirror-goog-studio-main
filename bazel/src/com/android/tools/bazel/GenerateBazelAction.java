@@ -16,8 +16,6 @@
 
 package com.android.tools.bazel;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-
 import com.android.tools.bazel.model.BazelRule;
 import com.android.tools.bazel.model.ImlModule;
 import com.android.tools.bazel.model.ImlProject;
@@ -30,154 +28,131 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.io.Files;
-import com.intellij.compiler.CompilerConfiguration;
-import com.intellij.compiler.CompilerConfigurationImpl;
-import com.intellij.compiler.ModuleCompilerUtil;
-import com.intellij.ide.highlighter.ArchiveFileType;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.PlatformDataKeys;
-import com.intellij.openapi.compiler.options.ExcludeEntryDescription;
-import com.intellij.openapi.compiler.options.ExcludesConfiguration;
-import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleManager;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ContentEntry;
-import com.intellij.openapi.roots.DependencyScope;
-import com.intellij.openapi.roots.LibraryOrderEntry;
-import com.intellij.openapi.roots.ModuleOrderEntry;
-import com.intellij.openapi.roots.OrderEntry;
-import com.intellij.openapi.roots.OrderRootType;
-import com.intellij.openapi.roots.SourceFolder;
-import com.intellij.openapi.roots.libraries.Library;
-import com.intellij.openapi.util.AsyncResult;
-import com.intellij.openapi.util.io.FileUtil;
-import com.intellij.openapi.vfs.VfsUtil;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.util.Chunk;
-import com.intellij.util.PathUtil;
+import com.intellij.util.graph.DFSTBuilder;
+import com.intellij.util.graph.Graph;
+import com.intellij.util.graph.GraphGenerator;
+import gnu.trove.TIntArrayList;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.jps.model.JpsCompositeElement;
+import org.jetbrains.jps.model.JpsElementFactory;
+import org.jetbrains.jps.model.JpsElementReference;
+import org.jetbrains.jps.model.JpsModel;
+import org.jetbrains.jps.model.JpsProject;
+import org.jetbrains.jps.model.java.JavaResourceRootType;
+import org.jetbrains.jps.model.java.JavaSourceRootProperties;
 import org.jetbrains.jps.model.java.JavaSourceRootType;
+import org.jetbrains.jps.model.java.JpsJavaDependencyExtension;
+import org.jetbrains.jps.model.java.JpsJavaDependencyScope;
+import org.jetbrains.jps.model.java.JpsJavaExtensionService;
+import org.jetbrains.jps.model.java.compiler.JpsCompilerExcludes;
+import org.jetbrains.jps.model.library.JpsLibrary;
+import org.jetbrains.jps.model.library.JpsOrderRootType;
+import org.jetbrains.jps.model.module.JpsDependencyElement;
+import org.jetbrains.jps.model.module.JpsLibraryDependency;
+import org.jetbrains.jps.model.module.JpsModule;
+import org.jetbrains.jps.model.module.JpsModuleDependency;
+import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
+import org.jetbrains.jps.model.serialization.JpsModelSerializationDataService;
+import org.jetbrains.jps.model.serialization.JpsProjectLoader;
 
+public class GenerateBazelAction {
 
-public class GenerateBazelAction extends AnAction {
-    private static final String KOTLIN_RUNTIME = "KotlinJavaRuntime";
-    private static final String KOTLIN_TEST = "KotlinTest";
-    private static final Logger LOG = Logger.getInstance(GenerateBazelAction.class);
+    public void generate(Path workspace, PrintWriter progress, Configuration config)
+            throws IOException {
+        String projectPath = workspace.resolve("tools/idea").toString();
 
-    public GenerateBazelAction() {
-        super("Generate Bazel files");
-    }
+        HashMap<String, String> pathVariables = new HashMap<>();
+        pathVariables.put("KOTLIN_BUNDLED", workspace.resolve("prebuilts/tools/common/kotlin-plugin-ij/Kotlin/kotlinc").toString());
 
-    public void actionPerformed(AnActionEvent event) {
-        final Project project = checkNotNull(event.getData(PlatformDataKeys.PROJECT));
+        JpsProject project = JpsElementFactory.getInstance().createModel().getProject();
+        JpsProjectLoader.loadProject(project, pathVariables, projectPath);
+        System.err.println("Loaded project " + project.getName() + " with " + project.getModules().size() + " modules.");
 
-        ConsoleDialog dialog = new ConsoleDialog(project, "Generating BUILD files...");
-        AsyncResult<Boolean> result = dialog.showAndGetOk();
-        ((CompilerConfigurationImpl) CompilerConfiguration.getInstance(project)).convertPatterns();
-        try {
-            generate(project, dialog.getWriter(), new StudioConfiguration());
-        } catch (Throwable e) {
-            e.printStackTrace(dialog.getWriter());
-            LOG.error(e);
-        } finally {
-            result.getResult();
-        }
-    }
+        File projectDir = JpsModelSerializationDataService.getBaseDirectory(project);
+        Workspace bazel = new Workspace(workspace.toFile());
 
-
-    private void generate(Project project, PrintWriter progress, Configuration config) throws IOException {
-        File workspace = findWorkspace(project);
-        Workspace bazel = new Workspace(workspace);
-        Package toolsBaseBazel = bazel.findPackage("tools/base/bazel");
-
-        final ExcludesConfiguration excludesConfiguration = CompilerConfiguration.getInstance(project).getExcludedEntriesConfiguration();
-        ExcludeEntryDescription[] excludeEntries = excludesConfiguration.getExcludeEntryDescriptions();
+        JpsCompilerExcludes excludes = JpsJavaExtensionService.getInstance()
+                .getOrCreateCompilerConfiguration(project).getCompilerExcludes();
+        Set<File> excludedFiles = excludedFiles(excludes);
 
         // Map from file path to the bazel rule that provides it. Usually java_imports.
         Map<String, BazelRule> jarRules = Maps.newHashMap();
         Map<String, JavaLibrary> libraries = Maps.newHashMap();
 
-        progress.append("Processing modules...").append("\n");
-        ImmutableMap<Module, BazelModule> imlToBazel = createBazelModules(project);
+        ImmutableMap<JpsModule, BazelModule> imlToBazel = createBazelModules(project);
         ImmutableSet<BazelModule> modules = ImmutableSet.copyOf(imlToBazel.values());
 
         // 1st pass: Creation.
         for (BazelModule bazelModule : modules) {
             String name = bazelModule.getName();
-            String rel = FileUtil.getRelativePath(workspace, bazelModule.getBaseDir());
+            String rel = workspace.relativize(bazelModule.getBaseDir()).toString();
 
             Package pkg = bazel.findPackage(rel);
             ImlModule iml = new ImlModule(pkg, config.nameRule(pkg.getName(), rel, name));
-            for (Module module : bazelModule.getModules()) {
-                VirtualFile moduleFile = module.getModuleFile();
-                if (moduleFile != null) {
-                    String path =
-                            FileUtil.getRelativePath(
-                                    pkg.getPackageDir(), VfsUtil.virtualToIoFile(moduleFile));
-                    iml.addModuleFile(path);
+            for (JpsModule module : bazelModule.getModules()) {
+                File base = JpsModelSerializationDataService.getBaseDirectory(module);
+                File moduleFile = new File(base, module.getName() + ".iml");
+                if (!moduleFile.exists()) {
+                    throw new IllegalStateException("Cannot find module iml file: " + moduleFile);
                 } else {
-                    LOG.error("Cannot get file for module: " + module.getName());
+                    Path path = pkg.getPackageDir().toPath().relativize(moduleFile.toPath());
+                    iml.addModuleFile(path.toString());
                 }
             }
             bazelModule.rule = iml;
 
             // Add all the source and resource paths
-            for (ContentEntry contentEntry : bazelModule.getContentEntries()) {
-                final SourceFolder[] folders = contentEntry.getSourceFolders();
-
-                for (SourceFolder folder : folders) {
-                    VirtualFile root = folder.getFile();
-                    if (root != null) {
-                        File sourceDirectory =
-                                new File(
-                                        checkNotNull(
-                                                PathUtil.getLocalPath(root),
-                                                "No local path for " + root));
-                        String relativePath = FileUtil.getRelativePath(pkg.getPackageDir(), sourceDirectory);
-
-                        if (folder.getRootType() instanceof JavaSourceRootType) {
-                            if (folder.isTestSource()) {
-                                iml.addTestSource(relativePath);
-                            } else {
-                                iml.addSource(relativePath);
-                            }
-                            if (!folder.getPackagePrefix().isEmpty()) {
-                                iml.addPackagePrefix(relativePath, folder.getPackagePrefix());
-                            }
-                        } else {
-                            if (folder.isTestSource()) {
-                                iml.addTestResource(relativePath);
-                            } else {
-                                iml.addResource(relativePath);
-                            }
+            for (JpsModuleSourceRoot folder : bazelModule.getSourceRoots()) {
+                File root = folder.getFile();
+                if (root.exists()) {
+                    String relativePath = pkg.getPackageDir().toPath().relativize(root.toPath())
+                            .toString();
+                    boolean source = false;
+                    if (folder.getRootType().equals(JavaSourceRootType.TEST_SOURCE)) {
+                        iml.addTestSource(relativePath);
+                        source = true;
+                    }
+                    if (folder.getRootType().equals(JavaSourceRootType.SOURCE)) {
+                        iml.addSource(relativePath);
+                        source = true;
+                    }
+                    if (source) {
+                        String prefix = ((JavaSourceRootProperties) folder.getProperties())
+                                .getPackagePrefix();
+                        if (!prefix.isEmpty()) {
+                            iml.addPackagePrefix(relativePath, prefix);
                         }
+                    }
 
-                        // Projects can exclude specific files from compilation
-                        for (ExcludeEntryDescription entry : excludeEntries) {
-                            VirtualFile vf = entry.getVirtualFile();
-                            if (vf != null) {
-                                File excludeFile = VfsUtil.virtualToIoFile(vf);
-                                if (FileUtil.isAncestor(sourceDirectory, excludeFile, true)) {
-                                    String relExclude = FileUtil.getRelativePath(pkg.getPackageDir(), excludeFile);
-                                    iml.addExclude(relExclude);
-                                }
-                            }
+                    if (folder.getRootType().equals(JavaResourceRootType.TEST_RESOURCE)) {
+                        iml.addTestResource(relativePath);
+                    } else if (folder.getRootType().equals(JavaResourceRootType.RESOURCE)) {
+                        iml.addResource(relativePath);
+                    }
+
+                    // Projects can exclude specific files from compilation
+                    for (File excludeFile : excludedFiles) {
+                        if (excludeFile.toPath().startsWith(root.toPath())) {
+                            iml.addExclude(pkg.getPackageDir().toPath()
+                                    .relativize(excludeFile.toPath()).toString());
                         }
-
                     }
                 }
             }
@@ -185,58 +160,47 @@ public class GenerateBazelAction extends AnAction {
 
         // 2nd pass: Dependencies.
         for (BazelModule module : modules) {
-            File librariesDir = new File(VfsUtil.virtualToIoFile(project.getBaseDir()), ".idea/libraries");
-            Package librariesPkg = bazel.findPackage(FileUtil.getRelativePath(workspace, librariesDir));
-
-            for (OrderEntry orderEntry : module.getOrderEntries()) {
-                if (orderEntry instanceof LibraryOrderEntry) {
+            File librariesDir = new File(projectDir, ".idea/libraries");
+            Package librariesPkg = bazel
+                    .findPackage(workspace.relativize(librariesDir.toPath()).toString());
+            for (JpsDependencyElement dependency : module.getDependencies()) {
+                JpsJavaDependencyExtension extension = JpsJavaExtensionService.getInstance()
+                        .getDependencyExtension(dependency);
+                boolean isTest = (extension != null) &&
+                        extension.getScope().equals(JpsJavaDependencyScope.TEST);
+                boolean isExported = (extension != null) && extension.isExported();
+                if (dependency instanceof JpsLibraryDependency) {
                     // A dependency to a jar file
-                    LibraryOrderEntry libraryEntry = (LibraryOrderEntry) orderEntry;
+                    JpsLibraryDependency libraryDependency = (JpsLibraryDependency) dependency;
                     List<ImlModule.Tag> scopes = new LinkedList<>();
-                    if (libraryEntry.getScope().equals(DependencyScope.TEST)) {
+                    if (isTest) {
                         scopes.add(ImlModule.Tag.TEST);
                     }
 
                     JavaLibrary namedLib = null;
-                    if (!libraryEntry.isModuleLevel()) {
+
+                    JpsElementReference<? extends JpsCompositeElement> parent = libraryDependency
+                            .getLibraryReference().getParentReference();
+                    JpsCompositeElement resolved = parent.resolve();
+                    if (!(resolved instanceof JpsModule)) {
                         //noinspection ConstantConditions - getLibraryName() is not null for module-level libraries.
-                        String libName = libraryEntry.getLibraryName().replaceAll(":", "_");
+                        String libName = libraryDependency.getLibrary().getName().replaceAll(":", "_");
                         namedLib = libraries.get(libName.toLowerCase());
                         if (namedLib == null) {
                             namedLib = new JavaLibrary(librariesPkg, libName);
-                            switch (libName) {
-                                case KOTLIN_RUNTIME:
-                                    namedLib.addDependency(
-                                            new JavaImport(toolsBaseBazel, "kotlin-runtime"), true);
-                                    break;
-                                case KOTLIN_TEST:
-                                    namedLib.addDependency(
-                                            new JavaImport(toolsBaseBazel, "kotlin-test"), true);
-                                    break;
-                            }
                             libraries.put(libName.toLowerCase(), namedLib);
                         }
                     }
-
-                    Library library = libraryEntry.getLibrary();
-                    if (library == null) {
-                        LOG.error("No library for entry " + libraryEntry);
-                        continue;
-                    }
-
-                    VirtualFile[] files = library.getFiles(OrderRootType.CLASSES);
-                    for (VirtualFile libFile : files) {
-                        if (!(libFile.getFileType() instanceof ArchiveFileType)) {
-                            continue;
-                        }
-                        File jarFile = VfsUtil.virtualToIoFile(libFile);
-                        if (Files.getFileExtension(jarFile.getName()).equals("jar")) {
-                            if (jarFile.getName().endsWith("-sources.jar")) {
+                    JpsLibrary library = libraryDependency.getLibrary();
+                    List<File> files = library.getFiles(JpsOrderRootType.COMPILED);
+                    for (File file : files) {
+                        if (file.exists() &&
+                                Files.getFileExtension(file.getName()).equals("jar")) {
+                            if (file.getName().endsWith("-sources.jar")) {
                                 continue;
                             }
 
-                            String relJar = FileUtil.getRelativePath(workspace, jarFile);
-                            assert relJar != null;
+                            String relJar = workspace.relativize(file.toPath()).toString();
                             BazelRule jarRule = jarRules.get(relJar);
                             if (jarRule == null) {
                                 if (isGenFile(relJar)) {
@@ -249,10 +213,8 @@ public class GenerateBazelAction extends AnAction {
                                 } else {
                                     Package jarPkg = bazel.findPackage(relJar);
                                     if (jarPkg != null) {
-                                        String packageRelative =
-                                                FileUtil.getRelativePath(
-                                                        jarPkg.getPackageDir(), jarFile);
-                                        assert packageRelative != null;
+                                        String packageRelative = jarPkg.getPackageDir().toPath()
+                                                .relativize(file.toPath()).toString();
 
                                         // TODO: Fix all these dependencies correctly
                                         String target;
@@ -264,8 +226,8 @@ public class GenerateBazelAction extends AnAction {
                                         JavaImport javaImport = new JavaImport(jarPkg, target);
                                         javaImport.addJar(packageRelative);
                                         jarRule = javaImport;
-                                    } else if (!isKotlinRelated(library)) {
-                                        LOG.error("Cannot find package for:" + relJar);
+                                    } else {
+                                        System.err.println("Cannot find package for:" + relJar);
                                     }
                                 }
                             }
@@ -276,30 +238,30 @@ public class GenerateBazelAction extends AnAction {
                                 if (namedLib != null) {
                                     namedLib.addDependency(jarRule, true);
                                 } else {
-                                    module.rule.addDependency(
-                                            jarRule, libraryEntry.isExported(), scopes);
+                                    module.rule.addDependency(jarRule, isExported, scopes);
                                 }
                             }
-                        } else if (!isKotlinRelated(library)) {
-                            LOG.error("Cannot find file for: " + libFile);
+                        } else {
+                            System.err.println("Module [" + dependency.getContainingModule().getName() + "] depends on non existing file: " + file);
                         }
                     }
                     if (namedLib != null && !namedLib.isEmpty()) {
-                        module.rule.addDependency(namedLib, libraryEntry.isExported(), scopes);
+                        module.rule.addDependency(namedLib, isExported, scopes);
                     }
-                } else if (orderEntry instanceof ModuleOrderEntry) {
+                } else if (dependency instanceof JpsModuleDependency) {
                     // A dependency to another module
-                    ModuleOrderEntry entry = (ModuleOrderEntry) orderEntry;
-                    Module dep = entry.getModule();
+                    JpsModuleDependency moduleDependency = (JpsModuleDependency) dependency;
+                    JpsModule dep = moduleDependency.getModule();
                     BazelModule bazelModuleDep = imlToBazel.get(dep);
                     List<ImlModule.Tag> scopes = new LinkedList<>();
                     scopes.add(ImlModule.Tag.MODULE);
+
                     // TODO: Figure out how to add test if we depend on a multi-module rule
-                    if (bazelModuleDep.isSingle() && entry.getScope().equals(DependencyScope.TEST)) {
+                    if (bazelModuleDep.isSingle() && isTest) {
                         scopes.add(ImlModule.Tag.TEST);
                     }
                     if (bazelModuleDep != module) {
-                        module.rule.addDependency(bazelModuleDep.rule, entry.isExported(), scopes);
+                        module.rule.addDependency(bazelModuleDep.rule, isExported, scopes);
                     }
                 }
             }
@@ -316,9 +278,9 @@ public class GenerateBazelAction extends AnAction {
 
         for (Package pkg : bazel.getPackages()) {
             for (BazelRule rule : pkg.getRules()) {
-              if (config.shouldSuppress(rule)) {
-                rule.suppress();
-              }
+                if (config.shouldSuppress(rule)) {
+                    rule.suppress();
+                }
             }
         }
 
@@ -331,55 +293,86 @@ public class GenerateBazelAction extends AnAction {
             roots.removeAll(module.rule.getDependencies());
         }
 
-        File projectDir = VfsUtil.virtualToIoFile(project.getBaseDir());
-        Package projectPkg = bazel.findPackage(FileUtil.getRelativePath(workspace, projectDir));
+        Package projectPkg = bazel
+                .findPackage(workspace.relativize(projectDir.toPath()).toString());
         ImlProject imlProject = new ImlProject(projectPkg, "android-studio");
-        roots.stream().sorted(Comparator.comparing(BazelRule::getLabel)).forEach(imlProject::addModule);
+        roots.stream().sorted(Comparator.comparing(BazelRule::getLabel))
+                .forEach(imlProject::addModule);
 
         progress.println("Updating BUILD files...");
         CountingListener listener = new CountingListener(progress);
         bazel.generate(listener);
 
-        if (listener.getUpdatedPackages() == 0) {
-            progress.println("OK: No changes needed.");
-        } else {
-            progress.println(
-                    String.format("ATTENTION: %d files updated.", listener.getUpdatedPackages()));
+        progress.println(String.format("%d BUILD file(s) updated.", listener.getUpdatedPackages()));
+    }
+
+    /**
+     * Excludes are parsed and stored as a "filter" like object. This would require us going through
+     * the whole tree to find which files are excluded. In this case JPS and IJ code differ and both
+     * parse the xml differently. For now we use reflection assuming the implementation class.
+     */
+    private Set<File> excludedFiles(JpsCompilerExcludes excludes) {
+        Field myFiles = null;
+        try {
+            myFiles = excludes.getClass().getDeclaredField("myFiles");
+            Type genericType = myFiles.getGenericType();
+            if (genericType instanceof ParameterizedType) {
+                ParameterizedType type = (ParameterizedType) genericType;
+                if (type.getRawType().equals(Set.class)) {
+                    Type[] args = type.getActualTypeArguments();
+                    if (args.length == 1 && args[0].equals(File.class)) {
+                        myFiles.setAccessible(true);
+                        Object object = myFiles.get(excludes);
+                        return (Set<File>) object;
+                    }
+                }
+
+            }
+        } catch (NoSuchFieldException e) {
+        } catch (IllegalAccessException e) {
         }
+        throw new IllegalStateException("Unexpected version of JpsCompilerExcludes");
     }
 
     private boolean isGenFile(String relJar) {
         return relJar.startsWith("bazel-genfiles");
     }
 
-    /**
-     * Checks if the given library has something to do with Kotlin. BUILD files don't point to
-     * Kotlin jars bundled with the IJ plugin, instead we use jars from prebuilts.
-     */
-    private boolean isKotlinRelated(Library library) {
-        return KOTLIN_RUNTIME.equals(library.getName()) || KOTLIN_TEST.equals(library.getName());
-    }
-
-    private File findWorkspace(Project project) {
-        File dir = VfsUtil.virtualToIoFile(project.getBaseDir());
-        while (dir != null && !new File(dir, "WORKSPACE").exists()) {
-            dir = dir.getParentFile();
-        }
-        return dir;
-    }
-
     @NotNull
-    private ImmutableMap<Module, BazelModule> createBazelModules(Project project) {
-        List<Module> all = Arrays.asList(ModuleManager.getInstance(project).getModules());
-        List<Chunk<Module>> chunks = ModuleCompilerUtil.getSortedModuleChunks(project, all);
+    private ImmutableMap<JpsModule, BazelModule> createBazelModules(JpsProject project) {
+        Graph<JpsModule> graph = GraphGenerator.create(new GraphGenerator.SemiGraph<JpsModule>() {
 
-        ImmutableMap.Builder<Module, BazelModule> mapBuilder = ImmutableMap.builder();
-        for (Chunk<Module> chunk : chunks) {
+            @Override
+            public Collection<JpsModule> getNodes() {
+                return project.getModules();
+            }
 
+            @Override
+            public Iterator<JpsModule> getIn(JpsModule jpsModule) {
+                List<JpsDependencyElement> deps = jpsModule.getDependenciesList().getDependencies();
+                List<JpsModule> list = new ArrayList<>();
+                for (JpsDependencyElement dep : deps) {
+                    if (dep instanceof JpsModuleDependency) {
+                        list.add(((JpsModuleDependency) dep).getModule());
+                    }
+                }
+                return list.iterator();
+            }
+        });
+
+        DFSTBuilder<JpsModule> builder = new DFSTBuilder<>(graph);
+        TIntArrayList scCs = builder.getSCCs();
+        int k = 0;
+        ImmutableMap.Builder<JpsModule, BazelModule> mapBuilder = ImmutableMap.builder();
+        for (int i = 0; i < scCs.size(); i++) {
             BazelModule simple = new BazelModule();
-            for (Module module : chunk.getNodes()) {
+            for (int j = 0; j < scCs.get(i); j++) {
+                JpsModule module = builder.getNodeByTNumber(k++);
                 simple.add(module);
                 mapBuilder.put(module, simple);
+                if (scCs.get(i) > 1 && j == 0) {
+                    System.err.println("Found circular module dependency of " + scCs.get(i) + " modules. [" + module.getName() + "]");
+                }
             }
         }
         return mapBuilder.build();
@@ -409,10 +402,10 @@ public class GenerateBazelAction extends AnAction {
 
             // "If packagename and version are elided, the colon is not necessary."
             target = suffix.isEmpty()
-                // Target name is last package segment: (works in slash-free case too.)
-                ? pkg.substring(pkg.lastIndexOf('/') + 1)
-                // Target name is what's after colon:
-                : suffix.substring(1);
+                    // Target name is last package segment: (works in slash-free case too.)
+                    ? pkg.substring(pkg.lastIndexOf('/') + 1)
+                    // Target name is what's after colon:
+                    : suffix.substring(1);
         }
     }
 

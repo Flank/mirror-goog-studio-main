@@ -73,7 +73,7 @@ kotlin_jar = rule(
             allow_files = True,
         ),
         "_kotlin": attr.label(
-            default = Label("//tools/base/bazel:kotlin-runtime"),
+            default = Label("//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-runtime"),
             allow_files = True,
         ),
     },
@@ -134,7 +134,7 @@ def kotlin_library(
   singlejar(
       name = name,
       jar_name = jar_name,
-      runtime_deps = deps + ["//tools/base/bazel:kotlin-runtime"],
+      runtime_deps = deps + ["//prebuilts/tools/common/kotlin-plugin-ij:Kotlin/kotlinc/lib/kotlin-runtime"],
       jars = [":lib" + target + ".jar" for target in targets],
       visibility = visibility,
   )

@@ -16,8 +16,6 @@
 
 package com.android.tools.bazel.parser.ast;
 
-import org.jaxen.expr.Expr;
-
 import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
