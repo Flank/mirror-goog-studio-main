@@ -57,6 +57,7 @@ java_test(
     test_class = "com.android.testutils.JarTestSuite",
     deps = [
         ":java-lib-model-builder",
+        "//tools/base/build-system:gradle-api",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
