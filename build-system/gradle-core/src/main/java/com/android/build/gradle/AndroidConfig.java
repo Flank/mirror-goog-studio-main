@@ -17,6 +17,7 @@
 package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.VariantFilter;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -627,6 +628,18 @@ public interface AndroidConfig {
     /** Whether the feature module is the base feature. */
     Boolean getBaseFeature();
 
+    /**
+     * Name of the build type that will be used when running Android (on-device) tests.
+     *
+     * <p>Defaults to "debug".
+     *
+     * <p>FIXME this should not be here, but it has to be because of gradle-core not knowing
+     * anything besides this interface. This will be fixed with the new gradle-api based extension
+     * interfaces.
+     */
+    @Nullable
+    public String getTestBuildType();
+
     final class DeprecatedConfigurationAction implements Action<Dependency> {
 
         @NonNull
@@ -650,11 +663,13 @@ public interface AndroidConfig {
         public void execute(Dependency dependency) {
             if (!warningPrintedAlready) {
                 warningPrintedAlready = true;
-                System.out.println(String.format(
-                        DEPRECATED_CONFIG_WARNING,
-                        configuration.getName(),
-                        project.getPath(),
-                        replacement));
+                project.getLogger()
+                        .quiet(
+                                String.format(
+                                        DEPRECATED_CONFIG_WARNING,
+                                        configuration.getName(),
+                                        project.getPath(),
+                                        replacement));
             }
         }
     }

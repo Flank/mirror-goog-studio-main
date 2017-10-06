@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
+import com.android.builder.internal.aapt.v2.Aapt2QueuedResourceProcessor;
 import com.android.builder.internal.aapt.v2.AaptV2CommandBuilder;
 import com.android.builder.tasks.BooleanLatch;
 import com.android.builder.tasks.Job;
@@ -120,7 +121,12 @@ public class AaptProcess {
             throws IOException {
 
         if (!mReady.get()) {
-            throw new RuntimeException("AAPT2 process not ready to receive commands");
+            throw new RuntimeException(
+                    String.format(
+                            "AAPT2 process not ready to receive commands. Please make sure the "
+                                    + "build tools (located at %s) are not corrupted. Check the "
+                                    + "logs for details.",
+                            mAaptLocation));
         }
         NotifierProcessOutput notifier =
                 new NotifierProcessOutput(job, mProcessOutputFacade, mLogger, processOutputHandler);
@@ -155,7 +161,12 @@ public class AaptProcess {
             @Nullable ProcessOutputHandler processOutputHandler)
             throws IOException {
         if (!mReady.get()) {
-            throw new RuntimeException("AAPT2 process not ready to receive commands");
+            throw new RuntimeException(
+                    String.format(
+                            "AAPT2 process not ready to receive commands. Please make sure the "
+                                    + "build tools (located at %s) are not corrupted. Check the "
+                                    + "logs for details.",
+                            mAaptLocation));
         }
         NotifierProcessOutput notifier =
                 new NotifierProcessOutput(job, mProcessOutputFacade, mLogger, processOutputHandler);
@@ -176,7 +187,10 @@ public class AaptProcess {
         mLogger.verbose("AAPT2 processed(%1$d) linking job:%2$s", hashCode(), job.toString());
     }
 
-    public void waitForReady() throws InterruptedException {
+    /*
+     * @return true if process started successfully, false if it failed to start.
+     */
+    public boolean waitForReadyOrFail() throws InterruptedException {
         if (!mReadyLatch.await(TimeUnit.NANOSECONDS.convert(
                 SLAVE_AAPT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS))) {
             throw new RuntimeException(String.format(
@@ -189,9 +203,18 @@ public class AaptProcess {
 
         if (mReady.get()) {
             mLogger.verbose("Slave %1$s is ready", hashCode());
-        } else {
-            mLogger.verbose("Slave %1$s failed to start", hashCode());
+            return true;
         }
+
+        mLogger.error(
+                new RuntimeException(
+                        String.format(
+                                "AAPT slave failed to start. Please make sure the current build "
+                                        + "tools (located at %s) are not corrupted.",
+                                mAaptLocation)),
+                String.format("Slave %1$s failed to start", hashCode()));
+        Aapt2QueuedResourceProcessor.invalidateProcess(mAaptLocation);
+        return false;
     }
 
     @Override
@@ -209,7 +232,11 @@ public class AaptProcess {
      *
      */
     public void shutdown() throws IOException, InterruptedException {
-
+        if (!mReady.get()) {
+            // Process already shutdown or has never started properly in the first place.
+            mLogger.verbose("Process (%1$s) already shutdown", hashCode());
+            return;
+        }
         mReady.set(false);
         mWriter.write("quit\n");
         mWriter.write('\n');

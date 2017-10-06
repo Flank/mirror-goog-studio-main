@@ -17,8 +17,10 @@
 package com.android.build.gradle.managed.adaptor;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.Transform;
 import com.android.build.api.variant.VariantFilter;
+import com.android.build.gradle.TestAndroidConfig;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceFile;
 import com.android.build.gradle.api.AndroidSourceSet;
@@ -44,7 +46,6 @@ import com.android.builder.testing.api.DeviceProvider;
 import com.android.builder.testing.api.TestServer;
 import com.android.repository.Revision;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -52,7 +53,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
@@ -265,6 +265,15 @@ public class AndroidConfigAdaptor implements com.android.build.gradle.AndroidCon
         return ImmutableSet.copyOf(model.getAidlPackageWhitelist());
     }
 
+    @Nullable
+    @Override
+    public String getTestBuildType() {
+        if (model instanceof TestAndroidConfig) {
+            return ((TestAndroidConfig) model).getTestBuildType();
+        }
+
+        return null;
+    }
 
     private void applyProjectSourceSet() {
         for (String name : getSources().keySet()) {

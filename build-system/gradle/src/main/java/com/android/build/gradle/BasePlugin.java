@@ -242,7 +242,6 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         // We run by default in headless mode, so the JVM doesn't steal focus.
         System.setProperty("java.awt.headless", "true");
 
-        PluginInitializer.initialize(project);
         project.getPluginManager().apply(AndroidBasePlugin.class);
         checkPluginVersion();
 
@@ -254,6 +253,7 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         checkPathForErrors();
         checkModulesForErrors();
 
+        PluginInitializer.initialize(project, projectOptions);
         ProfilerInitializer.init(project, projectOptions);
         threadRecorder = ThreadRecorder.get();
 
@@ -615,6 +615,8 @@ public abstract class BasePlugin implements ToolingRegistryProvider {
         hasCreatedTasks = true;
 
         extension.disableWrite();
+
+        taskManager.configureCustomLintChecks(new TaskContainerAdaptor(project.getTasks()));
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setCompileSdk(extension.getCompileSdkVersion())

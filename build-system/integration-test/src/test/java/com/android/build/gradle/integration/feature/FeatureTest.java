@@ -28,7 +28,6 @@ import com.android.build.VariantOutput;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitDeclaration;
 import com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitPackageIds;
 import com.android.builder.model.AndroidProject;
@@ -350,6 +349,21 @@ public class FeatureTest {
         }
 
         assertThat(addedSource.delete()).isTrue();
+    }
+
+    @Test
+    public void incrementalManifestBuild() throws Exception {
+        sProject.executor().withEnabledAapt2(true).run("clean", "assembleDebug");
+
+        // now change the feature manifest
+        GradleTestProject featureProject = sProject.getSubproject(":feature");
+        File featureManifest = featureProject.file("src/main/AndroidManifest.xml");
+        String content = Files.toString(featureManifest, Charsets.UTF_8);
+        content = content.replace("84", "42");
+        Files.write(content, featureManifest, Charsets.UTF_8);
+
+        GradleBuildResult run = sProject.executor().withEnabledAapt2(true).run("assembleDebug");
+        assertThat(run.getNotUpToDateTasks()).contains(":baseFeature:processDebugFeatureManifest");
     }
 
     private static String generateClass() {

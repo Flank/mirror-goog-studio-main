@@ -26,8 +26,6 @@ import static com.intellij.psi.CommonClassNames.JAVA_LANG_STRING;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.intellij.psi.PsiAnnotation;
-import com.intellij.psi.PsiAnnotationMemberValue;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UExpression;
 
@@ -37,21 +35,6 @@ class SizeConstraint extends RangeConstraint {
     final long min;
     final long max;
     final long multiple;
-
-    @NonNull
-    public static SizeConstraint create(@NonNull PsiAnnotation annotation) {
-        assert SIZE_ANNOTATION.equals(annotation.getQualifiedName());
-        PsiAnnotationMemberValue exactValue = annotation.findAttributeValue(ATTR_VALUE);
-        PsiAnnotationMemberValue fromValue = annotation.findDeclaredAttributeValue(ATTR_MIN);
-        PsiAnnotationMemberValue toValue = annotation.findDeclaredAttributeValue(ATTR_MAX);
-        PsiAnnotationMemberValue multipleValue = annotation
-                .findDeclaredAttributeValue(ATTR_MULTIPLE);
-        long exact = getLongValue(exactValue, -1);
-        long min = getLongValue(fromValue, Long.MIN_VALUE);
-        long max = getLongValue(toValue, Long.MAX_VALUE);
-        long multiple = getLongValue(multipleValue, 1);
-        return new SizeConstraint(exact, min, max, multiple);
-    }
 
     @NonNull
     public static SizeConstraint create(@NonNull UAnnotation annotation) {
@@ -114,7 +97,7 @@ class SizeConstraint extends RangeConstraint {
 
     @Override
     public String toString() {
-        return describe(null);
+        return describe(null, null, null);
     }
 
     public boolean isValid(long actual) {
@@ -129,73 +112,9 @@ class SizeConstraint extends RangeConstraint {
         return true;
     }
 
-    @Override
-    public Boolean isValid(@NonNull UExpression argument) {
-        Number size = guessSize(argument);
-        if (size == null) {
-            return null;
-        }
-        int actual = size.intValue();
-        return isValid(actual);
-    }
-
-    @Override
-    protected Number guessSize(@NonNull UExpression argument) {
-        System.out.println("IMPLEMENT SIZE CONSTRAINT GUESS SIZE");
-        return super.guessSize(argument);
-        //if (argument instanceof PsiNewExpression) {
-        //    PsiNewExpression pne = (PsiNewExpression) argument;
-        //    PsiArrayInitializerExpression initializer = pne.getArrayInitializer();
-        //    if (initializer != null) {
-        //        return initializer.getInitializers().length;
-        //    }
-        //    PsiExpression[] dimensions = pne.getArrayDimensions();
-        //    if (dimensions.length > 0) {
-        //        PsiExpression dimension = dimensions[0];
-        //        return super.guessSize(dimension);
-        //    }
-        //} else if (argument instanceof PsiLiteral) {
-        //    PsiLiteral literal = (PsiLiteral) argument;
-        //    Object o = literal.getValue();
-        //    if (o instanceof String) {
-        //        return ((String) o).length();
-        //    }
-        //} else if (argument instanceof PsiBinaryExpression) {
-        //    // For PSI conversion, use this instead:
-        //    //Object v = JavaConstantExpressionEvaluator.computeConstantExpression(argument, false);
-        //    Object v = ConstantEvaluator.evaluate(null, argument);
-        //    if (v instanceof String) {
-        //        return ((String) v).length();
-        //    }
-        //} else if (argument instanceof PsiReferenceExpression) {
-        //    PsiReferenceExpression ref = (PsiReferenceExpression) argument;
-        //    PsiElement resolved = ref.resolve();
-        //    if (resolved instanceof PsiField) {
-        //        PsiField field = (PsiField) resolved;
-        //        PsiExpression initializer = field.getInitializer();
-        //        if (initializer != null) {
-        //            return guessSize(initializer);
-        //        }
-        //    } else if (resolved instanceof PsiLocalVariable) {
-        //        PsiLocalVariable variable = (PsiLocalVariable) resolved;
-        //        PsiExpression initializer = variable.getInitializer();
-        //        if (initializer != null) {
-        //            return guessSize(initializer);
-        //        }
-        //    }
-        //}
-        //return null;
-    }
-
     @NonNull
     public String describe() {
-        return describe(null);
-    }
-
-    @NonNull
-    @Override
-    public String describe(@Nullable UExpression argument) {
-        return describe(argument, null, null);
+        return describe(null, null, null);
     }
 
     @NonNull
@@ -272,15 +191,7 @@ class SizeConstraint extends RangeConstraint {
             sb.append(" a multiple of ");
             sb.append(Long.toString(multiple));
         }
-        if (argument != null) {
-            Number actual = guessSize(argument);
-            if (actual == null) {
-                actual = actualValue;
-            }
-            if (actual != null) {
-                sb.append(" (was ").append(Integer.toString(actual.intValue())).append(')');
-            }
-        } else if (actualValue != null) {
+        if (actualValue != null) {
             sb.append(" (was ").append(actualValue).append(')');
         }
         return sb.toString();

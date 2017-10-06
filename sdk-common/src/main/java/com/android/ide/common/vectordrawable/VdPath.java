@@ -18,10 +18,7 @@ package com.android.ide.common.vectordrawable;
 
 import com.android.SdkConstants;
 import com.google.common.collect.ImmutableMap;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
@@ -29,11 +26,13 @@ import java.awt.geom.Point2D;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.NodeList;
 
 /** Used to represent one VectorDrawable's path element. */
 class VdPath extends VdElement {
@@ -63,6 +62,11 @@ class VdPath extends VdElement {
     private static final String LINEJOIN_MITER = "miter";
     private static final String LINEJOIN_ROUND = "round";
     private static final String LINEJOIN_BEVEL = "bevel";
+
+
+    private VdGradient fillGradient = null;
+    private VdGradient strokeGradient = null;
+
 
     private Node[] mNodeList = null;
     private int mStrokeColor = 0;
@@ -432,10 +436,8 @@ class VdPath extends VdElement {
         }
     }
 
-    /**
-     * @return color value in #AARRGGBB format.
-     */
-    private static int calculateColor(String value) {
+    /** @return color value in #AARRGGBB format. */
+    protected static int calculateColor(String value) {
         int len = value.length();
         int ret;
         int k = 0;
@@ -527,10 +529,8 @@ class VdPath extends VdElement {
         return PathIterator.WIND_NON_ZERO;
     }
 
-    /**
-     * Multiply the <code>alpha</code> value into the alpha channel <code>color</code>.
-     */
-    private static int applyAlpha(int color, float alpha) {
+    /** Multiply the <code>alpha</code> value into the alpha channel <code>color</code>. */
+    protected static int applyAlpha(int color, float alpha) {
         int alphaBytes = (color >> 24) & 0xff;
         color &= 0x00FFFFFF;
         color |= ((int) (alphaBytes * alpha)) << 24;
@@ -554,13 +554,13 @@ class VdPath extends VdElement {
         g.scale(scaleX, scaleY);
         g.transform(currentMatrix);
 
-        if (mFillColor != 0) {
+        if (mFillColor != 0 && fillGradient == null) {
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             Color fillColor = new Color(applyAlpha(mFillColor, mFillAlpha), true);
             g.setColor(fillColor);
             g.fill(path2d);
         }
-        if (mStrokeColor != 0 && mStrokeWidth != 0) {
+        if (mStrokeColor != 0 && mStrokeWidth != 0 && strokeGradient == null) {
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             BasicStroke stroke = new BasicStroke(mStrokeWidth, mStrokeLineCap, mStrokeLineJoin, mStrokeMiterlimit);
             g.setStroke(stroke);
@@ -571,9 +571,15 @@ class VdPath extends VdElement {
         if (isClipPath) {
             g.setClip(path2d);
         }
+        if (fillGradient != null) {
+            fillGradient.drawGradient(g, path2d, true);
+        }
 
-
+        if (strokeGradient != null) {
+            strokeGradient.drawGradient(g, path2d, false);
+        }
     }
+
 
     @Override
     public void parseAttributes(NamedNodeMap attributes) {
@@ -609,5 +615,191 @@ class VdPath extends VdElement {
                 " mStrokeWidth:" + mStrokeWidth +
                 " mStrokeAlpha:" + mStrokeAlpha;
     }
+
+
+    /**
+     * We parse the given node for the gradient information if it exists. If it contains a gradient,
+     * depending on what type, we set the fillGradient or strokeGradient of the current VdPath to a
+     * new VdGradient and add the gradient information.
+     */
+    protected void addGradientIfExists(org.w3c.dom.Node current) {
+
+        // This should be guaranteed to be the gradient given the way we are writing the VD XMLs.
+        org.w3c.dom.Node gradientNode = current.getFirstChild();
+        VdGradient newGradient = new VdGradient();
+        if (gradientNode != null) {
+            gradientNode = gradientNode.getNextSibling();
+            if (gradientNode != null) {
+                // This should also be guaranteed given the way we write the VD XMLs.
+                String attrValue = gradientNode.getAttributes().getNamedItem("name").getNodeValue();
+                if (attrValue.equals("android:fillColor")) {
+                    fillGradient = newGradient;
+                } else if (attrValue.equals("android:strokeColor")) {
+                    strokeGradient = newGradient;
+                }
+                gradientNode = gradientNode.getFirstChild();
+                if (gradientNode != null) {
+                    gradientNode = gradientNode.getNextSibling();
+                }
+            }
+        }
+
+        if (gradientNode != null && gradientNode.getNodeName().equals("gradient")) {
+            NamedNodeMap gradientAttributes = gradientNode.getAttributes();
+            for (int i = 0; i < gradientAttributes.getLength(); i++) {
+                String name = gradientAttributes.item(i).getNodeName();
+                String value = gradientAttributes.item(i).getNodeValue();
+                newGradient.setGradientValue(name, value);
+            }
+
+            // Adding stop information to gradient.
+            NodeList items = gradientNode.getChildNodes();
+            for (int i = 0; i < items.getLength(); i++) {
+                org.w3c.dom.Node stop = items.item(i);
+                if (stop.getNodeName().equals("item")) {
+                    NamedNodeMap stopAttr = stop.getAttributes();
+                    String color = "";
+                    String offset = "";
+                    for (int j = 0; j < stopAttr.getLength(); j++) {
+                        org.w3c.dom.Node currentItem = stopAttr.item(j);
+                        if (currentItem.getNodeName().equals("android:color")) {
+                            color = currentItem.getNodeValue();
+                        } else if (currentItem.getNodeName().equals("android:offset")) {
+                            offset = currentItem.getNodeValue();
+                        }
+                    }
+                    if (color.isEmpty()) {
+                        color = "#000000";
+                        LOGGER.log(Level.WARNING, ">>>>>> No color for gradient found >>>>>>");
+                    }
+                    if (offset.isEmpty()) {
+                        offset = "0";
+                        LOGGER.log(Level.WARNING, ">>>>>> No offset for gradient found>>>>>>");
+                    }
+                    GradientStop gradientStop = new GradientStop(color, offset);
+                    newGradient.mGradientStops.add(gradientStop);
+                }
+            }
+        }
+    }
+
+    /**
+     * Contains gradient information in order to draw the fill or stroke of a path with a gradient.
+     */
+    class VdGradient {
+        // Gradient attributes
+        private float mStartX = 0;
+        private float mStartY = 0;
+        private float mEndX = 0;
+        private float mEndY = 0;
+        private float mCenterX = 0;
+        private float mCenterY = 0;
+        private float mGradientRadius = 0;
+        private String mTileMode = "NO_CYCLE";
+        private String mGradientType = "";
+
+        private final ArrayList<GradientStop> mGradientStops = new ArrayList<>();
+
+        private float[] mFractions = null;
+        private Color[] mGradientColors = null;
+        private float[] mOpacities = null;
+
+        VdGradient() {}
+
+        private void setGradientValue(String name, String value) {
+            switch (name) {
+                case "android:type":
+                    mGradientType = value;
+                    break;
+                case "android:tileMode":
+                    mTileMode = value;
+                    break;
+                case "android:startX":
+                    mStartX = Float.parseFloat(value);
+                    break;
+                case "android:startY":
+                    mStartY = Float.parseFloat(value);
+                    break;
+                case "android:endX":
+                    mEndX = Float.parseFloat(value);
+                    break;
+                case "android:endY":
+                    mEndY = Float.parseFloat(value);
+                    break;
+                case "android:centerX":
+                    mCenterX = Float.parseFloat(value);
+                    break;
+                case "android:centerY":
+                    mCenterY = Float.parseFloat(value);
+                    break;
+                case "android:gradientRadius":
+                    mGradientRadius = Float.parseFloat(value);
+                    break;
+            }
+        }
+
+        private void drawGradient(Graphics2D g, Path2D path2d, boolean fill) {
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            mFractions = new float[mGradientStops.size()];
+            mGradientColors = new Color[mGradientStops.size()];
+            mOpacities = new float[mGradientStops.size()];
+
+            for (int j = 0; j < mGradientStops.size(); j++) {
+                GradientStop stop = mGradientStops.get(j);
+                float fraction = Float.parseFloat(stop.getOffset());
+                int colorInt = calculateColor(stop.getColor());
+                //TODO: If opacity for android gradient items becomes supported, use mOpacity to modify colors.
+                Color color = new Color(colorInt, true);
+
+                mFractions[j] = fraction;
+                mGradientColors[j] = color;
+            }
+
+            // Gradient stop fractions must be strictly increasing in Java Swing. Decrement the
+            // first of two equal fraction floats by a small amount to get the effect of two
+            // overlapping stops.
+            // See LinearGradientPaint constructor:
+            // https://docs.oracle.com/javase/7/docs/api/java/awt/LinearGradientPaint.html
+            for (int i = 0; i < mGradientStops.size() - 1; i++) {
+                if (mFractions[i] == mFractions[i + 1]) {
+                    mFractions[i] -= 0.0000001;
+                }
+            }
+
+            // Create stroke in case the gradient applies to a stroke.
+            BasicStroke stroke =
+                    new BasicStroke(
+                            mStrokeWidth, mStrokeLineCap, mStrokeLineJoin, mStrokeMiterlimit);
+
+            // If there is only one stop, fill should be a solid color of the one stop.
+            if (mGradientStops.size() == 1) {
+                g.setColor(mGradientColors[0]);
+                if (!fill) {
+                    g.setStroke(stroke);
+                }
+                g.draw(path2d);
+            } else {
+                MultipleGradientPaint.CycleMethod tile = MultipleGradientPaint.CycleMethod.NO_CYCLE;
+                if (mTileMode.equals("mirror")) {
+                    tile = MultipleGradientPaint.CycleMethod.REFLECT;
+                } else if (mTileMode.equals("repeat")) {
+                    tile = MultipleGradientPaint.CycleMethod.REPEAT;
+                }
+                LinearGradientPaint gradient =
+                        new LinearGradientPaint(
+                                mStartX, mStartY, mEndX, mEndY, mFractions, mGradientColors, tile);
+                g.setPaint(gradient);
+
+                if (fill) {
+                    g.fill(path2d);
+                } else {
+                    g.setStroke(stroke);
+                    g.draw(path2d);
+                }
+            }
+        }
+    }
+
 
 }

@@ -28,7 +28,6 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -446,7 +445,7 @@ public class FeatureTaskManager extends TaskManager {
 
             variantScope.addTaskOutput(
                     TaskOutputHolder.TaskOutputType.METADADA_FEATURE_MANIFEST,
-                    BuildOutputs.getMetadataFile(variantScope.getManifestOutputDirectory()),
+                    variantScope.getManifestOutputDirectory(),
                     mergeManifestsAndroidTask.getName());
         }
 

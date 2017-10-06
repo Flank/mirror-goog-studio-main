@@ -328,6 +328,11 @@ class TransformTestHelper {
             this.changedFiles = ImmutableMap.builder();
         }
 
+        public DirectoryInputBuilder setScopes(Scope... scopes) {
+            this.scopes.addAll(Arrays.asList(scopes));
+            return this;
+        }
+
         TransformInput build() {
             return new FakeTransformInput(
                     ImmutableList.of(),

@@ -112,17 +112,17 @@ public final class IncrementalFileMergerState implements Serializable {
      *
      * @param inputNames the names of the inputs for the merge
      * @param origin maps OS-independent paths to the names of the inputs that contributed to the
-     * merged output path
+     *     merged output path
      * @param byInput maps input names to all OS-independent paths that it contains
      */
     IncrementalFileMergerState(
             @NonNull List<String> inputNames,
-            @NonNull Map<String, ImmutableList<String>> origin,
+            @NonNull Map<String, List<String>> origin,
             @NonNull Map<String, Set<String>> byInput) {
 
         ImmutableMap.Builder<String, ImmutableList<String>> originBuilder = ImmutableMap.builder();
-        for (Map.Entry<String, ImmutableList<String>> e : origin.entrySet()) {
-            originBuilder.put(e.getKey(), e.getValue());
+        for (Map.Entry<String, List<String>> e : origin.entrySet()) {
+            originBuilder.put(e.getKey(), ImmutableList.copyOf(e.getValue()));
         }
 
         ImmutableMap.Builder<String, ImmutableSet<String>> byInputBuilder = ImmutableMap.builder();
@@ -189,11 +189,8 @@ public final class IncrementalFileMergerState implements Serializable {
         @NonNull
         private List<String> inputNames;
 
-        /**
-         * Mutable version of {@link IncrementalFileMergerState#origin}.
-         */
-        @NonNull
-        private Map<String, ImmutableList<String>> origin;
+        /** Mutable version of {@link IncrementalFileMergerState#origin}. */
+        @NonNull private Map<String, List<String>> origin;
 
         /**
          * Mutable version of {@link IncrementalFileMergerState#byInput}.
@@ -211,7 +208,7 @@ public final class IncrementalFileMergerState implements Serializable {
 
             origin = new HashMap<>();
             for (Map.Entry<String, ImmutableList<String>> e : state.origin.entrySet()) {
-                origin.put(e.getKey(), e.getValue());
+                origin.put(e.getKey(), new ArrayList<>(e.getValue()));
             }
 
             byInput = new HashMap<>();
@@ -283,7 +280,7 @@ public final class IncrementalFileMergerState implements Serializable {
 
             assert inputNames.containsAll(names);
 
-            origin.put(path, ImmutableList.copyOf(names));
+            origin.put(path, new ArrayList<>(names));
             for (String n : names) {
                 Set<String> files = byInput.computeIfAbsent(n, k -> new HashSet<>());
                 files.add(path);

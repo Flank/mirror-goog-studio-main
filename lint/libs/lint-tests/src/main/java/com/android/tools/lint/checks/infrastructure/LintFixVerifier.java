@@ -352,7 +352,7 @@ public class LintFixVerifier {
             @NonNull String contents) {
         String oldPattern = replaceFix.oldPattern;
         String oldString = replaceFix.oldString;
-        Location location = warning.location;
+        Location location = replaceFix.range != null ? replaceFix.range : warning.location;
 
         Position start = location.getStart();
         Position end = location.getEnd();
@@ -411,7 +411,9 @@ public class LintFixVerifier {
                 endOffset = start.getOffset() + index + oldString.length();
             } else {
                 fail("Did not find \"" + oldString + "\" in \"" + locationRange
-                        + "\" as suggested in the quickfix");
+                        + "\" as suggested in the quickfix. Consider calling " +
+                        "ReplaceStringBuilder#range() to set a larger range to " +
+                        "search than the default highlight range.");
                 return null;
             }
         } else {
@@ -425,8 +427,29 @@ public class LintFixVerifier {
                         + "\" as suggested in the quickfix");
                 return null;
             } else {
-                startOffset = start.getOffset() + matcher.start(1);
-                endOffset = start.getOffset() + matcher.end(1);
+                startOffset = start.getOffset();
+                endOffset = startOffset;
+
+                if (matcher.groupCount() > 0) {
+                    if (oldPattern.contains("target")) {
+                        try {
+                            startOffset += matcher.start("target");
+                            endOffset += matcher.end("target");
+                        } catch (IllegalArgumentException ignore) {
+                            // Occurrence of "target" not actually a named group
+                            startOffset += matcher.start(1);
+                            endOffset += matcher.end(1);
+                        }
+                    } else {
+                        startOffset += matcher.start(1);
+                        endOffset += matcher.end(1);
+                    }
+                } else {
+                    startOffset += matcher.start();
+                    endOffset += matcher.end();
+                }
+
+                replacement = replaceFix.expandBackReferences(matcher);
             }
         }
 

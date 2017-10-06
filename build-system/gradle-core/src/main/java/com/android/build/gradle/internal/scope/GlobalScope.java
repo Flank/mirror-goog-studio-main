@@ -192,10 +192,7 @@ public class GlobalScope extends TaskOutputHolderImpl
 
             suffix.append(".jar");
 
-            File outDir =
-                    new File(
-                            getProject().getRootProject().getBuildDir(),
-                            AndroidProject.FD_GENERATED);
+            File outDir = new File(getProject().getBuildDir(), AndroidProject.FD_GENERATED);
             mockableAndroidJarFile = new File(outDir, "mockable-" + sdkName + suffix);
         }
         return mockableAndroidJarFile;

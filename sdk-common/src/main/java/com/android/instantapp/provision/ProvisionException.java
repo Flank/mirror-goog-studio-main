@@ -83,7 +83,7 @@ public class ProvisionException extends Exception {
     /**
      * Represents the possible errors while provisioning. This can be used to an automatic retry.
      */
-    enum ErrorType {
+    public enum ErrorType {
         ARCH_NOT_SUPPORTED,
         DEVICE_NOT_SUPPORTED,
         NO_GOOGLE_ACCOUNT,

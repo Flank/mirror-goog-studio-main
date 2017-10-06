@@ -277,6 +277,7 @@ public abstract class LibraryBaseTransform extends Transform {
     protected static void mergeInputsToLocation(
             @NonNull List<QualifiedContent> qualifiedContentList,
             @NonNull File toFile,
+            boolean forIntermediateJar,
             @Nullable final ZipEntryFilter filter,
             @Nullable final JarMerger.Transformer typedefRemover)
             throws IOException {
@@ -284,11 +285,14 @@ public abstract class LibraryBaseTransform extends Transform {
 
         try (JarMerger jarMerger = new JarMerger(toFile.toPath())) {
             for (QualifiedContent content : qualifiedContentList) {
-                // Filter out resources if they are not in the scope.
+                // merge only class files if RESOURCES are not in the scope, unless
+                // merging into an intermediate jar: in that case we want to merge
+                // meta-inf files even if the only content type is CLASSES
                 boolean hasResources =
                         content.getContentTypes()
                                 .contains(QualifiedContent.DefaultContentType.RESOURCES);
-                ZipEntryFilter thisFilter = hasResources ? filter : filterAndOnlyClasses;
+                ZipEntryFilter thisFilter =
+                        hasResources || forIntermediateJar ? filter : filterAndOnlyClasses;
                 if (content instanceof JarInput) {
                     jarMerger.addJar(content.getFile().toPath(), thisFilter);
                 } else {

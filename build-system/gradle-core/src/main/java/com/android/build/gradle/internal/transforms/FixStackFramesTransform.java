@@ -273,7 +273,10 @@ public class FixStackFramesTransform extends Transform {
                     if (userCache != null) {
                         FileCache.Inputs key =
                                 new FileCache.Inputs.Builder(FileCache.Command.FIX_STACK_FRAMES)
-                                        .putFilePathLengthTimestamp("file", input)
+                                        .putFile(
+                                                "file",
+                                                input,
+                                                FileCache.FileProperties.PATH_SIZE_TIMESTAMP)
                                         .build();
                         userCache.createFile(output, key, fileCreator);
                     } else {

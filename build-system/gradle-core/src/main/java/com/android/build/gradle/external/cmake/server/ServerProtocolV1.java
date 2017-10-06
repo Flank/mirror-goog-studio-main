@@ -374,6 +374,12 @@ public class ServerProtocolV1 implements Server {
 
         final List supportedTypes = Arrays.asList("message", "progress", "signal");
         // Process supported interactive messages.
+        // For a given command, the CMake server would respond with message types
+        // 0 or more of (message | progress | signal)
+        // and finally terminates with a message with message types
+        // (hello | reply | error)
+        // More info:
+        // https://cmake.org/cmake/help/v3.7/manual/cmake-server.7.html#general-message-layout
         while (supportedTypes.contains(messageType)) {
             switch (messageType) {
                 case "message":
@@ -416,8 +422,16 @@ public class ServerProtocolV1 implements Server {
                     serverReceiver.getDeserializationMonitor().receive(message, clazz);
                 }
                 return gson.fromJson(message, clazz);
+            case "error":
+                if (serverReceiver.getMessageReceiver() != null) {
+                    InteractiveMessage interactiveMessage =
+                            gson.fromJson(message, InteractiveMessage.class);
+                    serverReceiver.getMessageReceiver().receive(interactiveMessage);
+                }
+                return null;
             default:
-                throw new RuntimeException(message);
+                throw new RuntimeException(
+                        "Unsupported message type " + messageType + " received from CMake server.");
         }
     }
 

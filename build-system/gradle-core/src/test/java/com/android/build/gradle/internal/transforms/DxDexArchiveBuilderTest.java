@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.transforms;
 
-
 import com.android.builder.dexing.ClassFileEntry;
 import com.android.builder.dexing.DexArchiveBuilder;
 import com.android.builder.dexing.DexArchiveBuilderConfig;
@@ -29,7 +28,6 @@ import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.Rule;
@@ -97,8 +95,8 @@ public class DxDexArchiveBuilderTest {
         }
 
         @Override
-        public Path getRelativePath() {
-            return Paths.get(name);
+        public String getRelativePath() {
+            return name;
         }
 
         @Override

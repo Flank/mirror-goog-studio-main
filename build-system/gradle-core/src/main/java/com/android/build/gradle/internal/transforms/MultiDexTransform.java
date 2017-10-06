@@ -228,7 +228,7 @@ public class MultiDexTransform extends BaseProguardAction {
 
         // handle inputs
         libraryJar(findShrinkedAndroidJar());
-        inJar(input);
+        inJar(input, null);
 
         // outputs.
         outJar(variantScope.getProguardComponentsJarFile());

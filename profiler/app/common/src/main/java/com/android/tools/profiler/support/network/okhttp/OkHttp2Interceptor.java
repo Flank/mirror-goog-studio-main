@@ -85,10 +85,10 @@ public final class OkHttp2Interceptor implements InvocationHandler {
                 Collections.singletonList(Integer.toString(response.code())));
         tracker.trackResponse("", fields);
 
+        BufferedSource$ originalSource = response.body().source();
+        OkioClassLoader.setClassLoader(originalSource.obj.getClass().getClassLoader());
         BufferedSource$ source =
-                Okio$.buffer(
-                        Okio$.source(
-                                tracker.trackResponseBody(response.body().source().inputStream())));
+                Okio$.buffer(Okio$.source(tracker.trackResponseBody(originalSource.inputStream())));
         ResponseBody$ body =
                 ResponseBody$.create(
                         response.body().contentType(), response.body().contentLength(), source);

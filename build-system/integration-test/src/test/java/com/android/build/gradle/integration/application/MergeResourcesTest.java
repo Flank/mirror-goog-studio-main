@@ -16,10 +16,12 @@
 
 package com.android.build.gradle.integration.application;
 
+import static com.android.build.gradle.integration.common.fixture.GradleTestProject.SUPPORT_LIB_VERSION;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import static org.junit.Assert.assertTrue;
 
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
@@ -388,5 +390,55 @@ public class MergeResourcesTest {
                 "public int useFoo() { return R.id.foo; }");
 
         project.executor().with(IntegerOption.IDE_TARGET_DEVICE_API, 23).run(":app:assembleDebug");
+    }
+
+    @Test
+    public void testIncrementalBuildWithShrinkResources() throws Exception {
+        // Regression test for http://issuetracker.google.com/65829618
+        GradleTestProject appProject = project.getSubproject("app");
+        File appBuildFile = project.getSubproject("app").getBuildFile();
+        TestFileUtils.searchAndReplace(appBuildFile, "minSdkVersion 8", "minSdkVersion 9");
+        TestFileUtils.appendToFile(
+                appBuildFile,
+                "android {\n"
+                        + "    buildTypes {\n"
+                        + "        debug {\n"
+                        + "            minifyEnabled true\n"
+                        + "            shrinkResources true\n"
+                        + "        }\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "dependencies {\n"
+                        + "    implementation 'com.android.support:appcompat-v7:"
+                        + SUPPORT_LIB_VERSION
+                        + "'\n"
+                        + "}\n");
+
+        // Run a full build with shrinkResources enabled
+        GradleBuildResult result = project.executor().run(":app:clean", ":app:assembleDebug");
+        assertThat(result.getTask(":app:mergeDebugResources")).wasNotUpToDate();
+        long apkSizeWithShrinkResources =
+                appProject.getApk(GradleTestProject.ApkType.DEBUG).getContentsSize();
+
+        // Run an incremental build with shrinkResources disabled, the MergeResources task should
+        // not be UP-TO-DATE
+        TestFileUtils.searchAndReplace(
+                appBuildFile, "shrinkResources true", "shrinkResources false");
+        result = project.executor().run(":app:assembleDebug");
+        assertThat(result.getTask(":app:mergeDebugResources")).wasNotUpToDate();
+        long apkSizeWithoutShrinkResources =
+                appProject.getApk(GradleTestProject.ApkType.DEBUG).getContentsSize();
+
+        assertThat(apkSizeWithoutShrinkResources).isGreaterThan(apkSizeWithShrinkResources);
+
+        // Run an incremental build again with shrinkResources enabled, the MergeResources task
+        // again should not be UP-TO-DATE and the apk size must be exactly the same as the first
+        TestFileUtils.searchAndReplace(
+                appBuildFile, "shrinkResources false", "shrinkResources true");
+        result = project.executor().run(":app:assembleDebug");
+        assertThat(result.getTask(":app:mergeDebugResources")).wasNotUpToDate();
+        long sameApkSizeShrinkResources =
+                appProject.getApk(GradleTestProject.ApkType.DEBUG).getContentsSize();
+        assertThat(sameApkSizeShrinkResources).isEqualTo(apkSizeWithShrinkResources);
     }
 }

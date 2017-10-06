@@ -34,3 +34,6 @@ sdk {
     }
 }
 
+jar {
+    from 'NOTICE'
+}

@@ -14,7 +14,6 @@
       <module fileurl="file://$PROJECT_DIR$/annotations/android-annotations.iml" filepath="$PROJECT_DIR$/annotations/android-annotations.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/../apksig/apksig.iml" filepath="$PROJECT_DIR$/../apksig/apksig.iml" />
       <module fileurl="file://$PROJECT_DIR$/apkzlib/apkzlib.iml" filepath="$PROJECT_DIR$/apkzlib/apkzlib.iml" group="base" />
-      <module fileurl="file://$PROJECT_DIR$/asset-studio/assetstudio-base.iml" filepath="$PROJECT_DIR$/asset-studio/assetstudio-base.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/bazel/bazel.iml" filepath="$PROJECT_DIR$/bazel/bazel.iml" group="base" />
       <module fileurl="file://$PROJECT_DIR$/apkparser/binary-resources/binary-resources.iml" filepath="$PROJECT_DIR$/apkparser/binary-resources/binary-resources.iml" group="base/apkparser" />
       <module fileurl="file://$PROJECT_DIR$/../buildSrc/buildSrc.iml" filepath="$PROJECT_DIR$/../buildSrc/buildSrc.iml" />

@@ -6,7 +6,7 @@
         <!-- Set to true if app can function without mobile companion app. -->
         <meta-data
             android:name="com.google.android.wearable.standalone"
-            android:value="false" />
+            android:value="true" />
 
         <uses-library
             android:name="com.google.android.wearable"

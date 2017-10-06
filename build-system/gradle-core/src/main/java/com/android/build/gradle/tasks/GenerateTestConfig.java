@@ -22,6 +22,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
+import com.android.build.gradle.internal.dsl.TestOptions;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.OutputScope;
@@ -46,6 +47,8 @@ import org.gradle.api.tasks.TaskAction;
 /**
  * Generates the {@code test_config.properties} file that is put on the classpath for running unit
  * tests.
+ *
+ * <p>See DSL documentation in {@link TestOptions.UnitTestOptions#isIncludeAndroidResources()}
  */
 public class GenerateTestConfig extends DefaultTask {
 

@@ -235,15 +235,27 @@ public class VariantManager implements VariantModel {
 
         DefaultAndroidSourceSet mainSourceSet = (DefaultAndroidSourceSet) extension.getSourceSets().maybeCreate(name);
 
+        DefaultAndroidSourceSet androidTestSourceSet = null;
         DefaultAndroidSourceSet unitTestSourceSet = null;
         if (variantFactory.hasTestScope()) {
+            if (buildType.getName().equals(extension.getTestBuildType())) {
+                androidTestSourceSet =
+                        (DefaultAndroidSourceSet)
+                                extension
+                                        .getSourceSets()
+                                        .maybeCreate(
+                                                computeSourceSetName(
+                                                        buildType.getName(), ANDROID_TEST));
+            }
+
             unitTestSourceSet = (DefaultAndroidSourceSet) extension
                     .getSourceSets().maybeCreate(
                             computeSourceSetName(buildType.getName(), UNIT_TEST));
         }
 
-        BuildTypeData buildTypeData = new BuildTypeData(
-                buildType, project, mainSourceSet, unitTestSourceSet);
+        BuildTypeData buildTypeData =
+                new BuildTypeData(
+                        buildType, project, mainSourceSet, androidTestSourceSet, unitTestSourceSet);
 
         buildTypes.put(name, buildTypeData);
     }
@@ -510,6 +522,13 @@ public class VariantManager implements VariantModel {
                         variantDep.getCompileClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
                 project.getDependencies().add(
                         variantDep.getRuntimeClasspath().getName(), COM_ANDROID_SUPPORT_MULTIDEX_INSTRUMENTATION);
+            }
+
+            if (testedVariantData.getVariantConfiguration().getRenderscriptSupportModeEnabled()) {
+                project.getDependencies()
+                        .add(
+                                variantDep.getCompileClasspath().getName(),
+                                project.files(androidBuilder.getRenderScriptSupportJar()));
             }
 
             switch (variantType) {
@@ -958,8 +977,10 @@ public class VariantManager implements VariantModel {
             final ConfigurableFileCollection fileCollection = project.files(renderScriptSupportJar);
             project.getDependencies()
                     .add(variantDep.getCompileClasspath().getName(), fileCollection);
-            project.getDependencies()
-                    .add(variantDep.getRuntimeClasspath().getName(), fileCollection);
+            if (variantType == VariantType.DEFAULT || variantType == VariantType.FEATURE) {
+                project.getDependencies()
+                        .add(variantDep.getRuntimeClasspath().getName(), fileCollection);
+            }
         }
 
 

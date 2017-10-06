@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nls;
 
@@ -276,6 +277,7 @@ public class LintFix {
         private boolean shortenNames;
         private boolean reformat;
         @Language("RegExp") private String oldPattern;
+        private Location range;
 
         /** Constructed from {@link Builder#replace()} */
         private ReplaceStringBuilder(String displayName) {
@@ -314,12 +316,27 @@ public class LintFix {
             return this;
         }
 
+        /**
+         * Sets a location range to use for searching for the text or pattern. Useful
+         * if you want to make a replacement that is larger than the error range
+         * highlighted as the problem range.
+         */
+        public ReplaceStringBuilder range(@NonNull Location range) {
+            this.range = range;
+            return this;
+        }
+
         /** Replaces this entire range */
         public ReplaceStringBuilder all() {
             return this;
         }
 
-        /** The text to replace the old text or pattern with */
+        /**
+         * The text to replace the old text or pattern with.
+         * Note that the special syntax \g{n} can be used to
+         * reference the n'th group, if and only if this replacement
+         * is using {@link #pattern(String)}}.
+         */
         public ReplaceStringBuilder with(String newText) {
             assert this.newText == null;
             this.newText = newText;
@@ -344,7 +361,7 @@ public class LintFix {
         public LintFix build() {
             return new ReplaceString(displayName, oldText, oldPattern,
                     newText != null ? newText : "", shortenNames,
-                    reformat);
+                    reformat, range);
         }
     }
 
@@ -741,6 +758,13 @@ public class LintFix {
         @Nullable public final String oldPattern;
         /** The replacement string. */
         @NonNull public final String replacement;
+
+        /**
+         * A location range to use for searching for the text or pattern. Useful
+         * if you want to make a replacement that is larger than the error range
+         * highlighted as the problem range.
+         */
+        @Nullable public final Location range;
         /** Whether symbols should be shortened after replacement */
         public final boolean shortenNames;
         /** Whether the modified text range should be reformatted */
@@ -754,22 +778,28 @@ public class LintFix {
          * @param oldPattern   the regular expression to replace (provided as a string such that it
          *                     only needs to be compiled if actually referenced by the IDE. If there
          *                     is a group in the regexp, the substitution will be placed within the
-         *                     group.
+         *                     group. If there is more than one group, it will be placed in
+         *                     the group named "target"; if no group is named "target" it will be
+         *                     placed in the first group.
          * @param replacement  the replacement literal string
          * @param shortenNames whether to shorten references in the replaced range
          * @param reformat     whether to reformat the replaced range
+         * @param range        a range to use for searching for the old text, if different/larger
+         *                     than the warning highlight range
          */
         private ReplaceString(
           @NonNull String displayName,
           @Nullable String oldString, @Nullable String oldPattern,
           @NonNull String replacement, boolean shortenNames,
-                boolean reformat) {
+                boolean reformat,
+                @Nullable Location range) {
             super(displayName);
             this.oldString = oldString;
             this.oldPattern = oldPattern;
             this.replacement = replacement;
             this.shortenNames = shortenNames;
             this.reformat = reformat;
+            this.range = range;
         }
 
         /** Return display name */
@@ -781,6 +811,56 @@ public class LintFix {
             } else {
                 return "Replace with " + replacement;
             }
+        }
+
+        /**
+         * If this {@linkplain ReplaceString} specified a regular expression in
+         * {@link #oldPattern}, and the replacement string {@link #replacement}
+         * specifies one or more "back references" (with {@code (?<name>)} with the syntax
+         * {@code \k<name>} then this method will substitute in the matching
+         * group. Note that "target" is a reserved name, used to identify the range
+         * that should be completed.
+         */
+        public String expandBackReferences(@NonNull Matcher matcher) {
+            return expandBackReferences(replacement, matcher);
+        }
+
+        /**
+         * Given a matched regular expression and a back reference expression,
+         * this method produces the expression with back references substituted in.
+         */
+        public static String expandBackReferences(@NonNull String replacement,
+                @NonNull Matcher matcher) {
+            if (!replacement.contains("\\k<")) {
+                return replacement;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            int begin = 0;
+            while (true) {
+                int end = replacement.indexOf("\\k<", begin);
+                if (end == -1) {
+                    sb.append(replacement.substring(begin));
+                    break;
+                } else {
+                    int next = replacement.indexOf('>', end + 3);
+                    if (next != -1 && Character.isDigit(replacement.charAt(end + 3))) {
+                        sb.append(replacement.substring(begin, end));
+                        String groupString = replacement.substring(end + 3, next);
+                        int group = Integer.parseInt(groupString);
+                        if (group <= matcher.groupCount()) {
+                            sb.append(matcher.group(group));
+                        }
+                        begin = next + 1;
+                    } else {
+                        end += 3;
+                        sb.append(replacement.substring(begin, end));
+                        begin = end;
+                    }
+                }
+            }
+
+            return sb.toString();
         }
     }
 }

@@ -70,7 +70,7 @@ class FontDetail {
             query.append("&weight=").append(weight)
         }
         if (italics) {
-            query.append("&italics=1")
+            query.append("&italic=1")
         }
         if (width != DEFAULT_WIDTH) {
             query.append("&width=").append(width)

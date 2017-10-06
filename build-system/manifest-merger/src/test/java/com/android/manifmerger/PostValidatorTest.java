@@ -18,6 +18,7 @@ package com.android.manifmerger;
 
 import com.android.SdkConstants;
 import com.android.utils.ILogger;
+import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import java.io.IOException;
@@ -708,5 +709,71 @@ public class PostValidatorTest extends TestCase {
         // ensure application element is last.
         String attribute = xmlDocument.getRootNode().getXml().getAttribute("xmlns:android");
         assertEquals(SdkConstants.ANDROID_URI, attribute);
+    }
+
+    public void testToolsNamespaceAbsence()
+            throws ParserConfigurationException, SAXException, IOException {
+
+        String toolsNamespaceAttributeName =
+                (SdkConstants.XMLNS + XmlUtils.NS_SEPARATOR + SdkConstants.TOOLS_NS_NAME);
+        // include toolsNamespaceAttributeName in input string initially, because
+        // TestUtils.xmlDocumentFromString throws an exception otherwise.
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    "
+                        + toolsNamespaceAttributeName
+                        + "=\""
+                        + SdkConstants.TOOLS_URI
+                        + "\"\n"
+                        + "    package=\"com.example.lib3\">\n"
+                        + "\n"
+                        + "    <application />\n"
+                        + "\n"
+                        + "    <activity android:name=\"activityOne\" tools:remove=\"exported\"/>\n"
+                        + "\n"
+                        + "</manifest>";
+
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testToolsNamespaceAbsence"), input);
+
+        // remove toolsNamespaceAttributeName so we can check
+        // that enforeToolsNamespaceDeclaration adds it back
+        xmlDocument.getRootNode().getXml().removeAttribute(toolsNamespaceAttributeName);
+        assertFalse(xmlDocument.getRootNode().getXml().hasAttribute(toolsNamespaceAttributeName));
+
+        PostValidator.enforceToolsNamespaceDeclaration(xmlDocument.reparse());
+        String attribute =
+                xmlDocument.getRootNode().getXml().getAttribute(toolsNamespaceAttributeName);
+        assertEquals(SdkConstants.TOOLS_URI, attribute);
+    }
+
+    public void testElementUsesNamespace()
+            throws ParserConfigurationException, SAXException, IOException {
+
+        String input =
+                ""
+                        + "<manifest\n"
+                        + "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    package=\"com.example.lib3\">\n"
+                        + "\n"
+                        + "    <uses-sdk android:minSdkVersion=\"14\"/>"
+                        + "\n"
+                        + "    <application android:label=\"@string/lib_name\" />\n"
+                        + "\n"
+                        + "</manifest>";
+
+        XmlDocument xmlDocument =
+                TestUtils.xmlDocumentFromString(
+                        TestUtils.sourceFile(getClass(), "testElementUsesNamespace"), input);
+
+        MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
+        assertTrue(
+                PostValidator.elementUsesNamespace(xmlDocument.getRootNode().getXml(), "android"));
+        assertFalse(
+                PostValidator.elementUsesNamespace(xmlDocument.getRootNode().getXml(), "tools"));
     }
 }

@@ -207,7 +207,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                 jarFolderToLocation(content.getFile(), toFile, filter, typedefRemover);
             }
         } else {
-            mergeInputsToLocation(inputs, toFile, filter, typedefRemover);
+            mergeInputsToLocation(inputs, toFile, true, filter, typedefRemover);
         }
     }
 }

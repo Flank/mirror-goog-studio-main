@@ -56,17 +56,8 @@ class PreDexCallable implements Callable<Void> {
      */
     private enum FileCacheInputParams {
 
-        /** Path of an input file. */
-        FILE_PATH,
-
-        /** Relative path of an input file exploded from an aar file. */
-        EXPLODED_AAR_FILE_PATH,
-
-        /** Name of an input file that is an instant-run.jar file. */
-        INSTANT_RUN_JAR_FILE_NAME,
-
-        /** Hash of an input file. */
-        FILE_HASH,
+        /** The input file. */
+        FILE,
 
         /** Revision of the build tools. */
         BUILD_TOOLS_REVISION,
@@ -216,40 +207,18 @@ class PreDexCallable implements Callable<Void> {
         FileCache.Inputs.Builder buildCacheInputs =
                 new FileCache.Inputs.Builder(FileCache.Command.PREDEX_LIBRARY);
 
-        // As a general rule, we use the file's path and hash to uniquely identify a file. However,
-        // certain types of files are usually copied/duplicated at different locations. To recognize
-        // those files as the same file, instead of using the full file path, we use a substring of
-        // the file path as the file's identifier.
-        if (inputFile.getPath().contains("exploded-aar")) {
-            // If the file is exploded from an aar file, we use the path relative to the
-            // "exploded-aar" directory as the file's identifier, which contains the aar artifact
-            // information (e.g., "exploded-aar/com.android.support/support-v4/23.3.0/jars/
-            // classes.jar")
-            buildCacheInputs.putString(
-                    FileCacheInputParams.EXPLODED_AAR_FILE_PATH.name(),
-                    inputFile.getPath().substring(inputFile.getPath().lastIndexOf("exploded-aar")));
-        } else if (inputFile.getName().equals("instant-run.jar")) {
-            // If the file is an instant-run.jar file, we use the the file name itself as
-            // the file's identifier
-            buildCacheInputs.putString(
-                    FileCacheInputParams.INSTANT_RUN_JAR_FILE_NAME.name(), inputFile.getName());
-        } else {
-            // In all other cases, we use the file's path as the file's identifier
-            buildCacheInputs.putFilePath(FileCacheInputParams.FILE_PATH.name(), inputFile);
-        }
-
-        // In all cases, in addition to the (full or extracted) file path, we always use the file's
-        // hash to identify an input file, and provide other input parameters to the cache
         buildCacheInputs
-                .putFileHash(FileCacheInputParams.FILE_HASH.name(), inputFile)
+                .putFile(
+                        FileCacheInputParams.FILE.name(),
+                        inputFile,
+                        FileCache.FileProperties.PATH_HASH)
                 .putString(
                         FileCacheInputParams.BUILD_TOOLS_REVISION.name(),
                         buildToolsRevision.toString())
                 .putBoolean(FileCacheInputParams.JUMBO_MODE.name(), dexOptions.getJumboMode())
                 .putBoolean(FileCacheInputParams.OPTIMIZE.name(), true)
-                .putBoolean(FileCacheInputParams.MULTI_DEX.name(), multiDex);
-
-        buildCacheInputs.putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion);
+                .putBoolean(FileCacheInputParams.MULTI_DEX.name(), multiDex)
+                .putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion);
 
         List<String> additionalParams = dexOptions.getAdditionalParameters();
         for (int i = 0; i < additionalParams.size(); i++) {

@@ -41,10 +41,10 @@ public class RsEnabledAnnotationTest {
         project = null;
     }
 
-
     @Test
     public void checkExtractAnnotation() throws IOException {
         // check the resulting .aar file to ensure annotations.zip inclusion.
         assertThat(project.getAar("debug")).contains("annotations.zip");
+        assertThat(project.getAar("debug")).doesNotContain("libs/renderscript-v8.zip");
     }
 }

@@ -127,7 +127,9 @@ public class ServerUtils {
         return (codeModel.type != null
                 && codeModel.inReplyTo != null
                 && codeModel.inReplyTo.equals("codemodel")
-                && codeModel.type.equals("reply"));
+                && codeModel.type.equals("reply")
+                && codeModel.configurations != null
+                && isCodeModelConfigurationsValid(codeModel.configurations));
     }
 
     /**
@@ -163,11 +165,7 @@ public class ServerUtils {
      *     expected.
      */
     private static boolean isCodeModelProjectValid(Project project) {
-        if (project == null
-                || project.buildDirectory == null
-                || project.sourceDirectory == null
-                || project.targets == null
-                || project.targets.length <= 0) {
+        if (project == null || project.buildDirectory == null || project.sourceDirectory == null) {
             return false;
         }
 
@@ -186,13 +184,12 @@ public class ServerUtils {
      *     expected.
      */
     private static boolean isCodeModelTargetValid(Target target) {
-        if (target == null
-                || target.name == null
-                || target.artifacts == null
-                || target.artifacts.length <= 0
-                || target.buildDirectory == null
-                || target.fileGroups == null
-                || target.fileGroups.length <= 0) {
+        // If the target has no artifacts or filegroups, the target will be get ignored, so mark
+        // it valid.
+        if (target != null && (target.artifacts == null || target.fileGroups == null)) {
+            return true;
+        }
+        if (target == null || target.name == null || target.buildDirectory == null) {
             return false;
         }
 

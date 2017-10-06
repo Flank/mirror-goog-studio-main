@@ -57,22 +57,18 @@ import com.android.utils.FileUtils;
 import com.android.utils.ImmutableCollectors;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.gradle.api.Project;
@@ -94,7 +90,6 @@ import org.gradle.language.base.artifact.SourcesArtifact;
 public class ArtifactDependencyGraph {
 
     private static final String LOCAL_AAR_GROUPID = "__local_aars__";
-    private static final Splitter LINE_SPLITTER = Splitter.on(System.lineSeparator());
 
     private static final CreatingCache<HashableResolvedArtifactResult, MavenCoordinates>
             sMavenCoordinatesCache =
@@ -104,12 +99,7 @@ public class ArtifactDependencyGraph {
             new CreatingCache<>(ArtifactDependencyGraph::instantiateLibrary);
     private static final Map<String, Library> sGlobalLibrary = Maps.newHashMap();
 
-    // map from configuration name to errors
-    private final Map<String, Throwable> failures = Maps.newHashMap();
-
-    private BiConsumer<String, Collection<Throwable>> failureToMap =
-            (name, throwables) ->
-                    throwables.forEach(t -> ArtifactDependencyGraph.this.failures.put(name, t));
+    private DependencyFailureHandler dependencyFailureHandler = new DependencyFailureHandler();
 
     public static void clearCaches() {
         sMavenCoordinatesCache.clear();
@@ -251,7 +241,7 @@ public class ArtifactDependencyGraph {
     public static Set<HashableResolvedArtifactResult> getAllArtifacts(
             @NonNull VariantScope variantScope,
             @NonNull AndroidArtifacts.ConsumedConfigType consumedConfigType,
-            @Nullable BiConsumer<String, Collection<Throwable>> failureConsumer) {
+            @Nullable DependencyFailureHandler dependencyFailureHandler) {
         // FIXME change the way we compare dependencies b/64387392
 
         // we need to figure out the following:
@@ -300,9 +290,9 @@ public class ArtifactDependencyGraph {
 
 
         // collect dependency resolution failures
-        if (failureConsumer != null) {
+        if (dependencyFailureHandler != null) {
             // compute the name of the configuration
-            failureConsumer.accept(
+            dependencyFailureHandler.addErrors(
                     variantScope.getGlobalScope().getProject().getPath()
                             + "@"
                             + variantScope.getFullVariantName()
@@ -418,7 +408,7 @@ public class ArtifactDependencyGraph {
         try {
             // get the compile artifact first.
             Set<HashableResolvedArtifactResult> compileArtifacts =
-                    getAllArtifacts(variantScope, COMPILE_CLASSPATH, failureToMap);
+                    getAllArtifacts(variantScope, COMPILE_CLASSPATH, dependencyFailureHandler);
 
             // force download the javadoc/source artifacts of compile scope only, since the
             // the runtime-only is never used from the IDE.
@@ -482,7 +472,7 @@ public class ArtifactDependencyGraph {
             // in this mode, compute GraphItem for the runtime configuration
             // get the runtime artifacts.
             Set<HashableResolvedArtifactResult> runtimeArtifacts =
-                    getAllArtifacts(variantScope, RUNTIME_CLASSPATH, failureToMap);
+                    getAllArtifacts(variantScope, RUNTIME_CLASSPATH, dependencyFailureHandler);
 
             List<GraphItem> runtimeItems = Lists.newArrayListWithCapacity(runtimeArtifacts.size());
             for (HashableResolvedArtifactResult artifact : runtimeArtifacts) {
@@ -508,7 +498,7 @@ public class ArtifactDependencyGraph {
                     providedAddresses,
                     ImmutableList.of()); // FIXME: actually get skip list
         } finally {
-            collectFailures(failureConsumer);
+            dependencyFailureHandler.collectIssues().forEach(failureConsumer);
         }
     }
 
@@ -543,7 +533,7 @@ public class ArtifactDependencyGraph {
             }
 
             Set<HashableResolvedArtifactResult> artifacts =
-                    getAllArtifacts(variantScope, COMPILE_CLASSPATH, failureToMap);
+                    getAllArtifacts(variantScope, COMPILE_CLASSPATH, dependencyFailureHandler);
 
             for (HashableResolvedArtifactResult artifact : artifacts) {
                 ComponentIdentifier id = artifact.getId().getComponentIdentifier();
@@ -610,114 +600,8 @@ public class ArtifactDependencyGraph {
             return new DependenciesImpl(
                     androidLibraries.build(), javaLibrary.build(), projects.build());
         } finally {
-            collectFailures(failureConsumer);
+            dependencyFailureHandler.collectIssues().forEach(failureConsumer);
         }
-    }
-
-    private static final Pattern pattern =
-            Pattern.compile(".*any matches for ([a-zA-Z0-9:\\-.+]+) .*", Pattern.DOTALL);
-    private static final Pattern pattern2 =
-            Pattern.compile(".*Could not find ([a-zA-Z0-9:\\-.]+)\\..*", Pattern.DOTALL);
-
-    private void collectFailures(@NonNull Consumer<SyncIssue> failureConsumer) {
-        if (failures.isEmpty()) {
-            return;
-        }
-
-        for (Map.Entry<String, Throwable> entry : failures.entrySet()) {
-            processThrowable(
-                    entry.getValue(),
-                    ArtifactDependencyGraph::checkForData,
-                    (data, messages) -> {
-                        SyncIssue issue;
-                        if (data != null) {
-                            issue =
-                                    new SyncIssueImpl(
-                                            SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                                            SyncIssue.SEVERITY_ERROR,
-                                            data,
-                                            String.format("Unable to resolve dependency %s", data),
-                                            null);
-                        } else {
-                            issue =
-                                    new SyncIssueImpl(
-                                            SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                                            SyncIssue.SEVERITY_ERROR,
-                                            null,
-                                            String.format(
-                                                    "Unable to resolve dependency for '%s': %s",
-                                                    entry.getKey(), messages.get(0)),
-                                            messages);
-                        }
-                        failureConsumer.accept(issue);
-                    });
-        }
-    }
-
-    private static void processThrowable(
-            @NonNull Throwable throwable,
-            @NonNull Function<String, String> dataExtractor,
-            @NonNull BiConsumer<String, List<String>> resultConsumer) {
-        Throwable cause = throwable;
-
-        // gather all the messages.
-        List<String> messages = Lists.newArrayList();
-        String firstIndent = " > ";
-        String allIndent = "";
-
-        String data = null;
-
-        while (cause != null) {
-            final String message = cause.getMessage();
-            if (message != null) {
-                List<String> lines = ImmutableList.copyOf(LINE_SPLITTER.split(message));
-
-                // check if the first line contains a data we care about
-                data = dataExtractor.apply(lines.get(0));
-
-                //noinspection VariableNotUsedInsideIf
-                if (data != null) {
-                    break;
-                }
-
-                // add them to the main list
-                for (int i = 0, count = lines.size(); i < count; i++) {
-                    String line = lines.get(i);
-
-                    if (allIndent.isEmpty()) {
-                        messages.add(line);
-                    } else if (i == 0) {
-                        messages.add(firstIndent + line);
-                    } else {
-                        messages.add(allIndent + line);
-                    }
-                }
-
-                //noinspection StringConcatenationInLoop
-                firstIndent = allIndent + firstIndent;
-                //noinspection StringConcatenationInLoop
-                allIndent = allIndent + "   ";
-            }
-
-            cause = cause.getCause();
-        }
-
-        resultConsumer.accept(data, messages);
-    }
-
-    @Nullable
-    private static String checkForData(@NonNull String message) {
-        Matcher m = pattern.matcher(message);
-        if (m.matches()) {
-            return m.group(1);
-        }
-
-        m = pattern2.matcher(message);
-        if (m.matches()) {
-            return m.group(1);
-        }
-
-        return null;
     }
 
     @NonNull
@@ -783,7 +667,7 @@ public class ArtifactDependencyGraph {
             query.withArtifacts(JvmLibrary.class, artifactTypesArray);
             query.execute().getResolvedComponents();
         } catch (Throwable t) {
-            processThrowable(
+            DependencyFailureHandlerKt.processDependencyThrowable(
                     t,
                     s -> null,
                     (data, messages) ->

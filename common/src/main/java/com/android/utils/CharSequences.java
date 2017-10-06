@@ -23,9 +23,10 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.nio.CharBuffer;
 import java.util.Arrays;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
 /**
  * A number of utility methods around {@link CharSequence} handling, which
@@ -291,18 +292,23 @@ public class CharSequences {
         return sequence.toString().toCharArray();
     }
 
+    /**
+     * The {@link CharSequenceReader} returned by this method is intended for single-thread use
+     * only.
+     *
+     * @param data the character sequence to read
+     * @param stripBom whether a byte order mark at the beginning of the charachter sequence should
+     *     be skipped if present
+     * @return the reader obtaining its data from the given characher sequence
+     */
     @NonNull
-    public static Reader getReader(@NonNull CharSequence data, boolean stripBom) {
+    public static CharSequenceReader getReader(@NonNull CharSequence data, boolean stripBom) {
         CharSequenceReader reader = new CharSequenceReader(data);
         if (stripBom) {
             if (data.length() > 0 && data.charAt(0) == '\uFEFF') {
                 // Skip BOM
-                try {
-                    //noinspection ResultOfMethodCallIgnored
-                    reader.read();
-                } catch (IOException ignore) {
-                    // I/O errors can't happen for char sequence backed readers
-                }
+                //noinspection ResultOfMethodCallIgnored
+                reader.read();
             }
         }
 
@@ -314,9 +320,8 @@ public class CharSequences {
         try {
             Reader reader = getReader(xml, true);
             return XmlUtils.parseDocument(reader, namespaceAware);
-        } catch (Exception e) {
-            // pass
-            // This method is deliberately silent; will return null
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            // This method is deliberately silent; will return null.
         }
 
         return null;
@@ -378,88 +383,6 @@ public class CharSequences {
         @Override
         public String toString() {
             return new String(data, offset, length);
-        }
-    }
-
-    // Copy from package private Guava implementation (com.google.common.io),
-    // minus precondition checks, plus annotations
-    private static final class CharSequenceReader extends Reader {
-
-        private CharSequence seq;
-        private int pos;
-        private int mark;
-
-        public CharSequenceReader(@NonNull CharSequence seq) {
-            this.seq = seq;
-        }
-
-        private boolean hasRemaining() {
-            return remaining() > 0;
-        }
-
-        private int remaining() {
-            return seq.length() - pos;
-        }
-
-        @Override
-        public synchronized int read(@NonNull CharBuffer target) throws IOException {
-            if (!hasRemaining()) {
-                return -1;
-            }
-            int charsToRead = Math.min(target.remaining(), remaining());
-            for (int i = 0; i < charsToRead; i++) {
-                target.put(seq.charAt(pos++));
-            }
-            return charsToRead;
-        }
-
-        @Override
-        public synchronized int read() throws IOException {
-            return hasRemaining() ? seq.charAt(pos++) : -1;
-        }
-
-        @Override
-        public synchronized int read(@NonNull char[] cbuf, int off, int len) throws IOException {
-            if (!hasRemaining()) {
-                return -1;
-            }
-            int charsToRead = Math.min(len, remaining());
-            for (int i = 0; i < charsToRead; i++) {
-                cbuf[off + i] = seq.charAt(pos++);
-            }
-            return charsToRead;
-        }
-
-        @Override
-        public synchronized long skip(long n) throws IOException {
-            int charsToSkip = (int) Math.min(remaining(), n);
-            pos += charsToSkip;
-            return charsToSkip;
-        }
-
-        @Override
-        public synchronized boolean ready() throws IOException {
-            return true;
-        }
-
-        @Override
-        public boolean markSupported() {
-            return true;
-        }
-
-        @Override
-        public synchronized void mark(int readAheadLimit) throws IOException {
-            mark = pos;
-        }
-
-        @Override
-        public synchronized void reset() throws IOException {
-            pos = mark;
-        }
-
-        @Override
-        public synchronized void close() throws IOException {
-            seq = null;
         }
     }
 }

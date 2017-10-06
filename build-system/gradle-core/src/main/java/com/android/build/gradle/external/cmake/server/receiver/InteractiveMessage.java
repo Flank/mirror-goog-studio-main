@@ -25,11 +25,15 @@ public class InteractiveMessage {
     public final String cookie;
     public final String inReplyTo;
     public final String message;
+    public final String errorMessage;
+    public final String title;
 
     private InteractiveMessage() {
         this.type = null;
         this.cookie = null;
         this.inReplyTo = null;
         this.message = null;
+        this.errorMessage = null;
+        this.title = null;
     }
 }

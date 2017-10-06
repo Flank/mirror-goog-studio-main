@@ -1,6 +1,7 @@
 package com.android.build.gradle;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.api.ApplicationVariant;
 import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -102,5 +103,11 @@ public class TestExtension extends BaseExtension implements TestAndroidConfig {
 
     public void targetVariant(String targetVariant) {
         setTargetVariant(targetVariant);
+    }
+
+    @Nullable
+    @Override
+    public String getTestBuildType() {
+        return null;
     }
 }

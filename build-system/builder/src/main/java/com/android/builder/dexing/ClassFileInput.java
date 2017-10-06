@@ -17,12 +17,8 @@
 package com.android.builder.dexing;
 
 import com.android.SdkConstants;
-import com.android.annotations.NonNull;
 import java.io.Closeable;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.PathMatcher;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -36,17 +32,12 @@ import java.util.stream.Stream;
  */
 public interface ClassFileInput extends Closeable {
 
-    PathMatcher classMatcher =
-            FileSystems.getDefault().getPathMatcher("glob:**" + SdkConstants.DOT_CLASS);
-
-    /** Base path of this input. It can be a directory, or a path to a jar file. */
-    @NonNull
-    Path getRootPath();
+    Predicate<String> CLASS_MATCHER = s -> s.endsWith(SdkConstants.DOT_CLASS);
 
     /**
-     * @param filterPaths filter specify which files should be part of the class input
+     * @param filter filter specify which files should be part of the class input
      * @return a {@link Stream} for all the entries that satisfies the passed filter.
      * @throws IOException if the jar/directory cannot be read correctly.
      */
-    Stream<ClassFileEntry> entries(Predicate<Path> filter) throws IOException;
+    Stream<ClassFileEntry> entries(Predicate<String> filter) throws IOException;
 }

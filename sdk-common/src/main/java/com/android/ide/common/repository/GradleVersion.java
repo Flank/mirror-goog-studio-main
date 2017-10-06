@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
 public class GradleVersion implements Comparable<GradleVersion>, Serializable {
     private static final String PLUS = "+";
 
-    private static final Pattern PREVIEW_PATTERN = Pattern.compile("([a-zA-z]+)[\\-]?([\\d]+)?");
+    private static final Pattern PREVIEW_PATTERN = Pattern.compile("([a-zA-z]+)[\\-]?([\\d]+)?(-\\d+)?");
 
     private final String mRawValue;
 
@@ -61,6 +61,8 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
 
     @NonNull
     private final List<VersionSegment> mAdditionalSegments;
+
+    private final String mQualifiers;
 
     /**
      * Parses the given version. This method does the same as {@link #parse(String)}, but it does
@@ -146,7 +148,7 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
                         Matcher matcher = PREVIEW_PATTERN.matcher(qualifiers);
                         if (matcher.matches()) {
                             previewType = matcher.group(1);
-                            if (matcher.groupCount() == 2) {
+                            if (matcher.groupCount() >= 2) {
                                 String group = matcher.group(2);
                                 if (!isNullOrEmpty(group)) {
                                     preview = Integer.parseInt(group);
@@ -156,7 +158,7 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
                     }
                 }
                 return new GradleVersion(value, majorSegment, minorSegment, microSegment,
-                        additionalSegments, preview, previewType, snapshot);
+                        additionalSegments, preview, previewType, snapshot, qualifiers);
             }
         } catch (NumberFormatException e) {
             throw parsingFailure(value, e);
@@ -210,13 +212,13 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
     public GradleVersion(int major, int minor) {
         this((major + "." + minor), new VersionSegment(major),
                 new VersionSegment(minor), null,
-                Collections.<VersionSegment>emptyList(), 0, null, false);
+                Collections.emptyList(), 0, null, false, null);
     }
 
     public GradleVersion(int major, int minor, int micro) {
         this((major + "." + minor + "." + micro), new VersionSegment(major),
                 new VersionSegment(minor), new VersionSegment(micro),
-                Collections.<VersionSegment>emptyList(), 0, null, false);
+                Collections.emptyList(), 0, null, false, null);
     }
 
     private GradleVersion(@NonNull String rawValue,
@@ -226,7 +228,8 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
             @NonNull List<VersionSegment> additionalSegments,
             int preview,
             @Nullable String previewType,
-            boolean snapshot) {
+            boolean snapshot,
+            String qualifiers) {
         mRawValue = rawValue;
         mMajorSegment = majorSegment;
         mMinorSegment = minorSegment;
@@ -235,6 +238,7 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
         mPreview = preview;
         mPreviewType = previewType;
         mSnapshot = snapshot;
+        mQualifiers = qualifiers;
     }
 
     public int getMajor() {
@@ -316,25 +320,17 @@ public class GradleVersion implements Comparable<GradleVersion>, Serializable {
             return delta;
         }
         if (!ignoreQualifiers) {
-            if (mPreviewType == null) {
+            if (mQualifiers == null) {
                 //noinspection VariableNotUsedInsideIf
-                if (version.mPreviewType != null) {
+                if (version.mQualifiers != null) {
                     return 1;
                 }
-            } else if (version.mPreviewType == null) {
+                delta = mSnapshot == version.mSnapshot ? 0 : (mSnapshot ? -1 : 1);
+            } else if (version.mQualifiers == null) {
                 return -1;
             } else {
-                delta = mPreviewType.compareToIgnoreCase(version.mPreviewType);
+                delta = mQualifiers.compareTo(version.mQualifiers);
             }
-            if (delta != 0) {
-                return delta;
-            }
-
-            delta = mPreview - version.mPreview;
-            if (delta != 0) {
-                return delta;
-            }
-            delta = mSnapshot == version.mSnapshot ? 0 : (mSnapshot ? -1 : 1);
         }
         return delta;
     }

@@ -24,9 +24,11 @@ public interface QueueThreadContext<T> {
 
     /**
      * Notification of a new worker thread association with the queue
+     *
      * @param t the thread being associated.
+     * @return true if creation was successful.
      */
-    void creation(@NonNull Thread t) throws IOException;
+    boolean creation(@NonNull Thread t) throws IOException, InterruptedException;
 
     /**
      * Notification of a scheduled task execution.

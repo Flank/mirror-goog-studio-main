@@ -31,12 +31,6 @@ final class DirectoryBasedClassFileInput implements ClassFileInput {
         this.rootPath = rootPath;
     }
 
-    @NonNull
-    @Override
-    public Path getRootPath() {
-        return rootPath;
-    }
-
     @Override
     public void close() throws IOException {
         // nothing to do for folders.
@@ -44,14 +38,15 @@ final class DirectoryBasedClassFileInput implements ClassFileInput {
 
     @Override
     @NonNull
-    public Stream<ClassFileEntry> entries(Predicate<Path> filter) throws IOException {
+    public Stream<ClassFileEntry> entries(Predicate<String> filter) throws IOException {
+        Predicate<String> predicate = CLASS_MATCHER.and(filter);
         return Files.walk(rootPath)
-                .filter(((Predicate<Path>) classMatcher::matches).and(filter))
+                .filter(p -> predicate.test(p.toString()))
                 .map(this::createEntryFromPath);
     }
 
     @NonNull
     private ClassFileEntry createEntryFromPath(@NonNull Path path) {
-        return new FileBasedClassFileEntry(rootPath.relativize(path), path);
+        return new FileBasedClassFileEntry(rootPath, path);
     }
 }

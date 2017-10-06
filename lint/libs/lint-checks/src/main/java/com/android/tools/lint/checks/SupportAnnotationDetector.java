@@ -1883,11 +1883,11 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 if (resolved instanceof PsiModifierListOwner) {
                     RangeConstraint referenceConstraint =
                             RangeConstraint.create((PsiModifierListOwner) resolved);
-                    RangeConstraint here = RangeConstraint.create(context, annotation);
+                    RangeConstraint here = RangeConstraint.create(annotation);
                     if (here != null && referenceConstraint != null) {
                         Boolean contains = here.contains(referenceConstraint);
                         if (contains != null && !contains) {
-                            return here.describe(null);
+                            return here.toString();
                         }
                     }
                 }
@@ -1980,11 +1980,11 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 if (resolved instanceof PsiModifierListOwner) {
                     RangeConstraint referenceConstraint =
                             RangeConstraint.create((PsiModifierListOwner) resolved);
-                    RangeConstraint here = RangeConstraint.create(context, annotation);
+                    RangeConstraint here = RangeConstraint.create(annotation);
                     if (here != null && referenceConstraint != null) {
                         Boolean contains = here.contains(referenceConstraint);
                         if (contains != null && !contains) {
-                            String message = here.describe(null);
+                            String message = here.toString();
                             report(context, RANGE, argument, context.getLocation(argument), message);
                         }
                     }
@@ -2038,11 +2038,11 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                         if (resolved instanceof PsiModifierListOwner) {
                             RangeConstraint constraint = RangeConstraint
                                     .create((PsiModifierListOwner) resolved);
-                            RangeConstraint here = RangeConstraint.create(context, annotation);
+                            RangeConstraint here = RangeConstraint.create(annotation);
                             if (here != null && constraint != null) {
                                 Boolean contains = here.contains(constraint);
                                 if (contains != null && !contains) {
-                                    String message = here.describe(null);
+                                    String message = here.toString();
                                     report(context, RANGE, argument, context.getLocation(argument),
                                             message);
                                 }
@@ -2797,7 +2797,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
                 j++;
             }
             for (int i = 0, n = Math.min(parameters.length, arguments.size());
-                    i < n;
+                    j < n;
                     i++, j++) {
                 UExpression argument = arguments.get(i);
                 PsiParameter parameter = parameters[j];

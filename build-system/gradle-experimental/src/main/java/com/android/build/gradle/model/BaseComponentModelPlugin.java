@@ -643,6 +643,7 @@ public class BaseComponentModelPlugin implements Plugin<Project>, ToolingRegistr
                 @Path("binaries") ModelMap<AndroidBinaryInternal> binaries,
                 ModelMap<AndroidComponentSpec> specs,
                 TaskManager taskManager) {
+            taskManager.configureCustomLintChecks(new TaskModelMapAdaptor(tasks));
             final VariantManager variantManager =
                     ((AndroidComponentSpecInternal) specs.get(COMPONENT_NAME)).getVariantManager();
             variantManager.configureDependencies();

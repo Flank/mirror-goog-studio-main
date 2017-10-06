@@ -22,12 +22,14 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Project
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
+import java.nio.file.Files
 
 class CustomRuleTest {
 
@@ -142,6 +144,68 @@ class CustomRuleTest {
                     val library = dependencies.libraries.iterator().next()
                     Mockito.`when`(library.lintJar).thenReturn(lintJar)
                 }.allowMissingSdk().run().expect(expected)
+    }
+
+    @Test
+    fun `Load lint custom rules from locally packaged lint jars (via lintChecks)`() {
+        // Regression test for https://issuetracker.google.com/65941946
+        // Copy lint.jar into build/intermediates/lint and make sure the custom rules
+        // are picked up in a Gradle project
+
+        val expected = "" +
+                "src/main/java/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [AppCompatMethod]\n" +
+                "        getActionBar();                    // ERROR\n" +
+                "        ~~~~~~~~~~~~\n" +
+                "src/main/java/test/pkg/AppCompatTest.java:10: Warning: Should use startSupportActionMode instead of startActionMode name [AppCompatMethod]\n" +
+                "        startActionMode(null);             // ERROR\n" +
+                "        ~~~~~~~~~~~~~~~\n" +
+                "src/main/java/test/pkg/AppCompatTest.java:13: Warning: Should use supportRequestWindowFeature instead of requestWindowFeature name [AppCompatMethod]\n" +
+                "        requestWindowFeature(0);           // ERROR\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/main/java/test/pkg/AppCompatTest.java:16: Warning: Should use setSupportProgressBarVisibility instead of setProgressBarVisibility name [AppCompatMethod]\n" +
+                "        setProgressBarVisibility(true);    // ERROR\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/main/java/test/pkg/AppCompatTest.java:17: Warning: Should use setSupportProgressBarIndeterminate instead of setProgressBarIndeterminate name [AppCompatMethod]\n" +
+                "        setProgressBarIndeterminate(true);\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "src/main/java/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [AppCompatMethod]\n" +
+                "        setProgressBarIndeterminateVisibility(true);\n" +
+                "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                "0 errors, 6 warnings\n"
+
+        // Copy lint.jar into build/intermediates/lint/
+        val listener = object : LintListener {
+            override fun update(driver: LintDriver,
+                    type: LintListener.EventType,
+                    project: Project?,
+                    context: Context?) {
+                if (type == LintListener.EventType.REGISTERED_PROJECT) {
+                    val buildFolder = project?.gradleProjectModel?.buildFolder ?: return
+                    val lintFolder = File(buildFolder, "intermediates/lint")
+                    lintFolder.mkdirs()
+                    lintJar.copyTo(File(lintFolder, lintJar.name))
+                }
+            }
+        }
+        lint().files(
+                classpath(),
+                manifest().minSdk(1),
+                gradle(""
+                        + "apply plugin: 'com.android.library'\n"
+                        + "dependencies {\n"
+                        + "    compile 'my.test.group:artifact:1.0'\n"
+                        + "}\n"),
+
+                appCompatTestSource,
+                appCompatTestClass)
+                .incremental("bin/classes/test/pkg/AppCompatTest.class")
+                .allowDelayedIssueRegistration()
+                .issueIds("AppCompatMethod")
+                .allowObsoleteLintChecks(false)
+                .listener(listener)
+                .allowMissingSdk()
+                .run()
+                .expect(expected)
     }
 
     @Test

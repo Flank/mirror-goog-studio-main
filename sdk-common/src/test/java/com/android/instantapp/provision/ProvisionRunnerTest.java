@@ -73,30 +73,17 @@ public class ProvisionRunnerTest {
     }
 
     @Test
-    public void testFailsWhenDeviceNotEnabled() throws Throwable {
+    public void testDeviceEnabled() throws Throwable {
         IDevice device =
                 new InstantAppTests.DeviceGenerator()
                         .setApiLevel(23, null)
                         .setArchitectures("x86")
                         .setHardware("fakeRanchu")
+                        .setGoogleAccountLogged()
                         .getDevice();
-        assertProvisionException(device, ProvisionException.ErrorType.DEVICE_NOT_SUPPORTED);
+        myProvisionRunner.runProvision(device);
         assertEquals(
-                ProvisionRunner.ProvisionState.Step.CHECK_ARCH,
-                myProvisionRunner.getCache().get(device).lastSucceeded);
-    }
-
-    @Test
-    public void testFailsWhenDeviceWrongApiLevel() throws Throwable {
-        IDevice device =
-                new InstantAppTests.DeviceGenerator()
-                        .setApiLevel(20, null)
-                        .setArchitectures("x86")
-                        .setHardware("ranchu")
-                        .getDevice();
-        assertProvisionException(device, ProvisionException.ErrorType.DEVICE_NOT_SUPPORTED);
-        assertEquals(
-                ProvisionRunner.ProvisionState.Step.CHECK_ARCH,
+                ProvisionRunner.ProvisionState.Step.FINISHED,
                 myProvisionRunner.getCache().get(device).lastSucceeded);
     }
 

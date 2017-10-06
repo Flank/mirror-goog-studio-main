@@ -144,6 +144,7 @@ class ConfigurationExtensionTest(val pluginType: TestProjects.Plugin) {
             "testDemoImplementation" to "demoImplementation",
             "testDebugImplementation" to "debugImplementation",
             "androidTestDemoImplementation" to "demoImplementation",
+            "androidTestDebugImplementation" to "debugImplementation",
             // multi flavors and variant configs
             "testLollipopDemoImplementation" to "lollipopDemoImplementation",
             "androidTestLollipopDemoImplementation" to "lollipopDemoImplementation",

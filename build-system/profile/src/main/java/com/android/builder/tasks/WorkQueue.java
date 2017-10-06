@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * A work queue that accepts jobs and treat them in order.
@@ -49,6 +50,7 @@ public class WorkQueue<T> implements Runnable {
     private final float mGrowthTriggerRatio;
     private final int mMWorkforceIncrement;
     private final AtomicInteger mThreadId = new AtomicInteger(0);
+    private final AtomicInteger mServerFailure = new AtomicInteger(0);
     private final QueueThreadContext<T> mQueueThreadContext;
 
     // we could base this on the number of processors this machine has, etc...
@@ -158,6 +160,14 @@ public class WorkQueue<T> implements Runnable {
      */
     public synchronized void shutdown() throws InterruptedException {
 
+        List<Thread> livingThreads =
+                mWorkThreads.stream().filter(Thread::isAlive).collect(Collectors.toList());
+
+        if (livingThreads.isEmpty() && !mPendingJobs.isEmpty()) {
+            // all of our threads died without processing all the jobs, this is not good.
+            throw new RuntimeException("No slave process to process jobs, aborting");
+        }
+
         // push as many death pills as necessary
         for (Thread t : mWorkThreads) {
             _push(new QueueTask<>(QueueTask.ActionType.Death, null));
@@ -197,13 +207,38 @@ public class WorkQueue<T> implements Runnable {
     @Override
     public void run() {
         final String threadName = Thread.currentThread().getName();
-        // this
         try {
             try {
                 verbose("Creating a new working thread %1$s", threadName);
-                mQueueThreadContext.creation(Thread.currentThread());
+                if (!mQueueThreadContext.creation(Thread.currentThread())) {
+                    // Register this thread as failed and see how many failed in total.
+                    int failedServers = mServerFailure.incrementAndGet();
+                    // if all the threads have failed to start, pick up jobs and fail them all.
+                    if (failedServers == mWorkThreads.size()) {
+                        for (QueueTask<T> task : mPendingJobs) {
+                            task.job.error(
+                                    new RuntimeException(
+                                            "No server to serve request. Check logs for details."));
+                        }
+                    }
+                    verbose("Thread(%1$s): Could not start slave process, exiting thread.");
+                    return;
+                }
             } catch (IOException e) {
-                e.printStackTrace();
+                verbose(
+                        "Thread(%1$s): Exception while starting thread : (%2$s)",
+                        threadName, e.getMessage());
+                // Register this thread as failed and see how many failed in total.
+                int failedServers = mServerFailure.incrementAndGet();
+                // if all the threads have failed to start, pick up jobs and fail them all.
+                if (failedServers == mWorkThreads.size()) {
+                    for (QueueTask<T> task : mPendingJobs) {
+                        task.job.error(
+                                new RuntimeException(
+                                        "No server to serve request. Check logs for details."));
+                    }
+                }
+                return;
             }
             while(true) {
                 final QueueTask<T> queueTask = mPendingJobs.take();
