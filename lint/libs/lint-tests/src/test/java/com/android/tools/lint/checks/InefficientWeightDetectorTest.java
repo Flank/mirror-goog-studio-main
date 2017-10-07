@@ -590,6 +590,38 @@ public class InefficientWeightDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
+    public void testSpace() {
+        // Regression test for
+        // 30361083: Lint probably shouldn't warn that a <Space> view will be invisible
+
+        //noinspection all // Sample code
+        lint().files(
+                xml("res/layout/wrong0dp.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<FrameLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\"\n"
+                        + "    android:layout_width=\"match_parent\"\n"
+                        + "    android:layout_height=\"match_parent\"\n"
+                        + "    android:orientation=\"vertical\"\n"
+                        + "    tools:ignore=\"HardcodedText\" >\n"
+                        + "    <LinearLayout\n"
+                        + "        android:layout_width=\"match_parent\"\n"
+                        + "        android:layout_height=\"match_parent\"\n"
+                        + "        android:orientation=\"vertical\" >\n"
+                        + "        <Space\n"
+                        + "            android:layout_width=\"0dp\"\n"
+                        + "            android:layout_height=\"wrap_content\"\n"
+                        + "            android:text=\"Button\" />\n"
+                        + "        <android.support.v4.widget.Space\n"
+                        + "            android:layout_width=\"0dp\"\n"
+                        + "            android:layout_height=\"wrap_content\"\n"
+                        + "            android:text=\"Button\" />\n"
+                        + "    </LinearLayout>\n"
+                        + "</FrameLayout>\n"))
+                .run()
+                .expectClean();
+    }
+
     public void testOrientation() {
         String expected = ""
                 + "res/layout/orientation.xml:52: Error: No orientation specified, and the default is horizontal. This is a common source of bugs when children are added dynamically. [Orientation]\n"

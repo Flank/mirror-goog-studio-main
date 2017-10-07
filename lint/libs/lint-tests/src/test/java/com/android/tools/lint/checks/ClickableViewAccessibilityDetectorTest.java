@@ -25,7 +25,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
         return new ClickableViewAccessibilityDetector();
     }
 
-    public void testWarningWhenViewOverridesOnTouchEventButNotPerformClick() throws Exception {
+    public void testWarningWhenViewOverridesOnTouchEventButNotPerformClick() {
         String expected = ""
                 + "src/test/pkg/ClickableViewAccessibilityTest.java:15: Warning: Custom view ViewOverridesOnTouchEventButNotPerformClick overrides onTouchEvent but not performClick [ClickableViewAccessibility]\n"
                 + "        public boolean onTouchEvent(MotionEvent event) {\n"
@@ -59,7 +59,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testWarningWhenOnTouchEventDoesNotCallPerformClick() throws Exception {
+    public void testWarningWhenOnTouchEventDoesNotCallPerformClick() {
         String expected = ""
                 + "src/test/pkg/ClickableViewAccessibilityTest.java:15: Warning: ViewDoesNotCallPerformClick#onTouchEvent should call ViewDoesNotCallPerformClick#performClick when a click is detected [ClickableViewAccessibility]\n"
                 + "        public boolean onTouchEvent(MotionEvent event) {\n"
@@ -98,7 +98,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testWarningWhenPerformClickDoesNotCallSuper() throws Exception {
+    public void testWarningWhenPerformClickDoesNotCallSuper() {
         String expected = ""
                 + "src/test/pkg/ClickableViewAccessibilityTest.java:15: Warning: PerformClickDoesNotCallSuper#performClick should call super#performClick [ClickableViewAccessibility]\n"
                 + "        public boolean performClick() {\n"
@@ -132,7 +132,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoWarningOnValidView() throws Exception {
+    public void testNoWarningOnValidView() {
         //noinspection all // Sample code
         lint().files(
                 classpath(),
@@ -167,7 +167,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoWarningOnNonViewSubclass() throws Exception {
+    public void testNoWarningOnNonViewSubclass() {
         //noinspection all // Sample code
         lint().files(
                 classpath(),
@@ -194,7 +194,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWarningOnViewSubclass() throws Exception {
+    public void testWarningOnViewSubclass() {
         // ViewSubclass is actually a subclass of ValidView. This tests that we can detect
         // tests further down in the inheritance hierarchy than direct children of View.
         //noinspection all // Sample code
@@ -252,7 +252,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoWarningOnOnTouchEventWithDifferentSignature() throws Exception {
+    public void testNoWarningOnOnTouchEventWithDifferentSignature() {
         //noinspection all // Sample code
         lint().files(
                 classpath(),
@@ -282,7 +282,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoWarningOnPerformClickWithDifferentSignature() throws Exception {
+    public void testNoWarningOnPerformClickWithDifferentSignature() {
         //noinspection all // Sample code
         lint().files(
                 classpath(),
@@ -312,7 +312,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWarningWhenSetOnTouchListenerCalledOnViewWithNoPerformClick() throws Exception {
+    public void testWarningWhenSetOnTouchListenerCalledOnViewWithNoPerformClick() {
         String expected = ""
                 + "src/test/pkg/ClickableViewAccessibilityTest.java:19: Warning: Custom view `NoPerformClick` has setOnTouchListener called on it but does not override performClick [ClickableViewAccessibility]\n"
                 + "            view.setOnTouchListener(new ValidOnTouchListener());\n"
@@ -359,7 +359,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoWarningWhenSetOnTouchListenerNotCalledOnViewWithNoPerformClick() throws Exception {
+    public void testNoWarningWhenSetOnTouchListenerNotCalledOnViewWithNoPerformClick() {
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(10),
@@ -385,7 +385,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testNoWarningWhenSetOnTouchListenerCalledOnViewWithPerformClick() throws Exception {
+    public void testNoWarningWhenSetOnTouchListenerCalledOnViewWithPerformClick() {
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(10),
@@ -419,7 +419,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoWarningWhenOnTouchListenerCalledOnNonViewSubclass() throws Exception {
+    public void testNoWarningWhenOnTouchListenerCalledOnNonViewSubclass() {
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(10),
@@ -454,7 +454,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testNoWarningWhenOnTouchCallsPerformClick() throws Exception {
+    public void testNoWarningWhenOnTouchCallsPerformClick() {
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(10),
@@ -479,7 +479,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testWarningWhenOnTouchDoesNotCallPerformClick() throws Exception {
+    public void testWarningWhenOnTouchDoesNotCallPerformClick() {
         String expected = ""
                 + "src/test/pkg/ClickableViewAccessibilityTest.java:10: Warning: InvalidOnTouchListener#onTouch should call View#performClick when a click is detected [ClickableViewAccessibility]\n"
                 + "        public boolean onTouch(View v, MotionEvent event) {\n"
@@ -509,7 +509,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testNoWarningWhenAnonymousOnTouchListenerCallsPerformClick() throws Exception {
+    public void testNoWarningWhenAnonymousOnTouchListenerCallsPerformClick() {
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(10),
@@ -537,7 +537,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWarningWhenAnonymousOnTouchListenerDoesNotCallPerformClick() throws Exception {
+    public void testWarningWhenAnonymousOnTouchListenerDoesNotCallPerformClick() {
         String expected = ""
                 + "src/test/pkg/ClickableViewAccessibilityTest.java:12: Warning: onTouch should call View#performClick when a click is detected [ClickableViewAccessibility]\n"
                 + "                public boolean onTouch(View v, MotionEvent event) {\n"
@@ -627,7 +627,7 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                         + "0 errors, 4 warnings\n");
     }
 
-    public void testGenericFindViewById() throws Exception {
+    public void testGenericFindViewById() {
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(10),
@@ -651,6 +651,37 @@ public class ClickableViewAccessibilityDetectorTest extends AbstractCheckTest {
                         + "        view.setOnTouchListener((view1, motionEvent) -> view1.performClick());\n"
                         + "    }\n"
                         + "}\n"))
+                .run()
+                .expectClean();
+    }
+
+    public void testSuppress() {
+        // Regression test for 65125896
+        // 65125896: Lint suppression for ClickableViewAccessibility doesn't work
+        //noinspection all // Sample code
+        lint().files(
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.annotation.SuppressLint;\n" +
+                        "import android.webkit.WebView;\n" +
+                        "import android.widget.LinearLayout;\n" +
+                        "\n" +
+                        "public class CheckSuppress {\n" +
+                        "    private LinearLayout mOverScrollableParent;\n" +
+                        "    private WebView mWebView;\n" +
+                        "\n" +
+                        "    @SuppressLint(\"ClickableViewAccessibility\")\n" +
+                        "    public void test2() {\n" +
+                        "        mWebView.setOnTouchListener(\n" +
+                        "                (view, motionEvent) -> {\n" +
+                        "                    if (view.getScrollY() != 0 && mOverScrollableParent != null) {\n" +
+                        "                    }\n" +
+                        "                    return false;\n" +
+                        "                });\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n"))
                 .run()
                 .expectClean();
     }

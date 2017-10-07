@@ -394,7 +394,7 @@ public enum TextFormat {
                 int end = i + length;
                 while (end < n) {
                     char d = text.charAt(end);
-                    if (Character.isWhitespace(d)) {
+                    if (terminatesUrl(d)) {
                         break;
                     }
                     end++;
@@ -430,6 +430,31 @@ public enum TextFormat {
         }
 
         return sb.toString();
+    }
+
+    private static boolean terminatesUrl(char c) {
+        if (c >= 'a' && c <= 'z') {
+            return false;
+        }
+        if (c >= 'A' && c <= 'Z') {
+            return false;
+        }
+        if (c >= '0' && c <= '9') {
+            return false;
+        }
+        switch (c) {
+            case '-':
+            case '_':
+            case '.':
+            case '*':
+            case '+':
+            case '%':
+            case '/':
+            case '#':
+                return false;
+        }
+
+        return true;
     }
 
     private static String removeNumericEntities(@NonNull String html) {

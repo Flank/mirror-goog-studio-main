@@ -23,14 +23,17 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiLocalVariable;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiVariable;
+import java.lang.reflect.Field;
 import org.jetbrains.uast.UDeclaration;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UQualifiedReferenceExpression;
@@ -41,6 +44,64 @@ import org.jetbrains.uast.UastContext;
 import org.jetbrains.uast.UastUtils;
 
 public class UastLintUtils {
+
+    /** Returns the containing file for the given element */
+    @Nullable
+    public static PsiFile getContainingFile(
+            @NonNull JavaContext context,
+            @Nullable PsiElement element) {
+        if (element == null) {
+            return null;
+        }
+
+        PsiFile containingFile = element.getContainingFile();
+        if (!containingFile.equals(context.getPsiFile())) {
+            return getContainingFile(element);
+        }
+
+        return containingFile;
+    }
+
+    /** Returns the containing file for the given element */
+    @Nullable
+    public static PsiFile getPsiFile(@Nullable UFile file) {
+        if (file == null) {
+            return null;
+        }
+
+        return getContainingFile(file.getPsi());
+    }
+
+    /** Returns the containing file for the given element */
+    @Nullable
+    public static PsiFile getContainingFile(@Nullable PsiElement element) {
+        if (element == null) {
+            return null;
+        }
+
+        PsiFile containingFile =
+                element instanceof PsiFile ? (PsiFile) element : element.getContainingFile();
+
+        // In Kotlin files identifiers are sometimes using LightElements that are hosted in
+        // a dummy file, these do not have the right PsiFile as containing elements
+        Class<?> cls = containingFile.getClass();
+        String name = cls.getName();
+        if (name.startsWith(
+                "org.jetbrains.kotlin.asJava.classes.KtLightClassForSourceDeclaration")) {
+            try {
+                Field declaredField = cls.getSuperclass().getDeclaredField("ktFile");
+                declaredField.setAccessible(true);
+                Object o = declaredField.get(containingFile);
+                if (o instanceof PsiFile) {
+                    return (PsiFile) o;
+                }
+            } catch (Throwable ignore) {
+            }
+        }
+
+        return containingFile;
+    }
+
     @Nullable
     public static String getQualifiedName(PsiElement element) {
         if (element instanceof PsiClass) {

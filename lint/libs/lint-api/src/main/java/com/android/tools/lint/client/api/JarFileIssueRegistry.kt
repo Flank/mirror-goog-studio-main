@@ -18,6 +18,7 @@
 
 package com.android.tools.lint.client.api
 
+import com.android.SdkConstants
 import com.android.SdkConstants.DOT_CLASS
 import com.android.tools.lint.detector.api.Detector.JavaPsiScanner
 import com.android.tools.lint.detector.api.Detector.JavaScanner
@@ -295,7 +296,7 @@ private constructor(
          * with the file. We'll do that here. However, the whole point of the
          * [JarFileIssueRegistry] is that when lint is run over and over again
          * as the user is editing in the IDE and we're background checking the code, we
-         * don't to keep loading the custom view classes over and over again: we want to
+         * don't want to keep loading the custom view classes over and over again: we want to
          * cache them. Therefore, just closing the URLClassLoader right away isn't great
          * either. However, it turns out it's safe to close the URLClassLoader once you've
          * loaded the classes you need, since the URLClassLoader will continue to serve
@@ -312,29 +313,40 @@ private constructor(
                 client: LintClient,
                 file: File,
                 loader: URLClassLoader) {
+            if (SdkConstants.CURRENT_PLATFORM != SdkConstants.PLATFORM_WINDOWS) {
+                // We don't need to close the class loader on other platforms than Windows
+                return
+            }
+
             // Before closing the jar file, proactively load all classes:
             try {
                 JarFile(file).use { jar ->
                     val enumeration = jar.entries()
                     while (enumeration.hasMoreElements()) {
                         val entry = enumeration.nextElement()
-                        var name = entry.name
+                        val path = entry.name
                         // Load non-inner-classes
-                        if (name.endsWith(DOT_CLASS)) {
+                        if (path.endsWith(DOT_CLASS) && path.indexOf('$') == -1) {
                             // Strip .class suffix and change .jar file path (/)
                             // to class name (.'s).
-                            name = name.substring(0, name.length - DOT_CLASS.length)
-                            name = name.replace('/', '.')
+                            val name = path.substring(0, path.length - DOT_CLASS.length).
+                                    replace('/', '.')
                             try {
-                                val aClass = Class.forName(name, true, loader)
+                                val cls = Class.forName(name, true, loader)
                                 // Actually, initialize them too to make sure basic classes
                                 // needed by the detector are available
-                                aClass.newInstance()
+                                if (!(cls.isAnnotation || cls.isEnum || cls.isInterface)) {
+                                    try {
+                                        val defaultConstructor = cls.getConstructor()
+                                        defaultConstructor.isAccessible = true
+                                        defaultConstructor.newInstance()
+                                    } catch (ignore: NoSuchMethodException) {
+                                    }
+                                }
                             } catch (e: Throwable) {
                                 client.log(Severity.ERROR, e,
                                         "Failed to prefetch $name from $file")
                             }
-
                         }
                     }
                 }

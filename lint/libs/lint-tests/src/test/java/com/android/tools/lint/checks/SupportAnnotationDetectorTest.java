@@ -3566,6 +3566,32 @@ public class SupportAnnotationDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testKotlinVisibility() {
+        if (skipKotlinTests()) {
+            return;
+        }
+
+        // Regression test for https://issuetracker.google.com/67489310
+        // Handle Kotlin compilation unit visibility (files, internal ,etc)
+        lint().files(
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.support.annotation.VisibleForTesting\n" +
+                        "\n" +
+                        "fun foo() {\n" +
+                        "    AndroidOSVersionChecker()\n" +
+                        "}\n" +
+                        "\n" +
+                        "@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)\n" +
+                        "internal class AndroidOSVersionChecker2 {\n" +
+                        "}"),
+                mSupportClasspath,
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
     public static final String SUPPORT_JAR_PATH = "libs/support-annotations.jar";
     private TestFile mSupportJar = base64gzip(SUPPORT_JAR_PATH,
             SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP);

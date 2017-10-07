@@ -97,6 +97,7 @@ public class Main {
     private static final String ARG_VERSION    = "--version";
     private static final String ARG_EXIT_CODE  = "--exitcode";
     private static final String ARG_SDK_HOME   = "--sdk-home";
+    private static final String ARG_FATAL      = "--fatalOnly";
     private static final String ARG_PROJECT    = "--project";
     private static final String ARG_CLASSES    = "--classpath";
     private static final String ARG_SOURCES    = "--sources";
@@ -437,6 +438,8 @@ public class Main {
                 flags.setShowSourceLines(false);
             } else if (arg.equals(ARG_EXIT_CODE)) {
                 flags.setSetExitCode(true);
+            } else if (arg.equals(ARG_FATAL)) {
+                flags.setFatalOnly(true);
             } else if (arg.equals(ARG_VERSION)) {
                 printVersion(client);
                 exit(ERRNO_SUCCESS);
@@ -448,6 +451,7 @@ public class Main {
                 String map = args[++index];
                 // Allow repeated usage of the argument instead of just comma list
                 if (urlMap != null) {
+                    //noinspection StringConcatenationInLoop
                     urlMap = urlMap + ',' + map;
                 } else {
                     urlMap = map;
@@ -1173,6 +1177,7 @@ public class Main {
             ARG_EXIT_CODE, "Set the exit code to " + ERRNO_ERRORS + " if errors are found.",
             ARG_SHOW, "List available issues along with full explanations.",
             ARG_SHOW + " <ids>", "Show full explanations for the given list of issue id's.",
+            ARG_FATAL, "Only check for fatal severity issues",
 
             "", "\nEnabled Checks:",
             ARG_DISABLE + " <list>", "Disable the list of categories or " +

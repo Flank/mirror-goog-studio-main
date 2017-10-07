@@ -3616,17 +3616,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
     @SuppressWarnings({"MethodMayBeStatic", "ConstantConditions", "ClassNameDiffersFromFileName"})
     public void testCastChecks() {
         // When editing a file we place the error on the first line of the file instead
-        String expected = ""
-                + "src/test/pkg/CastTest.java:15: Error: Cast from Cursor to Closeable requires API level 16 (current min is 14) [NewApi]\n"
-                + "        Closeable closeable = (Closeable) cursor; // Requires 16\n"
-                + "                              ~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/CastTest.java:21: Error: Cast from KeyCharacterMap to Parcelable requires API level 16 (current min is 14) [NewApi]\n"
-                + "        Parcelable parcelable2 = (Parcelable)map; // Requires API 16\n"
-                + "                                 ~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/CastTest.java:27: Error: Cast from AnimatorListenerAdapter to AnimatorPauseListener requires API level 19 (current min is 14) [NewApi]\n"
-                + "        AnimatorPauseListener listener = (AnimatorPauseListener)adapter;\n"
-                + "                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "3 errors, 0 warnings\n";
+        String expected = "" +
+                "src/test/pkg/CastTest.java:15: Error: Cast from Cursor to Closeable requires API level 16 (current min is 14) [NewApi]\n" +
+                "        Closeable closeable = (Closeable) cursor; // Requires 16\n" +
+                "                              ~~~~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/CastTest.java:21: Error: Cast from KeyCharacterMap to Parcelable requires API level 16 (current min is 14) [NewApi]\n" +
+                "        Parcelable parcelable2 = (Parcelable)map; // Requires API 16\n" +
+                "                                 ~~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/CastTest.java:27: Error: Class requires API level 19 (current min is 14): android.animation.Animator.AnimatorPauseListener [NewApi]\n" +
+                "        AnimatorPauseListener listener = (AnimatorPauseListener)adapter;\n" +
+                "                                          ~~~~~~~~~~~~~~~~~~~~~\n" +
+                "3 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
                 java("src/test/pkg/CastTest.java", ""
@@ -4730,6 +4730,33 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
+    }
+
+    public void testCastTypeCheck() {
+        // Regression test for 35381581:  Check Class API target
+        //noinspection all // Sample code
+        lint().files(
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.content.Context;\n" +
+                        "import android.os.UserManager;\n" +
+                        "\n" +
+                        "/** @noinspection ClassNameDiffersFromFileName, MethodMayBeStatic */ " +
+                        "public class Check {\n" +
+                        "    public void test(Context context) {\n" +
+                        "        UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n"))
+                .run()
+                .expect("src/test/pkg/Check.java:8: Warning: Field requires API level 17 (current min is 1): android.content.Context#USER_SERVICE [InlinedApi]\n" +
+                        "        UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);\n" +
+                        "                                                                         ~~~~~~~~~~~~~~~~~~~~\n" +
+                        "src/test/pkg/Check.java:8: Error: Class requires API level 17 (current min is 1): android.os.UserManager [NewApi]\n" +
+                        "        UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);\n" +
+                        "                                   ~~~~~~~~~~~\n" +
+                        "1 errors, 1 warnings\n");
     }
 
     @Override

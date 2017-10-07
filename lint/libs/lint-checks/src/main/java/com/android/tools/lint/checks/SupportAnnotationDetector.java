@@ -1034,9 +1034,9 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
             // (1) private is available in the same compilation unit
             // (2) package private is available in the same package
             // (3) protected is available either from subclasses or in same package
-            UFile uFile = UastUtils.getContainingFile(node);
-            PsiFile containingFile1 = uFile != null ? uFile.getPsi() : null;
-            PsiFile containingFile2 = method.getContainingFile();
+            UFile uFile = UastUtils.getContainingFile(node); // Can't use getContainingUFile yet; IDE needs update
+            PsiFile containingFile1 = UastLintUtils.getPsiFile(uFile);
+            PsiFile containingFile2 = UastLintUtils.getContainingFile(method);
             if (Objects.equals(containingFile1, containingFile2) || containingFile2 == null) {
                 // Same compilation unit
                 return;
@@ -1103,6 +1103,7 @@ public class SupportAnnotationDetector extends Detector implements UastScanner {
     private static final int VISIBILITY_PACKAGE_PRIVATE   = 3;
     private static final int VISIBILITY_PROTECTED         = 4;
     private static final int VISIBILITY_NONE              = 5;
+    // TODO: Kotlin "module" visibility
 
     public static int getVisibilityForTesting(@NonNull UAnnotation annotation) {
         UExpression value = annotation.findDeclaredAttributeValue(ATTR_OTHERWISE);

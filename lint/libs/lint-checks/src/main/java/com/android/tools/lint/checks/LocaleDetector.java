@@ -37,6 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UThrowExpression;
 import org.jetbrains.uast.UastUtils;
 
 /**
@@ -156,6 +157,11 @@ public class LocaleDetector extends Detector implements UastScanner {
             if (isLoggingParameter(context, call)) {
                 return;
             }
+
+            if (UastUtils.getParentOfType(call, UThrowExpression.class, true) != null) {
+                return;
+            }
+
             Location location;
             if (FORMAT_METHOD.equals(call.getMethodName())) {
                 // For String#format, include receiver (String), but not for .toUppercase etc

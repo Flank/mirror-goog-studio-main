@@ -1157,7 +1157,42 @@ public class ApiDetector extends ResourceXmlDetector
             }
             PsiClassType classType = (PsiClassType)operandType;
             PsiClassType interfaceType = (PsiClassType)castType;
+
+            UTypeReferenceExpression typeReference = expression.getTypeReference();
+            if (typeReference != null) {
+                if (!checkCastTypeReference(typeReference, interfaceType)) {
+                    // Found problem with cast type itself: don't bother also warning
+                    // about problem with LHS
+                    return;
+                }
+            }
+
             checkCast(expression, classType, interfaceType);
+        }
+
+        private boolean checkCastTypeReference(@NonNull UTypeReferenceExpression node,
+                @NonNull PsiClassType classType) {
+            JavaEvaluator evaluator = mContext.getEvaluator();
+            String expressionOwner = evaluator.getQualifiedName(classType);
+            if (expressionOwner == null) {
+                return true;
+            }
+            int api = mApiDatabase.getClassVersion(expressionOwner);
+            if (api == -1) {
+                return true;
+            }
+            int minSdk = getMinSdk(mContext);
+            if (isSuppressed(mContext, api, node, minSdk)) {
+                return true;
+            }
+
+            String message = String.format(
+                    "Class requires API level %1$d (current min is %2$d): %3$s", api,
+                    Math.max(minSdk, getTargetApi(node)), expressionOwner);
+
+            Location location = mContext.getLocation(node);
+            mContext.report(UNSUPPORTED, node, location, message, apiLevelFix(api));
+            return false;
         }
 
         private void checkCast(

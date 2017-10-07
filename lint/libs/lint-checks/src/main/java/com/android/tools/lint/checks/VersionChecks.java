@@ -2,11 +2,14 @@ package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.detector.api.LintUtils.getNextInstruction;
 import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
+import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.sdklib.SdkVersionInfo;
 import com.android.tools.lint.detector.api.ClassContext;
+import com.android.utils.SdkUtils;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiExpression;
@@ -417,10 +420,18 @@ public class VersionChecks {
             }
         }
 
+        int version = getMinSdkVersionFromMethodName(name);
+        if (version != -1) {
+            return api <= version;
+        }
+
         // Unconditional version utility method? If so just attempt to call it
         if (!method.hasModifierProperty(PsiModifier.ABSTRACT)) {
             UastContext context = UastUtils.getUastContext(call);
             UExpression body = context.getMethodBody(method);
+            if (body == null) {
+                return null;
+            }
             List<UExpression> expressions;
             if (body instanceof UBlockExpression) {
                 expressions = ((UBlockExpression) body).getExpressions();
@@ -536,6 +547,46 @@ public class VersionChecks {
         }
 
         return false;
+    }
+
+    private static final String[] VERSION_METHOD_NAME_PREFIXES = {
+      "isAtLeast",  "isRunning", "is", "runningOn", "running"
+    };
+    private static final String[] VERSION_METHOD_NAME_SUFFIXES = {
+      "OrLater", "OrAbove", "OrHigher", "OrNewer", "Sdk"
+    };
+
+    @VisibleForTesting
+    static int getMinSdkVersionFromMethodName(String name) {
+        String prefix = null;
+        String suffix = null;
+        for (String p : VERSION_METHOD_NAME_PREFIXES) {
+            if (name.startsWith(p)) {
+                prefix = p;
+                break;
+            }
+        }
+        for (String p : VERSION_METHOD_NAME_SUFFIXES) {
+            if (endsWithIgnoreCase(name, p)) {
+                suffix = p;
+                break;
+            }
+        }
+
+        if ("isAtLeast".equals(prefix) && suffix == null) {
+            suffix = "";
+        }
+
+        if (prefix != null && suffix != null) {
+            String codeName = name.substring(prefix.length(), name.length() - suffix.length());
+            int version = SdkVersionInfo.getApiByPreviewName(codeName, false);
+            if (version == -1) {
+                version = SdkVersionInfo.getApiByBuildCode(codeName, false);
+            }
+
+            return version;
+        }
+        return -1;
     }
 
     @Nullable
@@ -710,7 +761,7 @@ public class VersionChecks {
                         }
                         level = SdkVersionInfo.getApiByBuildCode(codeName, true);
                     } else if (right instanceof ULiteralExpression) {
-                        ULiteralExpression lit = (ULiteralExpression)right;
+                        ULiteralExpression lit = (ULiteralExpression) right;
                         Object value = lit.getValue();
                         if (value instanceof Integer) {
                             level = (Integer) value;

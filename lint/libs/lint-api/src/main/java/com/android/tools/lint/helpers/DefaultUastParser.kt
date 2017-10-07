@@ -22,6 +22,7 @@ import com.android.tools.lint.client.api.UastParser
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
+import com.android.tools.lint.detector.api.UastLintUtils
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.util.TextRange
 import com.intellij.openapi.util.io.FileUtilRt
@@ -32,7 +33,6 @@ import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiManager
 import com.intellij.psi.PsiNameIdentifierOwner
-import com.intellij.psi.PsiPlainText
 import com.intellij.psi.PsiPlainTextFile
 import com.intellij.psi.impl.light.LightElement
 import org.jetbrains.uast.UCallExpression
@@ -169,7 +169,7 @@ open class DefaultUastParser(
             range = element.textRange
         }
 
-        val containingFile = getContainingFile(context, element)
+        val containingFile = UastLintUtils.getContainingFile(context, element)
         var file = context.file
         var contents: CharSequence = context.getContents() ?: ""
 
@@ -196,27 +196,6 @@ open class DefaultUastParser(
 
         return Location.create(file, contents, range.startOffset, range.endOffset)
                 .setSource(element)
-    }
-
-    /** Returns the containing file for the given element */
-    private fun getContainingFile(context: JavaContext, element: PsiElement): PsiFile? {
-        val containingFile = element.containingFile
-        if (containingFile != context.psiFile) {
-            // In Kotlin files identifiers are sometimes using LightElements that are hosted in
-            // a dummy file, these do not have the right PsiFile as containing elements
-            val cls = containingFile.javaClass
-            val name = cls.name
-            if (name.startsWith("org.jetbrains.kotlin.asJava.classes.KtLightClassForSourceDeclaration")) {
-                try {
-                    val declaredField = cls.superclass.getDeclaredField("ktFile")
-                    declaredField.isAccessible = true
-                    return (declaredField.get(containingFile) as? PsiFile?) ?: containingFile
-                } catch (e: Throwable) {
-                }
-            }
-        }
-
-        return containingFile
     }
 
     override // subclasses may want to override/optimize

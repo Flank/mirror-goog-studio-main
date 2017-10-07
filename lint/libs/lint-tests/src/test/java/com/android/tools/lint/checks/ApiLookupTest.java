@@ -74,7 +74,7 @@ import org.w3c.dom.Element;
 public class ApiLookupTest extends AbstractCheckTest {
     private final ApiLookup mDb = ApiLookup.get(createClient());
 
-    public void test1() {
+    public void testBasic() {
         assertEquals(5, mDb.getFieldVersion("android.Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
         assertEquals(5, mDb.getFieldVersion("android.Manifest.permission", "AUTHENTICATE_ACCOUNTS"));
         assertEquals(5, mDb.getFieldVersion("android/Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
@@ -107,7 +107,7 @@ public class ApiLookupTest extends AbstractCheckTest {
                 "<init>", "(I)V"));
     }
 
-    public void test2() {
+    public void testWildcardSyntax() {
         // Regression test:
         // This used to return 11 because of some wildcard syntax in the signature
         assertTrue(mDb.getMethodVersion("java/lang/Object", "getClass", "()") <= 1);
@@ -354,6 +354,22 @@ public class ApiLookupTest extends AbstractCheckTest {
             actual = -1;
         }
         assertEquals(desc, expected, actual);
+    }
+
+    public void testDeprecatedIn() {
+        assertEquals(9, mDb.getClassDeprecatedIn("org/xml/sax/Parser"));
+        assertEquals(16, mDb.getFieldDeprecatedIn("dalvik/bytecode/Opcodes", "OP_IPUT_WIDE_VOLATILE"));
+
+        assertEquals(20, mDb.getMethodDeprecatedIn("android/view/View", "fitSystemWindows", "(Landroid/graphics/Rect;)"));
+        assertEquals(16, mDb.getMethodVersion("android/widget/CalendarView", "getWeekNumberColor", "()"));
+        assertEquals(23, mDb.getMethodDeprecatedIn("android/widget/CalendarView", "getWeekNumberColor", "()"));
+        assertEquals(19, mDb.getMethodVersion("android/webkit/WebView", "createPrintDocumentAdapter", "()"));
+        // Regression test for 65376457: CreatePrintDocumentAdapter() was deprecated in api 21,
+        // not api 3 as lint reports.
+        // (The root bug was that for deprecation we also lowered it if superclasses were
+        // deprecated (such as AbsoluteLayout, a superclass of WebView) - this is necessary when
+        // computing version-requirementsbut not deprecation versions.
+        assertEquals(21, mDb.getMethodDeprecatedIn("android/webkit/WebView", "createPrintDocumentAdapter", "()"));
     }
 
     // Flaky test - http://b.android.com/225879

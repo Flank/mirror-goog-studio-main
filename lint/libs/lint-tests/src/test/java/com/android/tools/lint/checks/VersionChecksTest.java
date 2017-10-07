@@ -2077,6 +2077,49 @@ public class VersionChecksTest extends AbstractCheckTest {
                 "1 errors, 1 warnings\n");
     }
 
+    public void testGetMinSdkVersionFromMethodName() {
+        assertEquals(19, VersionChecks.getMinSdkVersionFromMethodName("isAtLeastKitKat"));
+        assertEquals(19, VersionChecks.getMinSdkVersionFromMethodName("isKitKatSdk"));
+        assertEquals(19, VersionChecks.getMinSdkVersionFromMethodName("isKitKatSDK"));
+        assertEquals(19, VersionChecks.getMinSdkVersionFromMethodName("isRunningKitkatOrLater"));
+        assertEquals(19, VersionChecks.getMinSdkVersionFromMethodName("isKeyLimePieOrLater"));
+        assertEquals(19, VersionChecks.getMinSdkVersionFromMethodName("isKitKatOrHigher"));
+        assertEquals(19, VersionChecks.getMinSdkVersionFromMethodName("isKitKatOrNewer"));
+
+        assertEquals(17, VersionChecks.getMinSdkVersionFromMethodName("isRunningJellyBeanMR1OrLater"));
+        assertEquals(20, VersionChecks.getMinSdkVersionFromMethodName("isAtLeastKitKatWatch"));
+    }
+
+    public void testVersionNameFromMethodName() {
+        //noinspection all // Sample code
+        lint().files(
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.content.pm.ShortcutManager;\n" +
+                        "\n" +
+                        "public abstract class VersionCheck {\n" +
+                        "    public void test(ShortcutManager shortcutManager) {\n" +
+                        "        // this requires API 26\n" +
+                        "        if (isAtLeastOreo()) {\n" +
+                        "            shortcutManager.removeAllDynamicShortcuts();\n" +
+                        "        }\n" +
+                        "        if (isOreoOrLater()) {\n" +
+                        "            shortcutManager.removeAllDynamicShortcuts();\n" +
+                        "        }\n" +
+                        "        if (isOreoOrAbove()) {\n" +
+                        "            shortcutManager.removeAllDynamicShortcuts();\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public abstract boolean isAtLeastOreo();\n" +
+                        "    public abstract boolean isOreoOrLater();\n" +
+                        "    public abstract boolean isOreoOrAbove();\n" +
+                        "}\n"))
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected Detector getDetector() {
         return new ApiDetector();

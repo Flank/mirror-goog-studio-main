@@ -158,21 +158,6 @@ final class ApiClass implements Comparable<ApiClass> {
         // This follows the same logic as getField/getMethod.
         // However, it also incorporates deprecation versions from the class.
         int apiLevel = getValueWithDefault(mMembersDeprecatedIn, name, 0);
-
-        // Look at the super classes and interfaces.
-        for (Pair<String, Integer> superClassPair : Iterables.concat(mSuperClasses, mInterfaces)) {
-            ApiClass superClass = info.getClass(superClassPair.getFirst());
-            if (superClass != null) {
-                int i = superClass.getMemberDeprecatedIn(name, info);
-                if (i != 0) {
-                    int tmp = Math.max(superClassPair.getSecond(), i);
-                    if (apiLevel == 0 || tmp < apiLevel) {
-                        apiLevel = tmp;
-                    }
-                }
-            }
-        }
-
         return apiLevel == 0
                 ? mDeprecatedIn
                 : mDeprecatedIn == 0 ? apiLevel : Math.min(apiLevel, mDeprecatedIn);

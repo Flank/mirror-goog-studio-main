@@ -26,6 +26,7 @@ import static com.android.SdkConstants.ATTR_ORIENTATION;
 import static com.android.SdkConstants.ATTR_STYLE;
 import static com.android.SdkConstants.LINEAR_LAYOUT;
 import static com.android.SdkConstants.RADIO_GROUP;
+import static com.android.SdkConstants.SPACE;
 import static com.android.SdkConstants.VALUE_FALSE;
 import static com.android.SdkConstants.VALUE_FILL_PARENT;
 import static com.android.SdkConstants.VALUE_HORIZONTAL;
@@ -364,6 +365,10 @@ public class InefficientWeightDetector extends LayoutDetector {
             if (heightNode != null && heightNode.getValue().startsWith("0")) {
                 noHeight = true;
             } else if (!noWidth) {
+                return;
+            }
+
+            if (child.getTagName().equals(SPACE)) {
                 return;
             }
 

@@ -138,7 +138,7 @@ public class ClickableViewAccessibilityDetector extends Detector implements Uast
             String message = String.format(
                     "Custom view `%1$s` has `setOnTouchListener` called on it but does not "
                             + "override `performClick`", describeClass(viewClass));
-            context.report(ISSUE, method, context.getLocation(node), message);
+            context.report(ISSUE, node, context.getLocation(node), message);
         }
     }
 

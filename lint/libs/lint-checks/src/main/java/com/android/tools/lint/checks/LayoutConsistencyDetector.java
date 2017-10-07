@@ -397,7 +397,7 @@ public class LayoutConsistencyDetector extends LayoutDetector implements UastSca
 
         // Sort locations by the file parent folders
         if (locations.size() > 1) {
-            Collections.sort(locations, (location1, location2) -> {
+            locations.sort((location1, location2) -> {
                 File file1 = location1.getFile();
                 File file2 = location2.getFile();
                 String folder1 = file1.getParentFile().getName();

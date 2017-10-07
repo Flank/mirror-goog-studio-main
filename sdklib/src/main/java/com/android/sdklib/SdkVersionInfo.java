@@ -271,8 +271,27 @@ public class SdkVersionInfo {
      */
     public static int getApiByPreviewName(@NonNull String previewName, boolean recognizeUnknowns) {
         // JellyBean => JELLY_BEAN
-        String codeName = camelCaseToUnderlines(previewName).toUpperCase(Locale.US);
-        return getApiByBuildCode(codeName, recognizeUnknowns);
+        String codeName = previewName.contains("_") ? previewName :
+                camelCaseToUnderlines(previewName).toUpperCase(Locale.US);
+
+        // The build code is KITKAT, not KIT_KAT as may be inferred from "KitKat":
+        if (codeName.contains("KIT_KAT")) {
+            codeName = codeName.replace("KIT_KAT", "KITKAT");
+        }
+
+        int code = getApiByBuildCode(codeName, recognizeUnknowns);
+        if (code == -1) {
+            for (int api = 1; api <= HIGHEST_KNOWN_API; api++) {
+                String c = getCodeName(api);
+                if (c != null && (c.equalsIgnoreCase(codeName) || c.equalsIgnoreCase(previewName))) {
+                    return api;
+                }
+            }
+            if (previewName.equalsIgnoreCase("KeyLimePie")) {
+                return 19;
+            }
+        }
+        return code;
     }
 
     /**
