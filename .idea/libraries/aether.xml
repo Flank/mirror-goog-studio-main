@@ -7,8 +7,6 @@
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-aether-provider/3.3.9" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model/3.3.9" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model-builder/3.3.9" />
-      <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model/3.3.9" />
-      <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model-builder/3.3.9" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-builder-support/3.3.9" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-connector-basic/1.0.2.v20150114" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-transport-http/1.0.2.v20150114" />
@@ -18,7 +16,6 @@
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-interpolation/1.21" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/slf4j/jcl-over-slf4j/1.6.2" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.6.2" />
-      <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/slf4j/jcl-over-slf4j/1.6.2" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-artifact/3.3.9" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-repository-metadata/3.3.9" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/httpcomponents/httpcore/4.2.5" />
@@ -36,13 +33,10 @@
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model/3.3.9" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model-builder/3.3.9" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-util/1.0.2.v20150114" />
-      <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model/3.3.9" />
-      <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model-builder/3.3.9" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-builder-support/3.3.9" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-connector-basic/1.0.2.v20150114" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-transport-http/1.0.2.v20150114" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-utils/3.0.22" />
-      <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-util/1.0.2.v20150114" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-component-annotations/1.6" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-interpolation/1.21" />
       <root url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-artifact/3.3.9" />
@@ -60,8 +54,6 @@
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-artifact/3.3.9" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-builder-support/3.3.9" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model-builder/3.3.9" recursive="false" />
-    <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model-builder/3.3.9" recursive="false" />
-    <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model/3.3.9" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model/3.3.9" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-repository-metadata/3.3.9" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-component-annotations/1.6" recursive="false" />
@@ -74,7 +66,6 @@
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-transport-http/1.0.2.v20150114" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-util/1.0.2.v20150114" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/slf4j/jcl-over-slf4j/1.6.2" recursive="false" />
-    <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/slf4j/jcl-over-slf4j/1.6.2" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/slf4j/slf4j-api/1.6.2" recursive="false" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/commons-codec/commons-codec/1.6" recursive="false" type="SOURCES" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.1.1" recursive="false" type="SOURCES" />
@@ -83,8 +74,6 @@
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-artifact/3.3.9" recursive="false" type="SOURCES" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-builder-support/3.3.9" recursive="false" type="SOURCES" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model-builder/3.3.9" recursive="false" type="SOURCES" />
-    <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model-builder/3.3.9" recursive="false" type="SOURCES" />
-    <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model/3.3.9" recursive="false" type="SOURCES" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-model/3.3.9" recursive="false" type="SOURCES" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/apache/maven/maven-repository-metadata/3.3.9" recursive="false" type="SOURCES" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/codehaus/plexus/plexus-component-annotations/1.6" recursive="false" type="SOURCES" />
@@ -95,7 +84,6 @@
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-impl/1.0.2.v20150114" recursive="false" type="SOURCES" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-spi/1.0.2.v20150114" recursive="false" type="SOURCES" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-transport-http/1.0.2.v20150114" recursive="false" type="SOURCES" />
-    <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-util/1.0.2.v20150114" recursive="false" type="SOURCES" />
     <jarDirectory url="file://$PROJECT_DIR$/../../prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-util/1.0.2.v20150114" recursive="false" type="SOURCES" />
   </library>
 </component>
