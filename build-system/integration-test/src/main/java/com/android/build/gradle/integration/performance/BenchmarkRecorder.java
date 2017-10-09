@@ -66,7 +66,8 @@ public final class BenchmarkRecorder {
         this(
                 benchmark,
                 projectScenario,
-                Arrays.asList(GoogleStorageProfileUploader.INSTANCE, ActdProfileUploader.INSTANCE));
+                Arrays.asList(
+                        GoogleStorageProfileUploader.INSTANCE, ActdProfileUploader.getInstance()));
     }
 
     @VisibleForTesting
