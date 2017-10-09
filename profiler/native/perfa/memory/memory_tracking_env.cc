@@ -128,6 +128,8 @@ MemoryTrackingEnv::MemoryTrackingEnv(jvmtiEnv* jvmti, bool log_live_alloc_count,
       max_stack_depth_(max_stack_depth),
       total_live_count_(0),
       total_free_count_(0),
+      jni_gref_created_count_(0),
+      jni_gref_deleted_count_(0),
       current_class_tag_(kClassStartTag),
       current_object_tag_(kObjectStartTag) {
   // Preallocate space for ClassTagMap to avoid rehashing.
@@ -203,6 +205,22 @@ void MemoryTrackingEnv::Initialize() {
                                    JVMTI_THREAD_NORM_PRIORITY);
     CheckJvmtiError(jvmti_, error);
   }
+}
+
+void MemoryTrackingEnv::AfterGlobalRefCreated(jobject prototype, jobject gref) {
+  jni_gref_created_count_++;
+}
+
+void MemoryTrackingEnv::BeforeGlobalRefDeleted(jobject gref) {
+  jni_gref_deleted_count_++;
+}
+
+void MemoryTrackingEnv::AfterGlobalWeakRefCreated(jobject prototype,
+                                                  jweak gref) {
+  // no-op for now
+}
+void MemoryTrackingEnv::BeforeGlobalWeakRefDeleted(jweak gref) {
+  // no-op for now
 }
 
 /**

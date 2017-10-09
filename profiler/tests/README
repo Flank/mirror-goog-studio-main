@@ -16,7 +16,7 @@ WHAT ARE THE COMPONENTS
   The app launcher is a simple program that acts as the android OS. The
   launchers job is to act as the middle man between the test, and the
   application we want to test. The app-launcher is loaded by art then
-  immediatly sets up a web server as its communication channel. The test
+  immediately sets up a web server as its communication channel. The test
   framework can then issue commands to the app-launcher via http using
   query parameters to do a number of things.
     - attach-agent: This options is called by perfd when attaching an
@@ -25,7 +25,7 @@ WHAT ARE THE COMPONENTS
       a system property in the framework. The current usecase for this
       is to set the communication port for perfa to connect to perfd.
       The format of this argument is set-property=property.name,property.value.
-    - load-dex: This expects a path accessable to the art runtime
+    - load-dex: This expects a path accessible to the art runtime
       (full file path to a dex file in the bazel sandbox) to load. The
       dex will be loaded using any previous dex's loaded as the parent
       class loader.
@@ -70,7 +70,7 @@ HOW DO I ADD NEW TEST
   setting all the proper config variables to ensure the processes are
   pointing to the proper dex files, and AgentConfig.
 
-CAN I MANUALLY LAUNCH THE TEST ENVRIONMENT
+CAN I MANUALLY LAUNCH THE TEST ENVIRONMENT
   Yes, To do this you first should build "//tools/base/profiler/...".
   In the output you can launch "perfd -config_file=[path to config]".
   Followed by launching art with the following options

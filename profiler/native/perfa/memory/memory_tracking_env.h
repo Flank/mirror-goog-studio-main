@@ -25,6 +25,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "perfa/jni_function_table.h"
 #include "proto/internal_memory.grpc.pb.h"
 #include "proto/memory.grpc.pb.h"
 #include "stats.h"
@@ -80,10 +81,16 @@ using MethodIdMap = std::unordered_map<int64_t, LineNumberInfo>;
 using ThreadIdMap = std::unordered_map<std::string, int32_t>;
 #endif
 
-class MemoryTrackingEnv {
+class MemoryTrackingEnv : public GlobalRefListener {
  public:
   static MemoryTrackingEnv* Instance(JavaVM* vm, bool log_live_alloc_count,
                                      int max_stack_depth);
+
+  void AfterGlobalRefCreated(jobject prototype, jobject gref) override;
+  void BeforeGlobalRefDeleted(jobject gref) override;
+
+  void AfterGlobalWeakRefCreated(jobject prototype, jweak gref) override;
+  void BeforeGlobalWeakRefDeleted(jweak gref) override;
 
  private:
   // POD for encoding the method/instruction location data into trie.
@@ -184,6 +191,10 @@ class MemoryTrackingEnv {
   std::atomic<int32_t> total_free_count_;
   std::atomic<int32_t> current_class_tag_;
   std::atomic<int32_t> current_object_tag_;
+  // Number of JNI global references created after agent attach.
+  std::atomic<int32_t> jni_gref_created_count_;
+  // Number of JNI global references deleted after agent attach.
+  std::atomic<int32_t> jni_gref_deleted_count_;
 
   std::mutex class_data_mutex_;
   ProducerConsumerQueue<AllocationEvent> event_queue_;

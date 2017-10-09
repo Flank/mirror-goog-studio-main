@@ -43,6 +43,8 @@ message AgentConfig {
     bool use_live_alloc = 1;
     // the maximum depth of allocation stack traces to record.
     int32 max_stack_depth = 2;
+    // Enable tracking of creation and deletion of globla JNI references.
+    bool track_global_jni_refs = 3;
   }
 
   // equivalent to profiler.jvmti flag in Studio

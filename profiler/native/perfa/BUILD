@@ -3,6 +3,8 @@ load("//tools/base/bazel:android.bzl", "ANDROID_COPTS", "ANDROID_LINKOPTS", "and
 cc_binary(
     name = "libperfa.so",
     srcs = [
+        "jni_function_table.cc",
+        "jni_function_table.h",
         "jvmti_helper.cc",
         "jvmti_helper.h",
         "memory/memory_tracking_env.cc",
