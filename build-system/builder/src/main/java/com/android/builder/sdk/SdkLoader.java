@@ -33,9 +33,8 @@ import java.util.List;
 public interface SdkLoader {
 
     /**
-     * Returns information about a build target.
-     * Potentially downloads SDK components if {@code sdkLibData.useSdlDownload()} is true.
-     * This requires loading/parsing the SDK.
+     * Returns information about a build target. Potentially downloads SDK components if {@code
+     * sdkLibData.useSdlDownload()} is true. This requires loading/parsing the SDK.
      *
      * @param targetHash the compilation target hash string.
      * @param buildToolRevision the build tools revision.
@@ -48,7 +47,8 @@ public interface SdkLoader {
             @NonNull String targetHash,
             @NonNull Revision buildToolRevision,
             @NonNull ILogger logger,
-            @NonNull SdkLibData sdkLibData);
+            @NonNull SdkLibData sdkLibData)
+            throws LicenceNotAcceptedException, InstallFailedException;
 
     /**
      * Returns generic SDK information.
@@ -71,9 +71,9 @@ public interface SdkLoader {
     /**
      * Tries to update (or install) all local maven repositories and returns a list of directories
      * that were modified.
-     * @param repositoryPaths a list of all install paths as described in {@code RepoPackage}
-     *                        of the remote packages for the maven repositories.
-     *                        Eg.: extras;google;m2repository
+     *
+     * @param repositoryPaths a list of all install paths as described in {@code RepoPackage} of the
+     *     remote packages for the maven repositories. Eg.: extras;google;m2repository
      * @param sdkLibData contains all the components for downloading.
      * @param logger a logger for messages.
      * @return a {@code List} of locations to the directories that contain the maven repositories.
@@ -82,7 +82,8 @@ public interface SdkLoader {
     List<File> updateRepositories(
             @NonNull List<String> repositoryPaths,
             @NonNull SdkLibData sdkLibData,
-            @NonNull ILogger logger);
+            @NonNull ILogger logger)
+            throws LicenceNotAcceptedException, InstallFailedException;
 
     /**
      * Installs an Android Sdk Tool if it's not already installed.
@@ -90,8 +91,9 @@ public interface SdkLoader {
      * @param sdkLibData contains all the components for downloading.
      * @param packageId the package/id path of the required Tool component.
      * @return a {@code File} representing the locations to the directory where the Tool component
-     *         is installed or null if we haven't managed to find such a component.
-     **/
+     *     is installed or null if we haven't managed to find such a component.
+     */
     @Nullable
-    File installSdkTool(@NonNull SdkLibData sdkLibData, @NonNull String packageId);
+    File installSdkTool(@NonNull SdkLibData sdkLibData, @NonNull String packageId)
+            throws LicenceNotAcceptedException, InstallFailedException;
 }

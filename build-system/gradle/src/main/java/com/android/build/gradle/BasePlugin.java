@@ -328,8 +328,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         sdkHandler = new SdkHandler(project, getLogger());
         if (!gradle.getStartParameter().isOffline()
-                && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD)
-                && !projectOptions.get(BooleanOption.IDE_INVOKED_FROM_IDE)) {
+                && projectOptions.get(BooleanOption.ENABLE_SDK_DOWNLOAD)) {
             SdkLibData sdkLibData = SdkLibData.download(getDownloader(), getSettingsController());
             sdkHandler.setSdkLibData(sdkLibData);
         }
@@ -657,7 +656,16 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     "The 'java' plugin has been applied, but it is not compatible with the Android plugins.");
         }
 
-        ensureTargetSetup();
+        boolean targetSetupSuccess = ensureTargetSetup();
+        sdkHandler.ensurePlatformToolsIsInstalledWarnOnFailure(
+                extraModelInfo.getSyncIssueHandler());
+        // Stop trying to configure the project if the SDK is not ready.
+        // Sync issues will already have been collected at this point in sync.
+        if (!targetSetupSuccess) {
+            project.getLogger()
+                    .warn("Aborting configuration as SDK is missing components in sync mode.");
+            return;
+        }
 
         // don't do anything if the project was not initialized.
         // Unless TEST_SDK_DIR is set in which case this is unit tests and we don't return.
@@ -763,23 +771,23 @@ public abstract class BasePlugin<E extends BaseExtension2>
         return project.getLogger().isEnabled(LogLevel.INFO);
     }
 
-    private void ensureTargetSetup() {
+    private boolean ensureTargetSetup() {
         // check if the target has been set.
         TargetInfo targetInfo = androidBuilder.getTargetInfo();
-        if (targetInfo == null) {
-            if (extension.getCompileOptions() == null) {
-                throw new GradleException("Calling getBootClasspath before compileSdkVersion");
-            }
-
-            sdkHandler.initTarget(
-                    extension.getCompileSdkVersion(),
-                    extension.getBuildToolsRevision(),
-                    extension.getLibraryRequests(),
-                    androidBuilder,
-                    SdkHandler.useCachedSdk(projectOptions));
-
-            sdkHandler.ensurePlatformToolsIsInstalled(extraModelInfo.getSyncIssueHandler());
+        // noinspection VariableNotUsedInsideIf Directly checking if initialized.
+        if (targetInfo != null) {
+            return true;
         }
+        if (extension.getCompileOptions() == null) {
+            throw new GradleException("Calling getBootClasspath before compileSdkVersion");
+        }
+
+        return sdkHandler.initTarget(
+                extension.getCompileSdkVersion(),
+                extension.getBuildToolsRevision(),
+                extension.getLibraryRequests(),
+                androidBuilder,
+                SdkHandler.useCachedSdk(projectOptions));
     }
 
     /**

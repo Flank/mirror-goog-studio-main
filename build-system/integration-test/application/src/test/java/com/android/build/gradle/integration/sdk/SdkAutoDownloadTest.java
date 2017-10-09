@@ -24,10 +24,13 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTaskExecutor;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelBuilder;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.model.AndroidProject;
+import com.android.builder.model.SyncIssue;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.MavenRepositories;
 import com.android.ide.common.repository.SdkMavenRepository;
@@ -37,6 +40,7 @@ import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
+import com.google.common.base.Splitter;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
@@ -45,7 +49,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -317,7 +323,9 @@ public class SdkAutoDownloadTest {
 
         GradleBuildResult result = getExecutor().expectFailure().run("assembleDebug");
 
-        assertThat(result.getStderr()).contains("not accepted the license agreements");
+        assertThat(result.getStderr())
+                .contains(
+                        "Failed to install the following Android SDK packages as some licences have not been accepted");
         assertThat(result.getStderr()).contains("CMake");
     }
 
@@ -416,6 +424,18 @@ public class SdkAutoDownloadTest {
                                 "-D%1$s=file:///%2$s/",
                                 AndroidSdkHandler.SDK_TEST_BASE_URL_PROPERTY,
                                 TestUtils.getRemoteSdk()));
+    }
+
+    @NonNull
+    private ModelBuilder getModel() {
+        return project.model()
+                .withSdkAutoDownload()
+                .withArgument(
+                        String.format(
+                                "-D%1$s=file:///%2$s/",
+                                AndroidSdkHandler.SDK_TEST_BASE_URL_PROPERTY,
+                                TestUtils.getRemoteSdk()))
+                .withoutOfflineFlag();
     }
 
     private void checkForLibrary(
@@ -539,6 +559,23 @@ public class SdkAutoDownloadTest {
                                 + Revision.parseRevision(BUILD_TOOLS_VERSION).toShortString());
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
                 .contains("missing components");
+
+        // Check that
+        AndroidProject model = getModel().ignoreSyncIssues().getSingle().getOnlyModel();
+        List<SyncIssue> syncErrors =
+                model.getSyncIssues()
+                        .stream()
+                        .filter(issue -> issue.getSeverity() == SyncIssue.SEVERITY_ERROR)
+                        .collect(Collectors.toList());
+        assertThat(syncErrors).hasSize(1);
+
+        assertThat(syncErrors.get(0)).hasType(SyncIssue.TYPE_MISSING_SDK_PACKAGE);
+        String data = syncErrors.get(0).getData();
+        assertNotNull(data);
+        assertThat(Splitter.on(' ').split(data))
+                .containsExactly(
+                        "platforms;android-" + PLATFORM_VERSION,
+                        "build-tools;" + BUILD_TOOLS_VERSION);
     }
 
     @Test
@@ -605,7 +642,7 @@ public class SdkAutoDownloadTest {
                             "Build-Tools "
                                     + Revision.parseRevision(BUILD_TOOLS_VERSION).toShortString());
             assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                    .contains("not writeable");
+                    .contains("not writable");
         } finally {
             Set<PosixFilePermission> readWriteDir =
                     ImmutableSet.of(

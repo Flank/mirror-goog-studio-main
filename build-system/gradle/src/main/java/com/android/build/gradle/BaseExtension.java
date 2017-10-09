@@ -1060,7 +1060,10 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     public List<File> getBootClasspath() {
-        ensureTargetSetup();
+        if (!ensureTargetSetup()) {
+            // In sync mode where the SDK could not be installed.
+            return ImmutableList.of();
+        }
         return androidBuilder.getBootClasspath(false);
     }
 
@@ -1171,17 +1174,18 @@ public abstract class BaseExtension implements AndroidConfig {
         return testOptions;
     }
 
-    private void ensureTargetSetup() {
+    private boolean ensureTargetSetup() {
         // check if the target has been set.
         TargetInfo targetInfo = androidBuilder.getTargetInfo();
         if (targetInfo == null) {
-            sdkHandler.initTarget(
+            return sdkHandler.initTarget(
                     getCompileSdkVersion(),
                     buildToolsRevision,
                     libraryRequests,
                     androidBuilder,
                     SdkHandler.useCachedSdk(projectOptions));
         }
+        return true;
     }
 
     // For compatibility with LibraryExtension.

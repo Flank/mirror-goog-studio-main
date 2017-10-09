@@ -178,6 +178,10 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         return (T) this;
     }
 
+    public final T withSdkAutoDownload() {
+        return with(BooleanOption.ENABLE_SDK_DOWNLOAD, true);
+    }
+
     protected final List<String> getArguments() throws IOException {
         List<String> arguments = new ArrayList<>();
         arguments.addAll(this.arguments);

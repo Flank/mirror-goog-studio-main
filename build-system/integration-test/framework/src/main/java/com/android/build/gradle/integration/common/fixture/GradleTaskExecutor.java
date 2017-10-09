@@ -114,10 +114,6 @@ public final class GradleTaskExecutor extends BaseGradleExecutor<GradleTaskExecu
         return this;
     }
 
-    public GradleTaskExecutor withSdkAutoDownload() {
-        return with(BooleanOption.ENABLE_SDK_DOWNLOAD, true);
-    }
-
     /**
      * Call connected check.
      *
