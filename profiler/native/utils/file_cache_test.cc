@@ -25,7 +25,7 @@ using profiler::MemoryFileSystem;
 using std::unique_ptr;
 
 TEST(FileCache, CanAddCacheByChunks) {
-  FileCache cache(unique_ptr<FileSystem>(new MemoryFileSystem()));
+  FileCache cache(unique_ptr<FileSystem>(new MemoryFileSystem()), "/");
 
   cache.AddChunk("dummy-id", "123");
   cache.AddChunk("dummy-id", "456");
@@ -40,7 +40,7 @@ TEST(FileCache, CanAddCacheByChunks) {
 }
 
 TEST(FileCache, CanAbortAddingToCache) {
-  FileCache cache(unique_ptr<FileSystem>(new MemoryFileSystem()));
+  FileCache cache(unique_ptr<FileSystem>(new MemoryFileSystem()), "/");
   cache.AddChunk("dummy-id", "123");
   cache.AddChunk("dummy-id", "456");
   cache.AddChunk("dummy-id", "789");
@@ -52,7 +52,7 @@ TEST(FileCache, CanAbortAddingToCache) {
 }
 
 TEST(FileCache, CanOverwriteCache) {
-  FileCache cache(unique_ptr<FileSystem>(new MemoryFileSystem()));
+  FileCache cache(unique_ptr<FileSystem>(new MemoryFileSystem()), "/");
 
   cache.AddChunk("dummy-id", "123");
   auto file = cache.Complete("dummy-id");

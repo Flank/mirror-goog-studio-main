@@ -68,7 +68,9 @@ int main(int argc, char** argv) {
   }
 
   profiler::Trace::Init();
-  profiler::Daemon daemon(config_path, is_testing_profiler);
+  profiler::Daemon daemon(config_path, is_testing_profiler
+                                           ? getenv("TEST_TMPDIR")
+                                           : profiler::CurrentProcess::dir());
 
   profiler::GenericComponent generic_component{&daemon.utilities()};
   daemon.RegisterComponent(&generic_component);

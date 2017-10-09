@@ -20,7 +20,6 @@
 #include <climits>
 #include <mutex>
 
-#include "utils/current_process.h"
 #include "utils/fs/disk_file_system.h"
 #include "utils/stopwatch.h"
 #include "utils/thread_name.h"
@@ -35,7 +34,7 @@ const int32_t kCleanupPeriodS = Clock::m_to_s(1);
 // Run thread much faster than cache cleanup periods, so we can interrupt on
 // short notice.
 const int32_t kSleepUs = Clock::ms_to_us(200);
-}
+}  // namespace
 
 namespace profiler {
 
@@ -46,21 +45,14 @@ using std::string;
 using std::unique_ptr;
 using std::vector;
 
-FileCache::FileCache() : FileCache(false) {}
+FileCache::FileCache(const string &root_path)
+    : FileCache(unique_ptr<FileSystem>(new DiskFileSystem()), root_path) {}
 
-FileCache::FileCache(bool use_test_dir_path)
-    : FileCache(unique_ptr<FileSystem>(new DiskFileSystem()),
-                                       use_test_dir_path) {}
-
-FileCache::FileCache(unique_ptr<FileSystem> fs)
-    : FileCache(std::move(fs), false) {}
-
-FileCache::FileCache(unique_ptr<FileSystem> fs, bool use_test_dir_path)
-    : fs_(std::move(fs)), use_test_dir_(use_test_dir_path) {
+FileCache::FileCache(unique_ptr<FileSystem> fs, const string &root_path)
+    : fs_(std::move(fs)) {
   // Since we're restarting perfd, nuke any leftover cache from a previous run.
   // Use TEST_TMPDIR that is set up by bazel if configured.
-  auto parent_dir = fs_->GetDir(
-      (use_test_dir_ ? getenv("TEST_TMPDIR") : CurrentProcess::dir()));
+  auto parent_dir = fs_->GetDir(root_path);
   auto cache_root = parent_dir->NewDir("cache");
   cache_partial_ = cache_root->NewDir("partial");
   cache_complete_ = cache_root->NewDir("complete");

@@ -41,7 +41,7 @@ namespace profiler {
 //
 // Example:
 //    // Streaming data into the cache
-//    FileCache cache;
+//    FileCache cache("/");
 //    cache.AddChunk("id", "123");
 //    cache.AddChunk("id", "456");
 //    auto file = cache.Complete("id"); // file->Contents() == "123456"
@@ -50,12 +50,10 @@ namespace profiler {
 // across multiple threads.
 class FileCache final {
  public:
-  FileCache();
+  FileCache(const std::string &root_path);
   // Make the path of file cache based on whether it is for test, because
   // non-testing path is not available in test environment.
-  FileCache(bool use_test_dir_path);
-  FileCache(std::unique_ptr<FileSystem> fs, bool use_test_dir_path);
-  FileCache(std::unique_ptr<FileSystem> fs);
+  FileCache(std::unique_ptr<FileSystem> fs, const std::string &root_path);
   ~FileCache();
 
   FileCache(const FileCache &) = delete;
@@ -99,7 +97,6 @@ class FileCache final {
   std::unique_ptr<FileSystem> fs_;
   std::shared_ptr<Dir> cache_partial_;
   std::shared_ptr<Dir> cache_complete_;
-  bool use_test_dir_;
 
   std::atomic_bool is_janitor_running_;
   std::thread janitor_thread_;

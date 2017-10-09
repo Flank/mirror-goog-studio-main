@@ -36,11 +36,10 @@ class Daemon {
  public:
   class Utilities {
    public:
-    // |config_path| is a string that points to a file that can be parsed by
-    // profiler::proto::AgentConfig. If the |config_path| is empty, the file
-    // will fail to load and an empty config will be used.
-    explicit Utilities(const std::string& config_path, bool is_testing_profiler)
-        : config_(config_path), file_cache_(is_testing_profiler) {}
+    // See |Daemon| constructor for parameter explanations.
+    explicit Utilities(const std::string& config_path,
+                       const std::string& cache_path)
+        : config_(config_path), file_cache_(cache_path) {}
 
     // Returns a const reference to the daemon's clock, which is used to produce
     // all timestamps in the deamon.
@@ -60,17 +59,19 @@ class Daemon {
    private:
     // Clock that timestamps profiling data.
     SteadyClock clock_;
-    // A shared cache for all profiler services
-    FileCache file_cache_;
     // Config object for profiling settings
     Config config_;
+    // A shared cache for all profiler services
+    FileCache file_cache_;
   };
 
   // |config_path| is a string that points to a file that can be parsed by
   // profiler::proto::AgentConfig. If the |config_path| is empty, the file
   // will fail to load and an empty config will be used.
-  Daemon(const std::string& config_path, bool is_testing_profiler)
-      : utilities_(config_path, is_testing_profiler) {}
+  // |cache_path| is a path where a temporary file cache will live. This
+  // cache will be cleared each time the daemon starts up.
+  Daemon(const std::string& config_path, const std::string& cache_path)
+      : utilities_(config_path, cache_path) {}
 
   // Registers profiler |component| to the daemon, in particular, the
   // component's public and internal services to daemon's server |builder|.

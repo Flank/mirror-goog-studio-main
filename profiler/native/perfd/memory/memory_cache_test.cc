@@ -30,7 +30,8 @@ const int64_t profiler::MemoryCache::kUnfinishedTimestamp;
 
 TEST(MemoryCache, TrackAllocations) {
   profiler::FileCache file_cache(
-      std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()));
+      std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()),
+      "/");
   profiler::FakeClock fake_clock(0);
   profiler::MemoryCache cache(fake_clock, &file_cache, 2);
   TrackAllocationsResponse response;
@@ -109,7 +110,8 @@ TEST(MemoryCache, TrackAllocations) {
 
 TEST(MemoryCache, HeapDump) {
   profiler::FileCache file_cache(
-      std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()));
+      std::unique_ptr<profiler::FileSystem>(new profiler::MemoryFileSystem()),
+      "/");
   profiler::FakeClock fake_clock(0);
   profiler::MemoryCache cache(fake_clock, &file_cache, 2);
   TriggerHeapDumpResponse response;
