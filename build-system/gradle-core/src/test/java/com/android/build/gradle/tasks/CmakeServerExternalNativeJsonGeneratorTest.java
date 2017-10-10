@@ -315,6 +315,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
     /** Returns a default CmakeServerExternalNativeJsonGenerator. */
     private CmakeServerExternalNativeJsonGenerator getCMakeServerGenerator() {
         Mockito.when(ndkHandler.getRevision()).thenReturn(new Revision(15));
+        Mockito.when(androidBuilder.getLogger()).thenReturn(Mockito.mock(ILogger.class));
         return new CmakeServerExternalNativeJsonGenerator(
                 ndkHandler,
                 minSdkVersion,

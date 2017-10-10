@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
 import com.android.repository.Revision;
+import com.android.utils.ILogger;
 import java.io.File;
 import java.util.Collection;
 import java.util.List;
@@ -76,6 +77,7 @@ public class CmakeExternalNativeJsonGeneratorFactoryTest {
 
     @Test
     public void testCmakeStrategy() {
+        Mockito.when(androidBuilder.getLogger()).thenReturn(Mockito.mock(ILogger.class));
         Revision revision = Revision.parseRevision("3.6.0-rc2", Revision.Precision.MICRO);
         assertThat(getCmakeStrategy(revision))
                 .isInstanceOf(CmakeAndroidNinjaExternalNativeJsonGenerator.class);
