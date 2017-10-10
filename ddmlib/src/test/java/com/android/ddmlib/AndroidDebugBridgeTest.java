@@ -37,9 +37,9 @@ public class AndroidDebugBridgeTest {
         mAdbPath = new File(TestUtils.getSdk(), "platform-tools/adb");
     }
 
-    // https://code.google.com/p/android/issues/detail?id=63170
+    /** Regression test for https://issuetracker.google.com/36985325 */
     @Test
-    @Ignore  // Flaky: Disabled in CI
+    @Ignore("b/67630952 This test is flaky")
     public void recreateAdb() throws IOException {
         AndroidDebugBridge.initIfNeeded(false);
 
@@ -58,7 +58,7 @@ public class AndroidDebugBridgeTest {
     // This test will fail if adb is not currently on the path. It is disabled since we
     // can't enforce that condition (adb on $PATH) very well from a test..
     @Test
-    @Ignore
+    @Ignore("b/67630952 This test is flaky")
     public void emptyAdbPath() throws Exception {
         AndroidDebugBridge.initIfNeeded(false);
         AdbVersion version = AndroidDebugBridge.getAdbVersion(
@@ -67,6 +67,7 @@ public class AndroidDebugBridgeTest {
         AndroidDebugBridge.terminate();
     }
 
+    @Ignore("b/67630952 This test is flaky")
     @Test
     public void adbVersion() throws Exception {
         FakeAdbServer.Builder builder = new FakeAdbServer.Builder();
