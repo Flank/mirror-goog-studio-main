@@ -28,7 +28,6 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.Preconditions;
-import com.google.common.hash.Hashing;
 import com.google.gson.Gson;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
 import java.io.BufferedReader;
@@ -36,7 +35,6 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
 import java.security.GeneralSecurityException;
 import java.util.Comparator;
 import java.util.List;
@@ -95,6 +93,10 @@ public final class ActdProfileUploader implements ProfileUploader {
      * <p>It's quite hacky to shell out to git in this way to get the information we need, so if you
      * feel motivated enough to find a better solution (something something libgit2?) feel free to
      * send the review to samwho@.
+     *
+     * <p>Note: this will likely fail when run in Bazel (it currently isn't because the BUILD file
+     * associated with this project specifically does not run tests that have a directory named
+     * "performance" on their path).
      */
     @NonNull private static final String GIT_BINARY = "/usr/bin/git";
 
@@ -150,12 +152,7 @@ public final class ActdProfileUploader implements ProfileUploader {
     @VisibleForTesting
     @NonNull
     public static String seriesId(@NonNull GradleBenchmarkResult result) {
-        return result.getBenchmark()
-                + " "
-                + result.getBenchmarkMode()
-                + " ("
-                + Hashing.sha256().hashString(flags(result), Charset.defaultCharset())
-                + ")";
+        return result.getBenchmark() + " " + result.getBenchmarkMode() + " (" + flags(result) + ")";
     }
 
     /**
