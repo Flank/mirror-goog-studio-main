@@ -1,15 +1,12 @@
 package com.android.ide.common.resources;
 
 import com.android.SdkConstants;
-import com.android.ide.common.rendering.api.ArrayResourceValue;
-import com.android.ide.common.rendering.api.DensityBasedResourceValue;
-import com.android.ide.common.rendering.api.LayoutLog;
-import com.android.ide.common.rendering.api.ResourceValue;
-import com.android.ide.common.rendering.api.StyleResourceValue;
+import com.android.ide.common.rendering.api.*;
 import com.android.ide.common.resources.configuration.FolderConfiguration;
 import com.android.resources.Density;
 import com.android.resources.ResourceType;
 import com.android.resources.ResourceUrl;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.util.Collections;
@@ -749,5 +746,78 @@ public class ResourceResolverTest extends TestCase {
 
         assertNull(resolver.findResValue("@color/doesnt_exist", false));
         assertNull(resolver.findResValue("@android:color/doesnt_exist", false));
+    }
+
+    public void testResolverIds() throws IOException {
+        ImmutableMap<String, Integer> frameworkIds =
+                ImmutableMap.of(
+                        "framework_id1", 1,
+                        "framework_id2", 2);
+        ImmutableMap<String, Integer> libraryIds =
+                ImmutableMap.of(
+                        "lib_id1", 11,
+                        "lib_id2", 22);
+        TestResourceRepository projectRepository =
+                TestResourceRepository.create(
+                        false,
+                        new Object[] {
+                            "layout/layout1.xml",
+                            "<!--contents doesn't matter-->",
+                            "layout/layout2.xml",
+                            "<!--contents doesn't matter-->",
+                            "layout-land/layout1.xml",
+                            "<!--contents doesn't matter-->",
+                            "layout-land/onlyLand.xml",
+                            "<!--contents doesn't matter-->",
+                            "layouts/layout.xml",
+                            ""
+                                    + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                                    + "<RelativeLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                                    + "    android:layout_width=\"match_parent\"\n"
+                                    + "    android:layout_height=\"match_parent\">\n"
+                                    + "\n"
+                                    + "    <TextView\n"
+                                    + "        android:id=\"@+id/new_id\"\n"
+                                    + "        style=\"@style/ButtonStyle\"\n"
+                                    + "        android:layout_width=\"wrap_content\"\n"
+                                    + "        android:layout_height=\"wrap_content\" />\n"
+                                    + "\n"
+                                    + "</RelativeLayout>\n",
+                        });
+        assertFalse(projectRepository.isFrameworkRepository());
+        FolderConfiguration config = FolderConfiguration.getConfigForFolder("values-es-land");
+        assertNotNull(config);
+        Map<ResourceType, ResourceValueMap> projectResources =
+                projectRepository.getConfiguredResources(config);
+        assertNotNull(projectResources);
+        ResourceResolver resolver =
+                ResourceResolver.create(projectResources, projectResources, "ButtonStyle", true);
+        resolver.setFrameworkResourceIdProvider(
+                new RenderResources.ResourceIdProvider() {
+                    @Override
+                    public Integer getId(ResourceType resType, String resName) {
+                        assertEquals(ResourceType.ID, resType);
+                        return frameworkIds.get(resName);
+                    }
+                });
+        resolver.setLibrariesIdProvider(
+                new RenderResources.ResourceIdProvider() {
+                    @Override
+                    public Integer getId(ResourceType resType, String resName) {
+                        assertEquals(ResourceType.ID, resType);
+                        return libraryIds.get(resName);
+                    }
+                });
+        assertNotNull(resolver);
+
+        assertNull(resolver.findResValue("@id/not_found", false));
+        assertNull(resolver.findResValue("@id/new_id", false));
+        assertNull(resolver.findResValue("@id/framework_id1", false));
+        assertNotNull(resolver.findResValue("@android:id/framework_id1", false));
+        assertNotNull(resolver.findResValue("@id/lib_id1", false));
+        assertNull(resolver.findResValue("@id/lib_id1", true));
+        assertNull(resolver.findResValue("@android:id/lib_id1", false));
+
+        projectRepository.dispose();
     }
 }

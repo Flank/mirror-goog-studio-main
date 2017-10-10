@@ -32,13 +32,28 @@ public class RenderResources {
     public static final String REFERENCE_EMPTY = "@empty";
     public static final String REFERENCE_UNDEFINED = "@undefined";
 
-    public static class FrameworkResourceIdProvider {
+    public static class ResourceIdProvider {
         public Integer getId(ResourceType resType, String resName) {
             return null;
         }
     }
 
+    /**
+     * @deprecated This class will be removed after layoutlib is updated. Use {@link
+     *     ResourceIdProvider}
+     */
+    @Deprecated
+    public static class FrameworkResourceIdProvider extends ResourceIdProvider {}
+
+    public void setFrameworkResourceIdProvider(ResourceIdProvider provider) {}
+
+    /**
+     * @deprecated This method will be removed after layoutlib is updated. Use {@link
+     *     #setFrameworkResourceIdProvider(ResourceIdProvider)}
+     */
+    @Deprecated
     public void setFrameworkResourceIdProvider(FrameworkResourceIdProvider provider) {
+        setFrameworkResourceIdProvider((ResourceIdProvider) provider);
     }
 
     public void setLogger(LayoutLog logger) {

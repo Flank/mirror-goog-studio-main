@@ -59,7 +59,8 @@ public class ResourceResolver extends RenderResources {
     private StyleResourceValue mDefaultTheme;
     // The resources should be searched in all the themes in the list in order.
     private final List<StyleResourceValue> mThemes;
-    private FrameworkResourceIdProvider mFrameworkProvider;
+    @NonNull private ResourceIdProvider mFrameworkIdProvider = new FrameworkResourceIdProvider();
+    @NonNull private ResourceIdProvider mLibrariesIdProvider = new ResourceIdProvider();
     private LayoutLog mLogger;
     private final String mThemeName;
     private boolean mIsProjectTheme;
@@ -113,7 +114,8 @@ public class ResourceResolver extends RenderResources {
         ResourceResolver resolver = new ResourceResolver(
           original.mProjectResources, original.mFrameworkResources,
           original.mThemeName, original.mIsProjectTheme);
-        resolver.mFrameworkProvider = original.mFrameworkProvider;
+        resolver.mFrameworkIdProvider = original.mFrameworkIdProvider;
+        resolver.mLibrariesIdProvider = original.mLibrariesIdProvider;
         resolver.mLogger = original.mLogger;
         resolver.mDefaultTheme = original.mDefaultTheme;
         resolver.mStyleInheritanceMap.putAll(original.mStyleInheritanceMap);
@@ -191,11 +193,20 @@ public class ResourceResolver extends RenderResources {
         return mFrameworkResources;
     }
 
+    public void setLibrariesIdProvider(@NonNull ResourceIdProvider provider) {
+        mLibrariesIdProvider = provider;
+    }
+
     // ---- RenderResources Methods
 
     @Override
-    public void setFrameworkResourceIdProvider(FrameworkResourceIdProvider provider) {
-        mFrameworkProvider = provider;
+    public void setFrameworkResourceIdProvider(@NonNull ResourceIdProvider provider) {
+        mFrameworkIdProvider = provider;
+    }
+
+    @Override
+    public void setFrameworkResourceIdProvider(@NonNull FrameworkResourceIdProvider provider) {
+        setFrameworkResourceIdProvider((ResourceIdProvider) provider);
     }
 
     @Override
@@ -486,29 +497,35 @@ public class ResourceResolver extends RenderResources {
             }
         }
 
-        if (isFramework) {
-            // if it was not found and the type is an id, it is possible that the ID was
-            // generated dynamically when compiling the framework resources.
-            // Look for it in the R map.
-            if (mFrameworkProvider != null && resType == ResourceType.ID) {
-                if (mFrameworkProvider.getId(resType, resName) != null) {
-                    return new ResourceValue(url.withFramework(true), null);
+        if (!url.create) {
+            if (resType == ResourceType.ID) {
+                // if it was not found and the type is an id, it is possible that the ID was
+                // generated dynamically when compiling the framework resources or in a library.
+                // Look for it in the R map.
+                boolean idExists =
+                        isFramework
+                                ? mFrameworkIdProvider.getId(resType, resName) != null
+                                : mLibrariesIdProvider.getId(resType, resName) != null;
+
+                if (idExists) {
+                    return new ResourceValue(isFramework ? url.withFramework(true) : url, null);
                 }
+            }
+
+            // didn't find the resource anywhere.
+            if (mLogger != null) {
+                mLogger.warning(
+                        LayoutLog.TAG_RESOURCES_RESOLVE,
+                        "Couldn't resolve resource @"
+                                + (isFramework ? "android:" : "")
+                                + resType
+                                + "/"
+                                + resName,
+                        null,
+                        url.withFramework(isFramework));
             }
         }
 
-        // didn't find the resource anywhere.
-        if (!url.create && mLogger != null) {
-            mLogger.warning(
-                    LayoutLog.TAG_RESOURCES_RESOLVE,
-                    "Couldn't resolve resource @"
-                            + (isFramework ? "android:" : "")
-                            + resType
-                            + "/"
-                            + resName,
-                    null,
-                    url.withFramework(isFramework));
-        }
         return null;
     }
 
@@ -823,7 +840,7 @@ public class ResourceResolver extends RenderResources {
     public ResourceResolver createRecorder(List<ResourceValue> lookupChain) {
         ResourceResolver resolver = new RecordingResourceResolver(
                 lookupChain, mProjectResources, mFrameworkResources, mThemeName, mIsProjectTheme);
-        resolver.mFrameworkProvider = mFrameworkProvider;
+        resolver.mFrameworkIdProvider = mFrameworkIdProvider;
         resolver.mLogger = mLogger;
         resolver.mDefaultTheme = mDefaultTheme;
         resolver.mStyleInheritanceMap.putAll(mStyleInheritanceMap);
