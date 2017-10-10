@@ -61,9 +61,11 @@ perf_test(
     name = "AllTest",
     srcs = [
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
+        "testSrcs/com/android/tools/profiler/JniTest.java",
         "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
         "testSrcs/com/android/tools/profiler/network/OkHttpTest.java",
     ],
+    native_lib = "//tools/base/profiler/tests/test-app:libnativetest.so",
     test_app = "//tools/base/profiler/tests/test-app:test-app",
     deps = [
         ":tests",

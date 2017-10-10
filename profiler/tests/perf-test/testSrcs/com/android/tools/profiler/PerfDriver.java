@@ -113,7 +113,7 @@ public class PerfDriver {
 
             myMockApp.loadDex(ProcessRunner.getProcessPath("jvmti.app.dex.location"));
         }
-        // Load our mock application, anad launch our test activity.
+        // Load our mock application, and launch our test activity.
         myMockApp.launchActivity(activity);
 
         if (myIsOPlusDevice) {

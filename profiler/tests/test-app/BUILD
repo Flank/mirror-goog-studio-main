@@ -1,4 +1,4 @@
-load("//tools/base/bazel:android.bzl", "dex_library")
+load("//tools/base/bazel:android.bzl", "dex_library", "ANDROID_COPTS", "ANDROID_LINKOPTS")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -22,4 +22,16 @@ java_binary(
 dex_library(
     name = "test-app",
     jars = [":test-app_java_deploy.jar"],
+)
+
+cc_binary(
+    name = "libnativetest.so",
+    srcs = ["src/native/main.cpp"],
+    copts = ANDROID_COPTS,
+    linkopts = ANDROID_LINKOPTS,
+    linkshared = 1,
+    visibility = ["//visibility:public"],
+    deps = [
+        "//prebuilts/studio/jdk:jni_headers",
+    ],
 )

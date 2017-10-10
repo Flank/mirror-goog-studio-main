@@ -28,7 +28,9 @@ public class FakeAndroidDriver extends ProcessRunner {
                         + ":"
                         + ProcessRunner.getProcessPath("perfa.dir.location")
                         + ":"
-                        + ProcessRunner.getProcessPath("art.lib64.location"),
+                        + ProcessRunner.getProcessPath("art.lib64.location")
+                        + ":"
+                        + getNativeLibLocation(),
                 "-cp",
                 ProcessRunner.getProcessPath("perfa.dex.location"),
                 "-Xbootclasspath:"
@@ -81,6 +83,11 @@ public class FakeAndroidDriver extends ProcessRunner {
 
     public void setProperty(String propertyKey, String propertyValue) {
         sendRequest("set-property", String.format("%s,%s", propertyKey, propertyValue));
+    }
+
+    private static String getNativeLibLocation() {
+        String libLocation = ProcessRunner.getProcessPath("native.lib.location");
+        return new java.io.File(libLocation).getParent();
     }
 
     private void sendRequest(String request, String value) {
