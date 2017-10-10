@@ -370,7 +370,7 @@ public final class ActdProfileUploader implements ProfileUploader {
                 transport
                         .createRequestFactory()
                         .buildPostRequest(gurl, content)
-                        .setNumberOfRetries(3)
+                        .setNumberOfRetries(5)
                         .setUnsuccessfulResponseHandler(
                                 new HttpBackOffUnsuccessfulResponseHandler(
                                         new ExponentialBackOff()))
@@ -436,6 +436,8 @@ public final class ActdProfileUploader implements ProfileUploader {
 
             addSample(sampleReq);
         }
+
+        System.out.println("successfully uploaded act-d data for build ID " + buildId);
     }
 
     /**
