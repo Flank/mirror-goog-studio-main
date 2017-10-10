@@ -72,13 +72,13 @@ public class ManifestResourceDetectorTest extends AbstractCheckTest {
 
     public void testInvalidManifestReference() throws Exception {
         assertEquals(""
-                + "AndroidManifest.xml:6: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21.) Found variation in mcc [ManifestResource]\n"
+                + "AndroidManifest.xml:6: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21). Found variation in mcc [ManifestResource]\n"
                 + "    <application android:fullBackupContent=\"@xml/backup\">\n"
                 + "                                            ~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:8: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21.) Found variation in en-rUS [ManifestResource]\n"
+                + "AndroidManifest.xml:8: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21). Found variation in en-rUS [ManifestResource]\n"
                 + "            android:process=\"@string/location_process\"\n"
                 + "                             ~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "AndroidManifest.xml:9: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21.) Found variation in watch-v20 [ManifestResource]\n"
+                + "AndroidManifest.xml:9: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21). Found variation in watch-v20 [ManifestResource]\n"
                 + "            android:enabled=\"@bool/enable_wearable_location_service\">\n"
                 + "                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "3 errors, 0 warnings\n",
@@ -131,15 +131,15 @@ public class ManifestResourceDetectorTest extends AbstractCheckTest {
 
     public void testBatchAnalysis() throws Exception {
         assertEquals(""
-                + "AndroidManifest.xml:11: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21.) Found variation in mcc [ManifestResource]\n"
+                + "AndroidManifest.xml:11: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21). Found variation in mcc [ManifestResource]\n"
                 + "        android:fullBackupContent=\"@xml/backup\"\n"
                 + "                                   ~~~~~~~~~~~\n"
                 + "    res/xml-mcc/backup.xml:2: This value will not be used\n"
-                + "AndroidManifest.xml:21: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21.) Found variation in en-rUS [ManifestResource]\n"
+                + "AndroidManifest.xml:21: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21). Found variation in en-rUS [ManifestResource]\n"
                 + "            android:process=\"@string/location_process\"\n"
                 + "                             ~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "    res/values-en-rUS/values.xml:2: This value will not be used\n"
-                + "AndroidManifest.xml:22: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21.) Found variation in watch [ManifestResource]\n"
+                + "AndroidManifest.xml:22: Error: Resources referenced from the manifest cannot vary by configuration (except for version qualifiers, e.g. -v21). Found variation in watch [ManifestResource]\n"
                 + "            android:enabled=\"@bool/enable_wearable_location_service\">\n"
                 + "                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "    res/values-watch/bools.xml:2: This value will not be used\n"

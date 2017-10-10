@@ -188,7 +188,7 @@ public class TextReporterTest extends AbstractCheckTest {
                     + "   Explanation for issues of type \"UsesMinSdkAttributes\":\n"
                     + "   The manifest should contain a <uses-sdk> element which defines the minimum\n"
                     + "   API Level required for the application to run, as well as the target\n"
-                    + "   version (the highest API level you have tested the version for.)\n"
+                    + "   version (the highest API level you have tested the version for).\n"
                     + "\n"
                     + "   http://developer.android.com/guide/topics/manifest/uses-sdk-element.html\n"
                     + "\n"

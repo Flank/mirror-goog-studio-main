@@ -201,7 +201,7 @@ public class AnnotationDetector extends Detector implements UastScanner {
             "\n" +
             "In some cases, the repeated constant is intentional (for example, renaming a " +
             "constant to a more intuitive name, and leaving the old name in place for " +
-            "compatibility purposes.)  In that case, simply suppress this check by adding a " +
+            "compatibility purposes).  In that case, simply suppress this check by adding a " +
             "`@SuppressLint(\"UniqueConstants\")` annotation.",
 
             Category.CORRECTNESS,

@@ -98,7 +98,7 @@ public class PxUsageDetector extends LayoutDetector {
             "\n" +
             "While it should work in principle, unfortunately many devices do not report " +
             "the correct true physical density, which means that the dimension calculations " +
-            "won't work correctly. You are better off using `dp` (and for font sizes, `sp`.)",
+            "won't work correctly. You are better off using `dp` (and for font sizes, `sp`).",
 
             Category.CORRECTNESS,
             4,

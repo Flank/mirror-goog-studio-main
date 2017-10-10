@@ -49,7 +49,7 @@ public class LintBaselineTest extends AbstractCheckTest {
                 + "        category=\"Correctness\"\n"
                 + "        priority=\"9\"\n"
                 + "        summary=\"Minimum SDK and target SDK attributes not defined\"\n"
-                + "        explanation=\"The manifest should contain a `&lt;uses-sdk>` element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for.)\"\n"
+                + "        explanation=\"The manifest should contain a `&lt;uses-sdk>` element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for).\"\n"
                 + "        url=\"http://developer.android.com/guide/topics/manifest/uses-sdk-element.html\"\n"
                 + "        urls=\"http://developer.android.com/guide/topics/manifest/uses-sdk-element.html\"\n"
                 + "        errorLine1=\"    &lt;uses-sdk android:minSdkVersion=&quot;8&quot; />\"\n"

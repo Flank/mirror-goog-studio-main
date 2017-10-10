@@ -89,7 +89,7 @@ public class WakelockDetector extends Detector implements ClassScanner, Detector
                     + "that it happens (i.e. can't use `JobScheduler`) then maybe they "
                     + "should consider a foreground service instead (which is a stronger "
                     + "run guarantee and lets the user know something long/important is "
-                    + "happening.)",
+                    + "happening).",
 
             Category.PERFORMANCE,
             9,

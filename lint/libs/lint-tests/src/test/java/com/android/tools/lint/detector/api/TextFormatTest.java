@@ -202,13 +202,13 @@ public class TextFormatTest extends TestCase {
             "The manifest should contain a `<uses-sdk>` element which defines the " +
             "minimum minimum API Level required for the application to run, " +
             "as well as the target version (the highest API level you have tested " +
-            "the version for.)";
+            "the version for).";
 
         assertEquals(
             "The manifest should contain a <code>&lt;uses-sdk></code> element which defines the " +
             "minimum minimum API Level required for the application to run, " +
             "as well as the target version (the highest API level you have tested " +
-            "the version for.)",
+            "the version for).",
             convertMarkup(explanation, HTML));
     }
 
@@ -282,7 +282,7 @@ public class TextFormatTest extends TestCase {
     }
 
     public void testEscapedNewlines() {
-        assertEquals("Using reflection to access hidden/private Android APIs is not safe; it will often not work on devices from other vendors, and it may suddenly stop working (if the API is removed) or crash spectacularly (if the API behavior changes, since there are no guarantees for compatibility.)", PrivateApiDetector.ISSUE.getExplanation(TextFormat.HTML));
+        assertEquals("Using reflection to access hidden/private Android APIs is not safe; it will often not work on devices from other vendors, and it may suddenly stop working (if the API is removed) or crash spectacularly (if the API behavior changes, since there are no guarantees for compatibility).", PrivateApiDetector.ISSUE.getExplanation(TextFormat.HTML));
         // Ignore newlines if they are escaped; used for line wrapping
         assertEquals("abcd<br/>\nef", RAW.convertTo("ab\\\ncd\nef", HTML));
     }

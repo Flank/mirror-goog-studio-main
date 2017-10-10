@@ -51,7 +51,7 @@ public class VectorDetector extends ResourceXmlDetector {
             "Vector icons require API 21, but when using Android Gradle plugin 1.4 or higher, " +
             "vectors placed in the `drawable` folder are automatically moved to `drawable-*dpi-v21` " +
             "and a bitmap image is generated each `drawable-*dpi` folder instead, for backwards " +
-            "compatibility (provided `minSdkVersion` is less than 21.).\n" +
+            "compatibility (provided `minSdkVersion` is less than 21).\n" +
             "\n" +
             "However, there are some limitations to this vector image generation, and this " +
             "lint check flags elements and attributes that are not fully supported. " +

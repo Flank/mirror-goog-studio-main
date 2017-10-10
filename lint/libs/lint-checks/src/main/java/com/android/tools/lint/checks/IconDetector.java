@@ -345,7 +345,7 @@ public class IconDetector extends ResourceXmlDetector implements UastScanner {
             "Icon format does not match the file extension",
 
             "Ensures that icons have the correct file extension (e.g. a `.png` file is " +
-            "really in the PNG format and not for example a GIF file named `.png`.)",
+            "really in the PNG format and not for example a GIF file named `.png`).",
             Category.ICONS,
             3,
             Severity.WARNING,

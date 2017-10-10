@@ -127,7 +127,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
             "The manifest should contain a `<uses-sdk>` element which defines the " +
             "minimum API Level required for the application to run, " +
             "as well as the target version (the highest API level you have tested " +
-            "the version for.)",
+            "the version for).",
 
             Category.CORRECTNESS,
             9,

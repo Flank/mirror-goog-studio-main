@@ -78,7 +78,7 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
             "Manifest Resource References",
             "Elements in the manifest can reference resources, but those resources cannot " +
             "vary across configurations (except as a special case, by version, and except " +
-            "for a few specific package attributes such as the application title and icon.)",
+            "for a few specific package attributes such as the application title and icon).",
 
             Category.CORRECTNESS,
             6,
@@ -340,6 +340,6 @@ public class ManifestResourceDetector extends ResourceXmlDetector {
     @NonNull
     private static String getErrorMessage(@NonNull  String qualifiers) {
         return "Resources referenced from the manifest cannot vary by configuration "
-                + "(except for version qualifiers, e.g. `-v21`.) Found variation in " + qualifiers;
+                + "(except for version qualifiers, e.g. `-v21`). Found variation in " + qualifiers;
     }
 }

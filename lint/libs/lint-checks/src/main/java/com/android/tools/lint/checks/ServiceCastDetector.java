@@ -107,7 +107,7 @@ public class ServiceCastDetector extends Detector implements UastScanner {
             "\n" +
             "In many cases, it's not obvious from the code where the `Context` is " +
             "coming from (e.g. it might be a parameter to a method, or a field initialized " +
-            "from various method calls.)  It's possible that the context being passed in " +
+            "from various method calls). It's possible that the context being passed in " +
             "is the application context, but to be on the safe side, you should consider " +
             "changing `context.getSystemService(...)` to " +
             "`context.getApplicationContext().getSystemService(...)`.",

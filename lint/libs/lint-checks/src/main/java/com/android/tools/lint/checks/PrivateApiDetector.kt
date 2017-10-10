@@ -50,7 +50,7 @@ class PrivateApiDetector : Detector(), Detector.UastScanner {
                 """
 Using reflection to access hidden/private Android APIs is not safe; it will often not work on \
 devices from other vendors, and it may suddenly stop working (if the API is removed) or crash \
-spectacularly (if the API behavior changes, since there are no guarantees for compatibility.)
+spectacularly (if the API behavior changes, since there are no guarantees for compatibility).
 """,
 
                 Category.CORRECTNESS,

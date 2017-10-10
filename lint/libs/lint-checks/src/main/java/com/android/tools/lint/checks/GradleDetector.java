@@ -196,7 +196,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             "There are some combinations of libraries, or tools and libraries, that are " +
             "incompatible, or can lead to bugs. One such incompatibility is compiling with " +
             "a version of the Android support libraries that is not the latest version (or in " +
-            "particular, a version lower than your `targetSdkVersion`.)",
+            "particular, a version lower than your `targetSdkVersion`).",
 
             Category.CORRECTNESS,
             8,
@@ -319,7 +319,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             "\n" +
             "That workaround is no longer necessary, and it has some serious downsides, such " +
             "as breaking API access checking (since the true `minSdkVersion` is no longer " +
-            "known.)\n" +
+            "known).\n" +
             "\n" +
             "In recent versions of the IDE and the Gradle plugin, the IDE automatically passes " +
             "the API level of the connected device used for deployment, and if that device " +
@@ -344,7 +344,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             "no longer has this problem, or to repackage the library (and all of its " +
             "dependencies) using something like the `jarjar` tool, or finally, rewriting " +
             "the code to use different APIs (for example, for http code, consider using " +
-            "`HttpUrlConnection` or a library like `okhttp`.)",
+            "`HttpUrlConnection` or a library like `okhttp`).",
             Category.CORRECTNESS,
             8,
             Severity.FATAL,

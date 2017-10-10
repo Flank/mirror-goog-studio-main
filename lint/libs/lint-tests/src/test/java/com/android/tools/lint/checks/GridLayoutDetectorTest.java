@@ -125,7 +125,7 @@ public class GridLayoutDetectorTest extends AbstractCheckTest {
 
     public void testGridLayout3() throws Exception {
         String expected = ""
-                + "res/layout/layout.xml:12: Error: Wrong namespace; with v7 GridLayout you should use app:layout_row (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element.) [GridLayout]\n"
+                + "res/layout/layout.xml:12: Error: Wrong namespace; with v7 GridLayout you should use app:layout_row (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element) [GridLayout]\n"
                 + "            android:layout_row=\"2\" />\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
@@ -168,19 +168,19 @@ public class GridLayoutDetectorTest extends AbstractCheckTest {
 
     public void testGridLayout4() throws Exception {
         String expected = ""
-                + "res/layout/layout.xml:6: Error: Wrong namespace; with v7 GridLayout you should use app:orientation (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element.) [GridLayout]\n"
+                + "res/layout/layout.xml:6: Error: Wrong namespace; with v7 GridLayout you should use app:orientation (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element) [GridLayout]\n"
                 + "        android:orientation=\"horizontal\">\n"
                 + "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "res/layout/layout.xml:12: Error: Wrong namespace; with v7 GridLayout you should use app:layout_columnWeight (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element.) [GridLayout]\n"
+                + "res/layout/layout.xml:12: Error: Wrong namespace; with v7 GridLayout you should use app:layout_columnWeight (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element) [GridLayout]\n"
                 + "            android:layout_columnWeight=\"2\"\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "res/layout/layout.xml:13: Error: Wrong namespace; with v7 GridLayout you should use app:layout_gravity (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element.) [GridLayout]\n"
+                + "res/layout/layout.xml:13: Error: Wrong namespace; with v7 GridLayout you should use app:layout_gravity (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element) [GridLayout]\n"
                 + "            android:layout_gravity=\"fill\"\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "res/layout/layout.xml:20: Error: Wrong namespace; with v7 GridLayout you should use app:layout_gravity (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element.) [GridLayout]\n"
+                + "res/layout/layout.xml:20: Error: Wrong namespace; with v7 GridLayout you should use app:layout_gravity (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element) [GridLayout]\n"
                 + "            android:layout_gravity=\"fill\"\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "res/layout/layout.xml:22: Error: Wrong namespace; with v7 GridLayout you should use app:layout_columnWeight (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element.) [GridLayout]\n"
+                + "res/layout/layout.xml:22: Error: Wrong namespace; with v7 GridLayout you should use app:layout_columnWeight (and add xmlns:app=\"http://schemas.android.com/apk/res-auto\" to your root element) [GridLayout]\n"
                 + "            android:layout_columnWeight=\"1\"\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "5 errors, 0 warnings\n";

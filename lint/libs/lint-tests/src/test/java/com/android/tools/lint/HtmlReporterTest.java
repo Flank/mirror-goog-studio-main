@@ -348,7 +348,7 @@ public class HtmlReporterTest extends AbstractCheckTest {
                     + "Severity: <span class=\"warning\">Warning</span><div class=\"summary\">\n"
                     + "Explanation: Minimum SDK and target SDK attributes not defined.</div>\n"
                     + "<div class=\"explanation\">\n"
-                    + "The manifest should contain a <code>&lt;uses-sdk></code> element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for.)\n"
+                    + "The manifest should contain a <code>&lt;uses-sdk></code> element which defines the minimum API Level required for the application to run, as well as the target version (the highest API level you have tested the version for).\n"
                     + "</div>\n"
                     + "<br/><div class=\"moreinfo\">More info: <a href=\"http://developer.android.com/guide/topics/manifest/uses-sdk-element.html\">http://developer.android.com/guide/topics/manifest/uses-sdk-element.html</a>\n"
                     + "</div><br/>To suppress this error, use the issue id \"UsesMinSdkAttributes\" as explained in the <a href=\"#SuppressInfo\">Suppressing Warnings and Errors</a> section.<br/>\n"

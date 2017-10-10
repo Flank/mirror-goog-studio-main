@@ -158,7 +158,7 @@ public class GridLayoutDetector extends LayoutDetector {
                     .append(":").append(name);
             if (!haveNamespace) {
                 sb.append(" (and add `xmlns:app=\"").append(AUTO_URI)
-                        .append("\"` to your root element.)");
+                        .append("\"` to your root element)");
             }
             String message = sb.toString();
 
