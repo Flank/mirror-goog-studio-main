@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -271,7 +272,13 @@ public class DexArchiveBuilderTransform extends Transform {
                                         .getFile()
                                         .toPath()
                                         .relativize(fileStatusEntry.getKey().toPath());
-                        output.removeFile(ClassFileEntry.withDexExtension(relativePath.toString()));
+                        String fileToDelete;
+                        if (fileStatusEntry.getKey().getName().endsWith(SdkConstants.DOT_CLASS)) {
+                            fileToDelete = ClassFileEntry.withDexExtension(relativePath.toString());
+                        } else {
+                            fileToDelete = relativePath.toString();
+                        }
+                        output.removeFile(fileToDelete);
                     }
                 }
             }

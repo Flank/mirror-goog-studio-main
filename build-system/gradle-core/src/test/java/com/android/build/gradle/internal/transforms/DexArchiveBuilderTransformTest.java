@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import static com.android.testutils.truth.MoreTruth.assertThat;
 import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,7 +34,6 @@ import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
 import com.android.testutils.TestInputsGenerator;
-import com.android.testutils.truth.MoreTruth;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -201,7 +201,7 @@ public class DexArchiveBuilderTransformTest {
                         .setIncremental(true)
                         .build();
         getTransform(null).transform(invocation);
-        MoreTruth.assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isFile();
+        assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isFile();
 
         // remove the class file
         TransformInput deletedDirInput =
@@ -226,8 +226,8 @@ public class DexArchiveBuilderTransformTest {
                         .setIncremental(true)
                         .build();
         getTransform(null).transform(secondInvocation);
-        MoreTruth.assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isNull();
-        MoreTruth.assertThat(FileUtils.find(out.toFile(), "A.dex").orNull()).isFile();
+        assertThat(FileUtils.find(out.toFile(), "B.dex").orNull()).isNull();
+        assertThat(FileUtils.find(out.toFile(), "A.dex").orNull()).isFile();
     }
 
     @Test
@@ -266,7 +266,7 @@ public class DexArchiveBuilderTransformTest {
                         .setTransformOutputProvider(outputProvider)
                         .build();
         getTransform(null).transform(invocation2);
-        MoreTruth.assertThat(FileUtils.find(out.toFile(), "A.dex").orNull()).isNull();
+        assertThat(FileUtils.find(out.toFile(), "A.dex").orNull()).isNull();
     }
 
     @Test
@@ -360,7 +360,7 @@ public class DexArchiveBuilderTransformTest {
 
         DexArchiveBuilderTransform noCacheTransform = getTransform(userCache);
         noCacheTransform.transform(noCacheInvocation);
-        MoreTruth.assertThat(out.resolve("classes.jar.jar")).doesNotExist();
+        assertThat(out.resolve("classes.jar.jar")).doesNotExist();
 
         // clean the output of the previous transform
         FileUtils.cleanOutputDir(out.toFile());
@@ -375,7 +375,7 @@ public class DexArchiveBuilderTransformTest {
         DexArchiveBuilderTransform fromCacheTransform = getTransform(userCache);
         fromCacheTransform.transform(fromCacheInvocation);
         assertThat(FileUtils.getAllFiles(out.toFile())).hasSize(1);
-        MoreTruth.assertThat(out.resolve("classes.jar.jar")).exists();
+        assertThat(out.resolve("classes.jar.jar")).exists();
 
         // modify the file so it is not a build cache hit any more
         Files.deleteIfExists(input);
@@ -396,7 +396,33 @@ public class DexArchiveBuilderTransformTest {
                         .build();
         DexArchiveBuilderTransform changedInputTransform = getTransform(userCache);
         changedInputTransform.transform(changedInputInvocation);
-        MoreTruth.assertThat(out.resolve("classes.jar.jar")).doesNotExist();
+        assertThat(out.resolve("classes.jar.jar")).doesNotExist();
+    }
+
+    /** Regression test for b/65241720. */
+    @Test
+    public void testDirectoryRemovedInIncrementalBuild() throws Exception {
+        Path input = tmpDir.getRoot().toPath().resolve("classes");
+        Path nestedDir = input.resolve("nested_dir");
+        Files.createDirectories(nestedDir);
+        Path nestedDirOutput = out.resolve("classes/nested_dir");
+        Files.createDirectories(nestedDirOutput);
+
+        TransformInput dirInput =
+                TransformTestHelper.directoryBuilder(input.toFile())
+                        .putChangedFiles(ImmutableMap.of(nestedDir.toFile(), Status.REMOVED))
+                        .build();
+
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setInputs(dirInput)
+                        .setIncremental(true)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .build();
+        DexArchiveBuilderTransform noCacheTransform = getTransform(null);
+        noCacheTransform.transform(invocation);
+        assertThat(nestedDirOutput).doesNotExist();
     }
 
     @NonNull
