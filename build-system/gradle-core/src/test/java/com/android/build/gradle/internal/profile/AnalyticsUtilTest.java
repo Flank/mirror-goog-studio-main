@@ -54,7 +54,9 @@ public class AnalyticsUtilTest {
                 AnalyticsUtil::getPotentialTaskExecutionTypeName,
                 "com.android.build.gradle.tasks.ZipMergingTask",
                 "com.android.build.gradle.tasks.AndroidZip",
-                "com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask");
+                "com.android.build.gradle.internal.tasks.featuresplit.FeatureSplitTransitiveDepsWriterTask",
+                "com.android.build.gradle.internal.res.LinkAndroidResForBundleTask",
+                "com.android.build.gradle.internal.tasks.PipelineToPublicationTask");
     }
 
     @Test

@@ -32,5 +32,7 @@
     <orderEntry type="module" module-name="dx" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="module" module-name="lint-gradle-api" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="library" name="bundletool" level="project" />
   </component>
 </module>

@@ -270,7 +270,7 @@ public abstract class LibraryBaseTransform extends Transform {
             @Nullable JarMerger.Transformer typedefRemover)
             throws IOException {
         try (JarMerger jarMerger = new JarMerger(toFile.toPath())) {
-            jarMerger.addDirectory(fromFolder.toPath(), filter, typedefRemover);
+            jarMerger.addDirectory(fromFolder.toPath(), filter, typedefRemover, null);
         }
     }
 
@@ -294,9 +294,10 @@ public abstract class LibraryBaseTransform extends Transform {
                 ZipEntryFilter thisFilter =
                         hasResources || forIntermediateJar ? filter : filterAndOnlyClasses;
                 if (content instanceof JarInput) {
-                    jarMerger.addJar(content.getFile().toPath(), thisFilter);
+                    jarMerger.addJar(content.getFile().toPath(), thisFilter, null);
                 } else {
-                    jarMerger.addDirectory(content.getFile().toPath(), thisFilter, typedefRemover);
+                    jarMerger.addDirectory(
+                            content.getFile().toPath(), thisFilter, typedefRemover, null);
                 }
             }
         }

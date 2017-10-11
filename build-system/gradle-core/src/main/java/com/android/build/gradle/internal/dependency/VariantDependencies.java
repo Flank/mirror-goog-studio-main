@@ -80,6 +80,8 @@ public class VariantDependencies {
 
     public static final String CONFIG_NAME_LINTCHECKS = "lintChecks";
 
+    public static final String USAGE_BUNDLE = "android-bundle";
+
     @NonNull private final String variantName;
 
     @NonNull private final Configuration compileClasspath;
@@ -94,6 +96,7 @@ public class VariantDependencies {
 
     @Nullable private final Configuration wearAppConfiguration;
     @Nullable private final Configuration metadataValuesConfiguration;
+    @Nullable private final Configuration bundleElements;
 
     /**
      *  Whether we have a direct dependency on com.android.support:support-annotations; this
@@ -254,28 +257,42 @@ public class VariantDependencies {
             runtimeAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
             runtimeAttributes.attribute(AndroidTypeAttr.ATTRIBUTE, consumeType);
 
-            Configuration wearApp = null;
-            if (publishType != null && publishType.getName().equals(AndroidTypeAttr.APK)) {
-                wearApp = configurations.maybeCreate(variantName + "WearBundling");
-                wearApp.setDescription(
-                        "Resolved Configuration for wear app bundling for variant: " + variantName);
-                wearApp.setExtendsFrom(wearAppConfigs);
-                wearApp.setCanBeConsumed(false);
-                final AttributeContainer wearAttributes = wearApp.getAttributes();
-                applyVariantAttributes(wearAttributes, buildType, consumptionFlavorMap);
-                // because the APK is published to Runtime, then we need to make sure this one consumes RUNTIME as well.
-                wearAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
-                wearAttributes.attribute(
-                        AndroidTypeAttr.ATTRIBUTE,
-                        factory.named(AndroidTypeAttr.class, AndroidTypeAttr.APK));
-            }
-
             Configuration apiElements = null;
             Configuration runtimeElements = null;
             Configuration metadataElements = null;
             Configuration metadataValues = null;
+            Configuration wearApp = null;
+            Configuration bundleElements = null;
 
             if (publishType != null) {
+                if (publishType.getName().equals(AndroidTypeAttr.APK)) {
+                    wearApp = configurations.maybeCreate(variantName + "WearBundling");
+                    wearApp.setDescription(
+                            "Resolved Configuration for wear app bundling for variant: "
+                                    + variantName);
+                    wearApp.setExtendsFrom(wearAppConfigs);
+                    wearApp.setCanBeConsumed(false);
+                    final AttributeContainer wearAttributes = wearApp.getAttributes();
+                    applyVariantAttributes(wearAttributes, buildType, consumptionFlavorMap);
+                    // because the APK is published to Runtime, then we need to make sure this one consumes RUNTIME as well.
+                    wearAttributes.attribute(Usage.USAGE_ATTRIBUTE, runtimeUsage);
+                    wearAttributes.attribute(
+                            AndroidTypeAttr.ATTRIBUTE,
+                            factory.named(AndroidTypeAttr.class, AndroidTypeAttr.APK));
+
+                    // bundle config for UAM bundle
+                    bundleElements = configurations.maybeCreate(variantName + "BundleElements");
+                    bundleElements.setDescription("Bundle elements for " + variantName);
+                    bundleElements.setCanBeResolved(false);
+
+                    final AttributeContainer bundleElementsAttributes =
+                            bundleElements.getAttributes();
+                    VariantAttr variantNameAttr = factory.named(VariantAttr.class, variantName);
+                    bundleElementsAttributes.attribute(VariantAttr.ATTRIBUTE, variantNameAttr);
+                    bundleElementsAttributes.attribute(
+                            Usage.USAGE_ATTRIBUTE, factory.named(Usage.class, USAGE_BUNDLE));
+                }
+
                 Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> publicationFlavorMap =
                         getFlavorAttributes(null);
 
@@ -368,7 +385,8 @@ public class VariantDependencies {
                     annotationProcessor,
                     metadataElements,
                     metadataValues,
-                    wearApp);
+                    wearApp,
+                    bundleElements);
         }
 
         private static void checkOldConfigurations(
@@ -450,7 +468,8 @@ public class VariantDependencies {
             @NonNull Configuration annotationProcessorConfiguration,
             @Nullable Configuration metadataElements,
             @Nullable Configuration metadataValuesConfiguration,
-            @Nullable Configuration wearAppConfiguration) {
+            @Nullable Configuration wearAppConfiguration,
+            @Nullable Configuration bundleElements) {
         this.variantName = variantName;
         this.compileClasspath = compileClasspath;
         this.runtimeClasspath = runtimeClasspath;
@@ -460,6 +479,7 @@ public class VariantDependencies {
         this.metadataElements = metadataElements;
         this.metadataValuesConfiguration = metadataValuesConfiguration;
         this.wearAppConfiguration = wearAppConfiguration;
+        this.bundleElements = bundleElements;
     }
 
     public String getName() {
@@ -504,6 +524,11 @@ public class VariantDependencies {
     @Nullable
     public Configuration getMetadataValuesConfiguration() {
         return metadataValuesConfiguration;
+    }
+
+    @Nullable
+    public Configuration getBundleElements() {
+        return bundleElements;
     }
 
     @Override

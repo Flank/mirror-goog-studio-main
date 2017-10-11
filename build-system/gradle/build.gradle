@@ -16,6 +16,7 @@ licenseReport {
 dependencies {
     compile project(':base:gradle-core')
     compile gradleApi()
+    compile libs.bundle_tool
 
     testCompile libs.kotlin_stdlib
 

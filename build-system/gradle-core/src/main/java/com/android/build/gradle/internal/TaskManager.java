@@ -44,6 +44,7 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_MANIFEST;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINKED_RES_FOR_BUNDLE;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MANIFEST_MERGE_REPORT;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
@@ -51,6 +52,9 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_NOT_COMPILED_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MOCKABLE_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PLATFORM_R_TXT;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_DEX;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_JAVA_RES;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_NATIVE_LIBS;
 import static com.android.builder.core.BuilderConstants.CONNECTED;
 import static com.android.builder.core.BuilderConstants.DEVICE;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
@@ -87,11 +91,13 @@ import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
+import com.android.build.gradle.internal.pipeline.StreamFilter;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.publishing.VariantPublishingSpec;
 import com.android.build.gradle.internal.res.GenerateLibraryRFileTask;
+import com.android.build.gradle.internal.res.LinkAndroidResForBundleTask;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.res.namespaced.NamespacedResourcesTaskManager;
 import com.android.build.gradle.internal.scope.BuildOutputs;
@@ -114,6 +120,7 @@ import com.android.build.gradle.internal.tasks.GenerateApkDataTask;
 import com.android.build.gradle.internal.tasks.InstallVariantTask;
 import com.android.build.gradle.internal.tasks.LintCompile;
 import com.android.build.gradle.internal.tasks.MockableAndroidJarTask;
+import com.android.build.gradle.internal.tasks.PipelineToPublicationTask;
 import com.android.build.gradle.internal.tasks.PlatformAttrExtractorTask;
 import com.android.build.gradle.internal.tasks.PrepareLintJar;
 import com.android.build.gradle.internal.tasks.SigningReportTask;
@@ -1282,6 +1289,23 @@ public abstract class TaskManager {
             }
 
             scope.setProcessResourcesTask(processAndroidResources);
+
+            // create the task that creates the aapt output for the bundle.
+            File resourcesAsProtosFile =
+                    FileUtils.join(
+                            globalScope.getIntermediatesDir(),
+                            "res-bundle",
+                            scope.getVariantConfiguration().getDirName(),
+                            "bundled-res.ap_");
+
+            LinkAndroidResForBundleTask linkResForBundle =
+                    taskFactory.create(
+                            new LinkAndroidResForBundleTask.ConfigAction(
+                                    scope, resourcesAsProtosFile));
+
+            // publish it.
+            scope.addTaskOutput(
+                    LINKED_RES_FOR_BUNDLE, resourcesAsProtosFile, linkResForBundle.getName());
         }
         scope.addTaskOutput(VariantScope.TaskOutputType.SYMBOL_LIST, symbolFile, taskName);
 
@@ -2333,6 +2357,40 @@ public abstract class TaskManager {
                 task.dependsOn(preColdSwapTask);
             }
         }
+
+        // ---- Create tasks to publish the pipeline output as needed.
+
+        final File intermediatesDir = variantScope.getGlobalScope().getIntermediatesDir();
+        createPipelineToPublishTask(
+                variantScope,
+                transformManager.getPipelineOutputAsFileCollection(StreamFilter.DEX),
+                FileUtils.join(intermediatesDir, "bundling", "dex"),
+                PUBLISHED_DEX);
+
+        createPipelineToPublishTask(
+                variantScope,
+                transformManager.getPipelineOutputAsFileCollection(StreamFilter.RESOURCES),
+                FileUtils.join(intermediatesDir, "bundling", "java-res"),
+                PUBLISHED_JAVA_RES);
+
+        createPipelineToPublishTask(
+                variantScope,
+                transformManager.getPipelineOutputAsFileCollection(StreamFilter.NATIVE_LIBS),
+                FileUtils.join(intermediatesDir, "bundling", "native-libs"),
+                PUBLISHED_NATIVE_LIBS);
+    }
+
+    private void createPipelineToPublishTask(
+            @NonNull VariantScope variantScope,
+            @NonNull FileCollection fileCollection,
+            @NonNull File outputFile,
+            @NonNull TaskOutputHolder.TaskOutputType outputType) {
+        PipelineToPublicationTask task =
+                taskFactory.create(
+                        new PipelineToPublicationTask.ConfigAction(
+                                variantScope, fileCollection, outputFile, outputType));
+
+        variantScope.addTaskOutput(outputType, outputFile, task.getName());
     }
 
     private void maybeCreateDesugarTask(

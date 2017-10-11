@@ -33,6 +33,7 @@ kotlin_library(
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/third_party:com.android.tools.build_bundletool",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",

@@ -16,6 +16,27 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "com.android.tools.build_aapt2-proto",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/aapt2-proto/0.1.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [":com.google.protobuf_protobuf-java"],
+)
+
+maven_java_library(
+    name = "com.android.tools.build_bundletool",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/bundletool/0.1.0-alpha01:jar",
+    visibility = ["//visibility:public"],
+    exports = [
+        ":com.android.tools.build_aapt2-proto",
+        ":com.google.auto.value_auto-value",
+        ":com.google.errorprone_error_prone_annotations",
+        ":com.google.guava_guava",
+        ":com.google.protobuf_protobuf-java",
+        ":com.google.protobuf_protobuf-java-util",
+    ],
+)
+
+maven_java_library(
     name = "com.android.tools.build_transform-api",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/build/transform-api/2.0.0-deprecated-use-gradle-api:jar",
     visibility = ["//visibility:public"],
@@ -62,7 +83,7 @@ maven_java_library(
 
 maven_java_library(
     name = "com.google.auto.value_auto-value",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value/1.4.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/auto/value/auto-value/1.5.2:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -76,14 +97,14 @@ maven_java_library(
 
 maven_java_library(
     name = "com.google.code.gson_gson",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.3:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.7:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
 
 maven_java_library(
     name = "com.google.errorprone_error_prone_annotations",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.0.18:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/errorprone/error_prone_annotations/2.1.2:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
@@ -153,14 +174,14 @@ maven_java_library(
 
 maven_java_library(
     name = "com.google.protobuf_protobuf-java",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.4.0:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )
 
 maven_java_library(
     name = "com.google.protobuf_protobuf-java-util",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.0.0:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java-util/3.4.0:jar",
     visibility = ["//visibility:public"],
     exports = [
         ":com.google.code.gson_gson",
@@ -753,6 +774,13 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-util/1.0.2.v20150114:jar",
     visibility = ["//visibility:public"],
     exports = [":org.eclipse.aether_aether-api"],
+)
+
+maven_java_library(
+    name = "org.eclipse.jdt.core.compiler_ecj",
+    export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/jdt/core/compiler/ecj/4.6.1:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
 )
 
 maven_java_library(

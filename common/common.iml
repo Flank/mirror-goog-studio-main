@@ -9,5 +9,6 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="library" exported="" name="Guava" level="project" />
     <orderEntry type="module" module-name="android-annotations" exported="" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

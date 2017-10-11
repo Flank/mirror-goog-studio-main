@@ -17,11 +17,9 @@
 package com.android.build.gradle.internal.fixture;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.AppExtension;
 import com.android.build.gradle.LibraryExtension;
 import com.android.build.gradle.api.ApkVariant;
@@ -92,7 +90,7 @@ public class VariantCheckers {
         return foundItem;
     }
 
-    @NonNull
+    @Nullable
     static TestVariant findTestVariantMaybe(
             @NonNull Collection<? extends TestVariant> variants, @NonNull String name) {
         return variants.stream().filter(t -> t.getName().equals(name)).findAny().orElse(null);
@@ -155,11 +153,16 @@ public class VariantCheckers {
                 @NonNull Collection<BaseTestedVariant> variants,
                 @NonNull Set<TestVariant> testVariants) {
             BaseTestedVariant variant = findVariant(variants, variantName);
-            assertNotNull(variant.getTestVariant());
-            assertEquals(testedVariantName, variant.getTestVariant().getName());
+            assertThat(variant.getTestVariant())
+                    .named("test variant of variant " + variantName)
+                    .isNotNull();
+            assertThat(variant.getTestVariant().getName())
+                    .named("test variant name")
+                    .isEqualTo(testedVariantName);
             if (variant.getTestVariant() != null) {
-                assertEquals(
-                        variant.getTestVariant(), findTestVariant(testVariants, testedVariantName));
+                assertThat(findTestVariant(testVariants, testedVariantName))
+                        .named("test variant searched by name: " + testedVariantName)
+                        .isSameAs(variant.getTestVariant());
             }
             checkTasks(variant.getOriginal());
             checkTasks(variant.getTestVariant());
@@ -169,7 +172,7 @@ public class VariantCheckers {
         public void checkNonTestedVariant(
                 @NonNull String variantName, @NonNull Set<BaseTestedVariant> variants) {
             BaseTestedVariant variant = findVariant(variants, variantName);
-            Assert.assertNull(variant.getTestVariant());
+            assertThat(variant.getTestVariant()).named("variant.getTestVariant()").isNull();
             checkTasks(variant.getOriginal());
         }
 
@@ -182,42 +185,60 @@ public class VariantCheckers {
         private static void checkTasks(@NonNull ApkVariant variant) {
             boolean isTestVariant = variant instanceof TestVariant;
 
-            assertNotNull(variant.getAidlCompile());
-            assertNotNull(variant.getMergeResources());
-            assertNotNull(variant.getMergeAssets());
-            assertNotNull(variant.getGenerateBuildConfig());
-            assertNotNull(variant.getJavaCompiler());
-            assertNotNull(variant.getProcessJavaResources());
-            assertNotNull(variant.getAssemble());
-            assertNotNull(variant.getUninstall());
+            assertThat(variant.getAidlCompile()).named("variant.getAidlCompile()").isNotNull();
+            assertThat(variant.getMergeResources())
+                    .named("variant.getMergeResources()")
+                    .isNotNull();
+            assertThat(variant.getMergeAssets()).named("variant.getMergeAssets()").isNotNull();
+            assertThat(variant.getGenerateBuildConfig())
+                    .named("variant.getGenerateBuildConfig()")
+                    .isNotNull();
+            assertThat(variant.getJavaCompiler()).named("variant.getJavaCompiler()").isNotNull();
+            assertThat(variant.getProcessJavaResources())
+                    .named("variant.getProcessJavaResources()")
+                    .isNotNull();
+            assertThat(variant.getAssemble()).named("variant.getAssemble()").isNotNull();
+            assertThat(variant.getUninstall()).named("variant.getUninstall()").isNotNull();
 
             for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
                 Assert.assertTrue(baseVariantOutput instanceof ApkVariantOutput);
                 ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
 
-                assertNotNull(apkVariantOutput.getProcessManifest());
-                assertNotNull(apkVariantOutput.getProcessResources());
-                assertNotNull(apkVariantOutput.getPackageApplication());
+                assertThat(apkVariantOutput.getProcessManifest())
+                        .named("apkVariantOutput.getProcessManifest()")
+                        .isNotNull();
+                assertThat(apkVariantOutput.getProcessResources())
+                        .named("apkVariantOutput.getProcessResources()")
+                        .isNotNull();
+                assertThat(apkVariantOutput.getPackageApplication())
+                        .named("apkVariantOutput.getPackageApplication()")
+                        .isNotNull();
             }
 
             if (variant.isSigningReady()) {
-                assertNotNull(variant.getInstall());
+                assertThat(variant.getInstall()).named("variant.getInstall()").isNotNull();
 
                 for (BaseVariantOutput baseVariantOutput : variant.getOutputs()) {
                     ApkVariantOutput apkVariantOutput = (ApkVariantOutput) baseVariantOutput;
 
                     // Check if we did the right thing, depending on the default value of the flag.
-                    Assert.assertNotNull(apkVariantOutput.getZipAlign());
+                    assertThat(apkVariantOutput.getZipAlign())
+                            .named("apkVariantOutput.getZipAlign()")
+                            .isNotNull();
                 }
 
             } else {
-                Assert.assertNull(variant.getInstall());
+                assertThat(variant.getInstall()).named("variant.getInstall()").isNull();
             }
 
             if (isTestVariant) {
                 TestVariant testVariant = DefaultGroovyMethods.asType(variant, TestVariant.class);
-                assertNotNull(testVariant.getConnectedInstrumentTest());
-                assertNotNull(testVariant.getTestedVariant());
+                assertThat(testVariant.getConnectedInstrumentTest())
+                        .named("testVariant.getConnectedInstrumentTest()")
+                        .isNotNull();
+                assertThat(testVariant.getTestedVariant())
+                        .named("testVariant.getTestedVariant()")
+                        .isNotNull();
             }
         }
     }
@@ -234,40 +255,56 @@ public class VariantCheckers {
         public void checkNonTestedVariant(
                 @NonNull String variantName, @NonNull Set<BaseTestedVariant> variants) {
             BaseTestedVariant variant = findVariant(variants, variantName);
-            assertNotNull(variant);
-            assertNull(variant.getTestVariant());
+            assertThat(variant).named("variant").isNotNull();
+            assertThat(variant.getTestVariant()).named("variant.getTestVariant()").isNull();
             checkLibraryTasks(variant.getOriginal());
         }
 
         private static void checkTestTasks(@NonNull TestVariant variant) {
-            assertNotNull(variant.getAidlCompile());
-            assertNotNull(variant.getMergeResources());
-            assertNotNull(variant.getMergeAssets());
-            assertNotNull(variant.getMergeResources());
-            assertNotNull(variant.getGenerateBuildConfig());
-            assertNotNull(variant.getJavaCompile());
-            assertNotNull(variant.getProcessJavaResources());
+            assertThat(variant.getAidlCompile()).named("variant.getAidlCompile()").isNotNull();
+            assertThat(variant.getMergeResources())
+                    .named("variant.getMergeResources()")
+                    .isNotNull();
+            assertThat(variant.getMergeAssets()).named("variant.getMergeAssets()").isNotNull();
+            assertThat(variant.getMergeResources())
+                    .named("variant.getMergeResources()")
+                    .isNotNull();
+            assertThat(variant.getGenerateBuildConfig())
+                    .named("variant.getGenerateBuildConfig()")
+                    .isNotNull();
+            assertThat(variant.getJavaCompile()).named("variant.getJavaCompile()").isNotNull();
+            assertThat(variant.getProcessJavaResources())
+                    .named("variant.getProcessJavaResources()")
+                    .isNotNull();
 
-            assertNotNull(variant.getAssemble());
-            assertNotNull(variant.getUninstall());
+            assertThat(variant.getAssemble()).named("variant.getAssemble()").isNotNull();
+            assertThat(variant.getUninstall()).named("variant.getUninstall()").isNotNull();
 
             if (variant.isSigningReady()) {
-                assertNotNull(variant.getInstall());
+                assertThat(variant.getInstall()).named("variant.getInstall()").isNotNull();
             } else {
-                assertNull(variant.getInstall());
+                assertThat(variant.getInstall()).named("variant.getInstall()").isNull();
             }
 
-            assertNotNull(variant.getConnectedInstrumentTest());
+            assertThat(variant.getConnectedInstrumentTest())
+                    .named("variant.getConnectedInstrumentTest()")
+                    .isNotNull();
         }
 
         private static void checkLibraryTasks(@NonNull LibraryVariant variant) {
-            assertNotNull(variant.getCheckManifest());
-            assertNotNull(variant.getAidlCompile());
-            assertNotNull(variant.getMergeResources());
-            assertNotNull(variant.getGenerateBuildConfig());
-            assertNotNull(variant.getJavaCompile());
-            assertNotNull(variant.getProcessJavaResources());
-            assertNotNull(variant.getAssemble());
+            assertThat(variant.getCheckManifest()).named("variant.getCheckManifest()").isNotNull();
+            assertThat(variant.getAidlCompile()).named("variant.getAidlCompile()").isNotNull();
+            assertThat(variant.getMergeResources())
+                    .named("variant.getMergeResources()")
+                    .isNotNull();
+            assertThat(variant.getGenerateBuildConfig())
+                    .named("variant.getGenerateBuildConfig()")
+                    .isNotNull();
+            assertThat(variant.getJavaCompile()).named("variant.getJavaCompile()").isNotNull();
+            assertThat(variant.getProcessJavaResources())
+                    .named("variant.getProcessJavaResources()")
+                    .isNotNull();
+            assertThat(variant.getAssemble()).named("variant.getAssemble()").isNotNull();
         }
 
         @NonNull
@@ -298,11 +335,16 @@ public class VariantCheckers {
                 @NonNull Collection<BaseTestedVariant> variants,
                 @NonNull Set<TestVariant> testVariants) {
             BaseTestedVariant variant = findVariant(variants, variantName);
-            assertNotNull(variant);
-            assertNotNull(variant.getTestVariant());
-            assertEquals(testedVariantName, variant.getTestVariant().getName());
-            assertEquals(
-                    variant.getTestVariant(), findTestVariant(testVariants, testedVariantName));
+            assertThat(variant).named("variant with name " + variantName).isNotNull();
+            assertThat(variant.getTestVariant())
+                    .named("test variant of variant " + variantName)
+                    .isNotNull();
+            assertThat(variant.getTestVariant().getName())
+                    .named("test variant name")
+                    .isEqualTo(testedVariantName);
+            assertThat(findTestVariant(testVariants, testedVariantName))
+                    .named("test variant searched by name: " + testedVariantName)
+                    .isSameAs(variant.getTestVariant());
             checkLibraryTasks(variant.getOriginal());
             checkTestTasks(variant.getTestVariant());
         }

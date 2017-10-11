@@ -14,10 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl
+package com.android.build.api.dsl.extension
 
-import com.android.builder.internal.aapt.AaptOptions
+import org.gradle.api.Incubating
 
-fun com.android.build.gradle.internal.dsl.AaptOptions.convert(): AaptOptions {
-    return AaptOptions(noCompress, failOnMissingConfigEntry, additionalParameters)
+/**
+ * Extension for bundle plugin.
+ *
+ * Allows developers to indicate which modules to bundle
+ */
+@Incubating
+interface BundleExtension: AndroidExtension {
+
+    /**
+     * Bundles the given module.
+     * @param moduleName the name of the module in the bundle
+     * @param projectPath the path of the Gradle project
+     * @param variantName the variant of the project to bundle
+     */
+    fun bundle(moduleName: String, projectPath: String, variantName: String)
 }

@@ -16,5 +16,6 @@
     <orderEntry type="library" name="bouncy-castle" level="project" />
     <orderEntry type="module" module-name="testutils" scope="TEST" />
     <orderEntry type="module" module-name="apksig" />
+    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>

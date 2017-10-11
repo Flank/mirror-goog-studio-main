@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.publishing;
 
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.API_ELEMENTS;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.BUNDLE_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.METADATA_ELEMENTS;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.PublishedConfigType.RUNTIME_ELEMENTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES;
@@ -38,13 +39,18 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_JAVA_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_JNI;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_MANIFEST;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINKED_RES_FOR_BUNDLE;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MANIFEST_METADATA;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MERGED_ASSETS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.METADADA_FEATURE_MANIFEST;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.METADATA_APP_ID_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.METADATA_FEATURE_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PACKAGED_RES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLIC_RES;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_DEX;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_JAVA_RES;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.PUBLISHED_NATIVE_LIBS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.RENDERSCRIPT_HEADERS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.RES_STATIC_LIBRARY;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.SYMBOL_LIST;
@@ -95,6 +101,8 @@ public class VariantPublishingSpec {
             ImmutableList.of(API_ELEMENTS, RUNTIME_ELEMENTS);
     private static final ImmutableList<PublishedConfigType> METADATA_ELEMENTS_ONLY =
             ImmutableList.of(METADATA_ELEMENTS);
+    private static final ImmutableList<PublishedConfigType> BUNDLE_ELEMENTS_ONLY =
+            ImmutableList.of(BUNDLE_ELEMENTS);
 
     private static final Map<VariantType, VariantPublishingSpec> variantMap =
             Maps.newEnumMap(VariantType.class);
@@ -130,7 +138,16 @@ public class VariantPublishingSpec {
                         outputSpec(
                                 METADATA_APP_ID_DECLARATION,
                                 ArtifactType.METADATA_APP_ID_DECLARATION,
-                                METADATA_ELEMENTS_ONLY))
+                                METADATA_ELEMENTS_ONLY),
+                        // bundle publishing
+                        outputSpec(MERGED_ASSETS, ArtifactType.ASSETS, BUNDLE_ELEMENTS_ONLY),
+                        outputSpec(PUBLISHED_DEX, ArtifactType.DEX, BUNDLE_ELEMENTS_ONLY),
+                        outputSpec(PUBLISHED_JAVA_RES, ArtifactType.JAVA_RES, BUNDLE_ELEMENTS_ONLY),
+                        outputSpec(PUBLISHED_NATIVE_LIBS, ArtifactType.JNI, BUNDLE_ELEMENTS_ONLY),
+                        outputSpec(
+                                LINKED_RES_FOR_BUNDLE,
+                                ArtifactType.RES_BUNDLE,
+                                BUNDLE_ELEMENTS_ONLY))
                 .withTestingSpec(
                         VariantType.ANDROID_TEST,
                         // java output query is done via CLASSES instead of JAR, so provide

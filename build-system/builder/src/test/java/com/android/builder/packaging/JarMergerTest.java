@@ -154,7 +154,8 @@ public class JarMergerTest {
             merger.addDirectory(
                     createDirectoryWithClassAndResource(),
                     ZipEntryFilter.CLASSES_ONLY,
-                    transformer);
+                    transformer,
+                    null);
         }
         assertThat(getEntries(out)).containsExactly("com/example/MyClass.class", REMOVED_TYPEDEFS);
     }
@@ -175,7 +176,8 @@ public class JarMergerTest {
             merger.addDirectory(
                     createDirectoryWithClassAndResource(),
                     ZipEntryFilter.CLASSES_ONLY,
-                    transformer);
+                    transformer,
+                    null);
         }
         assertThat(getEntries(out)).isEmpty();
     }

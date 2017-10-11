@@ -94,6 +94,15 @@ public interface TaskOutputHolder {
         DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
         INSTANT_RUN_MAIN_APK_RESOURCES,
         INSTANT_RUN_PACKAGED_RESOURCES,
+        // linked res for the unified bundle
+        LINKED_RES_FOR_BUNDLE,
+
+        // Published folders for bundling. This has extra cost as we need to copy
+        // the content of the pipeline. Use TransformManager.getPipelineOutputAsFileCollection
+        // whenever possible. See PipelineToPublicationTask
+        PUBLISHED_DEX,
+        PUBLISHED_JAVA_RES,
+        PUBLISHED_NATIVE_LIBS,
 
         // --- Namespaced android res ---
         // Compiled resources (directory of .flat files) for the local library

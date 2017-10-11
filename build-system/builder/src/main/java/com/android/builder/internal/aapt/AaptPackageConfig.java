@@ -149,6 +149,8 @@ public class AaptPackageConfig implements Cloneable {
     @NonNull
     private ImmutableSet<String> mResourceConfigs;
 
+    private boolean generateProtos;
+
     /**
      * Variant type.
      */
@@ -392,6 +394,10 @@ public class AaptPackageConfig implements Cloneable {
     @NonNull
     public Set<String> getResourceConfigs() {
         return Collections.unmodifiableSet(mResourceConfigs);
+    }
+
+    public boolean isGenerateProtos() {
+        return generateProtos;
     }
 
     /**
@@ -807,6 +813,11 @@ public class AaptPackageConfig implements Cloneable {
         @NonNull
         public Builder setStaticLibraryDependencies(@NonNull ImmutableList<File> libraries) {
             mConfig.staticLibraryDependencies = libraries;
+            return this;
+        }
+
+        public Builder generateProtos(boolean value) {
+            mConfig.generateProtos = value;
             return this;
         }
     }
