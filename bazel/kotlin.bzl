@@ -25,6 +25,7 @@ def kotlin_impl(ctx, roots, java_srcs, kotlin_srcs, kotlin_deps, package_prefixe
   return java_common.create_provider(
       compile_time_jars = [kotlin_jar],
       runtime_jars = [kotlin_jar],
+      use_ijar = False,
     )
 
 def _kotlin_jar_impl(ctx):

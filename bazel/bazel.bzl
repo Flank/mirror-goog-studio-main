@@ -149,6 +149,7 @@ def _iml_module_jar_impl(ctx,
       runtime_jars = [output_jar],
       transitive_compile_time_jars = [output_jar] + list(transitive_compile_time_jars),
       transitive_runtime_jars = [output_jar] + list(transitive_runtime_jars),
+      use_ijar = False,
   )]
   providers += exports
 
