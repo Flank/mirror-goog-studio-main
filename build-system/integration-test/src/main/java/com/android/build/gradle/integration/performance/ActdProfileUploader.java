@@ -450,7 +450,7 @@ public final class ActdProfileUploader implements ProfileUploader {
 
     @VisibleForTesting
     public static final class Benchmark {
-        public String range = "5%";
+        public String range = "10%";
         public int required = 3;
         public String trend = "smaller";
     }
