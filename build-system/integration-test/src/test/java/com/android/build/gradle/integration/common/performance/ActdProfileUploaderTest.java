@@ -80,11 +80,6 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void numCommits() throws IOException {
-        assertThat(ActdProfileUploader.numCommits(GIT_ROOT)).isGreaterThan(0);
-    }
-
-    @Test
     public void lastCommitJson() throws IOException {
         assertThat(ActdProfileUploader.lastCommitJson(GIT_ROOT)).isNotEmpty();
     }

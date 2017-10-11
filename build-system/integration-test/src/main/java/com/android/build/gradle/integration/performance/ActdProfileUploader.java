@@ -117,16 +117,6 @@ public final class ActdProfileUploader implements ProfileUploader {
     };
 
     /**
-     * A command the returns the total number of commits in a given git repository. Used as the
-     * build ID in the act-d dashboard. The {@code buildbotBuildNumber()} is not used because it
-     * does not guarantee monotonicity (i.e. the ID resets occasionally).
-     */
-    @NonNull
-    private static final String[] GIT_NUM_COMMITS_CMD = {
-        "/bin/sh", "-c", GIT_BINARY + " --no-pager log --pretty=oneline | wc -l"
-    };
-
-    /**
      * Represents the root directory of the git repository being performance tested. Used in a few
      * git commands to get information about the most recent change and number of commits.
      */
@@ -243,16 +233,6 @@ public final class ActdProfileUploader implements ProfileUploader {
     @NonNull
     public static String lastCommitJson(@NonNull File repo) throws IOException {
         return runCmd(repo, GIT_LAST_COMMIT_JSON_CMD);
-    }
-
-    /**
-     * Gets the total number of commits in the given repo. The intention is to use this as the build
-     * ID in the act-d dashboard, as the {@code buildbotBuildNumber()} is not guaranteed to be
-     * monotonic (ID resets occur).
-     */
-    @VisibleForTesting
-    public static int numCommits(@NonNull File repo) throws IOException {
-        return Integer.valueOf(runCmd(repo, GIT_NUM_COMMITS_CMD));
     }
 
     @VisibleForTesting
@@ -416,7 +396,7 @@ public final class ActdProfileUploader implements ProfileUploader {
             return;
         }
 
-        long buildId = numCommits(ROOT);
+        long buildId = buildbotBuildNumber();
         Infos infos = infos();
 
         BuildRequest buildReq = new BuildRequest();
