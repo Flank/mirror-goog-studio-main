@@ -114,7 +114,7 @@ def _iml_module_jar_impl(ctx,
       forms += relative_paths(ctx, form_srcs, roots)
       args, option_files = create_java_compiler_args_srcs(ctx,
         [form.path for form in form_srcs] + [k + "=" + v.path for k,v in form_deps] + [compile_output.path],
-        java_jar.path,
+        java_jar,
         transitive_runtime_jars)
       ctx.action(
           inputs = [v for _,v in form_deps] + form_srcs + [compile_output] + option_files + transitive_runtime_jars.to_list(),

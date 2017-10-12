@@ -13,7 +13,7 @@ def groovy_impl(ctx, srcs, groovy_deps, groovy_jar, stub_jar):
   args, option_files = create_java_compiler_args_srcs(
       ctx,
       [src.path for src in srcs],
-      groovy_jar.path,
+      groovy_jar,
       groovy_deps)
 
   ctx.action(

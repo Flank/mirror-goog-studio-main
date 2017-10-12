@@ -12,8 +12,7 @@ def kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs, kotlin_deps, package_p
     merged += [ctx.label.package + "/" + root]
 
   kotlin_deps = list(kotlin_deps) + ctx.files._kotlin
-  args, option_files = create_java_compiler_args_srcs(ctx, merged, kotlin_jar.path,
-                                                 kotlin_deps)
+  args, option_files = create_java_compiler_args_srcs(ctx, merged, kotlin_jar, kotlin_deps)
 
   args += ["--module_name", name]
   ctx.action(
@@ -43,8 +42,7 @@ def _kotlin_jar_impl(ctx):
   if ctx.attr.package_prefixes:
     merged = [ a + ":" + b if b else a for (a,b) in zip(merged, ctx.attr.package_prefixes)]
 
-  args, option_files = create_java_compiler_args_srcs(ctx, merged, class_jar.path,
-                                                 all_deps)
+  args, option_files = create_java_compiler_args_srcs(ctx, merged, class_jar, all_deps)
 
   ctx.action(
     inputs = ctx.files.inputs + list(all_deps) + option_files,

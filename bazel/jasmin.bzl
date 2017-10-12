@@ -1,7 +1,7 @@
 load(":functions.bzl", "create_java_compiler_args")
 def _jasmin_jar_impl(ctx):
   class_jar = ctx.outputs.class_jar
-  args, option_files = create_java_compiler_args(ctx, class_jar.path, [])
+  args, option_files = create_java_compiler_args(ctx, class_jar, [])
 
   ctx.action(
     inputs = ctx.files.srcs + option_files,
