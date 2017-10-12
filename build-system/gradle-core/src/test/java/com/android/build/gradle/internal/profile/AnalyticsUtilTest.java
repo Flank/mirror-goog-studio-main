@@ -21,6 +21,11 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.LongOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
+import com.android.build.gradle.options.StringOption;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.TypeToken;
@@ -30,6 +35,7 @@ import com.google.wireless.android.sdk.stats.DeviceInfo;
 import com.google.wireless.android.sdk.stats.GradleBuildSplits;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -188,13 +194,7 @@ public class AnalyticsUtilTest {
         Descriptors.EnumDescriptor protoEnum =
                 mappingFunction.apply(missingTasks.get(0)).getDescriptorForType();
 
-        int maxNumber =
-                protoEnum
-                        .getValues()
-                        .stream()
-                        .mapToInt(Descriptors.EnumValueDescriptor::getNumber)
-                        .max()
-                        .orElseThrow(() -> new IllegalStateException("Empty enum?"));
+        int maxNumber = getMaxEnumNumber(protoEnum);
 
         StringBuilder error =
                 new StringBuilder()
@@ -226,5 +226,70 @@ public class AnalyticsUtilTest {
             @NonNull Function<Class<T>, U> mappingFunction) {
         // This assumes that the proto with value 0 means 'unknown'.
         return mappingFunction.apply(clazz).getNumber() == 0;
+    }
+
+    private int getMaxEnumNumber(Descriptors.EnumDescriptor descriptor) {
+        return descriptor
+                .getValues()
+                .stream()
+                .mapToInt(Descriptors.EnumValueDescriptor::getNumber)
+                .max()
+                .orElseThrow(() -> new IllegalStateException("Empty enum?"));
+    }
+
+    @Test
+    public void checkBooleanOptions() {
+        checkOptions(BooleanOption.values(), AnalyticsUtil::toProto);
+    }
+
+    @Test
+    public void checkOptionalBooleanOptions() {
+        checkOptions(OptionalBooleanOption.values(), AnalyticsUtil::toProto);
+    }
+
+    @Test
+    public void checkIntegerOptions() {
+        checkOptions(IntegerOption.values(), AnalyticsUtil::toProto);
+    }
+
+    @Test
+    public void checkLongOptions() {
+        checkOptions(LongOption.values(), AnalyticsUtil::toProto);
+    }
+
+    @Test
+    public void checkStringOptions() {
+        checkOptions(StringOption.values(), AnalyticsUtil::toProto);
+    }
+
+    private <OptionT extends Enum<OptionT>, AnalyticsT extends ProtocolMessageEnum>
+            void checkOptions(OptionT[] options, Function<OptionT, AnalyticsT> toProtoFunction) {
+        List<OptionT> missing = new ArrayList<>();
+        for (OptionT option : options) {
+            if (toProtoFunction.apply(option).getNumber() == 0) {
+                missing.add(option);
+            }
+        }
+        if (!missing.isEmpty()) {
+            Descriptors.EnumDescriptor descriptor =
+                    toProtoFunction.apply(missing.get(0)).getDescriptorForType();
+            int max = getMaxEnumNumber(descriptor);
+
+            StringBuilder errorMessage =
+                    new StringBuilder("Missing analytics enum constants: ")
+                            .append(descriptor.getName())
+                            .append(
+                                    "\nSee tools/analytics-library/protos/src/main/proto/analytics_enums.proto\n\n");
+            for (OptionT option : missing) {
+                max++;
+                errorMessage
+                        .append("    ")
+                        .append(option.name())
+                        .append(" = ")
+                        .append(max)
+                        .append(";\n");
+            }
+            throw new AssertionError(errorMessage.toString());
+        }
     }
 }

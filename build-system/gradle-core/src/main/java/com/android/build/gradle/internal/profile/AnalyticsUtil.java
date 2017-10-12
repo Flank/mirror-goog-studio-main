@@ -22,6 +22,11 @@ import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.scope.VariantScope;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.IntegerOption;
+import com.android.build.gradle.options.LongOption;
+import com.android.build.gradle.options.OptionalBooleanOption;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.resources.Density;
@@ -220,6 +225,65 @@ public class AnalyticsUtil {
                 return GradleBuildSplits.CompatibleScreenSize.XLARGE;
             default:
                 return GradleBuildSplits.CompatibleScreenSize.UNKNOWN_SCREEN_SIZE;
+        }
+    }
+
+    @NonNull
+    public static com.android.tools.build.gradle.internal.profile.BooleanOption toProto(
+            @NonNull BooleanOption option) {
+        try {
+            return com.android.tools.build.gradle.internal.profile.BooleanOption.valueOf(
+                    option.name());
+        } catch (IllegalArgumentException e) {
+            return com.android.tools.build.gradle.internal.profile.BooleanOption
+                    .UNKNOWN_BOOLEAN_OPTION;
+        }
+    }
+
+    @NonNull
+    public static com.android.tools.build.gradle.internal.profile.OptionalBooleanOption toProto(
+            @NonNull OptionalBooleanOption option) {
+        try {
+            return com.android.tools.build.gradle.internal.profile.OptionalBooleanOption.valueOf(
+                    option.name());
+        } catch (IllegalArgumentException e) {
+            return com.android.tools.build.gradle.internal.profile.OptionalBooleanOption
+                    .UNKNOWN_OPTIONAL_BOOLEAN_OPTION;
+        }
+    }
+
+    @NonNull
+    public static com.android.tools.build.gradle.internal.profile.IntegerOption toProto(
+            @NonNull IntegerOption option) {
+        try {
+            return com.android.tools.build.gradle.internal.profile.IntegerOption.valueOf(
+                    option.name());
+        } catch (IllegalArgumentException e) {
+            return com.android.tools.build.gradle.internal.profile.IntegerOption
+                    .UNKNOWN_INTEGER_OPTION;
+        }
+    }
+
+    @NonNull
+    public static com.android.tools.build.gradle.internal.profile.LongOption toProto(
+            @NonNull LongOption option) {
+        try {
+            return com.android.tools.build.gradle.internal.profile.LongOption.valueOf(
+                    option.name());
+        } catch (IllegalArgumentException e) {
+            return com.android.tools.build.gradle.internal.profile.LongOption.UNKNOWN_LONG_OPTION;
+        }
+    }
+
+    @NonNull
+    public static com.android.tools.build.gradle.internal.profile.StringOption toProto(
+            @NonNull StringOption option) {
+        try {
+            return com.android.tools.build.gradle.internal.profile.StringOption.valueOf(
+                    option.name());
+        } catch (IllegalArgumentException e) {
+            return com.android.tools.build.gradle.internal.profile.StringOption
+                    .UNKNOWN_STRING_OPTION;
         }
     }
 }
