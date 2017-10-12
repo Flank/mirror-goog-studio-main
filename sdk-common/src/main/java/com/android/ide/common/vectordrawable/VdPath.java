@@ -18,7 +18,13 @@ package com.android.ide.common.vectordrawable;
 
 import com.android.SdkConstants;
 import com.google.common.collect.ImmutableMap;
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.LinearGradientPaint;
+import java.awt.MultipleGradientPaint;
+import java.awt.RadialGradientPaint;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
@@ -36,8 +42,6 @@ import org.w3c.dom.NodeList;
 
 /** Used to represent one VectorDrawable's path element. */
 class VdPath extends VdElement {
-    private static final Logger LOGGER = Logger.getLogger(VdPath.class.getSimpleName());
-
     private static final String PATH_ID = "android:name";
     private static final String PATH_DESCRIPTION = "android:pathData";
     private static final String PATH_FILL = "android:fillColor";
@@ -66,7 +70,6 @@ class VdPath extends VdElement {
 
     private VdGradient fillGradient = null;
     private VdGradient strokeGradient = null;
-
 
     private Node[] mNodeList = null;
     private int mStrokeColor = 0;
@@ -164,8 +167,7 @@ class VdPath extends VdElement {
         }
 
         private static final char INIT_TYPE = ' ';
-        public static void transform(AffineTransform totalTransform,
-                                     Node[] nodes) {
+        public static void transform(AffineTransform totalTransform, Node[] nodes) {
             Point2D.Float currentPoint = new Point2D.Float();
             Point2D.Float currentSegmentStartPoint = new Point2D.Float();
             char previousType = INIT_TYPE;
@@ -517,9 +519,8 @@ class VdPath extends VdElement {
         } else if (PATH_STROKE_MITERLIMIT.equals(name)) {
             mStrokeMiterlimit = Float.parseFloat(value);
         } else {
-            LOGGER.log(Level.WARNING, ">>>>>> DID NOT UNDERSTAND ! \"" + name + "\" <<<<");
+            getLogger().log(Level.WARNING, ">>>>>> DID NOT UNDERSTAND ! \"" + name + "\" <<<<");
         }
-
     }
 
     private static int parseFillType(String value) {
@@ -542,7 +543,6 @@ class VdPath extends VdElement {
      */
     @Override
     public void draw(Graphics2D g, AffineTransform currentMatrix, float scaleX, float scaleY) {
-
         Path2D path2d = new Path2D.Double(mFillType);
         toPath(path2d);
 
@@ -580,7 +580,6 @@ class VdPath extends VdElement {
         }
     }
 
-
     @Override
     public void parseAttributes(NamedNodeMap attributes) {
         for (int i = 0; i < attributes.getLength(); i++) {
@@ -616,14 +615,12 @@ class VdPath extends VdElement {
                 " mStrokeAlpha:" + mStrokeAlpha;
     }
 
-
     /**
      * We parse the given node for the gradient information if it exists. If it contains a gradient,
      * depending on what type, we set the fillGradient or strokeGradient of the current VdPath to a
      * new VdGradient and add the gradient information.
      */
     protected void addGradientIfExists(org.w3c.dom.Node current) {
-
         // This should be guaranteed to be the gradient given the way we are writing the VD XMLs.
         org.w3c.dom.Node gradientNode = current.getFirstChild();
         VdGradient newGradient = new VdGradient();
@@ -670,11 +667,11 @@ class VdPath extends VdElement {
                     }
                     if (color.isEmpty()) {
                         color = "#000000";
-                        LOGGER.log(Level.WARNING, ">>>>>> No color for gradient found >>>>>>");
+                        getLogger().log(Level.WARNING, ">>>>>> No color for gradient found >>>>>>");
                     }
                     if (offset.isEmpty()) {
                         offset = "0";
-                        LOGGER.log(Level.WARNING, ">>>>>> No offset for gradient found>>>>>>");
+                        getLogger().log(Level.WARNING, ">>>>>> No offset for gradient found>>>>>>");
                     }
                     GradientStop gradientStop = new GradientStop(color, offset);
                     newGradient.mGradientStops.add(gradientStop);
@@ -739,6 +736,9 @@ class VdPath extends VdElement {
         }
 
         private void drawGradient(Graphics2D g, Path2D path2d, boolean fill) {
+            if (mGradientStops.isEmpty()) {
+                return;
+            }
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             mFractions = new float[mGradientStops.size()];
@@ -818,5 +818,7 @@ class VdPath extends VdElement {
         }
     }
 
-
+    private static Logger getLogger() {
+        return Logger.getLogger(VdPath.class.getSimpleName());
+    }
 }
