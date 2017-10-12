@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl
 
-interface InitializableObject<in T : InitializableObject<T>> {
+interface Initializable<in T : Initializable<T>> {
     /**
      * Copies all properties from the given item of the same type
      */

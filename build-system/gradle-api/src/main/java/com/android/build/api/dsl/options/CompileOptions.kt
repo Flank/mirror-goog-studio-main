@@ -16,11 +16,11 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 import org.gradle.api.JavaVersion
 
 /** Java compilation options  */
-interface CompileOptions : InitializableObject<CompileOptions> {
+interface CompileOptions : Initializable<CompileOptions> {
     /** @see .getSourceCompatibility
      */
     fun setSourceCompatibility(sourceCompatibility: Any)

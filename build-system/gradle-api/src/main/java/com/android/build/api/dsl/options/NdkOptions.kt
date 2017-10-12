@@ -16,10 +16,10 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
 /** Base class for NDK config file.  */
-interface NdkOptions : InitializableObject<NdkOptions> {
+interface NdkOptions : Initializable<NdkOptions> {
 
     /** The module name  */
     var moduleName: String?

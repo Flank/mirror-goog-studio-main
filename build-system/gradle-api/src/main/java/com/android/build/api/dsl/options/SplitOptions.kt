@@ -16,10 +16,10 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
 /** Base data representing how an FULL_APK should be split for a given dimension (density, abi).  */
-interface SplitOptions : InitializableObject<SplitOptions> {
+interface SplitOptions : Initializable<SplitOptions> {
 
     /** Whether to split in this dimension.  */
     var isEnabled: Boolean

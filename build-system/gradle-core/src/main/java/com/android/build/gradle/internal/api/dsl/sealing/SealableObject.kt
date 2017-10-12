@@ -65,5 +65,4 @@ abstract class SealableObject(
         val itemName = name ?: if (this is Named) this.name else null
         return if (itemName != null) " '$itemName'" else ""
     }
-
 }

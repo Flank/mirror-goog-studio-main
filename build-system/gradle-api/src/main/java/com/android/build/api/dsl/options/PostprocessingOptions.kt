@@ -16,10 +16,10 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
 /** DSL object for configuring postprocessing: removing dead code, obfuscating etc.  */
-interface PostprocessingOptions : PostprocessingFiles, InitializableObject<PostprocessingOptions> {
+interface PostprocessingOptions : PostprocessingFiles, Initializable<PostprocessingOptions> {
 
     // FIXME fix isXXX properties
 

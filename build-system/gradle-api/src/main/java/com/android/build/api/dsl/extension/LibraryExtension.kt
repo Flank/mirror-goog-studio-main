@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl.extension
 
-/** 'android' extension 'com.android.library' projects.  */
+/** 'android' extension for 'com.android.library' projects.  */
 interface LibraryExtension : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, AndroidExtension {
 
     /** Name of the variant to publish.  */

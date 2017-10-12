@@ -39,7 +39,7 @@ class SealableMap<K,V> private constructor(
             private val instantiator: () -> MutableMap<K,V>,
             private val cloner: (MutableMap<K,V>) -> MutableMap<K,V>,
             issueReporter: EvalIssueReporter)
-    : NestedSealableObject(issueReporter), MutableMap<K,V> {
+    : NestedSealable(issueReporter), MutableMap<K,V> {
 
     companion object {
         fun <K,V> wrap(originMap: MutableMap<K,V>, errorReporter: EvalIssueReporter) =

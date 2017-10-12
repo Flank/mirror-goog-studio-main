@@ -50,28 +50,25 @@ class DefaultAndroidSourceDirectorySet(
         return name
     }
 
-    override fun srcDir(srcDir: Any): AndroidSourceDirectorySet {
+    override fun srcDir(srcDir: Any) {
         if (checkSeal()) {
             source.add(srcDir)
         }
-        return this
     }
 
-    override fun srcDirs(vararg srcDirs: Any): AndroidSourceDirectorySet {
+    override fun srcDirs(vararg srcDirs: Any) {
         if (checkSeal()) {
             Collections.addAll(source, *srcDirs)
         }
-        return this
     }
 
-    override fun setSrcDirs(srcDirs: Iterable<*>): AndroidSourceDirectorySet {
+    override fun setSrcDirs(srcDirs: Iterable<*>) {
         if (checkSeal()) {
             source.clear()
             for (srcDir in srcDirs) {
                 source.add(srcDir)
             }
         }
-        return this
     }
 
     override val sourceFiles: FileTree
@@ -85,18 +82,16 @@ class DefaultAndroidSourceDirectorySet(
         }
 
     override val sourceDirectoryTrees: List<ConfigurableFileTree>
-        get() {
-            val foo = source.stream()
-                    .map { sourceDir ->
-                        project.fileTree(
-                                ImmutableMap.of(
-                                        "dir", sourceDir,
-                                        "includes", includes,
-                                        "excludes", excludes))
-                    }
-                    .collect(Collectors.toList())
-            return ImmutableList.copyOf(foo)
-        }
+        get() = source
+                .stream()
+                .map { sourceDir ->
+                    project.fileTree(
+                            ImmutableMap.of(
+                                    "dir", sourceDir,
+                                    "includes", includes,
+                                    "excludes", excludes))
+                }
+                .collect(ImmutableList.toImmutableList())
 
     override val srcDirs: Set<File>
         get() = ImmutableSet.copyOf(project.files(*source.toTypedArray()).files)

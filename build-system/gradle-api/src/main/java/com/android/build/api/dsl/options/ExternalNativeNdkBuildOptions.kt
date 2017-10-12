@@ -16,10 +16,10 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
 /** Base interface for ndk-build per-variant info.  */
-interface ExternalNativeNdkBuildOptions : InitializableObject<ExternalNativeNdkBuildOptions> {
+interface ExternalNativeNdkBuildOptions : Initializable<ExternalNativeNdkBuildOptions> {
     /** The ndk-build build system Flags  */
     var arguments: List<String>
 

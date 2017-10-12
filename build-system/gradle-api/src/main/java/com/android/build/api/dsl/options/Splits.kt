@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 import org.gradle.api.Action
 
 /**
@@ -26,7 +26,7 @@ import org.gradle.api.Action
  * See [APK
  * Splits](https://developer.android.com/studio/build/configure-apk-splits.html).
  */
-interface Splits : InitializableObject<Splits> {
+interface Splits : Initializable<Splits> {
 
     /** Density settings.  */
     val density: DensitySplitOptions

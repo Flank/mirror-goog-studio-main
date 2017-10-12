@@ -16,8 +16,7 @@
 
 package com.android.build.api.dsl.extension
 
-@Suppress("DEPRECATION")
-/** 'android' extension 'com.android.test' projects.  */
+/** 'android' extension for 'com.android.test' projects.  */
 interface TestExtension : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, OnDeviceTestProperties, ApkProperties, AndroidExtension {
 
     /** The Gradle path of the project that this test project tests.  */

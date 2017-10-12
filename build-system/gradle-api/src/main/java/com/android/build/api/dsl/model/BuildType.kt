@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl.model
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 import com.android.build.api.dsl.options.PostprocessingOptions
 import org.gradle.api.Named
 
@@ -27,7 +27,7 @@ import org.gradle.api.Named
  * It does not include the sources or the dependencies. Those are available on the container or
  * in the artifact info.
  */
-interface BuildType : BuildTypeOrProductFlavor, BuildTypeOrVariant, VariantProperties, FallbackStrategy, InitializableObject<BuildType>, Named {
+interface BuildType : BuildTypeOrProductFlavor, BuildTypeOrVariant, VariantProperties, FallbackStrategy, Initializable<BuildType>, Named {
 
     /**
      * @see PostprocessingOptions.isObfuscate

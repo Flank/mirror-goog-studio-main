@@ -36,7 +36,7 @@ abstract class AbstractSealableCollection<T, C: MutableCollection<T>> protected 
             private val instantiator: () -> C,
             private val cloner: (C) -> C,
             issueReporter: EvalIssueReporter)
-        : NestedSealableObject(issueReporter), MutableCollection<T> {
+        : NestedSealable(issueReporter), MutableCollection<T> {
 
     // Use the cloner to clone the original collection into the internal version.
     // Behavior of the cloner will depend on the expected behavior of the sealable wrapper:
@@ -58,7 +58,7 @@ abstract class AbstractSealableCollection<T, C: MutableCollection<T>> protected 
 
     override fun add(element: T): Boolean {
         if (checkSeal()) {
-            return getOrCreateCollection().add(element)
+            return getBackingCollection().add(element)
         }
 
         return false
@@ -66,7 +66,7 @@ abstract class AbstractSealableCollection<T, C: MutableCollection<T>> protected 
 
     override fun addAll(elements: Collection<T>): Boolean {
         if (checkSeal()) {
-            return getOrCreateCollection().addAll(elements)
+            return getBackingCollection().addAll(elements)
         }
 
         return false
@@ -74,7 +74,7 @@ abstract class AbstractSealableCollection<T, C: MutableCollection<T>> protected 
 
     override fun remove(element: T): Boolean {
         if (checkSeal()) {
-            return getOrCreateCollection().remove(element)
+            return getBackingCollection().remove(element)
         }
 
         return false
@@ -82,7 +82,7 @@ abstract class AbstractSealableCollection<T, C: MutableCollection<T>> protected 
 
     override fun removeAll(elements: Collection<T>): Boolean {
         if (checkSeal()) {
-            return getOrCreateCollection().removeAll(elements)
+            return getBackingCollection().removeAll(elements)
         }
 
         return false
@@ -90,7 +90,7 @@ abstract class AbstractSealableCollection<T, C: MutableCollection<T>> protected 
 
     override fun retainAll(elements: Collection<T>): Boolean {
         if (checkSeal()) {
-            return getOrCreateCollection().retainAll(elements)
+            return getBackingCollection().retainAll(elements)
         }
 
         return false
@@ -128,7 +128,7 @@ abstract class AbstractSealableCollection<T, C: MutableCollection<T>> protected 
      *
      * This should only be call in order to add items to the backing collection.
      */
-    protected fun getOrCreateCollection(): C {
+    protected fun getBackingCollection(): C {
         if (internalCollection == null) {
             internalCollection = instantiator.invoke()
         }

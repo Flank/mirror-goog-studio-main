@@ -18,7 +18,7 @@ package com.android.build.api.dsl.extension
 
 import org.gradle.api.DomainObjectSet
 
-/** 'android' extension 'com.android.application' projects.  */
+/** 'android' extension for 'com.android.application' projects.  */
 interface AppExtension : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, ApkProperties, AndroidExtension {
 
     /**

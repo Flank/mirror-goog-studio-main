@@ -16,11 +16,11 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 import org.gradle.api.Action
 
 /** Options for configuring Java compilation.  */
-interface JavaCompileOptions : InitializableObject<JavaCompileOptions> {
+interface JavaCompileOptions : Initializable<JavaCompileOptions> {
     /** Returns the [AnnotationProcessorOptions] for configuring Java annotation processor.  */
     val annotationProcessorOptions: AnnotationProcessorOptions
 

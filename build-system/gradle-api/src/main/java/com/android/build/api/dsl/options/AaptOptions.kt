@@ -16,11 +16,11 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 import com.android.build.api.dsl.model.BuildType
 
 /** DSL object for configuring aapt options.  */
-interface AaptOptions : InitializableObject<AaptOptions> {
+interface AaptOptions : Initializable<AaptOptions> {
 
     /**
      * Pattern describing assets to be ignored.

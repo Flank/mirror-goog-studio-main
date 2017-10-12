@@ -16,9 +16,9 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
-interface DexOptions : InitializableObject<DexOptions> {
+interface DexOptions : Initializable<DexOptions> {
 
     /**
      * Whether to pre-dex libraries. This can improve incremental builds, but clean builds may be

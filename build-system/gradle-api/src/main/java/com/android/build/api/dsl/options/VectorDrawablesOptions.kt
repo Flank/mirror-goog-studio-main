@@ -16,10 +16,10 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
 /** Options for build-time support for vector drawables.  */
-interface VectorDrawablesOptions : InitializableObject<VectorDrawablesOptions> {
+interface VectorDrawablesOptions : Initializable<VectorDrawablesOptions> {
 
     val generatedDensities: Set<String>?
 

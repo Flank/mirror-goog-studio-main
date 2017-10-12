@@ -17,13 +17,13 @@
 package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.build.api.dsl.options.NdkOptions
-import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealableObject
+import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealable
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableSet
 import com.android.builder.errors.EvalIssueReporter
 
 class NdkOptionsImpl(issueReporter: EvalIssueReporter)
-        : InitializableSealableObject<NdkOptions>(issueReporter), NdkOptions {
+        : InitializableSealable<NdkOptions>(issueReporter), NdkOptions {
 
     //backing properties for lists/sets
     private val _ldlibs: SealableList<String> = SealableList.new(issueReporter)

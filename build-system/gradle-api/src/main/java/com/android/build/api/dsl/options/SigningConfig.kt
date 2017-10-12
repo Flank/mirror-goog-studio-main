@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 import java.io.File
 import org.gradle.api.Named
 
@@ -27,7 +27,7 @@ import org.gradle.api.Named
  * See [Signing Your
  * Applications](http://developer.android.com/tools/publishing/app-signing.html)
  */
-interface SigningConfig : Named, InitializableObject<SigningConfig> {
+interface SigningConfig : Named, Initializable<SigningConfig> {
 
     /**
      * The keystore file.

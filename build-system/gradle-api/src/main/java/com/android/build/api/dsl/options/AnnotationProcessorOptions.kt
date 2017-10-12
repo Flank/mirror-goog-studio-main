@@ -16,10 +16,10 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
 /** Options for configuring Java annotation processor.  */
-interface AnnotationProcessorOptions : InitializableObject<AnnotationProcessorOptions> {
+interface AnnotationProcessorOptions : Initializable<AnnotationProcessorOptions> {
 
     /**
      * Annotation processors to run.

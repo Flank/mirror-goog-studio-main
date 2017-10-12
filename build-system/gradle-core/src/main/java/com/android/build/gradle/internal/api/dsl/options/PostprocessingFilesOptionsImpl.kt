@@ -17,12 +17,12 @@
 package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.build.api.dsl.options.PostprocessingFilesOptions
-import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealableObject
+import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealable
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.builder.errors.EvalIssueReporter
 
 class PostprocessingFilesOptionsImpl(issueReporter: EvalIssueReporter)
-        : InitializableSealableObject<PostprocessingFilesOptions>(issueReporter), PostprocessingFilesOptions {
+        : InitializableSealable<PostprocessingFilesOptions>(issueReporter), PostprocessingFilesOptions {
 
     // the actual backing data for the exposed properties.
     private val _proguardFiles: SealableList<Any> = SealableList.new(issueReporter)

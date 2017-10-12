@@ -16,9 +16,9 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
-interface InstrumentationOptions : InitializableObject<InstrumentationOptions> {
+interface InstrumentationOptions : Initializable<InstrumentationOptions> {
 
     /**
      * Test application ID.

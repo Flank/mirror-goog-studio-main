@@ -16,5 +16,12 @@
 
 package com.android.build.api.dsl.extension
 
-/** Base interface for all Android extensions  */
+/**
+ * Base interface for all Android extensions.
+ *
+ * This includes extensions for plugins that build (com.android.application/library/feature) and
+ * those that don't (com.android.reporting).
+ *
+ * this can be used to verify that an extension called 'android' is in fact an Android extension.
+ */
 interface AndroidExtension

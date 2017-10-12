@@ -70,13 +70,13 @@ class SealableList<T> private constructor(
 
     override fun add(index: Int, element: T) {
         if (checkSeal()) {
-            getOrCreateCollection().add(index, element)
+            getBackingCollection().add(index, element)
         }
     }
 
     override fun addAll(index: Int, elements: Collection<T>): Boolean {
         if (checkSeal()) {
-            return getOrCreateCollection().addAll(index, elements)
+            return getBackingCollection().addAll(index, elements)
         }
 
         return false
@@ -102,17 +102,17 @@ class SealableList<T> private constructor(
 
     override fun removeAt(index: Int): T {
         if (checkSeal()) {
-            return getOrCreateCollection().removeAt(index)
+            return getBackingCollection().removeAt(index)
         }
 
         // we need to return something, since we cannot return null. We are returning the item
         // that should have been removed.
-        return getOrCreateCollection()[index]
+        return getBackingCollection()[index]
     }
 
     override fun set(index: Int, element: T): T {
         if (checkSeal()) {
-            return getOrCreateCollection().set(index, element)
+            return getBackingCollection().set(index, element)
         }
 
         return element
@@ -121,7 +121,7 @@ class SealableList<T> private constructor(
     override fun subList(fromIndex: Int, toIndex: Int): MutableList<T> {
         if (checkSeal()) {
             return new<T>(issueReporter)
-                    .reset(getOrCreateCollection().subList(fromIndex, toIndex))
+                    .reset(getBackingCollection().subList(fromIndex, toIndex))
         }
 
         // this is the case where the check seal fail but we are syncing in studio.

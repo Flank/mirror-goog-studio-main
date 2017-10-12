@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
 /**
  * DSL object for configuring per-language splits options.
@@ -25,7 +25,7 @@ import com.android.build.api.dsl.InitializableObject
  * See [APK
  * Splits](https://developer.android.com/studio/build/configure-apk-splits.html).
  */
-interface LanguageSplitOptions : InitializableObject<LanguageSplitOptions> {
+interface LanguageSplitOptions : Initializable<LanguageSplitOptions> {
 
     /** Collection of include patterns.  */
     val include: Set<String>

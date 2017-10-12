@@ -16,11 +16,11 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 import org.gradle.api.Action
 
 /** Base interface for external native build per-variant info.  */
-interface ExternalNativeBuildOptions : InitializableObject<ExternalNativeBuildOptions> {
+interface ExternalNativeBuildOptions : Initializable<ExternalNativeBuildOptions> {
     val externalNativeNdkBuildOptions: ExternalNativeNdkBuildOptions?
 
     fun externalNativeNdkBuildOptions(action: Action<ExternalNativeNdkBuildOptions>)

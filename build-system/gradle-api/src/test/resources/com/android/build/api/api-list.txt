@@ -4,8 +4,8 @@ com.android.build.api.dsl.ApiVersion
 com.android.build.api.dsl.ApiVersion.getApiLevel: java.lang.Integer ()
 com.android.build.api.dsl.ApiVersion.getApiString: java.lang.String ()
 com.android.build.api.dsl.ApiVersion.getCodename: java.lang.String ()
-com.android.build.api.dsl.InitializableObject
-com.android.build.api.dsl.InitializableObject.initWith: void (T)
+com.android.build.api.dsl.Initializable
+com.android.build.api.dsl.Initializable.initWith: void (T)
 com.android.build.api.dsl.extension.AndroidExtension
 com.android.build.api.dsl.extension.ApkProperties
 com.android.build.api.dsl.extension.ApkProperties.getGeneratePureSplits: boolean ()
@@ -561,9 +561,9 @@ com.android.build.api.sourcesets.AndroidSourceDirectorySet.getFilter: org.gradle
 com.android.build.api.sourcesets.AndroidSourceDirectorySet.getSourceDirectoryTrees: java.util.List<org.gradle.api.file.ConfigurableFileTree> ()
 com.android.build.api.sourcesets.AndroidSourceDirectorySet.getSourceFiles: org.gradle.api.file.FileTree ()
 com.android.build.api.sourcesets.AndroidSourceDirectorySet.getSrcDirs: java.util.Set<java.io.File> ()
-com.android.build.api.sourcesets.AndroidSourceDirectorySet.setSrcDirs: com.android.build.api.sourcesets.AndroidSourceDirectorySet (java.lang.Iterable<?>)
-com.android.build.api.sourcesets.AndroidSourceDirectorySet.srcDir: com.android.build.api.sourcesets.AndroidSourceDirectorySet (java.lang.Object)
-com.android.build.api.sourcesets.AndroidSourceDirectorySet.srcDirs: com.android.build.api.sourcesets.AndroidSourceDirectorySet (java.lang.Object[])
+com.android.build.api.sourcesets.AndroidSourceDirectorySet.setSrcDirs: void (java.lang.Iterable<?>)
+com.android.build.api.sourcesets.AndroidSourceDirectorySet.srcDir: void (java.lang.Object)
+com.android.build.api.sourcesets.AndroidSourceDirectorySet.srcDirs: void (java.lang.Object[])
 com.android.build.api.sourcesets.AndroidSourceFile
 com.android.build.api.sourcesets.AndroidSourceFile.getSrcFile: java.io.File ()
 com.android.build.api.sourcesets.AndroidSourceFile.setSrcFile: void (java.io.File)

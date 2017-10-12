@@ -16,12 +16,12 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 import java.io.File
 import org.gradle.api.tasks.Input
 
 /** DSL object for configuring lint options.  */
-interface LintOptions : InitializableObject<LintOptions> {
+interface LintOptions : Initializable<LintOptions> {
 
     /** Returns the set of issue id's to suppress. Callers are allowed to modify this collection.  */
     /**

@@ -16,11 +16,11 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 import com.google.common.collect.ListMultimap
 
 /** Options for configuring scoped shader options.  */
-interface ShaderOptions : InitializableObject<ShaderOptions> {
+interface ShaderOptions : Initializable<ShaderOptions> {
 
     /** Returns the list of glslc args.  */
     var glslcArgs: MutableList<String>

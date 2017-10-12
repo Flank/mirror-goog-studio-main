@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.internal.api.dsl.sealing
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 import com.android.builder.errors.EvalIssueReporter
 
 /**
  * An optional supplier of a instance provided by a lamdba.
  */
-class OptionalSupplier<T: InitializableSealableObject<T>>(private val instantiator: () -> T) {
+class OptionalSupplier<T: InitializableSealable<T>>(private val instantiator: () -> T) {
 
     private var localInstance: T? = null
 
@@ -53,5 +53,5 @@ class OptionalSupplier<T: InitializableSealableObject<T>>(private val instantiat
     fun hasInstance(): Boolean = localInstance != null
 }
 
-abstract class InitializableSealableObject<in T: InitializableObject<T>>(issueReporter: EvalIssueReporter):
-        SealableObject(issueReporter), InitializableObject<T>
+abstract class InitializableSealable<in T: Initializable<T>>(issueReporter: EvalIssueReporter):
+        SealableObject(issueReporter), Initializable<T>

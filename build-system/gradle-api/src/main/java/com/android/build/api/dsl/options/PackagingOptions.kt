@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
 /**
  * DSL object for configuring APK packaging options.
@@ -137,7 +137,7 @@ import com.android.build.api.dsl.InitializableObject
  * }
 </pre> *
  */
-interface PackagingOptions : InitializableObject<PackagingOptions> {
+interface PackagingOptions : Initializable<PackagingOptions> {
 
     /** Returns the list of excluded paths.  */
     var excludes: Set<String>

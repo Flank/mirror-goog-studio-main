@@ -16,8 +16,8 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
 /** DSL object for configuring postprocessing: removing dead code, obfuscating etc.  */
 interface PostprocessingFilesOptions
-    : PostprocessingFiles, InitializableObject<PostprocessingFilesOptions>
+    : PostprocessingFiles, Initializable<PostprocessingFilesOptions>

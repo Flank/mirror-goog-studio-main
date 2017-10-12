@@ -18,12 +18,12 @@ package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.build.api.dsl.options.AnnotationProcessorOptions
 import com.android.build.api.dsl.options.JavaCompileOptions
-import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealableObject
+import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealable
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 
 class JavaCompileOptionsImpl(issueReporter: EvalIssueReporter)
-        : InitializableSealableObject<JavaCompileOptions>(issueReporter), JavaCompileOptions {
+        : InitializableSealable<JavaCompileOptions>(issueReporter), JavaCompileOptions {
 
     override val annotationProcessorOptions: AnnotationProcessorOptions
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.

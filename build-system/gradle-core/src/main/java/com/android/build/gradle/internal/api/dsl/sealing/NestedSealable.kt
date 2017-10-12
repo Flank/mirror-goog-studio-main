@@ -25,7 +25,7 @@ import java.lang.ref.WeakReference
  *
  * This keeps tracks of these objects and seals them when the main class is sealed.
  */
-open class NestedSealableObject(issueReporter: EvalIssueReporter) : SealableObject(issueReporter) {
+open class NestedSealable(issueReporter: EvalIssueReporter) : SealableObject(issueReporter) {
 
     private var toBeSealed: MutableList<WeakReference<SealableObject>>? = null
 

@@ -30,27 +30,24 @@ interface AndroidSourceDirectorySet : PatternFilterable, Named {
      *
      * @param srcDir The source directory. This is evaluated as for
      * [org.gradle.api.Project.file]
-     * @return this
      */
-    fun srcDir(srcDir: Any): AndroidSourceDirectorySet
+    fun srcDir(srcDir: Any)
 
     /**
      * Adds the given source directories to this set.
      *
      * @param srcDirs The source directories. These are evaluated as for
      * [org.gradle.api.Project.files]
-     * @return this
      */
-    fun srcDirs(vararg srcDirs: Any): AndroidSourceDirectorySet
+    fun srcDirs(vararg srcDirs: Any)
 
     /**
      * Sets the source directories for this set.
      *
      * @param srcDirs The source directories. These are evaluated as for
      * [org.gradle.api.Project.files]
-     * @return this
      */
-    fun setSrcDirs(srcDirs: Iterable<*>): AndroidSourceDirectorySet
+    fun setSrcDirs(srcDirs: Iterable<*>)
 
     /**
      * Returns the list of source files as a [org.gradle.api.file.FileTree]

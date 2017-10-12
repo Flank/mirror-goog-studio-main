@@ -16,10 +16,10 @@
 
 package com.android.build.api.dsl.options
 
-import com.android.build.api.dsl.InitializableObject
+import com.android.build.api.dsl.Initializable
 
 /** Options for the adb tool.  */
-interface AdbOptions : InitializableObject<AdbOptions> {
+interface AdbOptions : Initializable<AdbOptions> {
 
     /** Returns the time out used for all adb operations.  */
     var timeOutInMs: Int
