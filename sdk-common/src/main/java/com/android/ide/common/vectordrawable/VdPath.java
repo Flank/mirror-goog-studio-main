@@ -18,7 +18,12 @@ package com.android.ide.common.vectordrawable;
 
 import com.android.SdkConstants;
 import com.google.common.collect.ImmutableMap;
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.LinearGradientPaint;
+import java.awt.MultipleGradientPaint;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
@@ -739,6 +744,9 @@ class VdPath extends VdElement {
         }
 
         private void drawGradient(Graphics2D g, Path2D path2d, boolean fill) {
+            if (mGradientStops.isEmpty()) {
+                return;
+            }
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
             mFractions = new float[mGradientStops.size()];
