@@ -34,6 +34,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("API 16: Android 4.1 (Jelly Bean)", SdkVersionInfo.getAndroidName(16));
         assertEquals("API 20: Android 4.4W (KitKat Wear)", SdkVersionInfo.getAndroidName(20));
         assertEquals("API 25: Android 7.1.1 (Nougat)", SdkVersionInfo.getAndroidName(25));
+        assertEquals("API 27: Android 8.1 (Oreo)", SdkVersionInfo.getAndroidName(27));
         // Future: if we don't have a name, don't include "null" as a name
         assertEquals("API 500", SdkVersionInfo.getAndroidName(500));
     }
@@ -60,6 +61,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals(16, getApiByBuildCode("JELLY_BEAN", false));
         assertEquals(24, getApiByBuildCode("N", false));
         assertEquals(26, getApiByBuildCode("O", false));
+        assertEquals(27, getApiByBuildCode("O_MR1", false));
 
         for (int api = 1; api <= HIGHEST_KNOWN_API; api++) {
             assertEquals(api, getApiByBuildCode(getBuildCode(api), false));
@@ -77,6 +79,7 @@ public class SdkVersionInfoTest extends TestCase {
         assertEquals("Lollipop", getCodeName(21));
         assertEquals("Nougat", getCodeName(24));
         assertEquals("Oreo", getCodeName(26));
+        assertEquals("Oreo", getCodeName(27));
     }
 
     public void testCamelCaseToUnderlines() {
