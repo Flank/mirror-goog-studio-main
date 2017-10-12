@@ -177,14 +177,15 @@ public class PerfDriver {
             myConfigFile.deleteOnExit();
             FileOutputStream outputStream = new FileOutputStream(myConfigFile);
             Agent.AgentConfig config =
-                Agent.AgentConfig.newBuilder()
-                    // The test below are using JVMTI, however this flag controls if we are
-                    // using an abstract unix socket or if we are using a host and port.
-                    // TODO: Update framework to support abstract sockets.
-                    .setUseJvmti(false)
-                    .setServiceAddress(LOCAL_HOST + ":" + myPort)
-                    .setSocketType(Agent.SocketType.UNSPECIFIED_SOCKET)
-                    .build();
+                    Agent.AgentConfig.newBuilder()
+                            // The test below are using JVMTI, however this flag controls if we are
+                            // using an abstract unix socket or if we are using a host and port.
+                            // TODO: Update framework to support abstract sockets.
+                            .setUseJvmti(false)
+                            .setServiceAddress(LOCAL_HOST + ":" + myPort)
+                            .setSocketType(Agent.SocketType.UNSPECIFIED_SOCKET)
+                            .setProfilerNetworkRequestPayload(true)
+                            .build();
             config.writeTo(outputStream);
             outputStream.flush();
             outputStream.close();

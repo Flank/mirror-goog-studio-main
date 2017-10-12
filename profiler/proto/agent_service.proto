@@ -49,6 +49,8 @@ message AgentConfig {
 
   // equivalent to profiler.jvmti flag in Studio
   bool use_jvmti = 1;
+  // equivalent to StudioFlags.PROFILER_NETWORK_REQUEST_PAYLOAD.
+  bool profiler_network_request_payload = 6;
   MemoryConfig mem_config = 2;
   // Which socket type we are using when setting up our service
   // if the device is O+ we use service_socket_name and

@@ -78,11 +78,12 @@ final class InitializerAdapter extends ClassVisitor implements Opcodes {
                 case ARETURN:
                 case RETURN:
                     super.visitLdcInsn(SERVICE_ADDRESS_PROPERTY);
+                    super.visitLdcInsn(ProfilerTransform.NETWORK_REQUEST_PAYLOAD_ENABLED);
                     super.visitMethodInsn(
                             INVOKESTATIC,
                             PROFILER_APPLICATION_CLASSNAME,
                             "initialize",
-                            "(Ljava/lang/String;)V",
+                            "(Ljava/lang/String;Z)V",
                             false);
             }
             super.visitInsn(opcode);

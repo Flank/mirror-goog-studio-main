@@ -182,6 +182,8 @@ message HttpConnectionData {
   int64 conn_id = 1;
   // Always set. Time this network request was first opened.
   int64 start_timestamp = 2;
+  // If not 0, time when request body stream was closed and bytes were uploaded.
+  int64 uploaded_timestamp = 5;
   // If not 0, time when the first byte was received. Always > start.
   int64 downloading_timestamp = 3;
   // If not 0, time when request was closed. Always > start.
