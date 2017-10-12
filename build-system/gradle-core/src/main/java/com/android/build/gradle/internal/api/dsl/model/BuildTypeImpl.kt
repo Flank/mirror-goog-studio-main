@@ -48,13 +48,13 @@ class BuildTypeImpl(
         get() {
             deprecationReporter.reportObsoleteUsage(
                     "BuildType.crunchPngsDefault",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             return field
         }
         set(value) {
             deprecationReporter.reportObsoleteUsage(
                     "BuildType.crunchPngsDefault",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             if (checkSeal()) {
                 field = value
             }
@@ -88,7 +88,7 @@ class BuildTypeImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "BuildType.crunchPngs",
                 "BuildType.isCrunchPngs",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return crunchPngs
     }
 
@@ -98,14 +98,14 @@ class BuildTypeImpl(
             deprecationReporter.reportDeprecatedUsage(
                     "PostprocessingOptions",
                     "BuildType.minifyEnabled",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             return postprocessing.isObfuscate || postprocessing.isRemoveUnusedCode
         }
         set(value) {
             deprecationReporter.reportDeprecatedUsage(
                     "PostprocessingOptions",
                     "BuildType.minifyEnabled",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             postprocessing.isObfuscate = true
             postprocessing.isRemoveUnusedCode = true
         }

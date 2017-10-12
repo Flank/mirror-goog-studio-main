@@ -46,7 +46,7 @@ class BuildTypeOrProductFlavorImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.proguardFiles",
                 "proguardFile()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         postprocessingFiles.invoke().proguardFiles.add(proguardFile)
     }
 
@@ -55,7 +55,7 @@ class BuildTypeOrProductFlavorImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.proguardFiles",
                 "proguardFiles()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         postprocessingFiles.invoke().proguardFiles.addAll(files.toMutableList())
     }
 
@@ -64,7 +64,7 @@ class BuildTypeOrProductFlavorImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.proguardFiles",
                 "setProguardFiles()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         postprocessingFiles.invoke().proguardFiles.addAll(proguardFileIterable.toMutableList())
     }
 
@@ -73,7 +73,7 @@ class BuildTypeOrProductFlavorImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.testProguardFiles",
                 "testProguardFile()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         postprocessingFiles.invoke().testProguardFiles.add(proguardFile)
     }
 
@@ -82,7 +82,7 @@ class BuildTypeOrProductFlavorImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.testProguardFiles",
                 "testProguardFiles()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         postprocessingFiles.invoke().testProguardFiles.addAll(proguardFiles.toMutableList())
     }
 
@@ -91,7 +91,7 @@ class BuildTypeOrProductFlavorImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.testProguardFiles",
                 "setTestProguardFiles()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         postprocessingFiles.invoke().testProguardFiles.addAll(files.toMutableList())
     }
 
@@ -100,7 +100,7 @@ class BuildTypeOrProductFlavorImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.consumerProguardFiles",
                 "consumerProguardFile()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         postprocessingFiles.invoke().consumerProguardFiles.add(proguardFile)
     }
 
@@ -109,7 +109,7 @@ class BuildTypeOrProductFlavorImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.consumerProguardFiles",
                 "consumerProguardFiles()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         postprocessingFiles.invoke().consumerProguardFiles.addAll(proguardFiles.toMutableList())
     }
 
@@ -118,7 +118,7 @@ class BuildTypeOrProductFlavorImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "Postprocessing.consumerProguardFiles",
                 "setConsumerProguardFile()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         postprocessingFiles.invoke().consumerProguardFiles.addAll(proguardFileIterable.toMutableList())
     }
 

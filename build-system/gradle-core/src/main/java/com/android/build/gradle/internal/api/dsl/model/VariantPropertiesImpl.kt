@@ -80,9 +80,7 @@ class VariantPropertiesImpl(
         }
 
     override fun buildConfigField(type: String, name: String, value: String) {
-        if (checkSeal()) {
-            _buildConfigFields.add(TypedValueImpl(type, name, value))
-        }
+        _buildConfigFields.add(TypedValueImpl(type, name, value))
     }
 
     override var resValues: MutableList<TypedValue>

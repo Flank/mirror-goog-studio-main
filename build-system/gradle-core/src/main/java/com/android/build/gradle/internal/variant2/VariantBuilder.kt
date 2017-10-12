@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.model.BuildTypeOrProductFlavor
+import com.android.build.api.dsl.model.ProductFlavor
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
 import com.android.build.api.dsl.model.VariantProperties
 import com.android.build.api.dsl.variant.Variant
@@ -46,6 +47,21 @@ import org.gradle.api.Named
 import java.io.File
 import java.util.stream.Collectors
 
+/**
+ * A builder of variants.
+ *
+ * This combines [ProductFlavor] and [com.android.build.api.dsl.model.BuildType], along with a
+ * [BaseExtension2] to create [Variant] objects.
+ *
+ * Each combination of flavors and build type can create more than one variants. There is generally
+ * a main variant accompanied by test variants.
+ *
+ * @param dslModelData the dsl model data containing flavors and build type and sourcesets
+ * @param extension the extension
+ * @param factories the factories needed to create the different variants.
+ * @param deprecationReporter the deprecation reporter
+ * @param issueReporter the error/warning reporter.
+ */
 class VariantBuilder<in E: BaseExtension2>(
         private val dslModelData: DslModelData,
         private val extension: E,
@@ -53,10 +69,15 @@ class VariantBuilder<in E: BaseExtension2>(
         private val deprecationReporter: DeprecationReporter,
         private val issueReporter: EvalIssueReporter) {
 
+    /** whether the variants have been computed */
     private var generated: Boolean = false
+
+    /** the generated list of variants */
     private val _variants: MutableList<SealableVariant> = mutableListOf()
+    /** the generated map of variant shims. The key is the variant being shimmed */
     private val _shims: MutableMap<Variant, Variant> = Maps.newIdentityHashMap()
 
+    /** property-style getter for the variant as a read-only list */
     val variants: List<SealableVariant>
         get() {
             if (!generated) {
@@ -65,6 +86,7 @@ class VariantBuilder<in E: BaseExtension2>(
             return _variants
         }
 
+    /** property-style getter for the shims as a read-only list */
     val shims: List<Variant>
         get() {
             if (!generated) {
@@ -73,6 +95,7 @@ class VariantBuilder<in E: BaseExtension2>(
             return ImmutableList.copyOf(_shims.values)
         }
 
+    /** Computes the variants */
     fun generateVariants() {
         // compute the flavor combinations
         val flavorCombinations = computeFlavorCombo()
@@ -94,6 +117,13 @@ class VariantBuilder<in E: BaseExtension2>(
         }
     }
 
+    /**
+     * Compute all the possible combinations of flavors.
+     *
+     * Each combo contains exactly one flavor from each flavor dimension
+     *
+     * @return a list of [FlavorCombination]
+     */
     private fun computeFlavorCombo(): List<FlavorCombination> {
         val flavorDimensions = extension.flavorDimensions
 
@@ -131,8 +161,15 @@ class VariantBuilder<in E: BaseExtension2>(
         return createCombinations(flavorDimensions, dslModelData.productFlavors, issueReporter)
     }
 
+    /**
+     * Creates one or more variants for a given build type and [FlavorCombination].
+     *
+     * The number of variants depends on the number of factories.
+     *
+     * For each generated variant, a shim is generated as well.
+     */
     private fun createVariant(buildType: BuildTypeImpl, flavorCombo: FlavorCombination?) {
-        // check if we have to run this at all via the externally-provided filter
+        // check if we have to run this at all via the externally-provided filters
         val filterObject = VariantFilterImpl(
                 buildType.name,
                 flavorCombo?.flavorNames ?: ImmutableList.of(),
@@ -147,6 +184,17 @@ class VariantBuilder<in E: BaseExtension2>(
         // seal so that people get notified if they try to change this too late.
         filterObject.seal()
 
+        // -----
+        // At this point we are going to merge all the build type, flavors and extension
+        // properties into a single variant object.
+        // As all these objects are actually composed of many delegates, some of which are
+        // present in several object (build type and flavors, or build type and extension),
+        // the variant is going to be assembled from the same delegates.
+        // Therefore, the first thing we are doing is merging all the duplicated delegates
+        // into new delegates of the same type.
+        // Then we will create the variant object by passing it the merged delegate.
+
+        // list of items to merge
         val items = mutableListOf<Any>()
 
         // merge just the default config + flavors into ProductFlavorOrVariant
@@ -164,6 +212,9 @@ class VariantBuilder<in E: BaseExtension2>(
         @Suppress("UNCHECKED_CAST")
         val variantProperties = mergeVariantProperties(items as MutableList<VariantProperties>)
 
+        // Special case for app ID and variant name suffix
+        // FIXME we need to change how we handle this, using a dynamic provider of
+        // manifest data which will include the full appId
         @Suppress("UNCHECKED_CAST")
         val appIdSuffixFromFlavors = combineSuffixes(
                 items as MutableList<BuildTypeOrProductFlavor>,
@@ -176,6 +227,10 @@ class VariantBuilder<in E: BaseExtension2>(
                 { it.versionNameSuffix },
                 null)
 
+        // -----
+        // the next two delegate are not duplicated in the source object, so we can just
+        // duplicate the source delegate into a new delegate for the variant.
+
         // buildTypOrVariant can just be cloned from the BuildType delegate
         val buildTypOrVariant = cloneBuildTypeOrVariant(buildType)
 
@@ -183,12 +238,22 @@ class VariantBuilder<in E: BaseExtension2>(
         val variantExtensionProperties = cloneVariantOrExtensionProperties(
                 extension.variantExtensionProperties)
 
-        val variantDispatcher = mutableMapOf<VariantType, Map<Variant, Variant>>()
-        val createdVariantMap = mutableMapOf<VariantType, Variant>()
+        // -----
+        // Loop on the factories and create the variants and shims.
 
+        // creates a dispatcher to link the main variant and the tested variant in a bi-directional
+        // way. It's a map of (VariantType -> Map of (variant -> variant))
+        // The first key is the variant type that is requested from the dispatcher.
+        // In the secondary map, the key is the variant making the request, and the value is the
+        // variant of the type provided in the main key.
+        val variantDispatcher = mutableMapOf<VariantType, Map<Variant, Variant>>()
+        // map of generated variant by their type. Allow quick access when building the dispatcher
+        val createdVariantMap = mutableMapOf<VariantType, Variant>()
         for (factory in factories) {
+            // what does the factory generates?
             val generatedType = factory.generatedType
 
+            // is this filtered out?
             if (!generatedType.isForTesting) {
                 if (filterObject.ignoresProd) {
                     continue
@@ -217,7 +282,7 @@ class VariantBuilder<in E: BaseExtension2>(
 
             // FIXME do same for versionName
 
-            // FIXME we want to copy these items for each variant
+            // FIXME we want to copy these items for each variant - Maybe have some sort of copy on write?
             val variant = factory.createVariant(
                     extension,
                     variantProperties,
@@ -229,21 +294,21 @@ class VariantBuilder<in E: BaseExtension2>(
 
             val variantType = variant.variantType
 
-
-            // add variant to map
+            // add variant to main list
             _variants.add(variant)
 
-            // get shim and put it in main map and intermediate map for dispatcher
+            // get shim and put it in variant-to-shim map
             val shim = variant.createShim()
             _shims[variant] = shim
 
-            // put the main variant in the map
+            // and put the variant in the intermediate map for the dispatcher
             if (createdVariantMap[variantType] != null) {
                 throw RuntimeException("More than one VariantFactory with same type $variantType")
             }
             createdVariantMap.put(variantType, variant)
         }
 
+        // -----
         // setup the variant dispatcher linking the variants together.
         // The key is the internal variant but the result must be the shim
         for (factory in factories) {
@@ -273,6 +338,7 @@ class VariantBuilder<in E: BaseExtension2>(
 
         takeLastNonNull(variantProperties, items, SET_MULTIDEX_ENABLED, GET_MULTIDEX_ENABLED)
         takeLastNonNull(variantProperties, items, SET_MULTIDEX_KEEPFILE, GET_MULTIDEX_KEEPFILE)
+        // TODO more
 
         return variantProperties
     }
@@ -281,6 +347,7 @@ class VariantBuilder<in E: BaseExtension2>(
         val productFlavorOrVariant = ProductFlavorOrVariantImpl(issueReporter)
 
         // merge the default-config + flavors in there.
+        // TODO more
 
         return productFlavorOrVariant
     }
@@ -313,7 +380,7 @@ class VariantBuilder<in E: BaseExtension2>(
             flavorCombo: FlavorCombination?,
             buildType: BuildTypeImpl): CommonVariantPropertiesImpl {
 
-        val flavors: ImmutableList<ProductFlavorImpl> = flavorCombo?.flavors ?: ImmutableList.of()
+        val flavors: ImmutableList<ProductFlavor> = flavorCombo?.flavors ?: ImmutableList.of()
 
         // use DslModelData as this one is not sealed.
         val allSourceSets = dslModelData.sourceSets
@@ -372,7 +439,7 @@ private fun <T, V> takeLastNonNull(outObject: T, inList: List<T>, setter: (T,V) 
  * @param name the optional name of the combination. Only valid for 2+ flavors
  * @param flavors the list of flavors
  */
-private class FlavorCombination(val name: String?, val flavors: ImmutableList<ProductFlavorImpl>) {
+private class FlavorCombination(val name: String?, val flavors: ImmutableList<ProductFlavor>) {
     val flavorNames: List<String> = flavors.stream().map(Named::getName).collect(ImmutableCollectors.toImmutableList())
 }
 
@@ -384,7 +451,7 @@ private class FlavorCombination(val name: String?, val flavors: ImmutableList<Pr
  */
 private fun createCombinations(
         flavorDimensions: List<String>,
-        productFlavors: Set<ProductFlavorImpl>,
+        productFlavors: Set<ProductFlavor>,
         issueReporter: EvalIssueReporter): List<FlavorCombination> {
 
     if (flavorDimensions.size == 1) {
@@ -399,7 +466,7 @@ private fun createCombinations(
         val result = mutableListOf<FlavorCombination>()
         // need to group the flavor per dimension.
         // First a map of dimension -> list(ProductFlavor)
-        val map = ArrayListMultimap.create<String, ProductFlavorImpl>()
+        val map = ArrayListMultimap.create<String, ProductFlavor>()
 
         for (flavor in productFlavors) {
             if (flavor.dimension == null) {
@@ -434,10 +501,10 @@ private fun createCombinations(
 /** Recursively go through all the dimensions and build all combinations */
 private fun createFlavorCombinations(
         outCombos: MutableList<FlavorCombination>,
-        flavorAccumulator: MutableList<ProductFlavorImpl>,
+        flavorAccumulator: MutableList<ProductFlavor>,
         index: Int,
         flavorDimensionList: List<String>,
-        flavorMap: ListMultimap<String, ProductFlavorImpl>,
+        flavorMap: ListMultimap<String, ProductFlavor>,
         issueReporter: EvalIssueReporter) {
 
     if (index == flavorDimensionList.size) {
@@ -500,7 +567,7 @@ private fun combineSuffixes(
 }
 
 
-private fun computeMultiFlavorName(flavors: List<ProductFlavorImpl>): String {
+private fun computeMultiFlavorName(flavors: List<ProductFlavor>): String {
     var first = true
     val sb = StringBuilder(flavors.size * 20)
     for (flavor in flavors) {

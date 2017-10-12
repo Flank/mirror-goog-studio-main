@@ -56,7 +56,7 @@ public class JackDeprecatedTest {
         SyncIssue singleIssue = Iterables.getOnlyElement(issues);
         assertThat(singleIssue.getData())
                 .named("Sync issue data")
-                .isEqualTo("JackOptions.enabled::::4.0");
+                .isEqualTo("JackOptions.enabled::::EOY2018");
         assertThat(singleIssue.getSeverity())
                 .named("Sync issue severity")
                 .isEqualTo(SyncIssue.SEVERITY_WARNING);
@@ -66,7 +66,7 @@ public class JackDeprecatedTest {
         assertThat(singleIssue.getMessage())
                 .named("Sync issue message")
                 .isEqualTo(
-                        "DSL element 'JackOptions.enabled' is obsolete and will be removed in version 4.0\n"
+                        "DSL element 'JackOptions.enabled' is obsolete and will be removed at the end of 2018\n"
                                 + "For more information, see https://d.android.com/r/tools/java-8-support-message.html");
 
         GradleBuildResult result = project.executor().run("assembleDebug");

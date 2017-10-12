@@ -26,9 +26,9 @@ package com.android.builder.errors
 interface DeprecationReporter {
 
     /** Enum for deprecated element removal target.  */
-    enum class DeprecationTarget  constructor(val version: String) {
-        // Object will be removed in 4.0
-        VERSION_4_0("4.0")
+    enum class DeprecationTarget  constructor(val removalTime: String) {
+        // Object will be removed EOY2018
+        EOY2018("at the end of 2018")
     }
 
     /**

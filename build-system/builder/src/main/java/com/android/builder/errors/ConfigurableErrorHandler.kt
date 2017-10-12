@@ -47,8 +47,8 @@ abstract class ConfigurableErrorHandler protected constructor(val mode: Evaluati
                 SyncIssue.TYPE_DEPRECATED_DSL,
                 SyncIssue.SEVERITY_WARNING,
                 "DSL element '$oldDslElement' is obsolete and has been replaced with '$newDslElement'.\n" +
-                        "It will be removed in version ${deprecationTarget.version}",
-                "$oldDslElement::$newDslElement::${deprecationTarget.version}")
+                        "It will be removed ${deprecationTarget.removalTime}",
+                "$oldDslElement::$newDslElement::${deprecationTarget.name}")
     }
 
     override fun reportDeprecatedUsage(
@@ -60,9 +60,9 @@ abstract class ConfigurableErrorHandler protected constructor(val mode: Evaluati
                 SyncIssue.TYPE_DEPRECATED_DSL,
                 SyncIssue.SEVERITY_WARNING,
                 "DSL element '$oldDslElement' is obsolete and has been replaced with '$newDslElement'.\n" +
-                        "It will be removed in version ${deprecationTarget.version}\n" +
+                        "It will be removed ${deprecationTarget.removalTime}\n" +
                         "For more information, see $url",
-                "$oldDslElement::$newDslElement::${deprecationTarget.version}")
+                "$oldDslElement::$newDslElement::${deprecationTarget.name}")
     }
 
     override fun reportObsoleteUsage(oldDslElement: String,
@@ -70,8 +70,8 @@ abstract class ConfigurableErrorHandler protected constructor(val mode: Evaluati
         reportIssue(
                 SyncIssue.TYPE_DEPRECATED_DSL,
                 SyncIssue.SEVERITY_WARNING,
-                "DSL element '$oldDslElement' is obsolete and will be removed in version ${deprecationTarget.version}",
-                "$oldDslElement::::${deprecationTarget.version}")
+                "DSL element '$oldDslElement' is obsolete and will be removed ${deprecationTarget.removalTime}",
+                "$oldDslElement::::${deprecationTarget.name}")
     }
 
     override fun reportObsoleteUsage(
@@ -81,9 +81,9 @@ abstract class ConfigurableErrorHandler protected constructor(val mode: Evaluati
         reportIssue(
                 SyncIssue.TYPE_DEPRECATED_DSL,
                 SyncIssue.SEVERITY_WARNING,
-                "DSL element '$oldDslElement' is obsolete and will be removed in version ${deprecationTarget.version}\n" +
+                "DSL element '$oldDslElement' is obsolete and will be removed ${deprecationTarget.removalTime}\n" +
                         "For more information, see $url",
-                "$oldDslElement::::${deprecationTarget.version}")
+                "$oldDslElement::::${deprecationTarget.name}")
     }
 
 }

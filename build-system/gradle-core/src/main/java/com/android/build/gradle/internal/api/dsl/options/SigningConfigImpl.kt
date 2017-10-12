@@ -86,7 +86,7 @@ class SigningConfigImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "SigningConfig.v1SigningEnabled",
                 "SigningConfig.isV1SigningEnabled()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return v1SigningEnabled
     }
 
@@ -94,7 +94,7 @@ class SigningConfigImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "SigningConfig.v2SigningEnabled",
                 "SigningConfig.isV2SigningEnabled()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return v2SigningEnabled
     }
 

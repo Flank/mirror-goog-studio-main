@@ -134,7 +134,7 @@ class BuildTypeOrVariantImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "$typeName.debuggable",
                 "$typeName.isDebuggable",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return debuggable
     }
 
@@ -143,7 +143,7 @@ class BuildTypeOrVariantImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "$typeName.testCoverageEnabled",
                 "$typeName.isTestCoverageEnabled",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return testCoverageEnabled
     }
 
@@ -152,7 +152,7 @@ class BuildTypeOrVariantImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "$typeName.testCoverageEnabled",
                 "$typeName.isTestCoverageEnabled",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return embedMicroApp
     }
 
@@ -161,7 +161,7 @@ class BuildTypeOrVariantImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "$typeName.pseudoLocalesEnabled",
                 "$typeName.isPseudoLocalesEnabled",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return pseudoLocalesEnabled
     }
 
@@ -170,7 +170,7 @@ class BuildTypeOrVariantImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "$typeName.jniDebuggable",
                 "$typeName.isJniDebuggable",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return jniDebuggable
     }
 
@@ -179,7 +179,7 @@ class BuildTypeOrVariantImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "$typeName.renderscriptDebuggable",
                 "$typeName.isRenderscriptDebuggable",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return renderscriptDebuggable
     }
 
@@ -188,7 +188,7 @@ class BuildTypeOrVariantImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "$typeName.zipAlignEnabled",
                 "$typeName.isZipAlignEnabled",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return zipAlignEnabled
     }
 }

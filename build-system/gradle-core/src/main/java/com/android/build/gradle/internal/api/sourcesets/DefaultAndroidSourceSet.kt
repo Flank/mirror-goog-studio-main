@@ -42,8 +42,6 @@ import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.SourceProvider
-import java.io.File
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
@@ -267,7 +265,7 @@ class DefaultAndroidSourceSet(
             deprecationReporter.reportDeprecatedUsage(
                     "AndroidSourceSet.implementationConfigurationName",
                     "AndroidSourceSet.compileConfigurationName",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
                 CONFIG_NAME_COMPILE
             } else {
@@ -282,7 +280,7 @@ class DefaultAndroidSourceSet(
             deprecationReporter.reportDeprecatedUsage(
                     "AndroidSourceSet.runtimeOnlyConfigurationName",
                     "AndroidSourceSet.packageConfigurationName",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
                 CONFIG_NAME_PUBLISH
             } else {
@@ -296,7 +294,7 @@ class DefaultAndroidSourceSet(
             deprecationReporter.reportDeprecatedUsage(
                     "AndroidSourceSet.compileOnlyConfigurationName",
                     "AndroidSourceSet.providedConfigurationName",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
                 CONFIG_NAME_PROVIDED
             } else {
@@ -308,7 +306,7 @@ class DefaultAndroidSourceSet(
     override val jackPluginConfigurationName: String
         get() {
             deprecationReporter.reportObsoleteUsage("AndroidSourceSet.getJackPluginConfigurationName()",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             return ""
         }
 }

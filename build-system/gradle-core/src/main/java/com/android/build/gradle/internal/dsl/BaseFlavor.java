@@ -547,9 +547,7 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
     @Nullable
     public Boolean getUseJack() {
         deprecationReporter.reportObsoleteUsage(
-                "ProductFlavor.useJack",
-                JackOptions.DEPRECATION_URL,
-                DeprecationTarget.VERSION_4_0);
+                "ProductFlavor.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.EOY2018);
         return null;
     }
 
@@ -564,9 +562,7 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
     @Deprecated
     public void setUseJack(Boolean useJack) {
         deprecationReporter.reportObsoleteUsage(
-                "ProductFlavor.useJack",
-                JackOptions.DEPRECATION_URL,
-                DeprecationTarget.VERSION_4_0);
+                "ProductFlavor.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.EOY2018);
     }
 
     /**
@@ -580,9 +576,7 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
     @Deprecated
     public void useJack(Boolean useJack) {
         deprecationReporter.reportObsoleteUsage(
-                "ProductFlavor.useJack",
-                JackOptions.DEPRECATION_URL,
-                DeprecationTarget.VERSION_4_0);
+                "ProductFlavor.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.EOY2018);
     }
 
     /** Options for configuration Java compilation. */

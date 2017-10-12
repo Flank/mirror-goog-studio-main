@@ -141,14 +141,14 @@ class VariantAwarePropertiesImpl(
             deprecationReporter.reportDeprecatedUsage(
                     "android.flavorDimensions",
                     "android.flavorDimensionList",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             return flavorDimensions
         }
         set(value) {
             deprecationReporter.reportDeprecatedUsage(
                     "android.flavorDimensions",
                     "android.flavorDimensionList",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             flavorDimensions = value
         }
 
@@ -158,7 +158,7 @@ class VariantAwarePropertiesImpl(
             deprecationReporter.reportDeprecatedUsage(
                     "android",
                     "android.defaultConfig",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             return _defaultConfig
         }
 
@@ -167,7 +167,7 @@ class VariantAwarePropertiesImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "android",
                 "android.defaultConfig",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         action.execute(_defaultConfig)
     }
 }

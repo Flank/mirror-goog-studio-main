@@ -39,7 +39,7 @@ class FallbackStrategyImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "BuildType.matchingFallbacks",
                 "BuildType.setMatchingFallbacks",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         _matchingFallbacks.reset(fallbacks.toMutableList())
     }
 
@@ -53,7 +53,7 @@ class FallbackStrategyImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "BuildType.matchingFallbacks",
                 "BuildType.setMatchingFallbacks",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         _matchingFallbacks.reset(mutableListOf(fallback))
     }
 
