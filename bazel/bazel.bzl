@@ -1,4 +1,4 @@
-load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target", "create_option_file")
+load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target", "create_option_file", "label_workspace_path", "workspace_path")
 load(":groovy.bzl", "groovy_impl")
 load(":kotlin.bzl", "kotlin_impl")
 load(":utils.bzl", "fileset", "java_jarjar", "singlejar")
@@ -27,7 +27,7 @@ def relative_paths(ctx, files, roots):
   paths = []
   for file in files:
     for root in roots:
-      path = ctx.label.package + "/" + root
+      path = label_workspace_path(ctx.label) + "/" + root
       if file.path.startswith(path):
         paths += [(file.path[len(path) + 1:], file)]
   return paths

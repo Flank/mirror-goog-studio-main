@@ -1,3 +1,4 @@
+load(":functions.bzl", "label_workspace_path", "workspace_path")
 load(":maven.bzl", "maven_java_library")
 
 # Enum-like values to determine the language the gen_proto rule will compile
@@ -8,18 +9,15 @@ proto_languages = struct(
 )
 
 def _gen_proto_impl(ctx):
-  gen_dir = ctx.label.package
+  gen_dir = label_workspace_path(ctx.label)
   inputs = []
   inputs += ctx.files.srcs + ctx.files.include
-  root = ctx.label.workspace_root
-  if root != "":
-      root += "/"
   args = [
-      "--proto_path=" + root + gen_dir, \
-      "--proto_path=" + root + "prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0/include"
+      "--proto_path=" + gen_dir,
+      "--proto_path=" + workspace_path("prebuilts/tools/common/m2/repository/com/google/protobuf/protobuf-java/3.0.0/include"),
   ]
   for dep in ctx.attr.deps:
-    args += ["--proto_path=" + root + dep.proto_package]
+    args += ["--proto_path=" + workspace_path(dep.proto_package)]
     inputs += dep.proto_src
 
   args += [s.path for s in ctx.files.srcs]

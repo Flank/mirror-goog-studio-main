@@ -1,5 +1,4 @@
-load(":functions.bzl", "create_java_compiler_args_srcs")
-load(":functions.bzl", "explicit_target")
+load(":functions.bzl", "create_java_compiler_args_srcs", "explicit_target", "label_workspace_path", "workspace_path")
 load(":maven.bzl", "maven_pom")
 load(":utils.bzl", "singlejar")
 
@@ -9,7 +8,7 @@ def kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs, kotlin_deps, package_p
   for root in roots:
     if root in package_prefixes:
       root += ":" + package_prefixes[root]
-    merged += [ctx.label.package + "/" + root]
+    merged += [label_workspace_path(ctx.label) + "/" + root]
 
   kotlin_deps = list(kotlin_deps) + ctx.files._kotlin
   args, option_files = create_java_compiler_args_srcs(ctx, merged, kotlin_jar, kotlin_deps)
