@@ -48,7 +48,7 @@ public class TestWithMismatchDep {
             "Conflict with dependency \'com.google.guava:guava\' in"
                     + " project ':'."
                     + " Resolved versions for app (18.0) and test app (19.0) differ."
-                    + " See http://g.co/androidstudio/app-test-app-conflict for details.";
+                    + " See https://d.android.com/r/tools/test-apk-dependency-conflicts.html for details.";
 
     @Test
     public void testMismatchDependencyBreaksTestBuild() throws Exception {
