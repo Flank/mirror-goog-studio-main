@@ -80,7 +80,9 @@ public class Aapt2QueuedResourceProcessor extends QueuedResourceProcessor {
         }
 
         public void invalidateProcessor(@NonNull String aaptLocation) {
-            sInstances.remove(aaptLocation);
+            synchronized (sLock) {
+                sInstances.remove(aaptLocation);
+            }
         }
     }
 
