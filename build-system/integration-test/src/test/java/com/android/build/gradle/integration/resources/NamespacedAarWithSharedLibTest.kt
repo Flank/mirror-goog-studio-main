@@ -153,8 +153,9 @@ class NamespacedAarWithSharedLibTest {
         val progress = FakeProgressIndicator()
         val sdk = AndroidSdkHandler.getInstance(TestUtils.getSdk())
         val buildToolInfo = sdk.getLatestBuildTool(progress, false)
-        val androidTarget = sdk.getAndroidTargetManager(progress)
-                .getTargetFromHashString("android-" + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION, progress)!!
+        val androidTarget =
+                sdk.getAndroidTargetManager(progress)
+                        .getTargetFromHashString(GradleTestProject.getCompileSdkHash(), progress)!!
 
         // Take the aar and convert it in to a fake shared library.
         ZFile(project.file("publishedLib/build/outputs/aar/publishedLib-release.aar")).use { previousAar ->
