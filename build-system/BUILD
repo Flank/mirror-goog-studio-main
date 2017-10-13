@@ -1,8 +1,8 @@
 load("//tools/base/bazel:bazel.bzl", "iml_module")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 load(
     "//tools/base/bazel:maven.bzl",
     "maven_java_import",
-    "maven_java_library",
     "maven_pom",
 )
 
@@ -46,9 +46,9 @@ java_import(
     visibility = ["//visibility:public"],
 )
 
-maven_java_library(
+kotlin_library(
     name = "tools.manifest-merger",
-    srcs = glob(["manifest-merger/src/main/java/**"]),
+    srcs = ["manifest-merger/src/main/java"],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
     pom = ":manifest-merger.pom",
     visibility = ["//visibility:public"],
@@ -60,6 +60,7 @@ maven_java_library(
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.code.gson_gson",
         "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     ],
 )
 
@@ -70,14 +71,17 @@ maven_pom(
     source = "//tools/buildSrc/base:build_version",
 )
 
-java_test(
+kotlin_test(
     name = "tools.manifest-merger_tests",
     # TODO: Why are the xml files not under resources?
-    srcs = glob(["manifest-merger/src/test/java/**/*.java"]),
+    srcs = ["manifest-merger/src/test/java"],
     jvm_flags = ["-Dtest.suite.jar=tools.manifest-merger_tests.jar"],
     resources = glob(
         include = ["manifest-merger/src/test/java/**"],
-        exclude = ["manifest-merger/src/test/java/**/*.java"],
+        exclude = [
+            "manifest-merger/src/test/java/**/*.java",
+            "manifest-merger/src/test/java/**/*.kt",
+        ],
     ),
     test_class = "com.android.testutils.JarTestSuite",
     runtime_deps = ["//tools/base/testutils:tools.testutils"],
@@ -92,6 +96,7 @@ java_test(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:com.google.truth_truth",
         "//tools/base/third_party:junit_junit",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.mockito_mockito-core",
     ],
 )
