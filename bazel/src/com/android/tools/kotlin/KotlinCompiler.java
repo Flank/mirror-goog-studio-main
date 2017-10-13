@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import org.jetbrains.kotlin.cli.common.CLICompiler;
 import org.jetbrains.kotlin.cli.common.ExitCode;
@@ -34,12 +35,25 @@ import org.jetbrains.kotlin.cli.jvm.K2JVMCompiler;
  */
 public class KotlinCompiler extends JarOutputCompiler {
 
+    private String moduleName;
+
     protected KotlinCompiler() {
         super("kotlinc");
+        moduleName = "dummy";
     }
 
     public static void main(String[] args) throws IOException {
         System.exit(new KotlinCompiler().run(Arrays.asList(args)));
+    }
+
+    @Override
+    protected void additionalOptions(Iterator<String> it) {
+        while (it.hasNext()) {
+            String arg = it.next();
+            if (arg.equals("--module_name") && it.hasNext()) {
+                moduleName = it.next();
+            }
+        }
     }
 
     @Override
@@ -54,7 +68,10 @@ public class KotlinCompiler extends JarOutputCompiler {
             File xml = new File(outDir.getParentFile(), outDir.getName() + ".xml");
             try (PrintWriter writer = new PrintWriter(xml)) {
                 writer.println("<modules>");
-                writer.print("<module name=\"dummy\" type=\"java-production\" outputDir=\"");
+                writer.print(
+                        "<module name=\""
+                                + moduleName
+                                + "\" type=\"java-production\" outputDir=\"");
                 writer.print(outDir.getAbsolutePath());
                 writer.println("\">");
 

@@ -4,7 +4,7 @@ load(":maven.bzl", "maven_pom")
 load(":utils.bzl", "singlejar")
 
 
-def kotlin_impl(ctx, roots, java_srcs, kotlin_srcs, kotlin_deps, package_prefixes, kotlin_jar):
+def kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs, kotlin_deps, package_prefixes, kotlin_jar):
   merged = []
   for root in roots:
     if root in package_prefixes:
@@ -15,6 +15,7 @@ def kotlin_impl(ctx, roots, java_srcs, kotlin_srcs, kotlin_deps, package_prefixe
   args, option_files = create_java_compiler_args_srcs(ctx, merged, kotlin_jar.path,
                                                  kotlin_deps)
 
+  args += ["--module_name", name]
   ctx.action(
     inputs = java_srcs + kotlin_srcs + option_files + kotlin_deps,
     outputs = [kotlin_jar],

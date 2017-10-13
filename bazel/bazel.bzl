@@ -90,7 +90,7 @@ def _iml_module_jar_impl(ctx,
   # Kotlin
   kotlin_providers = []
   if kotlin_srcs:
-    kotlin_providers += [kotlin_impl(ctx, roots, java_srcs, kotlin_srcs,
+    kotlin_providers += [kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs,
         transitive_runtime_jars, ctx.attr.package_prefixes, kotlin_jar)]
 
     jars += [kotlin_jar]
@@ -434,7 +434,7 @@ def split_srcs(src_dirs, res_dirs, exclude):
   roots = src_dirs + res_dirs
   resources = native.glob(
       include = [src + "/**" for src in roots],
-      exclude = ["**/*.java", "**/*.kt", "**/*.groovy", "**/.DS_Store", "**/*.form"]
+      exclude = ["**/*.java", "**/*.kt", "**/*.groovy", "**/.DS_Store", "**/*.form", "**/*.flex"]
   )
   javas = native.glob([src + "/**/*.java" for src in src_dirs], exclude)
   kotlins = native.glob([src + "/**/*.kt" for src in src_dirs], exclude)
