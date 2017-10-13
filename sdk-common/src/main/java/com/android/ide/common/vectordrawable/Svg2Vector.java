@@ -463,9 +463,13 @@ public class Svg2Vector {
         if (!styleData.isEmpty()) {
             // Separate each of the classes.
             String[] classData = styleData.split("}");
-            for (int i = 0; i < classData.length - 1; i++) {
+            for (int i = 0; i < classData.length; i++) {
                 // Separate the class name from the attribute values.
                 String[] splitClassData = classData[i].split("\\{");
+                if (splitClassData.length < 2) {
+                    // When the class info is empty, then skip.
+                    continue;
+                }
                 String className = splitClassData[0].trim();
                 String styleAttr = splitClassData[1].trim();
                 // Separate multiple classes if necessary.
