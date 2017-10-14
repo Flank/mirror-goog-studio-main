@@ -750,7 +750,7 @@ public class PostValidatorTest extends TestCase {
         assertEquals(SdkConstants.TOOLS_URI, attribute);
     }
 
-    public void testElementUsesNamespace()
+    public void testElementUsesNamespacePrefix()
             throws ParserConfigurationException, SAXException, IOException {
 
         String input =
@@ -772,8 +772,10 @@ public class PostValidatorTest extends TestCase {
 
         MergingReport.Builder mergingReportBuilder = new MergingReport.Builder(mILogger);
         assertTrue(
-                PostValidator.elementUsesNamespace(xmlDocument.getRootNode().getXml(), "android"));
+                PostValidator.elementUsesNamespacePrefix(
+                        xmlDocument.getRootNode().getXml(), "android"));
         assertFalse(
-                PostValidator.elementUsesNamespace(xmlDocument.getRootNode().getXml(), "tools"));
+                PostValidator.elementUsesNamespacePrefix(
+                        xmlDocument.getRootNode().getXml(), "tools"));
     }
 }

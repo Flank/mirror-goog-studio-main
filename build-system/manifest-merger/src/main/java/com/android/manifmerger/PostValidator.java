@@ -73,16 +73,9 @@ public class PostValidator {
      * added attributes requiring the namespace declaration.
      */
     private static void enforceAndroidNamespaceDeclaration(@NonNull XmlDocument xmlDocument) {
-        XmlElement manifest = xmlDocument.getRootNode();
-        for (XmlAttribute xmlAttribute : manifest.getAttributes()) {
-            if (xmlAttribute.getXml().getName().startsWith(SdkConstants.XMLNS) &&
-                    SdkConstants.ANDROID_URI.equals(xmlAttribute.getValue())) {
-                return;
-            }
-        }
-        // if we are here, we did not find the namespace declaration, add it.
-        manifest.getXml().setAttribute(SdkConstants.XMLNS + ":" + "android",
-                SdkConstants.ANDROID_URI);
+        final Element rootElement = xmlDocument.getRootNode().getXml();
+        XmlUtils.lookupNamespacePrefix(
+                rootElement, SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME, true);
     }
 
     /**
@@ -92,19 +85,16 @@ public class PostValidator {
      * may have added attributes requiring the namespace declaration.
      */
     protected static void enforceToolsNamespaceDeclaration(@NonNull XmlDocument xmlDocument) {
-        XmlElement manifest = xmlDocument.getRootNode();
-        String toolsNamespaceAttributeName =
-                SdkConstants.XMLNS + XmlUtils.NS_SEPARATOR + SdkConstants.TOOLS_NS_NAME;
-        for (XmlAttribute xmlAttribute : manifest.getAttributes()) {
-            if (xmlAttribute.getXml().getName().equals(toolsNamespaceAttributeName)
-                    && SdkConstants.TOOLS_URI.equals(xmlAttribute.getValue())) {
-                return;
-            }
+        final Element rootElement = xmlDocument.getRootNode().getXml();
+        if (SdkConstants.TOOLS_PREFIX.equals(
+                XmlUtils.lookupNamespacePrefix(rootElement, SdkConstants.TOOLS_URI, null, false))) {
+            return;
         }
         // if we are here, we did not find the namespace declaration, so we add it if
         // tools namespace is used anywhere in the xml document
-        if (elementUsesNamespace(manifest.getXml(), SdkConstants.TOOLS_NS_NAME)) {
-            manifest.getXml().setAttribute(toolsNamespaceAttributeName, SdkConstants.TOOLS_URI);
+        if (elementUsesNamespacePrefix(rootElement, SdkConstants.TOOLS_NS_NAME)) {
+            XmlUtils.lookupNamespacePrefix(
+                    rootElement, SdkConstants.TOOLS_URI, SdkConstants.TOOLS_NS_NAME, true);
         }
     }
 
@@ -112,16 +102,16 @@ public class PostValidator {
      * Check whether element or any of its descendants have an attribute with the given namespace
      *
      * @param element the element under consideration
-     * @param namespaceName the name of the namespace under consideration
+     * @param prefix the namespace prefix under consideration
      * @return true if element or any of its descendants have an attribute with the given namespace,
      *     false otherwise.
      */
     @VisibleForTesting
-    static boolean elementUsesNamespace(@NonNull Element element, @NonNull String namespaceName) {
+    static boolean elementUsesNamespacePrefix(@NonNull Element element, @NonNull String prefix) {
         NamedNodeMap namedNodeMap = element.getAttributes();
         for (int i = 0; i < namedNodeMap.getLength(); i++) {
             Node attribute = namedNodeMap.item(i);
-            if (namespaceName.equals(attribute.getPrefix())) {
+            if (prefix.equals(attribute.getPrefix())) {
                 return true;
             }
         }
@@ -129,7 +119,7 @@ public class PostValidator {
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node childNode = childNodes.item(i);
             if (childNode instanceof Element) {
-                if (elementUsesNamespace((Element) childNode, namespaceName)) {
+                if (elementUsesNamespacePrefix((Element) childNode, prefix)) {
                     return true;
                 }
             }

@@ -212,7 +212,9 @@ public enum ManifestSystemProperty implements ManifestMerger2.AutoAddingProperty
             String value,
             @NonNull XmlElement to) {
 
-        String toolsPrefix = getAndroidPrefix(to.getXml());
+        String toolsPrefix =
+                XmlUtils.lookupNamespacePrefix(
+                        to.getXml(), SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME, true);
         to.getXml().setAttributeNS(SdkConstants.ANDROID_URI,
                 toolsPrefix + XmlUtils.NS_SEPARATOR + manifestSystemProperty.toCamelCase(),
                 value);
@@ -279,17 +281,4 @@ public enum ManifestSystemProperty implements ManifestMerger2.AutoAddingProperty
             return new XmlElement((Element) nodes.item(0), document);
         }
     }
-
-    private static String getAndroidPrefix(@NonNull Element xml) {
-        String toolsPrefix = XmlUtils.lookupNamespacePrefix(
-                xml, SdkConstants.ANDROID_URI, SdkConstants.ANDROID_NS_NAME, false);
-        if (!toolsPrefix.equals(SdkConstants.ANDROID_NS_NAME) && xml.getOwnerDocument()
-                .getDocumentElement().getAttribute("xmlns:" + toolsPrefix) == null) {
-            // this is weird, the document is using "android" prefix but it's not bound
-            // to our namespace. Add the proper xmlns declaration.
-            xml.setAttribute("xmlns:" + toolsPrefix, SdkConstants.ANDROID_URI);
-        }
-        return toolsPrefix;
-    }
-
 }
