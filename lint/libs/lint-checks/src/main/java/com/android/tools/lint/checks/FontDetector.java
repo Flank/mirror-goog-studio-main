@@ -95,7 +95,7 @@ public class FontDetector extends ResourceXmlDetector {
     public static final GradleCoordinate MIN_APPSUPPORT_VERSION = new GradleCoordinate(
       SUPPORT_LIB_GROUP_ID, APPCOMPAT_LIB_ARTIFACT_ID, "26.0.0");
 
-    protected FontLoader mFontLoader;
+    private FontLoader mFontLoader;
 
     @Override
     public boolean appliesTo(@NonNull ResourceFolderType folderType) {
@@ -140,11 +140,13 @@ public class FontDetector extends ResourceXmlDetector {
 
         if (downloadableFontFile) {
             checkSupportLibraryVersion(context, element);
-            reportMisplacedFontTag(context, fontTag);
-            if (minSdk.getApiLevel() >= 26) {
+            if (reportMisplacedFontTag(context, fontTag)) {
+                return;
+            }
+            if (minSdk.getApiLevel() > AndroidVersion.VersionCodes.O_MR1) {
                 reportUnexpectedAttributeNamespace(context, firstAppAttribute, ANDROID_NS_NAME);
             }
-            if (1 < minSdk.getFeatureLevel() && minSdk.getFeatureLevel() <= 25) {
+            else  {
                 reportUnexpectedAttributeNamespace(context, firstAndroidAttribute, APP_PREFIX);
             }
             FontProvider provider = reportUnknownProvider(context, authority, appAuthority);
@@ -152,22 +154,21 @@ public class FontDetector extends ResourceXmlDetector {
                 reportUnknownPackage(context, androidPackage, appPackage, provider);
                 reportQueryProblem(context, query, appQuery, provider);
             }
-            if (1 < minSdk.getApiLevel() && minSdk.getApiLevel() <= 25) {
+            if (minSdk.getFeatureLevel() > AndroidVersion.VersionCodes.O_MR1) {
+                reportMissingAppAttribute(
+                  context,
+                  firstAndroidAttribute,
+                  missingAndroidAttributes,
+                  ANDROID_URI,
+                  ANDROID_NS_NAME,
+                  provider);
+            } else {
                 reportMissingAppAttribute(
                         context,
                         firstAppAttribute,
                         missingAppAttributes,
                         AUTO_URI,
                         APP_PREFIX,
-                        provider);
-            }
-            if (minSdk.getFeatureLevel() >= 26) {
-                reportMissingAppAttribute(
-                        context,
-                        firstAndroidAttribute,
-                        missingAndroidAttributes,
-                        ANDROID_URI,
-                        ANDROID_NS_NAME,
                         provider);
             }
         }
@@ -223,14 +224,15 @@ public class FontDetector extends ResourceXmlDetector {
         }
     }
 
-    private static void reportMisplacedFontTag(
+    private static boolean reportMisplacedFontTag(
             @NonNull XmlContext context,
             @Nullable Element fontTag) {
-        if (fontTag != null) {
-            LintFix fix = fix().replace().with("").build();
-            reportError(context, fontTag,
-                    "A downloadable font cannot have a `<font>` sub tag", fix);
+        if (fontTag == null) {
+            return false;
         }
+        LintFix fix = fix().replace().with("").build();
+        reportError(context, fontTag, "A downloadable font cannot have a `<font>` sub tag", fix);
+        return true;
     }
 
     private static void reportUnexpectedAttributeNamespace(
@@ -316,16 +318,6 @@ public class FontDetector extends ResourceXmlDetector {
         } else if (appAuthority != null) {
             provider = reportUnknownProvider(context, attrAppAuthority, appAuthority);
         }
-        if (authority != null
-                && appAuthority != null
-                && !authority.equals(appAuthority)
-                && provider != null) {
-            LintFix fix = fix().name("Replace with " + authority)
-                    .set(AUTO_URI, ATTR_FONT_PROVIDER_AUTHORITY, authority)
-                    .build();
-            reportError(context, attrAppAuthority, "Unexpected font provider authority", fix);
-            provider = null;
-        }
         return provider;
     }
 
@@ -385,21 +377,14 @@ public class FontDetector extends ResourceXmlDetector {
             @NonNull FontProvider provider) {
         String androidQuery = androidQueryAttr != null ? androidQueryAttr.getValue() : null;
         String appQuery = appQueryAttr != null ? appQueryAttr.getValue() : null;
-        boolean error = false;
         if (androidQuery != null) {
-            error = reportQueryProblem(context, androidQueryAttr, androidQuery, provider);
+            reportQueryProblem(context, androidQueryAttr, androidQuery, provider);
         } else if (appQuery != null) {
-            error = reportQueryProblem(context, appQueryAttr, appQuery, provider);
-        }
-        if (androidQuery != null && appQuery != null && !androidQuery.equals(appQuery) && !error) {
-            LintFix fix = fix().name("Replace with " + androidQuery)
-                    .set(AUTO_URI, ATTR_FONT_PROVIDER_QUERY, androidQuery)
-                    .build();
-            reportError(context, appQueryAttr, "Unexpected query", fix);
+            reportQueryProblem(context, appQueryAttr, appQuery, provider);
         }
     }
 
-    private boolean reportQueryProblem(
+    private void reportQueryProblem(
             @NonNull XmlContext context,
             @NonNull Attr queryAttr,
             @NonNull String query,
@@ -408,21 +393,19 @@ public class FontDetector extends ResourceXmlDetector {
             LintFix fix = fix().set().todo(queryAttr.getNamespaceURI(), queryAttr.getLocalName())
                     .build();
             reportError(context, queryAttr, "Missing provider query", fix);
-            return true;
+            return;
         }
         try {
             QueryParser.DownloadableParseResult result =
                     QueryParser.parseDownloadableFont(
                             provider.getAuthority(), XmlUtils.fromXmlAttributeValue(query));
             if (!mFontLoader.fontsLoaded()) {
-                return false;
+                return;
             }
-            boolean errorReported = false;
             for (String fontName : result.getFonts().keySet()) {
                 FontFamily family = mFontLoader.findFont(provider, fontName);
                 if (family == null) {
                     reportError(context, queryAttr, "Unknown font: " + fontName, null);
-                    errorReported = true;
                 } else {
                     for (MutableFontDetail detail : result.getFonts().get(fontName)) {
                         FontDetail best = detail.findBestMatch(family.getFonts());
@@ -449,15 +432,12 @@ public class FontDetector extends ResourceXmlDetector {
                                         "No exact match found for: " + fontName,
                                         fix);
                             }
-                            errorReported = true;
                         }
                     }
                 }
             }
-            return errorReported;
         } catch (QueryParser.FontQueryParserError ex) {
             reportError(context, queryAttr, ex.getMessage(), null);
-            return true;
         }
     }
 
