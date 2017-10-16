@@ -50,7 +50,7 @@ public class TestUtils {
      *   <li>tools/idea/.idea/libraries definition for kotlin-stdlib-jre8
      * </ul>
      */
-    public static final String KOTLIN_VERSION_FOR_TESTS = "1.1.3-2";
+    public static final String KOTLIN_VERSION_FOR_TESTS = "1.1.51";
 
     /**
      * Default timeout for the {@link #eventually(Runnable)} check.
