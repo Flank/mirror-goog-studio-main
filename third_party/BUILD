@@ -244,7 +244,7 @@ maven_java_library(
 
 maven_java_library(
     name = "commons-logging_commons-logging",
-    export_artifact = "//prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.1.1:jar",
+    export_artifact = "//prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.2:jar",
     visibility = ["//visibility:public"],
     exports = [],
 )

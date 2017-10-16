@@ -302,4 +302,8 @@ class FakeConfiguration(private val name: String): Configuration {
     override fun plus(p0: FileCollection?): FileCollection {
         TODO("not implemented")
     }
+
+    override fun withDependencies(p0: Action<in DependencySet>?): Configuration {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
 }
