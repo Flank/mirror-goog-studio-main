@@ -171,7 +171,7 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
 
     @NonNull
     @Override
-    public String executeProcess(
+    public String executeProcessAndGetOutput(
             @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
             throws ProcessException, IOException {
         // Once a Cmake server object is created
@@ -189,14 +189,17 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
             doHandshake(outputJsonDir, cmakeServer);
             ConfigureCommandResult configureCommandResult =
                     doConfigure(abi, abiPlatformVersion, cmakeServer);
-            doCompute(cmakeServer);
+            if (!ServerUtils.isConfigureResultValid(configureCommandResult.configureResult)) {
+                throw new ProcessException("Error configuring");
+            }
+
+            ComputeResult computeResult = doCompute(cmakeServer);
+            if (!ServerUtils.isComputedResultValid(computeResult)) {
+                throw new ProcessException("Error computing");
+            }
+
             generateAndroidGradleBuild(abi, cmakeServer);
             return configureCommandResult.interactiveMessages;
-        } catch (IOException | RuntimeException e) {
-            throw new RuntimeException(
-                    String.format(
-                            "Error occurred while communicating with CMake server. Check log %s for additional information.",
-                            getCmakeServerLog(getOutputFolder(getJsonFolder(), abi))));
         } finally {
             if (serverLogWriter != null) {
                 serverLogWriter.close();
@@ -232,7 +235,11 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                 new ServerReceiver()
                         .setMessageReceiver(
                                 message ->
-                                        receiveInteractiveMessage(serverLogWriter, logger, message))
+                                        receiveInteractiveMessage(
+                                                serverLogWriter,
+                                                logger,
+                                                message,
+                                                getMakefile().getParentFile()))
                         .setDiagnosticReceiver(
                                 message ->
                                         receiveDiagnosticMessage(serverLogWriter, logger, message));
@@ -253,12 +260,13 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
     }
 
     /** Processes an interactive message received from the CMake server. */
-    static void receiveInteractiveMessage(
+    void receiveInteractiveMessage(
             @NonNull PrintWriter writer,
             @NonNull ILogger logger,
-            @NonNull InteractiveMessage message) {
+            @NonNull InteractiveMessage message,
+            @NonNull File makeFileDirectory) {
         writer.println(CMAKE_SERVER_LOG_PREFIX + message.message);
-        logInteractiveMessage(logger, message);
+        logInteractiveMessage(logger, message, makeFileDirectory);
     }
 
     /**
@@ -267,7 +275,9 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
      */
     @VisibleForTesting
     static void logInteractiveMessage(
-            @NonNull ILogger logger, @NonNull InteractiveMessage message) {
+            @NonNull ILogger logger,
+            @NonNull InteractiveMessage message,
+            @NonNull File makeFileDirectory) {
         // CMake error/warining prefix strings. The CMake errors and warnings are part of the
         // message type "message" even though CMake is reporting errors/warnings (Note: They could
         // have a title that says if it's an error or warning, we check that first before checking
@@ -280,23 +290,25 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         // Note: This is not the same as a message with type "message" with error information, that
         // case is handled below.
         if (message.type != null && message.type.equals("error")) {
-            logger.error(null, message.errorMessage);
-            throw new RuntimeException("CMake server sync operations failed.");
+            logger.error(null, correctMakefilePaths(message.errorMessage, makeFileDirectory));
+            return;
         }
+
+        String correctedMessage = correctMakefilePaths(message.message, makeFileDirectory);
 
         if ((message.title != null && message.title.equals("Error"))
                 || message.message.startsWith(CMAKE_ERROR_PREFIX)) {
-            logger.error(null, message.message);
+            logger.error(null, correctedMessage);
             return;
         }
 
         if ((message.title != null && message.title.equals("Warning"))
                 || message.message.startsWith(CMAKE_WARNING_PREFIX)) {
-            logger.warning(message.message);
+            logger.warning(correctedMessage);
             return;
         }
 
-        logger.info(message.message);
+        logger.info(correctedMessage);
     }
 
     /** Processes an diagnostic message received by/from the CMake server. */
@@ -373,32 +385,19 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         ConfigureCommandResult configureCommandResult =
                 cmakeServer.configure(
                         cacheArgumentsList.toArray(new String[cacheArgumentsList.size()]));
-        if (!ServerUtils.isConfigureResultValid(configureCommandResult.configureResult)) {
-            throw new RuntimeException(
-                    String.format(
-                            "Invalid config result from Cmake server: \n%s\n%s",
-                            getObjectToString(configureCommandResult),
-                            getCmakeInfoString(cmakeServer)));
-        }
-
         return configureCommandResult;
     }
 
     /**
-     * Generate build system files in the build directly, or compute the given project.
+     * Generate build system files in the build directly, or compute the given project and returns
+     * the computed result.
      *
      * @param cmakeServer Connected cmake server.
      * @throws IOException I/O failure. Note: The function throws RuntimeException if we receive an
      *     invalid/erroneous ComputeResult.
      */
-    private static void doCompute(@NonNull Server cmakeServer) throws IOException {
-        ComputeResult computeResult = cmakeServer.compute();
-        if (!ServerUtils.isComputedResultValid(computeResult)) {
-            throw new RuntimeException(
-                    String.format(
-                            "Invalid compute result from Cmake server: \n%s\n%s",
-                            getObjectToString(computeResult), getCmakeInfoString(cmakeServer)));
-        }
+    private static ComputeResult doCompute(@NonNull Server cmakeServer) throws IOException {
+        return cmakeServer.compute();
     }
 
     /**

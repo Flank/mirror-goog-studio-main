@@ -35,6 +35,7 @@ public class CmakeOutputParserTest {
     @Rule public TemporaryFolder mTemporaryFolder = new TemporaryFolder();
     private ToolOutputParser mParser;
     private File mSourceFile;
+    private static final int SOURCE_POSITION_OFFSET_TO_ADD = 1;
 
     @Before
     public void setUp() throws IOException {
@@ -157,7 +158,7 @@ public class CmakeOutputParserTest {
         assertEquals(
                 "[line number]",
                 lineNumber,
-                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartLine());
+                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartLine() + 1);
     }
 
     @Test
@@ -178,11 +179,13 @@ public class CmakeOutputParserTest {
         assertEquals(
                 "[line number]",
                 lineNumber,
-                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartLine());
+                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartLine()
+                        + SOURCE_POSITION_OFFSET_TO_ADD);
         assertEquals(
                 "[column number]",
                 columnNumber,
-                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartColumn());
+                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartColumn()
+                        + SOURCE_POSITION_OFFSET_TO_ADD);
     }
 
     @Test
@@ -223,7 +226,7 @@ public class CmakeOutputParserTest {
         assertEquals(
                 "[line number]",
                 lineNumber,
-                formattedError.getSourceFilePositions().get(0).getPosition().getStartLine());
+                formattedError.getSourceFilePositions().get(0).getPosition().getStartLine() + 1);
     }
 
     @Test
@@ -244,11 +247,13 @@ public class CmakeOutputParserTest {
         assertEquals(
                 "[line number]",
                 lineNumber,
-                formattedError.getSourceFilePositions().get(0).getPosition().getStartLine());
+                formattedError.getSourceFilePositions().get(0).getPosition().getStartLine()
+                        + SOURCE_POSITION_OFFSET_TO_ADD);
         assertEquals(
                 "[column number]",
                 columnNumber,
-                formattedError.getSourceFilePositions().get(0).getPosition().getStartColumn());
+                formattedError.getSourceFilePositions().get(0).getPosition().getStartColumn()
+                        + SOURCE_POSITION_OFFSET_TO_ADD);
     }
 
     @Test
@@ -288,7 +293,8 @@ public class CmakeOutputParserTest {
         assertEquals(
                 "[line number]",
                 lineNumber,
-                formattedError.getSourceFilePositions().get(0).getPosition().getStartLine());
+                formattedError.getSourceFilePositions().get(0).getPosition().getStartLine()
+                        + SOURCE_POSITION_OFFSET_TO_ADD);
         assertEquals(
                 "[column number]",
                 -1,
@@ -313,11 +319,13 @@ public class CmakeOutputParserTest {
         assertEquals(
                 "[line number]",
                 lineNumber,
-                formattedError.getSourceFilePositions().get(0).getPosition().getStartLine());
+                formattedError.getSourceFilePositions().get(0).getPosition().getStartLine()
+                        + SOURCE_POSITION_OFFSET_TO_ADD);
         assertEquals(
                 "[column number]",
                 columnNumber,
-                formattedError.getSourceFilePositions().get(0).getPosition().getStartColumn());
+                formattedError.getSourceFilePositions().get(0).getPosition().getStartColumn()
+                        + SOURCE_POSITION_OFFSET_TO_ADD);
     }
 
     @Test
@@ -357,7 +365,8 @@ public class CmakeOutputParserTest {
         assertEquals(
                 "[line number]",
                 lineNumber,
-                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartLine());
+                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartLine()
+                        + SOURCE_POSITION_OFFSET_TO_ADD);
         assertEquals(
                 "[column number]",
                 -1,
@@ -382,11 +391,13 @@ public class CmakeOutputParserTest {
         assertEquals(
                 "[line number]",
                 lineNumber,
-                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartLine());
+                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartLine()
+                        + SOURCE_POSITION_OFFSET_TO_ADD);
         assertEquals(
                 "[column number]",
                 columnNumber,
-                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartColumn());
+                formattedWarning.getSourceFilePositions().get(0).getPosition().getStartColumn()
+                        + SOURCE_POSITION_OFFSET_TO_ADD);
     }
 
     @Test

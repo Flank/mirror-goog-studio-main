@@ -88,7 +88,7 @@ class CmakeAndroidNinjaExternalNativeJsonGenerator extends CmakeExternalNativeJs
 
     @NonNull
     @Override
-    public String executeProcess(
+    public String executeProcessAndGetOutput(
             @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
             throws ProcessException, IOException {
         return executeBuildProcessAndLogError(
