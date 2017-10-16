@@ -10,16 +10,16 @@
     <copy from="root/res/xml/automotive_app_desc.xml"
           to="${escapeXmlAttribute(resOut)}/xml/automotive_app_desc.xml" />
 
-    <instantiate from="root/src/app_package/MessagingService.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${serviceName}.java" />
+    <instantiate from="root/src/app_package/MessagingService.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${serviceName}.${ktOrJavaExt}" />
 
-    <instantiate from="root/src/app_package/MessageReadReceiver.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${readReceiverName}.java" />
+    <instantiate from="root/src/app_package/MessageReadReceiver.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${readReceiverName}.${ktOrJavaExt}" />
 
-    <instantiate from="root/src/app_package/MessageReplyReceiver.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${replyReceiverName}.java" />
+    <instantiate from="root/src/app_package/MessageReplyReceiver.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${replyReceiverName}.${ktOrJavaExt}" />
 
-    <open file="${escapeXmlAttribute(srcOut)}/${serviceName}.java" />
-    <open file="${escapeXmlAttribute(srcOut)}/${readReceiverName}.java" />
-    <open file="${escapeXmlAttribute(srcOut)}/${replyReceiverName}.java" />
+    <open file="${escapeXmlAttribute(srcOut)}/${serviceName}.${ktOrJavaExt}" />
+    <open file="${escapeXmlAttribute(srcOut)}/${readReceiverName}.${ktOrJavaExt}" />
+    <open file="${escapeXmlAttribute(srcOut)}/${replyReceiverName}.${ktOrJavaExt}" />
 </recipe>
