@@ -56,4 +56,12 @@ class NdkOptionsImpl(issueReporter: EvalIssueReporter)
             _abiFilters.reset(that.abiFilters)
         }
     }
+
+    override fun seal() {
+        super.seal()
+
+        _ldlibs.seal()
+        _abiFilters.seal()
+
+    }
 }

@@ -176,5 +176,7 @@ class VariantPropertiesImpl(
         _javaCompileOptions.instance?.seal()
         _externalNativeBuildOptions.instance?.seal()
         _shaders.instance?.seal()
+        // enforced in the setter.
+        (signingConfig as SigningConfigImpl).seal()
     }
 }

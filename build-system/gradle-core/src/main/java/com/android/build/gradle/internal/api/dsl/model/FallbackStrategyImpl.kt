@@ -62,4 +62,10 @@ class FallbackStrategyImpl(
             _matchingFallbacks.reset(that._matchingFallbacks)
         }
     }
+
+    override fun seal() {
+        super.seal()
+
+        _matchingFallbacks.seal()
+    }
 }

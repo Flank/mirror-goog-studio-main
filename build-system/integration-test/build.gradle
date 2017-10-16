@@ -123,7 +123,7 @@ configure([test, testPrebuilts]) {
     // Always run the task, when requested.
     outputs.upToDateWhen { false }
 
-    maxParallelForks = Runtime.runtime.availableProcessors() / 4
+    maxParallelForks = Runtime.runtime.availableProcessors()
 
     // FIXME: Temporarily disable multi-threading on Windows to address http://b/38119382.
     // We will remove this work-around once the issue is resolved.
