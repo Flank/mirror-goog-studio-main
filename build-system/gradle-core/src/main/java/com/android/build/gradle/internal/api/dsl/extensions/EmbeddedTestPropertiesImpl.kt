@@ -31,7 +31,7 @@ import org.gradle.api.DomainObjectSet
 class EmbeddedTestPropertiesImpl(issueReporter: EvalIssueReporter)
         : SealableObject(issueReporter), EmbeddedTestProperties {
 
-    override var testBuildType: String = "debug"
+    override var testBuildType: String? = "debug"
         set(value) {
             if (checkSeal()) {
                 field = value

@@ -18,11 +18,11 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultProductFlavor;
-import com.android.builder.errors.DeprecationReporter;
-import com.android.builder.errors.DeprecationReporter.DeprecationTarget;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.ApiVersion;
 import com.android.builder.model.ClassField;

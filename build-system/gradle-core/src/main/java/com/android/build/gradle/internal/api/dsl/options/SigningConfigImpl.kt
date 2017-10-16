@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.build.api.dsl.options.SigningConfig
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import java.io.File
 

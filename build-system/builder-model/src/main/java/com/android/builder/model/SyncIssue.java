@@ -142,8 +142,10 @@ public interface SyncIssue {
      */
     int TYPE_DEPRECATED_DSL = 28;
 
+    int TYPE_DEPRECATED_CONFIGURATION = 29;
+
     /** Highest number assigned to types of {@link SyncIssue}s. */
-    int TYPE_MAX = 28; // increment when adding new types.
+    int TYPE_MAX = 29; // increment when adding new types.
 
     /** Returns the severity of the issue. */
     int getSeverity();

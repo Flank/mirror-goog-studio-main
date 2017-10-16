@@ -21,7 +21,7 @@ import com.android.build.api.dsl.options.PostprocessingOptions
 import com.android.build.gradle.internal.api.dsl.options.PostprocessingOptionsImpl
 import com.android.build.gradle.internal.api.dsl.sealing.OptionalSupplier
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 

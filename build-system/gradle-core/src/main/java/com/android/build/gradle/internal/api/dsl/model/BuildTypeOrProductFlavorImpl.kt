@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.api.dsl.model
 import com.android.build.api.dsl.model.BuildTypeOrProductFlavor
 import com.android.build.api.dsl.options.PostprocessingFiles
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 
 class BuildTypeOrProductFlavorImpl(

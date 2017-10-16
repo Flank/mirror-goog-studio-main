@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.internal.api.sourcesets
 
-import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.internal.reflect.Instantiator
 
 class AndroidSourceSetFactory(
+            private val filesProvider: FilesProvider,
             private val instantiator: Instantiator,
             private val deprecationReporter: DeprecationReporter,
             private val issueReporter: EvalIssueReporter)
@@ -30,6 +30,6 @@ class AndroidSourceSetFactory(
 
     override fun create(name: String): DefaultAndroidSourceSet {
         return instantiator.newInstance(DefaultAndroidSourceSet::class.java,
-                name, deprecationReporter, issueReporter)
+                name, filesProvider, deprecationReporter, issueReporter)
     }
 }

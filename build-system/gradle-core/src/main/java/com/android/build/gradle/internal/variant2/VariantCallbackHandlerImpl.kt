@@ -24,33 +24,33 @@ import org.gradle.api.Action
 
 internal class VariantCallbackHandlerImpl<T: Variant> private constructor(
         private val predicate: VariantPredicate,
-        private val actionRegister: ActionRegister,
+        private val variantCallbackHolder: VariantCallbackHolder,
         private val issueReporter: EvalIssueReporter)
     : VariantCallbackHandler<T> {
 
     internal constructor(
-            actionRegister: ActionRegister,
+            variantCallbackHolder: VariantCallbackHolder,
             issueReporter: EvalIssueReporter)
-            : this(VariantPredicate(issueReporter), actionRegister, issueReporter)
+            : this(VariantPredicate(issueReporter), variantCallbackHolder, issueReporter)
 
     override fun withName(name: String): VariantCallbackHandler<T> {
         return VariantCallbackHandlerImpl(
-                predicate.cloneWithName(name), actionRegister, issueReporter)
+                predicate.cloneWithName(name), variantCallbackHolder, issueReporter)
     }
 
     override fun <S : Variant> withType(variantClass: Class<S>): VariantCallbackHandler<S> {
         return VariantCallbackHandlerImpl(
-                predicate.cloneWithClass(variantClass), actionRegister, issueReporter)
+                predicate.cloneWithClass(variantClass), variantCallbackHolder, issueReporter)
     }
 
     override fun withBuildType(name: String): VariantCallbackHandler<T> {
         return VariantCallbackHandlerImpl(
-                predicate.cloneWithBuildType(name), actionRegister, issueReporter)
+                predicate.cloneWithBuildType(name), variantCallbackHolder, issueReporter)
     }
 
     override fun withProductFlavor(name: String): VariantCallbackHandler<T> {
         return VariantCallbackHandlerImpl(
-                predicate.cloneWithFlavor(name), actionRegister, issueReporter)
+                predicate.cloneWithFlavor(name), variantCallbackHolder, issueReporter)
     }
 
     override fun all(action: Action<T>) {
@@ -75,7 +75,7 @@ internal class VariantCallbackHandlerImpl<T: Variant> private constructor(
 
     private fun <V: Variant> registerAction(action: Action<V>, predicate: VariantPredicate) {
         @Suppress("UNCHECKED_CAST")
-        actionRegister.register(predicate, action as Action<Variant>)
+        variantCallbackHolder.register(predicate, action as Action<Variant>)
     }
 }
 

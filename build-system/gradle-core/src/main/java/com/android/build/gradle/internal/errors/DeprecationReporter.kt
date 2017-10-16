@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.builder.errors
+package com.android.build.gradle.internal.errors
 
 /**
  * Reporter for issues during evaluation.
@@ -85,4 +85,17 @@ interface DeprecationReporter {
             url: String,
             deprecationTarget: DeprecationTarget)
 
+    /**
+     * Reports a deprecation usage in the DSL/API.
+     *
+     * @param newConfiguration the name of the [org.gradle.api.artifacts.Configuration] to use
+     * instead
+     * @param oldConfiguration the name of the deprecated [org.gradle.api.artifacts.Configuration]
+     * @param deprecationTarget when the deprecated element is going to be removed. A line about the
+     * timing is added to the message.
+     */
+    fun reportDeprecatedConfiguration(
+            newConfiguration: String,
+            oldConfiguration: String,
+            deprecationTarget: DeprecationTarget)
 }

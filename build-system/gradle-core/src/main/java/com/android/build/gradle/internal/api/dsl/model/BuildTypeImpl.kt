@@ -23,16 +23,16 @@ import com.android.build.api.dsl.model.FallbackStrategy
 import com.android.build.api.dsl.model.VariantProperties
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.core.BuilderConstants
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 
 class BuildTypeImpl(
         private val named: String,
-        private val deprecationReporter: DeprecationReporter,
         private val variantProperties: VariantPropertiesImpl,
         private val buildTypeOrProductFlavor: BuildTypeOrProductFlavorImpl,
         internal val buildTypeOrVariant: BuildTypeOrVariantImpl,
         private val fallbackStrategy: FallbackStrategyImpl,
+        private val deprecationReporter: DeprecationReporter,
         issueReporter: EvalIssueReporter)
     : SealableObject(issueReporter),
         BuildType,

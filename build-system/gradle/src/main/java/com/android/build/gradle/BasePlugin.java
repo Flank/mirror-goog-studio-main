@@ -54,6 +54,7 @@ import com.android.build.gradle.internal.api.dsl.model.FallbackStrategyImpl;
 import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImpl;
 import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl;
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant;
+import com.android.build.gradle.internal.api.sourcesets.FilesProvider;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
@@ -61,6 +62,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.SigningConfigFactory;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
@@ -75,9 +77,10 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.build.gradle.internal.variant2.DslModelData;
+import com.android.build.gradle.internal.variant2.DslModelDataImpl;
 import com.android.build.gradle.internal.variant2.VariantBuilder;
 import com.android.build.gradle.internal.variant2.VariantFactory2;
+import com.android.build.gradle.internal.variant2.VariantModelData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -86,7 +89,6 @@ import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.errors.DeprecationReporter;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
@@ -133,6 +135,8 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.LogLevel;
@@ -323,7 +327,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
     private void configureProject() {
         final Gradle gradle = project.getGradle();
 
-        extraModelInfo = new ExtraModelInfo(projectOptions, project.getLogger());
+        extraModelInfo = new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
         checkGradleVersion();
 
         sdkHandler = new SdkHandler(project, getLogger());
@@ -609,7 +613,8 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                                 () -> createAndroidTasks(false)));
     }
 
-    private DslModelData dslModelData = null;
+    private DslModelDataImpl<E> dslModelData = null;
+    private VariantModelData variantModelData = null;
     private E newExtension = null;
 
     @NonNull
@@ -623,7 +628,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
 
     private void configureNewExtension() {
         // FIXME we don't want to keep this around in this form.
-        extraModelInfo = new ExtraModelInfo(projectOptions, project.getLogger());
+        extraModelInfo = new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
         // FIXME, split in different implementations
         EvalIssueReporter issueReporter = extraModelInfo;
         DeprecationReporter deprecationReporter = extraModelInfo;
@@ -641,15 +646,55 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                         issueReporter);
 
         dslModelData =
-                new DslModelData(
-                        project, defaultConfig, instantiator, extraModelInfo, extraModelInfo);
+                new DslModelDataImpl<E>(
+                        defaultConfig,
+                        getVariantFactories(),
+                        project.getConfigurations(),
+                        new FilesProviderImpl(project),
+                        project::container,
+                        instantiator,
+                        extraModelInfo,
+                        extraModelInfo,
+                        project.getLogger());
+
+        variantModelData = new VariantModelData(extraModelInfo);
 
         newExtension =
                 createNewExtension(
                         new BuildPropertiesImpl(dslModelData, issueReporter),
                         new VariantOrExtensionPropertiesImpl(issueReporter),
                         new VariantAwarePropertiesImpl(
-                                dslModelData, deprecationReporter, issueReporter));
+                                dslModelData,
+                                variantModelData,
+                                deprecationReporter,
+                                issueReporter));
+    }
+
+    private static final class FilesProviderImpl implements FilesProvider {
+
+        private final Project project;
+
+        private FilesProviderImpl(Project project) {
+            this.project = project;
+        }
+
+        @NonNull
+        @Override
+        public File file(@NonNull Object file) {
+            return project.file(file);
+        }
+
+        @NonNull
+        @Override
+        public ConfigurableFileCollection files(@NonNull Object... files) {
+            return project.files(files);
+        }
+
+        @NonNull
+        @Override
+        public ConfigurableFileTree fileTree(@NonNull Map<String, ?> args) {
+            return project.fileTree(args);
+        }
     }
 
     private void afterEvaluateCallback() {
@@ -661,15 +706,14 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
 
         // seal the DSL.
         newExtension.seal();
-
-        dslModelData.afterEvaluateCompute(true /*FIXME*/, null);
+        dslModelData.seal();
 
         // compute the variants
+        dslModelData.afterEvaluateCompute();
         VariantBuilder<E> builder =
                 new VariantBuilder<>(
                         dslModelData,
                         newExtension,
-                        getVariantFactories(),
                         extraModelInfo,
                         extraModelInfo);
         builder.generateVariants();
@@ -677,7 +721,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
         List<Variant> variantShims = builder.getShims();
 
         // run the variant API
-        dslModelData.runVariantCallbacks(variantShims);
+        variantModelData.runVariantCallbacks(variantShims);
 
         // post-variant API
         for (Action<List<Variant>> action : newExtension.getPostVariants()) {
@@ -688,8 +732,8 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
         for (SealableVariant variant : variants) {
             variant.seal();
         }
-        // and additional data
-        dslModelData.seal();
+        // and additional data (callbacks)
+        variantModelData.seal();
 
         // create the tasks
         // FIXME implement

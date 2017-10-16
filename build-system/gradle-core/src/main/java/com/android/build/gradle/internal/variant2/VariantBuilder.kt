@@ -26,14 +26,13 @@ import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrVariantImpl
-import com.android.build.gradle.internal.api.dsl.model.ProductFlavorImpl
 import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImpl
 import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
-import com.android.builder.core.BuilderConstants
+import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
 import com.android.builder.core.VariantType
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 import com.android.utils.ImmutableCollectors
@@ -58,14 +57,12 @@ import java.util.stream.Collectors
  *
  * @param dslModelData the dsl model data containing flavors and build type and sourcesets
  * @param extension the extension
- * @param factories the factories needed to create the different variants.
  * @param deprecationReporter the deprecation reporter
  * @param issueReporter the error/warning reporter.
  */
 class VariantBuilder<in E: BaseExtension2>(
-        private val dslModelData: DslModelData,
+        private val dslModelData: DslModelDataImpl<E>,
         private val extension: E,
-        private val factories: List<VariantFactory2<E>>,
         private val deprecationReporter: DeprecationReporter,
         private val issueReporter: EvalIssueReporter) {
 
@@ -103,12 +100,12 @@ class VariantBuilder<in E: BaseExtension2>(
         // call to the variant factory to create variant data.
         // Also need to merge the different items
         if (flavorCombinations.isEmpty()) {
-            for (buildType in dslModelData.buildTypes) {
+            for (buildType in dslModelData._buildTypes) {
                 createVariant(buildType, null)
             }
 
         } else {
-            for (buildType in dslModelData.buildTypes) {
+            for (buildType in dslModelData._buildTypes) {
                 for (flavorCombo in flavorCombinations) {
                     createVariant(buildType, flavorCombo)
                 }
@@ -127,7 +124,7 @@ class VariantBuilder<in E: BaseExtension2>(
     private fun computeFlavorCombo(): List<FlavorCombination> {
         val flavorDimensions = extension.flavorDimensions
 
-        if (dslModelData.productFlavors.isEmpty()) {
+        if (dslModelData._productFlavors.isEmpty()) {
             // FIXME
             //configureDependencies()
 
@@ -147,7 +144,7 @@ class VariantBuilder<in E: BaseExtension2>(
         } else if (flavorDimensions.size == 1) {
             // if there's only one dimension, auto-assign the dimension to all the flavors.
             val dimensionName = flavorDimensions[0]
-            for (productFlavor in dslModelData.productFlavors) {
+            for (productFlavor in dslModelData._productFlavors) {
                 // need to use the internal backing properties to bypass the seal
                 productFlavor._dimension = dimensionName
             }
@@ -240,6 +237,7 @@ class VariantBuilder<in E: BaseExtension2>(
 
         // -----
         // Loop on the factories and create the variants and shims.
+        val variantFactories = dslModelData.variantFactories
 
         // creates a dispatcher to link the main variant and the tested variant in a bi-directional
         // way. It's a map of (VariantType -> Map of (variant -> variant))
@@ -249,7 +247,7 @@ class VariantBuilder<in E: BaseExtension2>(
         val variantDispatcher = mutableMapOf<VariantType, Map<Variant, Variant>>()
         // map of generated variant by their type. Allow quick access when building the dispatcher
         val createdVariantMap = mutableMapOf<VariantType, Variant>()
-        for (factory in factories) {
+        for (factory in variantFactories) {
             // what does the factory generates?
             val generatedType = factory.generatedType
 
@@ -271,7 +269,7 @@ class VariantBuilder<in E: BaseExtension2>(
                     buildType.name, flavorCombo?.name, generatedType, factory.testTarget)
 
             val commonVariantProperties = computeCommonVariantPropertiesImpl(
-                    variantName, flavorCombo, buildType)
+                    generatedType, variantName, flavorCombo, buildType)
 
             // compute the application ID and feed it back into the delegate that holds it
             // FIXME I think we need to handle the case where there is no appId but there are
@@ -311,7 +309,7 @@ class VariantBuilder<in E: BaseExtension2>(
         // -----
         // setup the variant dispatcher linking the variants together.
         // The key is the internal variant but the result must be the shim
-        for (factory in factories) {
+        for (factory in variantFactories) {
             val generatedVariant = createdVariantMap[factory.generatedType] ?: continue
 
             val testTargetType = factory.testTarget
@@ -376,35 +374,50 @@ class VariantBuilder<in E: BaseExtension2>(
     }
 
     private fun computeCommonVariantPropertiesImpl(
+            variantType: VariantType,
             variantName: String,
             flavorCombo: FlavorCombination?,
             buildType: BuildTypeImpl): CommonVariantPropertiesImpl {
 
         val flavors: ImmutableList<ProductFlavor> = flavorCombo?.flavors ?: ImmutableList.of()
 
-        // use DslModelData as this one is not sealed.
-        val allSourceSets = dslModelData.sourceSets
-
         val sourceSets: MutableList<AndroidSourceSet> = mutableListOf()
-        // add Main
-        sourceSets.add(allSourceSets.getByName(BuilderConstants.MAIN))
+
+        // add Main.
+        // FIXME log error if source sets don't exist?
+        dslModelData.defaultConfigData.getSourceSet(variantType)?.let {
+            sourceSets.add(it)
+        }
 
         // add the flavors.
-        sourceSets.addAll(
-                flavors.stream()
-                        .map({ allSourceSets.getByName(it.name) })
-                        .collect(Collectors.toList()))
+        flavors.forEach {
+            dslModelData.flavorData[it.name]?.getSourceSet(variantType)?.let {
+                sourceSets.add(it)
+            }
+        }
+
+        // create multi-flavor sourceset, optional, and add it
+        var multiFlavorSourceSet: DefaultAndroidSourceSet? = null
+        flavorCombo?.name.let {
+            // use the internal container to bypass the seal
+            multiFlavorSourceSet = dslModelData._sourceSets.maybeCreate(it)
+        }
+
+        multiFlavorSourceSet?.let {
+            sourceSets.add(it)
+        }
 
         // add the build type
-        sourceSets.add(allSourceSets.getByName(buildType.name))
+        dslModelData.buildTypeData[buildType.name]?.getSourceSet(variantType)?.let {
+            sourceSets.add(it)
+        }
 
-        // create variant sourceset
-        val variantSourceSet = allSourceSets.create(variantName)
-
-        // create multi-flavor sourceset, optional.
-        var multiFlavorSourceSet: AndroidSourceSet? = null
-        flavorCombo?.name.let {
-            multiFlavorSourceSet = allSourceSets.create(it)
+        // create variant source-set
+        // use the internal container to bypass the seal
+        var variantSourceSet: DefaultAndroidSourceSet? = null
+        if (!flavors.isEmpty()) {
+            variantSourceSet = dslModelData._sourceSets.maybeCreate(variantName)
+            sourceSets.add(variantSourceSet)
         }
 
         return CommonVariantPropertiesImpl(

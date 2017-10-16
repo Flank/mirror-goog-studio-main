@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.android.builder.errors
+package com.android.build.gradle.internal.errors
 
+import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.model.SyncIssue
 
 /**
@@ -25,7 +26,9 @@ import com.android.builder.model.SyncIssue
  * The behavior of the handler varies depending on the evaluation mode ([ ]), indicating whether the IDE is querying the project or
  * not.
  */
-abstract class ConfigurableErrorHandler protected constructor(val mode: EvaluationMode) :
+abstract class ConfigurableErrorHandler protected constructor(
+        val mode: EvaluationMode,
+        private val projectPath: String) :
         EvalIssueReporter, DeprecationReporter {
 
     enum class EvaluationMode {
@@ -86,4 +89,15 @@ abstract class ConfigurableErrorHandler protected constructor(val mode: Evaluati
                 "$oldDslElement::::${deprecationTarget.name}")
     }
 
+    override fun reportDeprecatedConfiguration(
+            newConfiguration: String,
+            oldConfiguration: String,
+            deprecationTarget: DeprecationReporter.DeprecationTarget) {
+        reportIssue(
+                SyncIssue.TYPE_DEPRECATED_CONFIGURATION,
+                SyncIssue.SEVERITY_WARNING,
+                "Configuration '$oldConfiguration' is obsolete and has been replaced with '$newConfiguration'.\n" +
+                        "It will be removed ${deprecationTarget.removalTime}",
+                "$oldConfiguration::$newConfiguration::${deprecationTarget.name}")
+    }
 }

@@ -17,6 +17,7 @@
 package com.android.build.api.dsl.variant
 
 import com.android.build.api.sourcesets.AndroidSourceSet
+import org.gradle.api.Action
 import org.gradle.api.Incubating
 
 /** common variant properties to all variants */
@@ -34,6 +35,11 @@ interface CommonVariantProperties {
      */
     val baseSourceSets: List<AndroidSourceSet>
 
-    val variantSourceSet: AndroidSourceSet
+    val variantSourceSet: AndroidSourceSet?
+
+    fun variantSourceSet(action: Action<AndroidSourceSet>)
+
     val multiFlavorSourceSet: AndroidSourceSet?
+
+    fun multiFlavorSourceSet(action: Action<AndroidSourceSet>)
 }

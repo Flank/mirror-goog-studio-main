@@ -30,7 +30,7 @@ import com.android.build.gradle.internal.api.dsl.options.PostprocessingFilesOpti
 import com.android.build.gradle.internal.api.dsl.options.PostprocessingOptionsImpl
 import com.android.build.gradle.internal.api.dsl.options.ShaderOptionsImpl
 import com.android.build.gradle.internal.api.dsl.options.SigningConfigImpl
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ListMultimap
@@ -117,8 +117,8 @@ class DslImplementationSealableTest {
             com.android.build.api.dsl.options.SigningConfig::class ->
                 return SigningConfigImpl("signing", depecationReporter, issueReporter)
             com.android.build.api.dsl.model.BuildType::class ->
-                return BuildTypeImpl("foo",
-                        depecationReporter,
+                return BuildTypeImpl(
+                        "foo",
                         VariantPropertiesImpl(issueReporter),
                         BuildTypeOrProductFlavorImpl(depecationReporter, issueReporter) {
                             PostprocessingFilesOptionsImpl(issueReporter)
@@ -129,6 +129,7 @@ class DslImplementationSealableTest {
                                 false,
                                 depecationReporter, issueReporter),
                         FallbackStrategyImpl(depecationReporter, issueReporter),
+                        depecationReporter,
                         issueReporter)
 
             com.android.build.api.dsl.options.ExternalNativeBuildOptions::class ->

@@ -25,13 +25,13 @@ import com.android.build.gradle.api.BaseVariant;
 import com.android.build.gradle.internal.dependency.ConfigurationDependencyGraphs;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
 import com.android.build.gradle.internal.ide.ArtifactMetaDataImpl;
 import com.android.build.gradle.internal.ide.JavaArtifactImpl;
 import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.variant.DefaultSourceProviderContainer;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
-import com.android.builder.errors.ConfigurableErrorHandler;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.ArtifactMetaData;
 import com.android.builder.model.JavaArtifact;
@@ -82,8 +82,11 @@ public class ExtraModelInfo extends ConfigurableErrorHandler implements MessageR
     @Nullable
     private final Gson mGson;
 
-    public ExtraModelInfo(@NonNull ProjectOptions projectOptions, @NonNull Logger logger) {
-        super(SyncOptions.getModelQueryMode(projectOptions));
+    public ExtraModelInfo(
+            @NonNull String projectPath,
+            @NonNull ProjectOptions projectOptions,
+            @NonNull Logger logger) {
+        super(SyncOptions.getModelQueryMode(projectOptions), projectPath);
         this.logger = logger;
         errorFormatMode = SyncOptions.getErrorFormatMode(projectOptions);
         if (errorFormatMode == ErrorFormatMode.MACHINE_PARSABLE) {

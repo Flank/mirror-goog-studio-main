@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.errors.DeprecationReporter;
-import com.android.builder.errors.DeprecationReporter.DeprecationTarget;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;

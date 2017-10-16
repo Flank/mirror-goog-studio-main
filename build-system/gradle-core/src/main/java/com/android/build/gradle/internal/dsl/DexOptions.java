@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.dsl;
 
+import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
 import com.android.builder.core.DefaultDexOptions;
-import com.android.builder.errors.DeprecationReporter;
-import com.android.builder.errors.DeprecationReporter.DeprecationTarget;
 import java.util.Arrays;
 
 /**

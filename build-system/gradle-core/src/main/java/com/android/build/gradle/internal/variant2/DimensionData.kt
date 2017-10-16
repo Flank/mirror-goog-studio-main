@@ -26,27 +26,25 @@ import org.gradle.api.artifacts.ConfigurationContainer
  */
 class DimensionData<out T>(
         val dimensionObject: T,
-        val sourceSet: AndroidSourceSet,
-        val androidTestSourceSet: AndroidSourceSet?,
-        val unitTestSourceSet: AndroidSourceSet?,
-        project: Project) {
+        private val sourceSet: AndroidSourceSet,
+        private val androidTestSourceSet: AndroidSourceSet?,
+        private val unitTestSourceSet: AndroidSourceSet?,
+        configurationContainer: ConfigurationContainer) {
 
     init {
-        val configurations = project.configurations
-
         androidTestSourceSet?.let {
-            makeTestExtendMain(sourceSet, it, configurations)
+            makeTestExtendMain(sourceSet, it, configurationContainer)
         }
 
         unitTestSourceSet?.let {
-            makeTestExtendMain(sourceSet, it, configurations)
+            makeTestExtendMain(sourceSet, it, configurationContainer)
         }
     }
 
-    fun getTestSourceSet(type: VariantType) = when (type) {
+    fun getSourceSet(type: VariantType) = when (type) {
         VariantType.ANDROID_TEST -> androidTestSourceSet
         VariantType.UNIT_TEST -> unitTestSourceSet
-        else -> throw IllegalArgumentException("Unknown test variant type '$type'")
+        else -> sourceSet
     }
 }
 

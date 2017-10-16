@@ -19,7 +19,7 @@ package com.android.build.gradle.options;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.builder.errors.ConfigurableErrorHandler;
+import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 

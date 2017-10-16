@@ -40,10 +40,9 @@ import com.android.build.api.sourcesets.AndroidSourceDirectorySet
 import com.android.build.api.sourcesets.AndroidSourceFile
 import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
-import org.gradle.api.Project
 import org.gradle.api.tasks.SourceSet
 import org.gradle.util.GUtil
 
@@ -51,7 +50,7 @@ import org.gradle.util.GUtil
  */
 class DefaultAndroidSourceSet(
         private val name: String,
-        project: Project,
+        filesProvider: FilesProvider,
         private val deprecationReporter: DeprecationReporter,
         issueReporter: EvalIssueReporter) : SealableObject(issueReporter), AndroidSourceSet {
 
@@ -69,36 +68,39 @@ class DefaultAndroidSourceSet(
 
     init {
         val javaSrcDisplayName = "$displayName Java source"
-        _javaSource = DefaultAndroidSourceDirectorySet(javaSrcDisplayName, project, issueReporter)
+        _javaSource = DefaultAndroidSourceDirectorySet(javaSrcDisplayName,
+                filesProvider, issueReporter)
         _javaSource.filter.include("**/*.java")
 
         val javaResourcesDisplayName = "$displayName Java resources"
-        _javaResources = DefaultAndroidSourceDirectorySet(javaResourcesDisplayName, project, issueReporter)
+        _javaResources = DefaultAndroidSourceDirectorySet(javaResourcesDisplayName,
+                filesProvider, issueReporter)
         _javaResources.filter.exclude("**/*.java")
 
         val manifestDisplayName = "$displayName manifest"
-        _manifest = DefaultAndroidSourceFile(manifestDisplayName, project, issueReporter)
+        _manifest = DefaultAndroidSourceFile(manifestDisplayName, filesProvider, issueReporter)
 
         val assetsDisplayName = "$displayName assets"
-        _assets = DefaultAndroidSourceDirectorySet(assetsDisplayName, project, issueReporter)
+        _assets = DefaultAndroidSourceDirectorySet(assetsDisplayName, filesProvider, issueReporter)
 
         val resourcesDisplayName = "$displayName resources"
-        _res = DefaultAndroidSourceDirectorySet(resourcesDisplayName, project, issueReporter)
+        _res = DefaultAndroidSourceDirectorySet(resourcesDisplayName, filesProvider, issueReporter)
 
         val aidlDisplayName = "$displayName aidl"
-        _aidl = DefaultAndroidSourceDirectorySet(aidlDisplayName, project, issueReporter)
+        _aidl = DefaultAndroidSourceDirectorySet(aidlDisplayName, filesProvider, issueReporter)
 
         val renderscriptDisplayName = "$displayName renderscript"
-        _renderscript = DefaultAndroidSourceDirectorySet(renderscriptDisplayName, project, issueReporter)
+        _renderscript = DefaultAndroidSourceDirectorySet(renderscriptDisplayName,
+                filesProvider, issueReporter)
 
         val jniDisplayName = "$displayName jni"
-        _jni = DefaultAndroidSourceDirectorySet(jniDisplayName, project, issueReporter)
+        _jni = DefaultAndroidSourceDirectorySet(jniDisplayName, filesProvider, issueReporter)
 
         val libsDisplayName = "$displayName jniLibs"
-        _jniLibs = DefaultAndroidSourceDirectorySet(libsDisplayName, project, issueReporter)
+        _jniLibs = DefaultAndroidSourceDirectorySet(libsDisplayName, filesProvider, issueReporter)
 
         val shaderDisplayName = "$displayName shaders"
-        _shaders = DefaultAndroidSourceDirectorySet(shaderDisplayName, project, issueReporter)
+        _shaders = DefaultAndroidSourceDirectorySet(shaderDisplayName, filesProvider, issueReporter)
     }
 
     override fun getName() = name
@@ -266,13 +268,15 @@ class DefaultAndroidSourceSet(
                     "AndroidSourceSet.implementationConfigurationName",
                     "AndroidSourceSet.compileConfigurationName",
                     DeprecationReporter.DeprecationTarget.EOY2018)
-            return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-                CONFIG_NAME_COMPILE
-            } else {
-                String.format(CONFIG_NAME_S_COMPILE, name)
-            }
+            return _compileConfigurationName
         }
 
+    internal val _compileConfigurationName: String
+        get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
+            CONFIG_NAME_COMPILE
+        } else {
+            String.format(CONFIG_NAME_S_COMPILE, name)
+        }
 
     @Suppress("OverridingDeprecatedMember")
     override val packageConfigurationName: String
@@ -281,11 +285,14 @@ class DefaultAndroidSourceSet(
                     "AndroidSourceSet.runtimeOnlyConfigurationName",
                     "AndroidSourceSet.packageConfigurationName",
                     DeprecationReporter.DeprecationTarget.EOY2018)
-            return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-                CONFIG_NAME_PUBLISH
-            } else {
-                String.format(CONFIG_NAME_S_PUBLISH, name)
-            }
+            return _packageConfigurationName
+        }
+
+    internal val _packageConfigurationName: String
+        get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
+            CONFIG_NAME_PUBLISH
+        } else {
+            String.format(CONFIG_NAME_S_PUBLISH, name)
         }
 
     @Suppress("OverridingDeprecatedMember")
@@ -295,11 +302,14 @@ class DefaultAndroidSourceSet(
                     "AndroidSourceSet.compileOnlyConfigurationName",
                     "AndroidSourceSet.providedConfigurationName",
                     DeprecationReporter.DeprecationTarget.EOY2018)
-            return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-                CONFIG_NAME_PROVIDED
-            } else {
-                String.format(CONFIG_NAME_S_PROVIDED, name)
-            }
+            return _providedConfigurationName
+        }
+
+    internal val _providedConfigurationName: String
+        get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
+            CONFIG_NAME_PROVIDED
+        } else {
+            String.format(CONFIG_NAME_S_PROVIDED, name)
         }
 
     @Suppress("OverridingDeprecatedMember")

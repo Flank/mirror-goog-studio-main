@@ -26,8 +26,12 @@ import org.gradle.api.Incubating
 /** Partial extension properties for modules that contain tests  */
 @Incubating
 interface EmbeddedTestProperties {
-    /** Return the name of the BuildType for testing.  */
-    var testBuildType: String
+    /** Return the name of the BuildType used when running connectedCheck. If null, runs the
+     * androidTests for all variants.
+     *
+     * Default is 'debug'
+     */
+    var testBuildType: String?
 
     /** Options for running tests.  */
     val testOptions: TestOptions

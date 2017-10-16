@@ -532,6 +532,8 @@ com.android.build.api.dsl.variant.CommonVariantProperties.getFlavorNames: java.u
 com.android.build.api.dsl.variant.CommonVariantProperties.getMultiFlavorSourceSet: com.android.build.api.sourcesets.AndroidSourceSet ()
 com.android.build.api.dsl.variant.CommonVariantProperties.getName: java.lang.String ()
 com.android.build.api.dsl.variant.CommonVariantProperties.getVariantSourceSet: com.android.build.api.sourcesets.AndroidSourceSet ()
+com.android.build.api.dsl.variant.CommonVariantProperties.multiFlavorSourceSet: void (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceSet>)
+com.android.build.api.dsl.variant.CommonVariantProperties.variantSourceSet: void (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceSet>)
 com.android.build.api.dsl.variant.LibraryVariant
 com.android.build.api.dsl.variant.LibraryVariant.getAndroidTestVariant: com.android.build.api.dsl.variant.AndroidTestVariant ()
 com.android.build.api.dsl.variant.LibraryVariant.getUnitTestVariant: com.android.build.api.dsl.variant.UnitTestVariant ()
