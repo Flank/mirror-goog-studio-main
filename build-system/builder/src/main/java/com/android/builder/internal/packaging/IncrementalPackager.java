@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Makes the final app package. The packager allows build an APK from:
@@ -150,11 +151,10 @@ public class IncrementalPackager implements Closeable {
         Preconditions.checkNotNull(mApkCreator, "mApkCreator == null");
 
         Iterable<String> deletedPaths =
-                Iterables.transform(
-                        Iterables.filter(
-                                updates,
-                                p -> p.getStatus() == FileStatus.REMOVED),
-                        PackagedFileUpdate::getName);
+                updates.stream()
+                        .filter(p -> p.getStatus() == FileStatus.REMOVED)
+                        .map(PackagedFileUpdate::getName)
+                        .collect(Collectors.toList());
 
         for (String deletedPath : deletedPaths) {
             mApkCreator.deleteFile(deletedPath);
@@ -164,21 +164,30 @@ public class IncrementalPackager implements Closeable {
                 pfu -> pfu.getStatus() == FileStatus.NEW || pfu.getStatus() == FileStatus.CHANGED;
 
         Iterable<PackagedFileUpdate> newOrChangedNonArchiveFiles =
-                Iterables.filter(
-                        updates,
-                        pfu -> pfu.getSource().getBase().isDirectory() && isNewOrChanged.test(pfu));
+                updates.stream()
+                        .filter(
+                                pfu ->
+                                        pfu.getSource().getType() == RelativeFile.Type.DIRECTORY
+                                                && isNewOrChanged.test(pfu))
+                        .collect(Collectors.toList());
 
         for (PackagedFileUpdate rf : newOrChangedNonArchiveFiles) {
-            mApkCreator.writeFile(rf.getSource().getFile(), rf.getName());
+            File out = new File(rf.getSource().getBase(), rf.getSource().getRelativePath());
+            mApkCreator.writeFile(out, rf.getName());
         }
 
         Iterable<PackagedFileUpdate> newOrChangedArchiveFiles =
-                Iterables.filter(
-                        updates,
-                        pfu -> pfu.getSource().getBase().isFile() && isNewOrChanged.test(pfu));
+                updates.stream()
+                        .filter(
+                                pfu ->
+                                        pfu.getSource().getType() == RelativeFile.Type.JAR
+                                                && isNewOrChanged.test(pfu))
+                        .collect(Collectors.toList());
 
-        Iterable<File> archives =
-                Iterables.transform(newOrChangedArchiveFiles, pfu -> pfu.getSource().getBase());
+        Set<File> archives =
+                StreamSupport.stream(newOrChangedArchiveFiles.spliterator(), false)
+                        .map(pfu -> pfu.getSource().getBase())
+                        .collect(Collectors.toSet());
         Set<String> names = Sets.newHashSet(
                 Iterables.transform(
                         newOrChangedArchiveFiles,
@@ -190,11 +199,10 @@ public class IncrementalPackager implements Closeable {
          */
         Map<String, String> pathNameMap = Maps.newHashMap();
         for (PackagedFileUpdate archiveUpdate : newOrChangedArchiveFiles) {
-            pathNameMap.put(archiveUpdate.getSource().getOsIndependentRelativePath(),
-                    archiveUpdate.getName());
+            pathNameMap.put(archiveUpdate.getSource().getRelativePath(), archiveUpdate.getName());
         }
 
-        for (File arch : Sets.newHashSet(archives)) {
+        for (File arch : archives) {
             mApkCreator.writeZip(arch, pathNameMap::get, name -> !names.contains(name));
         }
     }
@@ -216,8 +224,7 @@ public class IncrementalPackager implements Closeable {
                 PackagedFileUpdates.fromIncrementalRelativeFileSet(
                         Maps.filterKeys(
                                 files,
-                                rf -> !rf.getOsIndependentRelativePath()
-                                        .endsWith(SdkConstants.DOT_CLASS))));
+                                rf -> !rf.getRelativePath().endsWith(SdkConstants.DOT_CLASS))));
     }
 
     /**
@@ -258,12 +265,7 @@ public class IncrementalPackager implements Closeable {
             throws IOException {
         updateFiles(
                 PackagedFileUpdates.fromIncrementalRelativeFileSet(
-                        Maps.filterKeys(
-                                files,
-                                rf -> mAbiPredicate.test(rf.getOsIndependentRelativePath())
-                        )
-                )
-        );
+                        Maps.filterKeys(files, rf -> mAbiPredicate.test(rf.getRelativePath()))));
     }
 
     /**
@@ -323,13 +325,10 @@ public class IncrementalPackager implements Closeable {
             return;
         }
 
-        Closer closer = Closer.create();
-        try {
+        try (Closer closer = Closer.create()) {
             closer.register(mApkCreator);
             closer.register(mDexRenamer);
             mApkCreator = null;
-        } finally {
-            closer.close();
         }
     }
 }

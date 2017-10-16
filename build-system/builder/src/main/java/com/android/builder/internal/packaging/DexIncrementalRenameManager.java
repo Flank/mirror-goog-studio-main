@@ -93,10 +93,8 @@ class DexIncrementalRenameManager implements Closeable {
      */
     private static final String BASE_KEY_PREFIX = "base.";
 
-    /**
-     * Prefix for property that has the name of the relative file.
-     */
-    private static final String FILE_KEY_PREFIX = "file.";
+    /** Prefix for property that has the name of the relative file. */
+    private static final String RELATIVE_PATH_PREFIX = "path.";
 
     /**
      * Prefix for property that has the name of the renamed file.
@@ -159,18 +157,20 @@ class DexIncrementalRenameManager implements Closeable {
 
         for (int i = 0; ; i++) {
             String baseKey = BASE_KEY_PREFIX + i;
-            String fileKey = FILE_KEY_PREFIX + i;
+            String relativePathKey = RELATIVE_PATH_PREFIX + i;
             String renamedKey = RENAMED_KEY_PREFIX + i;
 
             String base = props.getProperty(baseKey);
-            String file = props.getProperty(fileKey);
+            String relativePath = props.getProperty(relativePathKey);
             String rename = props.getProperty(renamedKey);
 
-            if (base == null || file == null || rename == null) {
+            if (base == null || relativePath == null || rename == null) {
                 break;
             }
 
-            RelativeFile rf = new RelativeFile(new File(base), new File(file));
+            // The base is always a directory and the file is a regular file.
+            RelativeFile rf =
+                    new RelativeFile(new File(base), relativePath, RelativeFile.Type.DIRECTORY);
             mNameMap.put(rf, rename);
         }
     }
@@ -186,8 +186,8 @@ class DexIncrementalRenameManager implements Closeable {
         Properties props = new Properties();
         int currIdx = 0;
         for (BiMap.Entry<RelativeFile, String> entry : mNameMap.entrySet()) {
-            props.put(BASE_KEY_PREFIX + currIdx, entry.getKey().getBase().getPath());
-            props.put(FILE_KEY_PREFIX + currIdx, entry.getKey().getFile().getPath());
+            props.put(BASE_KEY_PREFIX + currIdx, entry.getKey().getBase().getAbsolutePath());
+            props.put(RELATIVE_PATH_PREFIX + currIdx, entry.getKey().getRelativePath());
             props.put(RENAMED_KEY_PREFIX + currIdx, entry.getValue());
             currIdx++;
         }
@@ -221,8 +221,7 @@ class DexIncrementalRenameManager implements Closeable {
                         .map(Map.Entry::getKey)
                         .sorted(
                                 Comparator.comparing(
-                                        RelativeFile::getOsIndependentRelativePath,
-                                        new DexNameComparator()))
+                                        RelativeFile::getRelativePath, new DexNameComparator()))
                         .collect(Collectors.toCollection(LinkedList::new));
 
         // Build a list with buckets that represent the dex files we have before the updates.
@@ -343,7 +342,7 @@ class DexIncrementalRenameManager implements Closeable {
      */
     @NonNull
     private static String getOsIndependentFileName(@NonNull RelativeFile file) {
-        String[] pathSplit = file.getOsIndependentRelativePath().split("/");
+        String[] pathSplit = file.getRelativePath().split("/");
         return pathSplit[pathSplit.length - 1];
     }
 

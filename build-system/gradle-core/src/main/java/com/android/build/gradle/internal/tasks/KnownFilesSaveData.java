@@ -66,11 +66,14 @@ public class KnownFilesSaveData {
     /** Suffix for property with the base file. */
     private static final String BASE_SUFFIX = ".base";
 
-    /** Suffix for property with the file. */
-    private static final String FILE_SUFFIX = ".file";
+    /** Suffix for property with the relative path. */
+    private static final String RELATIVE_PATH_SUFFIX = ".path";
 
     /** Suffix for property with the input set. */
     private static final String INPUT_SET_SUFFIX = ".set";
+
+    /** Suffix for property with the type of the base file. */
+    private static final String BASE_TYPE_SUFFIX = ".baseType";
 
     /** Cache with all known cached files. */
     private static final Map<File, CachedFileContents<KnownFilesSaveData>> mCache =
@@ -213,15 +216,15 @@ public class KnownFilesSaveData {
                                 + "' has no value).");
             }
 
-            String fileName = properties.getProperty(i + FILE_SUFFIX);
-            if (fileName == null) {
+            String relativePath = properties.getProperty(i + RELATIVE_PATH_SUFFIX);
+            if (relativePath == null) {
                 throw new IOException(
                         "Invalid data stored in file '"
                                 + saveFile
                                 + "' ("
                                 + "property '"
                                 + i
-                                + FILE_SUFFIX
+                                + RELATIVE_PATH_SUFFIX
                                 + "' has no value).");
             }
 
@@ -235,6 +238,33 @@ public class KnownFilesSaveData {
                                 + i
                                 + INPUT_SET_SUFFIX
                                 + "' has no value).");
+            }
+
+            String baseTypeString = properties.getProperty(i + BASE_TYPE_SUFFIX);
+            if (baseTypeString == null) {
+                throw new IOException(
+                        "Invalid data stored in file '"
+                                + saveFile
+                                + "' ("
+                                + "property '"
+                                + i
+                                + BASE_TYPE_SUFFIX
+                                + "' has no value).");
+            }
+            RelativeFile.Type baseType;
+            try {
+                baseType = RelativeFile.Type.valueOf(baseTypeString);
+            } catch (IllegalArgumentException e) {
+                throw new IOException(
+                        "Invalid data stored in file '"
+                                + saveFile
+                                + "' ("
+                                + "property '"
+                                + BASE_TYPE_SUFFIX
+                                + "' has value '"
+                                + baseTypeString
+                                + "').",
+                        e);
             }
 
             InputSet is;
@@ -253,7 +283,7 @@ public class KnownFilesSaveData {
                                 + "').");
             }
 
-            mFiles.put(new RelativeFile(new File(baseName), new File(fileName)), is);
+            mFiles.put(new RelativeFile(new File(baseName), relativePath, baseType), is);
         }
     }
 
@@ -278,12 +308,13 @@ public class KnownFilesSaveData {
             String basePath = Verify.verifyNotNull(rf.getBase().getPath());
             Verify.verify(!basePath.isEmpty());
 
-            String filePath = Verify.verifyNotNull(rf.getFile().getPath());
-            Verify.verify(!filePath.isEmpty());
+            String relativePath = Verify.verifyNotNull(rf.getRelativePath());
+            Verify.verify(!relativePath.isEmpty());
 
             properties.put(idx + BASE_SUFFIX, basePath);
-            properties.put(idx + FILE_SUFFIX, filePath);
+            properties.put(idx + RELATIVE_PATH_SUFFIX, relativePath);
             properties.put(idx + INPUT_SET_SUFFIX, e.getValue().name());
+            properties.put(idx + BASE_SUFFIX, rf.getType().name());
 
             idx++;
         }
@@ -313,7 +344,7 @@ public class KnownFilesSaveData {
     public ImmutableSet<RelativeFile> find(@NonNull Set<File> files, @NonNull InputSet inputSet) {
         Set<RelativeFile> found = Sets.newHashSet();
         for (RelativeFile rf : Maps.filterValues(mFiles, Predicates.equalTo(inputSet)).keySet()) {
-            if (files.contains(rf.getFile())) {
+            if (files.contains(new File(rf.getBase(), rf.getRelativePath()))) {
                 found.add(rf);
             }
         }
@@ -334,7 +365,10 @@ public class KnownFilesSaveData {
                         .stream()
                         .filter(e -> e.getValue() == inputSet)
                         .map(Map.Entry::getKey)
-                        .collect(HashMap::new, (m, rf) -> m.put(rf.getFile(), rf), Map::putAll);
+                        .collect(
+                                HashMap::new,
+                                (m, rf) -> m.put(new File(rf.getBase(), rf.getRelativePath()), rf),
+                                Map::putAll);
 
         return inverseFiltered::get;
     }
@@ -358,7 +392,7 @@ public class KnownFilesSaveData {
 
         files.forEach(
                 f -> {
-                    if (!mFiles.containsKey(f)) {
+                    if ((!mFiles.containsKey(f)) && f.getType() == RelativeFile.Type.DIRECTORY) {
                         mFiles.put(f, set);
                         mDirty = true;
                     }

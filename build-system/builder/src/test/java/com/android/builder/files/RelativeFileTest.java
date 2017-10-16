@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,12 +51,17 @@ public class RelativeFileTest {
     @Nullable
     private static RelativeFile findFile(@NonNull Set<RelativeFile> files, @NonNull String name) {
         for (RelativeFile rf : files) {
-            if (rf.getFile().getName().equals(name)) {
+            if (rf.getRelativePath().endsWith(name)) {
                 return rf;
             }
         }
 
         return null;
+    }
+
+    @NonNull
+    private static File getFile(@NonNull RelativeFile rf) {
+        return new File(rf.getBase(), rf.getRelativePath());
     }
 
     @Test
@@ -77,20 +83,20 @@ public class RelativeFileTest {
         RelativeFile fooFile = findFile(files, "foo");
         assertNotNull(fooFile);
         assertEquals(temporaryFolder.getRoot(), fooFile.getBase());
-        assertEquals("foo", fooFile.getOsIndependentRelativePath());
-        assertTrue(fooFile.getFile().isFile());
+        assertEquals("foo", fooFile.getRelativePath());
+        assertTrue(getFile(fooFile).isFile());
 
         RelativeFile barFile = findFile(files, "bar");
         assertNotNull(barFile);
         assertEquals(temporaryFolder.getRoot(), barFile.getBase());
-        assertEquals("bar", barFile.getOsIndependentRelativePath());
-        assertTrue(barFile.getFile().isFile());
+        assertEquals("bar", barFile.getRelativePath());
+        assertTrue(getFile(barFile).isFile());
 
         RelativeFile fileInSubFile = findFile(files, "file-in-sub");
         assertNotNull(fileInSubFile);
         assertEquals(temporaryFolder.getRoot(), fileInSubFile.getBase());
-        assertEquals("sub/file-in-sub", fileInSubFile.getOsIndependentRelativePath());
-        assertTrue(fileInSubFile.getFile().isFile());
+        assertEquals("sub/file-in-sub", fileInSubFile.getRelativePath());
+        assertTrue(getFile(fileInSubFile).isFile());
     }
 
     @Test
@@ -100,8 +106,7 @@ public class RelativeFileTest {
         temporaryFolder.newFile("dir" + File.separator + "bar");
 
         Set<RelativeFile> files =
-                RelativeFiles.fromDirectory(
-                        temporaryFolder.getRoot(), rf -> rf.getFile().isFile());
+                RelativeFiles.fromDirectory(temporaryFolder.getRoot(), rf -> getFile(rf).isFile());
         assertEquals(2, files.size());
 
         assertNotNull(findFile(files, "foo"));
@@ -117,7 +122,7 @@ public class RelativeFileTest {
         Set<RelativeFile> files =
                 RelativeFiles.fromDirectory(
                         temporaryFolder.getRoot(),
-                        relativeFile -> relativeFile.getFile().isDirectory());
+                        relativeFile -> getFile(relativeFile).isDirectory());
         assertEquals(0, files.size());
     }
 
@@ -155,7 +160,7 @@ public class RelativeFileTest {
 
     @Test
     public void relativeFileNotEqualsIfDifferentFile() throws Exception {
-        File base = new File("base");
+        File base = temporaryFolder.newFolder("base");
         File relative = new File(base, "relative");
         RelativeFile rf1 = new RelativeFile(base, relative);
         RelativeFile rf2 = new RelativeFile(base, new File("relative2"));
@@ -164,17 +169,17 @@ public class RelativeFileTest {
 
     @Test
     public void relativeFileNotEqualsIfDifferentBase() throws Exception {
-        File base = new File("base");
+        File base = temporaryFolder.newFolder("base");
         File relative = new File(base, "relative");
         RelativeFile rf1 = new RelativeFile(base, relative);
-        File base2 = new File("base2");
+        File base2 = temporaryFolder.newFolder("base2");
         RelativeFile rf2 = new RelativeFile(base2, new File(base2, "relative"));
         assertFalse(rf1.equals(rf2));
     }
 
     @Test
     public void relativeFileEqualsIfSameBaseAndRelative() throws Exception {
-        File base = new File("base");
+        File base = temporaryFolder.newFolder("base");
         File relative = new File(base, "relative");
         RelativeFile rf1 = new RelativeFile(base, relative);
         RelativeFile rf2 = new RelativeFile(base, relative);
@@ -183,8 +188,8 @@ public class RelativeFileTest {
     }
 
     @Test
-    public void relativeFileToString() {
-        File base = new File("basic");
+    public void relativeFileToString() throws IOException {
+        File base = temporaryFolder.newFolder("basic");
         File relative = new File(new File(base, "foo"), "bar");
 
         String toString = new RelativeFile(base, relative).toString();

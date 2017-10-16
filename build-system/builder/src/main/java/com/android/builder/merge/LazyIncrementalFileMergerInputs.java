@@ -94,7 +94,7 @@ public final class LazyIncrementalFileMergerInputs {
             }
 
             for (RelativeFile rf : files) {
-                String p = rf.getOsIndependentRelativePath();
+                String p = rf.getRelativePath();
                 if (!paths.add(p)) {
                     throw new DuplicatePathInIncrementalInputException(
                             "Duplicate relative path '" + p + "'");

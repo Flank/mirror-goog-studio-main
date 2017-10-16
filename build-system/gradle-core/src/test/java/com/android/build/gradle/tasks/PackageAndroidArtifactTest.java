@@ -94,7 +94,7 @@ public class PackageAndroidArtifactTest {
         assertThat(relativeFileFileStatus).hasSize(2000);
         relativeFileFileStatus.forEach(
                 (relativeFile, fileStatus) -> {
-                    assertThat(relativeFile.getFile().getName())
+                    assertThat(relativeFile.getRelativePath())
                             .doesNotContain(SdkConstants.DOT_CLASS);
                     assertThat(fileStatus).isEqualTo(FileStatus.NEW);
                 });

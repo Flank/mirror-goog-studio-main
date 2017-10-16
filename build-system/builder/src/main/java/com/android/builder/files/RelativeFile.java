@@ -34,46 +34,66 @@ import java.io.File;
  */
 public class RelativeFile {
 
-    /**
-     * The base directory.
-     */
-    @NonNull
-    private final File base;
+    public enum Type {
+        DIRECTORY,
+        JAR,
+    }
 
-    /**
-     * The file.
-     */
-    @NonNull
-    private final File file;
+    /** The base directory or jar. */
+    @NonNull private final File base;
 
-    /**
-     * The OS independent path from base to file, including the file name in the end.
-     */
-    @NonNull
-    private final String osIndependentRelativePath;
+    /** The OS independent path from base to file, including the file name in the end. */
+    @NonNull private final String relativePath;
+
+    @NonNull public final Type type;
 
     /**
      * Creates a new relative file.
      *
-     * @param base the base directory
+     * @param base the base directory.
      * @param file the file, must not be the same as the base directory and must be located inside
-     * {@code base}
+     *     {@code base}
      */
     public RelativeFile(@NonNull File base, @NonNull File file) {
-        Preconditions.checkArgument(!base.equals(file), "base.equals(file)");
+        this(
+                base,
+                FileUtils.toSystemIndependentPath(
+                        FileUtils.relativePossiblyNonExistingPath(file, base)),
+                Type.DIRECTORY);
 
-        this.base = base;
-        this.file = file;
-
-        String relativePath = FileUtils. relativePossiblyNonExistingPath(file, base);
-
-        osIndependentRelativePath = FileUtils.toSystemIndependentPath(relativePath);
+        Preconditions.checkArgument(
+                !base.equals(file), "Base must not equal file. Given: %s", base.getAbsolutePath());
     }
 
     /**
-     * Obtains the base directory.
+     * Creates a new relative file.
      *
-     * @return the base directory as provided when created the object
+     * @param base the base jar.
+     * @param relativePath the relative path to the file.
+     */
+    public RelativeFile(@NonNull File base, @NonNull String relativePath) {
+        this(base, relativePath, Type.JAR);
+    }
+
+    /**
+     * Creates a new relative file.
+     *
+     * @param base the base jar or directory.
+     * @param relativePath the relative path to the file.
+     * @param type the type of the base.
+     */
+    public RelativeFile(@NonNull File base, @NonNull String relativePath, @NonNull Type type) {
+        Preconditions.checkArgument(!relativePath.isEmpty(), "Relative path cannot be empty");
+
+        this.base = base;
+        this.relativePath = relativePath;
+        this.type = type;
+    }
+
+    /**
+     * Obtains the base directory or jar.
+     *
+     * @return the base directory or jar as provided when created the object
      */
     @NonNull
     public File getBase() {
@@ -81,30 +101,25 @@ public class RelativeFile {
     }
 
     /**
-     * Obtains the file.
-     *
-     * @return the file as provided when created the object
-     */
-    @NonNull
-    public File getFile() {
-        return file;
-    }
-
-    /**
      * Obtains the OS independent path. The general contract of the normalized relative path is that
-     * by replacing the slashes by file separators in the relative path and appending it to the
-     * base directory's path, the resulting path is the file's path
+     * by replacing the slashes by file separators in the relative path and appending it to the base
+     * directory's path, the resulting path is the file's path
      *
      * @return the normalized path, separated by slashes; directories have a terminating slash
      */
     @NonNull
-    public String getOsIndependentRelativePath() {
-        return osIndependentRelativePath;
+    public String getRelativePath() {
+        return relativePath;
+    }
+
+    @NonNull
+    public Type getType() {
+        return type;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(base, file);
+        return Objects.hashCode(base, relativePath);
     }
 
     @Override
@@ -113,15 +128,18 @@ public class RelativeFile {
             return false;
         }
 
-        RelativeFile rf = (RelativeFile) obj;
-        return Objects.equal(base, rf.base) && Objects.equal(file, rf.file);
+        RelativeFile other = (RelativeFile) obj;
+        return Objects.equal(base, other.base)
+                && Objects.equal(relativePath, other.relativePath)
+                && Objects.equal(type, other.type);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
                 .add("base", base)
-                .add("path", osIndependentRelativePath)
+                .add("path", relativePath)
+                .add("type", type)
                 .toString();
     }
 }

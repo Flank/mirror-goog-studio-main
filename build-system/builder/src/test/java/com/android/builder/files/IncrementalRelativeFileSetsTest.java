@@ -107,11 +107,9 @@ public class IncrementalRelativeFileSetsTest {
     public void readZip() throws Exception {
         File zipFile = new File(temporaryFolder.getRoot(), "foo");
 
-        RelativeFile expectedB = new RelativeFile(zipFile,
-                new File(zipFile, "a" + File.separator + "b"));
-        RelativeFile expectedC = new RelativeFile(zipFile,
-                new File(zipFile, "a" + File.separator + "c"));
-        RelativeFile expectedD = new RelativeFile(zipFile, new File(zipFile, "d"));
+        RelativeFile expectedB = new RelativeFile(zipFile, "a" + File.separator + "b");
+        RelativeFile expectedC = new RelativeFile(zipFile, "a" + File.separator + "c");
+        RelativeFile expectedD = new RelativeFile(zipFile, "d");
 
         Closer closer = Closer.create();
         try {
@@ -149,11 +147,9 @@ public class IncrementalRelativeFileSetsTest {
     public void unionOfSets() throws Exception {
         File zipFile = new File(temporaryFolder.getRoot(), "foo1");
 
-        RelativeFile expectedB = new RelativeFile(zipFile,
-                new File(zipFile, "a" + File.separator + "b"));
-        RelativeFile expectedC = new RelativeFile(zipFile,
-                new File(zipFile, "a" + File.separator + "c"));
-        RelativeFile expectedD = new RelativeFile(zipFile, new File(zipFile, "d"));
+        RelativeFile expectedB = new RelativeFile(zipFile, "a" + File.separator + "b");
+        RelativeFile expectedC = new RelativeFile(zipFile, "a" + File.separator + "c");
+        RelativeFile expectedD = new RelativeFile(zipFile, "d");
 
         ImmutableMap<RelativeFile, FileStatus> set1;
         ImmutableMap<RelativeFile, FileStatus> set2;
@@ -360,11 +356,11 @@ public class IncrementalRelativeFileSetsTest {
                 IncrementalRelativeFileSets.fromZip(foo, cache, updates);
         assertEquals(2, m.size());
 
-        RelativeFile f0z = new RelativeFile(foo, new File(foo, "f0z"));
+        RelativeFile f0z = new RelativeFile(foo, "f0z");
         assertTrue(m.containsKey(f0z));
         assertEquals(m.get(f0z), FileStatus.NEW);
 
-        RelativeFile f1z = new RelativeFile(foo, new File(foo, "f1z"));
+        RelativeFile f1z = new RelativeFile(foo, "f1z");
         assertTrue(m.containsKey(f1z));
         assertEquals(m.get(f1z), FileStatus.NEW);
 
@@ -392,11 +388,11 @@ public class IncrementalRelativeFileSetsTest {
                 IncrementalRelativeFileSets.fromZip(foo, cache, updates);
         assertEquals(2, m.size());
 
-        RelativeFile f0z = new RelativeFile(foo, new File(foo, "f0z"));
+        RelativeFile f0z = new RelativeFile(foo, "f0z");
         assertTrue(m.containsKey(f0z));
         assertEquals(m.get(f0z), FileStatus.REMOVED);
 
-        RelativeFile f1z = new RelativeFile(foo, new File(foo, "f1z"));
+        RelativeFile f1z = new RelativeFile(foo, "f1z");
         assertTrue(m.containsKey(f1z));
         assertEquals(m.get(f1z), FileStatus.REMOVED);
 
@@ -428,7 +424,7 @@ public class IncrementalRelativeFileSetsTest {
                 IncrementalRelativeFileSets.fromZip(foo, cache, updates);
         assertEquals(1, m.size());
 
-        RelativeFile f0z = new RelativeFile(foo, new File(foo, "f0z/a"));
+        RelativeFile f0z = new RelativeFile(foo, "f0z/a");
         assertTrue(m.containsKey(f0z));
         assertEquals(m.get(f0z), FileStatus.CHANGED);
 
