@@ -185,6 +185,7 @@ public class JarContentsTest {
                 "com/android/builder/core/",
                 "com/android/builder/dependency/",
                 "com/android/builder/dependency/level2/",
+                "com/android/builder/desugaring/",
                 "com/android/builder/dexing/",
                 "com/android/builder/dexing/r8/",
                 "com/android/builder/errors/",

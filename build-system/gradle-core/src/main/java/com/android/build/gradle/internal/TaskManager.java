@@ -2356,6 +2356,10 @@ public abstract class TaskManager {
                             userCache);
             transformManager.addTransform(tasks, variantScope, fixFrames);
 
+            String projectVariant =
+                    variantScope.getGlobalScope().getProject().getName()
+                            + ":"
+                            + variantScope.getFullVariantName();
             DesugarTransform desugarTransform =
                     new DesugarTransform(
                             () -> androidBuilder.getBootClasspath(true),
@@ -2364,10 +2368,10 @@ public abstract class TaskManager {
                             minSdk.getFeatureLevel(),
                             androidBuilder.getJavaProcessExecutor(),
                             project.getLogger().isEnabled(LogLevel.INFO),
-                            globalScope
-                                    .getProjectOptions()
-                                    .get(BooleanOption.ENABLE_GRADLE_WORKERS),
-                            variantScope.getGlobalScope().getTmpFolder().toPath());
+                            projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS),
+                            variantScope.getGlobalScope().getTmpFolder().toPath(),
+                            projectVariant,
+                            projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING));
             transformManager.addTransform(tasks, variantScope, desugarTransform);
 
             if (minSdk.getFeatureLevel()

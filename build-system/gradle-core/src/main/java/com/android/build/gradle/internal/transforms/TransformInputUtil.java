@@ -16,12 +16,18 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import com.android.annotations.NonNull;
 import com.android.build.api.transform.DirectoryInput;
 import com.android.build.api.transform.JarInput;
+import com.android.build.api.transform.Status;
 import com.android.build.api.transform.TransformInput;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Utility methods for retrieving files from TransformInput.
@@ -54,5 +60,23 @@ public class TransformInputUtil {
             }
         }
         return inputFiles.build();
+    }
+
+    @NonNull
+    public static Map<Status, Set<File>> getByStatus(@NonNull DirectoryInput dir) {
+        Map<Status, Set<File>> byStatus =
+                dir.getChangedFiles()
+                        .entrySet()
+                        .stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        Map.Entry::getValue,
+                                        Collectors.mapping(Map.Entry::getKey, Collectors.toSet())));
+
+        for (Status status : Status.values()) {
+            byStatus.putIfAbsent(status, ImmutableSet.of());
+        }
+
+        return byStatus;
     }
 }
