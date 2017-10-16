@@ -20,6 +20,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.performance.ActdProfileUploader;
 import com.android.testutils.TestUtils;
+import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
+import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.protobuf.ProtocolMessageEnum;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.Benchmark;
@@ -27,6 +29,9 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult.Flags;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
+import com.google.wireless.android.sdk.stats.GradleTaskExecution;
+import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.File;
 import java.io.IOException;
 import java.util.Random;
@@ -60,17 +65,40 @@ public class ActdProfileUploaderTest {
     }
 
     private static Logging.GradleBenchmarkResult randomBenchmarkResult() {
+        Flags flags =
+                Flags.newBuilder()
+                        .setAapt(random(Flags.Aapt.values()))
+                        .setBranch(random(Flags.Branch.values()))
+                        .setCompiler(random(Flags.Compiler.values()))
+                        .setJacoco(random(Flags.Jacoco.values()))
+                        .setMinification(random(Flags.Minification.values()))
+                        .build();
+
+        GradleTaskExecution.Builder task =
+                GradleTaskExecution.newBuilder()
+                        .setType(random(GradleTaskExecutionType.values()).getNumber());
+
+        GradleBuildProfileSpan.Builder span =
+                GradleBuildProfileSpan.newBuilder()
+                        .setDurationInMs(new Random().nextLong())
+                        .setTask(task);
+
+        if (span.getTask().getType() == GradleTaskExecutionType.TRANSFORM_VALUE) {
+            GradleTransformExecution.Builder transform =
+                    GradleTransformExecution.newBuilder()
+                            .setType(random(GradleTransformExecutionType.values()).getNumber());
+
+            span.setTransform(transform);
+        }
+
+        GradleBuildProfile.Builder profile =
+                GradleBuildProfile.newBuilder().setBuildTime(new Random().nextLong()).addSpan(span);
+
         return Logging.GradleBenchmarkResult.newBuilder()
                 .setBenchmarkMode(random(BenchmarkMode.values()))
                 .setBenchmark(random(Benchmark.values()))
-                .setFlags(
-                        Flags.newBuilder()
-                                .setAapt(random(Flags.Aapt.values()))
-                                .setBranch(random(Flags.Branch.values()))
-                                .setCompiler(random(Flags.Compiler.values()))
-                                .setJacoco(random(Flags.Jacoco.values()))
-                                .setMinification(random(Flags.Minification.values())))
-                .setProfile(GradleBuildProfile.newBuilder().setBuildTime(new Random().nextLong()))
+                .setFlags(flags)
+                .setProfile(profile)
                 .build();
     }
 
@@ -107,15 +135,28 @@ public class ActdProfileUploaderTest {
     @Test
     public void seriesId() throws IOException {
         GradleBenchmarkResult gbr = randomBenchmarkResult();
-        assertThat(ActdProfileUploader.seriesId(gbr)).isNotEmpty();
 
-        // Make sure that we get the same result for the same object passed in multiple times.
-        assertThat(ActdProfileUploader.seriesId(gbr)).isEqualTo(ActdProfileUploader.seriesId(gbr));
+        assertThat(gbr.getProfile()).isNotNull();
+        assertThat(gbr.getProfile().getSpanList()).isNotEmpty();
+
+        for (GradleBuildProfileSpan span : gbr.getProfile().getSpanList()) {
+            assertThat(ActdProfileUploader.seriesId(gbr, span)).isNotEmpty();
+
+            // Make sure that we get the same result for the same object passed in multiple times.
+            assertThat(ActdProfileUploader.seriesId(gbr, span))
+                    .isEqualTo(ActdProfileUploader.seriesId(gbr, span));
+        }
     }
 
     @Test
     public void description() throws IOException {
         GradleBenchmarkResult gbr = randomBenchmarkResult();
-        assertThat(ActdProfileUploader.description(gbr)).isNotEmpty();
+
+        assertThat(gbr.getProfile()).isNotNull();
+        assertThat(gbr.getProfile().getSpanList()).isNotEmpty();
+
+        for (GradleBuildProfileSpan span : gbr.getProfile().getSpanList()) {
+            assertThat(ActdProfileUploader.description(gbr, span)).isNotEmpty();
+        }
     }
 }

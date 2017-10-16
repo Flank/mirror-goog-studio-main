@@ -20,6 +20,8 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.testutils.TestUtils;
+import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
+import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
@@ -27,9 +29,11 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.client.util.Maps;
 import com.google.api.client.util.Preconditions;
 import com.google.gson.Gson;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
+import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -38,6 +42,7 @@ import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -141,8 +146,25 @@ public final class ActdProfileUploader implements ProfileUploader {
      */
     @VisibleForTesting
     @NonNull
-    public static String seriesId(@NonNull GradleBenchmarkResult result) {
-        return result.getBenchmark() + " " + result.getBenchmarkMode() + " (" + flags(result) + ")";
+    public static String seriesId(
+            @NonNull GradleBenchmarkResult result, @NonNull GradleBuildProfileSpan span) {
+        String task = GradleTaskExecutionType.forNumber(span.getTask().getType()).name();
+        if (span.getTask().getType() == GradleTaskExecutionType.TRANSFORM_VALUE) {
+            task =
+                    task
+                            + " "
+                            + GradleTransformExecutionType.forNumber(span.getTransform().getType())
+                                    .name();
+        }
+
+        return result.getBenchmark()
+                + " "
+                + result.getBenchmarkMode()
+                + " "
+                + task
+                + " ("
+                + flags(result)
+                + ")";
     }
 
     /**
@@ -151,7 +173,8 @@ public final class ActdProfileUploader implements ProfileUploader {
      */
     @VisibleForTesting
     @NonNull
-    public static String description(@NonNull GradleBenchmarkResult result) {
+    public static String description(
+            @NonNull GradleBenchmarkResult result, @NonNull GradleBuildProfileSpan span) {
         return flags(result);
     }
 
@@ -405,18 +428,42 @@ public final class ActdProfileUploader implements ProfileUploader {
 
         addBuild(buildReq);
 
+        /*
+         * Because there can be multiple of each task happening per build (e.g. if there are
+         * multiple projects), we sum the times for each task and take the overall time spent doing
+         * that type of task per build.
+         */
+        Map<String, SampleRequest> summedSeriesDurations = Maps.newHashMap();
         for (GradleBenchmarkResult result : results) {
-            SampleRequest sampleReq = new SampleRequest();
-            sampleReq.infos = infos;
-            sampleReq.serieId = seriesId(result);
-            sampleReq.description = description(result);
-            sampleReq.sample.buildId = buildId;
-            sampleReq.sample.value = result.getProfile().getBuildTime();
-            sampleReq.sample.url = buildUrl();
+            if (result.getProfile() == null) {
+                // Shouldn't happen, but it's worth being defensive.
+                continue;
+            }
 
-            addSample(sampleReq);
+            for (GradleBuildProfileSpan span : result.getProfile().getSpanList()) {
+                String seriesId = seriesId(result, span);
+                SampleRequest sampleReq =
+                        summedSeriesDurations.computeIfAbsent(
+                                seriesId,
+                                key -> {
+                                    SampleRequest req = new SampleRequest();
+                                    req.infos = infos;
+                                    req.serieId = seriesId;
+                                    req.description = description(result, span);
+                                    req.sample.buildId = buildId;
+                                    req.sample.value = 0;
+                                    req.sample.url = buildUrl();
+                                    return req;
+                                });
+
+                sampleReq.sample.value += span.getDurationInMs();
+            }
         }
 
+        System.out.println("prepared " + summedSeriesDurations.size() + " series for upload");
+        for (SampleRequest sampleReq : summedSeriesDurations.values()) {
+            addSample(sampleReq);
+        }
         System.out.println("successfully uploaded act-d data for build ID " + buildId);
     }
 
@@ -449,6 +496,7 @@ public final class ActdProfileUploader implements ProfileUploader {
     }
 
     @VisibleForTesting
+    @SuppressWarnings("unused") // matches the structure act-d requires, not all params are used
     public static final class Benchmark {
         public String range = "10%";
         public int required = 3;
@@ -461,12 +509,14 @@ public final class ActdProfileUploader implements ProfileUploader {
     }
 
     @VisibleForTesting
+    @SuppressWarnings("unused") // matches the structure act-d requires, not all params are used
     public static final class BuildRequest {
         public final String projectId = ACTD_PROJECT_ID;
         public Build build = new Build();
     }
 
     @VisibleForTesting
+    @SuppressWarnings("unused") // matches the structure act-d requires, not all params are used
     public static final class SampleRequest {
         public final String projectId = ACTD_PROJECT_ID;
         public String serieId;
