@@ -56,7 +56,7 @@ class ${mainFragment} : BrowseFragment() {
 
     private val mHandler = Handler()
     private lateinit var mBackgroundManager: BackgroundManager
-    private lateinit var mDefaultBackground: Drawable
+    private var mDefaultBackground: Drawable? = null
     private lateinit var mMetrics: DisplayMetrics
     private var mBackgroundTimer: Timer? = null
     private var mBackgroundUri: String? = null
