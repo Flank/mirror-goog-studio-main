@@ -58,7 +58,7 @@ public final class DuplicateFileException extends ZipAbortException {
     public String getMessage() {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("Duplicate files copied in APK ").append(mArchivePath).append('\n');
+        sb.append("APK File '").append(mArchivePath).append("' found in multiple sources:\n");
         int index = 1;
         for (File file : mSourceFiles) {
             sb.append("\tFile").append(index++).append(": ").append(file).append('\n');
