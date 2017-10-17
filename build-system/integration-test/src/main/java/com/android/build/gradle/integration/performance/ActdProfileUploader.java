@@ -44,6 +44,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -59,6 +60,7 @@ public final class ActdProfileUploader implements ProfileUploader {
 
     @NonNull private static final String ACTD_PROJECT_ID = "SamProjectTest3";
     @NonNull private static final String ACTD_ADD_BUILD_URL = "/apis/addBuild";
+    @NonNull private static final String ACTD_ADD_SERIE_URL = "/apis/addSerie";
     @NonNull private static final String ACTD_ADD_SAMPLE_URL = "/apis/addSample";
 
     /**
@@ -405,6 +407,19 @@ public final class ActdProfileUploader implements ProfileUploader {
     }
 
     /**
+     * Adds a Serie to the act-d dashboard using the act-d API.
+     *
+     * <p>Serie each belong to a Build, and the Build must exist in the act-d API before you can add
+     * a Serie. See {@code addBuild(BuildRequest)} for more information.
+     *
+     * @throws IOException if anything networky goes wrong, or if the API returns an unsuccessful
+     *     response.
+     */
+    private void addSerie(@NonNull SerieRequest req) throws IOException {
+        jsonPost(actdBaseUrl + ACTD_ADD_SERIE_URL, req);
+    }
+
+    /**
      * Adds a Sample to the act-d dashboard using the act-d API.
      *
      * <p>Samples each belong to a Build, and the Build must exist in the act-d API before you can
@@ -443,7 +458,6 @@ public final class ActdProfileUploader implements ProfileUploader {
                                     SampleRequest req = new SampleRequest();
                                     req.projectId = actdProjectId;
                                     req.serieId = seriesId;
-                                    req.description = description(result, span);
                                     req.sample.buildId = buildId;
                                     req.sample.value = 0;
                                     req.sample.url = buildUrl();
@@ -478,11 +492,32 @@ public final class ActdProfileUploader implements ProfileUploader {
         BuildRequest br = buildRequest();
         addBuild(br);
 
-        for (SampleRequest sampleReq : sampleRequests(results)) {
-            sampleReq.infos = br.build.infos;
-            addSample(sampleReq);
+        Collection<SampleRequest> sampleRequests = sampleRequests(results);
+
+        Set<String> serieIds =
+                sampleRequests
+                        .stream()
+                        .map(req -> req.serieId)
+                        .distinct()
+                        .collect(Collectors.toSet());
+
+        System.out.println("found " + serieIds.size() + " unique series IDs");
+        System.out.println("ensuring all series exist");
+
+        // Make sure that all series we're about to upload data for exist in Dana.
+        for (String serieId : serieIds) {
+            SerieRequest serieReq = new SerieRequest();
+            serieReq.projectId = actdProjectId;
+            serieReq.serieId = serieId;
+            serieReq.analyse.base = br.build.buildId;
+
+            addSerie(serieReq);
         }
 
+        System.out.println("starting uplaod of " + sampleRequests.size() + " samples");
+        for (SampleRequest sampleReq : sampleRequests) {
+            addSample(sampleReq);
+        }
         System.out.println("successfully uploaded act-d data for build ID " + buildId);
     }
 
@@ -526,6 +561,7 @@ public final class ActdProfileUploader implements ProfileUploader {
 
     @VisibleForTesting
     public static final class Analyse {
+        public long base;
         public Benchmark benchmark = new Benchmark();
     }
 
@@ -534,6 +570,7 @@ public final class ActdProfileUploader implements ProfileUploader {
     public static final class BuildRequest {
         public String projectId;
         public Build build = new Build();
+        public boolean override = true;
     }
 
     @VisibleForTesting
@@ -541,9 +578,15 @@ public final class ActdProfileUploader implements ProfileUploader {
     public static final class SampleRequest {
         public String projectId;
         public String serieId;
-        public String description;
-        public Infos infos;
         public Sample sample = new Sample();
+    }
+
+    @VisibleForTesting
+    @SuppressWarnings("unused") // matches the structure act-d requires, not all params are used
+    public static final class SerieRequest {
+        public String projectId;
+        public String serieId;
         public Analyse analyse = new Analyse();
+        public boolean override = true;
     }
 }
