@@ -619,8 +619,26 @@ public class NativeModelTest {
         } else if (config.compiler == Compiler.CLANG) {
             checkClang(model);
         }
+
         checkProblematicCompilerFlags(model);
         checkNativeBuildOutputPath(config, project);
+    }
+
+    @Test
+    public void checkNativeSourceFileValue() throws Exception {
+        // Syncing once, causes the JSON to exist
+        project.model().getSingle(NativeAndroidProject.class);
+
+        String[] buildTypes = {"debug", "release"};
+        for (String buildType : buildTypes) {
+            File jsonFile = getJsonFile(buildType, "x86_64");
+            if (jsonFile == null) {
+                continue;
+            }
+
+            NativeBuildConfigValue nativeBuildConfigValue = getNativeBuildConfigValue(jsonFile);
+            checkSourceFileValue(nativeBuildConfigValue);
+        }
     }
 
     @Test
@@ -801,6 +819,19 @@ public class NativeModelTest {
                         config.buildSystem.getName(),
                         variantName),
                 abi);
+    }
+
+    /** Validates the NativeBuildConfigValue. Note: workingDirectory is optional. */
+    private static void checkSourceFileValue(@NonNull NativeBuildConfigValue config) {
+        for (NativeLibraryValue library : config.libraries.values()) {
+            for (NativeSourceFileValue nativeSourceFileValue : library.files) {
+                assertThat(nativeSourceFileValue.src).exists();
+                assertThat(nativeSourceFileValue.flags).isNotEmpty();
+                if (nativeSourceFileValue.workingDirectory != null) {
+                    assertThat(nativeSourceFileValue.workingDirectory).exists();
+                }
+            }
+        }
     }
 
     private static void checkDefaultVariants(NativeAndroidProject model) {

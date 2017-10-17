@@ -516,8 +516,8 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
                                     new NativeSourceFileValue();
                             nativeSourceFileValue.workingDirectory =
                                     new File(target.buildDirectory);
-                            nativeSourceFileValue.src = new File(source);
                             File sourceFile = new File(project.sourceDirectory, source);
+                            nativeSourceFileValue.src = sourceFile;
                             nativeSourceFileValue.flags =
                                     getAndroidGradleFileLibFlags(abi, sourceFile.getAbsolutePath());
                             nativeLibraryValue.files.add(nativeSourceFileValue);
