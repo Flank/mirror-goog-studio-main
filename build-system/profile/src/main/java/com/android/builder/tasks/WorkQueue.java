@@ -70,6 +70,16 @@ public class WorkQueue<T> implements Runnable {
             this.actionType = actionType;
             this.job = job;
         }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append("QueueTask of type ");
+            sb.append(actionType.name());
+            sb.append(" with job ");
+            sb.append(job.toString());
+            return sb.toString();
+        }
     }
 
     /**
@@ -172,6 +182,11 @@ public class WorkQueue<T> implements Runnable {
 
         if (livingThreads.isEmpty() && !mPendingJobs.isEmpty()) {
             // all of our threads died without processing all the jobs, this is not good.
+            mLogger.verbose("Shutdown called on the work queue, but there are still jobs pending.");
+            mLogger.verbose("Pending jobs:");
+            for (QueueTask<T> job : mPendingJobs) {
+                mLogger.verbose(job.toString());
+            }
             throw new RuntimeException("No slave process to process jobs, aborting");
         }
 
