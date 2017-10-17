@@ -2363,27 +2363,39 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     public void testTryWithResources() {
         String expected = ""
-                + "src/test/pkg/MultiCatch.java:10: Error: Multi-catch with these reflection exceptions requires API level 19 (current min is 1) because they get compiled to the common but new super type ReflectiveOperationException. As a workaround either create individual catch statements, or catch Exception. [NewApi]\n"
+                + "src/main/java/test/pkg/MultiCatch.java:10: Error: Multi-catch with these reflection exceptions requires API level 19 (current min is 1) because they get compiled to the common but new super type ReflectiveOperationException. As a workaround either create individual catch statements, or catch Exception. [NewApi]\n"
                 + "        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {\n"
                 + "                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
-                + "src/test/pkg/TryWithResources.java:9: Error: Try-with-resources requires API level 19 (current min is 1) [NewApi]\n"
+                + "src/main/java/test/pkg/TryWithResources.java:9: Error: Try-with-resources requires API level 19 (current min is 1) [NewApi]\n"
                 + "        try (BufferedReader br = new BufferedReader(new FileReader(path))) {\n"
                 + "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "2 errors, 0 warnings\n";
         lint().files(
                 manifest().minSdk(1),
                 tryWithResources,
-                multiCatch)
+                multiCatch,
+                gradleVersion231)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
     }
 
-    public void testTryWithResourcesOk() {
+    public void testTryWithResourcesOkDueToCompileSdk() {
         lint().files(
                 manifest().minSdk(19),
                 tryWithResources,
-                multiCatch)
+                multiCatch,
+                gradleVersion231)
+                .run()
+                .expectClean();
+    }
+
+    public void testTryWithResourcesOkDueToDesugar() {
+        lint().files(
+                manifest().minSdk(19),
+                tryWithResources,
+                multiCatch,
+                gradleVersion24_language18)
                 .run()
                 .expectClean();
     }
@@ -2446,17 +2458,17 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
         // Default methods require minSdkVersion >= N
         String expected = ""
-                + "src/test/pkg/InterfaceMethodTest.java:6: Error: Default method requires API level 24 (current min is 15) [NewApi]\n"
+                + "src/main/java/test/pkg/InterfaceMethodTest.java:6: Error: Default method requires API level 24 (current min is 15) [NewApi]\n"
                 + "    default void method2() {\n"
                 + "    ^\n"
-                + "src/test/pkg/InterfaceMethodTest.java:9: Error: Static interface  method requires API level 24 (current min is 15) [NewApi]\n"
+                + "src/main/java/test/pkg/InterfaceMethodTest.java:9: Error: Static interface method requires API level 24 (current min is 15) [NewApi]\n"
                 + "    static void method3() {\n"
                 + "    ^\n"
                 + "2 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(15),
-                java("src/test/pkg/InterfaceMethodTest.java", ""
+                java("src/main/java/test/pkg/InterfaceMethodTest.java", ""
                         + "package test.pkg;\n"
                         + "\n"
                         + "@SuppressWarnings(\"unused\")\n"
@@ -2469,7 +2481,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "    static void method3() {\n"
                         + "        System.out.println(\"test\");\n"
                         + "    }\n"
-                        + "}"))
+                        + "}"),
+                gradleVersion231)
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
@@ -2495,6 +2508,35 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "}"))
                 .run()
                 .expectClean();
+    }
+
+    public void testDesugarMethods() {
+        // Desugar inlines Objects.requireNonNull(foo) so don't flag this if using Desugar
+        // Ditto for Throwable.addSuppressed.
+
+        //noinspection all // Sample code
+        lint().files(
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import java.util.Objects;\n" +
+                        "\n" +
+                        "public class DesugarTest {\n" +
+                        "    public void testRequireNull(Object foo) {\n" +
+                        "        Objects.requireNonNull(foo); // Desugared, should not generate warning\n" +
+                        "        Objects.requireNonNull(foo, \"message\"); // Should generate API warning\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public void addThrowable(Throwable t1, Throwable t2) {\n" +
+                        "        t1.addSuppressed(t2); // Desugared, should not generate warning\n" +
+                        "    }\n" +
+                        "}\n"),
+                gradleVersion24_language18)
+                .run()
+                .expect("src/main/java/test/pkg/DesugarTest.java:8: Error: Call requires API level 19 (current min is 1): java.util.Objects#requireNonNull [NewApi]\n" +
+                        "        Objects.requireNonNull(foo, \"message\"); // Should generate API warning\n" +
+                        "                ~~~~~~~~~~~~~~\n" +
+                        "1 errors, 0 warnings\n");
     }
 
     public void testDefaultMethodsDesugar() {
@@ -2528,14 +2570,14 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
         // Repeatable annotations require minSdkVersion >= N
         String expected = ""
-                + "src/test/pkg/MyAnnotation.java:5: Error: Repeatable annotation requires API level 24 (current min is 15) [NewApi]\n"
+                + "src/main/java/test/pkg/MyAnnotation.java:5: Error: Repeatable annotation requires API level 24 (current min is 15) [NewApi]\n"
                 + "@Repeatable(android.annotation.SuppressLint.class)\n"
                 + "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "1 errors, 0 warnings\n";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(15),
-                java("src/test/pkg/MyAnnotation.java", ""
+                java("src/main/java/test/pkg/MyAnnotation.java", ""
                         + "package test.pkg;\n"
                         + "\n"
                         + "import java.lang.annotation.Repeatable;\n"
@@ -2543,7 +2585,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         + "@Repeatable(android.annotation.SuppressLint.class)\n"
                         + "public @interface MyAnnotation {\n"
                         + "    int test() default 1;\n"
-                        + "}"))
+                        + "}"),
+                gradleVersion231)
                 .allowCompilationErrors(true)
                 .allowSystemErrors(false)
                 .checkMessage(this::checkReportedError)

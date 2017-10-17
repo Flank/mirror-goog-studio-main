@@ -1254,7 +1254,7 @@ public class ApiDetector extends ResourceXmlDetector
                         String message = String.format("%1$s method requires API level %2$d "
                                         + "(current min is %3$d)",
                                 methodModifierList.hasExplicitModifier(PsiModifier.DEFAULT)
-                                        ? "Default" : "Static interface ",
+                                        ? "Default" : "Static interface",
                                 api,
                                 Math.max(minSdk, getTargetApi(method)));
                         mContext.report(UNSUPPORTED, method, location, message, apiLevelFix(api));
@@ -1822,6 +1822,19 @@ public class ApiDetector extends ResourceXmlDetector
                 return;
             }
 
+            // Desugar rewrites Objects.requireNonNull calls (see b/32446315)
+            if (name.equals("requireNonNull") && api == 19
+                    && owner.equals("java.util.Objects") && desc.equals("(Ljava.lang.Object;)")
+                    && isUsingDesugar(mContext, expression)) {
+                return;
+            }
+
+            if (name.equals("addSuppressed") && api == 19
+                    && owner.equals("java.lang.Throwable") && desc.equals("(Ljava.lang.Throwable;)")
+                    && isUsingDesugar(mContext, expression)) {
+                return;
+            }
+
             String signature;
             if (CONSTRUCTOR_NAME.equals(name)) {
                 signature = "new " + fqcn;
@@ -2213,7 +2226,11 @@ public class ApiDetector extends ResourceXmlDetector
         // Desugar runs if the Gradle plugin is 2.4.0 alpha 8 or higher...
         GradleVersion version = context.getProject().getGradleModelVersion();
         if (version == null) {
-            return false;
+            // We don't really know if you're using desugar if it's some other
+            // build system invoked from the command line, but might as well
+            // return true here since the main clients I'm aware of are
+            // already using desugar.
+            return true;
         }
         if (!version.isAtLeast(2, 4, 0, "alpha", 8, true)) {
             return false;

@@ -335,6 +335,20 @@ project.xml:4: Error: Unexpected tag unknown [LintError]
     fun testSimpleProject() {
         val root = temp.newFolder()
         val projects = lint().files(
+                java("src/test/pkg/InterfaceMethodTest.java", """
+                    package test.pkg;
+
+                    @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
+                    public interface InterfaceMethodTest {
+                        void someMethod();
+                        default void method2() {
+                            System.out.println("test");
+                        }
+                        static void method3() {
+                            System.out.println("test");
+                        }
+                    }
+                    """).indented(),
                 java("C.java", """
 import android.app.Fragment;
 
@@ -371,6 +385,7 @@ public class C {
                 <module name="M" android="true" library="true">
                 <manifest file="AndroidManifest.xml" />
                 <src file="C.java" />
+                <src file="src/test/pkg/InterfaceMethodTest.java" />
             </module>
             </project>""".trimIndent()
         val descriptorFile = File(root, "project.xml")
