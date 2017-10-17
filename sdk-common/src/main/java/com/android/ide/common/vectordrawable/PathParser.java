@@ -16,6 +16,7 @@
 package com.android.ide.common.vectordrawable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -23,6 +24,8 @@ import java.util.List;
  * The implementation details should be the same as the PathParser in Android framework.
  */
 public class PathParser {
+    private static final float[] EMPTY_FLOAT_ARRAY = new float[0];
+
     private static class ExtractFloatResult {
         // We need to return the position of the next separator and whether the
         // next float starts with a '-' or a '.'.
@@ -30,37 +33,12 @@ public class PathParser {
         private boolean mEndWithNegOrDot;
     }
 
-    /**
-     * Copies elements from {@code original} into a new array, from indexes start (inclusive) to
-     * end (exclusive). The original order of elements is preserved.
-     * If {@code end} is greater than {@code original.length}, the result is padded
-     * with the value {@code 0.0f}.
-     *
-     * @param original the original array
-     * @param start the start index, inclusive
-     * @param end the end index, exclusive
-     * @return the new array
-     * @throws ArrayIndexOutOfBoundsException if {@code start < 0 || start > original.length}
-     * @throws IllegalArgumentException if {@code start > end}
-     * @throws NullPointerException if {@code original == null}
-     */
-    private static float[] copyOfRange(float[] original, int start, int end) {
-        if (start > end) {
-            throw new IllegalArgumentException();
-        }
-        int originalLength = original.length;
-        if (start < 0 || start > originalLength) {
-            throw new ArrayIndexOutOfBoundsException();
-        }
-        int resultLength = end - start;
-        int copyLength = Math.min(resultLength, originalLength - start);
-        float[] result = new float[resultLength];
-        System.arraycopy(original, start, result, 0, copyLength);
-        return result;
-    }
+    // Do not instantiate.
+    private PathParser() {}
 
     /**
-     * Calculate the position of the next comma or space or negative sign
+     * Calculates the position of the next comma or space or negative sign.
+     *
      * @param s the string to search
      * @param start the position to start searching
      * @param result the result of the extraction, including the position of the
@@ -113,14 +91,14 @@ public class PathParser {
     }
 
     /**
-     * parse the floats in the string this is an optimized version of parseFloat(s.split(",|\\s"));
+     * Parses the floats in the string this is an optimized version of parseFloat(s.split(",|\\s"));
      *
      * @param s the string containing a command and list of floats
      * @return array of floats
      */
     private static float[] getFloats(String s) {
         if (s.charAt(0) == 'z' || s.charAt(0) == 'Z') {
-            return new float[0];
+            return EMPTY_FLOAT_ARRAY;
         }
         try {
             float[] results = new float[s.length()];
@@ -139,8 +117,7 @@ public class PathParser {
                 endPosition = result.mEndPosition;
 
                 if (startPosition < endPosition) {
-                    results[count++] = Float.parseFloat(
-                        s.substring(startPosition, endPosition));
+                    results[count++] = Float.parseFloat(s.substring(startPosition, endPosition));
                 }
 
                 if (result.mEndWithNegOrDot) {
@@ -150,7 +127,7 @@ public class PathParser {
                     startPosition = endPosition + 1;
                 }
             }
-            return copyOfRange(results, 0, count);
+            return Arrays.copyOfRange(results, 0, count);
         } catch (NumberFormatException e) {
             throw new RuntimeException("error in parsing \"" + s + "\"", e);
         }
@@ -161,16 +138,14 @@ public class PathParser {
     }
 
     private static int nextStart(String s, int end) {
-        char c;
-
         while (end < s.length()) {
-            c = s.charAt(end);
+            char c = s.charAt(end);
             // Note that 'e' or 'E' are not valid path commands, but could be
             // used for floating point numbers' scientific notation.
             // Therefore, when searching for next command, we should ignore 'e'
             // and 'E'.
             if ((((c - 'A') * (c - 'Z') <= 0) || ((c - 'a') * (c - 'z') <= 0))
-                && c != 'e' && c != 'E') {
+                    && c != 'e' && c != 'E') {
                 return end;
             }
             end++;
@@ -179,11 +154,11 @@ public class PathParser {
     }
 
     public static VdPath.Node[] parsePath(String value) {
+        value = value.trim();
+        List<VdPath.Node> list = new ArrayList<>();
+
         int start = 0;
         int end = 1;
-        value = value.trim();
-        List<VdPath.Node> list = new ArrayList<VdPath.Node>();
-
         while (end < value.length()) {
             end = nextStart(value, end);
             String s = value.substring(start, end);
@@ -194,7 +169,7 @@ public class PathParser {
                 // For the starting command, special handling:
                 // add M 0 0 if there is none.
                 // This is good for transformation.
-                if (currentCommand != 'M' && currentCommand != 'm'){
+                if (currentCommand != 'M' && currentCommand != 'm') {
                     addNode(list, 'M', new float[2]);
                 }
             }
@@ -203,9 +178,8 @@ public class PathParser {
             start = end;
             end++;
         }
-        if ((end - start) == 1 && start < value.length()) {
-
-            addNode(list, value.charAt(start), new float[0]);
+        if (end - start == 1 && start < value.length()) {
+            addNode(list, value.charAt(start), EMPTY_FLOAT_ARRAY);
         }
         return list.toArray(new VdPath.Node[list.size()]);
     }
