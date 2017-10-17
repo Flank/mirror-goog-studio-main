@@ -157,7 +157,7 @@ public class DesugarTransform extends Transform {
             @NonNull Path tmpDir) {
         this.androidJarClasspath = androidJarClasspath;
         this.compilationBootclasspath = PathUtils.getClassPathItems(compilationBootclasspath);
-        this.userCache = userCache;
+        this.userCache = null;
         this.minSdk = minSdk;
         this.executor = executor;
         this.waitableExecutor = WaitableExecutor.useGlobalSharedThreadPool();
@@ -210,7 +210,7 @@ public class DesugarTransform extends Transform {
 
     @Override
     public boolean isIncremental() {
-        return true;
+        return false;
     }
 
     @Override
