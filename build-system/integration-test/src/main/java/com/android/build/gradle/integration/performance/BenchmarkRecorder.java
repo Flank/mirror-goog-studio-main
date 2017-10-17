@@ -17,9 +17,11 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
@@ -30,7 +32,6 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -63,21 +64,30 @@ public final class BenchmarkRecorder {
 
     public BenchmarkRecorder(
             @NonNull Logging.Benchmark benchmark, @NonNull ProjectScenario projectScenario) {
-        this(
-                benchmark,
-                projectScenario,
-                Arrays.asList(
-                        GoogleStorageProfileUploader.INSTANCE, ActdProfileUploader.getInstance()));
+        this(benchmark, projectScenario, null);
     }
 
     @VisibleForTesting
     public BenchmarkRecorder(
             @NonNull Logging.Benchmark benchmark,
             @NonNull ProjectScenario projectScenario,
-            @NonNull List<ProfileUploader> uploaders) {
+            @Nullable List<ProfileUploader> uploaders) {
         this.benchmark = benchmark;
         this.projectScenario = projectScenario;
-        this.uploaders = uploaders;
+        this.uploaders = uploaders == null ? defaultUploaders() : uploaders;
+    }
+
+    private List<ProfileUploader> defaultUploaders() {
+        List<ProfileUploader> uploaders = Lists.newLinkedList();
+        uploaders.add(GoogleStorageProfileUploader.INSTANCE);
+
+        try {
+            uploaders.add(ActdProfileUploader.fromEnvironment());
+        } catch (IllegalStateException e) {
+            System.out.println("unable to create act-d profile uploader: " + e);
+        }
+
+        return uploaders;
     }
 
     public void recordBenchmarkResult(@NonNull GradleBenchmarkResult.Builder benchmarkResult) {

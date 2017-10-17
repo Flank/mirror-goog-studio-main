@@ -19,9 +19,11 @@ package com.android.build.gradle.integration.common.performance;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.performance.ActdProfileUploader;
+import com.android.build.gradle.integration.performance.ActdProfileUploader.SampleRequest;
 import com.android.testutils.TestUtils;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
+import com.google.common.collect.Lists;
 import com.google.protobuf.ProtocolMessageEnum;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.Benchmark;
@@ -34,11 +36,29 @@ import com.google.wireless.android.sdk.stats.GradleTaskExecution;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
 import java.util.Random;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ActdProfileUploaderTest {
-    private static final File GIT_ROOT = TestUtils.getWorkspaceFile("tools/base");
+    private final ActdProfileUploader.Infos infos = new ActdProfileUploader.Infos();
+    private final int buildId = 1234;
+    private final File repo = TestUtils.getWorkspaceFile("tools/base");
+    private final String actdBaseUrl = "http://example.com";
+    private final String actdProjectId = "test";
+    private final String actdBuildUrl = "http://example.com";
+    private final String actdCommitUrl = null;
+
+    private ActdProfileUploader uploader;
+
+    @Before
+    public void setUp() {
+        uploader =
+                ActdProfileUploader.create(
+                        buildId, repo, actdBaseUrl, actdProjectId, actdBuildUrl, actdCommitUrl);
+    }
 
     /**
      * Gets a random enum value for a given array of proto enums.
@@ -64,6 +84,14 @@ public class ActdProfileUploaderTest {
         }
     }
 
+    private static long randomPositiveLong() {
+        long value = Math.abs(new Random().nextLong());
+        if (value == Long.MIN_VALUE) {
+            value = Long.MAX_VALUE;
+        }
+        return value;
+    }
+
     private static Logging.GradleBenchmarkResult randomBenchmarkResult() {
         Flags flags =
                 Flags.newBuilder()
@@ -80,7 +108,7 @@ public class ActdProfileUploaderTest {
 
         GradleBuildProfileSpan.Builder span =
                 GradleBuildProfileSpan.newBuilder()
-                        .setDurationInMs(new Random().nextLong())
+                        .setDurationInMs(randomPositiveLong())
                         .setTask(task);
 
         if (span.getTask().getType() == GradleTaskExecutionType.TRANSFORM_VALUE) {
@@ -92,7 +120,7 @@ public class ActdProfileUploaderTest {
         }
 
         GradleBuildProfile.Builder profile =
-                GradleBuildProfile.newBuilder().setBuildTime(new Random().nextLong()).addSpan(span);
+                GradleBuildProfile.newBuilder().setBuildTime(randomPositiveLong()).addSpan(span);
 
         return Logging.GradleBenchmarkResult.newBuilder()
                 .setBenchmarkMode(random(BenchmarkMode.values()))
@@ -102,6 +130,15 @@ public class ActdProfileUploaderTest {
                 .build();
     }
 
+    private static List<GradleBenchmarkResult> randomBenchmarkResults() {
+        int count = new Random().nextInt(10);
+        List<GradleBenchmarkResult> results = Lists.newArrayListWithCapacity(count);
+        for (int i = 0; i < count; i++) {
+            results.add(randomBenchmarkResult());
+        }
+        return results;
+    }
+
     @Test
     public void hostname() throws IOException {
         assertThat(ActdProfileUploader.hostname()).isNotEmpty();
@@ -109,12 +146,13 @@ public class ActdProfileUploaderTest {
 
     @Test
     public void lastCommitJson() throws IOException {
-        assertThat(ActdProfileUploader.lastCommitJson(GIT_ROOT)).isNotEmpty();
+        assertThat(ActdProfileUploader.lastCommitJson(repo)).isNotEmpty();
     }
 
     @Test
     public void infos() throws IOException {
-        ActdProfileUploader.Infos infos = ActdProfileUploader.infos();
+        ActdProfileUploader.Infos infos =
+                ActdProfileUploader.infos(TestUtils.getWorkspaceFile("tools/base"));
 
         assertThat(infos.abbrevHash).isNotEmpty();
         assertThat(infos.hash).isNotEmpty();
@@ -157,6 +195,21 @@ public class ActdProfileUploaderTest {
 
         for (GradleBuildProfileSpan span : gbr.getProfile().getSpanList()) {
             assertThat(ActdProfileUploader.description(gbr, span)).isNotEmpty();
+        }
+    }
+
+    @Test
+    public void sampleRequests() throws IOException {
+        Collection<SampleRequest> reqs = uploader.sampleRequests(randomBenchmarkResults());
+        assertThat(reqs).isNotEmpty();
+
+        for (ActdProfileUploader.SampleRequest req : reqs) {
+            // act-d baulks on 0 values, so we should not return them from sampleRequests()
+            assertThat(req.sample.value).isGreaterThan(0L);
+
+            // make sure the various IDs make sense
+            assertThat(req.projectId).isNotEmpty();
+            assertThat(req.sample.buildId).isGreaterThan(0L);
         }
     }
 }

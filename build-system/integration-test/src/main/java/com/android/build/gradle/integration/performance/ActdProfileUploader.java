@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -48,48 +49,8 @@ import java.util.stream.Collectors;
 
 /** Uploader that pushes profile results to act-d. */
 public final class ActdProfileUploader implements ProfileUploader {
-    /** Singleton instance of this class. Use {@code getInstance()} instead. */
-    @NonNull private static final ActdProfileUploader INSTANCE = new ActdProfileUploader();
-
-    /**
-     * Use {@code buildbotBuildNumber()} to get the value of this constant (it checks validity
-     * before returning it to you).
-     */
-    @Nullable
-    private static final String BUILDBOT_BUILDNUMBER = System.getenv("BUILDBOT_BUILDNUMBER");
-
-    /**
-     * act-d constants. Includes API endpoints to hit and the project name to use in API requests.
-     * When the system eventually moves, or when we want to start sending our data to a different
-     * instance / project, we'll need to change these.
-     */
-    @Nullable private static final String ACTD_BASE_URL = System.getenv("ACTD_BASE_URL");
-
     @NonNull private static final String ACTD_ADD_BUILD_URL = "/apis/addBuild";
     @NonNull private static final String ACTD_ADD_SAMPLE_URL = "/apis/addSample";
-    @Nullable private static final String ACTD_PROJECT_ID = System.getenv("ACTD_PROJECT_ID");
-
-    /**
-     * Informational URL for use in API calls to make the dashboards more useful. Don't use this
-     * directly, instead use {@code buildUrl()}.
-     *
-     * <p>This is set from an environment variable. Remember that the environment variable cannot
-     * use format strings (e.g. %s) because buildbot uses those for other things and the values
-     * won't come out as you expect them. Because of this, we simply append a slash followed by the
-     * {@code buildbotBuildNumber()} to get the final URL.
-     */
-    @Nullable private static final String BUILDER_URL = System.getenv("ACTD_BUILDER_URL");
-
-    /**
-     * Informational URL for use in API calls to make the dashboards more useful. Don't use this
-     * directly, instead use {@code commitUrl(String)}.
-     *
-     * <p>This is set from an environment variable. Remember that the environment variable cannot
-     * use format strings (e.g. %s) because buildbot uses those for other things and the values
-     * won't come out as you expect them. Because of this, we simply append a slash followed by the
-     * commit hash to get the final URL.
-     */
-    @Nullable private static final String COMMIT_URL = System.getenv("ACTD_COMMIT_URL");
 
     /**
      * Git-specific constants used to ascertain what the current HEAD commit is, which is used to
@@ -121,24 +82,93 @@ public final class ActdProfileUploader implements ProfileUploader {
                 + "}%n"
     };
 
-    /**
-     * Represents the root directory of the git repository being performance tested. Used in a few
-     * git commands to get information about the most recent change and number of commits.
-     */
-    @NonNull private static final File ROOT = TestUtils.getWorkspaceFile("tools/base");
+    private final int buildId;
+    private final File repo;
+    @NonNull private final String actdBaseUrl;
+    @NonNull private final String actdProjectId;
+    @Nullable private final String actdBuildUrl;
+    @Nullable private final String actdCommitUrl;
 
-    /**
-     * {@code ActdProfileUploader} has no state of its own, but to satisfy the {@code
-     * ProfileUploader} interface we must create an instance of it. Because of that, it is a
-     * singleton.
-     */
-    @NonNull
-    public static ActdProfileUploader getInstance() {
-        return INSTANCE;
+    private ActdProfileUploader(
+            int buildId,
+            @NonNull File repo,
+            @NonNull String actdBaseUrl,
+            @NonNull String actdProjectId,
+            @Nullable String actdBuildUrl,
+            @Nullable String actdCommitUrl) {
+        this.buildId = buildId;
+        this.repo = repo;
+        this.actdBaseUrl = actdBaseUrl;
+        this.actdProjectId = actdProjectId;
+        this.actdBuildUrl = actdBuildUrl;
+        this.actdCommitUrl = actdCommitUrl;
     }
 
-    /** Private because Singleton. See {@code getInstance()}. */
-    private ActdProfileUploader() {}
+    /**
+     * Creates an ActdProfileUploader object. If you're looking to use the act-d uploader, use
+     * {@code fromEnvironment()} instead and set the relevant environment variables.
+     */
+    @VisibleForTesting
+    @NonNull
+    public static ActdProfileUploader create(
+            int buildId,
+            @NonNull File repo,
+            @NonNull String actdBaseUrl,
+            @NonNull String actdProjectId,
+            @Nullable String actdBuildUrl,
+            @Nullable String actdCommitUrl) {
+        return new ActdProfileUploader(
+                buildId, repo, actdBaseUrl, actdProjectId, actdBuildUrl, actdCommitUrl);
+    }
+
+    /**
+     * Constructs an ActdProfileUploader from the relevant environment variables.
+     *
+     * @throws IllegalStateException if any required environment variables are not present or empty.
+     */
+    @NonNull
+    public static ActdProfileUploader fromEnvironment() {
+        /** Required properties for act-d uploading to work. */
+        String actdBaseUrl = System.getenv("ACTD_BASE_URL");
+        if (actdBaseUrl == null || actdBaseUrl.isEmpty()) {
+            throw new IllegalStateException("no ACTD_BASE_URL environment variable set");
+        }
+
+        String actdProjectId = System.getenv("ACTD_PROJECT_ID");
+        if (actdProjectId == null || actdProjectId.isEmpty()) {
+            throw new IllegalStateException("no ACTD_PROJECT_ID environment variable set");
+        }
+
+        String buildbotBuildNumber = System.getenv("BUILDBOT_BUILDNUMBER");
+        if (buildbotBuildNumber == null || buildbotBuildNumber.isEmpty()) {
+            throw new IllegalStateException("no BUILDBOT_BUILDNUMBER environment variable set");
+        }
+
+        /**
+         * Optional URLs for use in API calls to make the dashboards more useful.
+         *
+         * <p>Remember that the environment variable cannot use format strings (e.g. %s) because
+         * buildbot uses those for other things and the values won't come out as you expect them.
+         * Because of this, we simply append a slash followed by the commit hash or build ID to get
+         * the final URL.
+         */
+        String actdBuildUrl = System.getenv("ACTD_BUILD_URL");
+        String actdCommitUrl = System.getenv("ACTD_COMMIT_URL");
+
+        /**
+         * Hardcoding the repo for the time being. It should be relatively easy to change this later
+         * if the need arises.
+         */
+        File repo = TestUtils.getWorkspaceFile("tools/base");
+
+        return new ActdProfileUploader(
+                Integer.parseInt(buildbotBuildNumber),
+                repo,
+                actdBaseUrl,
+                actdProjectId,
+                actdBuildUrl,
+                actdCommitUrl);
+    }
 
     /**
      * Returns a stable "series ID" for this benchmark result. These need to be unique per benchmark
@@ -150,11 +180,9 @@ public final class ActdProfileUploader implements ProfileUploader {
             @NonNull GradleBenchmarkResult result, @NonNull GradleBuildProfileSpan span) {
         String task = GradleTaskExecutionType.forNumber(span.getTask().getType()).name();
         if (span.getTask().getType() == GradleTaskExecutionType.TRANSFORM_VALUE) {
-            task =
-                    task
-                            + " "
-                            + GradleTransformExecutionType.forNumber(span.getTransform().getType())
-                                    .name();
+            String transform =
+                    GradleTransformExecutionType.forNumber(span.getTransform().getType()).name();
+            task = task + " " + transform;
         }
 
         return result.getBenchmark()
@@ -196,55 +224,14 @@ public final class ActdProfileUploader implements ProfileUploader {
                 .collect(Collectors.joining(", "));
     }
 
-    private static int buildbotBuildNumber() {
-        if (BUILDBOT_BUILDNUMBER == null || BUILDBOT_BUILDNUMBER.isEmpty()) {
-            throw new IllegalStateException(
-                    "no BUILDBOT_BUILDNUMBER specified as an environment variable");
-        }
-
-        return Integer.valueOf(BUILDBOT_BUILDNUMBER);
-    }
-
     /**
-     * Returns a URL that links to the current build on the builder tools-perf_master-dev dashboard.
-     *
-     * <p>This depends on the user setting the ACTD_BUILDER_URL environment variable. If it isn't
-     * set, or is empty, this method will return null. Same goes with BUILDBOT_BUILDNUMBER.
-     */
-    @Nullable
-    private static String buildUrl() {
-        if (BUILDER_URL == null || BUILDER_URL.isEmpty()) {
-            return null;
-        }
-
-        return BUILDER_URL + "/" + buildbotBuildNumber();
-    }
-
-    /**
-     * Returns a URL to the commit in tools/base represented by the given hash.
-     *
-     * <p>This depends on the user setting the ACTD_COMMIT_URL environment variable. If it isn't
-     * set, or is empty, this method will return null.
-     */
-    @Nullable
-    private static String commitUrl(@Nullable String hash) {
-        if (COMMIT_URL == null || COMMIT_URL.isEmpty()) {
-            return null;
-        }
-
-        return COMMIT_URL + "/" + hash;
-    }
-
-    /**
-     * Creates a valid {@code Infos} object for the head of the tools/base repository. This relies
-     * on shelling out to git, see {@code lastCommitJson()} for details.
+     * Creates a valid {@code Infos} object for the head of the given repository. This relies on
+     * shelling out to git, see {@code lastCommitJson()} for details.
      */
     @VisibleForTesting
     @NonNull
-    public static Infos infos() throws IOException {
-        Infos infos = new Gson().fromJson(lastCommitJson(ROOT), Infos.class);
-        infos.url = commitUrl(infos.hash);
-        return infos;
+    public static Infos infos(File repo) throws IOException {
+        return new Gson().fromJson(lastCommitJson(repo), Infos.class);
     }
 
     /**
@@ -322,32 +309,6 @@ public final class ActdProfileUploader implements ProfileUploader {
     }
 
     /**
-     * Adds a Build to the act-d dashboard using the act-d API.
-     *
-     * <p>This Build should have a unique buildId and it is required that a Build exists before any
-     * Samples can be added to the dashboard, because Samples have a relationship with Builds.
-     *
-     * @throws IOException if anything networky goes wrong, or if the API returns an unsuccessful
-     *     response.
-     */
-    private static void addBuild(@NonNull BuildRequest req) throws IOException {
-        jsonPost(ACTD_BASE_URL + ACTD_ADD_BUILD_URL, req);
-    }
-
-    /**
-     * Adds a Sample to the act-d dashboard using the act-d API.
-     *
-     * <p>Samples each belong to a Build, and the Build must exist in the act-d API before you can
-     * add a Sample. See {@code addBuild(BuildRequest)} for more information.
-     *
-     * @throws IOException if anything networky goes wrong, or if the API returns an unsuccessful
-     *     response.
-     */
-    private static void addSample(@NonNull SampleRequest req) throws IOException {
-        jsonPost(ACTD_BASE_URL + ACTD_ADD_SAMPLE_URL, req);
-    }
-
-    /**
      * POSTs JSON to a given URL. The JSON is created by using {@code Gson} on the {@code req}
      * parameter to this function.
      *
@@ -394,46 +355,63 @@ public final class ActdProfileUploader implements ProfileUploader {
         }
     }
 
-    /**
-     * Runs a variety of checks to see if it's possible for this uploader to run with the
-     * information that it has. This mostly checks that the plethora of environment variables
-     * required are present.
-     */
-    private static boolean canRun() {
-        if (ACTD_BASE_URL == null || ACTD_BASE_URL.isEmpty()) {
-            System.out.println("not running act-d upload because no ACTD_BASE_URL specified");
-            return false;
+    @Nullable
+    private String buildUrl() {
+        if (actdBuildUrl == null || actdBuildUrl.isEmpty()) {
+            return null;
         }
 
-        if (ACTD_PROJECT_ID == null || ACTD_PROJECT_ID.isEmpty()) {
-            System.out.println("not running act-d upload because no ACTD_PROJECT_ID specified");
-            return false;
-        }
-
-        return true;
+        String sep = actdBuildUrl.endsWith("/") ? "" : "/";
+        return actdBuildUrl + sep + buildId;
     }
 
-    @Override
-    public void uploadData(@NonNull List<GradleBenchmarkResult> results) throws IOException {
-        if (!canRun()) {
-            return;
+    @Nullable
+    private String commitUrl(@Nullable String hash) {
+        if (actdCommitUrl == null || actdCommitUrl.isEmpty()) {
+            return null;
         }
 
-        long buildId = buildbotBuildNumber();
-        Infos infos = infos();
+        String sep = actdCommitUrl.endsWith("/") ? "" : "/";
+        return actdCommitUrl + sep + hash;
+    }
 
-        BuildRequest buildReq = new BuildRequest();
-        buildReq.build.buildId = buildId;
-        buildReq.build.infos = infos;
+    /**
+     * Adds a Build to the act-d dashboard using the act-d API.
+     *
+     * <p>This Build should have a unique buildId and it is required that a Build exists before any
+     * Samples can be added to the dashboard, because Samples have a relationship with Builds.
+     *
+     * @throws IOException if anything networky goes wrong, or if the API returns an unsuccessful
+     *     response.
+     */
+    private void addBuild(@NonNull BuildRequest req) throws IOException {
+        jsonPost(actdBaseUrl + ACTD_ADD_BUILD_URL, req);
+    }
 
-        addBuild(buildReq);
+    /**
+     * Adds a Sample to the act-d dashboard using the act-d API.
+     *
+     * <p>Samples each belong to a Build, and the Build must exist in the act-d API before you can
+     * add a Sample. See {@code addBuild(BuildRequest)} for more information.
+     *
+     * @throws IOException if anything networky goes wrong, or if the API returns an unsuccessful
+     *     response.
+     */
+    private void addSample(@NonNull SampleRequest req) throws IOException {
+        jsonPost(actdBaseUrl + ACTD_ADD_SAMPLE_URL, req);
+    }
 
-        /*
-         * Because there can be multiple of each task happening per build (e.g. if there are
-         * multiple projects), we sum the times for each task and take the overall time spent doing
-         * that type of task per build.
-         */
+    /**
+     * Because there can be multiple of each task happening per build (e.g. if there are multiple
+     * projects), we sum the times for each task and take the overall time spent doing that type of
+     * task per build.
+     */
+    @VisibleForTesting
+    @NonNull
+    public Collection<SampleRequest> sampleRequests(@NonNull List<GradleBenchmarkResult> results)
+            throws IOException {
         Map<String, SampleRequest> summedSeriesDurations = Maps.newHashMap();
+
         for (GradleBenchmarkResult result : results) {
             if (result.getProfile() == null) {
                 // Shouldn't happen, but it's worth being defensive.
@@ -447,7 +425,7 @@ public final class ActdProfileUploader implements ProfileUploader {
                                 seriesId,
                                 key -> {
                                     SampleRequest req = new SampleRequest();
-                                    req.infos = infos;
+                                    req.projectId = actdProjectId;
                                     req.serieId = seriesId;
                                     req.description = description(result, span);
                                     req.sample.buildId = buildId;
@@ -460,10 +438,35 @@ public final class ActdProfileUploader implements ProfileUploader {
             }
         }
 
-        System.out.println("prepared " + summedSeriesDurations.size() + " series for upload");
-        for (SampleRequest sampleReq : summedSeriesDurations.values()) {
+        // act-d doesn't like samples with a value of 0, so we filter them out before returning
+        return summedSeriesDurations
+                .values()
+                .stream()
+                .filter(req -> req.sample.value > 0)
+                .collect(Collectors.toList());
+    }
+
+    @VisibleForTesting
+    @NonNull
+    public BuildRequest buildRequest() throws IOException {
+        BuildRequest buildReq = new BuildRequest();
+        buildReq.projectId = actdProjectId;
+        buildReq.build.infos = infos(repo);
+        buildReq.build.infos.url = commitUrl(buildReq.build.infos.hash);
+        buildReq.build.buildId = buildId;
+        return buildReq;
+    }
+
+    @Override
+    public void uploadData(@NonNull List<GradleBenchmarkResult> results) throws IOException {
+        BuildRequest br = buildRequest();
+        addBuild(br);
+
+        for (SampleRequest sampleReq : sampleRequests(results)) {
+            sampleReq.infos = br.build.infos;
             addSample(sampleReq);
         }
+
         System.out.println("successfully uploaded act-d data for build ID " + buildId);
     }
 
@@ -483,12 +486,14 @@ public final class ActdProfileUploader implements ProfileUploader {
     }
 
     @VisibleForTesting
+    @SuppressWarnings("unused") // matches the structure act-d requires, not all params are used
     public static final class Build {
         public long buildId;
         public Infos infos;
     }
 
     @VisibleForTesting
+    @SuppressWarnings("unused") // matches the structure act-d requires, not all params are used
     public static final class Sample {
         public long buildId;
         public long value;
@@ -511,14 +516,14 @@ public final class ActdProfileUploader implements ProfileUploader {
     @VisibleForTesting
     @SuppressWarnings("unused") // matches the structure act-d requires, not all params are used
     public static final class BuildRequest {
-        public final String projectId = ACTD_PROJECT_ID;
+        public String projectId;
         public Build build = new Build();
     }
 
     @VisibleForTesting
     @SuppressWarnings("unused") // matches the structure act-d requires, not all params are used
     public static final class SampleRequest {
-        public final String projectId = ACTD_PROJECT_ID;
+        public String projectId;
         public String serieId;
         public String description;
         public Infos infos;
