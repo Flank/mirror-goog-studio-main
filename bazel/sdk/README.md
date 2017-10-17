@@ -44,6 +44,13 @@ into your project.
 //prebuilts/studio/sdk/linux
 ```
 
+There is also a 'remote' sdk, which contains a subset of the SDK packages from the Android repository.
+This is used to integration test the SDK download in a deterministic way.
+
+```
+//prebuilts/studio/sdk/remote
+```
+
 If you find yourself developing an Android app inside Android Studio, you should _not_ use this SDK
 for that. Instead, you should download a separate, mutable SDK (e.g. in `~/Android/sdk`) which
 you can update and prune to your hearts content.
@@ -73,10 +80,13 @@ manifest:
  </project>
 ```
 
-## dev-sdk-packages
+For the remote SDK, the BUILD file is simply checked in to
+```//prebuilts/studio/sdk/remote/BUILD```.
 
-This directory includes a `dev-sdk-packages` file which contains a list of SDK components that one
-would need if they wanted to compile all code and pass all tests.
+## dev-sdk-packages and remote-sdk-packages
+
+This directory includes a `dev-sdk-packages` file which contains a list of SDK components needed
+to compile all code and pass all tests.
 
 Here's a snippet from the top of the file:
 ```
@@ -88,6 +98,8 @@ build-tools;24.0.0
 
 This file will be used to update and download SDK components. For future maintainers, please keep it
 up to date if you need to add any new SDK packages.
+
+The `remote-sdk-packages` file works similarly, but for the remote SDK packages.
 
 ## Filtering SDKs
 
@@ -103,6 +115,8 @@ e.g. `{pattern1,pattern2}`, which will match if _any_ of the patterns match.
 
 See the [official docs on globs](http://docs.oracle.com/javase/tutorial/essential/io/fileOps.html#glob)
 and `dev-sdk-updater --help` for more details.
+
+The remote sdk does not support filtering, but the binaries are compressed zip files.
 
 ## Updating the development SDK
 
@@ -240,3 +254,43 @@ $ rm -rf prebuilts/studio/sdk/darwin # unless you're darwin
 $ rm -rf prebuilts/studio/sdk/linux # unless you're linux
 $ rm -rf prebuilts/studio/sdk/windows # unless you're windows
 ```
+
+
+## Updating the remote SDK
+
+1. Create a branch on the two git repos
+   ```
+   repo start remote_sdk_build_tools_99.0.0 \
+       tools/base \
+       prebuilts/studio/sdk/remote
+   ```
+
+2. Update the list of packages needed in the
+   ```remote-sdk-packages``` file
+
+3. Run the remote SDK updater
+   ```bazel run //tools/base/bazel/sdk:dev-sdk-updater```
+
+4. If you are removing a component that is used, update build files and tests.
+   Simply adding a new component should not affect the build or tests.
+   When you need a new component for a test, have separate commits that
+   add the component to the ones that switch to using them, as this makes
+   reverting easier if something goes wrong.
+
+5. Commit and upload your change
+   ```
+   $ cd /path/to/studio-master-dev/
+
+   $ repo forall \
+       tools/base \
+       prebuilts/studio/sdk/remote \
+       -c git add -A; git commit -a -m "Updated SDK with build-tools;99:0.0"
+
+   # When uploading, include -t to ensure both code reviews have the
+   # same topic (the topic will be set to your current branch name).
+   # Be careful that someone else isn't using the same topic as you
+   # at the same time!
+   $ repo upload --cbr -t
+
+   # This opens an editor. Uncomment all SDK branches and save.
+   ```

@@ -7,3 +7,17 @@ java_binary(
         "//tools/base/sdklib:studio.sdklib",
     ],
 )
+
+java_binary(
+    name = "remote-sdk-updater",
+    srcs = ["src/com/android/tools/utils/RemoteSdkUpdater.java"],
+    main_class = "com.android.tools.utils.RemoteSdkUpdater",
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/bazel:utils",
+        "//tools/base/common:tools.common",
+        "//tools/base/repository:tools.repository",
+        "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/third_party:com.google.guava_guava",
+    ],
+)

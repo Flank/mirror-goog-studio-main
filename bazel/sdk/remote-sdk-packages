@@ -1,0 +1,7 @@
+# Line format: <sdk package>
+
+platform-tools
+build-tools;26.0.2
+platforms;android-26
+cmake;3.6.4111459
+add-ons;addon-google_apis-google-24

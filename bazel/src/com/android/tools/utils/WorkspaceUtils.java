@@ -72,4 +72,13 @@ public class WorkspaceUtils {
         Path workspace = findWorkspace();
         return workspace.resolve("tools/base/bazel/sdk/dev-sdk-packages");
     }
+
+    public static Path findRemoteSdkPackagesFile() throws IOException {
+        Path workspace = findWorkspace();
+        return workspace.resolve("tools/base/bazel/sdk/remote-sdk-packages");
+    }
+
+    public static Path findRemoteSdkMirror() throws IOException {
+        return findPrebuiltsSdks().resolve("remote");
+    }
 }
