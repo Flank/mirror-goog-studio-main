@@ -198,6 +198,9 @@ filegroup(
     srcs = glob(["test-projects/**"]),
 )
 
+# Used for bazel packages below this one that use GradleTestProject.
+exports_files(["test-projects/commonBuildScript.gradle"])
+
 # Maven repo with all the dependencies required by test projects.
 #
 # Quick way of updating this list:
@@ -551,4 +554,5 @@ maven_repo(
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: neverlink
         "//tools/base/third_party:junit_junit",
     ],
+    visibility = ["__subpackages__"],
 )

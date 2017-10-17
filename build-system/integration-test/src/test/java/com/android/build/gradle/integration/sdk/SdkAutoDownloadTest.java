@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.application;
+package com.android.build.gradle.integration.sdk;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static org.junit.Assert.assertNotNull;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.category.OnlineTests;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
@@ -35,6 +34,8 @@ import com.android.ide.common.repository.MavenRepositories;
 import com.android.ide.common.repository.SdkMavenRepository;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
+import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
@@ -50,10 +51,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Tests for automatic SDK download from Gradle. */
-@Category(OnlineTests.class)
 public class SdkAutoDownloadTest {
 
     private static String cmakeLists = "cmake_minimum_required(VERSION 3.4.1)"
@@ -67,7 +66,7 @@ public class SdkAutoDownloadTest {
             + "target_link_libraries(hello-jni log)";
 
     private static final String BUILD_TOOLS_VERSION = AndroidBuilder.MIN_BUILD_TOOLS_REV.toString();
-    private static final String PLATFORM_VERSION = "25";
+    private static final String PLATFORM_VERSION = "26";
 
     @Rule
     public GradleTestProject project =
@@ -90,7 +89,6 @@ public class SdkAutoDownloadTest {
                 project.getBuildFile(),
                 System.lineSeparator() + "apply plugin: 'com.android.application'");
 
-        // TODO: Set System property {@code AndroidSdkHandler.SDK_TEST_BASE_URL_PROPERTY}.
         mSdkHome = project.file("local-sdk-for-test");
         FileUtils.mkdirs(mSdkHome);
 
@@ -99,16 +97,17 @@ public class SdkAutoDownloadTest {
         licenseFile = new File(licensesFolder, "android-sdk-license");
         previewLicenseFile = new File(licensesFolder, "android-sdk-preview-license");
 
+        // noinspection SpellCheckingInspection SHAs.
         String licensesHash =
-                "e6b7c2ab7fa2298c15165e9583d0acf0b04a2232"
-                        + System.lineSeparator()
-                        + "8933bad161af4178b1185d1a37fbf41ea5269c55";
+                String.format(
+                        "e6b7c2ab7fa2298c15165e9583d0acf0b04a2232%n"
+                                + "8933bad161af4178b1185d1a37fbf41ea5269c55%n"
+                                + "d56f5187479451eabf01fb78af6dfcb131a6481e%n");
 
         String previewLicenseHash =
-                "84831b9409646a918e30573bab4c9c91346d8abd"
-                        + System.lineSeparator()
-                        + "79120722343a6f314e0719f863036c702b0e6b2a";
-
+                String.format(
+                        "84831b9409646a918e30573bab4c9c91346d8abd%n"
+                                + "79120722343a6f314e0719f863036c702b0e6b2a%n");
 
         Files.write(licenseFile.toPath(), licensesHash.getBytes(StandardCharsets.UTF_8));
         Files.write(
@@ -144,7 +143,7 @@ public class SdkAutoDownloadTest {
 
         FileUtils.copyDirectoryToDirectory(
                 FileUtils.join(realAndroidHome, SdkConstants.FD_PLATFORM_TOOLS),
-                FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS));
+                FileUtils.join(mSdkHome));
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.defaultConfig.minSdkVersion = 19");
@@ -183,11 +182,12 @@ public class SdkAutoDownloadTest {
      * downloaded.
      */
     @Test
+    @Ignore("b/65237460")
     public void checkCompileSdkAddonDownloading() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
-                        + "android.compileSdkVersion \"Google Inc.:Google APIs:23\""
+                        + "android.compileSdkVersion \"Google Inc.:Google APIs:24\""
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -199,7 +199,7 @@ public class SdkAutoDownloadTest {
         assertThat(platformBase).isDirectory();
 
         File addonTarget =
-                FileUtils.join(mSdkHome, SdkConstants.FD_ADDONS, "addon-google_apis-google-23");
+                FileUtils.join(mSdkHome, SdkConstants.FD_ADDONS, "addon-google_apis-google-24");
         assertThat(addonTarget).isDirectory();
     }
 
@@ -460,7 +460,13 @@ public class SdkAutoDownloadTest {
     }
 
     private RunGradleTasks getOfflineExecutor() {
-        return project.executor().withSdkAutoDownload();
+        return project.executor()
+                .withSdkAutoDownload()
+                .withArgument(
+                        String.format(
+                                "-D%1$s=file:///%2$s/",
+                                AndroidSdkHandler.SDK_TEST_BASE_URL_PROPERTY,
+                                TestUtils.getRemoteSdk()));
     }
 
     private void checkForLibrary(
@@ -531,9 +537,7 @@ public class SdkAutoDownloadTest {
         assertNotNull(result.getException());
 
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains(
-                        "Android SDK Platform "
-                                + AndroidBuilder.MIN_BUILD_TOOLS_REV.toShortString());
+                .contains("Android SDK Platform " + PLATFORM_VERSION);
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
                 .contains("missing components");
     }
@@ -543,12 +547,13 @@ public class SdkAutoDownloadTest {
     }
 
     @Test
+    @Ignore("b/65237460")
     public void checkNoLicenseError_AddonTarget() throws Exception {
         deleteLicense();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
-                        + "android.compileSdkVersion \"Google Inc.:Google APIs:23\""
+                        + "android.compileSdkVersion \"Google Inc.:Google APIs:24\""
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -582,14 +587,13 @@ public class SdkAutoDownloadTest {
         assertNotNull(result.getException());
 
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains(
-                        "Android SDK Build-Tools "
-                                + AndroidBuilder.MIN_BUILD_TOOLS_REV.toShortString());
+                .contains("Build-Tools " + AndroidBuilder.MIN_BUILD_TOOLS_REV.toShortString());
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
                 .contains("missing components");
     }
 
     @Test
+    @Ignore("b/65237460")
     public void checkNoLicenseError_MultiplePackages() throws Exception {
         deleteLicense();
         deleteBuildTools();
@@ -597,7 +601,7 @@ public class SdkAutoDownloadTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
-                        + "android.compileSdkVersion \"Google Inc.:Google APIs:23\""
+                        + "android.compileSdkVersion \"Google Inc.:Google APIs:24\""
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
@@ -609,9 +613,7 @@ public class SdkAutoDownloadTest {
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
                 .contains("missing components");
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains(
-                        "Android SDK Build-Tools "
-                                + AndroidBuilder.MIN_BUILD_TOOLS_REV.toShortString());
+                .contains("Build-Tools " + AndroidBuilder.MIN_BUILD_TOOLS_REV.toShortString());
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
                 .contains("Android SDK Platform 23");
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
@@ -653,9 +655,7 @@ public class SdkAutoDownloadTest {
             assertNotNull(result.getException());
 
             assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                    .contains(
-                            "Android SDK Build-Tools "
-                                    + AndroidBuilder.MIN_BUILD_TOOLS_REV.toShortString());
+                    .contains("Build-Tools " + AndroidBuilder.MIN_BUILD_TOOLS_REV.toShortString());
             assertThat(Throwables.getRootCause(result.getException()).getMessage())
                     .contains("not writeable");
         } finally {

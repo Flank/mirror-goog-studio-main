@@ -23,6 +23,7 @@ import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.integration.performance.BenchmarkRecorder;
+import com.android.testutils.TestUtils;
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import java.io.File;
@@ -97,38 +98,26 @@ public final class GradleTestProjectBuilder {
         if (name == null) {
             name = project;
         }
-        File projectDir = new File(GradleTestProject.TEST_PROJECT_DIR, project);
+
+        File projectDir = TestProjectPaths.getTestProjectDir(project);
         addAllFiles(app, projectDir);
         return fromTestApp(app);
     }
 
     /** Create GradleTestProject from an existing test project. */
     public GradleTestProjectBuilder fromExternalProject(@NonNull String project) {
-        try {
-            AndroidTestApp app = new EmptyTestApp();
-            name = project;
-            // compute the root folder of the checkout, based on test-projects.
-            File parentDir =
-                    GradleTestProject.TEST_PROJECT_DIR
-                            .getCanonicalFile()
-                            .getParentFile()
-                            .getParentFile()
-                            .getParentFile()
-                            .getParentFile()
-                            .getParentFile();
-            parentDir = new File(parentDir, "external");
-            File projectDir = new File(parentDir, project);
-            if (!projectDir.exists()) {
-                projectDir = new File(parentDir, project.replace('-', '_'));
-            }
-            if (!projectDir.exists()) {
-                throw new RuntimeException("Project " + project + " not found in " + projectDir + ".");
-            }
-            addAllFiles(app, projectDir);
-            return fromTestApp(app);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        AndroidTestApp app = new EmptyTestApp();
+        name = project;
+        File parentDir = TestUtils.getWorkspaceFile("external");
+        File projectDir = new File(parentDir, project);
+        if (!projectDir.exists()) {
+            projectDir = new File(parentDir, project.replace('-', '_'));
         }
+        if (!projectDir.exists()) {
+            throw new RuntimeException("Project " + project + " not found in " + projectDir + ".");
+        }
+        addAllFiles(app, projectDir);
+        return fromTestApp(app);
     }
 
     /** Add a new file to the project. */
@@ -226,4 +215,6 @@ public final class GradleTestProjectBuilder {
             throw new UncheckedIOException(e);
         }
     }
+
+
 }

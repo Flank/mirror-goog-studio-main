@@ -24,6 +24,7 @@ import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import junit.framework.TestCase;
@@ -255,6 +256,18 @@ public class TestUtils {
     @NonNull
     public static File getNdk() {
         return new File(getSdk(), SdkConstants.FD_NDK);
+    }
+
+    /**
+     * Returns the remote SDK directory.
+     *
+     * @throws IllegalArgumentException if the path results in a file not found.
+     * @return a valid File object pointing at the remote SDK directory.
+     */
+    @NonNull
+    public static Path getRemoteSdk() {
+        return getWorkspaceFile("prebuilts/studio/sdk/remote/dl.google.com/android/repository")
+                .toPath();
     }
 
     @NonNull

@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkState;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.TestProjectPaths;
 import com.android.build.gradle.integration.common.runner.CheckAllRunner;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -46,7 +47,7 @@ public class CheckAll {
     public static Collection<Object[]> data() {
         List<Object[]> parameters = Lists.newArrayList();
 
-        File[] testProjects = GradleTestProject.TEST_PROJECT_DIR.listFiles();
+        File[] testProjects = TestProjectPaths.getTestProjectDir().listFiles();
         checkState(testProjects != null);
 
         for (File testProject : testProjects) {

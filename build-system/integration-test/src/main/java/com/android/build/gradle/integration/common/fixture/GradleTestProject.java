@@ -95,7 +95,6 @@ import org.junit.runners.model.Statement;
 public final class GradleTestProject implements TestRule {
     public static final String ENV_CUSTOM_REPO = "CUSTOM_REPO";
 
-    public static final File TEST_PROJECT_DIR;
 
     public static final String DEFAULT_COMPILE_SDK_VERSION;
     public static final int LATEST_NDK_PLATFORM_VERSION = 21;
@@ -133,10 +132,7 @@ public final class GradleTestProject implements TestRule {
 
     static {
         try {
-            TEST_PROJECT_DIR =
-                    TestUtils.getWorkspaceFile(
-                            "tools/base/build-system/integration-test/test-projects");
-            assertThat(TEST_PROJECT_DIR).isDirectory();
+
 
             if (BuildSystem.get() == BuildSystem.IDEA) {
                 BUILD_DIR = new File(TestUtils.getWorkspaceRoot(), "out/gradle-integration-tests");
@@ -152,7 +148,7 @@ public final class GradleTestProject implements TestRule {
 
             boolean useNightly =
                     Boolean.parseBoolean(
-                            System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "true"));
+                            System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
 
             String nightlyVersion = getLatestGradleCheckedIn();
             if (useNightly) {
@@ -667,8 +663,9 @@ public final class GradleTestProject implements TestRule {
         abstract List<Path> getLocalRepositories();
 
         String getCommonBuildScriptContent() throws IOException {
-            return Files.toString(
-                    new File(TEST_PROJECT_DIR, COMMON_BUILD_SCRIPT), StandardCharsets.UTF_8);
+            File commonBuildScript =
+                    new File(TestProjectPaths.getTestProjectDir(), COMMON_BUILD_SCRIPT);
+            return Files.asCharSource(commonBuildScript, StandardCharsets.UTF_8).read();
         }
 
         static BuildSystem get() {
