@@ -23,6 +23,9 @@ import com.android.annotations.Nullable;
  */
 public final class PortForwarder {
 
+    /**
+     * An invalid/uninitialized port number.
+     */
     public static final int INVALID_PORT = -1;
 
     private final ForwarderSource mSource = new ForwarderSource();

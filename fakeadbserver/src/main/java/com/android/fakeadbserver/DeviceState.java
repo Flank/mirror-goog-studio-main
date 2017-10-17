@@ -172,38 +172,26 @@ public class DeviceState {
 
     public boolean addPortForwarder(@NonNull PortForwarder forwarder, boolean noRebind) {
         synchronized (mPortForwarders) {
-            if (mPortForwarders.containsKey(forwarder.getSource().mPort)) {
-                if (noRebind) {
-                    return false;
-                } else {
-                    removePortForwarder(forwarder);
-                }
+            if (noRebind) {
+                return mPortForwarders
+                        .computeIfAbsent(forwarder.getSource().mPort, port -> forwarder) == null;
+            } else {
+                // Just overwrite the previous forwarder.
+                mPortForwarders.put(forwarder.getSource().mPort, forwarder);
+                return true;
             }
-
-            // Just overwrite the previous forwarder.
-            mPortForwarders.put(forwarder.getSource().mPort, forwarder);
-
-            return true;
         }
     }
 
     public boolean removePortForwarder(int hostPort) {
-        return removePortForwarder(PortForwarder.createPortForwarder(hostPort, -1));
+        synchronized (mPortForwarders) {
+            return mPortForwarders.remove(hostPort) != null;
+        }
     }
 
     public void removeAllPortForwarders() {
         synchronized (mPortForwarders) {
             mPortForwarders.clear();
-        }
-    }
-
-    private boolean removePortForwarder(@NonNull PortForwarder forwarder) {
-        synchronized (mPortForwarders) {
-            if (!mPortForwarders.containsKey(forwarder.getSource().mPort)) {
-                return false;
-            }
-            mPortForwarders.remove(forwarder.getSource().mPort);
-            return true;
         }
     }
 
