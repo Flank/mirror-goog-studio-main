@@ -323,7 +323,7 @@ public class DexArchiveBuilderTest {
             fail("Default and static interface method should require min sdk 24.");
         } catch (DexArchiveBuilderException ignored) {
             assertThat(Throwables.getStackTraceAsString(ignored))
-                    .contains("default or static interface method used without --min-sdk-version");
+                    .contains("strictly requires --min-sdk-version >= 24");
         }
     }
 

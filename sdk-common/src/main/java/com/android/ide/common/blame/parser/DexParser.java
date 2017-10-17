@@ -34,7 +34,7 @@ public class DexParser implements PatternAwareOutputParser {
     public static final String DX_UNEXPECTED_EXCEPTION = "UNEXPECTED TOP-LEVEL EXCEPTION:";
 
     public static final String ERROR_INVOKE_DYNAMIC =
-            "invalid opcode ba (invokedynamic requires --min-sdk-version >= 26)";
+            "invalid opcode ba - invokedynamic requires --min-sdk-version >= 26";
 
     public static final String ENABLE_DESUGARING =
             "The dependency contains Java 8 bytecode. Please enable desugaring by "
