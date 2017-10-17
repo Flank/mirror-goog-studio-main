@@ -36,8 +36,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -55,7 +53,6 @@ import org.gradle.tooling.events.ProgressListener;
 /** A Gradle tooling api build builder. */
 public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
-    public static final int RETRY_COUNT = 5;
     @Nullable private final String buildToolsVersion;
 
     private boolean isExpectingFailure = false;
@@ -153,7 +150,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             args.add("--stacktrace");
         }
 
-        int attempt = 0;
         while (true) {
             ByteArrayOutputStream stdout = new ByteArrayOutputStream();
             ByteArrayOutputStream stderr = new ByteArrayOutputStream();
@@ -188,30 +184,28 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             launcher.run(handler);
             GradleConnectionException failure = handler.waitForResult();
 
+            RuntimeException exceptionToThrow = null;
             if (failure != null && !isExpectingFailure) {
-                Throwable cause = failure.getCause();
-                if (cause != null) {
-                    if (cause.getClass()
-                            .getName()
-                            .equals(
-                                    "org.gradle.launcher.daemon.client.DaemonDisappearedException")) {
-                        System.err.println("Captured DaemonDisappearedException, retrying.");
-                        if (CAPTURE_JVM_LOGS && attempt == 0) {
-                            printJvmLogs();
-                        }
-                        if (attempt++ < RETRY_COUNT) {
-                            // Start the loop from scratch.
-                            continue;
-                        } else {
-                            throw failure;
-                        }
-                    }
+                switch (chooseRetryAction(failure)) {
+                    case RETRY:
+                        continue;
+                    case FAILED_TOO_MANY_TIMES:
+                        exceptionToThrow = new TooFlakyException(failure);
+                        break;
+                    case THROW:
+                        exceptionToThrow = failure;
+                        break;
                 }
             }
 
             GradleBuildResult result =
                     new GradleBuildResult(stdout, stderr, progressListener.getEvents(), failure);
             lastBuildResultConsumer.accept(result);
+
+            if (exceptionToThrow != null) {
+                throw exceptionToThrow;
+            }
+
             if (isExpectingFailure && failure == null) {
                 throw new AssertionError("Expecting build to fail");
             } else if (!isExpectingFailure && failure != null) {
@@ -224,20 +218,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
             return result;
         }
-    }
-
-    private void printJvmLogs() throws IOException {
-        System.err.println("----------- JVM Log start -----------");
-        for (Path path : Files.list(getJvmLogDir()).collect(Collectors.toList())) {
-            System.err.print("---- Log file: ");
-            System.err.print(path);
-            System.err.println("----");
-            System.err.println();
-            for (String line : Files.readAllLines(path)) {
-                System.err.println(line);
-            }
-        }
-        System.err.println("------------ JVM Log end ------------");
     }
 
     private static class CollectingProgressListener implements ProgressListener {

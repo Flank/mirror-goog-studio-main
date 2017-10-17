@@ -37,7 +37,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.apache.commons.io.output.TeeOutputStream;
+import org.gradle.tooling.GradleConnectionException;
 import org.gradle.tooling.LongRunningOperation;
 import org.gradle.tooling.ProjectConnection;
 
@@ -48,6 +50,9 @@ import org.gradle.tooling.ProjectConnection;
  */
 @SuppressWarnings("unchecked") // Returning this as <T> in most methods.
 public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
+
+    /** Number of times we repeat Tooling API operations that are expected to succeed. */
+    public static final int RETRY_COUNT = 5;
 
     private static final boolean VERBOSE =
             !Strings.isNullOrEmpty(System.getenv().get("CUSTOM_TEST_VERBOSE"));
@@ -66,6 +71,9 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull private LoggingLevel loggingLevel = LoggingLevel.INFO;
     private boolean offline = true;
     private boolean localAndroidSdkHome = false;
+
+    /** @see #RETRY_COUNT */
+    private int failedAttempts = 0;
 
 
     BaseGradleExecutor(
@@ -257,6 +265,57 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             launcher.setStandardError(new TeeOutputStream(stderr, System.err));
         } else {
             launcher.setStandardError(stderr);
+        }
+    }
+
+    private void printJvmLogs() throws IOException {
+        System.err.println("----------- JVM Log start -----------");
+        for (Path path : Files.list(getJvmLogDir()).collect(Collectors.toList())) {
+            System.err.print("---- Log file: ");
+            System.err.print(path);
+            System.err.println("----");
+            System.err.println();
+            for (String line : Files.readAllLines(path)) {
+                System.err.println(line);
+            }
+        }
+        System.err.println("------------ JVM Log end ------------");
+    }
+
+    protected enum RetryAction {
+        /** Caller should retry the action. */
+        RETRY,
+
+        /** This is potential flakiness, but it's consistent. */
+        FAILED_TOO_MANY_TIMES,
+
+        /** Failure not related to Tooling API. */
+        THROW
+    }
+
+    protected RetryAction chooseRetryAction(GradleConnectionException failure) throws IOException {
+        Throwable cause = failure.getCause();
+        if (cause != null) {
+            if (cause.getClass()
+                    .getName()
+                    .equals("org.gradle.launcher.daemon.client.DaemonDisappearedException")) {
+                if (CAPTURE_JVM_LOGS && failedAttempts == 0) {
+                    printJvmLogs();
+                }
+                if (failedAttempts++ < RETRY_COUNT) {
+                    System.err.println("Captured DaemonDisappearedException, retrying.");
+                    return RetryAction.RETRY;
+                } else {
+                    return RetryAction.FAILED_TOO_MANY_TIMES;
+                }
+            }
+        }
+        return RetryAction.THROW;
+    }
+
+    protected static class TooFlakyException extends RuntimeException {
+        public TooFlakyException(Throwable cause) {
+            super("Operation keeps failing after " + RETRY_COUNT + "attempts.", cause);
         }
     }
 }

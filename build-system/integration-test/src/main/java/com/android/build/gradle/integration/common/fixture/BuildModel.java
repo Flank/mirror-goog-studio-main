@@ -206,7 +206,6 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
     @NonNull
     private <T> ModelContainer<T> buildModel(
             @NonNull BuildAction<ModelContainer<T>> action, int modelLevel) throws IOException {
-        BuildActionExecuter<ModelContainer<T>> executor = this.projectConnection.action(action);
 
         with(BooleanOption.IDE_BUILD_MODEL_ONLY, true);
         with(BooleanOption.IDE_INVOKED_FROM_IDE, true);
@@ -228,27 +227,39 @@ public class BuildModel extends BaseGradleExecutor<BuildModel> {
                 throw new RuntimeException("Unsupported ModelLevel:" + modelLevel);
         }
 
-        setJvmArguments(executor);
+        while (true) {
+            BuildActionExecuter<ModelContainer<T>> executor = this.projectConnection.action(action);
+            setJvmArguments(executor);
 
-        ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-        setStandardOut(executor, stdout);
-        ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-        setStandardError(executor, stderr);
+            ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+            setStandardOut(executor, stdout);
+            ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+            setStandardError(executor, stderr);
 
-        GradleConnectionException exception = null;
-        // See ProfileCapturer javadoc for explanation.
-        try {
-            ProfileCapturer profileCapturer =
-                    new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory);
-            ModelContainer<T> result = executor.withArguments(getArguments()).run();
-            profileCapturer.recordProfile();
-            return result;
-        } catch (GradleConnectionException e) {
-            exception = e;
-            throw e;
-        } finally {
-            lastBuildResultConsumer.accept(
-                    new GradleBuildResult(stdout, stderr, ImmutableList.of(), exception));
+            ModelContainer<T> result;
+            // See ProfileCapturer javadoc for explanation.
+            try {
+                ProfileCapturer profileCapturer =
+                        new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory);
+                result = executor.withArguments(getArguments()).run();
+                profileCapturer.recordProfile();
+
+                lastBuildResultConsumer.accept(
+                        new GradleBuildResult(stdout, stderr, ImmutableList.of(), null));
+
+                return result;
+            } catch (GradleConnectionException e) {
+                RetryAction retryAction = chooseRetryAction(e);
+                if (retryAction != RetryAction.RETRY) {
+                    lastBuildResultConsumer.accept(
+                            new GradleBuildResult(stdout, stderr, ImmutableList.of(), e));
+                    if (retryAction == RetryAction.FAILED_TOO_MANY_TIMES) {
+                        throw new TooFlakyException(e);
+                    } else if (retryAction == RetryAction.THROW) {
+                        throw e;
+                    }
+                }
+            }
         }
     }
 
