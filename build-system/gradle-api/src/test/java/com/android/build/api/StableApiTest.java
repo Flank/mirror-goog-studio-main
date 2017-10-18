@@ -71,7 +71,7 @@ public class StableApiTest {
 
         // Compare the two as strings, to get a nice diff UI in the IDE.
         Iterable<String> expectedApiElements =
-                Splitter.on(System.lineSeparator())
+                Splitter.on("\n")
                         .omitEmptyStrings()
                         .split(Resources.toString(STABLE_API_URL, Charsets.UTF_8));
 
