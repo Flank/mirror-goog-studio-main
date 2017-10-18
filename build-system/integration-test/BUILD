@@ -503,8 +503,15 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/org/jdeferred/jdeferred-android-aar/1.2.3:aar",
         "//prebuilts/tools/common/m2/repository/org/jdeferred/jdeferred-core/1.2.2:jar",
         "//prebuilts/tools/common/m2/repository/org/jdeferred/jdeferred-core/1.2.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-annotation-processing/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-runner/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin-api/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin/1.1.51:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre7/1.1.51:jar",
         "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre8/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.1.51:jar",
         "//prebuilts/tools/common/m2/repository/org/json/json/20141113:jar",
         "//prebuilts/tools/common/m2/repository/org/jsoup/jsoup/1.7.3:jar",
         "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/1.10.19:jar",
@@ -543,6 +550,5 @@ maven_repo(
         "//prebuilts/tools/common/m2/repository/xpp3/xpp3_min/1.1.4c:jar",
         "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: neverlink
         "//tools/base/third_party:junit_junit",
-        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-gradle-plugin",
     ],
 )
