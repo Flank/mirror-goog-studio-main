@@ -143,8 +143,8 @@ bool RunAgent(const string& app_name, const string& package_name,
   bool success =
       package_manager.GetAppDataPath(package_name, &data_path, &error);
   if (success) {
-    const std::string& attach_params =
-        ProcessManager::GetAttachAgentParams(app_name, data_path, config_path, agent_lib_file_name);
+    const std::string& attach_params = ProcessManager::GetAttachAgentParams(
+        app_name, data_path, config_path, agent_lib_file_name);
     BashCommandRunner attach(ProcessManager::GetAttachAgentCommand());
     success |= attach.Run(attach_params, &error);
   }
@@ -286,6 +286,56 @@ Status ProfilerServiceImpl::AttachAgent(
 
     return Status::OK;
   }
+}
+
+Status ProfilerServiceImpl::BeginSession(
+    ServerContext* context, const profiler::proto::BeginSessionRequest* request,
+    profiler::proto::BeginSessionResponse* response) {
+  // TODO(b/67508356): Replace this with a real serial number
+  string device_serial;
+  FileReader::Read("/proc/sys/kernal/random/uuid", &device_serial);
+  string boot_id;
+  FileReader::Read("/proc/sys/kernel/random/boot_id", &boot_id);
+
+  sessions_.BeginSession(device_serial, boot_id, request->pid());
+  return Status::OK;
+}
+
+Status ProfilerServiceImpl::EndSession(
+    ServerContext* context, const profiler::proto::EndSessionRequest* request,
+    profiler::proto::EndSessionResponse* response) {
+  sessions_.EndSession(request->session_id());
+  return Status::OK;
+}
+
+Status ProfilerServiceImpl::GetSession(
+    ServerContext* context, const profiler::proto::GetSessionRequest* request,
+    profiler::proto::GetSessionResponse* response) {
+  auto* session = sessions_.GetSession(request->session_id());
+  if (session != nullptr) {
+    response->mutable_session()->CopyFrom(*session);
+  }
+
+  return Status::OK;
+}
+
+Status ProfilerServiceImpl::GetSessions(
+    ServerContext* context, const profiler::proto::GetSessionsRequest* request,
+    profiler::proto::GetSessionsResponse* response) {
+  auto matching_sessions = sessions_.GetSessions(request->start_timestamp(),
+                                                 request->end_timestamp());
+  for (const auto& session : matching_sessions) {
+    response->add_sessions()->CopyFrom(session);
+  }
+  return Status::OK;
+}
+
+Status ProfilerServiceImpl::DeleteSession(
+    ServerContext* context,
+    const profiler::proto::DeleteSessionRequest* request,
+    profiler::proto::DeleteSessionResponse* response) {
+  sessions_.DeleteSession(request->session_id());
+  return Status::OK;
 }
 
 // Runs the connector as the application user and tries to send a message

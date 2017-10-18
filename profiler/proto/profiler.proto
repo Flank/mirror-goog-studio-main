@@ -33,7 +33,22 @@ message CommonData {
   int64 end_timestamp = 3;
 }
 
+// A Session represents a range of profiling data for an app running on a
+// device. While of course different apps or different devices will imply
+// separate sessions, the same app on the same device can also be broken up
+// into several sessions.
 message Session {
-  string device_serial = 1;
-  string boot_id = 2;
+  // ID uniquely identifying this session. This will be unique across devices.
+  int64 session_id = 1;
+  // A string which uniquely identifies this device.
+  string device_serial = 2;
+  // A string which uniquely identifies this particular device run. Restarting
+  // the device will generate a new |boot_id|.
+  string boot_id = 3;
+  // The PID of the app. Note that this is actually an int16, but gRPC only
+  // provides int32.
+  int32 pid = 4;
+  int64 start_timestamp = 5;
+  // If LLONG_MAX, the session is ongoing and hasn't ended yet.
+  int64 end_timestamp = 6;
 }
