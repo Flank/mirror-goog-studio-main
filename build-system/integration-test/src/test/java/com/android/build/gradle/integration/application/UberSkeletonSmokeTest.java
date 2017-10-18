@@ -16,12 +16,14 @@
 
 package com.android.build.gradle.integration.application;
 
+import com.android.SdkConstants;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.builder.model.AndroidProject;
 import java.io.IOException;
 import java.util.Map;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -42,6 +44,8 @@ public class UberSkeletonSmokeTest {
 
     @Test
     public void checkModel() throws Exception {
+        // b/67975239
+        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
         GetAndroidModelAction.ModelContainer<AndroidProject> modelContainer =
                 project.model().withArgument("--continue").ignoreSyncIssues().getMulti();
         Map<String, AndroidProject> models = modelContainer.getModelMap();

@@ -117,7 +117,7 @@ public final class GradleTestProject implements TestRule {
 
     public static final String DEVICE_TEST_TASK = "deviceCheck";
 
-    private static final int MAX_TEST_NAME_DIR_WINDOWS = 100;
+    private static final int MAX_TEST_NAME_DIR_WINDOWS = 50;
 
     public static final File BUILD_DIR;
     public static final File OUT_DIR;
@@ -460,7 +460,12 @@ public final class GradleTestProject implements TestRule {
                         Hashing.sha1()
                                 .hashString(classDir + methodDir, Charsets.US_ASCII)
                                 .toString();
-                classDir = hash.substring(0, Math.min(hash.length(), MAX_TEST_NAME_DIR_WINDOWS));
+                // take the first 10 characters of the method name, hopefully it will be enough
+                // to disambiguate tests, and hash the rest.
+                classDir =
+                        methodDir.substring(0, 10)
+                                + hash.substring(
+                                        0, Math.min(hash.length(), MAX_TEST_NAME_DIR_WINDOWS - 10));
                 methodDir = null;
             }
         }

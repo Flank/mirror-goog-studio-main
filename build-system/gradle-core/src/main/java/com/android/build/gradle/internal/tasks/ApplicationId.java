@@ -50,13 +50,15 @@ public class ApplicationId {
     }
 
     @NonNull
-    public static ApplicationId load(@NonNull File input) throws FileNotFoundException {
+    public static ApplicationId load(@NonNull File input) throws IOException {
         if (!input.getName().equals(PERSISTED_FILE_NAME)) {
             throw new FileNotFoundException("No application declaration present.");
         }
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
-        return gson.fromJson(new FileReader(input), ApplicationId.class);
+        try (FileReader fileReader = new FileReader(input)) {
+            return gson.fromJson(fileReader, ApplicationId.class);
+        }
     }
 
     @NonNull
