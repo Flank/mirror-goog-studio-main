@@ -22,10 +22,10 @@ using std::vector;
 
 namespace profiler {
 // 1000 sessions per app means 1000 objects operation on files at the same time.
-IoAppCache::IoAppCache(int32_t app_id) : sessions_(1000), app_id_(app_id) {}
+IoAppCache::IoAppCache(int32_t app_id) : app_id_(app_id), sessions_(1000) {}
 
-SessionDetails* IoAppCache::AddSession(int64_t session_id, int64_t timestamp,
-                                       string file_path) {
+IoSessionDetails* IoAppCache::AddSession(int64_t session_id, int64_t timestamp,
+                                         string file_path) {
   lock_guard<mutex> lock(sessions_mutex_);
   if (sessions_.full()) {
     // An old session is about to get overwritten, so remove it from our map
@@ -33,18 +33,18 @@ SessionDetails* IoAppCache::AddSession(int64_t session_id, int64_t timestamp,
     session_id_map_.erase(session.session_id);
   }
 
-  SessionDetails new_session;
+  IoSessionDetails new_session;
   new_session.session_id = session_id;
   new_session.start_timestamp = timestamp;
   new_session.file_path = file_path;
   // |Add| copies new_session; instead of tracking the (temporary) original,
   // make sure we use the address of the *copy* instead.
-  SessionDetails* session_ptr = sessions_.Add(new_session);
+  IoSessionDetails* session_ptr = sessions_.Add(new_session);
   session_id_map_[session_id] = session_ptr;
   return session_ptr;
 }
 
-SessionDetails* IoAppCache::GetDetails(int64_t session_id) {
+IoSessionDetails* IoAppCache::GetDetails(int64_t session_id) {
   lock_guard<mutex> lock(sessions_mutex_);
   auto it = session_id_map_.find(session_id);
   if (it != session_id_map_.end()) {
@@ -54,9 +54,10 @@ SessionDetails* IoAppCache::GetDetails(int64_t session_id) {
   }
 }
 
-vector<SessionDetails> IoAppCache::GetRange(int64_t start, int64_t end) const {
+vector<IoSessionDetails> IoAppCache::GetRange(int64_t start,
+                                              int64_t end) const {
   lock_guard<mutex> lock(sessions_mutex_);
-  vector<SessionDetails> data_range;
+  vector<IoSessionDetails> data_range;
   for (size_t i = 0; i < sessions_.size(); ++i) {
     const auto& session = sessions_.Get(i);
     // Given a range t0 and t1 and sessions a-f...

@@ -19,7 +19,7 @@
 #include <mutex>
 #include <unordered_map>
 
-#include "perfd/io/session_details.h"
+#include "perfd/io/io_session_details.h"
 #include "utils/circular_buffer.h"
 
 namespace profiler {
@@ -28,20 +28,20 @@ class IoAppCache final {
  public:
   explicit IoAppCache(int32_t app_id);
 
-  // Register a new I/O session, returning a |SessionDetails| instance.
-  SessionDetails* AddSession(int64_t session_id, int64_t timestamp,
-                             std::string file_path);
+  // Register a new I/O session, returning a |IoSessionDetails| instance.
+  IoSessionDetails* AddSession(int64_t session_id, int64_t timestamp,
+                               std::string file_path);
 
   // Return details for the session with a matching |session_id|, or nullptr if
   // there is no match. A session will exist only after registered by
   // |AddSession|, although it may be removed from the cache later, so always
   // check for |nullptr|.
-  SessionDetails* GetDetails(int64_t session_id);
+  IoSessionDetails* GetDetails(int64_t session_id);
 
   // Return a subset of this cache after filtering based on time range
   // (inclusive). The results will be sorted by start time in ascending order.
-  std::vector<SessionDetails> GetRange(int64_t start_timestamp,
-                                       int64_t end_timestamp) const;
+  std::vector<IoSessionDetails> GetRange(int64_t start_timestamp,
+                                         int64_t end_timestamp) const;
   // Returns the app id whose data is being saved in this cache object.
   int32_t app_id() const { return app_id_; }
 
@@ -49,9 +49,9 @@ class IoAppCache final {
   const int32_t app_id_;
   // Mutex guards sessions_ and session_id_map_
   mutable std::mutex sessions_mutex_;
-  CircularBuffer<SessionDetails> sessions_;
+  CircularBuffer<IoSessionDetails> sessions_;
   // A mapping of sessions IDs to session data
-  std::unordered_map<int64_t, SessionDetails*> session_id_map_;
+  std::unordered_map<int64_t, IoSessionDetails*> session_id_map_;
 };
 
 }  // namespace profiler

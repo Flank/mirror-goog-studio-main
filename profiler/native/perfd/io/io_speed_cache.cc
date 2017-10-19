@@ -46,12 +46,12 @@ void IoSpeedCache::AddIoCall(int32_t app_id, int64_t start_timestamp,
 }
 
 // Returns speed data for the given app id and interval
-std::vector<SpeedDetails> IoSpeedCache::GetSpeedData(
+std::vector<IoSpeedDetails> IoSpeedCache::GetSpeedData(
     int32_t app_id, int64_t start_timestamp, int64_t end_timestamp,
     profiler::proto::IoType type) const {
   IoSpeedAppCache* io_speed_app_cache = FindAppCache(app_id);
   if (io_speed_app_cache == nullptr) {
-    std::vector<SpeedDetails> empty;
+    std::vector<IoSpeedDetails> empty;
     return empty;
   }
   return io_speed_app_cache->GetSpeedData(start_timestamp, end_timestamp, type);

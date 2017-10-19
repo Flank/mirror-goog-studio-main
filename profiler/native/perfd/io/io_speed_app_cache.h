@@ -20,7 +20,7 @@
 #include <set>
 #include <unordered_map>
 
-#include "perfd/io/speed_details.h"
+#include "perfd/io/io_speed_details.h"
 #include "proto/io.grpc.pb.h"
 
 namespace profiler {
@@ -33,9 +33,9 @@ class IoSpeedAppCache final {
   void AddIoCall(int64_t start_timestamp, int64_t end_timestamp,
                  int32_t bytes_count, profiler::proto::IoType type);
   // Returns speed data for the given and interval
-  std::vector<SpeedDetails> GetSpeedData(int64_t start_timestamp,
-                                         int64_t end_timestamp,
-                                         profiler::proto::IoType type) const;
+  std::vector<IoSpeedDetails> GetSpeedData(int64_t start_timestamp,
+                                           int64_t end_timestamp,
+                                           profiler::proto::IoType type) const;
   // Returns the app id whose data is being saved in this cache object.
   int32_t app_id() const { return app_id_; }
 

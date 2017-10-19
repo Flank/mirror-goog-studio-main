@@ -33,8 +33,9 @@ bool IoCache::DeallocateAppCache(int32_t app_id) {
   return false;
 }
 
-SessionDetails* IoCache::AddSession(int32_t app_id, int64_t session_id,
-                                    int64_t timestamp, std::string file_path) {
+IoSessionDetails* IoCache::AddSession(int32_t app_id, int64_t session_id,
+                                      int64_t timestamp,
+                                      std::string file_path) {
   IoAppCache* io_app_cache = FindAppCache(app_id);
   if (io_app_cache == nullptr) {
     return nullptr;
@@ -42,7 +43,7 @@ SessionDetails* IoCache::AddSession(int32_t app_id, int64_t session_id,
   return io_app_cache->AddSession(session_id, timestamp, file_path);
 }
 
-SessionDetails* IoCache::GetDetails(int32_t app_id, int64_t session_id) {
+IoSessionDetails* IoCache::GetDetails(int32_t app_id, int64_t session_id) {
   IoAppCache* io_app_cache = FindAppCache(app_id);
   if (io_app_cache == nullptr) {
     return nullptr;
@@ -50,11 +51,11 @@ SessionDetails* IoCache::GetDetails(int32_t app_id, int64_t session_id) {
   return io_app_cache->GetDetails(session_id);
 }
 
-std::vector<SessionDetails> IoCache::GetRange(int32_t app_id, int64_t start,
-                                              int64_t end) const {
+std::vector<IoSessionDetails> IoCache::GetRange(int32_t app_id, int64_t start,
+                                                int64_t end) const {
   IoAppCache* io_app_cache = FindAppCache(app_id);
   if (io_app_cache == nullptr) {
-    std::vector<SessionDetails> empty;
+    std::vector<IoSessionDetails> empty;
     return empty;
   }
   return io_app_cache->GetRange(start, end);

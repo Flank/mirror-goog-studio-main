@@ -18,10 +18,10 @@ cc_library(
         "io_cache.h",
         "io_profiler_component.h",
         "io_service.h",
+        "io_session_details.h",
         "io_speed_app_cache.h",
         "io_speed_cache.h",
-        "session_details.h",
-        "speed_details.h",
+        "io_speed_details.h",
     ],
     copts = ANDROID_COPTS + [
         "-Itools/base/profiler/native",

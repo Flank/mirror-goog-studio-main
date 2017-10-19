@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "perfd/io/io_speed_app_cache.h"
-#include "perfd/io/speed_details.h"
+#include "perfd/io/io_speed_details.h"
 
 namespace profiler {
 
@@ -36,10 +36,10 @@ class IoSpeedCache final {
                  int32_t bytes_count, profiler::proto::IoType type);
 
   // Returns speed data for the given app id and interval
-  std::vector<SpeedDetails> GetSpeedData(int32_t app_id,
-                                         int64_t start_timestamp,
-                                         int64_t end_timestamp,
-                                         profiler::proto::IoType type) const;
+  std::vector<IoSpeedDetails> GetSpeedData(int32_t app_id,
+                                           int64_t start_timestamp,
+                                           int64_t end_timestamp,
+                                           profiler::proto::IoType type) const;
 
  private:
   std::vector<std::unique_ptr<IoSpeedAppCache>> app_caches_;

@@ -30,7 +30,7 @@ Status InternalIoServiceImpl::TrackIoCall(
   auto session_details = io_cache_.GetDetails(io_call_request->process_id(),
                                               io_call_request->io_session_id());
   if (session_details != nullptr) {
-    SessionDetails::IoCall io_call;
+    IoSessionDetails::IoCall io_call;
     io_call.start_timestamp = io_call_request->start_timestamp();
     io_call.end_timestamp = io_call_request->end_timestamp();
     io_call.bytes_count = io_call_request->bytes_count();

@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_IO_SPEED_DETAILS_H_
-#define PERFD_IO_SPEED_DETAILS_H_
+#ifndef PERFD_IO_IO_SPEED_DETAILS_H_
+#define PERFD_IO_IO_SPEED_DETAILS_H_
 
 namespace profiler {
 // Contains info about average read or write speed measured at time interval
 // [x, x + sampling_interval], the timestamp is set to x + (sampling_interval /
 // 2), which is the mid point of the interval.
 
-struct SpeedDetails final {
+struct IoSpeedDetails final {
   // The timestamp the speed info represents.
   int64_t timestamp;
   // The speed of reading or writing at the specified timestamp.
@@ -30,4 +30,4 @@ struct SpeedDetails final {
 
 }  // namespace profiler
 
-#endif  // PERFD_IO_SPEED_DETAILS_H_
+#endif  // PERFD_IO_IO_SPEED_DETAILS_H_

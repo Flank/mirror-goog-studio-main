@@ -80,12 +80,12 @@ void IoSpeedAppCache::AddIoCall(int64_t start_timestamp, int64_t end_timestamp,
 // |sampling_interval_|, and for each small interval report the average speed
 // amongst the I/O calls happened in it
 
-vector<SpeedDetails> IoSpeedAppCache::GetSpeedData(
+vector<IoSpeedDetails> IoSpeedAppCache::GetSpeedData(
     int64_t start_timestamp, int64_t end_timestamp,
     profiler::proto::IoType type) const {
   lock_guard<mutex> lock(
       (type == profiler::proto::READ ? read_speed_mutex_ : write_speed_mutex_));
-  vector<SpeedDetails> speed_data;
+  vector<IoSpeedDetails> speed_data;
 
   int64_t current_speed = 0;
   int64_t sampled_speed = 0;
@@ -93,7 +93,7 @@ vector<SpeedDetails> IoSpeedAppCache::GetSpeedData(
   int64_t previous_timestamp = start_timestamp;
 
   auto get_speed_details = [](int64_t timestamp, int64_t speed) {
-    SpeedDetails new_speed_details;
+    IoSpeedDetails new_speed_details;
     new_speed_details.timestamp = timestamp;
     new_speed_details.speed = speed;
     return new_speed_details;

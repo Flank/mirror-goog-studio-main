@@ -23,10 +23,10 @@ using grpc::Status;
 grpc::Status IoServiceImpl::GetFileData(grpc::ServerContext *context,
                                         const proto::FileDataRequest *request,
                                         proto::FileDataResponse *response) {
-  std::vector<SessionDetails> data =
+  std::vector<IoSessionDetails> data =
       io_cache_.GetRange(request->process_id(), request->start_timestamp(),
                          request->end_timestamp());
-  for (SessionDetails session : data) {
+  for (IoSessionDetails session : data) {
     proto::FileSession file_session;
     file_session.set_io_session_id(session.session_id);
     file_session.set_start_timestamp(session.start_timestamp);
@@ -49,10 +49,10 @@ grpc::Status IoServiceImpl::GetFileData(grpc::ServerContext *context,
 void IoServiceImpl::AddSpeedData(const proto::SpeedDataRequest *request,
                                  profiler::proto::IoType type,
                                  proto::SpeedDataResponse *response) {
-  std::vector<SpeedDetails> data = io_speed_cache_.GetSpeedData(
+  std::vector<IoSpeedDetails> data = io_speed_cache_.GetSpeedData(
       request->process_id(), request->start_timestamp(),
       request->end_timestamp(), type);
-  for (SpeedDetails speed_data : data) {
+  for (IoSpeedDetails speed_data : data) {
     proto::IoSpeedData new_speed_data;
     new_speed_data.set_type(type);
     new_speed_data.set_speed(speed_data.speed);

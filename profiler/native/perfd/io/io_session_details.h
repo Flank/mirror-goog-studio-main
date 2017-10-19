@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef PERFD_IO_SESSION_DETAILS_H_
-#define PERFD_IO_SESSION_DETAILS_H_
+#ifndef PERFD_IO_IO_SESSION_DETAILS_H_
+#define PERFD_IO_IO_SESSION_DETAILS_H_
 
 #include <string>
 #include <vector>
@@ -22,7 +22,7 @@
 
 namespace profiler {
 
-struct SessionDetails final {
+struct IoSessionDetails final {
   struct IoCall {
     // timestamp when the call started
     int64_t start_timestamp;
@@ -50,4 +50,4 @@ struct SessionDetails final {
 
 }  // namespace profiler
 
-#endif  // PERFD_IO_SESSION_DETAILS_H_
+#endif  // PERFD_IO_IO_SESSION_DETAILS_H_
