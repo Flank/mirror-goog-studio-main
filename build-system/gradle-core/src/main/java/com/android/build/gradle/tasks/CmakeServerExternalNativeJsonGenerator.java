@@ -590,16 +590,33 @@ class CmakeServerExternalNativeJsonGenerator extends CmakeExternalNativeJsonGene
         File preNDKr15ToolchainFile = getTempToolchainFile(getOutputFolder(getJsonFolder(), abi));
 
         for (String source : buildSources) {
-            File sourceFile =
-                    (sourceDirectory != null)
-                            ? new File(sourceDirectory, source)
-                            : new File(source);
+            // The source file can either be relative or absolute, if it's relative, use the source
+            // directory to get the absolute path.
+            File sourceFile = new File(source);
+            if (!sourceFile.isAbsolute()) {
+                if (sourceDirectory != null) {
+                    sourceFile = new File(sourceDirectory, source);
+                }
+            }
+
+            if (!sourceFile.exists()) {
+                ILogger logger =
+                        LoggerWrapper.getLogger(CmakeServerExternalNativeJsonGenerator.class);
+                logger.error(
+                        null,
+                        "Build file "
+                                + sourceFile
+                                + " provided by CMake "
+                                + "does not exists. This might lead to incorrect Android Studio behavior.");
+                continue;
+            }
             // Ignore the toolchain file created to support pre NDKr15, because, even if the user
             // updates the file, it'll be overwritten by Gradle during the next sync. So we don't
             // need to watch this file.
             if (preNDKr15ToolchainFile.getName().equals(sourceFile.getName())) {
                 continue;
             }
+
             buildFiles.add(sourceFile);
         }
 
