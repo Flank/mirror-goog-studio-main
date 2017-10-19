@@ -77,6 +77,21 @@ class SvgGroupNode extends SvgNode {
         }
     }
 
+    /**
+     * Finds the parent node of the input node.
+     *
+     * @return the parent node, or null if node is not in the tree.
+     */
+    public void findParent(SvgNode node, SvgGroupNode[] result) {
+        for (SvgNode n : mChildren) {
+            if (n == node) {
+                result[0] = this;
+            } else if (n.isGroupNode()) {
+                ((SvgGroupNode) n).findParent(node, result);
+            }
+        }
+    }
+
     @Override
     public boolean isGroupNode() {
         return true;

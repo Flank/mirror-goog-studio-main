@@ -19,6 +19,7 @@ package com.android.ide.common.vectordrawable;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ide.common.blame.SourcePosition;
+import com.android.utils.Pair;
 import com.android.utils.PositionXmlParser;
 import com.google.common.base.Strings;
 import java.awt.geom.AffineTransform;
@@ -79,7 +80,7 @@ class SvgTree {
 
     // Key is SvgNode that references a clipPath. Value is SvgGroupNode that is the parent of that
     // SvgNode.
-    private final HashMap<SvgNode, SvgGroupNode> mClipPathAffectedNodes = new HashMap<>();
+    private final Map<SvgNode, Pair<SvgGroupNode, String>> mClipPathAffectedNodes = new HashMap<>();
 
     // Key is String that is the id of a style class.
     // Value is set of SvgNodes referencing that class.
@@ -236,11 +237,12 @@ class SvgTree {
         }
     }
 
-    public void addIdToMap(String id, SvgNode svgNode) {
+    public void addIdToMap(@NonNull String id, @NonNull SvgNode svgNode) {
         mIdMap.put(id, svgNode);
     }
 
-    public SvgNode getSvgNodeFromId(String id) {
+    @Nullable
+    public SvgNode getSvgNodeFromId(@NonNull String id) {
         return mIdMap.get(id);
     }
 
@@ -252,11 +254,14 @@ class SvgTree {
         return mUseGroupSet;
     }
 
-    public void addClipPathAffectedNode(SvgNode child, SvgGroupNode currentGroup) {
-        mClipPathAffectedNodes.put(child, currentGroup);
+    public void addClipPathAffectedNode(
+            @NonNull SvgNode child,
+            @NonNull SvgGroupNode currentGroup,
+            @NonNull String clipPathName) {
+        mClipPathAffectedNodes.put(child, Pair.of(currentGroup, clipPathName));
     }
 
-    public Set<Map.Entry<SvgNode, SvgGroupNode>> getClipPathAffectedNodesSet() {
+    public Set<Map.Entry<SvgNode, Pair<SvgGroupNode, String>>> getClipPathAffectedNodesSet() {
         return mClipPathAffectedNodes.entrySet();
     }
 
@@ -287,4 +292,14 @@ class SvgTree {
         return mStyleAffectedNodes.entrySet();
     }
 
+    /**
+     * Finds the parent node of the input node.
+     *
+     * @return the parent node, or null if node is not in the tree.
+     */
+    public @Nullable SvgGroupNode findParent(@NonNull SvgNode node) {
+        SvgGroupNode[] result = new SvgGroupNode[1];
+        mRoot.findParent(node, result);
+        return result[0];
+    }
 }
