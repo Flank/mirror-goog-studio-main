@@ -216,7 +216,7 @@ public class SvgGradientNode extends SvgNode {
         }
 
         // Apply the path's transformations to the gradient.
-        mLocalTransform.concatenate(mSvgLeafNode.mStackedTransform);
+        mLocalTransform.preConcatenate(mSvgLeafNode.mStackedTransform);
 
         // Source and target arrays to which we apply the local transform.
         double[] gradientBounds;

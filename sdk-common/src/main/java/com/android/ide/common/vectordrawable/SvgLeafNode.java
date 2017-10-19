@@ -431,12 +431,13 @@ class SvgLeafNode extends SvgNode {
 
             // Second, write the color info handling the default values.
             writer.write("    <path\n");
-            if (!mVdAttributesMap.containsKey(Svg2Vector.SVG_FILL_COLOR)
-                    && !getTree().getHasGradient()) {
+            if (!mVdAttributesMap.containsKey(Svg2Vector.SVG_FILL_COLOR) && !mHasFillGradient) {
                 logger.log(Level.FINE, "ADDING FILL SVG_FILL_COLOR");
                 writer.write("        android:fillColor=\"#FF000000\"\n");
             }
-            if (!emptyStroke && !mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)) {
+            if (!emptyStroke
+                    && !mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)
+                    && !mHasStrokeGradient) {
                 logger.log(Level.FINE, "Adding default stroke width");
                 writer.write("        android:strokeWidth=\"1\"\n");
             }

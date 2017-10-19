@@ -1054,9 +1054,10 @@ public class Svg2Vector {
                     // We need to handle the clip path within the style in a different way than other
                     // styles. We treat it as an attribute as clip-path = "#url(name)".
                     if (attr.equals("clip-path")) {
-                        path.getTree()
-                                .addClipPathAffectedNode(
-                                        path, path.getTree().findParent(path), val);
+                        SvgGroupNode parentNode = path.getTree().findParent(path);
+                        if (parentNode != null) {
+                            path.getTree().addClipPathAffectedNode(path, parentNode, val);
+                        }
                     }
                 }
             }
