@@ -92,6 +92,7 @@ public final class ActdProfileUploader implements ProfileUploader {
 
     private final int buildId;
     private final File repo;
+    private final String hostname;
     @NonNull private final String actdBaseUrl;
     @NonNull private final String actdProjectId;
     @Nullable private final String actdBuildUrl;
@@ -100,12 +101,14 @@ public final class ActdProfileUploader implements ProfileUploader {
     private ActdProfileUploader(
             int buildId,
             @NonNull File repo,
+            @NonNull String hostname,
             @NonNull String actdBaseUrl,
             @NonNull String actdProjectId,
             @Nullable String actdBuildUrl,
             @Nullable String actdCommitUrl) {
         this.buildId = buildId;
         this.repo = repo;
+        this.hostname = hostname;
         this.actdBaseUrl = actdBaseUrl;
         this.actdProjectId = actdProjectId;
         this.actdBuildUrl = actdBuildUrl;
@@ -121,12 +124,13 @@ public final class ActdProfileUploader implements ProfileUploader {
     public static ActdProfileUploader create(
             int buildId,
             @NonNull File repo,
+            @NonNull String hostname,
             @NonNull String actdBaseUrl,
             @NonNull String actdProjectId,
             @Nullable String actdBuildUrl,
             @Nullable String actdCommitUrl) {
         return new ActdProfileUploader(
-                buildId, repo, actdBaseUrl, actdProjectId, actdBuildUrl, actdCommitUrl);
+                buildId, repo, hostname, actdBaseUrl, actdProjectId, actdBuildUrl, actdCommitUrl);
     }
 
     /**
@@ -135,7 +139,7 @@ public final class ActdProfileUploader implements ProfileUploader {
      * @throws IllegalStateException if any required environment variables are not present or empty.
      */
     @NonNull
-    public static ActdProfileUploader fromEnvironment() {
+    public static ActdProfileUploader fromEnvironment() throws IOException {
         /** Required properties for act-d uploading to work. */
         String actdBaseUrl = System.getenv("ACTD_BASE_URL");
         if (actdBaseUrl == null || actdBaseUrl.isEmpty()) {
@@ -150,6 +154,11 @@ public final class ActdProfileUploader implements ProfileUploader {
         String buildbotBuildNumber = System.getenv("BUILDBOT_BUILDNUMBER");
         if (buildbotBuildNumber == null || buildbotBuildNumber.isEmpty()) {
             throw new IllegalStateException("no BUILDBOT_BUILDNUMBER environment variable set");
+        }
+
+        String hostname = hostname();
+        if (hostname == null || hostname.isEmpty()) {
+            throw new IllegalStateException("no BUILDBOT_SLAVENAME environment variable set");
         }
 
         /**
@@ -172,6 +181,7 @@ public final class ActdProfileUploader implements ProfileUploader {
         return new ActdProfileUploader(
                 Integer.parseInt(buildbotBuildNumber),
                 repo,
+                hostname,
                 actdBaseUrl,
                 actdProjectId,
                 actdBuildUrl,
@@ -184,7 +194,7 @@ public final class ActdProfileUploader implements ProfileUploader {
      */
     @VisibleForTesting
     @NonNull
-    public static String seriesId(
+    public String seriesId(
             @NonNull GradleBenchmarkResult result, @NonNull GradleBuildProfileSpan span) {
         String task = GradleTaskExecutionType.forNumber(span.getTask().getType()).name();
         if (span.getTask().getType() == GradleTaskExecutionType.TRANSFORM_VALUE) {
@@ -193,7 +203,9 @@ public final class ActdProfileUploader implements ProfileUploader {
             task = task + " " + transform;
         }
 
-        return result.getBenchmark()
+        return hostname
+                + " "
+                + result.getBenchmark()
                 + " "
                 + result.getBenchmarkMode()
                 + " "

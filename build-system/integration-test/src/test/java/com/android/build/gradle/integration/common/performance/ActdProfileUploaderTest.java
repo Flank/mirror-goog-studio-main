@@ -48,6 +48,7 @@ public class ActdProfileUploaderTest {
     private final ActdProfileUploader.Infos infos = new ActdProfileUploader.Infos();
     private final int buildId = 1234;
     private final File repo = TestUtils.getWorkspaceFile("tools/base");
+    private final String hostname = "me.here.corp.google.com";
     private final String actdBaseUrl = "http://example.com";
     private final String actdProjectId = "test";
     private final String actdBuildUrl = "http://example.com";
@@ -59,7 +60,13 @@ public class ActdProfileUploaderTest {
     public void setUp() {
         uploader =
                 ActdProfileUploader.create(
-                        buildId, repo, actdBaseUrl, actdProjectId, actdBuildUrl, actdCommitUrl);
+                        buildId,
+                        repo,
+                        hostname,
+                        actdBaseUrl,
+                        actdProjectId,
+                        actdBuildUrl,
+                        actdCommitUrl);
     }
 
     /**
@@ -190,11 +197,10 @@ public class ActdProfileUploaderTest {
         assertThat(gbr.getProfile().getSpanList()).isNotEmpty();
 
         for (GradleBuildProfileSpan span : gbr.getProfile().getSpanList()) {
-            assertThat(ActdProfileUploader.seriesId(gbr, span)).isNotEmpty();
+            assertThat(uploader.seriesId(gbr, span)).isNotEmpty();
 
             // Make sure that we get the same result for the same object passed in multiple times.
-            assertThat(ActdProfileUploader.seriesId(gbr, span))
-                    .isEqualTo(ActdProfileUploader.seriesId(gbr, span));
+            assertThat(uploader.seriesId(gbr, span)).isEqualTo(uploader.seriesId(gbr, span));
         }
     }
 
