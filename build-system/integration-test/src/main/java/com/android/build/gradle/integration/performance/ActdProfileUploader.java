@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.performance;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -64,23 +65,9 @@ public final class ActdProfileUploader implements ProfileUploader {
     @NonNull private static final String ACTD_ADD_SERIE_URL = "/apis/addSerie";
     @NonNull private static final String ACTD_ADD_SAMPLE_URL = "/apis/addSample";
 
-    /**
-     * Git-specific constants used to ascertain what the current HEAD commit is, which is used to
-     * send to the act-d API to make the dashboards more useful.
-     *
-     * <p>It's quite hacky to shell out to git in this way to get the information we need, so if you
-     * feel motivated enough to find a better solution (something something libgit2?) feel free to
-     * send the review to samwho@.
-     *
-     * <p>Note: this will likely fail when run in Bazel (it currently isn't because the BUILD file
-     * associated with this project specifically does not run tests that have a directory named
-     * "performance" on their path).
-     */
-    @NonNull private static final String GIT_BINARY = "/usr/bin/git";
-
     @NonNull
     private static final String[] GIT_LAST_COMMIT_JSON_CMD = {
-        GIT_BINARY,
+        null, // to be filled in by findExecutable(String)
         "--no-pager",
         "log",
         "-n1",
@@ -187,6 +174,30 @@ public final class ActdProfileUploader implements ProfileUploader {
                 actdCommitUrl);
     }
 
+    private static String findExecutable(String executable) throws IOException {
+        String where;
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            where = "where.exe";
+        } else {
+            where = "which";
+        }
+
+        String out = runCmd(null, new String[] {where, executable});
+        String[] lines = out.split(System.lineSeparator());
+
+        if (lines.length == 0) {
+            return null;
+        }
+
+        for (String line : lines) {
+            if (!line.isEmpty()) {
+                return line;
+            }
+        }
+
+        return null;
+    }
+
     /**
      * Returns a stable "series ID" for this benchmark result. These need to be unique per benchmark
      * scenario, e.g. AntennaPod no-op with a specific set of flags.
@@ -261,6 +272,14 @@ public final class ActdProfileUploader implements ProfileUploader {
     @VisibleForTesting
     @NonNull
     public static String lastCommitJson(@NonNull File repo) throws IOException {
+        if (GIT_LAST_COMMIT_JSON_CMD[0] == null) {
+            String git = findExecutable("git");
+            if (git == null) {
+                throw new IllegalStateException("cannot find git executable on system");
+            }
+            GIT_LAST_COMMIT_JSON_CMD[0] = git;
+        }
+
         return runCmd(repo, GIT_LAST_COMMIT_JSON_CMD);
     }
 
