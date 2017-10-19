@@ -1052,6 +1052,10 @@ public final class SdkConstants {
     public static final String REQUEST_FOCUS = "requestFocus"; //$NON-NLS-1$
     public static final String TAG = "tag"; //$NON-NLS-1$
 
+    // Tags: Navigation
+    public static final String TAG_INCLUDE = "include";
+    public static final String TAG_DEEPLINK = "deeplink";
+
     public static final String VIEW = "View"; //$NON-NLS-1$
     public static final String VIEW_GROUP = "ViewGroup"; //$NON-NLS-1$
     public static final String FRAME_LAYOUT = "FrameLayout"; //$NON-NLS-1$
@@ -1296,6 +1300,11 @@ public final class SdkConstants {
     public static final String ATTR_PARENT_TAG = "parentTag"; //$NON-NLS-1$
     public static final String ATTR_WIDTH = "width"; //$NON-NLS-1$
     public static final String ATTR_HEIGHT = "height"; //$NON-NLS-1$
+
+    // Attributes: Navigation
+    public static final String ATTR_GRAPH = "graph";
+    public static final String ATTR_URI = "uri";
+    public static final String ATTR_AUTO_VERIFY = "autoVerify";
 
     // TextView attributes
     public static final String ATTR_TEXT_APPEARANCE = "textAppearance"; //$NON-NLS-1$
@@ -1809,6 +1818,7 @@ public final class SdkConstants {
     public static final String FONT_PREFIX = "@font/"; //$NON-NLS-1$
     public static final String AAPT_ATTR_PREFIX = "@aapt:_aapt/";
     public static final String SAMPLE_PREFIX = "@sample/";
+    public static final String NAVIGATION_PREFIX = "@navigation/"; //$NON-NLS-1$
 
     public static final String TOOLS_SAMPLE_PREFIX = "@tools:sample/";
 
