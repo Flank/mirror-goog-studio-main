@@ -212,7 +212,7 @@ public class ActdProfileUploaderTest {
         assertThat(gbr.getProfile().getSpanList()).isNotEmpty();
 
         for (GradleBuildProfileSpan span : gbr.getProfile().getSpanList()) {
-            assertThat(ActdProfileUploader.description(gbr, span)).isNotEmpty();
+            assertThat(ActdProfileUploader.description(gbr, span)).isNotNull();
         }
     }
 
