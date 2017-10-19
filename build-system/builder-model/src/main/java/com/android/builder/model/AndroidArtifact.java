@@ -33,6 +33,8 @@ import java.util.Set;
  */
 public interface AndroidArtifact extends BaseArtifact {
 
+    /** @deprecated Use post-build model instead. See {@link ProjectBuildOutput} */
+    @Deprecated
     @NonNull
     Collection<AndroidArtifactOutput> getOutputs();
 
