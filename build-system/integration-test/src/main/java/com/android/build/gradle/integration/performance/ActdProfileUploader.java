@@ -49,6 +49,14 @@ import java.util.stream.Collectors;
 
 /** Uploader that pushes profile results to act-d. */
 public final class ActdProfileUploader implements ProfileUploader {
+    /**
+     * A threshold below which samples will not be uploaded.
+     *
+     * <p>We seem to have a bunch of timeseries that take 1 or 2 milliseconds, so when they go up or
+     * down it counts as a 100% regression/improvement. These are noisy, and we want to ignore them.
+     */
+    public static final long BENCHMARK_VALUE_THRESHOLD = 50;
+
     @NonNull private static final String ACTD_ADD_BUILD_URL = "/apis/addBuild";
     @NonNull private static final String ACTD_ADD_SAMPLE_URL = "/apis/addSample";
 
@@ -438,11 +446,11 @@ public final class ActdProfileUploader implements ProfileUploader {
             }
         }
 
-        // act-d doesn't like samples with a value of 0, so we filter them out before returning
+        // filter out low-value, noisy samples before returning a set of samples
         return summedSeriesDurations
                 .values()
                 .stream()
-                .filter(req -> req.sample.value > 0)
+                .filter(req -> req.sample.value > BENCHMARK_VALUE_THRESHOLD)
                 .collect(Collectors.toList());
     }
 

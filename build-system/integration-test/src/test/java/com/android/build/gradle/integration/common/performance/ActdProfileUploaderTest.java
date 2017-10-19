@@ -91,6 +91,12 @@ public class ActdProfileUploaderTest {
         if (value == Long.MIN_VALUE) {
             value = Long.MAX_VALUE;
         }
+
+        // to make sure samples aren't filtered out, we add the threshold if it's below it
+        if (value < ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD) {
+            value += ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD;
+        }
+
         return value;
     }
 
