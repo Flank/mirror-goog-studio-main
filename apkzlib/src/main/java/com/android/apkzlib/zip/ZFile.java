@@ -201,14 +201,24 @@ public class ZFile implements Closeable {
     private static final int ZIP64_EOCD_LOCATOR_SIZE = 20;
 
     /**
+     * Maximum size for the EOCD.
+     */
+    private static final int MAX_EOCD_COMMENT_SIZE = 65535;
+
+    /**
      * How many bytes to look back from the end of the file to look for the EOCD signature.
      */
-    private static final int LAST_BYTES_TO_READ = 65535 + MIN_EOCD_SIZE;
+    private static final int LAST_BYTES_TO_READ = MIN_EOCD_SIZE + MAX_EOCD_COMMENT_SIZE;
 
     /**
      * Signature of the Zip64 EOCD locator record.
      */
     private static final int ZIP64_EOCD_LOCATOR_SIGNATURE = 0x07064b50;
+
+    /**
+     * Signature of the EOCD record.
+     */
+    private static final byte[] EOCD_SIGNATURE = new byte[] { 0x06, 0x05, 0x4b, 0x50 };
 
     /**
      * Size of buffer for I/O operations.
@@ -257,6 +267,9 @@ public class ZFile implements Closeable {
     /**
      * The EOCD entry. Will be {@code null} if there is no EOCD (because the zip is new) or the
      * one that exists on disk is no longer valid (because the zip has been changed).
+     *
+     * <p>If the EOCD is deleted because the zip has been changed and the old EOCD was no longer
+     * valid, then {@link #eocdComment} will contain the comment saved from the EOCD.
      */
     @Nullable
     private FileUseMapEntry<Eocd> eocdEntry;
@@ -386,6 +399,19 @@ public class ZFile implements Closeable {
     @Nonnull
     private final VerifyLog verifyLog;
 
+    /**
+     * This field contains the comment in the zip's EOCD if there is no in-memory EOCD structure.
+     * This may happen, for example, if the zip has been changed and the Central Directory and
+     * EOCD have been deleted (in-memory). In that case, this field will save the comment to place
+     * on the EOCD once it is created.
+     *
+     * <p>This field will only be non-{@code null} if there is no in-memory EOCD structure
+     * (<i>i.e.</i>, {@link #eocdEntry} is {@code null}). If there is an {@link #eocdEntry}, then
+     * the comment will be there instead of being in this field.
+     */
+    @Nullable
+    private byte[] eocdComment;
+
 
     /**
      * Creates a new zip file. If the zip file does not exist, then no file is created at this
@@ -455,7 +481,15 @@ public class ZFile implements Closeable {
 
                 map.extend(Ints.checkedCast(rafSize));
                 readData();
+            }
 
+            // If we don't have an EOCD entry, set the comment to empty.
+            if (eocdEntry == null) {
+                eocdComment = new byte[0];
+            }
+
+            // Notify the extensions if the zip file has been open.
+            if (state != ZipFileState.CLOSED) {
                 notify(ZFileExtension::open);
             }
         } catch (Zip64NotSupportedException e) {
@@ -614,7 +648,6 @@ public class ZFile implements Closeable {
         byte[] last = new byte[lastToRead];
         directFullyRead(raf.length() - lastToRead, last);
 
-        byte[] eocdSignature = new byte[] { 0x06, 0x05, 0x4b, 0x50 };
 
         /*
          * Start endIdx at the first possible location where the signature can be located and then
@@ -635,10 +668,10 @@ public class ZFile implements Closeable {
             /*
              * Remember: little endian...
              */
-            if (last[endIdx] == eocdSignature[3]
-                    && last[endIdx + 1] == eocdSignature[2]
-                    && last[endIdx + 2] == eocdSignature[1]
-                    && last[endIdx + 3] == eocdSignature[0]) {
+            if (last[endIdx] == EOCD_SIGNATURE[3]
+                    && last[endIdx + 1] == EOCD_SIGNATURE[2]
+                    && last[endIdx + 2] == EOCD_SIGNATURE[1]
+                    && last[endIdx + 3] == EOCD_SIGNATURE[0]) {
 
                 /*
                  * We found a signature. Try to read the EOCD record.
@@ -1170,6 +1203,8 @@ public class ZFile implements Closeable {
     /**
      * Removes the Central Directory and EOCD from the file. This will free space for new entries
      * as well as allowing the zip file to be truncated if files have been removed.
+     *
+     * <p>This method does not mark the zip as dirty.
      */
     private void deleteDirectoryAndEocd() {
         if (directoryEntry != null) {
@@ -1179,6 +1214,10 @@ public class ZFile implements Closeable {
 
         if (eocdEntry != null) {
             map.remove(eocdEntry);
+
+            Eocd eocd = eocdEntry.getStore();
+            Verify.verify(eocd != null);
+            eocdComment = eocd.getComment();
             eocdEntry = null;
         }
     }
@@ -1353,7 +1392,9 @@ public class ZFile implements Closeable {
             dirStart = extraDirectoryOffset;
         }
 
-        Eocd eocd = new Eocd(entries.size(), dirStart, dirSize);
+        Verify.verify(eocdComment != null);
+        Eocd eocd = new Eocd(entries.size(), dirStart, dirSize, eocdComment);
+        eocdComment = null;
 
         byte[] eocdBytes = eocd.toBytes();
         long eocdOffset = map.size();
@@ -2400,6 +2441,69 @@ public class ZFile implements Closeable {
         }
 
         return eocdEntry.getSize();
+    }
+
+    /**
+     * Obtains the comment in the EOCD.
+     *
+     * @return the comment exactly as it was encoded in the EOCD, no encoding conversion is done
+     */
+    @Nonnull
+    public byte[] getEocdComment() {
+        if (eocdEntry == null) {
+            Verify.verify(eocdComment != null);
+            byte[] eocdCommentCopy = new byte[eocdComment.length];
+            System.arraycopy(eocdComment, 0, eocdCommentCopy, 0, eocdComment.length);
+            return eocdCommentCopy;
+        }
+
+        Eocd eocd = eocdEntry.getStore();
+        Verify.verify(eocd != null);
+        return eocd.getComment();
+    }
+
+    /**
+     * Sets the comment in the EOCD.
+     *
+     * @param comment the new comment; no conversion is done, these exact bytes will be placed in
+     * the EOCD comment
+     */
+    public void setEocdComment(@Nonnull byte[] comment) {
+        if (comment.length > MAX_EOCD_COMMENT_SIZE) {
+            throw new IllegalArgumentException(
+                    "EOCD comment size ("
+                            + comment.length
+                            + ") is larger than the maximum allowed ("
+                            + MAX_EOCD_COMMENT_SIZE
+                            + ")");
+        }
+
+        // Check if the EOCD signature appears anywhere in the comment we need to check if it
+        // is valid.
+        for (int i = 0; i < comment.length - MIN_EOCD_SIZE; i++) {
+            // Remember: little endian...
+            if (comment[i] == EOCD_SIGNATURE[3]
+                    && comment[i + 1] == EOCD_SIGNATURE[2]
+                    && comment[i + 2] == EOCD_SIGNATURE[1]
+                    && comment[i + 3] == EOCD_SIGNATURE[0]) {
+                // We found a possible EOCD signature at position i. Try to read it.
+                ByteBuffer bytes = ByteBuffer.wrap(comment, i, comment.length - i);
+                try {
+                    Eocd eocdInComment = new Eocd(bytes);
+                    throw new IllegalArgumentException(
+                            "Position "
+                                    + i
+                                    + " of the comment contains a valid EOCD record.");
+                } catch (IOException e) {
+                    // Fine, this is an invalid record. Move along...
+                }
+            }
+        }
+
+        deleteDirectoryAndEocd();
+        eocdComment = new byte[comment.length];
+        System.arraycopy(comment, 0, eocdComment, 0, comment.length);
+        dirty = true;
     }
 
     /**

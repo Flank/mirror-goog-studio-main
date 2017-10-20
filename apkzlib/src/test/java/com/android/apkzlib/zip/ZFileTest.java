@@ -26,6 +26,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.apkzlib.zip.compress.DeflateExecutionCompressor;
 import com.android.apkzlib.zip.utils.CloseableByteSource;
@@ -1667,6 +1668,118 @@ public class ZFileTest {
             StoredEntry se = zf.get("a");
             assertNotNull(se);
             assertNotEquals(DataDescriptorType.NO_DATA_DESCRIPTOR, se.getDataDescriptorType());
+        }
+    }
+
+    @Test
+    public void zipCommentsAreSaved() throws Exception {
+        File zipFileWithComments = new File(mTemporaryFolder.getRoot(), "a.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(zipFileWithComments))) {
+            zos.setComment("foo");
+        }
+
+        /*
+         * Open the zip file and check the comment is there.
+         */
+        try (ZFile zf = new ZFile(zipFileWithComments)) {
+            byte[] comment = zf.getEocdComment();
+            assertArrayEquals(new byte[] { 'f', 'o', 'o' }, comment);
+
+            /*
+             * Modify the comment and write the file.
+             */
+            zf.setEocdComment(new byte[] { 'b', 'a', 'r', 'r' });
+        }
+
+        /*
+         * Open the file and see that the comment is there (both with java and zfile).
+         */
+        try (ZipFile zf2 = new ZipFile(zipFileWithComments)) {
+            assertEquals("barr", zf2.getComment());
+        }
+
+        try (ZFile zf3 = new ZFile(zipFileWithComments)) {
+            assertArrayEquals(new byte[] { 'b', 'a', 'r', 'r' }, zf3.getEocdComment());
+        }
+    }
+
+    @Test
+    public void eocdCommentsWithMoreThan64kNotAllowed() throws Exception {
+        File zipFileWithComments = new File(mTemporaryFolder.getRoot(), "a.zip");
+        try (ZFile zf = new ZFile(zipFileWithComments)) {
+            try {
+                zf.setEocdComment(new byte[65536]);
+                fail();
+            } catch (IllegalArgumentException e) {
+                // Expected.
+            }
+
+            zf.setEocdComment(new byte[65535]);
+        }
+    }
+
+    @Test
+    public void eocdCommentsWithTheEocdMarkerAreAllowed() throws Exception {
+        File zipFileWithComments = new File(mTemporaryFolder.getRoot(), "a.zip");
+        byte[] data = new byte[100];
+        data[50] = 0x50; // Signature
+        data[51] = 0x4b;
+        data[52] = 0x05;
+        data[53] = 0x06;
+        data[54] = 0x00; // Number of disk
+        data[55] = 0x00;
+        data[56] = 0x00; // Disk CD start
+        data[57] = 0x00;
+        data[54] = 0x01; // Total records 1
+        data[55] = 0x00;
+        data[56] = 0x02; // Total records 2, must be = to total records 1
+        data[57] = 0x00;
+
+        try (ZFile zf = new ZFile(zipFileWithComments)) {
+            zf.setEocdComment(data);
+        }
+
+        try (ZFile zf = new ZFile(zipFileWithComments)) {
+            assertArrayEquals(data, zf.getEocdComment());
+        }
+    }
+
+    @Test
+    public void eocdCommentsWithTheEocdMarkerThatAreInvalidAreNotAllowed() throws Exception {
+        File zipFileWithComments = new File(mTemporaryFolder.getRoot(), "a.zip");
+        byte[] data = new byte[100];
+        data[50] = 0x50;
+        data[51] = 0x4b;
+        data[52] = 0x05;
+        data[53] = 0x06;
+        data[67] = 0x00;
+
+        try (ZFile zf = new ZFile(zipFileWithComments)) {
+            try {
+                zf.setEocdComment(data);
+                fail();
+            } catch (IllegalArgumentException e) {
+                // Expected.
+            }
+        }
+    }
+
+    @Test
+    public void zipCommentsArePreservedWithFileChanges() throws Exception {
+        File zipFileWithComments = new File(mTemporaryFolder.getRoot(), "a.zip");
+        byte[] comment = new byte[] { 1, 3, 4 };
+        try (ZFile zf = new ZFile(zipFileWithComments)) {
+            zf.add("foo", new ByteArrayInputStream(new byte[50]));
+            zf.setEocdComment(comment);
+        }
+
+        try (ZFile zf = new ZFile(zipFileWithComments)) {
+            assertArrayEquals(comment, zf.getEocdComment());
+            zf.add("bar", new ByteArrayInputStream(new byte[100]));
+        }
+
+        try (ZFile zf = new ZFile(zipFileWithComments)) {
+            assertArrayEquals(comment, zf.getEocdComment());
         }
     }
 }

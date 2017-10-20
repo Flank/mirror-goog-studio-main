@@ -167,8 +167,9 @@ class Eocd {
      * @param directoryOffset offset, since beginning of archive, where the Central Directory is
      * located
      * @param directorySize number of bytes of the Central Directory
+     * @param comment the EOCD comment
      */
-    Eocd(int totalRecords, long directoryOffset, long directorySize) {
+    Eocd(int totalRecords, long directoryOffset, long directorySize, @Nonnull byte[] comment) {
         Preconditions.checkArgument(totalRecords >= 0, "totalRecords < 0");
         Preconditions.checkArgument(directoryOffset >= 0, "directoryOffset < 0");
         Preconditions.checkArgument(directorySize >= 0, "directorySize < 0");
@@ -176,8 +177,8 @@ class Eocd {
         this.totalRecords = totalRecords;
         this.directoryOffset = directoryOffset;
         this.directorySize = directorySize;
-        comment = new byte[0];
-        byteSupplier = new CachedSupplier<byte[]>(this::computeByteRepresentation);
+        this.comment = comment;
+        byteSupplier = new CachedSupplier<>(this::computeByteRepresentation);
     }
 
     /**
@@ -226,6 +227,19 @@ class Eocd {
     @Nonnull
     byte[] toBytes() throws IOException {
         return byteSupplier.get();
+    }
+
+    /*
+     * Obtains the comment in the EOCD.
+     *
+     * @return the comment exactly as it is represented in the file (no encoding conversion is
+     * done)
+     */
+    @Nonnull
+    byte[] getComment() {
+        byte[] commentCopy = new byte[comment.length];
+        System.arraycopy(comment, 0, commentCopy, 0, comment.length);
+        return commentCopy;
     }
 
     /**
