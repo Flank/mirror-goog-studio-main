@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
 import com.android.builder.core.VariantType
+import com.android.builder.errors.EvalIssueReporter
 
 interface VariantFactory2<in E: BaseExtension2> {
 
@@ -40,7 +41,8 @@ interface VariantFactory2<in E: BaseExtension2> {
             buildTypOrVariant: BuildTypeOrVariantImpl,
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
-            variantMap: Map<VariantType, Map<Variant, Variant>>
+            variantMap: Map<VariantType, Map<Variant, Variant>>,
+            issueReporter: EvalIssueReporter
     ): SealableVariant
 
     fun computeApplicationId(mergedFlavor: ProductFlavorOrVariant, appIdSuffixFromFlavors: String?): String?

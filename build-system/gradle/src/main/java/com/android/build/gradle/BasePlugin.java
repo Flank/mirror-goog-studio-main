@@ -25,7 +25,6 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
-import com.android.build.api.dsl.variant.Variant;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.build.gradle.api.BaseVariantOutput;
@@ -44,17 +43,6 @@ import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
-import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.VariantAwarePropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.model.BaseFlavorImpl;
-import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrProductFlavorImpl;
-import com.android.build.gradle.internal.api.dsl.model.DefaultConfigImpl;
-import com.android.build.gradle.internal.api.dsl.model.FallbackStrategyImpl;
-import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImpl;
-import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.variant.SealableVariant;
-import com.android.build.gradle.internal.api.sourcesets.FilesProvider;
 import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
@@ -62,11 +50,12 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.SigningConfigFactory;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformTask;
+import com.android.build.gradle.internal.plugin.PluginDelegate;
+import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
 import com.android.build.gradle.internal.profile.AnalyticsUtil;
@@ -77,10 +66,6 @@ import com.android.build.gradle.internal.tasks.TaskInputHelper;
 import com.android.build.gradle.internal.transforms.DexTransform;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.build.gradle.internal.variant2.DslModelDataImpl;
-import com.android.build.gradle.internal.variant2.VariantBuilder;
-import com.android.build.gradle.internal.variant2.VariantFactory2;
-import com.android.build.gradle.internal.variant2.VariantModelData;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -89,7 +74,6 @@ import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
@@ -122,7 +106,6 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -135,8 +118,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.initialization.Settings;
 import org.gradle.api.invocation.Gradle;
 import org.gradle.api.logging.LogLevel;
@@ -301,17 +282,15 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                     null,
                     this::createTasks);
         } else {
-            // configure project
-
             // Apply the Java and Jacoco plugins.
             project.getPlugins().apply(JavaBasePlugin.class);
             project.getPlugins().apply(JacocoPlugin.class);
 
-            // configure extension
-            configureNewExtension();
+            // create the delegate
+            PluginDelegate<E> delegate =
+                    new PluginDelegate<>(project, instantiator, projectOptions, getTypedDelegate());
 
-            // create basic tasks?
-            // FIXME dependency should be setup using BuildableArtifacts
+            delegate.prepareForEvaluation();
 
             // after evaluate callbacks
             project.afterEvaluate(
@@ -320,9 +299,21 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                                     ExecutionType.BASE_PLUGIN_CREATE_ANDROID_TASKS,
                                     p.getPath(),
                                     null,
-                                    this::afterEvaluateCallback));
+                                    delegate::afterEvaluate));
         }
     }
+
+    /**
+     * Returns the typed plugin delegate.
+     *
+     * <p>This is the delegate that is specific to the actual plugin that is applied (app, lib,
+     * etc...)
+     *
+     * <p>In the long term when the old code path is removed this can be passed via the constructor.
+     *
+     * @return the typed delegate
+     */
+    protected abstract TypedPluginDelegate<E> getTypedDelegate();
 
     private void configureProject() {
         final Gradle gradle = project.getGradle();
@@ -611,132 +602,6 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                                 project.getPath(),
                                 null,
                                 () -> createAndroidTasks(false)));
-    }
-
-    private DslModelDataImpl<E> dslModelData = null;
-    private VariantModelData variantModelData = null;
-    private E newExtension = null;
-
-    @NonNull
-    protected abstract E createNewExtension(
-            @NonNull BuildPropertiesImpl buildProperties,
-            @NonNull VariantOrExtensionPropertiesImpl variantExtensionProperties,
-            @NonNull VariantAwarePropertiesImpl variantAwareProperties);
-
-    @NonNull
-    protected abstract List<VariantFactory2<E>> getVariantFactories();
-
-    private void configureNewExtension() {
-        // FIXME we don't want to keep this around in this form.
-        extraModelInfo = new ExtraModelInfo(project.getPath(), projectOptions, project.getLogger());
-        // FIXME, split in different implementations
-        EvalIssueReporter issueReporter = extraModelInfo;
-        DeprecationReporter deprecationReporter = extraModelInfo;
-
-        // create the default config implementation
-        BaseFlavorImpl baseFlavor = new BaseFlavorImpl(deprecationReporter, issueReporter);
-        DefaultConfigImpl defaultConfig =
-                new DefaultConfigImpl(
-                        new VariantPropertiesImpl(issueReporter),
-                        new BuildTypeOrProductFlavorImpl(
-                                deprecationReporter, issueReporter, baseFlavor::getPostprocessing),
-                        new ProductFlavorOrVariantImpl(issueReporter),
-                        new FallbackStrategyImpl(deprecationReporter, issueReporter),
-                        baseFlavor,
-                        issueReporter);
-
-        dslModelData =
-                new DslModelDataImpl<E>(
-                        defaultConfig,
-                        getVariantFactories(),
-                        project.getConfigurations(),
-                        new FilesProviderImpl(project),
-                        project::container,
-                        instantiator,
-                        extraModelInfo,
-                        extraModelInfo,
-                        project.getLogger());
-
-        variantModelData = new VariantModelData(extraModelInfo);
-
-        newExtension =
-                createNewExtension(
-                        new BuildPropertiesImpl(dslModelData, issueReporter),
-                        new VariantOrExtensionPropertiesImpl(issueReporter),
-                        new VariantAwarePropertiesImpl(
-                                dslModelData,
-                                variantModelData,
-                                deprecationReporter,
-                                issueReporter));
-    }
-
-    private static final class FilesProviderImpl implements FilesProvider {
-
-        private final Project project;
-
-        private FilesProviderImpl(Project project) {
-            this.project = project;
-        }
-
-        @NonNull
-        @Override
-        public File file(@NonNull Object file) {
-            return project.file(file);
-        }
-
-        @NonNull
-        @Override
-        public ConfigurableFileCollection files(@NonNull Object... files) {
-            return project.files(files);
-        }
-
-        @NonNull
-        @Override
-        public ConfigurableFileTree fileTree(@NonNull Map<String, ?> args) {
-            return project.fileTree(args);
-        }
-    }
-
-    private void afterEvaluateCallback() {
-        // callback for the afterEvaluate
-        List<Action<Void>> preVariantActions = newExtension.getPreVariantCallbacks();
-        for (Action<Void> action : preVariantActions) {
-            action.execute(null);
-        }
-
-        // seal the DSL.
-        newExtension.seal();
-        dslModelData.seal();
-
-        // compute the variants
-        dslModelData.afterEvaluateCompute();
-        VariantBuilder<E> builder =
-                new VariantBuilder<>(
-                        dslModelData,
-                        newExtension,
-                        extraModelInfo,
-                        extraModelInfo);
-        builder.generateVariants();
-        List<SealableVariant> variants = builder.getVariants();
-        List<Variant> variantShims = builder.getShims();
-
-        // run the variant API
-        variantModelData.runVariantCallbacks(variantShims);
-
-        // post-variant API
-        for (Action<List<Variant>> action : newExtension.getPostVariants()) {
-            action.execute(variantShims);
-        }
-
-        // seal the variants
-        for (SealableVariant variant : variants) {
-            variant.seal();
-        }
-        // and additional data (callbacks)
-        variantModelData.seal();
-
-        // create the tasks
-        // FIXME implement
     }
 
     private void checkGradleVersion() {

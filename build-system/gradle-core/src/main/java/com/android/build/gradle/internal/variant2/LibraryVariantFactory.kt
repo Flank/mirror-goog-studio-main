@@ -25,11 +25,11 @@ import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImp
 import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
 
-class LibraryVariantFactory(private val issueReporter: EvalIssueReporter)
-        : VariantFactory2<LibraryExtensionImpl> {
+class LibraryVariantFactory : VariantFactory2<LibraryExtensionImpl> {
 
     override val generatedType: VariantType = VariantType.LIBRARY
     override val testedBy: List<VariantType> = listOf(VariantType.ANDROID_TEST,
@@ -43,7 +43,8 @@ class LibraryVariantFactory(private val issueReporter: EvalIssueReporter)
             buildTypOrVariant: BuildTypeOrVariantImpl,
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
-            variantMap: Map<VariantType, Map<Variant, Variant>>)
+            variantMap: Map<VariantType, Map<Variant, Variant>>,
+            issueReporter: EvalIssueReporter)
             : SealableVariant {
 
         return LibraryVariantImpl(

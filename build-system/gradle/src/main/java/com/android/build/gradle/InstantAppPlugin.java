@@ -25,24 +25,19 @@ import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
-import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.VariantAwarePropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ide.InstantAppModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.InstantAppVariantFactory;
-import com.android.build.gradle.internal.variant2.VariantFactory2;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.profile.Recorder;
-import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
-import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
@@ -151,19 +146,8 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> implements Plug
                 globalScope, instantiator, androidBuilder, androidConfig);
     }
 
-    @NonNull
     @Override
-    protected BaseExtension2 createNewExtension(
-            @NonNull BuildPropertiesImpl buildProperties,
-            @NonNull VariantOrExtensionPropertiesImpl variantExtensionProperties,
-            @NonNull VariantAwarePropertiesImpl variantAwareProperties) {
-        // FIXME
+    protected TypedPluginDelegate<BaseExtension2> getTypedDelegate() {
         return null;
-    }
-
-    @NonNull
-    @Override
-    protected List<VariantFactory2<BaseExtension2>> getVariantFactories() {
-        return ImmutableList.of();
     }
 }

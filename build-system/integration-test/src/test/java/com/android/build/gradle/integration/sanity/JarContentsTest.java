@@ -502,6 +502,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/ndk/",
                 "com/android/build/gradle/internal/packaging/",
                 "com/android/build/gradle/internal/pipeline/",
+                "com/android/build/gradle/internal/plugin/",
                 "com/android/build/gradle/internal/process/",
                 "com/android/build/gradle/internal/profile/",
                 "com/android/build/gradle/internal/publishing/",

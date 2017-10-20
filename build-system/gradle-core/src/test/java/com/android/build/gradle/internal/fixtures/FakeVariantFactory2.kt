@@ -27,6 +27,7 @@ import com.android.build.gradle.internal.api.dsl.variant.CommonVariantProperties
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
 import com.android.build.gradle.internal.variant2.VariantFactory2
 import com.android.builder.core.VariantType
+import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.ImmutableList
 
 class FakeVariantFactory2<in E: BaseExtension2>(
@@ -34,14 +35,14 @@ class FakeVariantFactory2<in E: BaseExtension2>(
         override val testedBy: List<VariantType> = ImmutableList.of(),
         override val testTarget: VariantType? = null): VariantFactory2<E> {
 
-    override fun createVariant(
-            extension: E,
+    override fun createVariant(extension: E,
             variantProperties: VariantPropertiesImpl,
             productFlavorOrVariant: ProductFlavorOrVariantImpl,
             buildTypOrVariant: BuildTypeOrVariantImpl,
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
-            variantMap: Map<VariantType, Map<Variant, Variant>>): SealableVariant {
+            variantMap: Map<VariantType, Map<Variant, Variant>>,
+            issueReporter: EvalIssueReporter): SealableVariant {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

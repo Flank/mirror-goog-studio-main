@@ -251,16 +251,8 @@ class VariantBuilder<in E: BaseExtension2>(
             // what does the factory generates?
             val generatedType = factory.generatedType
 
-            // is this filtered out?
-            if (!generatedType.isForTesting) {
-                if (filterObject.ignoresProd) {
-                    continue
-                }
-            } else {
-                if ((generatedType == VariantType.ANDROID_TEST && filterObject.ignoresAndroidTest)
-                        || (generatedType == VariantType.UNIT_TEST && filterObject.ignoresUnitTest)) {
-                    continue
-                }
+            if (filterObject.ignores(generatedType)) {
+                continue
             }
 
             // Internal variant properties. Due to the variant name
@@ -288,7 +280,8 @@ class VariantBuilder<in E: BaseExtension2>(
                     buildTypOrVariant,
                     variantExtensionProperties,
                     commonVariantProperties,
-                    variantDispatcher)
+                    variantDispatcher,
+                    issueReporter)
 
             val variantType = variant.variantType
 
