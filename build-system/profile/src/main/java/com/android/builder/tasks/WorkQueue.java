@@ -17,7 +17,9 @@
 package com.android.builder.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.utils.ILogger;
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,9 +66,12 @@ public class WorkQueue<T> implements Runnable {
 
         enum ActionType { Death, Normal }
         final ActionType actionType;
-        final Job<T> job;
+        @Nullable final Job<T> job;
 
-        private QueueTask(ActionType actionType, Job<T> job) {
+        private QueueTask(ActionType actionType, @Nullable Job<T> job) {
+            Preconditions.checkState(
+                    job != null || actionType == ActionType.Death,
+                    "Job cannot be null for action type NORMAL");
             this.actionType = actionType;
             this.job = job;
         }
@@ -77,7 +82,7 @@ public class WorkQueue<T> implements Runnable {
             sb.append("QueueTask of type ");
             sb.append(actionType.name());
             sb.append(" with job ");
-            sb.append(job.toString());
+            sb.append(job == null ? "null" : job.toString());
             return sb.toString();
         }
     }
