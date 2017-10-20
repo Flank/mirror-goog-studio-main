@@ -16,14 +16,15 @@
 
 package com.android.build.api.sourcesets
 
-import com.android.build.api.sourcesets.AndroidSourceDirectorySet
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 import org.gradle.api.Named
 
 /**
  * An AndroidSourceSet represents a logical group of Java, aidl and RenderScript sources as well as
  * Android and non-Android (Java-style) resources.
  */
+@Incubating
 interface AndroidSourceSet : Named {
 
     /**

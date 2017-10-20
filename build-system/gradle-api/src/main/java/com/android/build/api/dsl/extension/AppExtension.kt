@@ -17,8 +17,10 @@
 package com.android.build.api.dsl.extension
 
 import org.gradle.api.DomainObjectSet
+import org.gradle.api.Incubating
 
 /** 'android' extension for 'com.android.application' projects.  */
+@Incubating
 interface AppExtension : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, ApkProperties, AndroidExtension {
 
     /**

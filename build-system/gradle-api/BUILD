@@ -37,6 +37,7 @@ kotlin_test(
     ],
     deps = [
         ":gradle-api",
+        "//tools/base/annotations",
         "//tools/base/build-system:gradle-api",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",

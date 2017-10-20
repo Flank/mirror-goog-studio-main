@@ -20,8 +20,10 @@ import com.android.builder.model.AdbOptions
 import com.android.builder.testing.api.DeviceProvider
 import com.android.builder.testing.api.TestServer
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 
 /** Partial extension properties for modules that contain on-device tests  */
+@Incubating
 interface OnDeviceTestProperties {
     /** Adb options.  */
     val adbOptions: AdbOptions

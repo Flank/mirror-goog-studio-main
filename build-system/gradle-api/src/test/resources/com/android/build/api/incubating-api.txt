@@ -1,5 +1,3 @@
-com.android.build.api.attributes.BuildTypeAttr
-com.android.build.api.attributes.ProductFlavorAttr
 com.android.build.api.dsl.ApiVersion
 com.android.build.api.dsl.ApiVersion.getApiLevel: java.lang.Integer ()
 com.android.build.api.dsl.ApiVersion.getApiString: java.lang.String ()
@@ -33,7 +31,6 @@ com.android.build.api.dsl.extension.BuildProperties.sourceSets: void (org.gradle
 com.android.build.api.dsl.extension.BuildProperties.useLibrary: void (java.lang.String)
 com.android.build.api.dsl.extension.BuildProperties.useLibrary: void (java.lang.String, boolean)
 com.android.build.api.dsl.extension.EmbeddedTestProperties
-com.android.build.api.dsl.extension.EmbeddedTestProperties$DefaultImpls
 com.android.build.api.dsl.extension.EmbeddedTestProperties.getTestBuildType: java.lang.String ()
 com.android.build.api.dsl.extension.EmbeddedTestProperties.getTestOptions: com.android.builder.model.TestOptions ()
 com.android.build.api.dsl.extension.EmbeddedTestProperties.getTestVariants: org.gradle.api.DomainObjectSet<com.android.build.api.dsl.variant.TestVariant> ()
@@ -45,7 +42,6 @@ com.android.build.api.dsl.extension.FeatureExtension.baseFeature: void (boolean)
 com.android.build.api.dsl.extension.FeatureExtension.getBaseFeature: boolean ()
 com.android.build.api.dsl.extension.FeatureExtension.setBaseFeature: void (boolean)
 com.android.build.api.dsl.extension.LibraryExtension
-com.android.build.api.dsl.extension.LibraryExtension$DefaultImpls
 com.android.build.api.dsl.extension.LibraryExtension.getAidlPackageWhiteList: java.util.Collection<java.lang.String> ()
 com.android.build.api.dsl.extension.LibraryExtension.getDefaultPublishConfig: java.lang.String ()
 com.android.build.api.dsl.extension.LibraryExtension.getPackageBuildConfig: boolean ()
@@ -60,13 +56,11 @@ com.android.build.api.dsl.extension.OnDeviceTestProperties.getTestServers: java.
 com.android.build.api.dsl.extension.OnDeviceTestProperties.setDeviceProviders: void (java.util.List<com.android.builder.testing.api.DeviceProvider>)
 com.android.build.api.dsl.extension.OnDeviceTestProperties.setTestServers: void (java.util.List<com.android.builder.testing.api.TestServer>)
 com.android.build.api.dsl.extension.TestExtension
-com.android.build.api.dsl.extension.TestExtension$DefaultImpls
 com.android.build.api.dsl.extension.TestExtension.getTargetProjectPath: java.lang.String ()
 com.android.build.api.dsl.extension.TestExtension.getTargetVariant: java.lang.String ()
 com.android.build.api.dsl.extension.TestExtension.setTargetProjectPath: void (java.lang.String)
 com.android.build.api.dsl.extension.TestExtension.setTargetVariant: void (java.lang.String)
 com.android.build.api.dsl.extension.VariantAwareProperties
-com.android.build.api.dsl.extension.VariantAwareProperties$DefaultImpls
 com.android.build.api.dsl.extension.VariantAwareProperties.buildTypes: void (org.gradle.api.Action<org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.model.BuildType>>)
 com.android.build.api.dsl.extension.VariantAwareProperties.defaultConfig: void (org.gradle.api.Action<com.android.build.api.dsl.model.DefaultConfig>)
 com.android.build.api.dsl.extension.VariantAwareProperties.getBuildTypes: org.gradle.api.NamedDomainObjectContainer<com.android.build.api.dsl.model.BuildType> ()
@@ -111,7 +105,6 @@ com.android.build.api.dsl.extension.VariantOrExtensionProperties.getDexOptions: 
 com.android.build.api.dsl.extension.VariantOrExtensionProperties.getLintOptions: com.android.build.api.dsl.options.LintOptions ()
 com.android.build.api.dsl.extension.VariantOrExtensionProperties.lintOptions: void (org.gradle.api.Action<com.android.build.api.dsl.options.LintOptions>)
 com.android.build.api.dsl.model.BaseFlavor
-com.android.build.api.dsl.model.BaseFlavor$DefaultImpls
 com.android.build.api.dsl.model.BaseFlavor.getGeneratedDensities: java.util.Set<java.lang.String> ()
 com.android.build.api.dsl.model.BaseFlavor.getPostprocessing: com.android.build.api.dsl.options.PostprocessingFilesOptions ()
 com.android.build.api.dsl.model.BaseFlavor.getTestApplicationId: java.lang.String ()
@@ -135,7 +128,6 @@ com.android.build.api.dsl.model.BaseFlavor.testInstrumentationRunnerArgument: vo
 com.android.build.api.dsl.model.BaseFlavor.testInstrumentationRunnerArguments: void (java.util.Map<java.lang.String, java.lang.String>)
 com.android.build.api.dsl.model.BaseFlavor.wearAppUnbundled: void (java.lang.Boolean)
 com.android.build.api.dsl.model.BuildType
-com.android.build.api.dsl.model.BuildType$DefaultImpls
 com.android.build.api.dsl.model.BuildType.getCrunchPngsDefault: boolean ()
 com.android.build.api.dsl.model.BuildType.getMinifyEnabled: boolean ()
 com.android.build.api.dsl.model.BuildType.getShrinkResources: boolean ()
@@ -265,7 +257,6 @@ com.android.build.api.dsl.model.VariantProperties.setResValues: void (java.util.
 com.android.build.api.dsl.model.VariantProperties.setSigningConfig: void (com.android.build.api.dsl.options.SigningConfig)
 com.android.build.api.dsl.model.VariantProperties.shaderOptions: void (org.gradle.api.Action<com.android.build.api.dsl.options.ShaderOptions>)
 com.android.build.api.dsl.options.AaptOptions
-com.android.build.api.dsl.options.AaptOptions$DefaultImpls
 com.android.build.api.dsl.options.AaptOptions.getAdditionalParameters: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.options.AaptOptions.getCruncherEnabled: boolean ()
 com.android.build.api.dsl.options.AaptOptions.getCruncherEnabledOverride: java.lang.Boolean ()
@@ -311,7 +302,6 @@ com.android.build.api.dsl.options.DensitySplitOptions.getStrict: boolean ()
 com.android.build.api.dsl.options.DensitySplitOptions.setAuto: void (boolean)
 com.android.build.api.dsl.options.DensitySplitOptions.setStrict: void (boolean)
 com.android.build.api.dsl.options.DexOptions
-com.android.build.api.dsl.options.DexOptions$DefaultImpls
 com.android.build.api.dsl.options.DexOptions.getAdditionalParameters: java.util.List<java.lang.String> ()
 com.android.build.api.dsl.options.DexOptions.getDexInProcess: boolean ()
 com.android.build.api.dsl.options.DexOptions.getIncremental: boolean ()
@@ -569,7 +559,6 @@ com.android.build.api.sourcesets.AndroidSourceFile.getSrcFile: java.io.File ()
 com.android.build.api.sourcesets.AndroidSourceFile.setSrcFile: void (java.io.File)
 com.android.build.api.sourcesets.AndroidSourceFile.srcFile: com.android.build.api.sourcesets.AndroidSourceFile (java.lang.Object)
 com.android.build.api.sourcesets.AndroidSourceSet
-com.android.build.api.sourcesets.AndroidSourceSet$DefaultImpls
 com.android.build.api.sourcesets.AndroidSourceSet.aidl: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
 com.android.build.api.sourcesets.AndroidSourceSet.assets: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
 com.android.build.api.sourcesets.AndroidSourceSet.getAidl: com.android.build.api.sourcesets.AndroidSourceDirectorySet ()
@@ -601,88 +590,3 @@ com.android.build.api.sourcesets.AndroidSourceSet.res: com.android.build.api.sou
 com.android.build.api.sourcesets.AndroidSourceSet.resources: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
 com.android.build.api.sourcesets.AndroidSourceSet.setRoot: com.android.build.api.sourcesets.AndroidSourceSet (java.lang.String)
 com.android.build.api.sourcesets.AndroidSourceSet.shaders: com.android.build.api.sourcesets.AndroidSourceSet (org.gradle.api.Action<com.android.build.api.sourcesets.AndroidSourceDirectorySet>)
-com.android.build.api.transform.Context
-com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.LoggingManager ()
-com.android.build.api.transform.Context.getPath: java.lang.String ()
-com.android.build.api.transform.Context.getTemporaryDir: java.io.File ()
-com.android.build.api.transform.Context.getVariantName: java.lang.String ()
-com.android.build.api.transform.Context.getWorkerExecutor: org.gradle.workers.WorkerExecutor ()
-com.android.build.api.transform.DirectoryInput
-com.android.build.api.transform.DirectoryInput.getChangedFiles: java.util.Map<java.io.File, com.android.build.api.transform.Status> ()
-com.android.build.api.transform.Format
-com.android.build.api.transform.Format.valueOf: com.android.build.api.transform.Format (java.lang.String)
-com.android.build.api.transform.Format.values: com.android.build.api.transform.Format[] ()
-com.android.build.api.transform.JarInput
-com.android.build.api.transform.JarInput.getStatus: com.android.build.api.transform.Status ()
-com.android.build.api.transform.QualifiedContent
-com.android.build.api.transform.QualifiedContent$ContentType
-com.android.build.api.transform.QualifiedContent$ContentType.getValue: int ()
-com.android.build.api.transform.QualifiedContent$ContentType.name: java.lang.String ()
-com.android.build.api.transform.QualifiedContent$DefaultContentType
-com.android.build.api.transform.QualifiedContent$DefaultContentType.getValue: int ()
-com.android.build.api.transform.QualifiedContent$DefaultContentType.valueOf: com.android.build.api.transform.QualifiedContent$DefaultContentType (java.lang.String)
-com.android.build.api.transform.QualifiedContent$DefaultContentType.values: com.android.build.api.transform.QualifiedContent$DefaultContentType[] ()
-com.android.build.api.transform.QualifiedContent$Scope
-com.android.build.api.transform.QualifiedContent$Scope.getValue: int ()
-com.android.build.api.transform.QualifiedContent$Scope.valueOf: com.android.build.api.transform.QualifiedContent$Scope (java.lang.String)
-com.android.build.api.transform.QualifiedContent$Scope.values: com.android.build.api.transform.QualifiedContent$Scope[] ()
-com.android.build.api.transform.QualifiedContent$ScopeType
-com.android.build.api.transform.QualifiedContent$ScopeType.getValue: int ()
-com.android.build.api.transform.QualifiedContent$ScopeType.name: java.lang.String ()
-com.android.build.api.transform.QualifiedContent.getContentTypes: java.util.Set<com.android.build.api.transform.QualifiedContent$ContentType> ()
-com.android.build.api.transform.QualifiedContent.getFile: java.io.File ()
-com.android.build.api.transform.QualifiedContent.getName: java.lang.String ()
-com.android.build.api.transform.QualifiedContent.getScopes: java.util.Set<? super com.android.build.api.transform.QualifiedContent$Scope> ()
-com.android.build.api.transform.SecondaryFile
-com.android.build.api.transform.SecondaryFile.<init>: com.android.build.api.transform.SecondaryFile (java.io.File, boolean)
-com.android.build.api.transform.SecondaryFile.getFile: java.io.File ()
-com.android.build.api.transform.SecondaryFile.getFileCollection: org.gradle.api.file.FileCollection (org.gradle.api.Project)
-com.android.build.api.transform.SecondaryFile.incremental: com.android.build.api.transform.SecondaryFile (java.io.File)
-com.android.build.api.transform.SecondaryFile.incremental: com.android.build.api.transform.SecondaryFile (org.gradle.api.file.FileCollection)
-com.android.build.api.transform.SecondaryFile.nonIncremental: com.android.build.api.transform.SecondaryFile (java.io.File)
-com.android.build.api.transform.SecondaryFile.nonIncremental: com.android.build.api.transform.SecondaryFile (org.gradle.api.file.FileCollection)
-com.android.build.api.transform.SecondaryFile.supportsIncrementalBuild: boolean ()
-com.android.build.api.transform.SecondaryInput
-com.android.build.api.transform.SecondaryInput.getSecondaryInput: com.android.build.api.transform.SecondaryFile ()
-com.android.build.api.transform.SecondaryInput.getStatus: com.android.build.api.transform.Status ()
-com.android.build.api.transform.Status
-com.android.build.api.transform.Status.valueOf: com.android.build.api.transform.Status (java.lang.String)
-com.android.build.api.transform.Status.values: com.android.build.api.transform.Status[] ()
-com.android.build.api.transform.Transform
-com.android.build.api.transform.Transform.<init>: com.android.build.api.transform.Transform ()
-com.android.build.api.transform.Transform.getInputTypes: java.util.Set<com.android.build.api.transform.QualifiedContent$ContentType> ()
-com.android.build.api.transform.Transform.getName: java.lang.String ()
-com.android.build.api.transform.Transform.getOutputTypes: java.util.Set<com.android.build.api.transform.QualifiedContent$ContentType> ()
-com.android.build.api.transform.Transform.getParameterInputs: java.util.Map<java.lang.String, java.lang.Object> ()
-com.android.build.api.transform.Transform.getReferencedScopes: java.util.Set<? super com.android.build.api.transform.QualifiedContent$Scope> ()
-com.android.build.api.transform.Transform.getScopes: java.util.Set<? super com.android.build.api.transform.QualifiedContent$Scope> ()
-com.android.build.api.transform.Transform.getSecondaryDirectoryOutputs: java.util.Collection<java.io.File> ()
-com.android.build.api.transform.Transform.getSecondaryFileInputs: java.util.Collection<java.io.File> ()
-com.android.build.api.transform.Transform.getSecondaryFileOutputs: java.util.Collection<java.io.File> ()
-com.android.build.api.transform.Transform.getSecondaryFiles: java.util.Collection<com.android.build.api.transform.SecondaryFile> ()
-com.android.build.api.transform.Transform.isCacheable: boolean ()
-com.android.build.api.transform.Transform.isIncremental: boolean ()
-com.android.build.api.transform.Transform.transform: void (com.android.build.api.transform.Context, java.util.Collection<com.android.build.api.transform.TransformInput>, java.util.Collection<com.android.build.api.transform.TransformInput>, com.android.build.api.transform.TransformOutputProvider, boolean) throws java.io.IOException, com.android.build.api.transform.TransformException, java.lang.InterruptedException
-com.android.build.api.transform.Transform.transform: void (com.android.build.api.transform.TransformInvocation) throws com.android.build.api.transform.TransformException, java.lang.InterruptedException, java.io.IOException
-com.android.build.api.transform.TransformException
-com.android.build.api.transform.TransformException.<init>: com.android.build.api.transform.TransformException (java.lang.String)
-com.android.build.api.transform.TransformException.<init>: com.android.build.api.transform.TransformException (java.lang.Throwable)
-com.android.build.api.transform.TransformInput
-com.android.build.api.transform.TransformInput.getDirectoryInputs: java.util.Collection<com.android.build.api.transform.DirectoryInput> ()
-com.android.build.api.transform.TransformInput.getJarInputs: java.util.Collection<com.android.build.api.transform.JarInput> ()
-com.android.build.api.transform.TransformInvocation
-com.android.build.api.transform.TransformInvocation.getContext: com.android.build.api.transform.Context ()
-com.android.build.api.transform.TransformInvocation.getInputs: java.util.Collection<com.android.build.api.transform.TransformInput> ()
-com.android.build.api.transform.TransformInvocation.getOutputProvider: com.android.build.api.transform.TransformOutputProvider ()
-com.android.build.api.transform.TransformInvocation.getReferencedInputs: java.util.Collection<com.android.build.api.transform.TransformInput> ()
-com.android.build.api.transform.TransformInvocation.getSecondaryInputs: java.util.Collection<com.android.build.api.transform.SecondaryInput> ()
-com.android.build.api.transform.TransformInvocation.isIncremental: boolean ()
-com.android.build.api.transform.TransformOutputProvider
-com.android.build.api.transform.TransformOutputProvider.deleteAll: void () throws java.io.IOException
-com.android.build.api.transform.TransformOutputProvider.getContentLocation: java.io.File (java.lang.String, java.util.Set<com.android.build.api.transform.QualifiedContent$ContentType>, java.util.Set<? super com.android.build.api.transform.QualifiedContent$Scope>, com.android.build.api.transform.Format)
-com.android.build.api.variant.VariantFilter
-com.android.build.api.variant.VariantFilter.getBuildType: com.android.builder.model.BuildType ()
-com.android.build.api.variant.VariantFilter.getDefaultConfig: com.android.builder.model.ProductFlavor ()
-com.android.build.api.variant.VariantFilter.getFlavors: java.util.List<com.android.builder.model.ProductFlavor> ()
-com.android.build.api.variant.VariantFilter.getName: java.lang.String ()
-com.android.build.api.variant.VariantFilter.setIgnore: void (boolean)

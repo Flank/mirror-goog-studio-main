@@ -16,6 +16,7 @@
 
 package com.android.build.api.sourcesets
 
+import org.gradle.api.Incubating
 import java.io.File
 import org.gradle.api.Named
 import org.gradle.api.file.ConfigurableFileTree
@@ -23,6 +24,7 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.tasks.util.PatternFilterable
 
 /** An AndroidSourceDirectorySet represents a set of directory inputs for an Android project.  */
+@Incubating
 interface AndroidSourceDirectorySet : PatternFilterable, Named {
 
     /**

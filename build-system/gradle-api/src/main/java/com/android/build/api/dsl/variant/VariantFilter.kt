@@ -16,6 +16,8 @@
 
 package com.android.build.api.dsl.variant
 
+import org.gradle.api.Incubating
+
 /**
  * Interface for variant control, allowing to query a variant for some base
  * data and allowing to disable some variants.
@@ -26,6 +28,7 @@ package com.android.build.api.dsl.variant
  *
  * It is possible to disable all or just specific ones.
  */
+@Incubating
 interface VariantFilter {
 
     /** ignores all the versions of this variant */

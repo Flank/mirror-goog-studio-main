@@ -17,6 +17,7 @@
 package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
+import org.gradle.api.Incubating
 
 /**
  * DSL object for configuring per-language splits options.
@@ -25,6 +26,7 @@ import com.android.build.api.dsl.Initializable
  * See [APK
  * Splits](https://developer.android.com/studio/build/configure-apk-splits.html).
  */
+@Incubating
 interface LanguageSplitOptions : Initializable<LanguageSplitOptions> {
 
     /** Collection of include patterns.  */

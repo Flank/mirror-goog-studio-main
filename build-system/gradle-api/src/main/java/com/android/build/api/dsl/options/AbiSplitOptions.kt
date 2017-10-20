@@ -16,6 +16,8 @@
 
 package com.android.build.api.dsl.options
 
+import org.gradle.api.Incubating
+
 /**
  * DSL object for configuring per-abi splits options.
  *
@@ -23,6 +25,7 @@ package com.android.build.api.dsl.options
  * See [FULL_APK
  * Splits](https://developer.android.com/studio/build/configure-apk-splits.html).
  */
+@Incubating
 interface AbiSplitOptions : SplitOptions {
 
     /** Whether to create an FULL_APK with all available ABIs.  */

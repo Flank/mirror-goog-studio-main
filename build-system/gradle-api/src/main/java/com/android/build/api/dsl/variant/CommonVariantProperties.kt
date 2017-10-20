@@ -17,8 +17,10 @@
 package com.android.build.api.dsl.variant
 
 import com.android.build.api.sourcesets.AndroidSourceSet
+import org.gradle.api.Incubating
 
 /** common variant properties to all variants */
+@Incubating
 interface CommonVariantProperties {
 
     val name: String

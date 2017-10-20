@@ -18,8 +18,10 @@ package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
 import com.android.build.api.dsl.model.BuildType
+import org.gradle.api.Incubating
 
 /** DSL object for configuring aapt options.  */
+@Incubating
 interface AaptOptions : Initializable<AaptOptions> {
 
     /**

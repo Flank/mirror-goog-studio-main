@@ -20,8 +20,10 @@ import com.android.build.api.dsl.ApiVersion
 import com.android.build.api.dsl.options.InstrumentationOptions
 import com.android.build.api.dsl.options.VectorDrawablesOptions
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 
 /** properties common to product flavors and variants  */
+@Incubating
 interface ProductFlavorOrVariant {
 
     /**

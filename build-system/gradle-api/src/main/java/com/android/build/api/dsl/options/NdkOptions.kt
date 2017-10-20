@@ -17,8 +17,10 @@
 package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
+import org.gradle.api.Incubating
 
 /** Base class for NDK config file.  */
+@Incubating
 interface NdkOptions : Initializable<NdkOptions> {
 
     /** The module name  */

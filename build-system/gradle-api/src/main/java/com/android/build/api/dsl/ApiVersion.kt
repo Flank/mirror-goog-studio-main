@@ -16,6 +16,8 @@
 
 package com.android.build.api.dsl
 
+import org.gradle.api.Incubating
+
 /**
  * Represents the version of an Android Platform.
  *
@@ -31,6 +33,7 @@ package com.android.build.api.dsl
  * Preview versions of the platform are identified by a code name. Their API level is usually set
  * to the value of the previous platform.
  */
+@Incubating
 interface ApiVersion {
 
     /**

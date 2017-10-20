@@ -16,6 +16,9 @@
 
 package com.android.build.api.dsl.variant
 
+import org.gradle.api.Incubating
+
+@Incubating
 interface LibraryVariant : Variant {
     val androidTestVariant: AndroidTestVariant?
     val unitTestVariant: UnitTestVariant?

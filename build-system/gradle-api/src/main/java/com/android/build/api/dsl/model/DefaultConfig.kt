@@ -16,5 +16,8 @@
 
 package com.android.build.api.dsl.model
 
+import org.gradle.api.Incubating
+
 /** DSL object for the defaultConfig object.  */
+@Incubating
 interface DefaultConfig : BaseFlavor, BuildTypeOrProductFlavor, ProductFlavorOrVariant, VariantProperties

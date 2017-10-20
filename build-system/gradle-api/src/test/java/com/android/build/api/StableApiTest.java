@@ -18,6 +18,7 @@ package com.android.build.api;
 
 import static org.junit.Assert.assertEquals;
 
+import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
@@ -30,13 +31,18 @@ import com.google.common.reflect.Invokable;
 import com.google.common.reflect.Parameter;
 import com.google.common.reflect.TypeToken;
 import com.google.common.truth.Truth;
+import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.Assert;
@@ -47,27 +53,50 @@ import org.junit.Test;
  */
 public class StableApiTest {
 
-    private static final URL API_LIST_URL =
-            Resources.getResource(StableApiTest.class, "api-list.txt");
+    private static final URL STABLE_API_URL =
+            Resources.getResource(StableApiTest.class, "stable-api.txt");
+
+    private static final URL INCUBATING_API_URL =
+            Resources.getResource(StableApiTest.class, "incubating-api.txt");
+
+    private static final String INCUBATING_ANNOTATION = "@org.gradle.api.Incubating()";
 
     @Test
-    public void apiElements() throws Exception {
-        ImmutableSet<ClassPath.ClassInfo> allClasses =
-                ClassPath.from(Transform.class.getClassLoader())
-                        .getTopLevelClassesRecursive("com.android.build.api");
-
+    public void stableApiElements() throws Exception {
         List<String> apiElements =
-                allClasses
-                        .stream()
-                        .filter(classInfo -> !classInfo.getSimpleName().endsWith("Test"))
-                        .flatMap(classInfo -> getApiElements(classInfo.load()))
-                        .collect(Collectors.toList());
+                getApiElements(
+                        incubatingClass -> !incubatingClass,
+                        (incubatingClass, incubatingMember) ->
+                                !incubatingClass && !incubatingMember);
 
         // Compare the two as strings, to get a nice diff UI in the IDE.
         Iterable<String> expectedApiElements =
                 Splitter.on(System.lineSeparator())
                         .omitEmptyStrings()
-                        .split(Resources.toString(API_LIST_URL, Charsets.UTF_8));
+                        .split(Resources.toString(STABLE_API_URL, Charsets.UTF_8));
+
+        //System.err.println("####################");
+        //Collections.sort(apiElements);
+        //for (String apiElement : apiElements) {
+        //    System.err.println(apiElement);
+        //}
+        //System.err.println("####################");
+
+        Truth.assertThat(apiElements).containsExactlyElementsIn(expectedApiElements);
+    }
+
+    @Test
+    public void incubatingApiElements() throws Exception {
+        List<String> apiElements =
+                getApiElements(
+                        incubatingClass -> incubatingClass,
+                        (incubatingClass, incubatingMember) -> incubatingClass || incubatingMember);
+
+        // Compare the two as strings, to get a nice diff UI in the IDE.
+        Iterable<String> expectedApiElements =
+                Splitter.on(System.lineSeparator())
+                        .omitEmptyStrings()
+                        .split(Resources.toString(INCUBATING_API_URL, Charsets.UTF_8));
 
         //System.err.println("####################");
         //Collections.sort(apiElements);
@@ -84,19 +113,39 @@ public class StableApiTest {
         // ATTENTION REVIEWER: if this needs to be changed, please make sure changes to api-list.txt
         // are backwards compatible.
         assertEquals(
-                "22b4944d91f8399a34f48ad8848355a37e1ae278",
+                "2293875af8a6b0700f099823ea4556d90fab3578",
                 Hashing.sha1()
                         .hashString(
-                                Resources.toString(API_LIST_URL, Charsets.UTF_8)
+                                Resources.toString(STABLE_API_URL, Charsets.UTF_8)
                                         .replace(System.lineSeparator(), "\n"),
                                 Charsets.UTF_8)
                         .toString());
     }
 
-    private static Stream<String> getApiElements(Class<?> klass) {
-        if (!Modifier.isPublic(klass.getModifiers())) {
+    private static List<String> getApiElements(
+            @NonNull Predicate<Boolean> classFilter,
+            @NonNull BiFunction<Boolean, Boolean, Boolean> memberFilter)
+            throws IOException {
+        ImmutableSet<ClassPath.ClassInfo> allClasses =
+                ClassPath.from(Transform.class.getClassLoader())
+                        .getTopLevelClassesRecursive("com.android.build.api");
+
+        return allClasses
+                .stream()
+                .filter(classInfo -> !classInfo.getSimpleName().endsWith("Test"))
+                .flatMap(classInfo -> getApiElements(classInfo.load(), classFilter, memberFilter))
+                .collect(Collectors.toList());
+    }
+
+    private static Stream<String> getApiElements(
+            @NonNull Class<?> klass,
+            @NonNull Predicate<Boolean> classFilter,
+            @NonNull BiFunction<Boolean, Boolean, Boolean> memberFilter) {
+        if (!Modifier.isPublic(klass.getModifiers()) || isKotlinMedata(klass)) {
             return Stream.empty();
         }
+
+        boolean incubatingClass = isIncubating(klass);
 
         for (Field field : klass.getDeclaredFields()) {
             if (!Modifier.isStatic(field.getModifiers())
@@ -109,34 +158,64 @@ public class StableApiTest {
             }
         }
 
+        // streams for all the fields.
         Stream<Stream<String>> streams =
                 Stream.of(
-                        // The class itself:
-                        Stream.of(klass.getName()),
-
                         // Constructors:
                         Stream.of(klass.getDeclaredConstructors())
                                 .map(Invokable::from)
                                 .filter(StableApiTest::isPublic)
+                                .filter(
+                                        invokable ->
+                                                memberFilter.apply(
+                                                        incubatingClass, isIncubating(invokable)))
                                 .map(StableApiTest::getApiElement)
                                 .filter(Objects::nonNull),
-
                         // Methods:
                         Stream.of(klass.getDeclaredMethods())
                                 .map(Invokable::from)
                                 .filter(StableApiTest::isPublic)
+                                .filter(
+                                        invokable ->
+                                                memberFilter.apply(
+                                                        incubatingClass, isIncubating(invokable)))
                                 .map(StableApiTest::getApiElement)
                                 .filter(Objects::nonNull),
 
                         // Finally, all inner classes:
                         Stream.of(klass.getDeclaredClasses())
-                                .flatMap(StableApiTest::getApiElements));
+                                .flatMap(
+                                        it ->
+                                                StableApiTest.getApiElements(
+                                                        it, classFilter, memberFilter)));
 
-        return streams.flatMap(Function.identity());
+        List<String> values = streams.flatMap(Function.identity()).collect(Collectors.toList());
+
+        if (classFilter.test(incubatingClass)) {
+            values = new ArrayList<>(values);
+            values.add(klass.getName());
+        }
+
+        return values.stream();
     }
 
     private static boolean isPublic(Invokable<?, ?> invokable) {
         return invokable.isPublic();
+    }
+
+    private static boolean isIncubating(@NonNull AnnotatedElement element) {
+        Annotation[] annotations = element.getAnnotations();
+        for (Annotation annotation : annotations) {
+            if (annotation.toString().equals(INCUBATING_ANNOTATION)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static Boolean isKotlinMedata(@NonNull Class<?> theClass) {
+        return theClass.getName().endsWith("$DefaultImpls");
     }
 
     private static String getApiElement(Invokable<?, ?> invokable) {

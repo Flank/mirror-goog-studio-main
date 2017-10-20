@@ -21,8 +21,10 @@ import com.android.build.api.dsl.variant.UnitTestVariant
 import com.android.builder.model.TestOptions
 import org.gradle.api.Action
 import org.gradle.api.DomainObjectSet
+import org.gradle.api.Incubating
 
 /** Partial extension properties for modules that contain tests  */
+@Incubating
 interface EmbeddedTestProperties {
     /** Return the name of the BuildType for testing.  */
     var testBuildType: String

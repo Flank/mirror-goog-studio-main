@@ -16,7 +16,10 @@
 
 package com.android.build.api.dsl.extension
 
+import org.gradle.api.Incubating
+
 /** 'android' extension for 'com.android.test' projects.  */
+@Incubating
 interface TestExtension : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, OnDeviceTestProperties, ApkProperties, AndroidExtension {
 
     /** The Gradle path of the project that this test project tests.  */

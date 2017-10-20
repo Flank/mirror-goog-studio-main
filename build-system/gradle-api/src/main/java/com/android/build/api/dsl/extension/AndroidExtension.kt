@@ -16,6 +16,8 @@
 
 package com.android.build.api.dsl.extension
 
+import org.gradle.api.Incubating
+
 /**
  * Base interface for all Android extensions.
  *
@@ -24,4 +26,5 @@ package com.android.build.api.dsl.extension
  *
  * this can be used to verify that an extension called 'android' is in fact an Android extension.
  */
+@Incubating
 interface AndroidExtension

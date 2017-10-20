@@ -17,9 +17,11 @@
 package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
+import org.gradle.api.Incubating
 import org.gradle.api.JavaVersion
 
 /** Java compilation options  */
+@Incubating
 interface CompileOptions : Initializable<CompileOptions> {
     /** @see .getSourceCompatibility
      */

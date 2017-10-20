@@ -17,6 +17,7 @@
 package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
+import org.gradle.api.Incubating
 
 /**
  * DSL object for configuring APK packaging options.
@@ -137,6 +138,7 @@ import com.android.build.api.dsl.Initializable
  * }
 </pre> *
  */
+@Incubating
 interface PackagingOptions : Initializable<PackagingOptions> {
 
     /** Returns the list of excluded paths.  */

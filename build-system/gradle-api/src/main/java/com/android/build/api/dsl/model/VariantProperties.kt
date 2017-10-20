@@ -22,9 +22,11 @@ import com.android.build.api.dsl.options.NdkOptions
 import com.android.build.api.dsl.options.ShaderOptions
 import com.android.build.api.dsl.options.SigningConfig
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 import java.io.File
 
 /** Properties common to Build Type, Product Flavors and Variants  */
+@Incubating
 interface VariantProperties {
 
     /** Sets the signing configuration. e.g.: `signingConfig signingConfigs.myConfig`  */

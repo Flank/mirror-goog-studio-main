@@ -17,8 +17,10 @@
 package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
+import org.gradle.api.Incubating
 
 /** Base interface for ndk-build per-variant info.  */
+@Incubating
 interface ExternalNativeNdkBuildOptions : Initializable<ExternalNativeNdkBuildOptions> {
     /** The ndk-build build system Flags  */
     var arguments: List<String>

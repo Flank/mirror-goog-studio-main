@@ -16,6 +16,9 @@
 
 package com.android.build.api.dsl.model
 
+import org.gradle.api.Incubating
+
+@Incubating
 interface FallbackStrategy {
 
     /**

@@ -16,5 +16,8 @@
 
 package com.android.build.api.dsl.variant
 
+import org.gradle.api.Incubating
+
 /** variant for separate test projects */
+@Incubating
 interface TestVariant : Variant

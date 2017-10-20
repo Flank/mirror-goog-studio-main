@@ -16,10 +16,12 @@
 
 package com.android.build.api.sourcesets
 
+import org.gradle.api.Incubating
 import java.io.File
 import org.gradle.api.Named
 
 /** An AndroidSourceFile represents a single file input for an Android project.  */
+@Incubating
 interface AndroidSourceFile : Named {
 
     /**

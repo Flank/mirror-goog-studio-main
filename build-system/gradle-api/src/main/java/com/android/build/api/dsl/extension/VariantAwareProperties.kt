@@ -23,11 +23,13 @@ import com.android.build.api.dsl.options.SigningConfig
 import com.android.build.api.dsl.variant.Variant
 import com.android.build.api.dsl.variant.VariantFilter
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 import org.gradle.api.NamedDomainObjectContainer
 
 /** Partial extension properties for modules that have variants made of [ProductFlavor] and
  * [BuildType]
  */
+@Incubating
 interface VariantAwareProperties : DefaultConfig {
 
     /** Build types used by this project.  */
