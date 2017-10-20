@@ -18,6 +18,7 @@ package com.android.tools.kotlin;
 
 import com.android.tools.utils.JarOutputCompiler;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
@@ -113,10 +114,21 @@ public class KotlinCompiler extends JarOutputCompiler {
             ExitCode exit =
                     CLICompiler.doMainNoExit(new K2JVMCompiler(), args.toArray(new String[] {}));
             xml.delete();
+            ensureManifestFile(outDir);
             return exit == ExitCode.OK;
 
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+    }
+
+    private void ensureManifestFile(File outDir) throws FileNotFoundException {
+        File manifest = new File(outDir, "META-INF/MANIFEST.MF");
+        if (!manifest.exists()) {
+            manifest.getParentFile().mkdirs();
+            try(PrintWriter writer = new PrintWriter(manifest)) {
+                writer.println("Manifest-Version: 1.0");
+            }
         }
     }
 }
