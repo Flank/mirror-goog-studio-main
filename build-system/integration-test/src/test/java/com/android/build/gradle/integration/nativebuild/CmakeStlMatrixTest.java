@@ -55,13 +55,7 @@ public class CmakeStlMatrixTest {
 
     @Parameterized.Parameters(name = "stl = {0}")
     public static Collection<Object[]> data() {
-        return ImmutableList.of(
-                new Object[] {"c++_shared"},
-                new Object[] {"gnustl_shared"},
-                new Object[] {"stlport_shared"},
-                new Object[] {"c++_static"},
-                new Object[] {"gnustl_static"},
-                new Object[] {"stlport_static"});
+        return ImmutableList.of(new Object[] {"c++_shared"}, new Object[] {"c++_static"});
     }
 
     public CmakeStlMatrixTest(String stl) {

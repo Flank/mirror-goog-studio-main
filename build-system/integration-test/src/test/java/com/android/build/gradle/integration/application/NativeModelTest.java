@@ -23,6 +23,7 @@ import static com.android.build.gradle.integration.common.fixture.app.HelloWorld
 import static com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp.cmakeLists;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
@@ -56,6 +57,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Set;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -551,6 +553,7 @@ public class NativeModelTest {
 
     @Before
     public void setup() throws Exception {
+        assumeNotCMakeOnWindows();
         if (config.nativeBuildOutputPath.equals("ABSOLUTE_PATH")) {
             File tempOutputDirectory = temporaryFolder.newFolder("absolute_path");
             config.buildGradle =
@@ -565,6 +568,7 @@ public class NativeModelTest {
 
     @Test
     public void checkModel() throws Exception {
+        assumeNotCMakeOnWindows();
         AndroidProject androidProject = project.model().getSingle().getOnlyModel();
         assertThat(androidProject.getSyncIssues()).hasSize(0);
         NativeAndroidProject model = project.model().getSingle(NativeAndroidProject.class);
@@ -643,6 +647,7 @@ public class NativeModelTest {
 
     @Test
     public void checkUpToDate() throws Exception {
+        assumeNotCMakeOnWindows();
         File jsonFile = getJsonFile("debug", "x86_64");
 
         // Initially, JSON file doesn't exist
@@ -740,6 +745,7 @@ public class NativeModelTest {
      */
     @Test
     public void checkNdkBuildCleanHasNoJobsFlags() throws Exception {
+        assumeNotCMakeOnWindows();
         if (config.buildSystem == NativeBuildSystem.NDK_BUILD) {
             project.model().getSingle(NativeAndroidProject.class);
             NativeBuildConfigValue buildConfig =
@@ -752,6 +758,7 @@ public class NativeModelTest {
 
     @Test
     public void checkDebugVsRelease() throws Exception {
+        assumeNotCMakeOnWindows();
         // Sync
         project.model().getSingle(NativeAndroidProject.class);
 
@@ -947,7 +954,16 @@ public class NativeModelTest {
 
         return outputDir;
     }
+
     private static String escapeWindowsCharacters(String path) {
         return path.replace("\\", "\\\\");
+    }
+
+    private void assumeNotCMakeOnWindows() {
+        // CMake project generation is too slow on Windows. Disable test there until performance
+        // is improved. This leaves the test on for Linux/PSQ
+        Assume.assumeTrue(
+                SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS
+                        || this.config.buildSystem != NativeBuildSystem.CMAKE);
     }
 }
