@@ -109,8 +109,9 @@ class ${CollectionName}Activity : ${superClass}() {
                 val item = v.tag as DummyContent.DummyItem
                 if (mTwoPane) {
                     val fragment = ${DetailName}Fragment().apply {
-                        arguments = Bundle()
-                        arguments.putString(${DetailName}Fragment.ARG_ITEM_ID, item.id)
+                        arguments = Bundle().apply {
+                            putString(${DetailName}Fragment.ARG_ITEM_ID, item.id)
+                        }
                     }
                     mParentActivity.supportFragmentManager
                             .beginTransaction()
