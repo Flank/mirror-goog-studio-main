@@ -18,9 +18,8 @@ package com.android.build.gradle.internal.incremental;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.incremental.IncrementalVisitor.ClassAndInterfacesNode;
+import com.android.annotations.VisibleForTesting;
 import com.android.utils.ILogger;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -82,6 +81,21 @@ public class AsmUtils {
         }
     }
 
+    public static final ClassNodeProvider classLoaderBasedProvider =
+            (className, logger) -> {
+                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+                try (InputStream is = classLoader.getResourceAsStream(className + ".class")) {
+                    if (is == null) {
+                        throw new IOException("Failed to find byte code for " + className);
+                    }
+
+                    ClassReader classReader = new ClassReader(is);
+                    ClassNode node = new ClassNode();
+                    classReader.accept(node, ClassReader.EXPAND_FRAMES);
+                    return node;
+                }
+            };
+
     public static class JarBasedClassReader implements ClassNodeProvider {
 
         private final File file;
@@ -106,23 +120,7 @@ public class AsmUtils {
         }
     }
 
-    public static final ClassNodeProvider classLoaderBasedProvider =
-            (className, logger) -> {
-                ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-                try (InputStream is = classLoader.getResourceAsStream(className + ".class")) {
-                    if (is == null) {
-                        throw new IOException("Failed to find byte code for " + className);
-                    }
-
-                    ClassReader classReader = new ClassReader(is);
-                    ClassNode node = new ClassNode();
-                    classReader.accept(node, ClassReader.EXPAND_FRAMES);
-                    return node;
-                }
-            };
-
     @NonNull
-    @VisibleForTesting
     public static List<AnnotationNode> getInvisibleAnnotationsOnClassOrOuterClasses(
             @NonNull ClassNodeProvider classReader,
             @NonNull ClassNode classNode,
@@ -147,25 +145,24 @@ public class AsmUtils {
 
     /**
      * Read a {@link ClassNode} from a class name and all it's implemented interfaces also as {@link
-     * ClassNode}. Store the class and its interfaces into a {@link ClassAndInterfacesNode}
-     * instance.
+     * ClassNode}. Store the class and its interfaces into a {@link AsmClassNode} instance.
      *
      * @param classReaderProvider provider to read class bytes from storage
      * @param parentClassName requested class name
      * @param logger logger to log
      * @return null if the parentClassName cannot be located by the provider otherwise an {@link
-     *     ClassAndInterfacesNode} encapsulating the class and its directly implemented interfaces
+     *     AsmClassNode} encapsulating the class and its directly implemented interfaces
      * @throws IOException when bytes cannot be read.
      */
     @Nullable
-    public static ClassAndInterfacesNode readParentClassAndInterfaces(
+    public static AsmClassNode readClassAndInterfaces(
             @NonNull ClassNodeProvider classReaderProvider,
             @NonNull String parentClassName,
             @NonNull String childClassName,
             int targetApi,
             @NonNull ILogger logger)
             throws IOException {
-        ClassNode classNode = classReaderProvider.loadClassNode(parentClassName, logger);
+        ClassNode classNode = loadClass(classReaderProvider, parentClassName, logger);
         if (classNode == null) {
             // Could not locate parent class. This is as far as we can go locating parents.
             logger.warning(
@@ -177,13 +174,59 @@ public class AsmUtils {
                     parentClassName, childClassName, targetApi);
             return null;
         }
+        // read the parent.
+        AsmClassNode parentClassNode =
+                classNode.superName != null
+                        ? readClassAndInterfaces(
+                                classReaderProvider,
+                                classNode.superName,
+                                childClassName,
+                                targetApi,
+                                logger)
+                        : null;
+
         // now read all implemented interfaces.
-        ImmutableList.Builder<ClassNode> interfaces = ImmutableList.builder();
+        ImmutableList.Builder<AsmInterfaceNode> interfaces = ImmutableList.builder();
         if (!readInterfaces(classNode, classReaderProvider, interfaces, logger)) {
             // if we cannot read any implemented interfaces, return null;
             return null;
         }
-        return new ClassAndInterfacesNode(classNode, interfaces.build());
+        return new AsmClassNode(classNode, parentClassNode, interfaces.build());
+    }
+
+    /**
+     * Loads an interface hierarchy and build a {@link AsmInterfaceNode}
+     *
+     * @param classReaderProvider provider of {@link ClassNode} instances.
+     * @param interfaceName name of the interface to load the hierarchy for.
+     * @param classNode the class implementing the interface name.
+     * @param logger to log issues.
+     * @return the interface hierarchy for interfaceName or null if class bytes cannot be located or
+     *     loaded.
+     * @throws IOException when loading bytes from disk failed.
+     */
+    @Nullable
+    private static AsmInterfaceNode readInterfaceHierarchy(
+            ClassNodeProvider classReaderProvider,
+            String interfaceName,
+            ClassNode classNode,
+            ILogger logger)
+            throws IOException {
+
+        ClassNode interfaceNode = loadClass(classReaderProvider, interfaceName, logger);
+        ImmutableList.Builder<AsmInterfaceNode> builder = ImmutableList.builder();
+
+        if (interfaceNode != null) {
+            return readInterfaces(interfaceNode, classReaderProvider, builder, logger)
+                    ? new AsmInterfaceNode(interfaceNode, builder.build())
+                    : null;
+        } else {
+            logger.warning(
+                    "Cannot load interface %$1s, which is implemented"
+                            + "by %2$s, therefore %2$s will not be eligible for hotswap.",
+                    interfaceName, classNode.name);
+            return null;
+        }
     }
 
     /**
@@ -191,27 +234,24 @@ public class AsmUtils {
      *
      * @param classNode the class
      * @param classReaderProvider a provider to read class bytes from storage
-     * @param interfacesList a builder to store the list of ClassNode for each directly implemented
-     *     interfaces, can be empty after method returns.
+     * @param interfacesList a builder to store the list of AsmInterfaceNode for each directly
+     *     implemented interfaces, can be empty after method returns.
      * @param logger logger to log
      * @return true if implemented interfaces could all be loaded, false otherwise.
      * @throws IOException when bytes cannot be read
      */
-    public static boolean readInterfaces(
+    static boolean readInterfaces(
             @NonNull ClassNode classNode,
             @NonNull ClassNodeProvider classReaderProvider,
-            @NonNull ImmutableList.Builder<ClassNode> interfacesList,
+            @NonNull ImmutableList.Builder<AsmInterfaceNode> interfacesList,
             @NonNull ILogger logger)
             throws IOException {
         for (String anInterface : (List<String>) classNode.interfaces) {
-            ClassNode intf = loadClass(classReaderProvider, anInterface, logger);
-            if (intf != null) {
-                interfacesList.add(intf);
+            AsmInterfaceNode interfaceNode =
+                    readInterfaceHierarchy(classReaderProvider, anInterface, classNode, logger);
+            if (interfaceNode != null) {
+                interfacesList.add(interfaceNode);
             } else {
-                logger.warning(
-                        "Cannot load interface %$1s, which is implemented"
-                                + "by %2$s, therefore %2$s will not be eligible for hotswap.",
-                        anInterface, classNode.name);
                 return false;
             }
         }
@@ -225,47 +265,36 @@ public class AsmUtils {
         return node;
     }
 
-    @NonNull
-    public static List<ClassAndInterfacesNode> parseParents(
+    @Nullable
+    public static AsmClassNode loadClass(
             @NonNull ILogger logger,
             @NonNull ClassNodeProvider classBytesReader,
             @NonNull ClassNode classNode,
             int targetApi)
             throws IOException {
 
-        ImmutableList.Builder<ClassAndInterfacesNode> parentNodes = ImmutableList.builder();
-
-        String currentParentName = classNode.superName;
-
-        while (currentParentName != null) {
-            ClassAndInterfacesNode parentWithInterfacesNode =
-                    readParentClassAndInterfaces(
-                            classBytesReader, currentParentName, classNode.name, targetApi, logger);
-            if (parentWithInterfacesNode == null) {
-                // May need method information from outside of the current project. The thread's
-                // context class loader is configured by the caller (InstantRunTransform) to contain
-                // all app's dependencies.
-                parentWithInterfacesNode =
-                        readParentClassAndInterfaces(
-                                classLoaderBasedProvider,
-                                currentParentName,
+        AsmClassNode parentedClassNode =
+                classNode.superName != null
+                        ? readClassAndInterfaces(
+                                classBytesReader,
+                                classNode.superName,
                                 classNode.name,
                                 targetApi,
-                                logger);
-                if (parentWithInterfacesNode == null) {
-                    // Could not locate parent class or implemented interfaces,
-                    // This is as far as we can go locating parents.
-                    return ImmutableList.of();
-                }
-            }
-            parentNodes.add(parentWithInterfacesNode);
-            currentParentName = parentWithInterfacesNode.classNode.superName;
+                                logger)
+                        : null;
+
+        // read interfaces
+        ImmutableList.Builder<AsmInterfaceNode> interfaces = ImmutableList.builder();
+        if (!readInterfaces(classNode, classBytesReader, interfaces, logger)) {
+            return null;
         }
-        return parentNodes.build();
+
+        return new AsmClassNode(classNode, parentedClassNode, interfaces.build());
     }
 
     @Nullable
-    public static ClassNode loadClass(
+    @VisibleForTesting
+    static ClassNode loadClass(
             @NonNull ClassNodeProvider classBytesReader,
             @NonNull String className,
             @NonNull ILogger logger)
@@ -275,18 +304,7 @@ public class AsmUtils {
         if (classNode != null) {
             return classNode;
         }
-        // May need method information from outside of the current project. The thread's
-        // context class loader is configured by the caller (InstantRunTransform) to contain
-        // all app's dependencies.
-        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-        try {
-            return readClass(contextClassLoader, className);
-        } catch (IOException e) {
-            // Could not locate parent class. This is as far as we can go locating parents.
-            logger.warning(e.getMessage());
-            logger.warning("IncrementalVisitor parseParents could not locate %1$s", className);
-        }
-        return null;
+        return classLoaderBasedProvider.loadClassNode(className, logger);
     }
 
     @NonNull
@@ -320,7 +338,8 @@ public class AsmUtils {
     }
 
     @Nullable
-    public static String getOuterClassName(@NonNull ClassNode classNode) {
+    @VisibleForTesting
+    static String getOuterClassName(@NonNull ClassNode classNode) {
         if (classNode.outerClass != null) {
             return classNode.outerClass;
         }

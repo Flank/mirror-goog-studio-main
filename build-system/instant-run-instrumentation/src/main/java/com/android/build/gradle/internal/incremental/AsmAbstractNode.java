@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-package com.java8;
+package com.android.build.gradle.internal.incremental;
 
-public interface InterfaceWithDefault {
+import com.android.annotations.NonNull;
+import org.objectweb.asm.tree.ClassNode;
 
-    String someMethod();
+/** Encapsulation of an Asm {@link ClassNode} reference. */
+class AsmAbstractNode {
+    @NonNull private final ClassNode classNode;
 
-    default String defaultedMethod() {
-        return "new default";
+    protected AsmAbstractNode(@NonNull ClassNode classNode) {
+        this.classNode = classNode;
     }
 
-    default String finalMethod() {
-        return "actually changed";
+    @NonNull
+    public ClassNode getClassNode() {
+        return classNode;
     }
 }

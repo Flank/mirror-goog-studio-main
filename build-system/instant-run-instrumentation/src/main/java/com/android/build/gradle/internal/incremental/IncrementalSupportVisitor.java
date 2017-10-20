@@ -19,12 +19,13 @@ package com.android.build.gradle.internal.incremental;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.utils.ILogger;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -71,11 +72,10 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         @NonNull
         @Override
         public IncrementalVisitor build(
-                @NonNull ClassAndInterfacesNode classNode,
-                @NonNull List<ClassAndInterfacesNode> parentNodes,
+                @NonNull AsmClassNode classNode,
                 @NonNull ClassVisitor classVisitor,
                 @NonNull ILogger logger) {
-            return new IncrementalSupportVisitor(classNode, parentNodes, classVisitor, logger);
+            return new IncrementalSupportVisitor(classNode, classVisitor, logger);
         }
 
         @Override
@@ -95,11 +95,10 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
     public static final IncrementalVisitor.VisitorBuilder VISITOR_BUILDER = new VisitorBuilder();
 
     public IncrementalSupportVisitor(
-            @NonNull ClassAndInterfacesNode classNode,
-            @NonNull List<ClassAndInterfacesNode> parentNodes,
+            @NonNull AsmClassNode classNode,
             @NonNull ClassVisitor classVisitor,
             @NonNull ILogger logger) {
-        super(classNode, parentNodes, classVisitor, logger);
+        super(classNode, classVisitor, logger);
     }
 
     /**
@@ -250,11 +249,8 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
      */
     private static int transformClassAccessForInstantRun(int access) {
         AccessRight accessRight = AccessRight.fromNodeAccess(access);
-        int fixedVisibility = accessRight == AccessRight.PACKAGE_PRIVATE
-                ? access | Opcodes.ACC_PUBLIC
-                : access;
 
-        return fixedVisibility;
+        return accessRight == AccessRight.PACKAGE_PRIVATE ? access | Opcodes.ACC_PUBLIC : access;
     }
 
     /**
@@ -281,7 +277,7 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         return access;
     }
 
-    private abstract class ISAbstractMethodVisitor extends GeneratorAdapter {
+    private abstract static class ISAbstractMethodVisitor extends GeneratorAdapter {
 
         protected boolean disableRedirection = false;
         protected int change;
@@ -446,6 +442,14 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
             this.method = method;
             this.owner = owner;
         }
+
+        private String getDefautlDispatchName() {
+            return getDefaultDispatchName(method);
+        }
+
+        private static String getDefaultDispatchName(MethodNode method) {
+            return method.name + "." + method.desc;
+        }
     }
     /***
      * Inserts a trampoline to this class so that the updated methods can make calls to super
@@ -485,20 +489,31 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         // implementation.
         // This will work fine as long as we don't support adding methods to a class.
         final Map<String, MethodReference> uniqueMethods = new HashMap<>();
-        if (parentNodes.isEmpty()) {
+        if (classAndInterfaceNode.hasParent()) {
+            addAllNewMethods(
+                    classAndInterfaceNode.getClassNode(),
+                    classAndInterfaceNode.getParent(),
+                    uniqueMethods);
+        } else {
             // if we cannot determine the parents for this class, let's blindly add all the
             // method of the current class as a gateway to a possible parent version.
-            addAllNewMethods(classAndInterfaceNode.classNode, classAndInterfaceNode, uniqueMethods);
-        } else {
-            // otherwise, use the parent list.
-            for (ClassAndInterfacesNode parentNode : parentNodes) {
-                addAllNewMethods(classAndInterfaceNode.classNode, parentNode, uniqueMethods);
-            }
+            addAllNewMethods(
+                    classAndInterfaceNode.getClassNode(),
+                    classAndInterfaceNode.getClassNode(),
+                    uniqueMethods);
         }
 
-        // and gather all default methods of all directly implemented interfaces.
-        for (ClassNode implementedInterface : classAndInterfaceNode.implementedInterfaces) {
-            addAllNewMethods(implementedInterface, implementedInterface, uniqueMethods);
+        // and gather all default methods of all directly/inherited implemented interfaces.
+        for (AsmInterfaceNode implementedInterface : classAndInterfaceNode.getInterfaces()) {
+            addDefaultMethods(
+                    classAndInterfaceNode.getClassNode(), implementedInterface, uniqueMethods);
+
+            implementedInterface.onAll(
+                    interfaceNode -> {
+                        addAllNewMethods(
+                                classAndInterfaceNode.getClassNode(), interfaceNode, uniqueMethods);
+                        return null;
+                    });
         }
 
         new StringSwitch() {
@@ -593,11 +608,15 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         final Map<String, MethodNode> uniqueMethods = new HashMap<>();
 
         addAllNewConstructors(
-                uniqueMethods, classAndInterfaceNode.classNode, true /*keepPrivateConstructors*/);
-        for (ClassAndInterfacesNode parentNode : parentNodes) {
-            addAllNewConstructors(
-                    uniqueMethods, parentNode.classNode, false /*keepPrivateConstructors*/);
-        }
+                uniqueMethods,
+                classAndInterfaceNode.getClassNode(),
+                true /*keepPrivateConstructors*/);
+        classAndInterfaceNode.onParents(
+                parentClassNode -> {
+                    addAllNewConstructors(
+                            uniqueMethods, parentClassNode, false /*keepPrivateConstructors*/);
+                    return null;
+                });
 
         int access = Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC;
 
@@ -762,42 +781,58 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
                 methodReference.method.name, methodReference.method.access,
                 methodReference.owner.name, methodReference.owner.access);
         // if the method owner class is accessible from the visited class, just use that.
-        if (isParentClassVisible(methodReference.owner, classAndInterfaceNode.classNode)) {
+        if (isParentClassVisible(methodReference.owner, classAndInterfaceNode.getClassNode())) {
             return methodReference.owner.name;
         }
         logger.verbose("Found an inaccessible methodReference %1$s", methodReference.method.name);
+
         // walk up the hierarchy, starting at the method reference owner.
-        Iterator<ClassAndInterfacesNode> parentIterator = parentNodes.iterator();
-        ClassNode parent = parentIterator.next().classNode;
-        while(!parent.name.equals(methodReference.owner.name)
-            && parentIterator.hasNext()) {
-            parent = parentIterator.next().classNode;
-        }
-        while (parentIterator.hasNext()) {
-            ClassNode node = parentIterator.next().classNode;
-            // check that this parent is visible, there might be several layers of package
-            // private classes.
-            if (isParentClassVisible(node, classAndInterfaceNode.classNode)) {
-                //noinspection unchecked: ASM API
-                for (MethodNode methodNode : (List<MethodNode>) node.methods) {
-                    // do not reference bridge methods, they might not be translated into dex, or
-                    // might disappear in the next javac compiler for that use case.
-                    if (methodNode.name.equals(methodReference.method.name)
-                            && methodNode.desc.equals(methodReference.method.desc)
-                            && (methodNode.access
-                                    & (Opcodes.ACC_BRIDGE | Opcodes.ACC_ABSTRACT)) == 0 ) {
-                        logger.verbose(
-                                "Using class %1$s for dispatching %2$s:%3$s",
-                                node.name,
-                                methodReference.method.name,
-                                methodReference.method.desc);
-                        return node.name;
-                    }
+        if (classAndInterfaceNode.hasParent()) {
+            AsmClassNode asmClassNode = classAndInterfaceNode.getParent();
+            while (!asmClassNode.getClassNode().name.equals(methodReference.owner.name)
+                    && asmClassNode.hasParent()) {
+                asmClassNode = asmClassNode.getParent();
+            }
+            if (asmClassNode.hasParent()) {
+                String selectedParent =
+                        asmClassNode.onParents(
+                                parentClassNode -> {
+
+                                    // check that this parent is visible, there might be several layers of package
+                                    // private classes.
+                                    if (isParentClassVisible(
+                                            parentClassNode,
+                                            classAndInterfaceNode.getClassNode())) {
+                                        //noinspection unchecked: ASM API
+                                        for (MethodNode methodNode :
+                                                (List<MethodNode>) parentClassNode.methods) {
+                                            // do not reference bridge methods, they might not be translated into dex, or
+                                            // might disappear in the next javac compiler for that use case.
+                                            if (methodNode.name.equals(methodReference.method.name)
+                                                    && methodNode.desc.equals(
+                                                            methodReference.method.desc)
+                                                    && (methodNode.access
+                                                                    & (Opcodes.ACC_BRIDGE
+                                                                            | Opcodes.ACC_ABSTRACT))
+                                                            == 0) {
+                                                logger.verbose(
+                                                        "Using class %1$s for dispatching %2$s:%3$s",
+                                                        parentClassNode.name,
+                                                        methodReference.method.name,
+                                                        methodReference.method.desc);
+                                                return parentClassNode.name;
+                                            }
+                                        }
+                                    }
+                                    return null;
+                                });
+                if (selectedParent != null) {
+                    return selectedParent;
                 }
             }
         }
         logger.verbose("Using immediate parent for dispatching %1$s", methodReference.method.desc);
-        return classAndInterfaceNode.classNode.superName;
+        return classAndInterfaceNode.getClassNode().superName;
     }
 
     private static boolean isParentClassVisible(@NonNull ClassNode parent,
@@ -817,16 +852,16 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
      *     methods from implemented interfaces from
      * @param methods the methods already encountered in the ClassNode hierarchy
      */
-    private static void addAllNewMethods(
+    private void addAllNewMethods(
             ClassNode instrumentedClass,
-            ClassAndInterfacesNode superClass,
+            AsmClassNode superClass,
             Map<String, MethodReference> methods) {
 
-        addAllNewMethods(instrumentedClass, superClass.classNode, methods);
-        // add all default methods from interfaces implemented by parents.
-        for (ClassNode implementedInterface : superClass.implementedInterfaces) {
-            addAllNewMethods(instrumentedClass, implementedInterface, methods);
-        }
+        superClass.onAll(
+                classNode -> {
+                    addAllNewMethods(instrumentedClass, classNode, methods);
+                    return null;
+                });
     }
 
     /**
@@ -837,14 +872,68 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
      * @param superClass the class to save all new methods from
      * @param methods the methods already encountered in the ClassNode hierarchy
      */
-    private static void addAllNewMethods(
+    private List<MethodReference> addAllNewMethods(
             ClassNode instrumentedClass,
             ClassNode superClass,
             Map<String, MethodReference> methods) {
+
+        ImmutableList.Builder<MethodReference> methodRefs = ImmutableList.builder();
         //noinspection unchecked
         for (MethodNode method : (List<MethodNode>) superClass.methods) {
-            addNewMethod(instrumentedClass, superClass, method, methods);
+            MethodReference methodRef =
+                    addNewMethod(instrumentedClass, superClass, method, methods);
+            if (methodRef != null) {
+                methodRefs.add(methodRef);
+            }
         }
+        return methodRefs.build();
+    }
+
+    /**
+     * Adds all default method for the passed implemented interface of a class as well as all
+     * default methods from any interface extended by the passed implemented interface.
+     *
+     * @param instrumentedClass the class we are bytecode instrumenting.
+     * @param implementedInterface the interface that might contain default methods.
+     * @param methods map of methods we already encountered on the instrumentedClass implementation.
+     * @return nothing
+     */
+    private Void addDefaultMethods(
+            ClassNode instrumentedClass,
+            AsmInterfaceNode implementedInterface,
+            Map<String, MethodReference> methods) {
+
+        Map<String, MethodReference> visitedInterfaceMethods = new HashMap<>();
+        implementedInterface.onAll(
+                interfaceNode -> {
+                    addAllNewMethods(instrumentedClass, interfaceNode, methods)
+                            .forEach(
+                                    methodRef -> {
+                                        visitedInterfaceMethods.put(
+                                                methodRef.getDefautlDispatchName(), methodRef);
+                                    });
+                    return null;
+                });
+
+        // now make sure we have a gateway for inherited default methods that are not present
+        // on the derived interface as calls can be made using the derived interface as the owner.
+        for (MethodNode methodNode :
+                (List<MethodNode>) implementedInterface.getClassNode().methods) {
+            visitedInterfaceMethods.remove(MethodReference.getDefaultDispatchName(methodNode));
+        }
+        // all the remaining methods should be added under this interface to make sure we calling
+        // all possible owners for this method.
+        for (MethodReference methodReference : visitedInterfaceMethods.values()) {
+            addNewMethod(
+                    implementedInterface.getClassNode().name
+                            + "."
+                            + methodReference.getDefautlDispatchName(),
+                    instrumentedClass,
+                    implementedInterface.getClassNode(),
+                    methodReference.method,
+                    methods);
+        }
+        return null;
     }
 
     /**
@@ -854,8 +943,11 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
      * @param superClass the class or interface defining the passed method.
      * @param method the method to study
      * @param methods the methods arlready encountered in the ClassNode hierarchy
+     * @return the newly added {@link MethodReference} of null if the method was not added for any
+     *     reason.
      */
-    private static void addNewMethod(
+    @Nullable
+    private static MethodReference addNewMethod(
             ClassNode instrumentedClass,
             ClassNode superClass,
             MethodNode method,
@@ -863,10 +955,10 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
 
         if (method.name.equals(ByteCodeUtils.CONSTRUCTOR)
                 || method.name.equals(ByteCodeUtils.CLASS_INITIALIZER)) {
-            return;
+            return null;
         }
 
-        String name = method.name + "." + method.desc;
+        String name = MethodReference.getDefaultDispatchName(method);
 
         // if we are dealing with an interface default method we should always provide a
         // way to invoke it through the access$super. It is possible that this default method
@@ -875,18 +967,42 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
         // implemented interfaces methods but not all of them).
         if ((superClass.access & Opcodes.ACC_INTERFACE) != 0
                 && isParentClassVisible(superClass, instrumentedClass)) {
-            // all default methods name will use the defining interface name for the hascode
+            // all default methods name will use the defining interface name for the hashcode
             // to avoid name collision when dealing with 2 methods with the same names coming
             // from 2 distinct interfaces.
             name = superClass.name + "." + name;
         }
 
+        return addNewMethod(name, instrumentedClass, superClass, method, methods);
+    }
+
+    /**
+     * Add a new method in the list of unseen methods in the instrumentedClass hierarchy.
+     *
+     * @param name the dispatching name that will be used for matching callers to the passed method.
+     * @param instrumentedClass class that is being visited
+     * @param superClass the class or interface defining the passed method.
+     * @param method the method to study
+     * @param methods the methods arlready encountered in the ClassNode hierarchy
+     * @return the newly added {@link MethodReference} of null if the method was not added for any
+     *     reason.
+     */
+    @Nullable
+    private static MethodReference addNewMethod(
+            String name,
+            ClassNode instrumentedClass,
+            ClassNode superClass,
+            MethodNode method,
+            Map<String, MethodReference> methods) {
         if (isAccessCompatibleWithInstantRun(method.access)
                 && !methods.containsKey(name)
                 && (method.access & Opcodes.ACC_STATIC) == 0
                 && isCallableFromSubclass(method, superClass, instrumentedClass)) {
-            methods.put(name, new MethodReference(method, superClass));
+            MethodReference methodReference = new MethodReference(method, superClass);
+            methods.put(name, methodReference);
+            return methodReference;
         }
+        return null;
     }
 
     @SuppressWarnings("SimplifiableIfStatement")

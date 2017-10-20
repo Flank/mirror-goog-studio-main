@@ -244,8 +244,8 @@ public class IncrementalVisitorTest {
         AsmUtils.ClassNodeProvider classReaderProvider = new ClassNodeProviderForTests();
         ILogger iLogger = new NullLogger();
 
-        IncrementalVisitor.ClassAndInterfacesNode classAndInterfacesNode =
-                AsmUtils.readParentClassAndInterfaces(
+        AsmClassNode classAndInterfacesNode =
+                AsmUtils.readClassAndInterfaces(
                         classReaderProvider,
                         Type.getType(ImplWithDefault.class).getInternalName(),
                         "Object",

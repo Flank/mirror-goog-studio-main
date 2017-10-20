@@ -22,11 +22,9 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
-import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -77,8 +75,7 @@ public class IncrementalVisitor extends ClassVisitor {
 
     protected String visitedClassName;
     protected String visitedSuperName;
-    @NonNull protected final ClassAndInterfacesNode classAndInterfaceNode;
-    @NonNull protected final List<ClassAndInterfacesNode> parentNodes;
+    @NonNull protected final AsmClassNode classAndInterfaceNode;
     @NonNull
     protected final ILogger logger;
 
@@ -98,17 +95,15 @@ public class IncrementalVisitor extends ClassVisitor {
     }
 
     public IncrementalVisitor(
-            @NonNull ClassAndInterfacesNode classAndInterfaceNode,
-            @NonNull List<ClassAndInterfacesNode> parentNodes,
+            @NonNull AsmClassNode classAndInterfaceNode,
             @NonNull ClassVisitor classVisitor,
             @NonNull ILogger logger) {
         super(Opcodes.ASM5, classVisitor);
         this.classAndInterfaceNode = classAndInterfaceNode;
-        this.parentNodes = parentNodes;
         this.logger = logger;
         this.logger.verbose(
                 "%s: Visiting %s",
-                getClass().getSimpleName(), classAndInterfaceNode.classNode.name);
+                getClass().getSimpleName(), classAndInterfaceNode.getClassNode().name);
     }
 
     @NonNull
@@ -119,28 +114,14 @@ public class IncrementalVisitor extends ClassVisitor {
     @Nullable
     AccessRight getFieldAccessRightByName(@NonNull String fieldName) {
         FieldNode fieldNode = getFieldByNameInClass(fieldName, classAndInterfaceNode);
-        Iterator<ClassAndInterfacesNode> iterator = parentNodes.iterator();
-        while(fieldNode == null && iterator.hasNext()) {
-            ClassAndInterfacesNode parentNode = iterator.next();
-            fieldNode = getFieldByNameInClass(fieldName, parentNode);
-        }
         return fieldNode != null ? AccessRight.fromNodeAccess(fieldNode.access) : null;
     }
 
     @Nullable
     protected static FieldNode getFieldByNameInClass(
-            @NonNull String fieldName, @NonNull ClassAndInterfacesNode classAndInterfaceNode) {
-        //noinspection unchecked ASM api.
-        FieldNode fieldNode = getFieldByNameInClass(fieldName, classAndInterfaceNode.classNode);
-        if (fieldNode == null) {
-            for (ClassNode implementedInterface : classAndInterfaceNode.implementedInterfaces) {
-                fieldNode = getFieldByNameInClass(fieldName, implementedInterface);
-                if (fieldNode != null) {
-                    return fieldNode;
-                }
-            }
-        }
-        return fieldNode;
+            @NonNull String fieldName, @NonNull AsmClassNode classAndInterfaceNode) {
+        return classAndInterfaceNode.onHierarchy(
+                classNode -> getFieldByNameInClass(fieldName, classNode));
     }
 
     @Nullable
@@ -159,31 +140,14 @@ public class IncrementalVisitor extends ClassVisitor {
     @Nullable
     protected AccessRight getMethodAccessRightByName(String methodName, String desc) {
         MethodNode methodNode = getMethodByNameInClass(methodName, desc, classAndInterfaceNode);
-        Iterator<ClassAndInterfacesNode> iterator = parentNodes.iterator();
-        while(methodNode == null && iterator.hasNext()) {
-            ClassAndInterfacesNode parentNode = iterator.next();
-            methodNode = getMethodByNameInClass(methodName, desc, parentNode);
-        }
         return methodNode != null ? AccessRight.fromNodeAccess(methodNode.access) : null;
     }
 
     @Nullable
     protected static MethodNode getMethodByNameInClass(
-            String methodName, String desc, ClassAndInterfacesNode classAndInterfaceNode) {
-        //noinspection unchecked ASM API
-        MethodNode methodByNameInClass =
-                getMethodByNameInClass(methodName, desc, classAndInterfaceNode.classNode);
-        if (methodByNameInClass == null) {
-            for (ClassNode implementedInterface : classAndInterfaceNode.implementedInterfaces) {
-                methodByNameInClass =
-                        getMethodByNameInClass(methodName, desc, implementedInterface);
-                if (methodByNameInClass != null) {
-                    return methodByNameInClass;
-                }
-            }
-        }
-
-        return methodByNameInClass;
+            String methodName, String desc, AsmClassNode classAndInterfaceNode) {
+        return classAndInterfaceNode.onAll(
+                classNode -> getMethodByNameInClass(methodName, desc, classNode));
     }
 
     @Nullable
@@ -249,8 +213,7 @@ public class IncrementalVisitor extends ClassVisitor {
     public interface VisitorBuilder {
         @NonNull
         IncrementalVisitor build(
-                @NonNull ClassAndInterfacesNode classNode,
-                @NonNull List<ClassAndInterfacesNode> parentNodes,
+                @NonNull AsmClassNode classNode,
                 @NonNull ClassVisitor classVisitor,
                 @NonNull ILogger logger);
 
@@ -259,17 +222,6 @@ public class IncrementalVisitor extends ClassVisitor {
 
         @NonNull
         OutputType getOutputType();
-    }
-
-    static class ClassAndInterfacesNode {
-        @NonNull final ClassNode classNode;
-        @NonNull final List<ClassNode> implementedInterfaces;
-
-        ClassAndInterfacesNode(
-                @NonNull ClassNode classNode, @NonNull List<ClassNode> implementedInterfaces) {
-            this.classNode = classNode;
-            this.implementedInterfaces = implementedInterfaces;
-        }
     }
 
     /**
@@ -379,24 +331,19 @@ public class IncrementalVisitor extends ClassVisitor {
 
         // if we are targeting a more recent version than the current device, disable instant run
         // for that class.
-        List<ClassAndInterfacesNode> parentsNodes =
+        AsmClassNode parentedClassNode =
                 isClassTargetingNewerPlatform(
                                 targetApiLevel,
                                 TARGET_API_TYPE,
                                 directoryClassReader,
                                 classNode,
                                 logger)
-                        ? ImmutableList.of()
-                        : AsmUtils.parseParents(
+                        ? null
+                        : AsmUtils.loadClass(
                                 logger, directoryClassReader, classNode, targetApiLevel);
 
-        ImmutableList.Builder<ClassNode> implementedInterfaces = ImmutableList.builder();
-        boolean interfacesLoaded =
-                AsmUtils.readInterfaces(
-                        classNode, directoryClassReader, implementedInterfaces, logger);
-
         // if we could not determine the parent hierarchy, disable instant run.
-        if (parentsNodes.isEmpty() || !interfacesLoaded || isPackageInstantRunDisabled(inputFile)) {
+        if (parentedClassNode == null || isPackageInstantRunDisabled(inputFile)) {
             if (visitorBuilder.getOutputType() == OutputType.INSTRUMENT) {
                 Files.createParentDirs(outputFile);
                 Files.write(classBytes, outputFile);
@@ -408,12 +355,7 @@ public class IncrementalVisitor extends ClassVisitor {
 
         outputFile = new File(outputDirectory, visitorBuilder.getMangledRelativeClassFilePath(path));
         Files.createParentDirs(outputFile);
-        IncrementalVisitor visitor =
-                visitorBuilder.build(
-                        new ClassAndInterfacesNode(classNode, implementedInterfaces.build()),
-                        parentsNodes,
-                        classWriter,
-                        logger);
+        IncrementalVisitor visitor = visitorBuilder.build(parentedClassNode, classWriter, logger);
 
         if (visitorBuilder.getOutputType() == OutputType.INSTRUMENT) {
             /*
