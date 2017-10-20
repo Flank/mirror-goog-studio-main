@@ -121,6 +121,30 @@ public class FirebaseMessagingDetectorTest extends AbstractCheckTest {
         assertEquals(expected, result);
     }
 
+    public void testSuppress() {
+        // Regression test for
+        // 67986477: It's not possible to suppress MissingFirebaseInstanceTokenRefresh warning
+        //noinspection all // Sample code
+        lint().files(
+                java("package test.pkg;\n" +
+                        "import com.google.firebase.iid.FirebaseInstanceId;\n" +
+                        "import com.google.firebase.iid.FirebaseInstanceIdService;\n" +
+                        "\n" +
+                        "public class SomeInteractor {\n" +
+                        "\n" +
+                        "    private final FirebaseInstanceId firebaseInstanceId;\n" +
+                        "\n" +
+                        "    @SuppressWarnings(\"MissingFirebaseInstanceTokenRefresh\")\n" +
+                        "    @Override\n" +
+                        "    public void test() {\n" +
+                        "        String token = firebaseInstanceId.getToken();\n" +
+                        "    }\n" +
+                        "}"),
+                mFirebaseInstanceIdService,
+                mFirebaseInstanceId).run()
+                .expectClean();
+    }
+
     @Override
     protected Detector getDetector() {
         return new FirebaseMessagingDetector();

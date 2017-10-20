@@ -4,7 +4,7 @@ apply plugin: 'jacoco-tools-base'
 apply plugin: 'sdk-java-lib'
 
 group = 'com.android.tools.lint'
-archivesBaseName = 'lint-api'
+archivesBaseName = 'lint-kotlin'
 version = rootProject.ext.baseVersion
 
 compileKotlin {
@@ -14,17 +14,9 @@ compileKotlin {
 }
 
 dependencies {
-    compile project(':base:sdk-common')
-    compile project(':base:builder-model')
-    compile libs.guava
-    compile project(':base:lint-kotlin')
     compile project(':base:intellij-core')
+    compile project(':base:kotlin-compiler')
     compile project(':base:uast')
-    compile project(':base:manifest-merger')
-
-    compile 'com.android.tools.external.lombok:lombok-ast:0.2.3'
-    compile libs.asm
-    compile libs.asm_tree
 
     compile libs.kotlin_reflect
     compile libs.kotlin_stdlib
@@ -35,8 +27,8 @@ sourceSets {
     test.resources.srcDir 'src/test/java'
 }
 
-project.ext.pomName = 'Android Tools Lint API'
-project.ext.pomDesc = 'API to build lint checks'
+project.ext.pomName = 'Android Tools Lint Kotlin API'
+project.ext.pomDesc = 'Android Tools Lint Kotlin API'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
 apply from: "$rootDir/buildSrc/base/bintray.gradle"

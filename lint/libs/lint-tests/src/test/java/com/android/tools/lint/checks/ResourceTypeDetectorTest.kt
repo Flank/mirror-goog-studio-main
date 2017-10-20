@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Detector
-import org.junit.Ignore
 
 class ResourceTypeDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = ResourceTypeDetector()
@@ -878,8 +877,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 .expectClean()
     }
 
-    @Ignore("Needs Kotlin-specific implementation of JavaEvaluator#computeArgumentMapping")
-    fun ignore_testExtensionMethods() {
+    fun testExtensionMethods() {
         // Regression test for https://issuetracker.google.com/65602862
         lint().files(
                 kotlin("" +
@@ -917,6 +915,92 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 })
                 .run()
                 .expectClean()
+    }
+
+    fun testArgumentMapping() {
+        // Check that the argument mapping (where parameters are not in the same order
+        // as arguments, thanks to named and default parameters as well as extension methods)
+        // works correctly.
+        lint().files(
+                kotlin("@file:Suppress(\"unused\", \"UNUSED_PARAMETER\")\n" +
+                        "\n" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.support.annotation.DimenRes\n" +
+                        "import android.support.annotation.DrawableRes\n" +
+                        "import android.support.annotation.StringRes\n" +
+                        "\n" +
+                        "fun target(@DrawableRes icon: Int = 0,\n" +
+                        "           @StringRes string: Int = 0,\n" +
+                        "           vararg @DimenRes dimensions: Int = IntArray(0)) {\n" +
+                        "}\n" +
+                        "\n" +
+                        "fun String.handleResourceTypes(@DrawableRes icon: Int = 0,\n" +
+                        "                               @StringRes string: Int = 0,\n" +
+                        "                               vararg @DimenRes dimensions: Int = IntArray(0)) {\n" +
+                        "}\n" +
+                        "\n" +
+                        "fun testNamedParametersAndDefaults(@DrawableRes myIcon: Int,\n" +
+                        "                                   @StringRes myString: Int,\n" +
+                        "                                   @DimenRes myDimension1: Int,\n" +
+                        "                                   @DimenRes myDimension2: Int) {\n" +
+                        "    target(myIcon) // OK\n" +
+                        "    target(myIcon, myString, myDimension1) // OK\n" +
+                        "    target(myIcon, myString, myDimension1, myDimension1) // OK\n" +
+                        "    target(icon = myIcon, string = myString, dimensions = myDimension1) // OK\n" +
+                        "    target(string = myString, dimensions = myDimension1, icon = myIcon) // OK\n" +
+                        "    target(icon = myIcon) // OK\n" +
+                        "    target(string = myString) // OK\n" +
+                        "    target(dimensions = myDimension1) // OK\n" +
+                        "    target(myIcon, dimensions = myDimension1) // OK\n" +
+                        "\n" +
+                        "    target(myString) // ERROR\n" +
+                        "    target(dimensions = myIcon) // ERROR\n" +
+                        "    target(myIcon, dimensions = myString) // ERROR\n" +
+                        "}\n" +
+                        "\n" +
+                        "fun testExtensionMethods(\n" +
+                        "        string: String,\n" +
+                        "        @DrawableRes myIcon: Int,\n" +
+                        "        @StringRes myString: Int,\n" +
+                        "        @DimenRes myDimension1: Int,\n" +
+                        "        @DimenRes myDimension2: Int) {\n" +
+                        "    string.handleResourceTypes(myIcon) // OK\n" +
+                        "    string.handleResourceTypes(myIcon, myString, myDimension1) // OK\n" +
+                        "    string.handleResourceTypes(myIcon, myString, myDimension1, myDimension1) // OK\n" +
+                        "    string.handleResourceTypes(icon = myIcon, string = myString, dimensions = myDimension1) // OK\n" +
+                        "    string.handleResourceTypes(string = myString, dimensions = myDimension1, icon = myIcon) // OK\n" +
+                        "    string.handleResourceTypes(icon = myIcon) // OK\n" +
+                        "    string.handleResourceTypes(string = myString) // OK\n" +
+                        "    string.handleResourceTypes(dimensions = myDimension1) // OK\n" +
+                        "    string.handleResourceTypes(myIcon, dimensions = myDimension1) // OK\n" +
+                        "\n" +
+                        "    string.handleResourceTypes(myString) // ERROR\n" +
+                        "    string.handleResourceTypes(dimensions = myIcon) // ERROR\n" +
+                        "    string.handleResourceTypes(myIcon, dimensions = myString) // ERROR\n" +
+                        "}\n"),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect("src/test/pkg/test.kt:33: Error: Expected resource of type drawable [ResourceType]\n" +
+                        "    target(myString) // ERROR\n" +
+                        "           ~~~~~~~~\n" +
+                        "src/test/pkg/test.kt:34: Error: Expected resource of type dimen [ResourceType]\n" +
+                        "    target(dimensions = myIcon) // ERROR\n" +
+                        "                        ~~~~~~\n" +
+                        "src/test/pkg/test.kt:35: Error: Expected resource of type dimen [ResourceType]\n" +
+                        "    target(myIcon, dimensions = myString) // ERROR\n" +
+                        "                                ~~~~~~~~\n" +
+                        "src/test/pkg/test.kt:54: Error: Expected resource of type drawable [ResourceType]\n" +
+                        "    string.handleResourceTypes(myString) // ERROR\n" +
+                        "                               ~~~~~~~~\n" +
+                        "src/test/pkg/test.kt:55: Error: Expected resource of type dimen [ResourceType]\n" +
+                        "    string.handleResourceTypes(dimensions = myIcon) // ERROR\n" +
+                        "                                            ~~~~~~\n" +
+                        "src/test/pkg/test.kt:56: Error: Expected resource of type dimen [ResourceType]\n" +
+                        "    string.handleResourceTypes(myIcon, dimensions = myString) // ERROR\n" +
+                        "                                                    ~~~~~~~~\n" +
+                        "6 errors, 0 warnings\n")
     }
 
     fun testTypes() {

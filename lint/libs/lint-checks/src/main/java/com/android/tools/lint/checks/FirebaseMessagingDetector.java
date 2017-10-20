@@ -82,9 +82,9 @@ public class FirebaseMessagingDetector extends Detector implements Detector.Uast
             @NonNull PsiMethod method) {
         PsiClass containingClass = method.getContainingClass();
         if (containingClass != null &&
-                FIREBASE_IID_CLASS_NAME.equals(containingClass.getQualifiedName())) {
-            // Save references to the call site and context since createLocationHandle uses the
-            // older Lombok API and is deprecated.
+                FIREBASE_IID_CLASS_NAME.equals(containingClass.getQualifiedName()) &&
+              !context.getDriver().isSuppressed(context, MISSING_TOKEN_REFRESH,
+                      mGetTokenCallSite)) {
             mGetTokenCallSite = call;
             mGetTokenContext = context;
         }

@@ -2562,7 +2562,7 @@ class LintDriver
                 }
             }
 
-            if (checkComments && context!!.isSuppressedWithComment(currentScope, issue)) {
+            if (checkComments && context != null && context.isSuppressedWithComment(currentScope, issue)) {
                 return true
             }
 
