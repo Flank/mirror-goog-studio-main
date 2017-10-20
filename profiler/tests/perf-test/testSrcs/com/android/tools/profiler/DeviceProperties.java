@@ -12,11 +12,19 @@ import org.junit.rules.ExternalResource;
  */
 public class DeviceProperties extends ExternalResource {
 
+    public static final String FAKE_SERIAL = "0123456789abcdef";
+
+    private String mySerial;
     private String myCodeName;
     private String myRelease;
     private String mySdk;
 
     public DeviceProperties(String codeName, String release, String sdk) {
+        this(FAKE_SERIAL, codeName, release, sdk);
+    }
+
+    public DeviceProperties(String serial, String codeName, String release, String sdk) {
+        mySerial = serial;
         myCodeName = codeName;
         myRelease = release;
         mySdk = sdk;
@@ -27,6 +35,7 @@ public class DeviceProperties extends ExternalResource {
             File propertiesFile = new File("device_info.prop");
             // We always expect to create a new file.
             PrintStream stream = new PrintStream(propertiesFile);
+            stream.println("ro.serialno=" + mySerial);
             stream.println("ro.build.version.codename=" + myCodeName);
             stream.println("ro.build.version.release=" + myRelease);
             stream.println("ro.build.version.sdk=" + mySdk);

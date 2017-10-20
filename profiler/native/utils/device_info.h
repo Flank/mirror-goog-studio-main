@@ -26,6 +26,7 @@ namespace profiler {
 // A singleton class containing information about the running device.
 class DeviceInfo {
  public:
+  static const std::string& serial() { return Instance()->serial_; }
   static const std::string& code_name() { return Instance()->code_name_; }
   static const std::string& release() { return Instance()->release_; }
   static const int sdk() { return Instance()->sdk_; }
@@ -44,6 +45,7 @@ class DeviceInfo {
   // 'getprop' command line is far more portable than NDK APIs such as
   // __system_property_get() across API levels.
   const BashCommandRunner getprop_;
+  const std::string serial_;
   const std::string code_name_;
   const std::string release_;
   const int sdk_;

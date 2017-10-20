@@ -291,9 +291,7 @@ Status ProfilerServiceImpl::AttachAgent(
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
-  // TODO(b/67508356): Replace this with a real serial number
-  string device_serial;
-  FileReader::Read("/proc/sys/kernal/random/uuid", &device_serial);
+  string device_serial = DeviceInfo::serial();
   string boot_id;
   FileReader::Read("/proc/sys/kernel/random/boot_id", &boot_id);
 

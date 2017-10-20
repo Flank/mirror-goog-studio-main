@@ -24,7 +24,10 @@ using std::string;
 namespace {
 
 const char* const kGetpropCmd = "cat";
+// The properties file is generated on the fly at test time by
+// DeviceProperties.java
 const char* const kPropFile = "./device_info.prop";
+const char* const kSerial = "ro.serialno";
 const char* const kCodeName = "ro.build.version.codename";
 const char* const kRelease = "ro.build.version.release";
 const char* const kSdk = "ro.build.version.sdk";
@@ -37,6 +40,7 @@ namespace profiler {
 
 DeviceInfo::DeviceInfo()
     : getprop_(kGetpropCmd),
+      serial_(GetSystemProperty(kSerial)),
       code_name_(GetSystemProperty(kCodeName)),
       release_(GetSystemProperty(kRelease)),
       sdk_(atoi(GetSystemProperty(kSdk).c_str())),
@@ -64,7 +68,7 @@ string DeviceInfo::GetSystemProperty(const string& property_name) const {
     string value;
     while (getline(properties, property)) {
       if (property.compare(0, property_name.length(), property_name) == 0) {
-        value = property.substr(property_name.length()+1);
+        value = property.substr(property_name.length() + 1);
         break;
       }
     }
