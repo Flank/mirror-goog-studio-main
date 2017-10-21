@@ -39,6 +39,7 @@ import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DexOptions;
+import com.android.builder.core.SerializableMessageReceiver;
 import com.android.builder.dexing.ClassFileEntry;
 import com.android.builder.dexing.ClassFileInput;
 import com.android.builder.dexing.ClassFileInputs;
@@ -87,6 +88,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 import javax.inject.Inject;
 import org.gradle.tooling.BuildException;
 import org.gradle.workers.IsolationMode;
@@ -433,6 +435,7 @@ public class DexArchiveBuilderTransform extends Transform {
         private final ClassFileProviderFactory classFileProviderFactory;
         private final VariantScope.Java8LangSupport java8LangSupportType;
         @NonNull private final Set<File> additionalPaths;
+        @Nonnull private final MessageReceiver messageReceiver;
 
         public DexConversionParameters(
                 @NonNull QualifiedContent input,
@@ -450,7 +453,8 @@ public class DexArchiveBuilderTransform extends Transform {
                 boolean isIncremental,
                 @NonNull ClassFileProviderFactory classFileProviderFactory,
                 @NonNull VariantScope.Java8LangSupport java8LangSupportType,
-                @NonNull Set<File> additionalPaths) {
+                @NonNull Set<File> additionalPaths,
+                @Nonnull MessageReceiver messageReceiver) {
             this.input = input;
             this.bootClasspath = bootClasspath;
             this.classpath = classpath;
@@ -467,6 +471,7 @@ public class DexArchiveBuilderTransform extends Transform {
             this.classFileProviderFactory = classFileProviderFactory;
             this.java8LangSupportType = java8LangSupportType;
             this.additionalPaths = additionalPaths;
+            this.messageReceiver = messageReceiver;
         }
 
         public boolean belongsToThisBucket(String path) {
@@ -490,7 +495,11 @@ public class DexArchiveBuilderTransform extends Transform {
         @Override
         public void run() {
             try {
-                launchProcessing(dexConversionParameters, System.out, System.err);
+                launchProcessing(
+                        dexConversionParameters,
+                        System.out,
+                        System.err,
+                        dexConversionParameters.messageReceiver);
             } catch (Exception e) {
                 throw new BuildException(e.getMessage(), e);
             }
@@ -509,7 +518,8 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull ClassFileProviderFactory classFileProviderFactory,
             boolean d8DesugaringEnabled,
             @NonNull OutputStream outStream,
-            @NonNull OutputStream errStream)
+            @NonNull OutputStream errStream,
+            @NonNull MessageReceiver messageReceiver)
             throws IOException {
 
         DexArchiveBuilder dexArchiveBuilder;
@@ -543,7 +553,8 @@ public class DexArchiveBuilderTransform extends Transform {
                                         .map(string -> Paths.get(string))
                                         .collect(Collectors.toList()),
                                 classFileProviderFactory,
-                                d8DesugaringEnabled);
+                                d8DesugaringEnabled,
+                                messageReceiver);
                 break;
             default:
                 throw new AssertionError("Unknown dexer type: " + dexer.name());
@@ -586,7 +597,8 @@ public class DexArchiveBuilderTransform extends Transform {
                             isIncremental,
                             classFileProviderFactory,
                             java8LangSupportType,
-                            additionalPaths);
+                            additionalPaths,
+                            new SerializableMessageReceiver(messageReceiver));
 
             if (useGradleWorkers) {
                 context.getWorkerExecutor()
@@ -610,7 +622,8 @@ public class DexArchiveBuilderTransform extends Transform {
                                 launchProcessing(
                                         parameters,
                                         output.getStandardOutput(),
-                                        output.getErrorOutput());
+                                        output.getErrorOutput(),
+                                        messageReceiver);
                             } finally {
                                 if (output != null) {
                                     try {
@@ -630,7 +643,8 @@ public class DexArchiveBuilderTransform extends Transform {
     private static void launchProcessing(
             @NonNull DexConversionParameters dexConversionParameters,
             @NonNull OutputStream outStream,
-            @NonNull OutputStream errStream)
+            @NonNull OutputStream errStream,
+            @NonNull MessageReceiver receiver)
             throws IOException, URISyntaxException {
         DexArchiveBuilder dexArchiveBuilder =
                 getDexArchiveBuilder(
@@ -646,7 +660,8 @@ public class DexArchiveBuilderTransform extends Transform {
                         VariantScope.Java8LangSupport.D8
                                 == dexConversionParameters.java8LangSupportType,
                         outStream,
-                        errStream);
+                        errStream,
+                        receiver);
 
         Path inputPath = dexConversionParameters.input.getFile().toPath();
         Predicate<String> bucketFilter = dexConversionParameters::belongsToThisBucket;

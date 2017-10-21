@@ -122,6 +122,7 @@ open class ExternalLibsMergerTransformTest {
                 DexMergerTool.D8, 21, true, messageReceiver, factory)
         
         Mockito.`when`(factory.create(
+                Mockito.any(),
                 Mockito.eq(DexingType.MONO_DEX),
                 Mockito.any(ProcessOutput::class.java),
                 Mockito.any(),
@@ -138,7 +139,8 @@ open class ExternalLibsMergerTransformTest {
         val outputDirCaptor = ArgumentCaptor.forClass(File::class.java)
         val outputListCaptor: ArgumentCaptor<MutableIterable<Path>> =
                 ArgumentCaptor.forClass(MutableIterable::class.java) as ArgumentCaptor<MutableIterable<Path>>
-        Mockito.verify(factory).create(Mockito.eq(DexingType.MONO_DEX),
+        Mockito.verify(factory).create(Mockito.any(),
+                Mockito.eq(DexingType.MONO_DEX),
                 processOutputCaptor.capture(),
                 outputDirCaptor.capture(),
                 outputListCaptor.capture(),

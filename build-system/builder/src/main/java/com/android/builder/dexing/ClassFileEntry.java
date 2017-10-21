@@ -38,6 +38,10 @@ public interface ClassFileEntry {
     /** Return the relative path from the root of the archive/folder abstraction. */
     String getRelativePath();
 
+    /** Return the {@link ClassFileInput} that has produced this entry */
+    @NonNull
+    ClassFileInput getInput();
+
     /**
      * Read the content into a newly allocated byte[].
      *

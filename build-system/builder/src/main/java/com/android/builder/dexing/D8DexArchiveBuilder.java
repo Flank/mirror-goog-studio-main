@@ -18,17 +18,19 @@ package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
 import com.android.builder.dexing.r8.ClassFileProviderFactory;
+import com.android.ide.common.blame.Message;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.blame.parser.DexParser;
-import com.android.tools.r8.ApiLevelException;
 import com.android.tools.r8.CompilationMode;
 import com.android.tools.r8.D8;
 import com.android.tools.r8.D8Command;
+import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.utils.OutputMode;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -45,6 +47,7 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
     @NonNull private final List<Path> classpath;
     @NonNull private final ClassFileProviderFactory classFileProviderFactory;
     private final boolean desugaring;
+    @NonNull private final MessageReceiver messageReceiver;
 
     public D8DexArchiveBuilder(
             int minSdkVersion,
@@ -52,33 +55,42 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
             @NonNull List<Path> bootClasspath,
             @NonNull List<Path> classpath,
             @NonNull ClassFileProviderFactory classFileProviderFactory,
-            boolean desugaring) {
+            boolean desugaring,
+            @NonNull MessageReceiver messageReceiver) {
         this.minSdkVersion = minSdkVersion;
         this.compilationMode = isDebuggable ? CompilationMode.DEBUG : CompilationMode.RELEASE;
         this.bootClasspath = bootClasspath;
         this.classpath = classpath;
         this.classFileProviderFactory = classFileProviderFactory;
         this.desugaring = desugaring;
+        this.messageReceiver = messageReceiver;
     }
 
     @Override
     public void convert(
             @NonNull Stream<ClassFileEntry> input, @NonNull Path output, boolean isIncremental)
             throws DexArchiveBuilderException {
+        D8DiagnosticsHandler d8DiagnosticsHandler = new InterceptingDiagnosticsHandler();
         try (ClassFileProviderFactory.Handler factory = classFileProviderFactory.open()) {
-            Iterator<byte[]> data = input.map(D8DexArchiveBuilder::readAllBytes).iterator();
-            if (!data.hasNext()) {
+
+            D8Command.Builder builder = D8Command.builder(d8DiagnosticsHandler);
+            AtomicInteger entryCount = new AtomicInteger();
+            input.forEach(
+                    entry -> {
+                        builder.addClassProgramData(
+                                readAllBytes(entry), D8DiagnosticsHandler.getOrigin(entry));
+                        entryCount.incrementAndGet();
+                    });
+            if (entryCount.get() == 0) {
                 // nothing to do here, just return
                 return;
             }
 
             OutputMode outputMode = isIncremental ? OutputMode.FilePerInputClass : OutputMode.Indexed;
-            D8Command.Builder builder =
-                    D8Command.builder()
-                            .setMode(compilationMode)
-                            .setMinApiLevel(minSdkVersion)
-                            .setIntermediate(true)
-                            .setOutputMode(outputMode);
+            builder.setMode(compilationMode)
+                    .setMinApiLevel(minSdkVersion)
+                    .setIntermediate(true)
+                    .setOutputMode(outputMode);
 
             if (desugaring) {
                 for (Path entry : bootClasspath) {
@@ -92,14 +104,10 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
                 builder.setEnableDesugaring(false);
             }
 
-            while (data.hasNext()) {
-                builder.addClassProgramData(data.next());
-            }
-
             builder.setOutputPath(output);
             D8.run(builder.build(), MoreExecutors.newDirectExecutorService());
         } catch (Throwable e) {
-            throw getExceptionToRethrow(e);
+            throw getExceptionToRethrow(e, d8DiagnosticsHandler);
         }
     }
 
@@ -112,16 +120,32 @@ final class D8DexArchiveBuilder extends DexArchiveBuilder {
         }
     }
 
-    // TODO (gavra, b/67624381): replace this with error handling through the D8 API
     @NonNull
-    private DexArchiveBuilderException getExceptionToRethrow(@NonNull Throwable t) {
+    private DexArchiveBuilderException getExceptionToRethrow(
+            @NonNull Throwable t, D8DiagnosticsHandler d8DiagnosticsHandler) {
         StringBuilder msg = new StringBuilder();
         msg.append("Error while dexing.");
-        msg.append(System.lineSeparator());
-        if (t instanceof ApiLevelException && t.getMessage().startsWith(INVOKE_CUSTOM)) {
-            msg.append(DexParser.ENABLE_DESUGARING);
+        for (String hint : d8DiagnosticsHandler.getPendingHints()) {
+            msg.append(System.lineSeparator());
+            msg.append(hint);
         }
 
         return new DexArchiveBuilderException(msg.toString(), t);
+    }
+
+    private class InterceptingDiagnosticsHandler extends D8DiagnosticsHandler {
+        public InterceptingDiagnosticsHandler() {
+            super(D8DexArchiveBuilder.this.messageReceiver);
+        }
+
+        @Override
+        protected Message convertToMessage(Message.Kind kind, Diagnostic diagnostic) {
+
+            if (diagnostic.getDiagnosticMessage().startsWith(INVOKE_CUSTOM)) {
+                addHint(DexParser.ENABLE_DESUGARING);
+            }
+
+            return super.convertToMessage(kind, diagnostic);
+        }
     }
 }

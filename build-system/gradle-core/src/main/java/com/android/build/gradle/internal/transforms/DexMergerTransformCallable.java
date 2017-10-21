@@ -22,6 +22,7 @@ import com.android.builder.dexing.DexArchiveMerger;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexingType;
 import com.android.dx.command.dexer.DxContext;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.process.ProcessOutput;
 import java.io.File;
 import java.nio.file.Path;
@@ -34,6 +35,7 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class DexMergerTransformCallable implements Callable<Void> {
 
+    @NonNull private final MessageReceiver messageReceiver;
     @NonNull private final DexingType dexingType;
     @NonNull private final ProcessOutput processOutput;
     @NonNull private final File dexOutputDir;
@@ -45,6 +47,7 @@ public class DexMergerTransformCallable implements Callable<Void> {
     private final boolean isDebuggable;
 
     public DexMergerTransformCallable(
+            @NonNull MessageReceiver messageReceiver,
             @NonNull DexingType dexingType,
             @NonNull ProcessOutput processOutput,
             @NonNull File dexOutputDir,
@@ -54,6 +57,7 @@ public class DexMergerTransformCallable implements Callable<Void> {
             @NonNull DexMergerTool dexMerger,
             int minSdkVersion,
             boolean isDebuggable) {
+        this.messageReceiver = messageReceiver;
         this.dexingType = dexingType;
         this.processOutput = processOutput;
         this.dexOutputDir = dexOutputDir;
@@ -88,7 +92,7 @@ public class DexMergerTransformCallable implements Callable<Void> {
                 }
                 merger =
                         DexArchiveMerger.createD8DexMerger(
-                                processOutput.getErrorOutput(), d8MinSdkVersion, isDebuggable);
+                                messageReceiver, d8MinSdkVersion, isDebuggable);
                 break;
             default:
                 throw new AssertionError("Unknown dex merger " + dexMerger.name());
@@ -100,6 +104,7 @@ public class DexMergerTransformCallable implements Callable<Void> {
 
     public interface Factory {
         DexMergerTransformCallable create(
+                @NonNull MessageReceiver messageReceiver,
                 @NonNull DexingType dexingType,
                 @NonNull ProcessOutput processOutput,
                 @NonNull File dexOutputDir,

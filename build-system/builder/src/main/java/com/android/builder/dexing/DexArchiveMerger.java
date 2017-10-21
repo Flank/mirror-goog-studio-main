@@ -3,8 +3,8 @@ package com.android.builder.dexing;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.dx.command.dexer.DxContext;
+import com.android.ide.common.blame.MessageReceiver;
 import com.android.tools.r8.CompilationMode;
-import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.concurrent.ForkJoinPool;
 
@@ -24,9 +24,9 @@ public interface DexArchiveMerger {
     /** Creates an instance of dex archive merger that is using d8 to merge dex files. */
     @NonNull
     static DexArchiveMerger createD8DexMerger(
-            @NonNull OutputStream errorStream, int minSdkVersion, boolean isDebuggable) {
+            @NonNull MessageReceiver messageReceiver, int minSdkVersion, boolean isDebuggable) {
         return new D8DexArchiveMerger(
-                errorStream,
+                messageReceiver,
                 minSdkVersion,
                 isDebuggable ? CompilationMode.DEBUG : CompilationMode.RELEASE);
     }
