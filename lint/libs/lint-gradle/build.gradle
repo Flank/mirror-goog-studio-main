@@ -29,6 +29,7 @@ dependencies {
     testCompile libs.junit
     testCompile libs.truth
     testCompile libs.mockito_core
+    testCompile project(':base:testutils')
 }
 
 sourceSets {
