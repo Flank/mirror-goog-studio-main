@@ -63,6 +63,6 @@ public class RelativeFilesTest {
         Set<RelativeFile> relativeFiles = RelativeFiles.fromZip(zfile);
         assertEquals(2, relativeFiles.size());
         assertThat(relativeFiles).contains(new RelativeFile(zfile, "file1"));
-        assertThat(relativeFiles).contains(new RelativeFile(zfile, FileUtils.join("dir", "file2")));
+        assertThat(relativeFiles).contains(new RelativeFile(zfile, "dir/file2"));
     }
 }

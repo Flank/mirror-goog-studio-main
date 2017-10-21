@@ -107,8 +107,8 @@ public class IncrementalRelativeFileSetsTest {
     public void readZip() throws Exception {
         File zipFile = new File(temporaryFolder.getRoot(), "foo");
 
-        RelativeFile expectedB = new RelativeFile(zipFile, "a" + File.separator + "b");
-        RelativeFile expectedC = new RelativeFile(zipFile, "a" + File.separator + "c");
+        RelativeFile expectedB = new RelativeFile(zipFile, "a/b");
+        RelativeFile expectedC = new RelativeFile(zipFile, "a/c");
         RelativeFile expectedD = new RelativeFile(zipFile, "d");
 
         Closer closer = Closer.create();
@@ -147,8 +147,8 @@ public class IncrementalRelativeFileSetsTest {
     public void unionOfSets() throws Exception {
         File zipFile = new File(temporaryFolder.getRoot(), "foo1");
 
-        RelativeFile expectedB = new RelativeFile(zipFile, "a" + File.separator + "b");
-        RelativeFile expectedC = new RelativeFile(zipFile, "a" + File.separator + "c");
+        RelativeFile expectedB = new RelativeFile(zipFile, "a/b");
+        RelativeFile expectedC = new RelativeFile(zipFile, "a/c");
         RelativeFile expectedD = new RelativeFile(zipFile, "d");
 
         ImmutableMap<RelativeFile, FileStatus> set1;

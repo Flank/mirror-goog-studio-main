@@ -462,8 +462,9 @@ public final class GradleTestProject implements TestRule {
                                 .toString();
                 // take the first 10 characters of the method name, hopefully it will be enough
                 // to disambiguate tests, and hash the rest.
+                String testIdentifier = methodDir != null ? methodDir : classDir;
                 classDir =
-                        methodDir.substring(0, 10)
+                        testIdentifier.substring(0, Math.min(testIdentifier.length(), 10))
                                 + hash.substring(
                                         0, Math.min(hash.length(), MAX_TEST_NAME_DIR_WINDOWS - 10));
                 methodDir = null;

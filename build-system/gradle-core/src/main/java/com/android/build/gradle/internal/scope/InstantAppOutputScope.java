@@ -78,7 +78,7 @@ public class InstantAppOutputScope {
     }
 
     @Nullable
-    public static InstantAppOutputScope load(@NonNull File directory) {
+    public static InstantAppOutputScope load(@NonNull File directory) throws IOException {
         File input = new File(directory, PERSISTED_FILE_NAME);
 
         if (!input.exists()) {
@@ -88,10 +88,8 @@ public class InstantAppOutputScope {
         GsonBuilder gsonBuilder = new GsonBuilder();
         Gson gson = gsonBuilder.create();
 
-        try {
-            return gson.fromJson(new FileReader(input), InstantAppOutputScope.class);
-        } catch (FileNotFoundException e) {
-            return null; // This should never happen.
+        try (FileReader fr = new FileReader(input)) {
+            return gson.fromJson(fr, InstantAppOutputScope.class);
         }
     }
 }
