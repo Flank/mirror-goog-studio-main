@@ -73,7 +73,7 @@ dependencies {
     testCompile libs.equalsverifier
     testCompile project(':base:project-test-lib')
     testCompile project(':base:testutils')
-    testCompile 'org.jetbrains:annotations:jar:13.0'
+    testCompile 'org.jetbrains:annotations:13.0'
     testCompile libs.jsoup
 }
 
