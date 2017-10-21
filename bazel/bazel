@@ -16,14 +16,20 @@ def main():
     platform = 'linux-x86_64'
     jdk_subdir = 'linux'
     sdk_subdir = 'linux'
+    tag_filter = "-no_linux"
+    test_tag_filter = "-no_test_linux"
   elif sys.platform == 'darwin':
     platform = 'darwin-x86_64'
     jdk_subdir = os.path.join('mac', 'Contents', 'Home')
     sdk_subdir = 'darwin'
+    tag_filter = "-no_mac"
+    test_tag_filter = "-no_test_mac"
   elif sys.platform == 'win32':
     platform = 'windows-x86_64'
     jdk_subdir = 'win64'
     sdk_subdir = 'windows'
+    tag_filter = "-no_windows"
+    tag_tag_filter = "-no_test_windows"
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
 
@@ -62,8 +68,13 @@ def main():
   else: # Linux
     env['CC'] = os.environ.get('GCC', '/usr/bin/gcc')
 
-  if bazel_command(args) == 'info' and bazel_command_index(args) == len(args) - 1:
+  command = bazel_command(args)
+
+  if command == 'info' and bazel_command_index(args) == len(args) - 1:
     print("bazel-cpu-count: " + str(count_bazel_CPUs()))
+  elif command == 'build' or command == 'test':
+    args = add_to_flag(args, "build", [tag_filter])
+    args = add_to_flag(args, "test", [tag_filter, test_tag_filter])
 
   sys.exit(subprocess.call([bazel] + args, env=env))
 
@@ -89,6 +100,27 @@ def find_workspace(path):
   else:
     parent = os.path.dirname(path)
     return None if parent == path else find_workspace(parent)
+
+
+def add_to_flag(args, kind, tags):
+  flag = "--" + kind + "_tag_filters"
+  command_ix = -1
+  values = ",".join(tags)
+  for i in reversed(range(0, len(args))):
+    arg = args[i]
+    if not arg.startswith('-'):
+      command_ix = i;
+    if arg.startswith(flag):
+      if len(arg) > len(flag):
+        args[i] = args[i] + "," + values
+        return args
+      elif i + 1 < len(args):
+        args[i + 1] = args[i + 1] + "," + values
+        return args
+  if command_ix != -1:
+    args.insert(command_ix + 1, flag + "=" + values)
+  return args
+
 
 """
 Returns the command index, which is the first non-option argument.
