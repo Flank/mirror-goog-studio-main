@@ -57,6 +57,7 @@ public final class ActdProfileUploader implements ProfileUploader {
      */
     public static final long BENCHMARK_VALUE_THRESHOLD = 50;
 
+    @NonNull private static final String ACTD_PROJECT_ID = "SamProjectTest3";
     @NonNull private static final String ACTD_ADD_BUILD_URL = "/apis/addBuild";
     @NonNull private static final String ACTD_ADD_SAMPLE_URL = "/apis/addSample";
 
@@ -146,11 +147,6 @@ public final class ActdProfileUploader implements ProfileUploader {
             throw new IllegalStateException("no ACTD_BASE_URL environment variable set");
         }
 
-        String actdProjectId = System.getenv("ACTD_PROJECT_ID");
-        if (actdProjectId == null || actdProjectId.isEmpty()) {
-            throw new IllegalStateException("no ACTD_PROJECT_ID environment variable set");
-        }
-
         String buildbotBuildNumber = System.getenv("BUILDBOT_BUILDNUMBER");
         if (buildbotBuildNumber == null || buildbotBuildNumber.isEmpty()) {
             throw new IllegalStateException("no BUILDBOT_BUILDNUMBER environment variable set");
@@ -183,7 +179,7 @@ public final class ActdProfileUploader implements ProfileUploader {
                 repo,
                 hostname,
                 actdBaseUrl,
-                actdProjectId,
+                ACTD_PROJECT_ID,
                 actdBuildUrl,
                 actdCommitUrl);
     }
