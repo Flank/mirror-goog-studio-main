@@ -110,10 +110,10 @@ object NamespaceRemover : ResourceCompilationService {
             if (prefix != null && prefix == "xmlns") {
                 // We found a definition of a namespace. Leave "android", "tools" and "aapt" intact.
                 // We will leave the namespace unchanged, but instead change the URI to res-auto.
-                val ns = node.localName
-                if (ns != SdkConstants.ANDROID_NS_NAME
-                        && ns != SdkConstants.TOOLS_NS_NAME
-                        && ns != SdkConstants.AAPT_PREFIX) {
+                val uri = node.textContent
+                if (uri != SdkConstants.ANDROID_URI
+                        && uri != SdkConstants.TOOLS_URI
+                        && uri != SdkConstants.AAPT_URI) {
                     node.textContent = SdkConstants.AUTO_URI
                 }
             }

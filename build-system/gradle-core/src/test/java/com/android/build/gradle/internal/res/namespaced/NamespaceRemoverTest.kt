@@ -126,6 +126,23 @@ class NamespaceRemoverTest {
         )
     }
 
+    @Test
+    fun customNameForToolsNamespace() {
+        assertThat(
+                rewrite("""<?xml version="1.0" encoding="utf-8"?>
+                    |<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:bar="http://schemas.android.com/my/custom/uri"
+                    |    xmlns:foo="http://schemas.android.com/tools"
+                    |    foo:targetApi="14" />
+                    |""".trimMargin()))
+                .isEqualTo("""<?xml version="1.0" encoding="utf-8"?>
+                    |<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    |    xmlns:bar="http://schemas.android.com/apk/res-auto"
+                    |    xmlns:foo="http://schemas.android.com/tools"
+                    |    foo:targetApi="14" />
+                    |""".trimMargin())
+    }
+
     private fun assertUnchanged(original: String) {
         assertThat(rewrite(original)).isEqualTo(original)
     }
