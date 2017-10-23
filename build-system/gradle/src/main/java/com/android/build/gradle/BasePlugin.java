@@ -427,10 +427,11 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                             }
                         });
 
-        createLintClasspathConfiguration();
+        createLintClasspathConfiguration(project);
     }
 
-    private void createLintClasspathConfiguration() {
+    /** Creates a lint class path Configuration for the given project */
+    public static void createLintClasspathConfiguration(@NonNull Project project) {
         Configuration config = project.getConfigurations().create(LintBaseTask.LINT_CLASS_PATH);
         config.setVisible(false);
         config.setTransitive(true);

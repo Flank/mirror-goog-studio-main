@@ -449,11 +449,16 @@ public abstract class TaskManager {
         // the lint.jar for this project.
         // This is not the configuration that consumes lint.jar artifacts from normal dependencies,
         // or publishes lint.jar to consumers. These are handled at the variant level.
+        globalScope.setLintChecks(createCustomLintChecksConfig(project));
+    }
+
+    @NonNull
+    public static Configuration createCustomLintChecksConfig(@NonNull Project project) {
         Configuration lintChecks = project.getConfigurations().maybeCreate(CONFIG_NAME_LINTCHECKS);
         lintChecks.setVisible(false);
         lintChecks.setDescription("Configuration to apply external lint check jar");
         lintChecks.setCanBeConsumed(false);
-        globalScope.setLintChecks(lintChecks);
+        return lintChecks;
     }
 
     // this is call before all the variants are created since they are all going to depend

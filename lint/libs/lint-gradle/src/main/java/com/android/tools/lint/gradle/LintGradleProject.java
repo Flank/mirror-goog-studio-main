@@ -813,9 +813,9 @@ public class LintGradleProject extends Project {
         public Project getProject(
                 @NonNull LintGradleClient lintClient,
                 @NonNull org.gradle.api.Project gradleProject,
-                @NonNull String variantName) {
+                @Nullable String variantName) {
             AndroidProject androidProject = getAndroidProject(gradleProject);
-            if (androidProject != null) {
+            if (androidProject != null && variantName != null) {
                 Collection<Variant> variants = androidProject.getVariants();
                 for (Variant variant : variants) {
                     if (variantName.equals(variant.getName())) {
@@ -874,7 +874,9 @@ public class LintGradleProject extends Project {
                     }
                     SourceSetOutput output = sourceSet.getOutput();
                     if (output != null) {
-                        classes.add(output.getClassesDir());
+                        for (File file : output.getClassesDirs()) {
+                            classes.add(file);
+                        }
                     }
 
                     libs.addAll(sourceSet.getCompileClasspath().getFiles());
@@ -1052,7 +1054,7 @@ public class LintGradleProject extends Project {
                 @NonNull LintGradleClient client,
                 @NonNull String path,
                 @NonNull org.gradle.api.Project gradleProject,
-                @NonNull String variantName) {
+                @Nullable String variantName) {
             Project cached = namedProjects.get(path);
             if (cached != null) {
                 // TODO: Are names unique across siblings?

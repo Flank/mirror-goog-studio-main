@@ -96,6 +96,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1001,24 +1002,7 @@ public class LintCliClient extends LintClient {
             // matches)
         }
 
-        IAndroidTarget buildTarget = null;
-        for (Project project : knownProjects) {
-            IAndroidTarget t = project.getBuildTarget();
-            if (t != null) {
-                if (buildTarget == null) {
-                    buildTarget = t;
-                } else if (buildTarget.getVersion().compareTo(t.getVersion()) > 0) {
-                    buildTarget = t;
-                }
-            }
-        }
-
-        if (buildTarget != null) {
-            File file = buildTarget.getFile(IAndroidTarget.ANDROID_JAR);
-            if (file != null) {
-                files.add(file);
-            }
-        }
+        addBootClassPath(knownProjects, files);
 
         projectEnvironment.registerPaths(files);
 
@@ -1045,6 +1029,31 @@ public class LintCliClient extends LintClient {
         }
 
         super.initializeProjects(knownProjects);
+    }
+
+    protected boolean addBootClassPath(@NonNull Collection<? extends Project> knownProjects,
+            List<File> files) {
+        IAndroidTarget buildTarget = null;
+        for (Project project : knownProjects) {
+            IAndroidTarget t = project.getBuildTarget();
+            if (t != null) {
+                if (buildTarget == null) {
+                    buildTarget = t;
+                } else if (buildTarget.getVersion().compareTo(t.getVersion()) > 0) {
+                    buildTarget = t;
+                }
+            }
+        }
+
+        if (buildTarget != null) {
+            File file = buildTarget.getFile(IAndroidTarget.ANDROID_JAR);
+            if (file != null) {
+                files.add(file);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override

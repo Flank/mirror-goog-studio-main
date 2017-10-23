@@ -79,8 +79,6 @@ public class VariantDependencies {
 
     public static final String CONFIG_NAME_LINTCHECKS = "lintChecks";
 
-    public static final String USAGE_LINT = "android-lint-checks";
-
     @NonNull private final String variantName;
 
     @NonNull private final Configuration compileClasspath;

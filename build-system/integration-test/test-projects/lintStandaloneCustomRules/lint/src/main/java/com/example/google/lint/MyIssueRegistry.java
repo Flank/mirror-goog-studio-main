@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2017 The Android Open Source Project
+ * Copyright (C) 2015 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,20 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.gradle.api
+package com.example.google.lint;
 
-import java.io.File
+import com.android.tools.lint.client.api.IssueRegistry;
+import com.android.tools.lint.detector.api.Issue;
+import java.util.Collections;
+import java.util.List;
 
-interface VariantInputs {
-    /** The variant name */
-    val name: String
-
-    /** The lint rule jars, if any */
-    val ruleJars: List<File>
-
-    /** The merged manifest of the current module  */
-    val mergedManifest: File?
-
-    /** The manifest merger report file, if any */
-    val manifestMergeReport: File?
+/** The list of issues that will be checked when running <code>lint</code>. */
+@SuppressWarnings("unused")
+public class MyIssueRegistry extends IssueRegistry {
+    @Override
+    public List<Issue> getIssues() {
+        return Collections.singletonList(MyDetector.ISSUE);
+    }
 }
