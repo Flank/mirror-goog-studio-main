@@ -26,6 +26,7 @@ iml_module(
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools/idea/.idea/libraries:truth[test]",
         "//tools/base/fakeadbserver:studio.fakeadbserver[module, test]",
+        "//tools/base/sdklib:studio.sdklib[module]",
     ],
 )
 
@@ -38,6 +39,8 @@ maven_java_library(
     deps = [
         "//tools/base/annotations",
         "//tools/base/common:tools.common",
+        "//tools/base/repository:tools.repository",
+        "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:net.sf.kxml_kxml2",
     ],

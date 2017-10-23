@@ -19,8 +19,10 @@ package com.android.ddmlib;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.ddmlib.log.LogReceiver;
+import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidVersion;
-
+import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.utils.ILogger;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -82,6 +84,12 @@ public interface IDevice extends IShellEnabledDevice {
         public String getCharacteristic() {
             return mCharacteristic;
         }
+    }
+
+    /** Emulator advanced features. */
+    enum EmulatorFeature {
+        SCREEN_RECORD, // ScreenRecording
+        SNAPSHOT_V1, // FastSnapshotV1
     }
 
     /** @deprecated Use {@link #PROP_BUILD_API_LEVEL}. */
@@ -249,6 +257,18 @@ public interface IDevice extends IShellEnabledDevice {
     boolean supportsFeature(@NonNull HardwareFeature feature);
 
     /**
+     * Returns whether the emulator has support for the given feature from the advancedFeatures.ini
+     * file.
+     *
+     * <p>This is only valid if {@link #isEmulator()} returns true.
+     */
+    boolean hasEmulatorAdvancedFeature(
+            @NonNull EmulatorFeature feature,
+            @NonNull AndroidSdkHandler androidSdkHandler,
+            @NonNull ProgressIndicator progressIndicator,
+            @NonNull ILogger log);
+
+    /**
      * Returns a mount point.
      *
      * @param name the name of the mount point to return
@@ -343,6 +363,9 @@ public interface IDevice extends IShellEnabledDevice {
             @NonNull ScreenRecorderOptions options, @NonNull IShellOutputReceiver receiver) throws
             TimeoutException, AdbCommandRejectedException, IOException,
             ShellCommandUnresponsiveException;
+
+    /** Stops the emulator screen recording. */
+    void stopEmulatorScreenRecorder();
 
     /**
      * @deprecated Use {@link #executeShellCommand(String, IShellOutputReceiver, long, java.util.concurrent.TimeUnit)}.

@@ -8,6 +8,7 @@ version = rootProject.ext.baseVersion
 
 dependencies {
     compile project(':base:common')
+    compile project(':base:sdklib')
     compile libs.kxml
 
     testCompile project(':base:fakeadbserver')

@@ -22,7 +22,6 @@ import com.android.annotations.concurrency.GuardedBy;
 import com.android.prefs.AndroidLocation;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -75,6 +74,9 @@ public final class EmulatorConsole {
     private static final String COMMAND_NETWORK_LATENCY = "network delay %1$s\r\n"; //$NON-NLS-1$
     private static final String COMMAND_GPS = "geo fix %1$f %2$f %3$f\r\n"; //$NON-NLS-1$
     private static final String COMMAND_AUTH = "auth %1$s\r\n"; //$NON-NLS-1$
+    private static final String COMMAND_SCREENRECORD_START =
+            "screenrecord start %1$s\r\n"; //$NON-NLS-1$
+    private static final String COMMAND_SCREENRECORD_STOP = "screenrecord stop\r\n"; //$NON-NLS-1$
 
     private static final Pattern RE_KO = Pattern.compile("KO:\\s+(.*)"); //$NON-NLS-1$
     private static final String RE_AUTH_REQUIRED = "Android Console: Authentication required"; //$NON-NLS-1$
@@ -617,6 +619,15 @@ public final class EmulatorConsole {
         String command = String.format(COMMAND_AUTH, authToken);
 
         return processCommand(command);
+    }
+
+    public synchronized String startEmulatorScreenRecording(String args) {
+        String command = String.format(COMMAND_SCREENRECORD_START, args);
+        return processCommand(command);
+    }
+
+    public synchronized String stopScreenRecording() {
+        return processCommand(COMMAND_SCREENRECORD_STOP);
     }
 
     /**

@@ -17,11 +17,10 @@
 package com.android.ddmlib;
 
 import com.android.annotations.NonNull;
+import java.util.concurrent.TimeUnit;
 import junit.framework.TestCase;
 import org.easymock.EasyMock;
 import org.easymock.IAnswer;
-
-import java.util.concurrent.TimeUnit;
 
 public class DeviceTest extends TestCase {
     public void testScreenRecorderOptions() {
@@ -30,16 +29,28 @@ public class DeviceTest extends TestCase {
                         .setBitRate(6)
                         .setSize(600,400)
                         .build();
-        assertEquals("screenrecord --size 600x400 --bit-rate 6000000 /sdcard/1.mp4",
-                Device.getScreenRecorderCommand("/sdcard/1.mp4", options));
+        assertEquals(
+                "screenrecord --size 600x400 --bit-rate 6000000 /sdcard/1.mp4",
+                Device.getScreenRecorderCommand("/sdcard/1.mp4", options, false));
+        assertEquals(
+                "--size 600x400 --bit-rate 6000000 /sdcard/1.mp4",
+                Device.getScreenRecorderCommand("/sdcard/1.mp4", options, true));
 
         options = new ScreenRecorderOptions.Builder().setTimeLimit(100, TimeUnit.SECONDS).build();
-        assertEquals("screenrecord --time-limit 100 /sdcard/1.mp4",
-                Device.getScreenRecorderCommand("/sdcard/1.mp4", options));
+        assertEquals(
+                "screenrecord --time-limit 100 /sdcard/1.mp4",
+                Device.getScreenRecorderCommand("/sdcard/1.mp4", options, false));
+        assertEquals(
+                "--time-limit 100 /sdcard/1.mp4",
+                Device.getScreenRecorderCommand("/sdcard/1.mp4", options, true));
 
         options = new ScreenRecorderOptions.Builder().setTimeLimit(4, TimeUnit.MINUTES).build();
-        assertEquals("screenrecord --time-limit 180 /sdcard/1.mp4",
-                Device.getScreenRecorderCommand("/sdcard/1.mp4", options));
+        assertEquals(
+                "screenrecord --time-limit 180 /sdcard/1.mp4",
+                Device.getScreenRecorderCommand("/sdcard/1.mp4", options, false));
+        assertEquals(
+                "--time-limit 180 /sdcard/1.mp4",
+                Device.getScreenRecorderCommand("/sdcard/1.mp4", options, true));
     }
 
     /** Helper method that sets the mock device to return the given response on a shell command */

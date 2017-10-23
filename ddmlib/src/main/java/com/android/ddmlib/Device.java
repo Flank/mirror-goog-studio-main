@@ -21,7 +21,11 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.annotations.concurrency.GuardedBy;
 import com.android.ddmlib.log.LogReceiver;
+import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidVersion;
+import com.android.sdklib.EmulatorAdvFeatures;
+import com.android.sdklib.repository.AndroidSdkHandler;
+import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
@@ -52,6 +56,9 @@ import java.util.regex.Pattern;
 final class Device implements IDevice {
     /** Emulator Serial Number regexp. */
     static final String RE_EMULATOR_SN = "emulator-(\\d+)"; //$NON-NLS-1$
+
+    /** Whether emulator supports screen recording */
+    private Boolean mEmuHasScreenRecording = null;
 
     /** Serial number of the device */
     private final String mSerialNumber;
@@ -385,6 +392,34 @@ final class Device implements IDevice {
         return mHardwareCharacteristics.contains(feature.getCharacteristic());
     }
 
+    @Override
+    public boolean hasEmulatorAdvancedFeature(
+            @NonNull EmulatorFeature feature,
+            @Nullable AndroidSdkHandler androidSdkHandler,
+            @Nullable ProgressIndicator progressIndicator,
+            @Nullable ILogger log) {
+        switch (feature) {
+            case SCREEN_RECORD:
+                if (mEmuHasScreenRecording != null) {
+                    return mEmuHasScreenRecording;
+                }
+                if (isEmulator()
+                        && androidSdkHandler != null
+                        && progressIndicator != null
+                        && log != null) {
+                    // Use emulator screen recording feature if available.
+                    mEmuHasScreenRecording =
+                            EmulatorAdvFeatures.emulatorSupportsScreenRecording(
+                                    androidSdkHandler, progressIndicator, log);
+                    return mEmuHasScreenRecording;
+                }
+                break;
+            default:
+                return false;
+        }
+        return false;
+    }
+
     @NonNull
     @Override
     public AndroidVersion getVersion() {
@@ -551,16 +586,38 @@ final class Device implements IDevice {
             @NonNull ScreenRecorderOptions options,
             @NonNull IShellOutputReceiver receiver) throws TimeoutException,
             AdbCommandRejectedException, IOException, ShellCommandUnresponsiveException {
-        executeShellCommand(getScreenRecorderCommand(remoteFilePath, options), receiver, 0, null);
+        if (mEmuHasScreenRecording != null && mEmuHasScreenRecording) {
+            // remoteFilePath is now a path on the host.
+            EmulatorConsole console = EmulatorConsole.getConsole(this);
+            if (console != null) {
+                console.startEmulatorScreenRecording(
+                        getScreenRecorderCommand(remoteFilePath, options, true));
+            }
+        } else {
+            executeShellCommand(
+                    getScreenRecorderCommand(remoteFilePath, options, false), receiver, 0, null);
+        }
+    }
+
+    @Override
+    public void stopEmulatorScreenRecorder() {
+        if (mEmuHasScreenRecording != null && mEmuHasScreenRecording) {
+            EmulatorConsole console = EmulatorConsole.getConsole(this);
+            console.stopScreenRecording();
+        }
     }
 
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    static String getScreenRecorderCommand(@NonNull String remoteFilePath,
-            @NonNull ScreenRecorderOptions options) {
+    static String getScreenRecorderCommand(
+            @NonNull String remoteFilePath,
+            @NonNull ScreenRecorderOptions options,
+            boolean isEmuScreenRecord) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("screenrecord");
-        sb.append(' ');
+        if (!isEmuScreenRecord) {
+            sb.append("screenrecord");
+            sb.append(' ');
+        }
 
         if (options.width > 0 && options.height > 0) {
             sb.append("--size ");
