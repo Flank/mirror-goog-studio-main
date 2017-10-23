@@ -16,4 +16,5 @@ project.ext.pomName = 'IntelliJ IDEA Core'
 project.ext.pomDesc = 'IntelliJ IDEA Core'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
-
+apply from: "$rootDir/buildSrc/base/bintray.gradle"
+apply from: "$rootDir/buildSrc/base/javadoc.gradle"
