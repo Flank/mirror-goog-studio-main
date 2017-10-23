@@ -440,9 +440,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getProcessResourcePackageOutputDirectory();
 
     void setProcessResourcesTask(
-            AndroidTask<ProcessAndroidResources> processAndroidResourcesAndroidTask);
+            AndroidTask<? extends ProcessAndroidResources> processAndroidResourcesAndroidTask);
 
-    AndroidTask<ProcessAndroidResources> getProcessResourcesTask();
+    AndroidTask<? extends ProcessAndroidResources> getProcessResourcesTask();
 
     void setDataBindingExportBuildInfoTask(AndroidTask<DataBindingExportBuildInfoTask> task);
 

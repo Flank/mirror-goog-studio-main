@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.common.fixture.app;
 
+import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TestProject;
 import com.google.common.collect.ImmutableMap;
@@ -24,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
  * Simple test application with an Android library that prints "hello world!".
  */
 public class HelloWorldLibraryApp extends MultiModuleTestProject implements TestProject {
+    @NonNull
     public static HelloWorldLibraryApp create() {
         return new HelloWorldLibraryApp();
     }

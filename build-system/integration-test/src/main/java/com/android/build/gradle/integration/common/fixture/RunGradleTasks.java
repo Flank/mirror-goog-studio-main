@@ -242,17 +242,9 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
         return this;
     }
 
-    public RunGradleTasks withNewResourceProcessing(boolean useNewResourceProcessing) {
-        with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, useNewResourceProcessing);
-        return this;
-    }
 
     /**
      * Makes the project execute with AAPT2 flag set to {@param enableAapt2}.
-     *
-     * <p>If param is {@code true} it will also trigger setting the new resource processing flag to
-     * {@code true}. To run AAPT2 without new resource processing, after this method also call
-     * {@link #withNewResourceProcessing(boolean)} with the {@code false} parameter.
      */
     public RunGradleTasks withEnabledAapt2(boolean enableAapt2) {
         with(enableAapt2 ? AaptGeneration.AAPT_V2_DAEMON_MODE : AaptGeneration.AAPT_V1);
@@ -261,10 +253,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     /**
      * Makes the project execute with AAPT2 flag set to {@param enableAapt2}.
-     *
-     * <p>If param is {@code true} it will also trigger setting the new resource processing flag to
-     * {@code true}. To run AAPT2 without new resource processing, after this method also call
-     * {@link #withNewResourceProcessing(boolean)} with the {@code false} parameter.
      */
     @SuppressWarnings("deprecation") // AAPT_V2 should not be used, but if it is, we handle it.
     public RunGradleTasks with(@NonNull AaptGeneration aaptGeneration) {
@@ -274,19 +262,16 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 break;
             case AAPT_V2:
                 with(BooleanOption.ENABLE_AAPT2, true);
-                with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
                 with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false);
                 with(BooleanOption.ENABLE_DAEMON_MODE_AAPT2, false);
                 break;
             case AAPT_V2_JNI:
                 with(BooleanOption.ENABLE_AAPT2, true);
-                with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
                 with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true);
                 with(BooleanOption.ENABLE_DAEMON_MODE_AAPT2, false);
                 break;
             case AAPT_V2_DAEMON_MODE:
                 with(BooleanOption.ENABLE_AAPT2, true);
-                with(BooleanOption.ENABLE_NEW_RESOURCE_PROCESSING, true);
                 with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false);
                 with(BooleanOption.ENABLE_DAEMON_MODE_AAPT2, true);
                 break;

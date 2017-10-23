@@ -26,6 +26,7 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.feature.BundleFeatureClasses;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
@@ -45,7 +46,6 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeManifests;
-import com.android.build.gradle.tasks.ProcessAndroidResources;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
@@ -217,7 +217,6 @@ public class FeatureTaskManager extends TaskManager {
                     createProcessResTask(
                             tasks,
                             variantScope,
-                            () ->
                                     FileUtils.join(
                                             globalScope.getIntermediatesDir(),
                                             "symbols",
@@ -526,14 +525,15 @@ public class FeatureTaskManager extends TaskManager {
     }
 
     @Override
-    protected TaskConfigAction<ProcessAndroidResources> createProcessAndroidResourcesConfigAction(
-            @NonNull VariantScope scope,
-            @NonNull Supplier<File> symbolLocation,
-            @NonNull File symbolsWithPackageName,
-            @NonNull File resPackageOutputFolder,
-            boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
-            @NonNull MergeType sourceTaskOutputType,
-            @NonNull String baseName) {
+    protected TaskConfigAction<LinkApplicationAndroidResourcesTask>
+            createProcessAndroidResourcesConfigAction(
+                    @NonNull VariantScope scope,
+                    @NonNull Supplier<File> symbolLocation,
+                    @NonNull File symbolsWithPackageName,
+                    @NonNull File resPackageOutputFolder,
+                    boolean useAaptToGenerateLegacyMultidexMainDexProguardRules,
+                    @NonNull MergeType sourceTaskOutputType,
+                    @NonNull String baseName) {
         if (scope.isBaseFeature()) {
             return super.createProcessAndroidResourcesConfigAction(
                     scope,
@@ -544,7 +544,7 @@ public class FeatureTaskManager extends TaskManager {
                     sourceTaskOutputType,
                     baseName);
         } else {
-            return new ProcessAndroidResources.FeatureSplitConfigAction(
+            return new LinkApplicationAndroidResourcesTask.FeatureSplitConfigAction(
                     scope,
                     symbolLocation,
                     symbolsWithPackageName,

@@ -34,6 +34,7 @@ import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact.ExtraComponentIdentifier;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -125,7 +126,7 @@ public class MergeManifests extends ManifestProcessorTask {
         @Nullable BuildOutput compatibleScreenManifestForSplit;
 
         List<ApkData> splitsToGenerate =
-                ProcessAndroidResources.getApksToGenerate(
+                LinkApplicationAndroidResourcesTask.getApksToGenerate(
                         outputScope, supportedAbis, buildTargetAbi, buildTargetDensity);
 
         // FIX ME : multi threading.

@@ -2045,16 +2045,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return FileUtils.join(getGlobalScope().getIntermediatesDir(), FD_RES, getDirName());
     }
 
-    AndroidTask<ProcessAndroidResources> processAndroidResourcesTask;
+    AndroidTask<? extends ProcessAndroidResources> processAndroidResourcesTask;
 
     @Override
     public void setProcessResourcesTask(
-            AndroidTask<ProcessAndroidResources> processAndroidResourcesAndroidTask) {
+            AndroidTask<? extends ProcessAndroidResources> processAndroidResourcesAndroidTask) {
         this.processAndroidResourcesTask = processAndroidResourcesAndroidTask;
     }
 
     @Override
-    public AndroidTask<ProcessAndroidResources> getProcessResourcesTask() {
+    public AndroidTask<? extends ProcessAndroidResources> getProcessResourcesTask() {
         return processAndroidResourcesTask;
     }
 

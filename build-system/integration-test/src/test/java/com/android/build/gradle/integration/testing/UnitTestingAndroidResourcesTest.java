@@ -13,7 +13,6 @@ import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
@@ -50,11 +49,6 @@ public class UnitTestingAndroidResourcesTest {
         APPLICATION
     }
 
-    enum LibrarySetup {
-        BYPASS_MERGE,
-        MERGE
-    }
-
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("unitTestingAndroidResources").create();
@@ -62,21 +56,16 @@ public class UnitTestingAndroidResourcesTest {
     @Parameterized.Parameters(name = "plugin={0}  librarySetup={1}  aaptGeneration={2}")
     public static Object[][] data() {
         return new Object[][] {
-            {Plugin.APPLICATION, null, AaptGeneration.AAPT_V1},
-            {Plugin.APPLICATION, null, AaptGeneration.AAPT_V2_DAEMON_MODE},
-            {Plugin.LIBRARY, LibrarySetup.BYPASS_MERGE, AaptGeneration.AAPT_V1},
-            {Plugin.LIBRARY, LibrarySetup.MERGE, AaptGeneration.AAPT_V1},
-            {Plugin.LIBRARY, LibrarySetup.BYPASS_MERGE, AaptGeneration.AAPT_V2_DAEMON_MODE},
-            {Plugin.LIBRARY, LibrarySetup.MERGE, AaptGeneration.AAPT_V2_DAEMON_MODE},
+            {Plugin.APPLICATION, AaptGeneration.AAPT_V1},
+            {Plugin.APPLICATION, AaptGeneration.AAPT_V2_DAEMON_MODE},
+            {Plugin.LIBRARY, AaptGeneration.AAPT_V1},
+            {Plugin.LIBRARY, AaptGeneration.AAPT_V2_DAEMON_MODE},
         };
     }
 
     @Parameterized.Parameter public Plugin plugin;
 
     @Parameterized.Parameter(value = 1)
-    public LibrarySetup librarySetup;
-
-    @Parameterized.Parameter(value = 2)
     public AaptGeneration aaptGeneration;
 
     @Before
@@ -117,12 +106,6 @@ public class UnitTestingAndroidResourcesTest {
     public void runUnitTests() throws Exception {
 
         RunGradleTasks runGradleTasks = project.executor().with(aaptGeneration);
-
-        if (librarySetup != null) {
-            runGradleTasks.with(
-                    BooleanOption.DISABLE_RES_MERGE_IN_LIBRARY,
-                    librarySetup == LibrarySetup.BYPASS_MERGE);
-        }
 
         runGradleTasks.run("testDebugUnitTest");
 
