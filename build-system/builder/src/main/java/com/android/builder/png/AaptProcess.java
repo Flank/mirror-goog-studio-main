@@ -389,7 +389,11 @@ public class AaptProcess {
                 if (line.equalsIgnoreCase("Done")) {
                     mOwner.reset();
                     if (mInError.get()) {
-                        mJob.error(new AaptException(AaptProcess.joiner.join(errors)));
+                        if (errors.isEmpty()) {
+                            mJob.error(new Aapt2Exception("AAPT error: check logs for details"));
+                        } else {
+                            mJob.error(new AaptException(AaptProcess.joiner.join(errors)));
+                        }
                     } else {
                         mJob.finished();
                     }
@@ -410,7 +414,12 @@ public class AaptProcess {
                     if (mInError.get()) {
                         if (!handleOutput()) {
                             // If processing the output failed, just print the errors.
-                            mJob.error(new Aapt2Exception(AaptProcess.joiner.join(errors)));
+                            if (errors.isEmpty()) {
+                                mJob.error(
+                                        new Aapt2Exception("AAPT2 error: check logs for details"));
+                            } else {
+                                mJob.error(new Aapt2Exception(AaptProcess.joiner.join(errors)));
+                            }
                         }
                     } else {
                         mJob.finished();
