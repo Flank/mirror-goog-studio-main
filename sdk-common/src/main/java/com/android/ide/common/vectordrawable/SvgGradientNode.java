@@ -182,7 +182,7 @@ public class SvgGradientNode extends SvgNode {
         } else {
             writer.write("        <aapt:attr name=\"android:strokeColor\">\n");
         }
-        writer.write("<gradient \n");
+        writer.write("<gradient ");
 
         // By default, the dimensions of the gradient is the bounding box of the path.
         setBoundingBox();
