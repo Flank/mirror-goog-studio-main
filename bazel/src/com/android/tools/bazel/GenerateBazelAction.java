@@ -41,6 +41,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -62,6 +63,7 @@ import org.jetbrains.jps.model.java.JpsJavaDependencyScope;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.java.compiler.JpsCompilerExcludes;
 import org.jetbrains.jps.model.library.JpsLibrary;
+import org.jetbrains.jps.model.library.JpsLibraryRoot;
 import org.jetbrains.jps.model.library.JpsOrderRootType;
 import org.jetbrains.jps.model.module.JpsDependencyElement;
 import org.jetbrains.jps.model.module.JpsLibraryDependency;
@@ -70,6 +72,7 @@ import org.jetbrains.jps.model.module.JpsModuleDependency;
 import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
 import org.jetbrains.jps.model.serialization.JpsModelSerializationDataService;
 import org.jetbrains.jps.model.serialization.JpsProjectLoader;
+import org.jetbrains.jps.util.JpsPathUtil;
 
 public class GenerateBazelAction {
 
@@ -193,6 +196,9 @@ public class GenerateBazelAction {
                     }
                     JpsLibrary library = libraryDependency.getLibrary();
                     List<File> files = library.getFiles(JpsOrderRootType.COMPILED);
+                    // Library files are sometimes returned in file system order. Which changes
+                    // across systems. Choose alphabetical always:
+                    Collections.sort(files);
                     for (File file : files) {
                         if (file.exists() &&
                                 Files.getFileExtension(file.getName()).equals("jar")) {

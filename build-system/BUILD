@@ -24,6 +24,7 @@ iml_module(
         "//tools/base/sdk-common:studio.sdk-common[module]",
         "//tools/base/testutils:studio.testutils[module, test]",
         "//tools/idea/.idea/libraries:truth[test]",
+        "//tools/idea/.idea/libraries:KotlinJavaRuntime",
     ],
 )
 
