@@ -93,7 +93,7 @@ public class GenerateBazelAction {
 
         JpsCompilerExcludes excludes = JpsJavaExtensionService.getInstance()
                 .getOrCreateCompilerConfiguration(project).getCompilerExcludes();
-        Set<File> excludedFiles = excludedFiles(excludes);
+        List<File> excludedFiles = excludedFiles(excludes);
 
         // Map from file path to the bazel rule that provides it. Usually java_imports.
         Map<String, BazelRule> jarRules = Maps.newHashMap();
@@ -317,7 +317,7 @@ public class GenerateBazelAction {
      * the whole tree to find which files are excluded. In this case JPS and IJ code differ and both
      * parse the xml differently. For now we use reflection assuming the implementation class.
      */
-    private Set<File> excludedFiles(JpsCompilerExcludes excludes) {
+    private List<File> excludedFiles(JpsCompilerExcludes excludes) {
         Field myFiles = null;
         try {
             myFiles = excludes.getClass().getDeclaredField("myFiles");
@@ -329,7 +329,8 @@ public class GenerateBazelAction {
                     if (args.length == 1 && args[0].equals(File.class)) {
                         myFiles.setAccessible(true);
                         Object object = myFiles.get(excludes);
-                        return (Set<File>) object;
+                        Set<File> set = (Set<File>) object;
+                        return set.stream().sorted().collect(Collectors.toList());
                     }
                 }
 
