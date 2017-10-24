@@ -37,6 +37,7 @@ import com.google.wireless.android.sdk.stats.GradleTaskExecution;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -146,7 +147,7 @@ public class ActdProfileUploaderTest {
     }
 
     private static List<GradleBenchmarkResult> randomBenchmarkResults() {
-        int count = new Random().nextInt(10);
+        int count = new Random().nextInt(10) + 5; // must always be greater than 0
         List<GradleBenchmarkResult> results = Lists.newArrayListWithCapacity(count);
         for (int i = 0; i < count; i++) {
             results.add(randomBenchmarkResult());
@@ -229,5 +230,11 @@ public class ActdProfileUploaderTest {
             assertThat(req.projectId).isNotEmpty();
             assertThat(req.sample.buildId).isGreaterThan(0L);
         }
+    }
+
+    @Test
+    public void sampleRequestsEmpty() throws IOException {
+        Collection<SampleRequest> reqs = uploader.sampleRequests(Arrays.asList());
+        assertThat(reqs).isEmpty();
     }
 }
