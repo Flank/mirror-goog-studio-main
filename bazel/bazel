@@ -29,7 +29,7 @@ def main():
     jdk_subdir = 'win64'
     sdk_subdir = 'windows'
     tag_filter = "-no_windows"
-    tag_tag_filter = "-no_test_windows"
+    test_tag_filter = "-no_test_windows"
   else:
     sys.exit('Platform %s is not yet supported.' % sys.platform)
 
