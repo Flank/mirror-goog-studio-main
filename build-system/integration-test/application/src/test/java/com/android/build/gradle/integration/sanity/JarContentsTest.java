@@ -571,6 +571,7 @@ public class JarContentsTest {
                 "com/android/instantapp/run/",
                 "com/android/instantapp/sdk/",
                 "com/android/instantapp/utils/",
+                "com/android/projectmodel/",
                 "NOTICE",
                 "META-INF/MANIFEST.MF",
                 "META-INF/",
