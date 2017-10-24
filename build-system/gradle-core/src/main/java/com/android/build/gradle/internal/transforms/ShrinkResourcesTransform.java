@@ -56,9 +56,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
+import org.xml.sax.SAXException;
 
 /**
  * Implementation of Resource Shrinking as a transform.
@@ -308,10 +310,18 @@ public class ShrinkResourcesTransform extends Transform {
         try {
             analyzer.setVerbose(logger.isEnabled(LogLevel.INFO));
             analyzer.setDebug(logger.isEnabled(LogLevel.DEBUG));
-            analyzer.analyze();
+            try {
+                analyzer.analyze();
+            } catch (IOException | ParserConfigurationException | SAXException e) {
+                throw new RuntimeException(e);
+            }
 
             // Just rewrite the .ap_ file to strip out the res/ files for unused resources
-            analyzer.rewriteResourceZip(uncompressedResourceFile, compressedResourceFile);
+            try {
+                analyzer.rewriteResourceZip(uncompressedResourceFile, compressedResourceFile);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
             // Dump some stats
             int unused = analyzer.getUnusedResourceCount();
@@ -350,8 +360,6 @@ public class ShrinkResourcesTransform extends Transform {
 
                 System.out.println(sb.toString());
             }
-        } catch (Exception e) {
-            logger.quiet("Failed to shrink resources: ignoring", e);
         } finally {
             analyzer.dispose();
         }
