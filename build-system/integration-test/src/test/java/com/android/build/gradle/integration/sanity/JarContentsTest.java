@@ -1013,6 +1013,7 @@ public class JarContentsTest {
                 "com/android/tools/",
                 "com/android/tools/lint/",
                 "com/android/tools/lint/kotlin/",
+                "NOTICE",
                 "META-INF/",
                 "META-INF/MANIFEST.MF"
         );
