@@ -70,7 +70,7 @@ public class HttpUrlTest {
         String responseFields = responseDetails.getResponse().getFields();
         assertThat(responseFields.contains("HTTP/1.0 200 OK")).isTrue();
 
-        String payloadId = stubWrapper.getResponsePayloadId(connectionId);
+        String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         Profiler.BytesResponse bytesResponse =
                 grpc.getProfilerStub().getBytes(BytesRequest.newBuilder().setId(payloadId).build());
@@ -95,9 +95,7 @@ public class HttpUrlTest {
         HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains("?activity=HttpUrlPost")).isTrue();
 
-        HttpDetailsResponse requestBody =
-                stubWrapper.getHttpDetails(connectionId, Type.REQUEST_BODY);
-        String payloadId = requestBody.getRequestBody().getPayloadId();
+        String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         Profiler.BytesResponse bytesResponse =
                 grpc.getProfilerStub().getBytes(BytesRequest.newBuilder().setId(payloadId).build());

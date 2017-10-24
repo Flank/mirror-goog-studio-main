@@ -81,7 +81,7 @@ public class OkHttpTest {
         String responseFields = responseDetails.getResponse().getFields();
         assertThat(responseFields.contains("response-status-code = 200")).isTrue();
 
-        String payloadId = stubWrapper.getResponsePayloadId(connectionId);
+        String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         Profiler.BytesResponse bytesResponse =
                 myGrpc.getProfilerStub()
@@ -132,7 +132,7 @@ public class OkHttpTest {
         String responseFields = responseDetails.getResponse().getFields();
         assertThat(responseFields.contains("response-status-code = 200")).isTrue();
 
-        String payloadId = stubWrapper.getResponsePayloadId(connectionId);
+        String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         Profiler.BytesResponse bytesResponse =
                 myGrpc.getProfilerStub()
