@@ -44,6 +44,7 @@ cc_test(
         "atrace_manager_test.cc",
         "cpu_usage_sampler_test.cc",
         "simpleperf_manager_test.cc",
+        "simpleperf_test.cc",
     ],
     copts = [
         "-Itools/base/profiler/native",

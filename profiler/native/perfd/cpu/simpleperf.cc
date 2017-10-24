@@ -19,17 +19,25 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cstring>
 #include <sstream>
 #include <string>
 
 #include "utils/bash_command.h"
+#include "utils/clock.h"
 
+using std::strcmp;
+using std::strcpy;
 using std::string;
-using std::stringstream;
+using std::ostringstream;
+
+namespace {
+
+const char* const kSimpleperfExecutable = "simpleperf";
+
+}  // namespace
 
 namespace profiler {
-
-const char* Simpleperf::kSimpleperfExecutable = "simpleperf";
 
 bool Simpleperf::EnableProfiling() const {
   // By default, linuxSE disallow profiling. This enables it.
@@ -41,14 +49,13 @@ bool Simpleperf::EnableProfiling() const {
 
 bool Simpleperf::KillSimpleperf(int simpleperf_pid) const {
   BashCommandRunner kill_simpleperf("kill");
-  stringstream string_pid;
+  ostringstream string_pid;
   string_pid << simpleperf_pid;
   return kill_simpleperf.Run(string_pid.str(), nullptr);
 }
 
-void Simpleperf::Record(const string& simpleperf_dir, int pid,
-                        const string& pkg_name, const string& trace_path,
-                        int sampling_interval_us,
+void Simpleperf::Record(int pid, const string& pkg_name,
+                        const string& trace_path, int sampling_interval_us,
                         const string& log_path) const {
   //  Redirect stdout and stderr to a log file (useful if simpleperf
   //  crashes).
@@ -58,27 +65,24 @@ void Simpleperf::Record(const string& simpleperf_dir, int pid,
   dup2(fd, fileno(stderr));
   close(fd);
 
-  std::stringstream string_pid;
-  string_pid << pid;
+  string record_command =
+      GetRecordCommand(pid, pkg_name, trace_path, sampling_interval_us);
 
-  string simpleperf_bin = simpleperf_dir + kSimpleperfExecutable;
+  // Converts the record command to a C string.
+  char command_buffer[record_command.length() + 1];
+  strcpy(command_buffer, record_command.c_str());
+  char* argv[record_command.length() + 1];
+  SplitRecordCommand(command_buffer, argv);
 
-  int one_sec_in_us = 1000000;
-  std::stringstream samples_per_sec;
-  samples_per_sec << one_sec_in_us / sampling_interval_us;
-
-  execlp(simpleperf_bin.c_str(), simpleperf_bin.c_str(), "record", "--app",
-         pkg_name.c_str(), "--call-graph", "dwarf", "-o", trace_path.c_str(),
-         "-p", string_pid.str().c_str(), "-f", samples_per_sec.str().c_str(),
-         "--exit-with-parent", NULL);
+  // Execute the simpleperf record command.
+  execvp(*argv, argv);
 }
 
-bool Simpleperf::ReportSample(const string& simpleperf_dir,
-                              const string& input_path,
+bool Simpleperf::ReportSample(const string& input_path,
                               const string& output_path, string* output) const {
-  string simpleperf_binary_abspath = simpleperf_dir + kSimpleperfExecutable;
+  string simpleperf_binary_abspath = simpleperf_dir_ + kSimpleperfExecutable;
   BashCommandRunner simpleperf_report(simpleperf_binary_abspath);
-  stringstream parameters;
+  ostringstream parameters;
   parameters << "report-sample ";
   parameters << "--protobuf ";
   parameters << "--show-callchain ";
@@ -89,6 +93,75 @@ bool Simpleperf::ReportSample(const string& simpleperf_dir,
   parameters << output_path;
 
   return simpleperf_report.Run(parameters.str(), output);
+}
+
+string Simpleperf::GetRecordCommand(int pid, const string& pkg_name,
+                                    const string& trace_path,
+                                    int sampling_interval_us) const {
+  ostringstream command;
+  command << simpleperf_dir_ << kSimpleperfExecutable << " record";
+  command << " -p " << pid;
+  command << " --app " << pkg_name;
+
+  string supported_features = GetFeatures();
+  // If the device supports dwarf-based call graphs, use them. Otherwise use
+  // frame pointer.
+  command << " --call-graph ";
+  if (supported_features.find("dwarf") != string::npos) {
+    command << "dwarf";
+  } else {
+    command << "fp";
+  }
+
+  // If the device supports tracing offcpu time, we need to pass the
+  // corresponding flag.
+  if (supported_features.find("trace-offcpu") != string::npos) {
+    command << " --trace-offcpu";
+  }
+
+  command << " -o " << trace_path;
+
+  command << " -f " << (Clock::s_to_us(1) / sampling_interval_us);
+
+  // If the device is an emulator, it doesn't support cpu-cycles events, which
+  // are the default events used by simpleperf. In that case, we need to use
+  // cpu-clock events.
+  if (is_emulator_) {
+    command << "-e cpu-clock";
+  }
+
+  command << " --exit-with-parent";
+
+  return command.str();
+}
+
+string Simpleperf::GetFeatures() const {
+  string simpleperf_bin = simpleperf_dir_ + kSimpleperfExecutable;
+  BashCommandRunner list_features(simpleperf_bin);
+  string supported_features;
+  list_features.Run("list --show-features", &supported_features);
+  return supported_features;
+}
+
+void Simpleperf::SplitRecordCommand(char* original_cmd,
+                                    char** split_cmd) const {
+  while (*original_cmd != '\0') {
+    // Replace whitespaces with \0
+    while (*original_cmd == ' ') {
+      *original_cmd++ = '\0';
+    }
+    // Add the argument to the split command array if it's not empty
+    if (strcmp(original_cmd, "") != 0) {
+      *split_cmd++ = original_cmd;
+    }
+    // Skip regular characters. They will be added to the split command once we
+    // find a space or a \0.
+    while (*original_cmd != '\0' && *original_cmd != ' ') {
+      original_cmd++;
+    }
+  }
+  // Mark the end of the command
+  *split_cmd = nullptr;
 }
 
 }  // namespace profiler
