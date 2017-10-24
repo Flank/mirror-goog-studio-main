@@ -53,6 +53,8 @@ public class BazelIntegrationTestsSuite {
             GRADLE_USER_HOME = Files.createTempDirectory("gradleUserHome");
 
             System.setProperty("gradle.user.home", GRADLE_USER_HOME.toAbsolutePath().toString());
+            // Run Kotlin in-process for easier control over its JVM args.
+            System.setProperty("kotlin.compiler.execution.strategy", "in-process");
         } catch (IOException e) {
             e.printStackTrace();
             throw new RuntimeException(e);
