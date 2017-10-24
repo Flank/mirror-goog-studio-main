@@ -113,7 +113,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
      * Only used for compatibility issue lookup (the driver suppression check takes
      * an issue, not an id)
      */
-    private static final Issue OLD_ISSUE_URL = Issue.create(
+    private static final Issue _OLD_ISSUE_URL = Issue.create(
             "GoogleAppIndexingUrlError", "?","?",
             Category.USABILITY, 5, Severity.ERROR, IMPLEMENTATION);
 
@@ -138,7 +138,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
     private static void reportUrlError(@NonNull XmlContext context, @NonNull Node node,
             @NonNull Location location, @NonNull String message, @Nullable LintFix quickfixData) {
         // Validation errors were reported here before
-        if (context.getDriver().isSuppressed(context, OLD_ISSUE_URL, node)) {
+        if (context.getDriver().isSuppressed(context, _OLD_ISSUE_URL, node)) {
             return;
         }
 

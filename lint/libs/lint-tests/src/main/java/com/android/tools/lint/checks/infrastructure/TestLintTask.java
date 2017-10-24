@@ -18,7 +18,6 @@ package com.android.tools.lint.checks.infrastructure;
 
 import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
 import static com.android.SdkConstants.DOT_GRADLE;
-import static com.android.SdkConstants.DOT_JAR;
 import static org.junit.Assert.assertTrue;
 
 import com.android.annotations.NonNull;
@@ -47,7 +46,6 @@ import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.NullLogger;
 import com.android.utils.Pair;
-import com.android.utils.SdkUtils;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -57,9 +55,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -896,13 +895,14 @@ public class TestLintTask {
                 checkedIssues = Lists.newArrayList();
                 // Find issues defined in the class
                 Class<? extends Detector> detectorClass = detector.getClass();
-                for (Field field : detectorClass.getFields()) {
-                    if ((field.getModifiers() & Modifier.STATIC) != 0
-                            && field.getType() == Issue.class) {
-                        try {
-                            checkedIssues.add((Issue) field.get(null));
-                        } catch (IllegalAccessException ignore) {
-                        }
+                addIssuesFromClass(checkedIssues, detectorClass);
+                if (checkedIssues.isEmpty()) {
+                    // Look in file
+                    try {
+                        Class<?> fileClass = Class.forName(detectorClass.getName() + "Kt");
+                        addIssuesFromClass(checkedIssues, fileClass);
+                    } catch (ClassNotFoundException ignore) {
+                        ignore.printStackTrace();
                     }
                 }
                 if (checkedIssues.isEmpty()) {
@@ -936,6 +936,51 @@ public class TestLintTask {
         }
 
         return checkedIssues;
+    }
+
+    /** Adds issue fields found in the given class */
+    private static void addIssuesFromClass(@NonNull List<Issue> checkedIssues,
+            @NonNull Class<?> detectorClass) {
+        addIssuesFromFields(checkedIssues, detectorClass.getFields());
+
+        // Use getDeclaredFields to also pick up private fields (e.g. backing fields
+        // for Kotlin properties); we can't *only* use getDeclaredFields since we
+        // also want to pick up inherited fields (for example used in the GradleDetector
+        // subclasses.)
+        addIssuesFromFields(checkedIssues, detectorClass.getDeclaredFields());
+
+        for (Method method : detectorClass.getDeclaredMethods()) {
+            if ((method.getModifiers() & Modifier.STATIC) != 0
+                    && method.getReturnType() == Issue.class
+                    && method.getName().startsWith("get")
+                    && method.getParameterCount() == 0) {
+                try {
+                    method.setAccessible(true);
+                    Issue issue = (Issue) method.invoke(null);
+                    if (!checkedIssues.contains(issue)) {
+                        checkedIssues.add(issue);
+                    }
+                } catch (IllegalAccessException | InvocationTargetException ignore) {
+                }
+            }
+        }
+    }
+
+    private static void addIssuesFromFields(@NonNull List<Issue> checkedIssues, Field[] fields) {
+        for (Field field : fields) {
+            if ((field.getModifiers() & Modifier.STATIC) != 0
+                    && !field.getName().startsWith("_")
+                    && field.getType() == Issue.class) {
+                try {
+                    field.setAccessible(true);
+                    Issue issue = (Issue) field.get(null);
+                    if (!checkedIssues.contains(issue)) {
+                        checkedIssues.add(issue);
+                    }
+                } catch (IllegalAccessException ignore) {
+                }
+            }
+        }
     }
 
     /**

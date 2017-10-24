@@ -111,9 +111,11 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
             Set<Issue> detectorIssues = Sets.newHashSet(computedIssues);
             if (!checkedIssues.equals(detectorIssues)) {
                 Set<Issue> difference = Sets.symmetricDifference(checkedIssues, detectorIssues);
-                fail("Discrepancy in issues listed in detector class "
-                        +getDetectorInstance().getClass().getSimpleName()+" and issues "
-                        +"found in the issue registry: "+difference);
+                fail("Discrepancy in issues listed in detector class " +
+                        getDetectorInstance().getClass().getSimpleName() + " and issues " +
+                        "found in the issue registry: " + difference + ". If the issue fields " +
+                        "are not meant to be included in the registry, you can rename them to " +
+                        "begin with an underscore.");
             }
         }
 
