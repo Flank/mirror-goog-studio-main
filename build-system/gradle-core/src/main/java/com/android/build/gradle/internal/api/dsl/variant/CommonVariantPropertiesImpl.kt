@@ -44,7 +44,7 @@ class CommonVariantPropertiesImpl(
             action.execute(variantSourceSet)
         } else {
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,
+                    EvalIssueReporter.Type.GENERIC,
                     "Calling variantSourceSet(Action) with a null variantSourceSet")
         }
     }
@@ -54,7 +54,7 @@ class CommonVariantPropertiesImpl(
             action.execute(multiFlavorSourceSet)
         } else {
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,
+                    EvalIssueReporter.Type.GENERIC,
                     "Calling multiFlavorSourceSet(Action) with a null multiFlavorSourceSet")
         }
     }

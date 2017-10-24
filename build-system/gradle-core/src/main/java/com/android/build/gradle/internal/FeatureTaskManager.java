@@ -47,7 +47,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeManifests;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.sdklib.AndroidTargetHash;
@@ -61,6 +61,7 @@ import java.util.function.Supplier;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
+
 
 /** TaskManager for creating tasks for feature variants in an Android feature project. */
 public class FeatureTaskManager extends TaskManager {
@@ -100,7 +101,7 @@ public class FeatureTaskManager extends TaskManager {
             if (androidVersion != null) {
                 message += " compileSdkVersion is set to " + androidVersion.getApiString();
             }
-            androidBuilder.getIssueReporter().reportError(SyncIssue.TYPE_GENERIC, message);
+            androidBuilder.getIssueReporter().reportError(Type.GENERIC, message);
         }
 
         // Ensure we're not using aapt1.
@@ -108,9 +109,7 @@ public class FeatureTaskManager extends TaskManager {
                 && !extension.getBaseFeature()) {
             androidBuilder
                     .getIssueReporter()
-                    .reportError(
-                            SyncIssue.TYPE_GENERIC,
-                            "Non-base feature modules require AAPTv2 to build.");
+                    .reportError(Type.GENERIC, "Non-base feature modules require AAPTv2 to build.");
         }
 
         BaseVariantData variantData = variantScope.getVariantData();
@@ -122,14 +121,14 @@ public class FeatureTaskManager extends TaskManager {
                 androidBuilder
                         .getIssueReporter()
                         .reportWarning(
-                                SyncIssue.TYPE_GENERIC,
+                                Type.GENERIC,
                                 "Data binding support for non-base features is experimental "
                                         + "and is not supported.");
             } else {
                 androidBuilder
                         .getIssueReporter()
                         .reportError(
-                                SyncIssue.TYPE_GENERIC,
+                                Type.GENERIC,
                                 "Currently, data binding does not work for non-base features. "
                                         + "Move data binding code to the base feature module.\n"
                                         + "See https://issuetracker.google.com/63814741.\n"
@@ -488,7 +487,7 @@ public class FeatureTaskManager extends TaskManager {
                                     + "tools/java-8-support-message.html\n",
                             pluginName);
 
-            androidBuilder.getIssueReporter().reportWarning(SyncIssue.TYPE_GENERIC, warningMsg);
+            androidBuilder.getIssueReporter().reportWarning(Type.GENERIC, warningMsg);
         }
 
         addJavacClassesStream(variantScope);

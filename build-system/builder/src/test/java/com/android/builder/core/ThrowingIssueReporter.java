@@ -28,37 +28,41 @@ public class ThrowingIssueReporter implements EvalIssueReporter {
     @NonNull
     @Override
     public SyncIssue reportIssue(
-            int type, int severity, @NonNull String msg, @Nullable String data) {
+            @NonNull Type type,
+            @NonNull Severity severity,
+            @NonNull String msg,
+            @Nullable String data) {
         throw new RuntimeException("fake");
     }
 
     @NonNull
     @Override
-    public SyncIssue reportIssue(int type, int severity, @NonNull String msg) {
+    public SyncIssue reportIssue(
+            @NonNull Type type, @NonNull Severity severity, @NonNull String msg) {
         throw new RuntimeException("fake");
     }
 
     @NonNull
     @Override
-    public SyncIssue reportError(int type, @NonNull String msg, @Nullable String data) {
+    public SyncIssue reportError(@NonNull Type type, @NonNull String msg, @Nullable String data) {
         throw new RuntimeException("fake");
     }
 
     @NonNull
     @Override
-    public SyncIssue reportError(int type, @NonNull String msg) {
+    public SyncIssue reportError(@NonNull Type type, @NonNull String msg) {
         throw new RuntimeException("fake");
     }
 
     @NonNull
     @Override
-    public SyncIssue reportWarning(int type, @NonNull String msg, @Nullable String data) {
+    public SyncIssue reportWarning(@NonNull Type type, @NonNull String msg, @Nullable String data) {
         throw new RuntimeException("fake");
     }
 
     @NonNull
     @Override
-    public SyncIssue reportWarning(int type, @NonNull String msg) {
+    public SyncIssue reportWarning(@NonNull Type type, @NonNull String msg) {
         throw new RuntimeException("fake");
     }
 }

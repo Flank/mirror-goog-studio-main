@@ -18,33 +18,37 @@ package com.android.build.gradle.options;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
 import com.android.builder.model.AndroidProject;
 
 public final class SyncOptions {
 
-    private SyncOptions() {}
-
-    public static ConfigurableErrorHandler.EvaluationMode getModelQueryMode(
-            @NonNull ProjectOptions options) {
-        if (options.get(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED)) {
-            return ConfigurableErrorHandler.EvaluationMode.IDE;
-        }
-
-        if (options.get(BooleanOption.IDE_BUILD_MODEL_ONLY)) {
-            return ConfigurableErrorHandler.EvaluationMode.IDE_LEGACY;
-        }
-
-        return ConfigurableErrorHandler.EvaluationMode.STANDARD;
+    public enum ErrorFormatMode {
+        MACHINE_PARSABLE,
+        HUMAN_READABLE
     }
 
-    public static ExtraModelInfo.ErrorFormatMode getErrorFormatMode(
-            @NonNull ProjectOptions options) {
+    public enum EvaluationMode {
+        /** Standard mode, errors should be breaking */
+        STANDARD,
+        /** IDE mode. Errors should not be breaking and should generate a SyncIssue instead. */
+        IDE,
+    }
+
+    private SyncOptions() {}
+
+    public static EvaluationMode getModelQueryMode(@NonNull ProjectOptions options) {
+        if (options.get(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED)) {
+            return EvaluationMode.IDE;
+        }
+
+        return EvaluationMode.STANDARD;
+    }
+
+    public static ErrorFormatMode getErrorFormatMode(@NonNull ProjectOptions options) {
         if (options.get(BooleanOption.IDE_INVOKED_FROM_IDE)) {
-            return ExtraModelInfo.ErrorFormatMode.MACHINE_PARSABLE;
+            return ErrorFormatMode.MACHINE_PARSABLE;
         } else {
-            return ExtraModelInfo.ErrorFormatMode.HUMAN_READABLE;
+            return ErrorFormatMode.HUMAN_READABLE;
         }
     }
 

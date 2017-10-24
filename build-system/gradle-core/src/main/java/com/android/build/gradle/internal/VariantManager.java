@@ -70,10 +70,10 @@ import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.DefaultProductFlavor.DimensionRequest;
 import com.android.builder.core.ManifestAttributeSupplier;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.InstantRun;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SigningConfig;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.ProcessProfileWriter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.StringHelper;
@@ -824,7 +824,7 @@ public class VariantManager implements VariantModel {
                 androidBuilder
                         .getIssueReporter()
                         .reportError(
-                                SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION,
+                                EvalIssueReporter.Type.UNNAMED_FLAVOR_DIMENSION,
                                 "All flavors must now belong to a named flavor dimension. "
                                         + "Learn more at "
                                         + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html");

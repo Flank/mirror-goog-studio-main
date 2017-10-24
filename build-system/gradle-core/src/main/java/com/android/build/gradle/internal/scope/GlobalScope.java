@@ -27,7 +27,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.SdkHandler;
-import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
+import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.options.ProjectOptions;
@@ -242,17 +242,13 @@ public class GlobalScope extends TaskOutputHolderImpl
     }
 
     @NonNull
-    public ConfigurableErrorHandler getErrorHandler() {
-        // This is ugly but this allow us to make it work for the component model.
-        // FIXME: once we clear out internal data structure and remove the component model, we can make this better.
-        return (ConfigurableErrorHandler) androidBuilder.getIssueReporter();
+    public SyncIssueHandler getErrorHandler() {
+        return (SyncIssueHandler) androidBuilder.getIssueReporter();
     }
 
     @NonNull
     public MessageReceiver getMessageReceiver() {
-        // This is ugly but this allow us to make it work for the component model.
-        // FIXME: once we clear out internal data structure and remove the component model, we can make this better.
-        return (MessageReceiver) androidBuilder.getIssueReporter();
+        return androidBuilder.getMessageReceiver();
     }
 
     @NonNull

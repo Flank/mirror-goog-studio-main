@@ -22,7 +22,7 @@ import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import org.gradle.api.Project;
 import org.gradle.internal.reflect.Instantiator;
 
@@ -52,7 +52,7 @@ public abstract class BaseVariantFactory implements VariantFactory {
                     .getAndroidBuilder()
                     .getIssueReporter()
                     .reportError(
-                            SyncIssue.TYPE_INCOMPATIBLE_PLUGIN,
+                            Type.INCOMPATIBLE_PLUGIN,
                             "android-apt plugin is incompatible with the Android Gradle plugin.  "
                                     + "Please use 'annotationProcessor' configuration "
                                     + "instead.",

@@ -41,8 +41,8 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.ApiVersion;
-import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.repository.Revision;
@@ -197,14 +197,12 @@ public abstract class ExternalNativeJsonGenerator {
             androidBuilder
                     .getIssueReporter()
                     .reportError(
-                            SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
-                            e.getMessage(),
-                            variantName);
+                            Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION, e.getMessage(), variantName);
         } catch (ProcessException e) {
             androidBuilder
                     .getIssueReporter()
                     .reportError(
-                            SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_PROCESS_EXCEPTION,
+                            Type.EXTERNAL_NATIVE_BUILD_PROCESS_EXCEPTION,
                             String.format(
                                     "executing external native build for %s %s",
                                     getNativeBuildSystem().getName(), makefile),
@@ -471,7 +469,7 @@ public abstract class ExternalNativeJsonGenerator {
             Iterable<String> supportedAbisNames =
                     supportedAbis.stream().map(Abi::getName)::iterator;
             issueReporter.reportError(
-                    SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                    Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
                     String.format(
                             "ABIs [%s] are not supported for platform. Supported ABIs are "
                                     + "[%s].",
@@ -719,7 +717,7 @@ public abstract class ExternalNativeJsonGenerator {
             if (buildTargetAbi != null) {
                 if (!validAbis.contains(buildTargetAbi)) {
                     issueReporter.reportError(
-                            SyncIssue.TYPE_GENERIC,
+                            Type.GENERIC,
                             String.format(
                                     "Cannot build for ABI: %1$s supported ABIs are: %2$s",
                                     buildTargetAbi.getName(),
@@ -822,7 +820,7 @@ public abstract class ExternalNativeJsonGenerator {
             androidBuilder
                     .getIssueReporter()
                     .reportError(
-                            SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                            Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
                             String.format(
                                     Locale.getDefault(),
                                     "The build staging directory you specified ('%s')"

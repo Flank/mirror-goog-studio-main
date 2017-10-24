@@ -88,7 +88,7 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
                         .filter({ !implClass.isInstance(it) })
                         .collect(Collectors.toSet())
 
-                issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+                issueReporter.reportError(EvalIssueReporter.Type.GENERIC,
                         "Expected type ${implClass.name} for items: $wrongTypeElements")
                 return false
             }
@@ -132,7 +132,7 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
             return if (implClass.isInstance(element)) {
                 container.add(implClass.cast(element))
             } else {
-                issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+                issueReporter.reportError(EvalIssueReporter.Type.GENERIC,
                         "Expected type ${implClass.name} for item: $element")
                 false
             }

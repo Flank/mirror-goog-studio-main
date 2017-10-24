@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.ide;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -40,18 +41,22 @@ public final class SyncIssueImpl implements SyncIssue, Serializable {
     @NonNull private final String message;
     @Nullable private final List<String> multiLineMessage;
 
-    public SyncIssueImpl(int type, int severity, @Nullable String data, @NonNull String message) {
+    public SyncIssueImpl(
+            @NonNull EvalIssueReporter.Type type,
+            @NonNull EvalIssueReporter.Severity severity,
+            @Nullable String data,
+            @NonNull String message) {
         this(type, severity, data, message, null);
     }
 
     public SyncIssueImpl(
-            int type,
-            int severity,
+            @NonNull EvalIssueReporter.Type type,
+            @NonNull EvalIssueReporter.Severity severity,
             @Nullable String data,
             @NonNull String message,
             @Nullable List<String> multiLineMessage) {
-        this.type = type;
-        this.severity = severity;
+        this.type = type.getType();
+        this.severity = severity.getSeverity();
         this.data = data;
         this.message = message;
         this.multiLineMessage =

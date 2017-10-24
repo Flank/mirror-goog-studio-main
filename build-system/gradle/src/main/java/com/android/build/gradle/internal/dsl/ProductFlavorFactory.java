@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
@@ -35,22 +35,22 @@ public class ProductFlavorFactory implements NamedDomainObjectFactory<ProductFla
     private final Project project;
     @NonNull
     private final Logger logger;
-    @NonNull private final ConfigurableErrorHandler errorReporter;
+    @NonNull private final DeprecationReporter deprecationReporter;
 
     public ProductFlavorFactory(
             @NonNull Instantiator instantiator,
             @NonNull Project project,
             @NonNull Logger logger,
-            @NonNull ConfigurableErrorHandler errorReporter) {
+            @NonNull DeprecationReporter deprecationReporter) {
         this.instantiator = instantiator;
         this.project = project;
         this.logger = logger;
-        this.errorReporter = errorReporter;
+        this.deprecationReporter = deprecationReporter;
     }
 
     @Override
     public ProductFlavor create(String name) {
-        return instantiator.newInstance(ProductFlavor.class,
-                name, project, instantiator, logger, errorReporter);
+        return instantiator.newInstance(
+                ProductFlavor.class, name, project, instantiator, logger, deprecationReporter);
     }
 }

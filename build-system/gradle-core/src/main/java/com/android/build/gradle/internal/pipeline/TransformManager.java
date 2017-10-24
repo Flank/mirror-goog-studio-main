@@ -35,8 +35,8 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -213,7 +213,7 @@ public class TransformManager extends FilterableStreamCollection {
         if (inputStreams.isEmpty() && referencedStreams.isEmpty()) {
             // didn't find any match. Means there is a broken order somewhere in the streams.
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,
+                    Type.GENERIC,
                     String.format(
                             "Unable to add Transform '%s' on variant '%s': requested streams not available: %s+%s / %s",
                             transform.getName(),
@@ -437,7 +437,7 @@ public class TransformManager extends FilterableStreamCollection {
         Set<? super Scope> scopes = transform.getScopes();
         if (scopes.contains(Scope.PROVIDED_ONLY)) {
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,
+                    Type.GENERIC,
                     String.format(
                             "PROVIDED_ONLY scope cannot be consumed by Transform '%1$s'",
                             transform.getName()));
@@ -445,7 +445,7 @@ public class TransformManager extends FilterableStreamCollection {
         }
         if (scopes.contains(Scope.TESTED_CODE)) {
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,
+                    Type.GENERIC,
                     String.format(
                             "TESTED_CODE scope cannot be consumed by Transform '%1$s'",
                             transform.getName()));
@@ -475,7 +475,7 @@ public class TransformManager extends FilterableStreamCollection {
                             Scope.PROJECT_LOCAL_DEPS.name(),
                             Scope.EXTERNAL_LIBRARIES.name());
             if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
-                issueReporter.reportError(SyncIssue.TYPE_GENERIC, message);
+                issueReporter.reportError(Type.GENERIC, message);
             }
         }
 
@@ -487,7 +487,7 @@ public class TransformManager extends FilterableStreamCollection {
                             Scope.SUB_PROJECTS_LOCAL_DEPS.name(),
                             Scope.EXTERNAL_LIBRARIES.name());
             if (!scopes.contains(Scope.EXTERNAL_LIBRARIES)) {
-                issueReporter.reportError(SyncIssue.TYPE_GENERIC, message);
+                issueReporter.reportError(Type.GENERIC, message);
             }
         }
     }
@@ -499,7 +499,7 @@ public class TransformManager extends FilterableStreamCollection {
             if (!(contentType instanceof QualifiedContent.DefaultContentType
                     || contentType instanceof ExtendedContentType)) {
                 issueReporter.reportError(
-                        SyncIssue.TYPE_GENERIC,
+                        Type.GENERIC,
                         String.format(
                                 "Custom content types (%1$s) are not supported in transforms (%2$s)",
                                 contentType.getClass().getName(), transform.getName()));

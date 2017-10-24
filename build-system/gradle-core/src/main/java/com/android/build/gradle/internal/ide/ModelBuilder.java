@@ -57,6 +57,8 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
+import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.AaptOptions;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
@@ -282,7 +284,7 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         AaptOptions aaptOptions = AaptOptionsImpl.create(config.getAaptOptions());
 
-        syncIssues.addAll(extraModelInfo.getSyncIssues().values());
+        syncIssues.addAll(extraModelInfo.getSyncIssueHandler().getSyncIssues());
 
         List<String> flavorDimensionList = config.getFlavorDimensionList() != null ?
                 config.getFlavorDimensionList() : Lists.newArrayList();
@@ -515,7 +517,7 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         // If there is a missing flavor dimension then we don't even try to resolve dependencies
         // as it may fail due to improperly setup configuration attributes.
-        if (extraModelInfo.hasSyncIssue(SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION)) {
+        if (extraModelInfo.getSyncIssueHandler().hasSyncIssue(Type.UNNAMED_FLAVOR_DIMENSION)) {
             result = Pair.of(EMPTY_DEPENDENCIES_IMPL, EMPTY_DEPENDENCY_GRAPH);
         } else {
             final Project project = variantScope.getGlobalScope().getProject();
@@ -644,8 +646,8 @@ public class ModelBuilder implements ToolingModelBuilder {
                     message ->
                             syncIssues.add(
                                     new SyncIssueImpl(
-                                            SyncIssue.TYPE_GENERIC,
-                                            SyncIssue.SEVERITY_ERROR,
+                                            Type.GENERIC,
+                                            EvalIssueReporter.Severity.ERROR,
                                             null,
                                             message)));
 

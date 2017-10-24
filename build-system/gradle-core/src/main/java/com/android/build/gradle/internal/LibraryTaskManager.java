@@ -64,7 +64,7 @@ import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
 import com.android.utils.StringHelper;
@@ -378,7 +378,7 @@ public class LibraryTaskManager extends TaskManager {
                                 androidBuilder
                                         .getIssueReporter()
                                         .reportError(
-                                                SyncIssue.TYPE_GENERIC,
+                                                Type.GENERIC,
                                                 String.format(
                                                         "Transforms with scopes '%s' cannot be applied to library projects.",
                                                         scopes));

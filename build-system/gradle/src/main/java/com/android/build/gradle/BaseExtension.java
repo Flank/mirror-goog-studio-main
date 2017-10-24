@@ -15,8 +15,6 @@
  */
 package com.android.build.gradle;
 
-import static com.android.builder.model.SyncIssue.TYPE_GENERIC;
-
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -48,6 +46,7 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.LibraryRequest;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.testing.api.DeviceProvider;
@@ -213,10 +212,11 @@ public abstract class BaseExtension implements AndroidConfig {
                         project,
                         instantiator,
                         project.getLogger(),
-                        extraModelInfo);
+                        extraModelInfo.getDeprecationReporter());
 
         aaptOptions = instantiator.newInstance(AaptOptions.class);
-        dexOptions = instantiator.newInstance(DexOptions.class, extraModelInfo);
+        dexOptions =
+                instantiator.newInstance(DexOptions.class, extraModelInfo.getDeprecationReporter());
         lintOptions = instantiator.newInstance(LintOptions.class);
         externalNativeBuild = instantiator.newInstance(
                 ExternalNativeBuild.class, instantiator, project);
@@ -1081,7 +1081,10 @@ public abstract class BaseExtension implements AndroidConfig {
 
     public File getDefaultProguardFile(String name) {
         if (!ProguardFiles.KNOWN_FILE_NAMES.contains(name)) {
-            extraModelInfo.reportError(TYPE_GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE);
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportError(
+                            EvalIssueReporter.Type.GENERIC, ProguardFiles.UNKNOWN_FILENAME_MESSAGE);
         }
         return ProguardFiles.getDefaultProguardFile(name, project);
     }

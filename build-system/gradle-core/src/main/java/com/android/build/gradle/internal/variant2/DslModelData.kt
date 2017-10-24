@@ -38,7 +38,7 @@ import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.SyncIssue
+import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.utils.StringHelper
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -262,7 +262,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
         }
 
         if (_buildTypes.any { it.name == name }) {
-            issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+            issueReporter.reportError(Type.GENERIC,
                     "ProductFlavor names cannot collide with BuildType names: $name")
 
             // don't want to keep going in case of sync
@@ -293,7 +293,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
         }
 
         if (_productFlavors.any { it.name == name }) {
-            issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+            issueReporter.reportError(Type.GENERIC,
                     "BuildType names cannot collide with ProductFlavor names: $name")
 
             // don't want to keep going in case of sync
@@ -469,13 +469,13 @@ class DslModelDataImpl<in E: BaseExtension2>(
         }
 
         if (BuilderConstants.MAIN == name) {
-            issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+            issueReporter.reportError(Type.GENERIC,
                     "$displayName names cannot be '${BuilderConstants.MAIN}'")
             return false
         }
 
         if (BuilderConstants.LINT == name) {
-            issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+            issueReporter.reportError(Type.GENERIC,
                     "$displayName names cannot be '${BuilderConstants.LINT}'")
             return false
         }
@@ -485,7 +485,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
 
     private fun checkPrefix(name: String, displayName: String, prefix: String): Boolean {
         if (name.startsWith(prefix)) {
-            issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+            issueReporter.reportError(Type.GENERIC,
                     "$displayName names cannot start with '$prefix'")
             return false
         }

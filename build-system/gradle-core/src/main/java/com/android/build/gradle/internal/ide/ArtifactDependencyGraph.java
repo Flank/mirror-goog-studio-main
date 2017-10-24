@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.ide.level2.SimpleDependencyGraphsImpl;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.builder.dependency.MavenCoordinatesImpl;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -696,8 +697,8 @@ public class ArtifactDependencyGraph {
                     (data, messages) ->
                             failureConsumer.accept(
                                     new SyncIssueImpl(
-                                            SyncIssue.TYPE_GENERIC,
-                                            SyncIssue.SEVERITY_WARNING,
+                                            EvalIssueReporter.Type.GENERIC,
+                                            EvalIssueReporter.Severity.WARNING,
                                             null,
                                             String.format(
                                                     "Unable to download sources/javadoc: %s",

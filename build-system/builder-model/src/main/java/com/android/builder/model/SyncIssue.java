@@ -25,6 +25,7 @@ import java.util.List;
  * report them at the end of a successful sync.
  */
 public interface SyncIssue {
+
     int SEVERITY_WARNING = 1;
     int SEVERITY_ERROR = 2;
 
@@ -143,6 +144,8 @@ public interface SyncIssue {
     int TYPE_DEPRECATED_DSL = 28;
 
     int TYPE_DEPRECATED_CONFIGURATION = 29;
+
+    // WHEN ADDING NEW VALUES HERE, UPDATE EvalIssueReporter.Type
 
     /** Highest number assigned to types of {@link SyncIssue}s. */
     int TYPE_MAX = 29; // increment when adding new types.

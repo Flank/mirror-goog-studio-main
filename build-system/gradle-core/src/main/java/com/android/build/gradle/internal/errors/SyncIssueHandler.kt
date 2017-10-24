@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal;
+package com.android.build.gradle.internal.errors
 
-import nl.jqno.equalsverifier.EqualsVerifier;
-import org.junit.Test;
+import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.model.SyncIssue
+import com.google.common.collect.ImmutableList
 
-public class SyncIssueKeyTest {
+/**
+ */
+interface SyncIssueHandler : EvalIssueReporter {
 
-    @Test
-    public void equals() throws Exception {
-        EqualsVerifier.forClass(ExtraModelInfo.SyncIssueKey.class).verify();
-    }
+    val syncIssues: ImmutableList<SyncIssue>
+
+    /** Whether there are sync issues */
+    fun hasSyncIssue(type: EvalIssueReporter.Type): Boolean
 }

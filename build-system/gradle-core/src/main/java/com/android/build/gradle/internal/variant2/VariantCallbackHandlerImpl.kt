@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.variant2
 import com.android.build.api.dsl.extension.VariantCallbackHandler
 import com.android.build.api.dsl.variant.Variant
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.SyncIssue
+import com.android.builder.errors.EvalIssueReporter.Type
 import org.gradle.api.Action
 
 internal class VariantCallbackHandlerImpl<T: Variant> private constructor(
@@ -126,7 +126,7 @@ data class VariantPredicate(
     internal fun cloneWithName(name: String): VariantPredicate {
         if (this.name != null) {
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,"Already filtered on variant name")
+                    Type.GENERIC,"Already filtered on variant name")
         }
 
         return VariantPredicate(
@@ -143,7 +143,7 @@ data class VariantPredicate(
     internal fun cloneWithClass(variantClass: Class<*>): VariantPredicate {
         if (this.theClass != null) {
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,"Already filtered on variant type")
+                    Type.GENERIC,"Already filtered on variant type")
         }
 
         return VariantPredicate(
@@ -161,7 +161,7 @@ data class VariantPredicate(
     internal fun cloneWithBuildType(buildTypeName: String): VariantPredicate {
         if (this.buildTypeName != null) {
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,"Already filtered on build type name")
+                    Type.GENERIC,"Already filtered on build type name")
         }
 
         return VariantPredicate(

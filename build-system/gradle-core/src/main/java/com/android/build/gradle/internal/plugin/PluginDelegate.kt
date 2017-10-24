@@ -16,7 +16,6 @@
 
 package com.android.build.gradle.internal.plugin
 
-import com.android.build.gradle.internal.ExtraModelInfo
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2
 import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.extensions.VariantAwarePropertiesImpl
@@ -29,13 +28,17 @@ import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImp
 import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporterImpl
+import com.android.build.gradle.internal.errors.SyncIssueHandlerImpl
 import com.android.build.gradle.internal.variant2.ContainerFactory
 import com.android.build.gradle.internal.variant2.DslModelDataImpl
 import com.android.build.gradle.internal.variant2.VariantBuilder
 import com.android.build.gradle.internal.variant2.VariantFactory2
 import com.android.build.gradle.internal.variant2.VariantModelData
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.model.SyncIssue
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
@@ -76,16 +79,18 @@ class PluginDelegate<E: BaseExtension2>(
     private lateinit var variantModelData: VariantModelData
     private lateinit var newExtension: E
 
-    private lateinit var extraModelInfo: ExtraModelInfo
+    private lateinit var issueReporter: EvalIssueReporter
+    private lateinit var deprecationReporter: DeprecationReporter
 
     fun prepareForEvaluation() {
-        // FIXME we don't want to keep this around in this form.
-        extraModelInfo = ExtraModelInfo(project.path,
-                projectOptions,
-                project.logger)
-        // FIXME, split in different implementations
-        val issueReporter = extraModelInfo
-        val deprecationReporter = extraModelInfo
+        issueReporter = SyncIssueHandlerImpl(
+                SyncOptions.getModelQueryMode(projectOptions), project.logger)
+        deprecationReporter = DeprecationReporterImpl(issueReporter, project.path)
+
+        if (projectOptions.hasDeprecatedOptions()) {
+            issueReporter.reportError(
+                    EvalIssueReporter.Type.GENERIC, projectOptions.deprecatedOptionsErrorMessage)
+        }
 
         // create the default config implementation
         val baseFlavor = BaseFlavorImpl(deprecationReporter, issueReporter)
@@ -107,11 +112,11 @@ class PluginDelegate<E: BaseExtension2>(
                 filesProvider = projectWrapper,
                 containerFactory = projectWrapper,
                 instantiator = instantiator,
-                deprecationReporter = extraModelInfo,
-                issueReporter = extraModelInfo,
+                deprecationReporter = deprecationReporter,
+                issueReporter = issueReporter,
                 logger = project.logger)
 
-        variantModelData = VariantModelData(extraModelInfo)
+        variantModelData = VariantModelData(issueReporter)
 
         newExtension = typedDelegate.createNewExtension(
                 project.extensions,
@@ -142,8 +147,8 @@ class PluginDelegate<E: BaseExtension2>(
         val builder = VariantBuilder(
                 dslModelData,
                 newExtension,
-                extraModelInfo,
-                extraModelInfo)
+                deprecationReporter,
+                issueReporter)
         builder.generateVariants()
         val variants = builder.variants
         val variantShims = builder.shims

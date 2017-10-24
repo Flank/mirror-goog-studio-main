@@ -35,7 +35,7 @@ import com.android.build.api.transform.TransformException;
 import com.android.build.api.transform.TransformInput;
 import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
-import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
+import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
@@ -475,7 +475,7 @@ public class DexTransformTest {
                         "createdBy",
                         mock(ProcessExecutor.class),
                         mock(JavaProcessExecutor.class),
-                        mock(ConfigurableErrorHandler.class),
+                        mock(SyncIssueHandler.class),
                         mock(MessageReceiver.class),
                         mock(ILogger.class),
                         false /* verboseExec */);
@@ -579,7 +579,7 @@ public class DexTransformTest {
                 @Nullable String createdBy,
                 @NonNull ProcessExecutor processExecutor,
                 @NonNull JavaProcessExecutor javaProcessExecutor,
-                @NonNull ConfigurableErrorHandler configurableErrorHandler,
+                @NonNull SyncIssueHandler errorHandler,
                 @NonNull MessageReceiver messageReceiver,
                 @NonNull ILogger logger,
                 boolean verboseExec) {
@@ -588,7 +588,7 @@ public class DexTransformTest {
                     createdBy,
                     processExecutor,
                     javaProcessExecutor,
-                    configurableErrorHandler,
+                    errorHandler,
                     messageReceiver,
                     logger,
                     verboseExec);

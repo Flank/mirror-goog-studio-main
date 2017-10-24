@@ -26,10 +26,10 @@ import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
 import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
-import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.Serializable;
@@ -307,7 +307,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                     String.format(
                             "BuildType(%s): buildConfigField '%s' value is being replaced: %s -> %s",
                             getName(), name, alreadyPresent.getValue(), value);
-            issueReporter.reportWarning(SyncIssue.TYPE_GENERIC, message);
+            issueReporter.reportWarning(Type.GENERIC, message);
         }
         addBuildConfigField(new ClassFieldImpl(type, name, value));
     }
@@ -333,7 +333,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                     String.format(
                             "BuildType(%s): resValue '%s' value is being replaced: %s -> %s",
                             getName(), name, alreadyPresent.getValue(), value);
-            issueReporter.reportWarning(SyncIssue.TYPE_GENERIC, message);
+            issueReporter.reportWarning(Type.GENERIC, message);
         }
         addResValue(new ClassFieldImpl(type, name, value));
     }
@@ -710,7 +710,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                 default:
                     throw new AssertionError("Unknown value " + used);
             }
-            issueReporter.reportError(SyncIssue.TYPE_GENERIC, message, methodName);
+            issueReporter.reportError(Type.GENERIC, message, methodName);
         }
     }
 

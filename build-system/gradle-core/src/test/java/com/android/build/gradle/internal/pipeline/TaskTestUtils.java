@@ -27,7 +27,7 @@ import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskFactory;
-import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
+import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.GlobalScope;
@@ -86,13 +86,11 @@ public class TaskTestUtils {
     protected Supplier<RuntimeException> mTransformTaskFailed;
     protected Project project;
 
-    static class FakeConfigurableErrorReporter extends ConfigurableErrorHandler {
+    static class FakeConfigurableErrorReporter implements SyncIssueHandler {
 
         private SyncIssue syncIssue = null;
 
-        protected FakeConfigurableErrorReporter(@NonNull EvaluationMode mode) {
-            super(mode, "fake");
-        }
+        protected FakeConfigurableErrorReporter() {}
 
         public SyncIssue getSyncIssue() {
             return syncIssue;
@@ -101,7 +99,10 @@ public class TaskTestUtils {
         @NonNull
         @Override
         public SyncIssue reportIssue(
-                int type, int severity, @NonNull String msg, @Nullable String data) {
+                @NonNull Type type,
+                @NonNull Severity severity,
+                @NonNull String msg,
+                @Nullable String data) {
             // always create a sync issue, no matter what the mode is. This can be used to validate
             // what error is thrown anyway.
             syncIssue = new SyncIssueImpl(type, severity, data, msg);
@@ -109,10 +110,53 @@ public class TaskTestUtils {
         }
 
         @Override
-        public boolean hasSyncIssue(int type) {
-            return syncIssue != null && syncIssue.getType() == type;
+        public boolean hasSyncIssue(@NonNull Type type) {
+            return syncIssue != null && syncIssue.getType() == type.getType();
         }
 
+        @NonNull
+        @Override
+        public ImmutableList<SyncIssue> getSyncIssues() {
+            if (syncIssue != null) {
+                return ImmutableList.of(syncIssue);
+            }
+
+            return ImmutableList.of();
+        }
+
+        // Kotlin default impl doesn't work in java...
+        @NonNull
+        @Override
+        public SyncIssue reportIssue(
+                @NonNull Type type, @NonNull Severity severity, @NonNull String msg) {
+            return reportIssue(type, severity, msg, null);
+        }
+
+        @NonNull
+        @Override
+        public SyncIssue reportError(
+                @NonNull Type type, @NonNull String msg, @Nullable String data) {
+            return reportIssue(type, Severity.ERROR, msg, data);
+        }
+
+        @NonNull
+        @Override
+        public SyncIssue reportError(@NonNull Type type, @NonNull String msg) {
+            return reportIssue(type, Severity.ERROR, msg, null);
+        }
+
+        @NonNull
+        @Override
+        public SyncIssue reportWarning(
+                @NonNull Type type, @NonNull String msg, @Nullable String data) {
+            return reportIssue(type, Severity.WARNING, msg, data);
+        }
+
+        @NonNull
+        @Override
+        public SyncIssue reportWarning(@NonNull Type type, @NonNull String msg) {
+            return reportIssue(type, Severity.WARNING, msg, null);
+        }
     }
 
     public static final class FakeRecorder implements Recorder {
@@ -162,8 +206,7 @@ public class TaskTestUtils {
         FileUtils.mkdirs(projectDirectory);
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
         scope = getScope();
-        errorReporter =
-                new FakeConfigurableErrorReporter(ConfigurableErrorHandler.EvaluationMode.IDE);
+        errorReporter = new FakeConfigurableErrorReporter();
         transformManager = new TransformManager(
                 project, new AndroidTaskRegistry(), errorReporter, new FakeRecorder());
         taskFactory = new TaskContainerAdaptor(project.getTasks());

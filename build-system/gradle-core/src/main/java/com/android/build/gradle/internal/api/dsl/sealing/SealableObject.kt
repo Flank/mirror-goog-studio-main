@@ -35,7 +35,7 @@ abstract class SealableObject(
             val className = this.javaClass.name
             val itemNameStr = computeName()
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,
+                    EvalIssueReporter.Type.GENERIC,
                     "Attempting to seal object$itemNameStr of type $className after it's been sealed.")
         }
 
@@ -51,7 +51,7 @@ abstract class SealableObject(
             val itemNameStr = computeName()
             // FIXME better error message and custom TYPE.
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,
+                    EvalIssueReporter.Type.GENERIC,
                     "Attempting to modify object$itemNameStr of type $className after it's been sealed.",
                     className)
 

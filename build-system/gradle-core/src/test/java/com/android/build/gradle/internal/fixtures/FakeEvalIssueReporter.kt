@@ -24,7 +24,10 @@ class FakeEvalIssueReporter: EvalIssueReporter {
 
     val messages = mutableListOf<String>()
 
-    override fun reportIssue(type: Int, severity: Int, msg: String, data: String?): SyncIssue {
+    override fun reportIssue(type: EvalIssueReporter.Type,
+            severity: EvalIssueReporter.Severity,
+            msg: String,
+            data: String?): SyncIssue {
         messages.add(msg)
         return SyncIssueImpl(type, severity, data, msg, listOf())
     }

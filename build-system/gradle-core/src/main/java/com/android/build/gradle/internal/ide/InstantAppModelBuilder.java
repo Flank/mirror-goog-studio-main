@@ -134,7 +134,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                         extraModelInfo.getExtraFlavorSourceProviders(
                                 variantManager.getDefaultConfig().getProductFlavor().getName()));
 
-        syncIssues.addAll(extraModelInfo.getSyncIssues().values());
+        syncIssues.addAll(extraModelInfo.getSyncIssueHandler().getSyncIssues());
 
         List<String> flavorDimensionList =
                 config.getFlavorDimensionList() != null

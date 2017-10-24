@@ -31,10 +31,10 @@ import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
 import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
-import com.android.builder.core.VariantType
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.SyncIssue
+import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.utils.ImmutableCollectors
 import com.android.utils.StringHelper
 import com.google.common.collect.ArrayListMultimap
@@ -136,7 +136,7 @@ class VariantBuilder<in E: BaseExtension2>(
 
         // ensure that there is always a dimension
         if (flavorDimensions.isEmpty()) {
-            issueReporter.reportError(SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION,
+            issueReporter.reportError(Type.UNNAMED_FLAVOR_DIMENSION,
                     "All flavors must now belong to a named flavor dimension. "
                             + "Learn more at "
                             + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html")
@@ -477,7 +477,7 @@ private fun createCombinations(
         for (flavor in productFlavors) {
             if (flavor.dimension == null) {
                 issueReporter.reportError(
-                        SyncIssue.TYPE_GENERIC,
+                        Type.GENERIC,
                         "Flavor '${flavor.name}' has no flavor dimension.")
                 continue
             }
@@ -486,7 +486,7 @@ private fun createCombinations(
 
             if (!flavorDimensions.contains(flavorDimension)) {
                 issueReporter.reportError(
-                        SyncIssue.TYPE_GENERIC,
+                        Type.GENERIC,
                         "Flavor '${flavor.name}' has unknown dimension '$flavorDimension")
                 continue
             }
@@ -530,7 +530,7 @@ private fun createFlavorCombinations(
     // loop on all the flavors to add them to the current index and recursively fill the next
     // indices.
     if (flavorList.isEmpty()) {
-        issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+        issueReporter.reportError(Type.GENERIC,
                 "No flavor is associated with flavor dimension '$dimensionName'.")
         return
     }

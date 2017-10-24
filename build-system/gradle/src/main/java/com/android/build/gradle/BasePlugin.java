@@ -69,6 +69,8 @@ import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.SyncOptions;
+import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.LintBaseTask;
@@ -335,14 +337,13 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                         creator,
                         new GradleProcessExecutor(project),
                         new GradleJavaProcessExecutor(project),
-                        extraModelInfo,
-                        extraModelInfo,
+                        extraModelInfo.getSyncIssueHandler(),
+                        extraModelInfo.getMessageReceiver(),
                         getLogger(),
                         isVerbose());
         dataBindingBuilder = new DataBindingBuilder();
         dataBindingBuilder.setPrintMachineReadableOutput(
-                extraModelInfo.getErrorFormatMode() ==
-                        ExtraModelInfo.ErrorFormatMode.MACHINE_PARSABLE);
+                SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
         // Apply the Java and Jacoco plugins.
         project.getPlugins().apply(JavaBasePlugin.class);
@@ -442,12 +443,18 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                 project.container(
                         BuildType.class,
                         new BuildTypeFactory(
-                                instantiator, project, extraModelInfo, extraModelInfo));
+                                instantiator,
+                                project,
+                                extraModelInfo.getSyncIssueHandler(),
+                                extraModelInfo.getDeprecationReporter()));
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
                 project.container(
                         ProductFlavor.class,
                         new ProductFlavorFactory(
-                                instantiator, project, project.getLogger(), extraModelInfo));
+                                instantiator,
+                                project,
+                                project.getLogger(),
+                                extraModelInfo.getDeprecationReporter()));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
                 project.container(SigningConfig.class, new SigningConfigFactory(instantiator));
 
@@ -768,7 +775,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                     androidBuilder,
                     SdkHandler.useCachedSdk(projectOptions));
 
-            sdkHandler.ensurePlatformToolsIsInstalled(extraModelInfo);
+            sdkHandler.ensurePlatformToolsIsInstalled(extraModelInfo.getSyncIssueHandler());
         }
     }
 

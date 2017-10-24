@@ -35,7 +35,7 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
@@ -94,7 +94,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
         if (model.getDefaultConfig().getProductFlavor().getApplicationId() != null) {
             String applicationId = model.getDefaultConfig().getProductFlavor().getApplicationId();
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,
+                    Type.GENERIC,
                     "Library projects cannot set applicationId. "
                             + "applicationId is set to '"
                             + applicationId
@@ -106,7 +106,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
             String applicationIdSuffix =
                     model.getDefaultConfig().getProductFlavor().getApplicationIdSuffix();
             issueReporter.reportError(
-                    SyncIssue.TYPE_GENERIC,
+                    Type.GENERIC,
                     "Library projects cannot set applicationIdSuffix. "
                             + "applicationIdSuffix is set to '"
                             + applicationIdSuffix
@@ -118,7 +118,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
             if (buildType.getBuildType().getApplicationIdSuffix() != null) {
                 String applicationIdSuffix = buildType.getBuildType().getApplicationIdSuffix();
                 issueReporter.reportError(
-                        SyncIssue.TYPE_GENERIC,
+                        Type.GENERIC,
                         "Library projects cannot set applicationIdSuffix. "
                                 + "applicationIdSuffix is set to '"
                                 + applicationIdSuffix
@@ -132,7 +132,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
             if (productFlavor.getProductFlavor().getApplicationId() != null) {
                 String applicationId = productFlavor.getProductFlavor().getApplicationId();
                 issueReporter.reportError(
-                        SyncIssue.TYPE_GENERIC,
+                        Type.GENERIC,
                         "Library projects cannot set applicationId. "
                                 + "applicationId is set to '"
                                 + applicationId
@@ -146,7 +146,7 @@ public class LibraryVariantFactory extends BaseVariantFactory {
                 String applicationIdSuffix =
                         productFlavor.getProductFlavor().getApplicationIdSuffix();
                 issueReporter.reportError(
-                        SyncIssue.TYPE_GENERIC,
+                        Type.GENERIC,
                         "Library projects cannot set applicationIdSuffix. "
                                 + "applicationIdSuffix is set to '"
                                 + applicationIdSuffix

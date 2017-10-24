@@ -66,7 +66,7 @@ class VariantPropertiesImpl(
             if (checkSeal()) {
                 if (value !is SigningConfigImpl) {
                     issueReporter.reportError(
-                            SyncIssue.TYPE_GENERIC,
+                            EvalIssueReporter.Type.GENERIC,
                             "BuildType.signingConfig set with an object not from android.signingConfigs")
                 }
                 field = value
