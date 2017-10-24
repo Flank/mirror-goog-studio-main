@@ -53,7 +53,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.model.JpsCompositeElement;
 import org.jetbrains.jps.model.JpsElementFactory;
 import org.jetbrains.jps.model.JpsElementReference;
-import org.jetbrains.jps.model.JpsModel;
 import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.java.JavaResourceRootType;
 import org.jetbrains.jps.model.java.JavaSourceRootProperties;
@@ -77,7 +76,7 @@ public class GenerateBazelAction {
     public void generate(Path workspace, PrintWriter progress, Configuration config)
             throws IOException {
         String projectPath = workspace.resolve("tools/idea").toString();
-
+        System.setProperty("idea.home.path", projectPath);
         HashMap<String, String> pathVariables = new HashMap<>();
         pathVariables.put("KOTLIN_BUNDLED", workspace.resolve("prebuilts/tools/common/kotlin-plugin-ij/Kotlin/kotlinc").toString());
 
