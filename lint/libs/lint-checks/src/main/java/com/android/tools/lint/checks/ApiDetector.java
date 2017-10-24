@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ANDROID_PREFIX;
 import static com.android.SdkConstants.ANDROID_THEME_PREFIX;
 import static com.android.SdkConstants.ANDROID_URI;
+import static com.android.SdkConstants.APPCOMPAT_LIB_ARTIFACT;
 import static com.android.SdkConstants.ATTR_CLASS;
 import static com.android.SdkConstants.ATTR_FULL_BACKUP_CONTENT;
 import static com.android.SdkConstants.ATTR_HEIGHT;
@@ -64,6 +65,7 @@ import static com.android.utils.CharSequences.indexOf;
 import static com.android.utils.SdkUtils.getResourceFieldName;
 import static com.intellij.pom.java.LanguageLevel.JDK_1_7;
 import static com.intellij.pom.java.LanguageLevel.JDK_1_8;
+import static java.lang.Boolean.TRUE;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -435,8 +437,8 @@ public class ApiDetector extends ResourceXmlDetector
         int attributeApiLevel = -1;
         if (ANDROID_URI.equals(attribute.getNamespaceURI())) {
             String name = attribute.getLocalName();
-            if (!(name.equals(ATTR_LAYOUT_WIDTH) && !(name.equals(ATTR_LAYOUT_HEIGHT)) &&
-                !(name.equals(ATTR_ID)))) {
+            if (!name.equals(ATTR_LAYOUT_WIDTH) && !name.equals(ATTR_LAYOUT_HEIGHT)
+                    && !isSupportedByAppcompat(name, context) && !name.equals(ATTR_ID)) {
                 String owner = "android/R$attr";
                 attributeApiLevel = mApiDatabase.getFieldVersion(owner, name);
                 int minSdk = getMinSdk(context);
@@ -606,6 +608,11 @@ public class ApiDetector extends ResourceXmlDetector
                 context.report(UNSUPPORTED, attribute, location, message, apiLevelFix(api));
             }
         }
+    }
+
+    private static boolean isSupportedByAppcompat(String name, XmlContext context) {
+        return name.equals("fillType")
+                && TRUE.equals(context.getProject().dependsOn(APPCOMPAT_LIB_ARTIFACT));
     }
 
     @NonNull
