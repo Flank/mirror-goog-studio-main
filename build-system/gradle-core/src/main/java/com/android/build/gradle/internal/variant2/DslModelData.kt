@@ -96,21 +96,10 @@ class DslModelDataImpl<in E: BaseExtension2>(
         private val logger: Logger): DslModelData, Sealable {
 
     // wrapped container for source sets.
-    internal val _sourceSets: NamedDomainObjectContainer<DefaultAndroidSourceSet> =
-            containerFactory.createContainer(
-                    DefaultAndroidSourceSet::class.java,
-                    AndroidSourceSetFactory(
-                            filesProvider,
-                            instantiator,
-                            deprecationReporter,
-                            issueReporter))
+    internal val _sourceSets: NamedDomainObjectContainer<DefaultAndroidSourceSet>
 
     // sealable container for source set.
-    override val sourceSets: SealableNamedDomainObjectContainer<AndroidSourceSet, DefaultAndroidSourceSet> =
-            createSealableContainer(
-                    AndroidSourceSet::class.java,
-                    DefaultAndroidSourceSet::class.java,
-                    _sourceSets)
+    override val sourceSets: SealableNamedDomainObjectContainer<AndroidSourceSet, DefaultAndroidSourceSet>
 
     // wrapped container for product flavors
     internal val _productFlavors: NamedDomainObjectContainer<ProductFlavorImpl> =
@@ -183,6 +172,18 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 .filter { !it.isForTesting }
                 .reduce(toSingleItem())
                 .orElseThrow { RuntimeException("No main variant type") }
+
+        _sourceSets = containerFactory.createContainer(
+                DefaultAndroidSourceSet::class.java,
+                AndroidSourceSetFactory(
+                        filesProvider,
+                        mainVariantType == VariantType.LIBRARY,
+                        instantiator,
+                        deprecationReporter,
+                        issueReporter))
+
+        sourceSets = createSealableContainer(
+                AndroidSourceSet::class.java, DefaultAndroidSourceSet::class.java, _sourceSets)
 
         hasAndroidTests = variantTypes.contains(VariantType.ANDROID_TEST)
         hasUnitTests = variantTypes.contains(VariantType.UNIT_TEST)

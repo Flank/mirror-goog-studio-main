@@ -23,6 +23,7 @@ import org.gradle.internal.reflect.Instantiator
 
 class AndroidSourceSetFactory(
             private val filesProvider: FilesProvider,
+            private val publishPackage: Boolean,
             private val instantiator: Instantiator,
             private val deprecationReporter: DeprecationReporter,
             private val issueReporter: EvalIssueReporter)
@@ -30,6 +31,6 @@ class AndroidSourceSetFactory(
 
     override fun create(name: String): DefaultAndroidSourceSet {
         return instantiator.newInstance(DefaultAndroidSourceSet::class.java,
-                name, filesProvider, deprecationReporter, issueReporter)
+                name, filesProvider, publishPackage, deprecationReporter, issueReporter)
     }
 }
