@@ -31,4 +31,6 @@ project.ext.pomName = 'Android Tools Lint Gradle Integration API'
 project.ext.pomDesc = 'Lint integration API for Gradle'
 
 apply from: "$rootDir/buildSrc/base/publish.gradle"
+apply from: "$rootDir/buildSrc/base/bintray.gradle"
+apply from: "$rootDir/buildSrc/base/javadoc.gradle"
 
