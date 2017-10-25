@@ -514,7 +514,6 @@ public final class ActdProfileUploader implements ProfileUploader {
             SerieRequest serieReq = new SerieRequest();
             serieReq.projectId = actdProjectId;
             serieReq.serieId = serieId;
-            serieReq.analyse.base = br.build.buildId;
 
             addSerie(serieReq);
         }
@@ -566,7 +565,6 @@ public final class ActdProfileUploader implements ProfileUploader {
 
     @VisibleForTesting
     public static final class Analyse {
-        public long base;
         public Benchmark benchmark = new Benchmark();
     }
 
