@@ -16,25 +16,21 @@
 
 package com.android.tools.lint.detector.api
 
+import com.android.testutils.TestUtils
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
-import com.google.common.truth.Truth.assertThat
-import com.android.testutils.TestUtils
-import com.android.tools.lint.client.api.JavaEvaluator
 import com.android.tools.lint.detector.api.LintFix.ReplaceString
 import com.android.tools.lint.detector.api.LintFix.SetAttribute
 import com.google.common.collect.Maps
+import com.google.common.truth.Truth.assertThat
 import com.intellij.psi.PsiMethod
-import java.math.BigDecimal
-import java.util.ArrayList
-import java.util.Collections
-import java.util.HashMap
-import java.util.regex.Matcher
-import java.util.regex.Pattern
 import junit.framework.TestCase
 import org.intellij.lang.annotations.Language
 import org.jetbrains.uast.UCallExpression
-import org.jetbrains.uast.UExpression
+import java.math.BigDecimal
+import java.util.ArrayList
+import java.util.HashMap
+import java.util.regex.Pattern
 
 class LintFixTest : TestCase() {
     fun testBasic() {

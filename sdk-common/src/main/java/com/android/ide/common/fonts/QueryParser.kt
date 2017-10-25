@@ -43,11 +43,11 @@ class QueryParser {
     private fun parse(authority: String, query: String): DownloadableParseResult {
         scanner.init(query)
         symbol = scanner.next()
-        if (symbol == Symbol.NAME) {
-            return parseV11(authority)
+        return if (symbol == Symbol.NAME) {
+            parseV11(authority)
         }
         else {
-            return parseV12(authority)
+            parseV12(authority)
         }
     }
 
@@ -271,15 +271,15 @@ class QueryParser {
                 return Symbol.EOQ
             }
             val ch = query[index++]
-            when (ch) {
-                in '0'..'9' -> return number()
-                '=' -> return symbol(Symbol.EQUALS, ch)
-                '&' -> return symbol(Symbol.AND, ch)
-                ':' -> return symbol(Symbol.COLON, ch)
-                '|' -> return symbol(Symbol.SEPARATOR, ch)
-                ',' -> return symbol(Symbol.COMMA, ch)
+            return when (ch) {
+                in '0'..'9' -> number()
+                '=' -> symbol(Symbol.EQUALS, ch)
+                '&' -> symbol(Symbol.AND, ch)
+                ':' -> symbol(Symbol.COLON, ch)
+                '|' -> symbol(Symbol.SEPARATOR, ch)
+                ',' -> symbol(Symbol.COMMA, ch)
                 in 'a'..'z',
-                in 'A'..'Z' -> return id()
+                in 'A'..'Z' -> id()
                 else -> throw FontQueryParserError("Unexpected symbol: " + ch)
             }
         }

@@ -401,11 +401,10 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
         }
 
         val values = listAllowedValues(node, allowedValues)
-        var message: String
-        if (flag) {
-            message = "Must be one or more of: " + values
+        var message = if (flag) {
+            "Must be one or more of: " + values
         } else {
-            message = "Must be one of: " + values
+            "Must be one of: " + values
         }
 
         val rangeAnnotation = RangeDetector.findIntRange(allAnnotations)

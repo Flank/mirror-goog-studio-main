@@ -1469,40 +1469,40 @@ class LintDriver
 
         // Visit all contexts
         if (!contexts.isEmpty() || !testContexts.isEmpty()) {
-            visitJavaFiles(checks, project, contexts, testContexts)
+            visitJavaFiles(checks, project, main, contexts, testContexts)
         }
     }
 
     private fun visitJavaFiles(checks: List<Detector>,
                                project: Project,
+                               main: Project?,
                                contexts: List<JavaContext>,
                                testContexts: List<JavaContext>) {
         val allContexts: List<JavaContext>
         if (testContexts.isEmpty()) {
             allContexts = contexts
         } else {
-            allContexts = ArrayList<JavaContext>(
-                    contexts.size + testContexts.size)
+            allContexts = ArrayList(contexts.size + testContexts.size)
             allContexts.addAll(contexts)
             allContexts.addAll(testContexts)
         }
 
         // Force all test sources into the normal source check (where all checks apply) ?
         if (isCheckTestSources) {
-            visitJavaFiles(checks, project, allContexts, allContexts, emptyList())
+            visitJavaFiles(checks, project, main, allContexts, allContexts, emptyList())
         } else {
-            visitJavaFiles(checks, project, allContexts, contexts, testContexts)
+            visitJavaFiles(checks, project, main, allContexts, contexts, testContexts)
         }
     }
 
     private fun visitJavaFiles(checks: List<Detector>,
                                project: Project,
+                               main: Project?,
                                allContexts: List<JavaContext>,
                                srcContexts: List<JavaContext>,
                                testContexts: List<JavaContext>) {
         // Temporary: we still have some builtin checks that aren't migrated to
         // PSI. Until that's complete, remove them from the list here
-        //List<Detector> scanners = checks;
         val scanners = ArrayList<Detector>(checks.size)
         val uastScanners = ArrayList<Detector>(checks.size)
         for (detector in checks) {
@@ -1536,6 +1536,8 @@ class LintDriver
                 }
             }
 
+            val projectContext = Context(this, project, main, project.dir)
+            uElementVisitor.visitGroups(projectContext, allContexts)
             uElementVisitor.dispose()
 
             if (!testContexts.isEmpty()) {
@@ -1758,7 +1760,7 @@ class LintDriver
         // as non-tests now. This gives you warnings if you're editing an individual
         // test file for example.
 
-        visitJavaFiles(checks, project, contexts, testContexts)
+        visitJavaFiles(checks, project, main, contexts, testContexts)
     }
 
     private var currentFolderType: ResourceFolderType? = null

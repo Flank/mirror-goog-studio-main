@@ -103,6 +103,10 @@ open class DefaultUastParser(
      * @return the compilation unit node for the file
      */
     override fun parse(context: JavaContext): UFile? {
+        if (context.uastFile != null) {
+            return context.uastFile
+        }
+
         val ideaProject = uastContext?.project ?: return null
         if (ideaProject.isDisposed) {
             return null
@@ -117,7 +121,7 @@ open class DefaultUastParser(
             // Expected to get Kotlin language back here!
             context.client.log(Severity.ERROR, null, "Could not process " +
                 context.project.getRelativePath(context.file) +
-                    ": Kotlin not configured correctly");
+                    ": Kotlin not configured correctly")
         }
 
         if (psiFile is PsiPlainTextFile) { // plain text: file too large to process with PSI
@@ -133,7 +137,7 @@ open class DefaultUastParser(
                         message = "Source file too large for lint to process (${size}KB); the " +
                                 "current max size is ${max}KB. You can increase the limit by " +
                                 "setting this system property: " +
-                                "`idea.max.intellisense.filesize=${sizeRoundedUp}` (or even higher)")
+                                "`idea.max.intellisense.filesize=$sizeRoundedUp` (or even higher)")
             }
             return null
         }

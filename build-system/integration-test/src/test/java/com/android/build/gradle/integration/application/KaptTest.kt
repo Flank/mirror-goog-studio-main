@@ -30,7 +30,7 @@ import org.junit.Test
 
 class KaptTest() {
     @JvmField @Rule
-    var project: GradleTestProject;
+    var project: GradleTestProject
 
     val sApp = HelloWorldApp.noBuildFile()
 
@@ -48,7 +48,7 @@ class KaptTest() {
     }
 
     fun initApp() {
-        sApp.removeFile(sApp.getFile("HelloWorld.java"));
+        sApp.removeFile(sApp.getFile("HelloWorld.java"))
         sApp.addFile(TestSourceFile ("src/main/java/com/example/helloworld", "HelloWorld.java",
                 "package com.example.helloworld;\n" + "\n"
                         + "import android.app.Activity;\n"
@@ -117,7 +117,7 @@ project.getSubproject(":app").file("build.gradle").writeText(buildScript)
         TruthHelper.assertThat(apk).containsClass("Lcom/example/helloworld/HelloWorld\$\$InnerClass;")
 
         // Modify the main file and rerun compilation. (b/65519025)
-        TestFileUtils.addMethod(app.file("src/main/java/com/example/helloworld/HelloWorld.java"), "void foo() {}");
+        TestFileUtils.addMethod(app.file("src/main/java/com/example/helloworld/HelloWorld.java"), "void foo() {}")
         project.executor().run(":app:assembleDebug")
         TruthHelper.assertThat(apk).containsClass("Lcom/example/helloworld/HelloWorldStringValue;")
         TruthHelper.assertThat(apk).containsClass("Lcom/example/helloworld/HelloWorld\$\$InnerClass;")

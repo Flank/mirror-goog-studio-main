@@ -58,7 +58,7 @@ android {
         }
     }
 }
-""");
+""")
     }
 
     @Test fun normalBuild() {

@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks.infrastructure;
 
 import static java.util.regex.Pattern.MULTILINE;
+import static kotlin.text.StringsKt.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -93,7 +94,8 @@ public class TestLintResult {
      */
     public TestLintResult expect(@NonNull String expectedText) {
         String actual = describeOutput();
-        if (!actual.trim().equals((expectedText.trim()))) {
+
+        if (!actual.trim().equals((trimIndent(expectedText).trim()))) {
             // See if it's a Windows path issue
             if (actual.equals(expectedText.replace(File.separatorChar, '/'))) {
                 assertEquals("The expected lint output does not match, but it *does* "
@@ -104,7 +106,7 @@ public class TestLintResult {
                         expectedText, actual);
             }
 
-            assertEquals(expectedText, actual);
+            assertEquals(trimIndent(expectedText), trimIndent(actual));
         }
         cleanup();
         return this;

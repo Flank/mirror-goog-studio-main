@@ -14,21 +14,8 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.dsl.tester.negative
+package com.android.tools.lint.detector.api.interprocedural
 
-import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.EvalIssueReporter
-
-interface BooleanNotSealed {
-
-    var booleanProperty: Boolean
-}
-
-class BooleanNotSealedImpl(issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter), BooleanNotSealed {
-
-    override var booleanProperty: Boolean = true
-        set(value) {
-            field = value
-        }
-}
+data class CallGraphResult(
+        val callGraph: CallGraph,
+        val receiverEval: IntraproceduralDispatchReceiverEvaluator)

@@ -154,6 +154,7 @@ kotlin_library(
         "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system/builder-model",
         "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     ],
 )
@@ -203,6 +204,7 @@ kotlin_library(
         "//tools/base/third_party:com.google.guava_guava",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.jetbrains_annotations",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
     ],
 )
@@ -277,6 +279,7 @@ kotlin_test(
         "//tools/base/third_party:net.sf.kxml_kxml2",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
+        "//tools/base/third_party:org.jetbrains.kotlin_kotlin-reflect",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jetbrains.trove4j_trove4j",
         "//tools/base/third_party:org.jetbrains_annotations",

@@ -583,6 +583,7 @@ public class TestLintTask {
      * @return this, for constructor chaining
      */
     public TestLintTask allowDuplicates() {
+        this.allowDuplicates = true;
         return this;
     }
 

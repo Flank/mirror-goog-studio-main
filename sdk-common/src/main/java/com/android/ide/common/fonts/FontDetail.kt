@@ -110,10 +110,10 @@ class FontDetail {
             700 -> return "Bold"
             800 -> return "Extra-Bold"
             900 -> return "Black"
-            else -> if (weight > 400) {
-                return "Custom-Bold"
+            else -> return if (weight > 400) {
+                "Custom-Bold"
             } else {
-                return "Custom-Light"
+                "Custom-Light"
             }
         }
     }
