@@ -281,12 +281,6 @@ class DslModelDataImpl<in E: BaseExtension2>(
     private fun checkNewBuildType(buildType: BuildTypeImpl) {
         val name = buildType.name
 
-        // setup the signing config for debug build type
-        if (name == BuilderConstants.DEBUG) {
-            val signingConfig = signingConfigs.findByName(BuilderConstants.DEBUG)
-            buildType.signingConfig = signingConfig
-        }
-
         if (!checkName(name, "BuildType")) {
             // don't want to keep going in case of sync
             return

@@ -21,4 +21,9 @@ import com.android.build.gradle.internal.variant2.AndroidTestVariantImpl
 
 /** shim implementation of [AndroidTestVariant] that delegates to an internal object */
 internal class AndroidTestVariantShim internal constructor(internalObject: AndroidTestVariantImpl)
-    : AndroidTestVariant by internalObject
+    : AndroidTestVariant by internalObject {
+
+    override fun toString(): String {
+        return name
+    }
+}

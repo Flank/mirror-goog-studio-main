@@ -16,12 +16,13 @@
 
 package com.android.build.gradle.internal.api.dsl.variant
 
-import com.android.build.api.dsl.variant.LibraryVariant
-import com.android.build.gradle.internal.variant2.LibraryVariantImpl
+import com.android.build.api.dsl.variant.AndroidTestVariant
+import com.android.build.api.dsl.variant.UnitTestVariant
+import com.android.build.gradle.internal.variant2.UnitTestVariantImpl
 
-/** shim implementation of [LibraryVariant] that delegates to an internal object */
-internal class LibraryVariantShim internal constructor(internalObject: LibraryVariantImpl)
-    : LibraryVariant by internalObject {
+/** shim implementation of [AndroidTestVariant] that delegates to an internal object */
+internal class UnitTestVariantShim internal constructor(internalObject: UnitTestVariantImpl)
+    : UnitTestVariant by internalObject {
 
     override fun toString(): String {
         return name

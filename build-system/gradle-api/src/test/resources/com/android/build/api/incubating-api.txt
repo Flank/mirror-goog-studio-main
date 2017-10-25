@@ -356,6 +356,8 @@ com.android.build.api.dsl.options.InstrumentationOptions.getHandleProfiling: jav
 com.android.build.api.dsl.options.InstrumentationOptions.getInstrumentationRunner: java.lang.String ()
 com.android.build.api.dsl.options.InstrumentationOptions.getInstrumentationRunnerArguments: java.util.Map<java.lang.String, java.lang.String> ()
 com.android.build.api.dsl.options.InstrumentationOptions.setApplicationId: void (java.lang.String)
+com.android.build.api.dsl.options.InstrumentationOptions.setFunctionalTest: void (java.lang.Boolean)
+com.android.build.api.dsl.options.InstrumentationOptions.setHandleProfiling: void (java.lang.Boolean)
 com.android.build.api.dsl.options.InstrumentationOptions.setInstrumentationRunner: void (java.lang.String)
 com.android.build.api.dsl.options.InstrumentationOptions.setInstrumentationRunnerArguments: void (java.util.Map<java.lang.String, java.lang.String>)
 com.android.build.api.dsl.options.JavaCompileOptions

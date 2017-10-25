@@ -25,6 +25,7 @@ import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImp
 import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
+import com.android.build.gradle.internal.variant2.VariantDispatcher
 import com.android.build.gradle.internal.variant2.VariantFactory2
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
@@ -41,7 +42,7 @@ class FakeVariantFactory2<in E: BaseExtension2>(
             buildTypOrVariant: BuildTypeOrVariantImpl,
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
-            variantMap: Map<VariantType, Map<Variant, Variant>>,
+            variantDispatcher: VariantDispatcher,
             issueReporter: EvalIssueReporter): SealableVariant {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }

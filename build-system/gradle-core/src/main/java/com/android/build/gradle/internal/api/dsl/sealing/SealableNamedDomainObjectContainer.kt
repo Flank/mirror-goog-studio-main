@@ -45,7 +45,7 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
             private val container: NamedDomainObjectContainer<ImplementationT>,
             private val implClass: Class<ImplementationT>,
             issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter), NamedDomainObjectContainer<InterfaceT> {
+    : NestedSealable(issueReporter), NamedDomainObjectContainer<InterfaceT> {
 
     override fun seal() {
         super.seal()
@@ -149,6 +149,12 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
         return false
     }
 
+    override fun iterator(): MutableIterator<InterfaceT> {
+        return handleSealableSubItem(
+                SealableMutableIterator(container.iterator(), issueReporter))
+    }
+
+
     // basic wrappers
 
     override fun whenObjectRemoved(closure: Closure<*>?) {
@@ -210,10 +216,6 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
     }
 
     override fun getAsMap(): SortedMap<String, InterfaceT> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun iterator(): MutableIterator<InterfaceT> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

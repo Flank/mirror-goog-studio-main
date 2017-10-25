@@ -55,6 +55,7 @@ import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.plugin.PluginDelegate;
+import com.android.build.gradle.internal.plugin.ProjectWrapper;
 import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
@@ -289,8 +290,18 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
             project.getPlugins().apply(JacocoPlugin.class);
 
             // create the delegate
+            ProjectWrapper projectWrapper = new ProjectWrapper(project);
             PluginDelegate<E> delegate =
-                    new PluginDelegate<>(project, instantiator, projectOptions, getTypedDelegate());
+                    new PluginDelegate<>(
+                            project.getPath(),
+                            instantiator,
+                            project.getExtensions(),
+                            project.getConfigurations(),
+                            projectWrapper,
+                            projectWrapper,
+                            project.getLogger(),
+                            projectOptions,
+                            getTypedDelegate());
 
             delegate.prepareForEvaluation();
 

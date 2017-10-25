@@ -25,16 +25,15 @@ import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImp
 import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
-import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
 
-class LibraryVariantFactory : VariantFactory2<LibraryExtensionImpl> {
+class LibUnitTestVariantFactory
+    : VariantFactory2<LibraryExtensionImpl> {
 
-    override val generatedType: VariantType = VariantType.LIBRARY
-    override val testedBy: List<VariantType> = listOf(VariantType.ANDROID_TEST,
-            VariantType.UNIT_TEST)
-    override val testTarget: VariantType? = null
+    override val generatedType: VariantType = VariantType.UNIT_TEST
+    override val testedBy: List<VariantType> = listOf()
+    override val testTarget: VariantType? = VariantType.LIBRARY
 
     override fun createVariant(
             extension: LibraryExtensionImpl,
@@ -47,8 +46,8 @@ class LibraryVariantFactory : VariantFactory2<LibraryExtensionImpl> {
             issueReporter: EvalIssueReporter)
             : SealableVariant {
 
-        return LibraryVariantImpl(
-                VariantType.LIBRARY,
+        return UnitTestVariantImpl(
+                VariantType.UNIT_TEST,
                 variantProperties,
                 productFlavorOrVariant,
                 buildTypOrVariant,
@@ -58,13 +57,11 @@ class LibraryVariantFactory : VariantFactory2<LibraryExtensionImpl> {
                 issueReporter)
     }
 
-    override fun computeApplicationId(
-            mergedFlavor: ProductFlavorOrVariant,
-            appIdSuffixFromFlavors: String?): String? {
+    override fun computeApplicationId(mergedFlavor: ProductFlavorOrVariant, appIdSuffixFromFlavors: String?): String? {
         if (appIdSuffixFromFlavors != null) {
-            return mergedFlavor.applicationId + appIdSuffixFromFlavors
+            return mergedFlavor.instrumentationOptions.applicationId + appIdSuffixFromFlavors
         }
 
-        return mergedFlavor.applicationId
+        return mergedFlavor.instrumentationOptions.applicationId
     }
 }

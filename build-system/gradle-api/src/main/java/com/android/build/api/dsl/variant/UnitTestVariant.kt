@@ -21,5 +21,4 @@ import org.gradle.api.Incubating
 @Incubating
 interface UnitTestVariant : Variant {
     val testedVariant: Variant
-
 }

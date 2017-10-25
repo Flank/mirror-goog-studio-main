@@ -211,9 +211,6 @@ class DslImplementationSealableTest {
                             PostprocessingFilesOptionsImpl(issueReporter)
                         },
                         BuildTypeOrVariantImpl("buildType",
-                                true,
-                                false,
-                                false,
                                 depecationReporter, issueReporter),
                         FallbackStrategyImpl(depecationReporter, issueReporter),
                         depecationReporter,

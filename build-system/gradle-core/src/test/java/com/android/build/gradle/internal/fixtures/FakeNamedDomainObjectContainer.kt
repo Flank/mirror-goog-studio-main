@@ -78,6 +78,8 @@ open class FakeNamedDomainObjectContainer<T>(
     override val size: Int
         get() = items.size
 
+    override fun isEmpty() = items.isEmpty()
+
     // --- internal fun
 
     private fun createAndAddItem(name: String): T {
@@ -133,10 +135,6 @@ open class FakeNamedDomainObjectContainer<T>(
     }
 
     override fun <S : T> withType(p0: Class<S>?, p1: Action<in S>?): DomainObjectCollection<S> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun isEmpty(): Boolean {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

@@ -47,7 +47,7 @@ class LibraryVariantImpl(
         private val buildTypeOrVariant: BuildTypeOrVariantImpl,
         private val variantExtensionProperties: VariantOrExtensionPropertiesImpl,
         private val commonVariantProperties: CommonVariantPropertiesImpl,
-        private val variantDispatcher: Map<VariantType, Map<Variant, Variant>>,
+        private val variantDispatcher: VariantDispatcher,
         issueReporter: EvalIssueReporter)
     : SealableObject(issueReporter),
         LibraryVariant,
@@ -59,10 +59,10 @@ class LibraryVariantImpl(
         CommonVariantProperties by commonVariantProperties {
 
     override val androidTestVariant: AndroidTestVariant?
-        get() = variantDispatcher[VariantType.ANDROID_TEST]?.get(this) as AndroidTestVariant?
+        get() = variantDispatcher.androidTestVariant
 
     override val unitTestVariant: UnitTestVariant?
-        get() = variantDispatcher[VariantType.UNIT_TEST]?.get(this) as UnitTestVariant?
+        get() = variantDispatcher.unitTestVariant
 
     override fun createShim(): Variant = LibraryVariantShim(this)
 
@@ -73,5 +73,9 @@ class LibraryVariantImpl(
         buildTypeOrVariant.seal()
         variantExtensionProperties.seal()
         commonVariantProperties.seal()
+    }
+
+    override fun toString(): String {
+        return name
     }
 }

@@ -20,21 +20,21 @@ import com.android.build.api.dsl.extension.VariantOrExtensionProperties
 import com.android.build.api.dsl.model.BuildTypeOrVariant
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
 import com.android.build.api.dsl.model.VariantProperties
-import com.android.build.api.dsl.variant.AndroidTestVariant
 import com.android.build.api.dsl.variant.CommonVariantProperties
+import com.android.build.api.dsl.variant.UnitTestVariant
 import com.android.build.api.dsl.variant.Variant
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrVariantImpl
 import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImpl
 import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.build.gradle.internal.api.dsl.variant.AndroidTestVariantShim
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
+import com.android.build.gradle.internal.api.dsl.variant.UnitTestVariantShim
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
 
-class AndroidTestVariantImpl(
+class UnitTestVariantImpl(
         override val variantType: VariantType,
         private val variantProperties: VariantPropertiesImpl,
         private val productFlavorOrVariant: ProductFlavorOrVariantImpl,
@@ -44,7 +44,7 @@ class AndroidTestVariantImpl(
         private val variantDispatcher: VariantDispatcher,
         issueReporter: EvalIssueReporter)
     : SealableObject(issueReporter),
-        AndroidTestVariant,
+        UnitTestVariant,
         SealableVariant,
         VariantProperties by variantProperties,
         ProductFlavorOrVariant by productFlavorOrVariant,
@@ -55,7 +55,7 @@ class AndroidTestVariantImpl(
     override val testedVariant: Variant
         get() = variantDispatcher.productionVariant
 
-    override fun createShim(): Variant = AndroidTestVariantShim(this)
+    override fun createShim(): Variant = UnitTestVariantShim(this)
 
     override fun seal() {
         super.seal()

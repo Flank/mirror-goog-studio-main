@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal.api.dsl.variant
+package com.android.build.gradle.internal.variant2
 
-import com.android.build.api.dsl.variant.LibraryVariant
-import com.android.build.gradle.internal.variant2.LibraryVariantImpl
+import com.android.build.api.dsl.variant.AndroidTestVariant
+import com.android.build.api.dsl.variant.UnitTestVariant
+import com.android.build.api.dsl.variant.Variant
 
-/** shim implementation of [LibraryVariant] that delegates to an internal object */
-internal class LibraryVariantShim internal constructor(internalObject: LibraryVariantImpl)
-    : LibraryVariant by internalObject {
+interface VariantDispatcher {
 
-    override fun toString(): String {
-        return name
-    }
+    val productionVariant: Variant
+
+    val androidTestVariant: AndroidTestVariant?
+
+    val unitTestVariant: UnitTestVariant?
+}
+
+class VariantDispatchImpl: VariantDispatcher {
+    override lateinit var productionVariant: Variant
+    override var androidTestVariant: AndroidTestVariant? = null
+    override var unitTestVariant: UnitTestVariant? = null
 }
