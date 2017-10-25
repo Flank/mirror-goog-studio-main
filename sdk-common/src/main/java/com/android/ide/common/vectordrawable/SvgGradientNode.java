@@ -217,8 +217,16 @@ public class SvgGradientNode extends SvgNode {
             }
         }
 
-        // Apply the path's transformations to the gradient.
-        mLocalTransform.preConcatenate(mSvgLeafNode.mStackedTransform);
+        // According to the SVG spec, the gradient transformation (mLocalTransform) always needs
+        // to be applied to the gradient. However, the geometry transformation (mStackedTransform)
+        // will be affecting gradient only when it is using user space because we flatten
+        // everything.
+        // If we are not using user space, at this moment, the bounding box already contains
+        // the geometry transformation, when we apply percentage to the bounding box, we don't
+        // need to multiply the geometry transformation the second time.
+        if (isUserSpaceOnUse) {
+            mLocalTransform.preConcatenate(mSvgLeafNode.mStackedTransform);
+        }
 
         // Source and target arrays to which we apply the local transform.
         double[] gradientBounds;
