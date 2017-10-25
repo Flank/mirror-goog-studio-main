@@ -200,19 +200,19 @@ filegroup(
 
 filegroup(
     name = "platforms/latest",
-    srcs = [":platforms/android-26"],
+    srcs = [":platforms/android-27"],
     visibility = ["//visibility:public"],
 )
 
 filegroup(
     name = "platforms/latest-preview",
-    srcs = [":platforms/android-26"],
+    srcs = [":platforms/android-27"],
     visibility = ["//visibility:public"],
 )
 
 java_import(
     name = "platforms/latest_jar",
-    jars = glob(["*/platforms/android-26/android.jar"]),
+    jars = glob(["*/platforms/android-27/android.jar"]),
     neverlink = 1,
     visibility = [
         "//tools/base/build-system/instant-run-instrumentation:__pkg__",
@@ -229,7 +229,7 @@ filegroup(
 
 # Version-specific rule left private in hopes we can depend on platforms/latest instead.
 platform_filegroup(
-    name = "platforms/android-26",
+    name = "platforms/android-27",
 )
 
 platform_filegroup(

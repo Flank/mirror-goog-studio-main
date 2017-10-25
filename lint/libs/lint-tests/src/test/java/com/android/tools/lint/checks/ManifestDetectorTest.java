@@ -227,10 +227,10 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected)
                 .expectFixDiffs(
                         ""
-                                + "Fix for AndroidManifest.xml line 6: Update targetSdkVersion to 26:\n"
+                                + "Fix for AndroidManifest.xml line 6: Update targetSdkVersion to 27:\n"
                                 + "@@ -7 +7\n"
                                 + "-     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
-                                + "+     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"26\" />\n");
+                                + "+     <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"27\" />\n");
     }
 
     public void testMultipleSdk() throws Exception {

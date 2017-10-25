@@ -20,7 +20,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.sdklib.AndroidVersion;
 
 public final class TestConstants {
-    public static final int COMPILE_SDK_VERSION = AndroidVersion.VersionCodes.O;
+    public static final int COMPILE_SDK_VERSION = AndroidVersion.VersionCodes.O_MR1;
     public static final int COMPILE_SDK_VERSION_WITH_GOOGLE_APIS = AndroidVersion.VersionCodes.N;
     public static final String BUILD_TOOL_VERSION =
             AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION.toString();

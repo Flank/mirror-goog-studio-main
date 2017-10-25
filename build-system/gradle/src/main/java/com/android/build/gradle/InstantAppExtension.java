@@ -67,7 +67,7 @@ class InstantAppExtension extends BaseExtension {
         return ANDROID_PLATFORM;
     }
 
-    @VisibleForTesting static final String ANDROID_PLATFORM = "android-26";
+    @VisibleForTesting static final String ANDROID_PLATFORM = "android-27";
 
     @Nullable
     @Override

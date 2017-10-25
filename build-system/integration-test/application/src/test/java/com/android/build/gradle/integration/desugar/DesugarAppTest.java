@@ -405,8 +405,8 @@ public class DesugarAppTest {
     public void testAndroidMethodInvocationsNotRewritten()
             throws IOException, InterruptedException, ProcessException {
         enableDesugar();
-        // using android-26 as ServiceConnection has a default method
-        TestFileUtils.appendToFile(project.getBuildFile(), "\nandroid.compileSdkVersion 26");
+        // using android-27 as ServiceConnection has a default method
+        TestFileUtils.appendToFile(project.getBuildFile(), "\nandroid.compileSdkVersion 27");
 
         Path newSource = project.getMainSrcDir().toPath().resolve("test").resolve("MyService.java");
         Files.createDirectories(newSource.getParent());

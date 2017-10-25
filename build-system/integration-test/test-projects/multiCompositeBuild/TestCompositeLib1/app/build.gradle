@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 //apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 27
     defaultConfig {
         applicationId "com.test.composite1"
         minSdkVersion 15

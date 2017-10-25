@@ -18,7 +18,7 @@ gradle_integration_test(
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/cmake-3.6.4111459-darwin-x86_64.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/cmake-3.6.4111459-linux-x86_64.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/cmake-3.6.4111459-windows-x86_64.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/platform-26_r02.zip",
+        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/platform-27_r01.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/platform-tools_r27.0.1-darwin.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/platform-tools_r27.0.1-linux.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/platform-tools_r27.0.1-windows.zip",
