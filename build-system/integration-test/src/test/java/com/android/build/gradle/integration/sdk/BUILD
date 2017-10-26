@@ -60,6 +60,7 @@ java_test(
     ],
     tags = [
         "block-network",
+        "manual",
     ],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
     runtime_deps = [
