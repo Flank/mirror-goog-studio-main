@@ -16,7 +16,7 @@
 
 package com.android.build.api;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
@@ -24,14 +24,13 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Streams;
 import com.google.common.hash.Hashing;
 import com.google.common.io.Resources;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.Invokable;
 import com.google.common.reflect.Parameter;
 import com.google.common.reflect.TypeToken;
+import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
@@ -41,7 +40,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -65,49 +63,66 @@ public class StableApiTest {
 
     @Test
     public void stableApiElements() throws Exception {
-        Set<String> apiElements =
+        List<String> apiElements =
                 getApiElements(
                         incubatingClass -> !incubatingClass,
                         (incubatingClass, incubatingMember) ->
                                 !incubatingClass && !incubatingMember);
 
-        assertSame(STABLE_API_URL, apiElements);
+        // Compare the two as strings, to get a nice diff UI in the IDE.
+        Iterable<String> expectedApiElements =
+                Splitter.on("\n")
+                        .omitEmptyStrings()
+                        .split(Resources.toString(STABLE_API_URL, Charsets.UTF_8));
+
+        //System.err.println("####################");
+        //Collections.sort(apiElements);
+        //for (String apiElement : apiElements) {
+        //    System.err.println(apiElement);
+        //}
+        //System.err.println("####################");
+
+        Truth.assertThat(apiElements).containsExactlyElementsIn(expectedApiElements);
     }
 
     @Test
     public void incubatingApiElements() throws Exception {
-        Set<String> apiElements =
+        List<String> apiElements =
                 getApiElements(
                         incubatingClass -> incubatingClass,
                         (incubatingClass, incubatingMember) -> incubatingClass || incubatingMember);
 
-        assertSame(INCUBATING_API_URL, apiElements);
+        // Compare the two as strings, to get a nice diff UI in the IDE.
+        Iterable<String> expectedApiElements =
+                Splitter.on(System.lineSeparator())
+                        .omitEmptyStrings()
+                        .split(Resources.toString(INCUBATING_API_URL, Charsets.UTF_8));
+
+        //System.err.println("####################");
+        //Collections.sort(apiElements);
+        //for (String apiElement : apiElements) {
+        //    System.err.println(apiElement);
+        //}
+        //System.err.println("####################");
+
+        Truth.assertThat(apiElements).containsExactlyElementsIn(expectedApiElements);
     }
 
     @Test
     public void apiListHash() throws Exception {
         // ATTENTION REVIEWER: if this needs to be changed, please make sure changes to api-list.txt
         // are backwards compatible.
-        assertThat(hashResourceFile(STABLE_API_URL))
-                .named("Stable API file hash")
-                .isEqualTo("2293875af8a6b0700f099823ea4556d90fab3578");
-        assertThat(hashResourceFile(INCUBATING_API_URL))
-                .named("Stable API file hash")
-                .isEqualTo("c5d78185d6116a2707b310d68420a2cf831bc67c");
+        assertEquals(
+                "2293875af8a6b0700f099823ea4556d90fab3578",
+                Hashing.sha1()
+                        .hashString(
+                                Resources.toString(STABLE_API_URL, Charsets.UTF_8)
+                                        .replace(System.lineSeparator(), "\n"),
+                                Charsets.UTF_8)
+                        .toString());
     }
 
-    @NonNull
-    private static String hashResourceFile(@NonNull URL url) throws IOException {
-        return Hashing.sha1()
-                .hashString(
-                        Resources.toString(url, Charsets.UTF_8)
-                                .replace(System.lineSeparator(), "\n"),
-                        Charsets.UTF_8)
-                .toString();
-    }
-
-    @NonNull
-    private static Set<String> getApiElements(
+    private static List<String> getApiElements(
             @NonNull Predicate<Boolean> classFilter,
             @NonNull BiFunction<Boolean, Boolean, Boolean> memberFilter)
             throws IOException {
@@ -119,10 +134,9 @@ public class StableApiTest {
                 .stream()
                 .filter(classInfo -> !classInfo.getSimpleName().endsWith("Test"))
                 .flatMap(classInfo -> getApiElements(classInfo.load(), classFilter, memberFilter))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 
-    @NonNull
     private static Stream<String> getApiElements(
             @NonNull Class<?> klass,
             @NonNull Predicate<Boolean> classFilter,
@@ -150,7 +164,7 @@ public class StableApiTest {
                         // Constructors:
                         Stream.of(klass.getDeclaredConstructors())
                                 .map(Invokable::from)
-                                .filter(Invokable::isPublic)
+                                .filter(StableApiTest::isPublic)
                                 .filter(
                                         invokable ->
                                                 memberFilter.apply(
@@ -160,7 +174,7 @@ public class StableApiTest {
                         // Methods:
                         Stream.of(klass.getDeclaredMethods())
                                 .map(Invokable::from)
-                                .filter(Invokable::isPublic)
+                                .filter(StableApiTest::isPublic)
                                 .filter(
                                         invokable ->
                                                 memberFilter.apply(
@@ -183,6 +197,10 @@ public class StableApiTest {
         }
 
         return values.stream();
+    }
+
+    private static boolean isPublic(Invokable<?, ?> invokable) {
+        return invokable.isPublic();
     }
 
     private static boolean isIncubating(@NonNull AnnotatedElement element) {
@@ -243,58 +261,5 @@ public class StableApiTest {
         } else {
             return typeToken.toString();
         }
-    }
-
-    private static final String TERMINAL_GREEN = "\u001B[32m";
-    private static final String TERMINAL_RED = "\u001B[31m";
-    private static final String TERMINAL_RESET = "\u001B[0m";
-
-    private static void assertSame(@NonNull URL url, @NonNull Set<String> actual)
-            throws IOException {
-
-        // Compare the two as strings, to get a nice diff UI in the IDE.
-        Set<String> expected =
-                Streams.stream(
-                                Splitter.on(System.lineSeparator())
-                                        .omitEmptyStrings()
-                                        .split(Resources.toString(url, Charsets.UTF_8)))
-                        .collect(Collectors.toSet());
-        if (expected.equals(actual)) {
-            return;
-        }
-
-        Set<String> added = Sets.difference(actual, expected);
-        Set<String> removed = Sets.difference(expected, actual);
-
-        String fileName = url.getPath().substring(url.getPath().lastIndexOf('/') + 1);
-
-        System.out.format(
-                "API file %1$s must be updated when API changes are made\n"
-                        + "%2$d addition%3$s only present in code,  %4$d removal%5$s only present in API list.\n\n",
-                fileName,
-                added.size(),
-                added.size() == 1 ? "" : "s",
-                removed.size(),
-                removed.size() == 1 ? "" : "s");
-
-        // Pretty diff
-        System.out.format("Changes: %n");
-        added.stream()
-                .sorted()
-                .forEach(item -> System.out.format("%1$s+%2$s%n", TERMINAL_GREEN, item));
-        removed.stream()
-                .sorted()
-                .forEach(item -> System.out.format("%1$s-%2$s%n", TERMINAL_RED, item));
-        System.out.println(TERMINAL_RESET);
-
-        // Print new file contents to terminal for easy copy-paste.
-        System.out.format(
-                "Replace the content of %1$s with the below, or revert the API changes.%n"
-                        + "----------------------------------------%n"
-                        + "%2$s"
-                        + "\n----------------------------------------\n",
-                fileName, actual.stream().sorted().collect(Collectors.joining("\n")));
-
-        throw new AssertionError("API file is not up to date");
     }
 }
