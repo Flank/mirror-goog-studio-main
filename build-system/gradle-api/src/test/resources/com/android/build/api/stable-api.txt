@@ -1,5 +1,6 @@
 com.android.build.api.attributes.BuildTypeAttr
 com.android.build.api.attributes.ProductFlavorAttr
+com.android.build.api.attributes.VariantAttr
 com.android.build.api.transform.Context
 com.android.build.api.transform.Context.getLogging: org.gradle.api.logging.LoggingManager ()
 com.android.build.api.transform.Context.getPath: java.lang.String ()
