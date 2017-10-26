@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -155,6 +156,7 @@ public class DaggerTest {
 
     @Test
     @Category(DeviceTests.class)
+    @Ignore("b/68305039")
     public void hotSwap_art() throws Exception {
         doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
     }
