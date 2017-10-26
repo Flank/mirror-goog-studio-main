@@ -25,7 +25,10 @@ import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpBackOffIOExceptionHandler;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler.BackOffRequired;
+import com.google.api.client.http.HttpIOExceptionHandler;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
@@ -40,6 +43,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.security.GeneralSecurityException;
 import java.util.Collection;
 import java.util.Collections;
@@ -368,28 +373,45 @@ public final class ActdProfileUploader implements ProfileUploader {
         ByteArrayInputStream json = new ByteArrayInputStream(jsonStr.getBytes());
         InputStreamContent content = new InputStreamContent("application/json", json);
         GenericUrl gurl = new GenericUrl(url);
-        HttpResponse res =
-                transport
-                        .createRequestFactory()
-                        .buildPostRequest(gurl, content)
-                        .setNumberOfRetries(5)
-                        .setUnsuccessfulResponseHandler(
-                                new HttpBackOffUnsuccessfulResponseHandler(
-                                        new ExponentialBackOff()))
-                        .setFollowRedirects(true)
-                        .execute();
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(res.getContent()))) {
-            String resContent = br.lines().collect(Collectors.joining("\n"));
+        try {
+            HttpBackOffUnsuccessfulResponseHandler unsuccessfulResponseHandler =
+                    new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff())
+                            .setBackOffRequired(BackOffRequired.ALWAYS);
 
-            // The check for the string "successful" is necessitated by the API not always returning
-            // a non-200 status code in the event of bad requests.
-            if (res.getStatusCode() != 200 || !resContent.contains("successful")) {
-                throw new IOException(
-                        "unsuccessful response: " + res.getStatusCode() + " -> " + resContent);
+            HttpIOExceptionHandler ioExceptionHandler =
+                    new HttpBackOffIOExceptionHandler(new ExponentialBackOff());
+
+            HttpResponse res =
+                    transport
+                            .createRequestFactory()
+                            .buildPostRequest(gurl, content)
+                            .setUnsuccessfulResponseHandler(unsuccessfulResponseHandler)
+                            .setIOExceptionHandler(ioExceptionHandler)
+                            .setFollowRedirects(true)
+                            .execute();
+
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(res.getContent()))) {
+                String resContent = br.lines().collect(Collectors.joining("\n"));
+
+                // The check for the string "successful" is necessitated by the API not always returning
+                // a non-200 status code in the event of bad requests.
+                if (res.getStatusCode() != 200 || !resContent.contains("successful")) {
+                    throw new IOException(
+                            "unsuccessful response: " + res.getStatusCode() + " -> " + resContent);
+                }
+            } finally {
+                res.disconnect();
             }
-        } finally {
-            res.disconnect();
+        } catch (SocketException | SocketTimeoutException e) {
+            /*
+             * These two exceptions are typically transient, caused by the endpoint having problems
+             * and there's not a whole lot we can do about it. Eventually, when we're hitting a more
+             * reliable instance of act-d, we should fail on this condition but for now, we're just
+             * going to let it slide.
+             */
+            System.out.println("transient exception prevented act-d data upload: " + e);
+            return;
         }
     }
 
