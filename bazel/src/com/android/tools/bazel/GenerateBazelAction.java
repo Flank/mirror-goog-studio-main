@@ -79,6 +79,7 @@ public class GenerateBazelAction {
         System.setProperty("idea.home.path", projectPath);
         HashMap<String, String> pathVariables = new HashMap<>();
         pathVariables.put("KOTLIN_BUNDLED", workspace.resolve("prebuilts/tools/common/kotlin-plugin-ij/Kotlin/kotlinc").toString());
+        pathVariables.put("MAVEN_REPOSITORY", workspace.resolve("prebuilts/tools/common/m2/repository").toString());
 
         JpsProject project = JpsElementFactory.getInstance().createModel().getProject();
         JpsProjectLoader.loadProject(project, pathVariables, projectPath);
