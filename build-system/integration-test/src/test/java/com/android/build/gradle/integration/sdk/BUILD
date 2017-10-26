@@ -26,6 +26,7 @@ java_library(
 
 java_test(
     name = "tests",
+    timeout = "eternal",
     # TODO: can we make this test start from no prebuilt SDK.
     # Note: this test is slightly unusual in testing the auto download, hence the hardcoded file
     # references. This is not necessarily the pattern to follow in other tests.
@@ -60,7 +61,6 @@ java_test(
     ],
     tags = [
         "block-network",
-        "manual",
     ],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
     runtime_deps = [
