@@ -68,22 +68,30 @@ public class EncodeUtils {
      */
     @Nonnull
     public static String decode(@Nonnull byte[] data, @Nonnull GPFlags flags) {
-        Charset charset = flagsCharset(flags);
+        return decode(data, flagsCharset(flags));
+    }
 
-        while (true) {
-            try {
-                return charset.newDecoder()
-                        .onMalformedInput(CodingErrorAction.REPORT)
-                        .decode(ByteBuffer.wrap(data))
-                        .toString();
-            } catch (CharacterCodingException e) {
-                // If we're trying to decode ASCII, try UTF-8. Otherwise, revert to the default
-                // behavior (usually replacing invalid characters).
-                if (charset == Charsets.US_ASCII) {
-                    charset = Charsets.UTF_8;
-                } else {
-                    return charset.decode(ByteBuffer.wrap(data)).toString();
-                }
+    /**
+     * Decodes a file name.
+     *
+     * @param data the raw data
+     * @param charset the charset to use
+     * @return the decode file name
+     */
+    @Nonnull
+    private static String decode(@Nonnull byte[] data, @Nonnull Charset charset) {
+        try {
+            return charset.newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(data))
+                    .toString();
+        } catch (CharacterCodingException e) {
+            // If we're trying to decode ASCII, try UTF-8. Otherwise, revert to the default
+            // behavior (usually replacing invalid characters).
+            if (charset.equals(Charsets.US_ASCII)) {
+                return decode(data, Charsets.UTF_8);
+            } else {
+                return charset.decode(ByteBuffer.wrap(data)).toString();
             }
         }
     }
