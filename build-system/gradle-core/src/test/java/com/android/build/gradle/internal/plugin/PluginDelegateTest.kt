@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.plugin
 
+import com.android.build.api.dsl.model.BuildType
+import com.android.build.api.dsl.options.SigningConfig
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2
 import com.android.build.gradle.internal.fixtures.FakeConfigurationContainer
 import com.android.build.gradle.internal.fixtures.FakeContainerFactory
@@ -31,6 +33,7 @@ import com.android.build.gradle.internal.fixtures.getLibVariant
 import com.android.build.gradle.internal.fixtures.getNamed
 import com.android.build.gradle.internal.fixtures.getUnitTestVariant
 import com.android.build.gradle.options.ProjectOptions
+import com.android.builder.core.BuilderConstants
 import com.google.common.collect.ImmutableMap
 import com.google.common.truth.Truth
 import org.junit.Test
@@ -40,29 +43,21 @@ class PluginDelegateTest {
 
     private var fakeInstantiator = FakeInstantiator()
 
-    private fun <T: BaseExtension2> createDelegate(
-            typedDelegate: TypedPluginDelegate<T>): PluginDelegate<T> {
-
-        return PluginDelegate<T>(
-                ":fake",
-                fakeInstantiator,
-                FakeExtensionContainer(fakeInstantiator),
-                FakeConfigurationContainer(),
-                FakeContainerFactory(),
-                FakeFilesProvider(),
-                FakeLogger(),
-                ProjectOptions(ImmutableMap.of()),
-                typedDelegate)
-    }
-
     @Test
     fun `basic variants for library plugin`() {
         val pluginDelegate = createDelegate(LibPluginDelegate())
         val extension = pluginDelegate.prepareForEvaluation()
 
+        // --- Validate build types
         val debugBuildType = getNamed(extension.buildTypes, "debug")
         Truth.assertThat(debugBuildType).isNotNull()
-        Truth.assertThat(debugBuildType!!.signingConfig).isSameAs(extension.signingConfigs.getByName("debug"))
+        validateDebugBuildType(debugBuildType!!, extension.signingConfigs.getByName("debug"))
+
+        val releaseBuildType = getNamed(extension.buildTypes, "release")
+        Truth.assertThat(releaseBuildType).isNotNull()
+        validateReleaseBuildType(releaseBuildType!!)
+
+        // create variants
 
         val variants = pluginDelegate.afterEvaluate()
         Truth.assertThat(variants).hasSize(6)
@@ -102,10 +97,16 @@ class PluginDelegateTest {
         val pluginDelegate = createDelegate(AppPluginDelegate())
         val extension = pluginDelegate.prepareForEvaluation()
 
+        // --- Validate build types
         val debugBuildType = getNamed(extension.buildTypes, "debug")
         Truth.assertThat(debugBuildType).isNotNull()
-        Truth.assertThat(debugBuildType!!.signingConfig).isSameAs(extension.signingConfigs.getByName("debug"))
+        validateDebugBuildType(debugBuildType!!, extension.signingConfigs.getByName("debug"))
 
+        val releaseBuildType = getNamed(extension.buildTypes, "release")
+        Truth.assertThat(releaseBuildType).isNotNull()
+        validateReleaseBuildType(releaseBuildType!!)
+
+        // create variants
         val variants = pluginDelegate.afterEvaluate()
         Truth.assertThat(variants).hasSize(6)
 
@@ -169,33 +170,36 @@ class PluginDelegateTest {
         Truth.assertThat(customUnitTest.testedVariant).isSameAs(customVariant)
     }
 
+    private fun <T: BaseExtension2> createDelegate(
+            typedDelegate: TypedPluginDelegate<T>): PluginDelegate<T> {
 
-
-    /*
-
-    @Test
-    public void testDebugSigningConfig() throws Exception {
-        android.getSigningConfigs().getByName("debug", debug -> debug.setStorePassword("foo"));
-
-        SigningConfig signingConfig = android.getBuildTypes().getByName("debug").getSigningConfig();
-
-        assertNotNull(signingConfig);
-        assertEquals(android.getSigningConfigs().getByName("debug"), signingConfig);
-        assertEquals("foo", signingConfig.getStorePassword());
+        return PluginDelegate<T>(
+                ":fake",
+                fakeInstantiator,
+                FakeExtensionContainer(fakeInstantiator),
+                FakeConfigurationContainer(),
+                FakeContainerFactory(),
+                FakeFilesProvider(),
+                FakeLogger(),
+                ProjectOptions(ImmutableMap.of()),
+                typedDelegate)
     }
 
-    @Test
-    public void testResourceShrinker() throws Exception {
-        BuildType debug = android.getBuildTypes().getByName("debug");
-        debug.getPostprocessing().setRemoveUnusedResources(true);
-        try {
-            plugin.createAndroidTasks(false);
-            fail("Expected resource shrinker error");
-        } catch (GradleException e) {
-            assertThat(e).hasMessage("Resource shrinker cannot be used for libraries.");
-        }
+    private fun validateDebugBuildType(buildType: BuildType, signingConfig: SigningConfig) {
+        Truth.assertThat(buildType.debuggable).named("debuggable").isTrue()
+        Truth.assertThat(buildType.jniDebuggable).named("jniDebuggable").isTrue()
+        Truth.assertThat(buildType.renderscriptDebuggable).named("renderscriptDebuggable").isTrue()
+        Truth.assertThat(buildType.zipAlignEnabled).named("zipAlignEnabled").isTrue()
 
-        debug.getPostprocessing().setRemoveUnusedResources(false);
-        plugin.createAndroidTasks(false);
-    }*/
+        Truth.assertThat(buildType.signingConfig).named("signingConfig").isSameAs(signingConfig)
+    }
+
+    private fun validateReleaseBuildType(buildType: BuildType) {
+        Truth.assertThat(buildType.debuggable).named("debuggable").isFalse()
+        Truth.assertThat(buildType.jniDebuggable).named("jniDebuggable").isFalse()
+        Truth.assertThat(buildType.renderscriptDebuggable).named("renderscriptDebuggable").isFalse()
+        Truth.assertThat(buildType.zipAlignEnabled).named("zipAlignEnabled").isTrue()
+
+        Truth.assertThat(buildType.signingConfig).named("signingConfig").isNull()
+    }
 }
