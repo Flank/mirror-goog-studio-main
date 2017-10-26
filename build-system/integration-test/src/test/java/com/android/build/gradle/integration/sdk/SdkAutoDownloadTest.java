@@ -25,7 +25,6 @@ import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
-import com.android.build.gradle.integration.common.utils.SdkHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.builder.core.AndroidBuilder;
@@ -119,44 +118,40 @@ public class SdkAutoDownloadTest {
                         + " = "
                         + mSdkHome.getAbsolutePath().replace("\\", "\\\\"));
 
-        // Copy one version of build tools and one platform from the real SDK, so we have something
-        // to start with.
-        File realAndroidHome = SdkHelper.findSdkDir();
-
-        File platform =
-                FileUtils.join(
-                        realAndroidHome,
-                        SdkConstants.FD_PLATFORMS,
-                        "android-" + PLATFORM_VERSION);
-        File buildTools =
-                FileUtils.join(realAndroidHome, SdkConstants.FD_BUILD_TOOLS, BUILD_TOOLS_VERSION);
-        assertThat(platform).isDirectory();
-        assertThat(buildTools).isDirectory();
-
-        FileUtils.copyDirectoryToDirectory(
-                platform,
-                FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS));
-
-        FileUtils.copyDirectoryToDirectory(
-                buildTools,
-                FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS));
-
-        FileUtils.copyDirectoryToDirectory(
-                FileUtils.join(realAndroidHome, SdkConstants.FD_PLATFORM_TOOLS),
-                FileUtils.join(mSdkHome));
-
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "android.defaultConfig.minSdkVersion = 19");
     }
 
-    /**
-     * Tests that the compile SDK target was automatically downloaded in the case that the target
-     * was a platform target and it wasn't already there.
-     */
-    @Test
-    public void checkCompileSdkPlatformDownloading() throws Exception {
-        deletePlatforms();
+    private void installPlatforms() throws IOException {
+        FileUtils.copyDirectoryToDirectory(
+                TestUtils.getSdk()
+                        .toPath()
+                        .resolve(SdkConstants.FD_PLATFORMS)
+                        .resolve("android-" + PLATFORM_VERSION)
+                        .toFile(),
+                FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS));
+    }
 
+    private void installBuildTools() throws IOException {
+        FileUtils.copyDirectoryToDirectory(
+                TestUtils.getSdk()
+                        .toPath()
+                        .resolve(SdkConstants.FD_BUILD_TOOLS)
+                        .resolve(BUILD_TOOLS_VERSION)
+                        .toFile(),
+                FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS));
+    }
+
+    private void installPlatformTools() throws IOException {
+        FileUtils.copyDirectoryToDirectory(
+                FileUtils.join(
+                        TestUtils.getSdk().toPath().toFile(), SdkConstants.FD_PLATFORM_TOOLS),
+                FileUtils.join(mSdkHome));
+    }
+
+    /** Tests that the compile SDK target and build tools are automatically downloaded. */
+    @Test
+    public void sanityTest() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
@@ -165,15 +160,38 @@ public class SdkAutoDownloadTest {
                         + System.lineSeparator()
                         + "android.buildToolsVersion \""
                         + BUILD_TOOLS_VERSION
-                        + "\"");
-
-        getExecutor().run("assembleDebug");
+                        + "\""
+                        + System.lineSeparator()
+                        // Tests that calling getBootClasspath() doesn't break auto-download.
+                        + "println(android.bootClasspath)");
 
         File platformTarget = getPlatformFolder();
-        assertThat(platformTarget).isDirectory();
+        File buildTools =
+                FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS, BUILD_TOOLS_VERSION);
 
+        // Not installed.
+        assertThat(buildTools).doesNotExist();
+        assertThat(platformTarget).doesNotExist();
+
+        // ---------- Build ----------
+        getExecutor().run("assembleDebug");
+
+        // Installed platform
+        assertThat(platformTarget).isDirectory();
         File androidJarFile = FileUtils.join(getPlatformFolder(), "android.jar");
         assertThat(androidJarFile).exists();
+
+        // Installed build tools.
+        assertThat(buildTools).isDirectory();
+        File dxFile =
+                FileUtils.join(
+                        mSdkHome,
+                        SdkConstants.FD_BUILD_TOOLS,
+                        BUILD_TOOLS_VERSION,
+                        SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS
+                                ? "dx.bat"
+                                : "dx");
+        assertThat(dxFile).exists();
     }
 
     /**
@@ -206,8 +224,7 @@ public class SdkAutoDownloadTest {
     /** Tests that we don't crash when a codename is used for the compile SDK level. */
     @Test
     public void checkCompileSdkCodename() throws Exception {
-        deletePlatforms();
-
+        installBuildTools();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
@@ -222,72 +239,14 @@ public class SdkAutoDownloadTest {
                 .contains("Failed to find target with hash string 'MadeUp'");
     }
 
-    /** Tests that calling getBootClasspath() doesn't break auto-download. */
-    @Test
-    public void checkGetBootClasspath() throws Exception {
-        deletePlatforms();
-
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                System.lineSeparator()
-                        + "android.compileSdkVersion "
-                        + PLATFORM_VERSION
-                        + System.lineSeparator()
-                        + "android.buildToolsVersion \""
-                        + BUILD_TOOLS_VERSION
-                        + "\""
-                        + System.lineSeparator()
-                        + "println(android.bootClasspath)");
-
-        getExecutor().run("assembleDebug");
-
-        File platformTarget = getPlatformFolder();
-        assertThat(platformTarget).isDirectory();
-
-        File androidJarFile = FileUtils.join(getPlatformFolder(), "android.jar");
-        assertThat(androidJarFile).exists();
-    }
-
     /**
-     * Tests that the build tools were automatically downloaded, when they weren't already installed
-     */
-    @Test
-    public void checkBuildToolsDownloading() throws Exception {
-        deleteBuildTools();
-
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                System.lineSeparator()
-                        + "android.compileSdkVersion "
-                        + PLATFORM_VERSION
-                        + System.lineSeparator()
-                        + "android.buildToolsVersion \""
-                        + BUILD_TOOLS_VERSION
-                        + "\"");
-
-        getExecutor().run("assembleDebug");
-
-        File buildTools =
-                FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS, BUILD_TOOLS_VERSION);
-        assertThat(buildTools).isDirectory();
-
-        File dxFile =
-                FileUtils.join(
-                        mSdkHome,
-                        SdkConstants.FD_BUILD_TOOLS,
-                        BUILD_TOOLS_VERSION,
-                        SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS
-                                ? "dx.bat"
-                                : "dx");
-        assertThat(dxFile).exists();
-    }
-
-    /**
-     * Tests that the platform tools were automatically downloaded, when they weren't already
-     * installed.
+     * Tests that missing platform tools don't break the build, and that the platform tools were
+     * automatically downloaded, when they weren't already installed.
      */
     @Test
     public void checkPlatformToolsDownloading() throws Exception {
+        installPlatforms();
+        installBuildTools();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
@@ -298,39 +257,19 @@ public class SdkAutoDownloadTest {
                         + BUILD_TOOLS_VERSION
                         + "\"");
 
-        // Delete the platform-tools folder from the set-up.
         File platformTools = FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS);
-        FileUtils.deletePath(platformTools);
+
+        getOfflineExecutor().run("assembleDebug");
         assertThat(platformTools).doesNotExist();
 
         getExecutor().run("assembleDebug");
         assertThat(platformTools).isDirectory();
     }
 
-    /** Tests that missing platform tools don't break the build. */
-    @Test
-    public void checkMissingPlatformTools() throws Exception {
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                System.lineSeparator()
-                        + "android.compileSdkVersion "
-                        + PLATFORM_VERSION
-                        + System.lineSeparator()
-                        + "android.buildToolsVersion \""
-                        + BUILD_TOOLS_VERSION
-                        + "\"");
-
-        // Delete the platform-tools folder from the set-up.
-        File platformTools = FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORM_TOOLS);
-        FileUtils.deletePath(platformTools);
-        assertThat(platformTools).doesNotExist();
-
-        getOfflineExecutor().run("assembleDebug");
-        assertThat(platformTools).doesNotExist();
-    }
-
     @Test
     public void checkCmakeDownloading() throws Exception {
+        installPlatforms();
+        installBuildTools();
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 System.lineSeparator()
@@ -354,6 +293,9 @@ public class SdkAutoDownloadTest {
 
     @Test
     public void checkCmakeMissingLicense() throws Exception {
+        installPlatforms();
+        installBuildTools();
+        installPlatformTools();
         FileUtils.delete(previewLicenseFile);
         deleteLicense();
 
@@ -527,7 +469,6 @@ public class SdkAutoDownloadTest {
     @Test
     public void checkNoLicenseError_PlatformTarget() throws Exception {
         deleteLicense();
-        deletePlatforms();
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -577,7 +518,6 @@ public class SdkAutoDownloadTest {
     @Test
     public void checkNoLicenseError_BuildTools() throws Exception {
         deleteLicense();
-        deleteBuildTools();
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -602,7 +542,6 @@ public class SdkAutoDownloadTest {
     @Ignore("b/65237460")
     public void checkNoLicenseError_MultiplePackages() throws Exception {
         deleteLicense();
-        deleteBuildTools();
 
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
@@ -629,8 +568,6 @@ public class SdkAutoDownloadTest {
     @Test
     public void checkPermissions_BuildTools() throws Exception {
         Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
-
-        deleteBuildTools();
 
         // Change the permissions.
         Path sdkHomePath = mSdkHome.toPath();
@@ -684,14 +621,6 @@ public class SdkAutoDownloadTest {
 
     private File getPlatformFolder() {
         return FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS, "android-" + PLATFORM_VERSION);
-    }
-
-    private void deleteBuildTools() throws Exception {
-        FileUtils.deleteDirectoryContents(FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS));
-    }
-
-    private void deletePlatforms() throws Exception {
-        FileUtils.deleteDirectoryContents(FileUtils.join(mSdkHome, SdkConstants.FD_PLATFORMS));
     }
 
 }
