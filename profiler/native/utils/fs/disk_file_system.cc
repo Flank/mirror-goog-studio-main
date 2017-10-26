@@ -56,9 +56,10 @@ bool DiskFileSystem::HasFile(const string &fpath) const {
 }
 
 bool DiskFileSystem::CreateDir(const string &dpath) {
-  // TODO: Restrictive permissions should be good enough for now, but consider
-  // allowing this to be configurable
-  return mkdir(dpath.c_str(), 0700) == 0;
+  // Make it accessible to all to avoid issue with users
+  // rooting/unrooting their device and end up with their
+  // directories inaccessible.
+  return mkdir(dpath.c_str(), 0777) == 0;
 }
 
 bool DiskFileSystem::CreateFile(const string &fpath) {
