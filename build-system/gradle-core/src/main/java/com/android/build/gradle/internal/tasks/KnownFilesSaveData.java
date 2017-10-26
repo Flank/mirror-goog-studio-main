@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.tasks;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.VisibleForTesting;
 import com.android.apkzlib.utils.CachedFileContents;
 import com.android.builder.files.FileCacheByPath;
 import com.android.builder.files.IncrementalRelativeFileSets;
@@ -95,7 +96,8 @@ public class KnownFilesSaveData {
      * @param cache the cache used
      * @throws IOException failed to read the file (not thrown if the file does not exist)
      */
-    private KnownFilesSaveData(@NonNull CachedFileContents<KnownFilesSaveData> cache)
+    @VisibleForTesting
+    KnownFilesSaveData(@NonNull CachedFileContents<KnownFilesSaveData> cache)
             throws IOException {
         mFileContentsCache = cache;
         mFiles = Maps.newHashMap();
@@ -149,7 +151,8 @@ public class KnownFilesSaveData {
      *
      * @throws IOException failed to read the file
      */
-    private void readCurrentData() throws IOException {
+    @VisibleForTesting
+    void readCurrentData() throws IOException {
         Closer closer = Closer.create();
 
         File saveFile = mFileContentsCache.getFile();
@@ -397,6 +400,16 @@ public class KnownFilesSaveData {
                         mDirty = true;
                     }
                 });
+    }
+
+    @VisibleForTesting
+    boolean isDirty() {
+        return mDirty;
+    }
+
+    @VisibleForTesting
+    Map<RelativeFile, InputSet> getFiles() {
+        return mFiles;
     }
 
     /**
