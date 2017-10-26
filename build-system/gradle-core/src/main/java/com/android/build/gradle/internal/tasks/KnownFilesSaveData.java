@@ -314,7 +314,7 @@ public class KnownFilesSaveData {
             properties.put(idx + BASE_SUFFIX, basePath);
             properties.put(idx + RELATIVE_PATH_SUFFIX, relativePath);
             properties.put(idx + INPUT_SET_SUFFIX, e.getValue().name());
-            properties.put(idx + BASE_SUFFIX, rf.getType().name());
+            properties.put(idx + BASE_TYPE_SUFFIX, rf.getType().name());
 
             idx++;
         }
