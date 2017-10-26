@@ -240,6 +240,11 @@ public class ViewTypeDetector extends ResourceXmlDetector implements UastScanner
                 return;
             }
 
+            if (parent instanceof UQualifiedReferenceExpression) {
+                // findViewById result is directly invoked prior to cast
+                return;
+            }
+
             // Implicit cast?
             UExpression variable = (UExpression) parent;
             PsiType type = variable.getExpressionType();
