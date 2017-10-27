@@ -26,20 +26,32 @@ import org.junit.Test
  *
  *
  * To run just this test:
- * ./gradlew :base:integration-test:test -D:base:integration-test:test.single=LintStandaloneTest
+ * ./gradlew :base:integration-test:test -D:base:integration-test:test.single=LintStandaloneVitalTest
  */
-class LintStandaloneTest {
-    @Rule @JvmField
-    var project = GradleTestProject.builder().fromTestProject("lintStandalone").create()
+class LintStandaloneVitalTest {
+    @Rule
+    @JvmField
+    var project = GradleTestProject.builder().fromTestProject("lintStandaloneVital").create()
 
     @Test
     @Throws(Exception::class)
-    fun checkStandaloneLint() {
-        project.execute("clean", "lint")
+    fun checkStandaloneLintVital() {
+        project.executeExpectingFailure("clean", "lintVital")
+
+        val stderr = project.buildResult.stderr
+        assertThat(stderr).contains("" +
+                "Lint found errors in the project; aborting build.\n" +
+                "  \n" +
+                "  Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n" +
+                "  ...\n" +
+                "  lintOptions {\n" +
+                "      abortOnError false\n" +
+                "  }\n" +
+                "  ...")
 
         val file = project.file("lint-results.txt")
         assertThat(file).exists()
-        assertThat(file).contains("MyClass.java:4: Warning: Do not hardcode \"/sdcard/\"")
-        assertThat(file).contains("0 errors, 1 warnings")
+        assertThat(file).contains("MyClass.java:4: Error: Do not hardcode \"/sdcard/\"")
+        assertThat(file).contains("1 errors, 0 warnings")
     }
 }

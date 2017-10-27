@@ -123,37 +123,48 @@ public class LintGradleExecution {
 
     private void abort(
             @Nullable LintGradleClient client,
-            @Nullable List<Warning> warnings) {
+            @Nullable List<Warning> warnings,
+            boolean isAndroid) {
         String message;
-        if (isFatalOnly()) {
-            message =
-                    ""
-                            + "Lint found fatal errors while assembling a release target.\n"
-                            + "\n"
-                            + "To proceed, either fix the issues identified by lint, or modify your build script as follows:\n"
-                            + "...\n"
-                            + "android {\n"
-                            + "    lintOptions {\n"
-                            + "        checkReleaseBuilds false\n"
-                            + "        // Or, if you prefer, you can continue to check for errors in release builds,\n"
-                            + "        // but continue the build even when errors are found:\n"
-                            + "        abortOnError false\n"
-                            + "    }\n"
-                            + "}\n"
-                            + "...";
+        if (isAndroid) {
+            if (isFatalOnly()) {
+                message = ""
+                        + "Lint found fatal errors while assembling a release target.\n"
+                        + "\n"
+                        + "To proceed, either fix the issues identified by lint, or modify your build script as follows:\n"
+                        + "...\n"
+                        + "android {\n"
+                        + "    lintOptions {\n"
+                        + "        checkReleaseBuilds false\n"
+                        + "        // Or, if you prefer, you can continue to check for errors in release builds,\n"
+                        + "        // but continue the build even when errors are found:\n"
+                        + "        abortOnError false\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "...";
+            } else {
+                message = ""
+                        + "Lint found errors in the project; aborting build.\n"
+                        + "\n"
+                        + "Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n"
+                        + "...\n"
+                        + "android {\n"
+                        + "    lintOptions {\n"
+                        + "        abortOnError false\n"
+                        + "    }\n"
+                        + "}\n"
+                        + "...";
+            }
         } else {
-            message =
-                    ""
-                            + "Lint found errors in the project; aborting build.\n"
-                            + "\n"
-                            + "Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n"
-                            + "...\n"
-                            + "android {\n"
-                            + "    lintOptions {\n"
-                            + "        abortOnError false\n"
-                            + "    }\n"
-                            + "}\n"
-                            + "...";
+            message = ""
+                    + "Lint found errors in the project; aborting build.\n"
+                    + "\n"
+                    + "Fix the issues identified by lint, or add the following to your build script to proceed with errors:\n"
+                    + "...\n"
+                    + "lintOptions {\n"
+                    + "    abortOnError false\n"
+                    + "}\n"
+                    + "...";
         }
 
         if (warnings != null && client != null &&
@@ -248,7 +259,7 @@ public class LintGradleExecution {
         }
 
         if (report && client.haveErrors() && flags.isSetExitCode()) {
-            abort(client, warnings.getFirst());
+            abort(client, warnings.getFirst(), isAndroid);
         }
 
         return warnings;
@@ -538,7 +549,7 @@ public class LintGradleExecution {
             }
 
             if (flags.isSetExitCode() && errorCount > 0) {
-                abort(client, mergedWarnings);
+                abort(client, mergedWarnings, true);
             }
         }
     }

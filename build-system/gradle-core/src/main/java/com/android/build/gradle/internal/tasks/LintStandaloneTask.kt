@@ -47,6 +47,8 @@ open class LintStandaloneTask : DefaultTask() {
     @get:OutputDirectory
     var reportDir: File? = null
 
+    var fatalOnly: Boolean = false
+
     var lintOptions: LintOptions? = null
 
     @get:Optional
@@ -80,6 +82,7 @@ open class LintStandaloneTask : DefaultTask() {
                 override val reportsDir: File? = this@LintStandaloneTask.reportDir
                 override val lintOptions: LintOptions? = this@LintStandaloneTask.lintOptions
                 override val gradlePluginVersion: String = ANDROID_GRADLE_PLUGIN_VERSION
+                override val isFatalOnly: Boolean = this@LintStandaloneTask.fatalOnly
 
                 override fun warn(message: String, vararg args: Any) {
                     Logging.getLogger(LintStandaloneTask::class.java).warn(message, args)

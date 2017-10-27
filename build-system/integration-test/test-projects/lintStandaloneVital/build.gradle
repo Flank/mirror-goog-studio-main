@@ -6,6 +6,9 @@ apply plugin: 'java'
 apply plugin: 'com.android.lint'
 
 lintOptions {
+    // Promote SdCardPath to an issue enforced by the lintVital task:
+    fatal 'SdCardPath'
+
     htmlReport true
     htmlOutput file("lint-report.html")
     textReport true

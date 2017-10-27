@@ -70,9 +70,11 @@ public class VectorPathDetector extends ResourceXmlDetector {
     public static final Issue PATH_VALID = Issue.create(
             "InvalidVectorPath",
             "Invalid vector paths",
-            "This check ensures that vector paths are valid. For example, it makes "
-                    + "sure that the numbers are not using scientific notation (such as 1.0e3) "
-                    + "which can lead to runtime crashes on older devices.",
+            "This check ensures that vector paths are valid. For example, it makes " +
+                    "sure that the numbers are not using scientific notation (such as 1.0e3) " +
+                    "which can lead to runtime crashes on older devices. As another example, " +
+                    "it flags numbers like `.5` which should be written as `0.5` instead to " +
+                    "avoid crashes on some pre-Marshmallow devices.",
 
             Category.CORRECTNESS,
             5,
