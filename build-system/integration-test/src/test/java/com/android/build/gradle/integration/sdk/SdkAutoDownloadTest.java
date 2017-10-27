@@ -117,7 +117,7 @@ public class SdkAutoDownloadTest {
                 System.lineSeparator()
                         + SdkConstants.SDK_DIR_PROPERTY
                         + " = "
-                        + mSdkHome.getAbsolutePath());
+                        + mSdkHome.getAbsolutePath().replace("\\", "\\\\"));
 
         // Copy one version of build tools and one platform from the real SDK, so we have something
         // to start with.
@@ -272,7 +272,13 @@ public class SdkAutoDownloadTest {
         assertThat(buildTools).isDirectory();
 
         File dxFile =
-                FileUtils.join(mSdkHome, SdkConstants.FD_BUILD_TOOLS, BUILD_TOOLS_VERSION, "dx");
+                FileUtils.join(
+                        mSdkHome,
+                        SdkConstants.FD_BUILD_TOOLS,
+                        BUILD_TOOLS_VERSION,
+                        SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS
+                                ? "dx.bat"
+                                : "dx");
         assertThat(dxFile).exists();
     }
 
