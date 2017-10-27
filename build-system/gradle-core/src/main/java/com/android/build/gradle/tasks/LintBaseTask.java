@@ -22,7 +22,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.LINT;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.AnchorOutputType.ALL_CLASSES;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_MANIFEST;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LINT_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.MANIFEST_MERGE_REPORT;
@@ -194,11 +193,8 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
             }
 
             // these inputs are only there to ensure that the lint task runs after these build
-            // intermediates/outputs are built.
+            // intermediates are built.
             allInputs.from(variantScope.getOutput(ALL_CLASSES));
-            if (variantScope.hasOutput(APK)) {
-                allInputs.from(variantScope.getOutput(APK));
-            }
         }
 
         @NonNull
