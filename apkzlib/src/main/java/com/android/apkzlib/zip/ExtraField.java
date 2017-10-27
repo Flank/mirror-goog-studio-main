@@ -324,6 +324,11 @@ public class ExtraField {
     public static class AlignmentSegment implements Segment {
 
         /**
+         * Minimum size for an alignment segment.
+         */
+        public static final int MINIMUM_SIZE = 6;
+
+        /**
          * The alignment value.
          */
         private int alignment;
@@ -341,14 +346,14 @@ public class ExtraField {
          */
         public AlignmentSegment(int alignment, int totalSize) {
             Preconditions.checkArgument(alignment > 0, "alignment <= 0");
-            Preconditions.checkArgument(totalSize >= 6, "totalSize < 6");
+            Preconditions.checkArgument(totalSize >= MINIMUM_SIZE, "totalSize < MINIMUM_SIZE");
 
             /*
              * We have 6 bytes of fixed data: header ID (2 bytes), data size (2 bytes), alignment
              * value (2 bytes).
              */
             this.alignment = alignment;
-            padding = totalSize - 6;
+            padding = totalSize - MINIMUM_SIZE;
         }
 
         /**

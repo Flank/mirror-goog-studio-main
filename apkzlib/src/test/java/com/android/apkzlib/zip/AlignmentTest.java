@@ -785,4 +785,72 @@ public class AlignmentTest {
             zf.add("bar", new ByteArrayInputStream(new byte[] { 5, 6, 7, 8 }));
         }
     }
+
+    @Test
+    public void fourByteAlignment() throws Exception {
+        // When aligning with 4 bytes, there are are only 3 possible cases:
+        // - We're 2 bytes short and so need to add +6 bytes (6 bytes for header + no zeroes)
+        // - We're 3 bytes short and so need to add +7 bytes (6 bytes for header + 1 zero)
+        // - We're 1 byte short and so need to add +9 bytes (6 bytes for header + 3 zeroes)
+
+        File zipFile = new File(mTemporaryFolder.getRoot(), "a.zip");
+        ZFileOptions options = new ZFileOptions();
+        options.setCoverEmptySpaceUsingExtraField(true);
+        options.setAlignmentRule(AlignmentRules.constant(4));
+        try (ZFile zf = new ZFile(zipFile, options)) {
+            // File header starts at 0.
+            // File name starts at 30 (LOCAL_HEADER_SIZE).
+            // If unaligned we would have data starting at 33, but with aligned we have data
+            // starting at 40 (36 isn't enough for the extra data header).
+            String fooName = "foo";
+            byte[] fooData = new byte[] { 1, 2, 3, 4, 5 };
+            zf.add(fooName, new ByteArrayInputStream(fooData), false);
+            zf.update();
+            StoredEntry foo = zf.get(fooName);
+            long fooOffset = ZFileTestConstants.LOCAL_HEADER_SIZE + fooName.length() + 7;
+            assertEquals(fooOffset, foo.getLocalHeaderSize());
+
+            // Bar header starts at 45 (foo data starts at 40 and is 5 bytes long).
+            // Bar header ends at 75.
+            // If unaligned we would have data starting at 78, but with aligned we have data
+            // starting at 84 (80 isn't enough for the extra header).
+            String barName = "bar";
+            byte[] barData = new byte[] { 6 };
+            zf.add(barName, new ByteArrayInputStream(barData), false);
+            zf.update();
+
+            StoredEntry bar = zf.get(barName);
+            long barStart = bar.getCentralDirectoryHeader().getOffset();
+            assertEquals(fooOffset + fooData.length, barStart);
+
+            long barStartOffset = ZFileTestConstants.LOCAL_HEADER_SIZE + barName.length() + 6;
+            assertEquals(barStartOffset, bar.getLocalHeaderSize());
+
+            // Xpto header starts at 85 (bar data starts at 84 and is 1 byte long).
+            // Xpto header ends at 115.
+            // If unaligned we would have data starting at 119, but with aligned we have data
+            // starting at 128 (120 & 124 are not enough for the extra header).
+            String xptoName = "xpto";
+            byte[] xptoData = new byte[] { 7, 8, 9, 10 };
+            zf.add(xptoName, new ByteArrayInputStream(xptoData), false);
+            zf.update();
+
+            StoredEntry xpto = zf.get(xptoName);
+            long xptoStart = xpto.getCentralDirectoryHeader().getOffset();
+            assertEquals(barStart + barStartOffset + barData.length, xptoStart);
+
+            long xptoStartOffset = ZFileTestConstants.LOCAL_HEADER_SIZE + xptoName.length() + 9;
+            assertEquals(xptoStartOffset, xpto.getLocalHeaderSize());
+
+            // Dummy header starts at 133 (xpto data starts at 128 and is 6 bytes long).
+            String dummyName = "dummy";
+            byte[] dummyData = new byte[] { 11 };
+            zf.add(dummyName, new ByteArrayInputStream(dummyData), false);
+            zf.update();
+
+            StoredEntry dummy = zf.get(dummyName);
+            long dummyStart = dummy.getCentralDirectoryHeader().getOffset();
+            assertEquals(xptoStart + xptoStartOffset + xptoData.length, dummyStart);
+        }
+    }
 }
