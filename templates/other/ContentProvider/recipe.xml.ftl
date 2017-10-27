@@ -4,7 +4,7 @@
     <@kt.addAllKotlinDependencies />
     <merge from="root/AndroidManifest.xml.ftl"
              to="${escapeXmlAttribute(manifestOut)}/AndroidManifest.xml" />
-    <instantiate from="root/src/app_package/ContentProvider.java.ftl"
-                   to="${escapeXmlAttribute(srcOut)}/${className}.java" />
-    <open file="${escapeXmlAttribute(srcOut)}/${className}.java" />
+    <instantiate from="root/src/app_package/ContentProvider.${ktOrJavaExt}.ftl"
+                   to="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
+    <open file="${escapeXmlAttribute(srcOut)}/${className}.${ktOrJavaExt}" />
 </recipe>
