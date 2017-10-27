@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.common.performance;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.SdkConstants;
 import com.android.build.gradle.integration.performance.ActdProfileUploader;
 import com.android.build.gradle.integration.performance.ActdProfileUploader.SampleRequest;
 import com.android.testutils.TestUtils;
@@ -41,7 +40,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -161,23 +159,26 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void lastCommitJson() throws IOException {
-        // b/67964499
-        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
-        assertThat(ActdProfileUploader.lastCommitJson(repo)).isNotEmpty();
-    }
-
-    @Test
     public void infos() throws IOException {
-        // b/67964499
-        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
         ActdProfileUploader.Infos infos =
                 ActdProfileUploader.infos(TestUtils.getWorkspaceFile("tools/base"));
 
         assertThat(infos.abbrevHash).isNotEmpty();
+        assertThat(infos.abbrevHash).doesNotContain("\n");
+        assertThat(infos.abbrevHash).doesNotContain(" ");
+        assertThat(infos.abbrevHash.length()).isLessThan(infos.hash.length());
+
         assertThat(infos.hash).isNotEmpty();
+        assertThat(infos.hash).doesNotContain("\n");
+        assertThat(infos.hash).doesNotContain(" ");
+
         assertThat(infos.authorEmail).isNotEmpty();
+        assertThat(infos.authorEmail).doesNotContain("\n");
+        assertThat(infos.authorEmail).contains("@google.com");
+
         assertThat(infos.authorName).isNotEmpty();
+        assertThat(infos.authorName).doesNotContain("\n");
+
         assertThat(infos.subject).isNotEmpty();
     }
 

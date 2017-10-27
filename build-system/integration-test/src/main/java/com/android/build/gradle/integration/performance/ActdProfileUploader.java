@@ -70,22 +70,6 @@ public final class ActdProfileUploader implements ProfileUploader {
     @NonNull private static final String ACTD_ADD_SERIE_URL = "/apis/addSerie";
     @NonNull private static final String ACTD_ADD_SAMPLE_URL = "/apis/addSample";
 
-    @NonNull
-    private static final String[] GIT_LAST_COMMIT_JSON_CMD = {
-        null, // to be filled in by findExecutable(String)
-        "--no-pager",
-        "log",
-        "-n1",
-        "--pretty=format:"
-                + "{%n"
-                + "  \"hash\": \"%H\",%n"
-                + "  \"abbrevHash\": \"%h\",%n"
-                + "  \"authorName\": \"%aN\",%n"
-                + "  \"authorEmail\": \"%aE\",%n"
-                + "  \"subject\": \"%s\"%n"
-                + "}%n"
-    };
-
     private final int buildId;
     private final File repo;
     private final String hostname;
@@ -261,31 +245,32 @@ public final class ActdProfileUploader implements ProfileUploader {
 
     /**
      * Creates a valid {@code Infos} object for the head of the given repository. This relies on
-     * shelling out to git, see {@code lastCommitJson()} for details.
+     * shelling out to git.
      */
     @VisibleForTesting
     @NonNull
-    public static Infos infos(File repo) throws IOException {
-        return new Gson().fromJson(lastCommitJson(repo), Infos.class);
-    }
-
-    /**
-     * Gets information about the most recent commit in a repository (given as a {@code File} as a
-     * parameter to this function), in a JSON format suitable for consumption by the {@code Infos}
-     * object, which itself is suitable for consumption by the act-d API.
-     */
-    @VisibleForTesting
-    @NonNull
-    public static String lastCommitJson(@NonNull File repo) throws IOException {
-        if (GIT_LAST_COMMIT_JSON_CMD[0] == null) {
-            String git = findExecutable("git");
-            if (git == null) {
-                throw new IllegalStateException("cannot find git executable on system");
-            }
-            GIT_LAST_COMMIT_JSON_CMD[0] = git;
+    public static Infos infos(@NonNull File repo) throws IOException {
+        String git = findExecutable("git");
+        if (git == null) {
+            throw new IllegalStateException("cannot find git executable on system");
         }
 
-        return runCmd(repo, GIT_LAST_COMMIT_JSON_CMD);
+        Infos infos = new Infos();
+        infos.hash = gitLatestCommitFormat(repo, git, "%H");
+        infos.abbrevHash = gitLatestCommitFormat(repo, git, "%h");
+        infos.authorName = gitLatestCommitFormat(repo, git, "%aN");
+        infos.authorEmail = gitLatestCommitFormat(repo, git, "%aE");
+        infos.subject = gitLatestCommitFormat(repo, git, "%s");
+        return infos;
+    }
+
+    private static String gitLatestCommitFormat(File repo, String gitExecutable, String format)
+            throws IOException {
+        return runCmd(
+                repo,
+                new String[] {
+                    gitExecutable, "--no-pager", "log", "-n1", "--pretty=format:" + format
+                });
     }
 
     @VisibleForTesting
