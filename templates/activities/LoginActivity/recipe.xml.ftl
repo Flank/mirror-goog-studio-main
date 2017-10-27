@@ -9,6 +9,10 @@
         <dependency mavenUrl="com.android.support:design:${buildApi}.+" />
     </#if>
 
+    <#if !appCompat && (includePermissionCheck!false)>
+        <dependency mavenUrl="com.android.support:support-annotations:${buildApi}.+" />
+    </#if>
+
     <#include "../common/recipe_theme.xml.ftl" />
 
     <merge from="root/AndroidManifest.xml.ftl"

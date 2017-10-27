@@ -5,7 +5,7 @@ import android.animation.AnimatorListenerAdapter
 import android.annotation.TargetApi
 <#if includePermissionCheck>
 import android.content.pm.PackageManager
-import android.support.design.widget.Snackbar
+<#if appCompat>import android.support.design.widget.Snackbar</#if>
 </#if>
 import ${superClassFqcn}
 import android.app.LoaderManager.LoaderCallbacks
@@ -77,9 +77,15 @@ class ${activityClass} : ${superClass}(), LoaderCallbacks<Cursor> {
             return true
         }
         if (shouldShowRequestPermissionRationale(READ_CONTACTS)) {
+<#if appCompat>
             Snackbar.make(email, R.string.permission_rationale, Snackbar.LENGTH_INDEFINITE)
                     .setAction(android.R.string.ok,
                             { requestPermissions(arrayOf(READ_CONTACTS), REQUEST_READ_CONTACTS) })
+<#else>
+            // TODO: alert the user with a Snackbar/AlertDialog giving them the permission rationale
+            // To use the Snackbar from the design support library, ensure that the activity extends
+            // AppCompatActivity and uses the Theme.AppCompat theme.
+</#if>
         } else {
             requestPermissions(arrayOf(READ_CONTACTS), REQUEST_READ_CONTACTS)
         }
