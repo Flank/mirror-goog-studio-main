@@ -101,6 +101,7 @@ grpc::Status NetworkServiceImpl::GetHttpRange(grpc::ServerContext *context,
     HttpConnectionData *data = response->add_data();
     data->set_conn_id(conn.id);
     data->set_start_timestamp(conn.start_timestamp);
+    data->set_uploaded_timestamp(conn.uploaded_timestamp);
     data->set_downloading_timestamp(conn.downloading_timestamp);
     data->set_end_timestamp(conn.end_timestamp);
   }

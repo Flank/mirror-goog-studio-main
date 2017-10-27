@@ -19,8 +19,11 @@ package com.android.build.gradle.internal.api.dsl.variant
 import com.android.build.api.dsl.variant.CommonVariantProperties
 import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
+import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
 import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.model.SyncIssue
 import com.google.common.collect.ImmutableList
+import org.gradle.api.Action
 
 /** propertie for variants that are not coming from the user model */
 class CommonVariantPropertiesImpl(
@@ -28,18 +31,38 @@ class CommonVariantPropertiesImpl(
         override val buildTypeName: String,
         flavorNames: List<String>,
         sourceSets: List<AndroidSourceSet>,
-        override val variantSourceSet: AndroidSourceSet,
-        override val multiFlavorSourceSet: AndroidSourceSet?,
+        override val variantSourceSet: DefaultAndroidSourceSet?,
+        override val multiFlavorSourceSet: DefaultAndroidSourceSet?,
         issueReporter: EvalIssueReporter
         ) : SealableObject(issueReporter), CommonVariantProperties {
 
     override val flavorNames: List<String> = ImmutableList.copyOf(flavorNames)
     override val baseSourceSets: List<AndroidSourceSet> = ImmutableList.copyOf(sourceSets)
 
+    override fun variantSourceSet(action: Action<AndroidSourceSet>) {
+        if (variantSourceSet != null) {
+            action.execute(variantSourceSet)
+        } else {
+            issueReporter.reportError(
+                    SyncIssue.TYPE_GENERIC,
+                    "Calling variantSourceSet(Action) with a null variantSourceSet")
+        }
+    }
+
+    override fun multiFlavorSourceSet(action: Action<AndroidSourceSet>) {
+        if (multiFlavorSourceSet != null) {
+            action.execute(multiFlavorSourceSet)
+        } else {
+            issueReporter.reportError(
+                    SyncIssue.TYPE_GENERIC,
+                    "Calling multiFlavorSourceSet(Action) with a null multiFlavorSourceSet")
+        }
+    }
+
     override fun seal() {
         super.seal()
 
-        // FIXME seal source sets
-
+        variantSourceSet?.seal()
+        multiFlavorSourceSet?.seal()
     }
 }

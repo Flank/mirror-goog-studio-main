@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.internal.dsl;
 
+import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
 import com.android.builder.core.DefaultDexOptions;
-import com.android.builder.errors.DeprecationReporter;
-import com.android.builder.errors.DeprecationReporter.DeprecationTarget;
 import java.util.Arrays;
 
 /**
@@ -37,13 +37,13 @@ public class DexOptions extends DefaultDexOptions {
     @Deprecated
     public boolean getIncremental() {
         deprecationReporter.reportObsoleteUsage(
-                "DexOptions.incremental", DeprecationTarget.VERSION_4_0);
+                "DexOptions.incremental", DeprecationTarget.EOY2018);
         return false;
     }
 
     public void setIncremental(boolean ignored) {
         deprecationReporter.reportObsoleteUsage(
-                "DexOptions.incremental", DeprecationTarget.VERSION_4_0);
+                "DexOptions.incremental", DeprecationTarget.EOY2018);
     }
 
     public void additionalParameters(String... parameters) {
@@ -55,7 +55,6 @@ public class DexOptions extends DefaultDexOptions {
      */
     @Deprecated
     public void setOptimize(@SuppressWarnings("UnusedParameters") Boolean optimize) {
-        deprecationReporter.reportObsoleteUsage(
-                "DexOptions.optimize", DeprecationTarget.VERSION_4_0);
+        deprecationReporter.reportObsoleteUsage("DexOptions.optimize", DeprecationTarget.EOY2018);
     }
 }

@@ -17,8 +17,10 @@
 package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
+import org.gradle.api.Incubating
 
 /** Options for configuring Java annotation processor.  */
+@Incubating
 interface AnnotationProcessorOptions : Initializable<AnnotationProcessorOptions> {
 
     /**

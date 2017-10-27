@@ -23,8 +23,8 @@ import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
+import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
 import com.android.builder.core.VariantType;
-import com.android.builder.errors.ConfigurableErrorHandler;
 import com.android.builder.model.SyncIssue;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -78,8 +78,6 @@ public class VariantDependencies {
     public static final String CONFIG_NAME_APPLICATION = "application";
 
     public static final String CONFIG_NAME_LINTCHECKS = "lintChecks";
-
-    public static final String USAGE_LINT = "android-lint-checks";
 
     @NonNull private final String variantName;
 

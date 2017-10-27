@@ -59,10 +59,13 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -193,8 +196,13 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                 ImmutableList.builder();
 
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
-            InstantAppOutputScope instantAppOutputScope =
-                    InstantAppOutputScope.load(variantScope.getApkLocation());
+            InstantAppOutputScope instantAppOutputScope = null;
+            try {
+                instantAppOutputScope = InstantAppOutputScope.load(variantScope.getApkLocation());
+            } catch (IOException e) {
+                Logger.getAnonymousLogger().log(
+                        Level.SEVERE, "Error while loading output.json", e);
+            }
             if (instantAppOutputScope != null) {
                 variantsOutput.add(
                         new DefaultInstantAppVariantBuildOutput(

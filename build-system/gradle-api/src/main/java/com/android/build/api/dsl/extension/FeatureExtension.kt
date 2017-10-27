@@ -16,7 +16,10 @@
 
 package com.android.build.api.dsl.extension
 
+import org.gradle.api.Incubating
+
 /** 'android' extension for 'com.android.feature' projects.  */
+@Incubating
 interface FeatureExtension : LibraryExtension, ApkProperties {
     /** Whether the feature module is the base feature.  */
     var baseFeature: Boolean

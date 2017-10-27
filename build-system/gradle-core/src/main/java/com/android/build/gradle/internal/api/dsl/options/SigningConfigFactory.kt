@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.builder.core.BuilderConstants
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.prefs.AndroidLocation

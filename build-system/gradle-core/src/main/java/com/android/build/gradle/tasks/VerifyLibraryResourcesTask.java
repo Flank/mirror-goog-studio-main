@@ -42,6 +42,7 @@ import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
 import com.android.ide.common.blame.parser.ToolOutputParser;
+import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser;
 import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
@@ -121,7 +122,11 @@ public class VerifyLibraryResourcesTask extends IncrementalTask {
                 new MergingLogRewriter(mergingLog::find, builder.getMessageReceiver());
         ProcessOutputHandler processOutputHandler =
                 new ParsingProcessOutputHandler(
-                        new ToolOutputParser(new AaptOutputParser(), getILogger()),
+                        new ToolOutputParser(
+                                aaptGeneration == AaptGeneration.AAPT_V1
+                                        ? new AaptOutputParser()
+                                        : new Aapt2OutputParser(),
+                                getILogger()),
                         mergingLogRewriter);
 
         Collection<BuildOutput> manifestsOutputs = BuildOutputs.load(taskInputType, manifestFiles);

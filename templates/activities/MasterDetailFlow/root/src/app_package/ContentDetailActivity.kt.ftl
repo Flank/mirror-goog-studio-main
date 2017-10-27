@@ -47,11 +47,13 @@ class ${DetailName}Activity : ${superClass}() {
         if (savedInstanceState == null) {
             // Create the detail fragment and add it to the activity
             // using a fragment transaction.
-            val arguments = Bundle()
-            arguments.putString(${DetailName}Fragment.ARG_ITEM_ID,
-                    intent.getStringExtra(${DetailName}Fragment.ARG_ITEM_ID))
-            val fragment = ${DetailName}Fragment()
-            fragment.arguments = arguments
+            val fragment = ${DetailName}Fragment().apply {
+                arguments = Bundle().apply {
+                    putString(${DetailName}Fragment.ARG_ITEM_ID,
+                            intent.getStringExtra(${DetailName}Fragment.ARG_ITEM_ID))
+                }
+            }
+
             ${kotlinFragmentManager}.beginTransaction()
                     .add(R.id.${detail_name}_container, fragment)
                     .commit()

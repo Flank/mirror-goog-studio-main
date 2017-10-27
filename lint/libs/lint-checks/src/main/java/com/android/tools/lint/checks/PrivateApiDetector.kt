@@ -137,10 +137,9 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
             if (aClass != null) { // Found in SDK: not internal
                 return
             }
-            val owner = value
             val apiLookup = ApiLookup.get(context.client,
                     context.getMainProject().buildTarget) ?: return
-            isInternal = !apiLookup.containsClass(owner)
+            isInternal = !apiLookup.containsClass(value)
         }
 
         if (isInternal) {

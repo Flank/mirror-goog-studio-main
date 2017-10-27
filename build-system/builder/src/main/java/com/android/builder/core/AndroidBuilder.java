@@ -812,7 +812,7 @@ public class AndroidBuilder {
             // For each dependency, load its symbol file.
             Set<SymbolTable> depSymbolTables =
                     SymbolUtils.loadDependenciesSymbolTables(
-                            aaptConfig.getLibrarySymbolTableFiles(), mainPackageName);
+                            aaptConfig.getLibrarySymbolTableFiles());
 
             boolean finalIds = true;
             if (aaptConfig.getVariantType() == VariantType.LIBRARY) {
@@ -991,7 +991,7 @@ public class AndroidBuilder {
             @NonNull File sourceOutputDir,
             @Nullable File packagedOutputDir,
             @Nullable Collection<String> packageWhitelist,
-            @NonNull List<File> importFolders,
+            @NonNull Iterable<File> importFolders,
             @Nullable DependencyFileProcessor dependencyFileProcessor,
             @NonNull ProcessOutputHandler processOutputHandler)
             throws IOException, InterruptedException, ProcessException {

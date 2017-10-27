@@ -30,7 +30,6 @@ import java.io.File;
 import java.util.Collection;
 import org.gradle.api.GradleException;
 import org.gradle.api.Task;
-import org.gradle.tooling.BuildException;
 
 /**
  * Implementation of the base variant output. This is the base class for items common to apps,

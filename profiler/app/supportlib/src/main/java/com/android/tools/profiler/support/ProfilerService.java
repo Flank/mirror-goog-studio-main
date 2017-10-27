@@ -16,6 +16,7 @@
 package com.android.tools.profiler.support;
 
 import android.os.Debug;
+import com.android.tools.profiler.support.network.HttpTracker;
 import com.android.tools.profiler.support.profilers.EventProfiler;
 import com.android.tools.profiler.support.profilers.MemoryProfiler;
 import com.android.tools.profiler.support.profilers.ProfilerComponent;
@@ -55,17 +56,19 @@ public class ProfilerService {
      * Initialization method called multiple times from many entry points in the application. Not
      * thread safe so, when instrumented, it needs to be added in the main thread.
      *
-     * @param property to pull the the IP address from and used to connect to perfd.
-     * This adds an additional property to the property namespace because the service address
-     * is required to be configurable for test to run in parallel.
+     * @param serviceAddressProperty to pull the the IP address from and used to connect to perfd.
+     *     This adds an additional property to the property namespace because the service address is
+     *     required to be configurable for test to run in parallel.
+     * @param requestPayloadEnabled set to true to enable tracking network request payload.
      */
-    public static void initialize(String serviceAddressProperty) {
+    public static void initialize(String serviceAddressProperty, boolean requestPayloadEnabled) {
         if (sInstance != null) {
             return;
         }
         sInstance =
                 new ProfilerService(
                         System.getProperty(serviceAddressProperty, DEFAULT_SERVICE_ADDRESS));
+        HttpTracker.setRequestPayloadEnabled(requestPayloadEnabled);
     }
 
     public ProfilerService(String serviceAddress) {

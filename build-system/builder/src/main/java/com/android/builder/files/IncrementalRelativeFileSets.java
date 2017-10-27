@@ -22,12 +22,9 @@ import com.android.apkzlib.zip.StoredEntry;
 import com.android.apkzlib.zip.StoredEntryType;
 import com.android.apkzlib.zip.ZFile;
 import com.android.ide.common.res2.FileStatus;
-import com.android.utils.FileUtils;
 import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.io.Closer;
@@ -37,6 +34,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Utilities for incremental relative file sets, immutable maps of relative files to status.
@@ -47,9 +45,6 @@ public final class IncrementalRelativeFileSets {
      * Utility class: no visible constructor.
      */
     private IncrementalRelativeFileSets() {
-        /*
-         * Nothing to do.
-         */
     }
 
     /**
@@ -63,10 +58,10 @@ public final class IncrementalRelativeFileSets {
     @NonNull
     public static ImmutableMap<RelativeFile, FileStatus> fromDirectory(@NonNull File directory) {
         Preconditions.checkArgument(directory.isDirectory(), "!directory.isDirectory()");
-        Set<RelativeFile> files = RelativeFiles.fromDirectory(directory);
-        files = Sets.filter(files, Predicates.compose(Files.isFile(), RelativeFile::getFile));
-        Map<RelativeFile, FileStatus> map = Maps.asMap(files, Functions.constant(FileStatus.NEW));
-        return ImmutableMap.copyOf(map);
+        return ImmutableMap.copyOf(
+                Maps.asMap(
+                        RelativeFiles.fromDirectory(directory),
+                        Functions.constant(FileStatus.NEW)));
     }
 
     /**
@@ -151,12 +146,9 @@ public final class IncrementalRelativeFileSets {
             try (ZFile zipReader = new ZFile(oldFile)) {
                 for (StoredEntry entry : zipReader.entries()) {
                     if (entry.getType() == StoredEntryType.FILE) {
-                        File file =
-                                new File(
-                                        zip,
-                                        FileUtils.toSystemDependentPath(
-                                                entry.getCentralDirectoryHeader().getName()));
-                        builder.put(new RelativeFile(zip, file), FileStatus.REMOVED);
+                        builder.put(
+                                new RelativeFile(zip, entry.getCentralDirectoryHeader().getName()),
+                                FileStatus.REMOVED);
                     }
                 }
             }
@@ -182,8 +174,7 @@ public final class IncrementalRelativeFileSets {
             for (StoredEntry entry : newZipReader.entries()) {
                 String path = entry.getCentralDirectoryHeader().getName();
                 if (entry.getType() == StoredEntryType.FILE) {
-                    File file = new File(zip, FileUtils.toSystemDependentPath(path));
-                    RelativeFile newRelative = new RelativeFile(zip, file);
+                    RelativeFile newRelative = new RelativeFile(zip, path);
 
                     StoredEntry oldEntry = oldZipReader.get(path);
                     if (oldEntry == null || oldEntry.getType() != StoredEntryType.FILE) {
@@ -207,8 +198,7 @@ public final class IncrementalRelativeFileSets {
             for (StoredEntry entry : oldZipReader.entries()) {
                 String path = entry.getCentralDirectoryHeader().getName();
                 if (entry.getType() == StoredEntryType.FILE) {
-                    File file = new File(zip, FileUtils.toSystemDependentPath(path));
-                    RelativeFile oldRelative = new RelativeFile(zip, file);
+                    RelativeFile oldRelative = new RelativeFile(zip, path);
 
                     StoredEntry newEntry = newZipReader.get(path);
                     if (newEntry == null || newEntry.getType() != StoredEntryType.FILE) {
@@ -257,12 +247,11 @@ public final class IncrementalRelativeFileSets {
      * @return the number of distinct base directories
      */
     public static int getBaseDirectoryCount(@NonNull ImmutableMap<RelativeFile, FileStatus> set) {
-        return Sets.newHashSet(
-                Iterables.filter(
-                        Iterables.transform(
-                                set.keySet(),
-                                RelativeFile::getBase),
-                        Files.isDirectory()))
+        return set.keySet()
+                .stream()
+                .map(RelativeFile::getBase)
+                .filter(Files.isDirectory())
+                .collect(Collectors.toSet())
                 .size();
     }
 

@@ -22,29 +22,21 @@ import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.EmbeddedTestPropertiesImpl;
 import com.android.build.gradle.internal.api.dsl.extensions.LibraryExtensionImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.OnDeviceTestPropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.VariantAwarePropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.plugin.LibPluginDelegate;
+import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.LibraryVariantFactory;
 import com.android.build.gradle.internal.variant.VariantFactory;
-import com.android.build.gradle.internal.variant2.LibAndroidTestVariantFactory;
-import com.android.build.gradle.internal.variant2.VariantFactory2;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.profile.Recorder;
-import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
-import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
@@ -148,32 +140,8 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> implements P
         project.getTasks().create("assembleDefault");
     }
 
-    @NonNull
     @Override
-    protected LibraryExtensionImpl createNewExtension(
-            @NonNull BuildPropertiesImpl buildProperties,
-            @NonNull VariantOrExtensionPropertiesImpl variantExtensionProperties,
-            @NonNull VariantAwarePropertiesImpl variantAwareProperties) {
-        EvalIssueReporter issueReporter = extraModelInfo;
-
-        return project.getExtensions()
-                .create(
-                        "android",
-                        LibraryExtensionImpl.class,
-                        buildProperties,
-                        variantExtensionProperties,
-                        variantAwareProperties,
-                        new EmbeddedTestPropertiesImpl(issueReporter),
-                        new OnDeviceTestPropertiesImpl(issueReporter),
-                        issueReporter);
-    }
-
-    @NonNull
-    @Override
-    protected List<VariantFactory2<LibraryExtensionImpl>> getVariantFactories() {
-        return ImmutableList.of(
-                new com.android.build.gradle.internal.variant2.LibraryVariantFactory(
-                        extraModelInfo),
-                new LibAndroidTestVariantFactory(extraModelInfo));
+    protected TypedPluginDelegate<LibraryExtensionImpl> getTypedDelegate() {
+        return new LibPluginDelegate();
     }
 }

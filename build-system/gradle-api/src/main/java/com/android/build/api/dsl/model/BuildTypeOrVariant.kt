@@ -18,8 +18,10 @@ package com.android.build.api.dsl.model
 
 import com.android.build.api.dsl.options.PostprocessingOptions
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 
 /** properties common to build types and variants  */
+@Incubating
 interface BuildTypeOrVariant {
 
     /** Whether the build type is configured to generate a debuggable apk.  */

@@ -45,6 +45,12 @@ public final class ProfilerTransform implements BiConsumer<InputStream, OutputSt
     private static final boolean IO_PROFILING_ENABLED = "true"
         .equals(PROPERTIES.getProperty("android.profiler.io.enabled"));
 
+    // Flag that controls whether to track network request body, should be the same as
+    // StudioFlags.PROFILER_NETWORK_REQUEST_PAYLOAD.getId().
+    private static final String NETWORK_REQUEST_PAYLOAD = "profiler.network.request.payload";
+    public static final boolean NETWORK_REQUEST_PAYLOAD_ENABLED =
+            "true".equals(PROPERTIES.getProperty(NETWORK_REQUEST_PAYLOAD));
+
     private static Logger getLog() {
         return Logger.getLogger(ProfilerTransform.class.getName());
     }

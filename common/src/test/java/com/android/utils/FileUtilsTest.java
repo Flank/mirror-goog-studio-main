@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.android.SdkConstants;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
@@ -148,9 +149,11 @@ public class FileUtilsTest {
         assertThat(FileUtils.isSameFile(fooHardLinkFile, fooFile)).isTrue();
 
         // Test symbolic links
-        File fooSymbolicLinkFile = new File(mTemporaryFolder.getRoot(), "fooSymbolicLink");
-        java.nio.file.Files.createSymbolicLink(fooSymbolicLinkFile.toPath(), fooFile.toPath());
-        assertThat(FileUtils.isSameFile(fooSymbolicLinkFile, fooFile)).isTrue();
+        if (SdkConstants.currentPlatform() != SdkConstants.PLATFORM_WINDOWS) {
+            File fooSymbolicLinkFile = new File(mTemporaryFolder.getRoot(), "fooSymbolicLink");
+            java.nio.file.Files.createSymbolicLink(fooSymbolicLinkFile.toPath(), fooFile.toPath());
+            assertThat(FileUtils.isSameFile(fooSymbolicLinkFile, fooFile)).isTrue();
+        }
     }
 
     @Test

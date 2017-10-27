@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.integration.performance;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -24,7 +25,10 @@ import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.GenericUrl;
+import com.google.api.client.http.HttpBackOffIOExceptionHandler;
 import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler;
+import com.google.api.client.http.HttpBackOffUnsuccessfulResponseHandler.BackOffRequired;
+import com.google.api.client.http.HttpIOExceptionHandler;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
@@ -39,36 +43,36 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.security.GeneralSecurityException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /** Uploader that pushes profile results to act-d. */
 public final class ActdProfileUploader implements ProfileUploader {
-    @NonNull private static final String ACTD_ADD_BUILD_URL = "/apis/addBuild";
-    @NonNull private static final String ACTD_ADD_SAMPLE_URL = "/apis/addSample";
-
     /**
-     * Git-specific constants used to ascertain what the current HEAD commit is, which is used to
-     * send to the act-d API to make the dashboards more useful.
+     * A threshold below which samples will not be uploaded.
      *
-     * <p>It's quite hacky to shell out to git in this way to get the information we need, so if you
-     * feel motivated enough to find a better solution (something something libgit2?) feel free to
-     * send the review to samwho@.
-     *
-     * <p>Note: this will likely fail when run in Bazel (it currently isn't because the BUILD file
-     * associated with this project specifically does not run tests that have a directory named
-     * "performance" on their path).
+     * <p>We seem to have a bunch of timeseries that take 1 or 2 milliseconds, so when they go up or
+     * down it counts as a 100% regression/improvement. These are noisy, and we want to ignore them.
      */
-    @NonNull private static final String GIT_BINARY = "/usr/bin/git";
+    public static final long BENCHMARK_VALUE_THRESHOLD = 50;
+
+    @NonNull private static final String ACTD_PROJECT_ID = "SamProjectTest3";
+    @NonNull private static final String ACTD_ADD_BUILD_URL = "/apis/addBuild";
+    @NonNull private static final String ACTD_ADD_SERIE_URL = "/apis/addSerie";
+    @NonNull private static final String ACTD_ADD_SAMPLE_URL = "/apis/addSample";
 
     @NonNull
     private static final String[] GIT_LAST_COMMIT_JSON_CMD = {
-        GIT_BINARY,
+        null, // to be filled in by findExecutable(String)
         "--no-pager",
         "log",
         "-n1",
@@ -84,6 +88,7 @@ public final class ActdProfileUploader implements ProfileUploader {
 
     private final int buildId;
     private final File repo;
+    private final String hostname;
     @NonNull private final String actdBaseUrl;
     @NonNull private final String actdProjectId;
     @Nullable private final String actdBuildUrl;
@@ -92,12 +97,14 @@ public final class ActdProfileUploader implements ProfileUploader {
     private ActdProfileUploader(
             int buildId,
             @NonNull File repo,
+            @NonNull String hostname,
             @NonNull String actdBaseUrl,
             @NonNull String actdProjectId,
             @Nullable String actdBuildUrl,
             @Nullable String actdCommitUrl) {
         this.buildId = buildId;
         this.repo = repo;
+        this.hostname = hostname;
         this.actdBaseUrl = actdBaseUrl;
         this.actdProjectId = actdProjectId;
         this.actdBuildUrl = actdBuildUrl;
@@ -113,12 +120,13 @@ public final class ActdProfileUploader implements ProfileUploader {
     public static ActdProfileUploader create(
             int buildId,
             @NonNull File repo,
+            @NonNull String hostname,
             @NonNull String actdBaseUrl,
             @NonNull String actdProjectId,
             @Nullable String actdBuildUrl,
             @Nullable String actdCommitUrl) {
         return new ActdProfileUploader(
-                buildId, repo, actdBaseUrl, actdProjectId, actdBuildUrl, actdCommitUrl);
+                buildId, repo, hostname, actdBaseUrl, actdProjectId, actdBuildUrl, actdCommitUrl);
     }
 
     /**
@@ -127,21 +135,21 @@ public final class ActdProfileUploader implements ProfileUploader {
      * @throws IllegalStateException if any required environment variables are not present or empty.
      */
     @NonNull
-    public static ActdProfileUploader fromEnvironment() {
+    public static ActdProfileUploader fromEnvironment() throws IOException {
         /** Required properties for act-d uploading to work. */
         String actdBaseUrl = System.getenv("ACTD_BASE_URL");
         if (actdBaseUrl == null || actdBaseUrl.isEmpty()) {
             throw new IllegalStateException("no ACTD_BASE_URL environment variable set");
         }
 
-        String actdProjectId = System.getenv("ACTD_PROJECT_ID");
-        if (actdProjectId == null || actdProjectId.isEmpty()) {
-            throw new IllegalStateException("no ACTD_PROJECT_ID environment variable set");
-        }
-
         String buildbotBuildNumber = System.getenv("BUILDBOT_BUILDNUMBER");
         if (buildbotBuildNumber == null || buildbotBuildNumber.isEmpty()) {
             throw new IllegalStateException("no BUILDBOT_BUILDNUMBER environment variable set");
+        }
+
+        String hostname = hostname();
+        if (hostname == null || hostname.isEmpty()) {
+            throw new IllegalStateException("no BUILDBOT_SLAVENAME environment variable set");
         }
 
         /**
@@ -164,10 +172,35 @@ public final class ActdProfileUploader implements ProfileUploader {
         return new ActdProfileUploader(
                 Integer.parseInt(buildbotBuildNumber),
                 repo,
+                hostname,
                 actdBaseUrl,
-                actdProjectId,
+                ACTD_PROJECT_ID,
                 actdBuildUrl,
                 actdCommitUrl);
+    }
+
+    private static String findExecutable(String executable) throws IOException {
+        String where;
+        if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS) {
+            where = "where.exe";
+        } else {
+            where = "which";
+        }
+
+        String out = runCmd(null, new String[] {where, executable});
+        String[] lines = out.split(System.lineSeparator());
+
+        if (lines.length == 0) {
+            return null;
+        }
+
+        for (String line : lines) {
+            if (!line.isEmpty()) {
+                return line;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -176,7 +209,7 @@ public final class ActdProfileUploader implements ProfileUploader {
      */
     @VisibleForTesting
     @NonNull
-    public static String seriesId(
+    public String seriesId(
             @NonNull GradleBenchmarkResult result, @NonNull GradleBuildProfileSpan span) {
         String task = GradleTaskExecutionType.forNumber(span.getTask().getType()).name();
         if (span.getTask().getType() == GradleTaskExecutionType.TRANSFORM_VALUE) {
@@ -185,7 +218,9 @@ public final class ActdProfileUploader implements ProfileUploader {
             task = task + " " + transform;
         }
 
-        return result.getBenchmark()
+        return hostname
+                + " "
+                + result.getBenchmark()
                 + " "
                 + result.getBenchmarkMode()
                 + " "
@@ -242,6 +277,14 @@ public final class ActdProfileUploader implements ProfileUploader {
     @VisibleForTesting
     @NonNull
     public static String lastCommitJson(@NonNull File repo) throws IOException {
+        if (GIT_LAST_COMMIT_JSON_CMD[0] == null) {
+            String git = findExecutable("git");
+            if (git == null) {
+                throw new IllegalStateException("cannot find git executable on system");
+            }
+            GIT_LAST_COMMIT_JSON_CMD[0] = git;
+        }
+
         return runCmd(repo, GIT_LAST_COMMIT_JSON_CMD);
     }
 
@@ -330,28 +373,45 @@ public final class ActdProfileUploader implements ProfileUploader {
         ByteArrayInputStream json = new ByteArrayInputStream(jsonStr.getBytes());
         InputStreamContent content = new InputStreamContent("application/json", json);
         GenericUrl gurl = new GenericUrl(url);
-        HttpResponse res =
-                transport
-                        .createRequestFactory()
-                        .buildPostRequest(gurl, content)
-                        .setNumberOfRetries(5)
-                        .setUnsuccessfulResponseHandler(
-                                new HttpBackOffUnsuccessfulResponseHandler(
-                                        new ExponentialBackOff()))
-                        .setFollowRedirects(true)
-                        .execute();
 
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(res.getContent()))) {
-            String resContent = br.lines().collect(Collectors.joining("\n"));
+        try {
+            HttpBackOffUnsuccessfulResponseHandler unsuccessfulResponseHandler =
+                    new HttpBackOffUnsuccessfulResponseHandler(new ExponentialBackOff())
+                            .setBackOffRequired(BackOffRequired.ALWAYS);
 
-            // The check for the string "successful" is necessitated by the API not always returning
-            // a non-200 status code in the event of bad requests.
-            if (res.getStatusCode() != 200 || !resContent.contains("successful")) {
-                throw new IOException(
-                        "unsuccessful response: " + res.getStatusCode() + " -> " + resContent);
+            HttpIOExceptionHandler ioExceptionHandler =
+                    new HttpBackOffIOExceptionHandler(new ExponentialBackOff());
+
+            HttpResponse res =
+                    transport
+                            .createRequestFactory()
+                            .buildPostRequest(gurl, content)
+                            .setUnsuccessfulResponseHandler(unsuccessfulResponseHandler)
+                            .setIOExceptionHandler(ioExceptionHandler)
+                            .setFollowRedirects(true)
+                            .execute();
+
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(res.getContent()))) {
+                String resContent = br.lines().collect(Collectors.joining("\n"));
+
+                // The check for the string "successful" is necessitated by the API not always returning
+                // a non-200 status code in the event of bad requests.
+                if (res.getStatusCode() != 200 || !resContent.contains("successful")) {
+                    throw new IOException(
+                            "unsuccessful response: " + res.getStatusCode() + " -> " + resContent);
+                }
+            } finally {
+                res.disconnect();
             }
-        } finally {
-            res.disconnect();
+        } catch (SocketException | SocketTimeoutException e) {
+            /*
+             * These two exceptions are typically transient, caused by the endpoint having problems
+             * and there's not a whole lot we can do about it. Eventually, when we're hitting a more
+             * reliable instance of act-d, we should fail on this condition but for now, we're just
+             * going to let it slide.
+             */
+            System.out.println("transient exception prevented act-d data upload: " + e);
+            return;
         }
     }
 
@@ -389,6 +449,19 @@ public final class ActdProfileUploader implements ProfileUploader {
     }
 
     /**
+     * Adds a Serie to the act-d dashboard using the act-d API.
+     *
+     * <p>Serie each belong to a Build, and the Build must exist in the act-d API before you can add
+     * a Serie. See {@code addBuild(BuildRequest)} for more information.
+     *
+     * @throws IOException if anything networky goes wrong, or if the API returns an unsuccessful
+     *     response.
+     */
+    private void addSerie(@NonNull SerieRequest req) throws IOException {
+        jsonPost(actdBaseUrl + ACTD_ADD_SERIE_URL, req);
+    }
+
+    /**
      * Adds a Sample to the act-d dashboard using the act-d API.
      *
      * <p>Samples each belong to a Build, and the Build must exist in the act-d API before you can
@@ -410,6 +483,10 @@ public final class ActdProfileUploader implements ProfileUploader {
     @NonNull
     public Collection<SampleRequest> sampleRequests(@NonNull List<GradleBenchmarkResult> results)
             throws IOException {
+        if (results.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         Map<String, SampleRequest> summedSeriesDurations = Maps.newHashMap();
 
         for (GradleBenchmarkResult result : results) {
@@ -427,7 +504,6 @@ public final class ActdProfileUploader implements ProfileUploader {
                                     SampleRequest req = new SampleRequest();
                                     req.projectId = actdProjectId;
                                     req.serieId = seriesId;
-                                    req.description = description(result, span);
                                     req.sample.buildId = buildId;
                                     req.sample.value = 0;
                                     req.sample.url = buildUrl();
@@ -438,11 +514,11 @@ public final class ActdProfileUploader implements ProfileUploader {
             }
         }
 
-        // act-d doesn't like samples with a value of 0, so we filter them out before returning
+        // filter out low-value, noisy samples before returning a set of samples
         return summedSeriesDurations
                 .values()
                 .stream()
-                .filter(req -> req.sample.value > 0)
+                .filter(req -> req.sample.value > BENCHMARK_VALUE_THRESHOLD)
                 .collect(Collectors.toList());
     }
 
@@ -462,11 +538,31 @@ public final class ActdProfileUploader implements ProfileUploader {
         BuildRequest br = buildRequest();
         addBuild(br);
 
-        for (SampleRequest sampleReq : sampleRequests(results)) {
-            sampleReq.infos = br.build.infos;
-            addSample(sampleReq);
+        Collection<SampleRequest> sampleRequests = sampleRequests(results);
+
+        Set<String> serieIds =
+                sampleRequests
+                        .stream()
+                        .map(req -> req.serieId)
+                        .distinct()
+                        .collect(Collectors.toSet());
+
+        System.out.println("found " + serieIds.size() + " unique series IDs");
+        System.out.println("ensuring all series exist");
+
+        // Make sure that all series we're about to upload data for exist in Dana.
+        for (String serieId : serieIds) {
+            SerieRequest serieReq = new SerieRequest();
+            serieReq.projectId = actdProjectId;
+            serieReq.serieId = serieId;
+
+            addSerie(serieReq);
         }
 
+        System.out.println("starting uplaod of " + sampleRequests.size() + " samples");
+        for (SampleRequest sampleReq : sampleRequests) {
+            addSample(sampleReq);
+        }
         System.out.println("successfully uploaded act-d data for build ID " + buildId);
     }
 
@@ -518,6 +614,7 @@ public final class ActdProfileUploader implements ProfileUploader {
     public static final class BuildRequest {
         public String projectId;
         public Build build = new Build();
+        public boolean override = true;
     }
 
     @VisibleForTesting
@@ -525,9 +622,15 @@ public final class ActdProfileUploader implements ProfileUploader {
     public static final class SampleRequest {
         public String projectId;
         public String serieId;
-        public String description;
-        public Infos infos;
         public Sample sample = new Sample();
+    }
+
+    @VisibleForTesting
+    @SuppressWarnings("unused") // matches the structure act-d requires, not all params are used
+    public static final class SerieRequest {
+        public String projectId;
+        public String serieId;
         public Analyse analyse = new Analyse();
+        public boolean override = true;
     }
 }

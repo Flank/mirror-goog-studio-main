@@ -181,7 +181,7 @@ public class SyncOptions {
     }
 
     @NonNull
-    private static File validateOutputFile(@NonNull File output) {
+    public static File validateOutputFile(@NonNull File output) {
         if (isStdOut(output) || isStdErr(output)) {
             return output;
         }
@@ -208,7 +208,7 @@ public class SyncOptions {
         return output;
     }
 
-    private static File createOutputPath(
+    public static File createOutputPath(
             @Nullable Project project,
             @Nullable String variantName,
             @NonNull String extension,

@@ -257,7 +257,7 @@ public final class IncrementalFileMergerTransformUtils {
         for (Map.Entry<File, Status> changedFile : changedFiles.entrySet()) {
             RelativeFile rf = new RelativeFile(directoryInput.getFile(), changedFile.getKey());
             FileStatus status = mapStatus(changedFile.getValue());
-            if (status != null && !rf.getFile().isDirectory()) {
+            if (status != null && !(new File(rf.getBase(), rf.getRelativePath()).isDirectory())) {
                 builder.put(rf, status);
             }
         }
@@ -362,9 +362,6 @@ public final class IncrementalFileMergerTransformUtils {
      * stating that the invocation is an incremental one
      * @param contentMap if not {@code null}, receives a mapping from all generated inputs to
      * {@link QualifiedContent} they came from
-     *
-     * @return the inputs; all inputs are instances of
-     * {@link IncrementalFileMergerInputWithQualifiedContent}
      */
     @NonNull
     public static ImmutableList<IncrementalFileMergerInput> toInput(

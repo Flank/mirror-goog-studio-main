@@ -18,8 +18,8 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.builder.errors.DeprecationReporter;
-import com.android.builder.errors.DeprecationReporter.DeprecationTarget;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -74,14 +74,14 @@ public class JackOptions implements CoreJackOptions {
     @Nullable
     public Boolean isEnabled() {
         deprecationReporter.reportObsoleteUsage(
-                "JackOptions.enabled", DEPRECATION_URL, DeprecationTarget.VERSION_4_0);
+                "JackOptions.enabled", DEPRECATION_URL, DeprecationTarget.EOY2018);
         // Jack toolchain has been deprecated
         return null;
     }
 
     public void setEnabled(@Nullable Boolean enabled) {
         deprecationReporter.reportObsoleteUsage(
-                "JackOptions.enabled", DEPRECATION_URL, DeprecationTarget.VERSION_4_0);
+                "JackOptions.enabled", DEPRECATION_URL, DeprecationTarget.EOY2018);
     }
 
     /** {@inheritDoc} */
@@ -90,13 +90,13 @@ public class JackOptions implements CoreJackOptions {
     @Nullable
     public Boolean isJackInProcess() {
         deprecationReporter.reportObsoleteUsage(
-                "JackOptions.jackInProcess", DEPRECATION_URL, DeprecationTarget.VERSION_4_0);
+                "JackOptions.jackInProcess", DEPRECATION_URL, DeprecationTarget.EOY2018);
         return isJackInProcessFlag;
     }
 
     public void setJackInProcess(@Nullable Boolean jackInProcess) {
         deprecationReporter.reportObsoleteUsage(
-                "JackOptions.jackInProcess", DEPRECATION_URL, DeprecationTarget.VERSION_4_0);
+                "JackOptions.jackInProcess", DEPRECATION_URL, DeprecationTarget.EOY2018);
         isJackInProcessFlag = jackInProcess;
     }
 

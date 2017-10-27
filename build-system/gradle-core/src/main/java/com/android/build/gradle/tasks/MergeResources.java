@@ -42,10 +42,11 @@ import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
 import com.android.ide.common.blame.ParsingProcessOutputHandler;
+import com.android.ide.common.blame.parser.PatternAwareOutputParser;
 import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser;
 import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
-import com.android.ide.common.process.LoggedProcessOutputHandler;
+import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.res2.FileValidity;
 import com.android.ide.common.res2.GeneratedResourceSet;
@@ -187,21 +188,30 @@ public class MergeResources extends IncrementalTask {
         return AaptGradleFactory.make(
                 aaptGeneration,
                 builder,
-                blameLog != null
-                        ? new ParsingProcessOutputHandler(
-                                new ToolOutputParser(
-                                        aaptGeneration == AaptGeneration.AAPT_V1
-                                                ? new AaptOutputParser()
-                                                : new Aapt2OutputParser(),
-                                        builder.getLogger()),
-                                new MergingLogRewriter(
-                                        blameLog::find, builder.getMessageReceiver()))
-                        : new LoggedProcessOutputHandler(
-                                new AaptGradleFactory.FilteringLogger(builder.getLogger())),
+                createProcessOutputHandler(aaptGeneration, builder, blameLog),
                 fileCache,
                 crunchPng,
                 intermediateDir,
                 scope.getGlobalScope().getExtension().getAaptOptions().getCruncherProcesses());
+    }
+
+    @Nullable
+    private static ProcessOutputHandler createProcessOutputHandler(
+            @NonNull AaptGeneration aaptGeneration,
+            @NonNull AndroidBuilder builder,
+            @Nullable MergingLog blameLog) {
+        if (blameLog == null) {
+            return null;
+        }
+
+        PatternAwareOutputParser parsers =
+                        aaptGeneration == AaptGeneration.AAPT_V1
+                                ? new AaptOutputParser()
+                                : new Aapt2OutputParser();
+
+        return new ParsingProcessOutputHandler(
+                new ToolOutputParser(parsers, builder.getLogger()),
+                new MergingLogRewriter(blameLog::find, builder.getMessageReceiver()));
     }
 
     @Input

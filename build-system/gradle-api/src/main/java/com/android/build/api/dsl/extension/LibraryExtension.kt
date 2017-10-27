@@ -16,7 +16,10 @@
 
 package com.android.build.api.dsl.extension
 
+import org.gradle.api.Incubating
+
 /** 'android' extension for 'com.android.library' projects.  */
+@Incubating
 interface LibraryExtension : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, AndroidExtension {
 
     /** Name of the variant to publish.  */

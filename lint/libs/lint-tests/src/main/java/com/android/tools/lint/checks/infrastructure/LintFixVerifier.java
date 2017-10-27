@@ -51,6 +51,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
+import kotlin.text.StringsKt;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -121,7 +122,8 @@ public class LintFixVerifier {
     public LintFixVerifier expectFixDiffs(@NonNull String expected) {
         StringBuilder diff = new StringBuilder(100);
         checkFixes(null, null, diff);
-        assertEquals(expected, diff.toString().replace("\r\n", "\n"));
+        assertEquals(StringsKt.trimIndent(expected),
+                StringsKt.trimIndent(diff.toString().replace("\r\n", "\n")));
         return this;
     }
 
@@ -185,7 +187,8 @@ public class LintFixVerifier {
                 }
 
                 if (expectedFile != null) {
-                    assertEquals(expectedFile.getContents(), after);
+                    assertEquals(StringsKt.trimIndent(expectedFile.getContents()),
+                            StringsKt.trimIndent(after));
                 }
 
                 if (diffs != null) {

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.api.dsl.options
 
 import com.android.build.api.dsl.options.SigningConfig
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import java.io.File
 
@@ -86,7 +86,7 @@ class SigningConfigImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "SigningConfig.v1SigningEnabled",
                 "SigningConfig.isV1SigningEnabled()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return v1SigningEnabled
     }
 
@@ -94,7 +94,7 @@ class SigningConfigImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "SigningConfig.v2SigningEnabled",
                 "SigningConfig.isV2SigningEnabled()",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return v2SigningEnabled
     }
 

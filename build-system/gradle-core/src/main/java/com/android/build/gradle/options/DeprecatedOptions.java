@@ -40,6 +40,13 @@ public enum DeprecatedOptions implements Option<String> {
             "android.enableImprovedDependenciesResolution",
             "The android.enableImprovedDependenciesResolution property does not have any effect. "
                     + "Dependency resolution is only performed during task execution phase."),
+
+    ENABLE_NEW_RESOURCE_PROCESSING(
+            "android.enableNewResourceProcessing",
+            "New resource processing is now always enabled."),
+    DISABLE_RES_MERGE_IN_LIBRARY(
+            "android.disable.res.merge",
+            "Resources from dependencies are never merged in libraries."),
     ;
 
     @NonNull private final String propertyName;

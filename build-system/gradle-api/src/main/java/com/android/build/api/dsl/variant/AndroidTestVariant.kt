@@ -16,6 +16,9 @@
 
 package com.android.build.api.dsl.variant
 
+import org.gradle.api.Incubating
+
+@Incubating
 interface AndroidTestVariant: Variant {
 
     val testedVariant: Variant

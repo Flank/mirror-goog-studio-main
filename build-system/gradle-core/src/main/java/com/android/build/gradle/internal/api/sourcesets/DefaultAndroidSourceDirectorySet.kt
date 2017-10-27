@@ -27,21 +27,19 @@ import groovy.lang.Closure
 import java.io.File
 import java.util.ArrayList
 import java.util.Collections
-import org.gradle.api.Project
 import org.gradle.api.file.ConfigurableFileTree
 import org.gradle.api.file.FileTree
 import org.gradle.api.file.FileTreeElement
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.api.tasks.util.PatternSet
-import java.util.stream.Collectors
 
 /**
  * Default implementation of the AndroidSourceDirectorySet.
  */
 class DefaultAndroidSourceDirectorySet(
         private val name: String,
-        private val project: Project,
+        private val filesProvider: FilesProvider,
         issueReporter: EvalIssueReporter) : SealableObject(issueReporter), AndroidSourceDirectorySet {
     private val source = Lists.newArrayList<Any>()
     private val _filter = PatternSet()
@@ -76,16 +74,16 @@ class DefaultAndroidSourceDirectorySet(
             var src: FileTree? = null
             val sources = srcDirs
             if (!sources.isEmpty()) {
-                src = project.files(ArrayList<Any>(sources)).asFileTree.matching(filter)
+                src = filesProvider.files(ArrayList<Any>(sources)).asFileTree.matching(filter)
             }
-            return if (src == null) project.files().asFileTree else src
+            return if (src == null) filesProvider.files().asFileTree else src
         }
 
     override val sourceDirectoryTrees: List<ConfigurableFileTree>
         get() = source
                 .stream()
                 .map { sourceDir ->
-                    project.fileTree(
+                    filesProvider.fileTree(
                             ImmutableMap.of(
                                     "dir", sourceDir,
                                     "includes", includes,
@@ -94,7 +92,7 @@ class DefaultAndroidSourceDirectorySet(
                 .collect(ImmutableList.toImmutableList())
 
     override val srcDirs: Set<File>
-        get() = ImmutableSet.copyOf(project.files(*source.toTypedArray()).files)
+        get() = ImmutableSet.copyOf(filesProvider.files(*source.toTypedArray()).files)
 
     override val filter: PatternFilterable
         get() = _filter

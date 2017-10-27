@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.util;
 
 import com.android.annotations.NonNull;
@@ -39,6 +38,8 @@ import java.util.List;
  * {@link Graphics2D} canvases.
  */
 public class AssetUtil {
+    public static final Effect[] NO_EFFECTS = {};
+
     /**
      * Scales the given rectangle by the given scale factor.
      *
@@ -55,7 +56,7 @@ public class AssetUtil {
     }
 
     /**
-     * Return the scaling factor to apply to the <code>source</code> rectangle so that its width or
+     * Returns the scaling factor to apply to the <code>source</code> rectangle so that its width or
      * height is equal to the width or height of <code>destination</code> rectangle, while remaining
      * contained within <code>destination</code>.
      */
@@ -494,7 +495,7 @@ public class AssetUtil {
      *
      * @param g The destination canvas.
      * @param source The source image.
-     * @param dstRect The destination rectangle in the destination canvas into which to draw the
+     * @param imageRect The destination rectangle in the destination canvas into which to draw the
      *     image.
      */
     public static void drawCentered(Graphics2D g, BufferedImage source, Rectangle imageRect) {

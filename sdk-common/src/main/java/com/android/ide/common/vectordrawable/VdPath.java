@@ -66,6 +66,7 @@ class VdPath extends VdElement {
     private static final String LINEJOIN_MITER = "miter";
     private static final String LINEJOIN_ROUND = "round";
     private static final String LINEJOIN_BEVEL = "bevel";
+    public static final float EPSILON = 1e-6f;
 
 
     private VdGradient fillGradient = null;
@@ -697,10 +698,6 @@ class VdPath extends VdElement {
 
         private final ArrayList<GradientStop> mGradientStops = new ArrayList<>();
 
-        private float[] mFractions = null;
-        private Color[] mGradientColors = null;
-        private float[] mOpacities = null;
-
         VdGradient() {}
 
         private void setGradientValue(String name, String value) {
@@ -739,11 +736,10 @@ class VdPath extends VdElement {
             if (mGradientStops.isEmpty()) {
                 return;
             }
-            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            mFractions = new float[mGradientStops.size()];
-            mGradientColors = new Color[mGradientStops.size()];
-            mOpacities = new float[mGradientStops.size()];
+            float[] mFractions = new float[mGradientStops.size()];
+            Color[] mGradientColors = new Color[mGradientStops.size()];
+            float[] mOpacities = new float[mGradientStops.size()];
 
             for (int j = 0; j < mGradientStops.size(); j++) {
                 GradientStop stop = mGradientStops.get(j);
@@ -756,17 +752,28 @@ class VdPath extends VdElement {
                 mGradientColors[j] = color;
             }
 
-            // Gradient stop fractions must be strictly increasing in Java Swing. Decrement the
-            // first of two equal fraction floats by a small amount to get the effect of two
-            // overlapping stops.
+            // Gradient stop fractions must be strictly increasing in Java Swing. Increment the
+            // second of two equal fraction floats by a small amount to get the effect of two
+            // overlapping stops. When the fraction is the 1.0, then decrement accordingly.
             // See LinearGradientPaint constructor:
             // https://docs.oracle.com/javase/7/docs/api/java/awt/LinearGradientPaint.html
             for (int i = 0; i < mGradientStops.size() - 1; i++) {
-                if (mFractions[i] == mFractions[i + 1]) {
-                    mFractions[i] -= 0.0000001;
+                if (mFractions[i] >= mFractions[i + 1]) {
+                    if (mFractions[i] + EPSILON <= 1.0f) {
+                        mFractions[i + 1] = mFractions[i] + EPSILON;
+                    }
                 }
             }
 
+            for (int i = mGradientStops.size() - 2; i >= 0; i--) {
+                if (mFractions[i] >= mFractions[i + 1] && mFractions[i] >= 1.0f) {
+                    mFractions[i] = mFractions[i + 1] - EPSILON;
+                } else {
+                    break;
+                }
+            }
+
+            g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             // Create stroke in case the gradient applies to a stroke.
             BasicStroke stroke =
                     new BasicStroke(

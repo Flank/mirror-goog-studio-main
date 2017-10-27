@@ -43,6 +43,7 @@ cc_binary(
         "//tools/base/profiler/native/perfd/io:profiler_io",
         "//tools/base/profiler/native/perfd/memory:profiler_memory",
         "//tools/base/profiler/native/perfd/network:profiler_network",
+        "//tools/base/profiler/native/perfd/sessions:profiler_sessions",
         "//tools/base/profiler/proto:profiler_cc_proto",
     ],
 )

@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Detector
-import kotlin.reflect.jvm.internal.impl.util.Check
 
 class CheckResultDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = CheckResultDetector()

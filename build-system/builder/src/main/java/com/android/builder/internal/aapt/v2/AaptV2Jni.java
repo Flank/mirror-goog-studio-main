@@ -18,6 +18,7 @@ package com.android.builder.internal.aapt.v2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.builder.internal.aapt.AaptException;
 import com.android.builder.internal.aapt.AaptPackageConfig;
 import com.android.builder.internal.aapt.AbstractAapt;
@@ -31,6 +32,7 @@ import com.android.ide.common.res2.CompileResourceRequest;
 import com.android.tools.aapt2.Aapt2Jni;
 import com.android.tools.aapt2.Aapt2RenamingConventions;
 import com.android.tools.aapt2.Aapt2Result;
+import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
@@ -131,21 +133,33 @@ public class AaptV2Jni extends AbstractAapt {
                 Aapt2RenamingConventions.compilationRename(request.getInput()));
     }
 
-    private static AaptException buildException(
-            String action, List<String> args, Aapt2Result aapt2Result) {
+    @VisibleForTesting
+    AaptException buildException(String action, List<String> args, Aapt2Result aapt2Result) {
         StringBuilder builder = new StringBuilder();
-        builder.append("AAPT2 ")
-                .append(action)
-                .append(" failed:\naapt2 ")
-                .append(action)
-                .append(" ")
-                .append(Joiner.on(' ').join(args))
-                .append("\n");
+
+        builder.append("AAPT2 ").append(action).append(" failed. ");
+
         if (aapt2Result.getMessages().isEmpty()) {
-            builder.append("No issues were reported");
+            builder.append("No issues were reported. ");
         } else {
-            builder.append("Issues:\n - ")
-                    .append(Joiner.on("\n - ").join(aapt2Result.getMessages()));
+            builder.append("Check logs for error details. ");
+        }
+
+        try {
+            File aaptCommand = new File(intermediateDir, "aaptCommand.txt");
+            FileUtils.deleteIfExists(aaptCommand);
+            FileUtils.createFile(aaptCommand, Joiner.on(' ').join(args));
+            builder.append("Argument list written to: ")
+                    .append(aaptCommand.getAbsolutePath())
+                    .append('\n');
+        } catch (IOException e) {
+            // If there was a problem writing to a file just output the command as a part of the
+            // error.
+            builder.append("Command:\naapt2 ")
+                    .append(action)
+                    .append(' ')
+                    .append(Joiner.on(' ').join(args))
+                    .append('\n');
         }
         return new AaptException(builder.toString());
     }

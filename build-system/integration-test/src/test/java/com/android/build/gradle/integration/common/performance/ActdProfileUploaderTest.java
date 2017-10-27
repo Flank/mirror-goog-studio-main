@@ -37,6 +37,7 @@ import com.google.wireless.android.sdk.stats.GradleTaskExecution;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -48,6 +49,7 @@ public class ActdProfileUploaderTest {
     private final ActdProfileUploader.Infos infos = new ActdProfileUploader.Infos();
     private final int buildId = 1234;
     private final File repo = TestUtils.getWorkspaceFile("tools/base");
+    private final String hostname = "me.here.corp.google.com";
     private final String actdBaseUrl = "http://example.com";
     private final String actdProjectId = "test";
     private final String actdBuildUrl = "http://example.com";
@@ -59,7 +61,13 @@ public class ActdProfileUploaderTest {
     public void setUp() {
         uploader =
                 ActdProfileUploader.create(
-                        buildId, repo, actdBaseUrl, actdProjectId, actdBuildUrl, actdCommitUrl);
+                        buildId,
+                        repo,
+                        hostname,
+                        actdBaseUrl,
+                        actdProjectId,
+                        actdBuildUrl,
+                        actdCommitUrl);
     }
 
     /**
@@ -91,6 +99,12 @@ public class ActdProfileUploaderTest {
         if (value == Long.MIN_VALUE) {
             value = Long.MAX_VALUE;
         }
+
+        // to make sure samples aren't filtered out, we add the threshold if it's below it
+        if (value < ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD) {
+            value += ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD;
+        }
+
         return value;
     }
 
@@ -133,7 +147,7 @@ public class ActdProfileUploaderTest {
     }
 
     private static List<GradleBenchmarkResult> randomBenchmarkResults() {
-        int count = new Random().nextInt(10);
+        int count = new Random().nextInt(10) + 5; // must always be greater than 0
         List<GradleBenchmarkResult> results = Lists.newArrayListWithCapacity(count);
         for (int i = 0; i < count; i++) {
             results.add(randomBenchmarkResult());
@@ -184,11 +198,10 @@ public class ActdProfileUploaderTest {
         assertThat(gbr.getProfile().getSpanList()).isNotEmpty();
 
         for (GradleBuildProfileSpan span : gbr.getProfile().getSpanList()) {
-            assertThat(ActdProfileUploader.seriesId(gbr, span)).isNotEmpty();
+            assertThat(uploader.seriesId(gbr, span)).isNotEmpty();
 
             // Make sure that we get the same result for the same object passed in multiple times.
-            assertThat(ActdProfileUploader.seriesId(gbr, span))
-                    .isEqualTo(ActdProfileUploader.seriesId(gbr, span));
+            assertThat(uploader.seriesId(gbr, span)).isEqualTo(uploader.seriesId(gbr, span));
         }
     }
 
@@ -200,7 +213,7 @@ public class ActdProfileUploaderTest {
         assertThat(gbr.getProfile().getSpanList()).isNotEmpty();
 
         for (GradleBuildProfileSpan span : gbr.getProfile().getSpanList()) {
-            assertThat(ActdProfileUploader.description(gbr, span)).isNotEmpty();
+            assertThat(ActdProfileUploader.description(gbr, span)).isNotNull();
         }
     }
 
@@ -217,5 +230,11 @@ public class ActdProfileUploaderTest {
             assertThat(req.projectId).isNotEmpty();
             assertThat(req.sample.buildId).isGreaterThan(0L);
         }
+    }
+
+    @Test
+    public void sampleRequestsEmpty() throws IOException {
+        Collection<SampleRequest> reqs = uploader.sampleRequests(Arrays.asList());
+        assertThat(reqs).isEmpty();
     }
 }

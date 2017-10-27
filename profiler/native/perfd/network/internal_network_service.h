@@ -56,6 +56,8 @@ class InternalNetworkServiceImpl final
                            proto::EmptyNetworkReply *reply) override;
 
  private:
+  const std::string GetPayloadFileName(int64_t conn_id, bool isRequestPayload);
+
   FileCache &file_cache_;
   NetworkCache &network_cache_;
 };

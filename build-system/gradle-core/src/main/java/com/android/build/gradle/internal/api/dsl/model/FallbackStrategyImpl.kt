@@ -19,7 +19,7 @@ package com.android.build.gradle.internal.api.dsl.model
 import com.android.build.api.dsl.model.FallbackStrategy
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 
 class FallbackStrategyImpl(
@@ -39,7 +39,7 @@ class FallbackStrategyImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "BuildType.matchingFallbacks",
                 "BuildType.setMatchingFallbacks",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         _matchingFallbacks.reset(fallbacks.toMutableList())
     }
 
@@ -53,7 +53,7 @@ class FallbackStrategyImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "BuildType.matchingFallbacks",
                 "BuildType.setMatchingFallbacks",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         _matchingFallbacks.reset(mutableListOf(fallback))
     }
 

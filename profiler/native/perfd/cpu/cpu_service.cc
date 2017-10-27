@@ -166,6 +166,9 @@ grpc::Status CpuServiceImpl::StartProfilingApp(
   if (request->profiler_type() == CpuProfilerType::SIMPLEPERF) {
     success = simplerperf_manager_.StartProfiling(
         app_pkg_name, request->sampling_interval_us(), &trace_path_, &error);
+  } else if (request->profiler_type() == CpuProfilerType::ATRACE) {
+    success = atrace_manager_.StartProfiling(
+        app_pkg_name, request->sampling_interval_us(), &trace_path_, &error);
   } else {
     // TODO: Move the activity manager to the daemon.
     // It should be shared with everything in perfd.
@@ -199,6 +202,8 @@ grpc::Status CpuServiceImpl::StopProfilingApp(
   bool success = false;
   if (request->profiler_type() == CpuProfilerType::SIMPLEPERF) {
     success = simplerperf_manager_.StopProfiling(app_pkg_name, &error);
+  } else if (request->profiler_type() == CpuProfilerType::ATRACE) {
+    success = atrace_manager_.StopProfiling(app_pkg_name, &error);
   } else {  // Profiler is ART
     ActivityManager* manager = ActivityManager::Instance();
     success = manager->StopProfiling(app_pkg_name, &error);

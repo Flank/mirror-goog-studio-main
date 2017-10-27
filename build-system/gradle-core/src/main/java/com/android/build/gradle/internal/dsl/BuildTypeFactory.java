@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.builder.errors.DeprecationReporter;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
 import com.android.builder.errors.EvalIssueReporter;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;

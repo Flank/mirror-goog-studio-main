@@ -74,10 +74,10 @@ internal class DirectoryHandler(private val provider: FontProvider) : DefaultHan
         if (intAsString == null) {
             return defaultValue
         }
-        try {
-            return Math.round(java.lang.Float.parseFloat(intAsString))
+        return try {
+            Math.round(java.lang.Float.parseFloat(intAsString))
         } catch (ex: NumberFormatException) {
-            return defaultValue
+            defaultValue
         }
     }
 

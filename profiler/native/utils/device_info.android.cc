@@ -23,6 +23,7 @@ using std::string;
 namespace {
 
 const char* const kGetpropCmd = "/system/bin/getprop";
+const char* const kSerial = "ro.serialno";
 const char* const kCodeName = "ro.build.version.codename";
 const char* const kRelease = "ro.build.version.release";
 const char* const kSdk = "ro.build.version.sdk";
@@ -35,6 +36,7 @@ namespace profiler {
 
 DeviceInfo::DeviceInfo()
     : getprop_(kGetpropCmd),
+      serial_(GetSystemProperty(kSerial)),
       code_name_(GetSystemProperty(kCodeName)),
       release_(GetSystemProperty(kRelease)),
       sdk_(atoi(GetSystemProperty(kSdk).c_str())),

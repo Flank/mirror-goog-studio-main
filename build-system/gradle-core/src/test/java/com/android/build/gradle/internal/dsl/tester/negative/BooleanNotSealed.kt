@@ -29,6 +29,6 @@ class BooleanNotSealedImpl(issueReporter: EvalIssueReporter)
 
     override var booleanProperty: Boolean = true
         set(value) {
-            field = value;
+            field = value
         }
 }

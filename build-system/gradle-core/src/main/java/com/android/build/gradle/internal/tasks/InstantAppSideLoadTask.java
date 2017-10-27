@@ -38,6 +38,7 @@ import com.android.instantapp.run.RunListener;
 import com.android.sdklib.AndroidVersion;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -70,7 +71,7 @@ public class InstantAppSideLoadTask extends AndroidBuilderTask {
     }
 
     @TaskAction
-    public void sideLoad() throws DeviceException, InstantAppRunException, FileNotFoundException {
+    public void sideLoad() throws DeviceException, InstantAppRunException, IOException {
         if (adbExe.get() == null) {
             throw new GradleException("No adb file found.");
         }

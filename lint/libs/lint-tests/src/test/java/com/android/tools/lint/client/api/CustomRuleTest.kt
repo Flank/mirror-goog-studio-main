@@ -20,18 +20,15 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.classpath
 import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
-import com.android.tools.lint.checks.infrastructure.TestFiles.toBase64gzip
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Project
-import org.junit.Assert
 import org.junit.ClassRule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
-import java.nio.file.Files
 
 class CustomRuleTest {
 

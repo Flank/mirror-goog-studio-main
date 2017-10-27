@@ -18,6 +18,7 @@ package com.android.build.gradle.internal.variant2
 
 import com.android.build.api.dsl.variant.VariantFilter
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
+import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
 
 class VariantFilterImpl(
@@ -55,15 +56,12 @@ class VariantFilterImpl(
         }
     }
 
+    fun ignores(type: VariantType) = when(type) {
+        VariantType.UNIT_TEST -> _ignoresUnitTest
+        VariantType.ANDROID_TEST -> _ignoresAndroidTest
+        else -> _ignoresProd
+    }
+
     val ignoresAll: Boolean
-        get() = ignoresProd && ignoresAndroidTest && ignoresUnitTest
-
-    val ignoresProd: Boolean
-        get() = _ignoresProd
-
-    val ignoresAndroidTest: Boolean
-        get() = _ignoresAndroidTest
-
-    val ignoresUnitTest: Boolean
-        get() = _ignoresUnitTest
+        get() = _ignoresProd && _ignoresAndroidTest && _ignoresUnitTest
 }

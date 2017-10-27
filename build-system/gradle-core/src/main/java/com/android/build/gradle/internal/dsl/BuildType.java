@@ -20,11 +20,11 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.api.JavaCompileOptions;
+import com.android.build.gradle.internal.errors.DeprecationReporter;
+import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
-import com.android.builder.errors.DeprecationReporter;
-import com.android.builder.errors.DeprecationReporter.DeprecationTarget;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.internal.ClassFieldImpl;
 import com.android.builder.model.BaseConfig;
@@ -541,7 +541,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Nullable
     public Boolean getUseJack() {
         deprecationReporter.reportObsoleteUsage(
-                "BuildType.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.VERSION_4_0);
+                "BuildType.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.EOY2018);
         return null;
     }
 
@@ -553,7 +553,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @Deprecated
     public void setUseJack(@Nullable Boolean useJack) {
         deprecationReporter.reportObsoleteUsage(
-                "BuildType.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.VERSION_4_0);
+                "BuildType.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.EOY2018);
     }
 
     /**

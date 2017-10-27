@@ -26,13 +26,13 @@ abstract class LintExecutionRequest {
     abstract val project: Project
     abstract val gradlePluginVersion: String
 
-    abstract val buildTools: BuildToolInfo
+    abstract val buildTools: BuildToolInfo?
 
     abstract val lintOptions: LintOptions?
 
     abstract val sdkHome: File?
 
-    abstract val toolingRegistry: ToolingModelBuilderRegistry
+    abstract val toolingRegistry: ToolingModelBuilderRegistry?
 
     open val isFatalOnly: Boolean
         get() = false

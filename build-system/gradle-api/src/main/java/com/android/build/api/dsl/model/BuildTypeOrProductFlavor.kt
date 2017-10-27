@@ -16,7 +16,10 @@
 
 package com.android.build.api.dsl.model
 
+import org.gradle.api.Incubating
+
 /** Properties common to Build Type and Product flavor.  */
+@Incubating
 interface BuildTypeOrProductFlavor {
 
     /**

@@ -28,7 +28,7 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true),
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
     ENABLE_DEX_ARCHIVE("android.useDexArchive", true),
-    ENABLE_NEW_RESOURCE_PROCESSING("android.enableNewResourceProcessing", true),
+
     ENABLE_IMPROVED_DEPENDENCY_RESOLUTION("android.enableImprovedDependenciesResolution", true),
     ENABLE_INTERMEDIATE_ARTIFACTS_CACHE("android.enableIntermediateArtifactsCache", true),
     ENABLE_EXTRACT_ANNOTATIONS("android.enableExtractAnnotations", true),
@@ -38,7 +38,7 @@ public enum BooleanOption implements Option<Boolean> {
     OVERRIDE_PATH_CHECK_PROPERTY_OLD("com.android.build.gradle.overridePathCheck"),
     ENABLE_DESUGAR("android.enableDesugar", true),
     ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", false),
-    DISABLE_RES_MERGE_IN_LIBRARY("android.disable.res.merge", true),
+
     ENABLE_D8("android.enableD8", true),
 
     ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk"),
@@ -49,7 +49,7 @@ public enum BooleanOption implements Option<Boolean> {
     BUILD_ONLY_TARGET_ABI("android.buildOnlyTargetAbi", true),
     KEEP_TIMESTAMPS_IN_APK("android.keepTimestampsInApk"),
 
-    ENABLE_NEW_DSL_AND_API("android.enable.new.dsl"),
+    ENABLE_NEW_DSL_AND_API("android.enableNewDsl"),
 
     IDE_INVOKED_FROM_IDE(AndroidProject.PROPERTY_INVOKED_FROM_IDE),
     IDE_BUILD_MODEL_ONLY(AndroidProject.PROPERTY_BUILD_MODEL_ONLY),

@@ -61,7 +61,7 @@ import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class LintBaseTask extends AndroidBuilderTask {
-    public static final String LINT_CLASS_PATH = "_lintClassPath";
+    public static final String LINT_CLASS_PATH = "lintClassPath";
 
     protected static final Logger LOG = Logging.getLogger(LintBaseTask.class);
 

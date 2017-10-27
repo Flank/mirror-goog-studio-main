@@ -22,6 +22,7 @@ import android.tools.SimpleWebServer.QueryParam;
 import android.tools.SimpleWebServer.RequestHandler;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.List;
@@ -73,7 +74,9 @@ public final class HttpUrlActivity extends Activity {
             URLConnection connection = url.openConnection();
             connection.setDoOutput(true);
             String requestBody = "TestRequestBody";
-            connection.getOutputStream().write(requestBody.getBytes());
+            OutputStream outputStream = connection.getOutputStream();
+            outputStream.write(requestBody.getBytes());
+            outputStream.close();
             inputStream = connection.getInputStream();
         } catch (IOException e) {
             System.out.println("Error in connection " + e.toString());

@@ -18,7 +18,9 @@ package com.android.build.api.dsl.extension
 
 import com.android.build.api.dsl.variant.Variant
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 
+@Incubating
 interface VariantCallbackHandler<T: Variant> {
 
     fun all(action: Action<T>)

@@ -52,7 +52,7 @@ class ProcessManifestTest {
             task.manifestOutputFile
             Assert.fail("failed to raise backward incompatible exception")
         } catch(e: RuntimeException) {
-            Truth.assertThat(e.message).contains("gradle-plugin-3-0-0-migration.html");
+            Truth.assertThat(e.message).contains("gradle-plugin-3-0-0-migration.html")
         }
     }
 }

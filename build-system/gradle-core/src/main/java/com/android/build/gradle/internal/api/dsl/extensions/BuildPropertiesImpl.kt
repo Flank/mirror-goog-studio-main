@@ -32,9 +32,7 @@ class BuildPropertiesImpl(
         issueReporter: EvalIssueReporter):
         SealableObject(issueReporter), BuildProperties {
 
-    override val sourceSets: SealableNamedDomainObjectContainer<AndroidSourceSet, DefaultAndroidSourceSet> =
-            SealableNamedDomainObjectContainer(
-                    dslModelData.sourceSets, DefaultAndroidSourceSet::class.java, issueReporter)
+    override val sourceSets = dslModelData.sourceSets
 
     override fun sourceSets(action: Action<NamedDomainObjectContainer<AndroidSourceSet>>) {
         action.execute(sourceSets)
@@ -78,12 +76,6 @@ class BuildPropertiesImpl(
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
     override val transformsDependencies: List<List<Any>>
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
-
-    override fun seal() {
-        super.seal()
-
-        sourceSets.seal()
-    }
 
     // DEPRECATED
 

@@ -22,8 +22,10 @@ import com.android.build.api.dsl.options.DexOptions
 import com.android.build.api.dsl.options.LintOptions
 import com.android.builder.model.DataBindingOptions
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 
 /** properties common to the extension and the generated variants */
+@Incubating
 interface VariantOrExtensionProperties {
     fun aaptOptions(action: Action<AaptOptions>)
 

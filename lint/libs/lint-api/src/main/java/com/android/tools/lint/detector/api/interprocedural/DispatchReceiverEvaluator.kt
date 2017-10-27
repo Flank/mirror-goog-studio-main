@@ -216,7 +216,7 @@ class SimpleExpressionDispatchReceiverEvaluator(
                     .unzip()
             val cartesianProd = Lists.cartesianProduct(nonEmptyDispatchReceivers)
             val paramContexts = cartesianProd
-                    .take(graphExpansionLimit) // Cap combinatorial explosions.
+                    .take(GRAPH_EXPANSION_LIMIT) // Cap combinatorial explosions.
                     .map { receiverTuple ->
                         val zipped = capturesWithReceivers.zip(receiverTuple)
                         ParamContext(zipped, implicitThis = null)

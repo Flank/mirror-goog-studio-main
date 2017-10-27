@@ -600,6 +600,36 @@ public class LintFix {
                 }
             }
 
+            // Auto boxing?
+            Class<?> wrapperClass = getWrapperClass(key);
+            if (wrapperClass != null) {
+                //noinspection unchecked
+                return (T) map.get(wrapperClass);
+            }
+
+            return null;
+        }
+
+        @Nullable
+        private static Class<?> getWrapperClass(@NonNull Class<?> primitiveClass) {
+            if (primitiveClass == Integer.TYPE) {
+                return Integer.class;
+            } else if (primitiveClass == Long.TYPE) {
+                return Long.class;
+            } else if (primitiveClass == Boolean.TYPE) {
+                return Boolean.class;
+            } else if (primitiveClass == Float.TYPE) {
+                return Float.class;
+            } else if (primitiveClass == Double.TYPE) {
+                return Double.class;
+            } else if (primitiveClass == Short.TYPE) {
+                return Short.class;
+            } else if (primitiveClass == Character.TYPE) {
+                return Character.class;
+            } else if (primitiveClass == Byte.TYPE) {
+                return Byte.class;
+            }
+
             return null;
         }
 

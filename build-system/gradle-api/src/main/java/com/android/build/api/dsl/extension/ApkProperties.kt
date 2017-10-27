@@ -19,8 +19,10 @@ package com.android.build.api.dsl.extension
 import com.android.build.api.dsl.options.PackagingOptions
 import com.android.build.api.dsl.options.Splits
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 
 /** Partial extension properties for modules that generate APKs  */
+@Incubating
 interface ApkProperties {
 
     /** Packaging options.  */

@@ -24,44 +24,38 @@ import com.android.build.api.dsl.model.ProductFlavor
 import com.android.build.api.dsl.options.SigningConfig
 import com.android.build.api.dsl.variant.Variant
 import com.android.build.api.dsl.variant.VariantFilter
-import com.android.build.gradle.internal.api.dsl.model.BuildTypeImpl
-import com.android.build.gradle.internal.api.dsl.model.ProductFlavorImpl
-import com.android.build.gradle.internal.api.dsl.options.SigningConfigImpl
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
-import com.android.build.gradle.internal.api.dsl.sealing.SealableNamedDomainObjectContainer
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.variant2.DslModelData
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.variant2.VariantCallbackHolder
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
 
 class VariantAwarePropertiesImpl(
-            dslModelData: DslModelData,
+            private val dslModelData: DslModelData,
+            variantCallbackHolder: VariantCallbackHolder,
             private val deprecationReporter: DeprecationReporter,
             issueReporter: EvalIssueReporter)
         : SealableObject(issueReporter),
         VariantAwareProperties,
         DefaultConfig by dslModelData.defaultConfig {
 
-    override val productFlavors: SealableNamedDomainObjectContainer<ProductFlavor, ProductFlavorImpl> =
-            SealableNamedDomainObjectContainer(
-                    dslModelData.productFlavors, ProductFlavorImpl::class.java, issueReporter)
-    override val buildTypes: SealableNamedDomainObjectContainer<BuildType, BuildTypeImpl> =
-            SealableNamedDomainObjectContainer(
-                    dslModelData.buildTypes, BuildTypeImpl::class.java, issueReporter)
-    override val signingConfigs: SealableNamedDomainObjectContainer<SigningConfig, SigningConfigImpl> =
-            SealableNamedDomainObjectContainer(
-                    dslModelData.signingConfigs, SigningConfigImpl::class.java, issueReporter)
-
-    private val _defaultConfig = dslModelData.defaultConfig
+    override val productFlavors
+        get() = dslModelData.productFlavors
+    override val buildTypes
+        get() = dslModelData.buildTypes
+    override val signingConfigs
+        get() = dslModelData.signingConfigs
 
     private val _flavorDimensions: SealableList<String> = SealableList.new(issueReporter)
     private val _variantFilters: SealableList<Action<VariantFilter>> = SealableList.new(issueReporter)
     private val _preVariants: SealableList<Action<Void>> = SealableList.new(issueReporter)
     private val _postVariants: SealableList<Action<List<Variant>>> = SealableList.new(issueReporter)
-    private val _variants: VariantCallbackHandler<Variant> =
-            VariantCallbackHandlerShim(dslModelData.createVariantCallbackHandler())
+
+    override val variants: VariantCallbackHandler<Variant> =
+            variantCallbackHolder.createVariantCallbackHandler()
 
     override var variantFilters:MutableList<Action<VariantFilter>>
         get() = _variantFilters
@@ -99,9 +93,6 @@ class VariantAwarePropertiesImpl(
         }
     }
 
-    override val variants: VariantCallbackHandler<Variant>
-        get() = _variants
-
     override fun variantFilter(action: Action<VariantFilter>) {
         if (checkSeal()) {
             _variantFilters.add(action)
@@ -122,15 +113,10 @@ class VariantAwarePropertiesImpl(
 
     override fun seal() {
         super.seal()
-        _defaultConfig.seal()
         _flavorDimensions.seal()
         _preVariants.seal()
         _variantFilters.seal()
         _postVariants.seal()
-
-        productFlavors.seal()
-        buildTypes.seal()
-        signingConfigs.seal()
     }
 
     // DEPRECATED
@@ -141,14 +127,14 @@ class VariantAwarePropertiesImpl(
             deprecationReporter.reportDeprecatedUsage(
                     "android.flavorDimensions",
                     "android.flavorDimensionList",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             return flavorDimensions
         }
         set(value) {
             deprecationReporter.reportDeprecatedUsage(
                     "android.flavorDimensions",
                     "android.flavorDimensionList",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             flavorDimensions = value
         }
 
@@ -158,8 +144,8 @@ class VariantAwarePropertiesImpl(
             deprecationReporter.reportDeprecatedUsage(
                     "android",
                     "android.defaultConfig",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
-            return _defaultConfig
+                    DeprecationReporter.DeprecationTarget.EOY2018)
+            return this
         }
 
     @Suppress("OverridingDeprecatedMember")
@@ -167,7 +153,7 @@ class VariantAwarePropertiesImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "android",
                 "android.defaultConfig",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
-        action.execute(_defaultConfig)
+                DeprecationReporter.DeprecationTarget.EOY2018)
+        action.execute(this)
     }
 }

@@ -243,6 +243,7 @@ public class JarContentsTest {
                 "com/android/tools/r8/",
                 "com/android/tools/r8/annotations/",
                 "com/android/tools/r8/bisect/",
+                "com/android/tools/r8/benchmarks/",
                 "com/android/tools/r8/code/",
                 "com/android/tools/r8/com/",
                 "com/android/tools/r8/com/google/",
@@ -404,6 +405,7 @@ public class JarContentsTest {
                 "NOTICE",
                 "META-INF/MANIFEST.MF",
                 "META-INF/",
+                "r8-version.properties",
                 "win32/",
                 "win32/libaapt2_jni.dll",
                 "win32/libwinpthread-1.dll",
@@ -438,6 +440,7 @@ public class JarContentsTest {
                 "META-INF/gradle-plugins/com.android.feature.properties",
                 "META-INF/gradle-plugins/com.android.instantapp.properties",
                 "META-INF/gradle-plugins/com.android.library.properties",
+                "META-INF/gradle-plugins/com.android.lint.properties",
                 "META-INF/gradle-plugins/com.android.test.properties");
         expected.putAll(
                 "com/android/tools/build/apksig",
@@ -490,6 +493,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/cxx/json/",
                 "com/android/build/gradle/internal/dependency/",
                 "com/android/build/gradle/internal/dsl/",
+                "com/android/build/gradle/internal/errors/",
                 "com/android/build/gradle/internal/feature/",
                 "com/android/build/gradle/internal/ide/",
                 "com/android/build/gradle/internal/ide/level2/",
@@ -498,6 +502,7 @@ public class JarContentsTest {
                 "com/android/build/gradle/internal/ndk/",
                 "com/android/build/gradle/internal/packaging/",
                 "com/android/build/gradle/internal/pipeline/",
+                "com/android/build/gradle/internal/plugin/",
                 "com/android/build/gradle/internal/process/",
                 "com/android/build/gradle/internal/profile/",
                 "com/android/build/gradle/internal/publishing/",
@@ -1006,6 +1011,17 @@ public class JarContentsTest {
                 "NOTICE",
                 "META-INF/MANIFEST.MF",
                 "META-INF/");
+        expected.putAll(
+                "com/android/tools/lint/lint-kotlin",
+                "com/",
+                "com/android/",
+                "com/android/tools/",
+                "com/android/tools/lint/",
+                "com/android/tools/lint/kotlin/",
+                "NOTICE",
+                "META-INF/",
+                "META-INF/MANIFEST.MF"
+        );
         expected.putAll(
                 "com/android/tools/screenshot2",
                 "com/",

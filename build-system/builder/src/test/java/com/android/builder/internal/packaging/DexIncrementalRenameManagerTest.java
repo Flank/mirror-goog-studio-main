@@ -283,11 +283,11 @@ public class DexIncrementalRenameManagerTest {
 
         PackagedFileUpdate pfu = Iterables.getOnlyElement(mgr.update(makeNew("x/y/classes.dex")));
         assertEquals("classes.dex", pfu.getName());
-        assertEquals("y/classes.dex", pfu.getSource().getOsIndependentRelativePath());
+        assertEquals("y/classes.dex", pfu.getSource().getRelativePath());
 
         pfu = Iterables.getOnlyElement(mgr.update(makeNew("a/b/classes.dex")));
         assertEquals("classes2.dex", pfu.getName());
-        assertEquals("b/classes.dex", pfu.getSource().getOsIndependentRelativePath());
+        assertEquals("b/classes.dex", pfu.getSource().getRelativePath());
     }
 
     @Test
@@ -300,7 +300,7 @@ public class DexIncrementalRenameManagerTest {
                 updates.stream()
                         .filter(u -> u.getName().equals("classes.dex"))
                         .collect(Collectors.toList()));
-        assertEquals("classes.dex", cdex.getSource().getOsIndependentRelativePath());
+        assertEquals("classes.dex", cdex.getSource().getRelativePath());
     }
 
     @Test
@@ -325,10 +325,10 @@ public class DexIncrementalRenameManagerTest {
 
         assertEquals(FileStatus.CHANGED, pfu3_1.getStatus());
         assertEquals("classes.dex", pfu3_1.getName());
-        assertEquals("y/aaa.dex", pfu3_1.getSource().getOsIndependentRelativePath());
+        assertEquals("y/aaa.dex", pfu3_1.getSource().getRelativePath());
         assertEquals(FileStatus.REMOVED, pfu3_2.getStatus());
         assertEquals("classes2.dex", pfu3_2.getName());
-        assertEquals("y/aaa.dex", pfu3_2.getSource().getOsIndependentRelativePath());
+        assertEquals("y/aaa.dex", pfu3_2.getSource().getRelativePath());
 
         Set<PackagedFileUpdate> pfu4 = mgr.update(makeNew("x/y/z/classes.dex"));
         assertEquals(2, pfu4.size());
@@ -341,9 +341,9 @@ public class DexIncrementalRenameManagerTest {
 
         assertEquals(FileStatus.CHANGED, pfu4_1.getStatus());
         assertEquals("classes.dex", pfu4_1.getName());
-        assertEquals("y/z/classes.dex", pfu4_1.getSource().getOsIndependentRelativePath());
+        assertEquals("y/z/classes.dex", pfu4_1.getSource().getRelativePath());
         assertEquals(FileStatus.NEW, pfu4_2.getStatus());
         assertEquals("classes2.dex", pfu4_2.getName());
-        assertEquals("y/aaa.dex", pfu4_2.getSource().getOsIndependentRelativePath());
+        assertEquals("y/aaa.dex", pfu4_2.getSource().getRelativePath());
     }
 }

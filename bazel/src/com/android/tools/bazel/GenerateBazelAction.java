@@ -41,6 +41,7 @@ import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -53,7 +54,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.jps.model.JpsCompositeElement;
 import org.jetbrains.jps.model.JpsElementFactory;
 import org.jetbrains.jps.model.JpsElementReference;
-import org.jetbrains.jps.model.JpsModel;
 import org.jetbrains.jps.model.JpsProject;
 import org.jetbrains.jps.model.java.JavaResourceRootType;
 import org.jetbrains.jps.model.java.JavaSourceRootProperties;
@@ -63,6 +63,7 @@ import org.jetbrains.jps.model.java.JpsJavaDependencyScope;
 import org.jetbrains.jps.model.java.JpsJavaExtensionService;
 import org.jetbrains.jps.model.java.compiler.JpsCompilerExcludes;
 import org.jetbrains.jps.model.library.JpsLibrary;
+import org.jetbrains.jps.model.library.JpsLibraryRoot;
 import org.jetbrains.jps.model.library.JpsOrderRootType;
 import org.jetbrains.jps.model.module.JpsDependencyElement;
 import org.jetbrains.jps.model.module.JpsLibraryDependency;
@@ -71,15 +72,17 @@ import org.jetbrains.jps.model.module.JpsModuleDependency;
 import org.jetbrains.jps.model.module.JpsModuleSourceRoot;
 import org.jetbrains.jps.model.serialization.JpsModelSerializationDataService;
 import org.jetbrains.jps.model.serialization.JpsProjectLoader;
+import org.jetbrains.jps.util.JpsPathUtil;
 
 public class GenerateBazelAction {
 
     public void generate(Path workspace, PrintWriter progress, Configuration config)
             throws IOException {
         String projectPath = workspace.resolve("tools/idea").toString();
-
+        System.setProperty("idea.home.path", projectPath);
         HashMap<String, String> pathVariables = new HashMap<>();
         pathVariables.put("KOTLIN_BUNDLED", workspace.resolve("prebuilts/tools/common/kotlin-plugin-ij/Kotlin/kotlinc").toString());
+        pathVariables.put("MAVEN_REPOSITORY", workspace.resolve("prebuilts/tools/common/m2/repository").toString());
 
         JpsProject project = JpsElementFactory.getInstance().createModel().getProject();
         JpsProjectLoader.loadProject(project, pathVariables, projectPath);
@@ -90,7 +93,7 @@ public class GenerateBazelAction {
 
         JpsCompilerExcludes excludes = JpsJavaExtensionService.getInstance()
                 .getOrCreateCompilerConfiguration(project).getCompilerExcludes();
-        Set<File> excludedFiles = excludedFiles(excludes);
+        List<File> excludedFiles = excludedFiles(excludes);
 
         // Map from file path to the bazel rule that provides it. Usually java_imports.
         Map<String, BazelRule> jarRules = Maps.newHashMap();
@@ -193,6 +196,9 @@ public class GenerateBazelAction {
                     }
                     JpsLibrary library = libraryDependency.getLibrary();
                     List<File> files = library.getFiles(JpsOrderRootType.COMPILED);
+                    // Library files are sometimes returned in file system order. Which changes
+                    // across systems. Choose alphabetical always:
+                    Collections.sort(files);
                     for (File file : files) {
                         if (file.exists() &&
                                 Files.getFileExtension(file.getName()).equals("jar")) {
@@ -311,7 +317,7 @@ public class GenerateBazelAction {
      * the whole tree to find which files are excluded. In this case JPS and IJ code differ and both
      * parse the xml differently. For now we use reflection assuming the implementation class.
      */
-    private Set<File> excludedFiles(JpsCompilerExcludes excludes) {
+    private List<File> excludedFiles(JpsCompilerExcludes excludes) {
         Field myFiles = null;
         try {
             myFiles = excludes.getClass().getDeclaredField("myFiles");
@@ -323,7 +329,8 @@ public class GenerateBazelAction {
                     if (args.length == 1 && args[0].equals(File.class)) {
                         myFiles.setAccessible(true);
                         Object object = myFiles.get(excludes);
-                        return (Set<File>) object;
+                        Set<File> set = (Set<File>) object;
+                        return set.stream().sorted().collect(Collectors.toList());
                     }
                 }
 

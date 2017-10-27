@@ -25,6 +25,7 @@ import com.android.tools.lint.client.api.JavaParser.ResolvedMethod;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.ResourceReference;
 import com.android.tools.lint.client.api.UElementHandler;
+import com.android.tools.lint.detector.api.interprocedural.CallGraphResult;
 import com.google.common.annotations.Beta;
 import com.intellij.psi.JavaElementVisitor;
 import com.intellij.psi.PsiBinaryExpression;
@@ -1214,6 +1215,21 @@ public abstract class Detector {
                 @NonNull List<UAnnotation> allMemberAnnotations,
                 @NonNull List<UAnnotation> allClassAnnotations,
                 @NonNull List<UAnnotation> allPackageAnnotations);
+
+        /**
+         * Whether this implementation wants to access the global call graph
+         * with a call to {@link #analyzeCallGraph(Context, CallGraphResult)}.
+         * <p>
+         * <b>NOTE: Highly experimental as well as resource intensive!</b>
+         */
+        boolean isCallGraphRequired();
+
+        /**
+         * Analyze the call graph requested with {@link #isCallGraphRequired()}
+         * <p>
+         * <b>NOTE: Highly experimental as well as resource intensive!</b>
+         */
+        void analyzeCallGraph(@NonNull Context context, @NonNull CallGraphResult callGraph);
     }
 
     /** Specialized interface for detectors that scan Java class files */
@@ -1871,5 +1887,12 @@ public abstract class Detector {
     @Nullable
     public List<String> applicableAnnotations() {
         return null;
+    }
+
+    public boolean isCallGraphRequired() {
+        return false;
+    }
+
+    public void analyzeCallGraph(@NonNull Context context, @NonNull CallGraphResult callGraph) {
     }
 }

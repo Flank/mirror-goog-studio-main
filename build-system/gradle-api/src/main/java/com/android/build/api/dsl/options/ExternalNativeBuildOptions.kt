@@ -18,8 +18,10 @@ package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 
 /** Base interface for external native build per-variant info.  */
+@Incubating
 interface ExternalNativeBuildOptions : Initializable<ExternalNativeBuildOptions> {
     val externalNativeNdkBuildOptions: ExternalNativeNdkBuildOptions?
 

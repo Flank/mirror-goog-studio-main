@@ -17,34 +17,27 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.checks.AnnotationDetector.UI_THREAD_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.WORKER_THREAD_ANNOTATION
-import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.interprocedural.CallGraph
-import com.android.tools.lint.detector.api.interprocedural.CallGraphVisitor
+import com.android.tools.lint.detector.api.interprocedural.CallGraphResult
 import com.android.tools.lint.detector.api.interprocedural.CallTarget
-import com.android.tools.lint.detector.api.interprocedural.ClassHierarchyVisitor
 import com.android.tools.lint.detector.api.interprocedural.ContextualEdge
 import com.android.tools.lint.detector.api.interprocedural.ContextualNode
 import com.android.tools.lint.detector.api.interprocedural.DispatchReceiver
 import com.android.tools.lint.detector.api.interprocedural.IntraproceduralDispatchReceiverEvaluator
-import com.android.tools.lint.detector.api.interprocedural.IntraproceduralDispatchReceiverVisitor
 import com.android.tools.lint.detector.api.interprocedural.ParamContext
 import com.android.tools.lint.detector.api.interprocedural.buildContextualCallGraph
 import com.android.tools.lint.detector.api.interprocedural.searchForContextualPaths
 import com.android.tools.lint.detector.api.interprocedural.shortName
 import com.intellij.codeInsight.AnnotationUtil
 import com.intellij.psi.PsiModifierListOwner
-import org.jetbrains.uast.UFile
-import org.jetbrains.uast.getContainingFile
 import java.util.EnumSet
-import java.util.HashMap
 
 data class AnnotatedCallPath(
         val contextualNodes: List<ContextualEdge>,
@@ -52,7 +45,7 @@ data class AnnotatedCallPath(
         val sinkAnnotation: String)
 
 /** Returns a collection of call paths that violate thread annotations found in source code. */
-fun searchForInterproceduralThreadAnnotationViolations(
+fun searchForInterproceduralThreadAnnotationViolations( // public because accessed from tools/adt/idea tests
         callGraph: CallGraph,
         receiverEval: IntraproceduralDispatchReceiverEvaluator): Collection<AnnotatedCallPath> {
 
@@ -119,54 +112,12 @@ fun searchForInterproceduralThreadAnnotationViolations(
 }
 
 class WrongThreadInterproceduralDetector : Detector(), Detector.UastScanner {
-    private val chaVisitor = ClassHierarchyVisitor()
-    private val receiverEvalVisitor =
-            IntraproceduralDispatchReceiverVisitor(chaVisitor.classHierarchy)
-    private val callGraphVisitor =
-            CallGraphVisitor(receiverEvalVisitor.receiverEval, chaVisitor.classHierarchy)
-    private val fileContexts = HashMap<UFile, JavaContext>()
-    private var phase = State.BuildingClassHierarchy
+    override fun isCallGraphRequired(): Boolean = true
 
-    enum class State { BuildingClassHierarchy, EvaluatingReceivers, BuildingCallGraph }
-
-    override fun getApplicableUastTypes() = listOf(UFile::class.java)
-
-    override fun beforeCheckFile(context: Context) {
-        if (context is JavaContext) {
-            context.uastFile?.let { fileContexts[it] = context }
-        }
-        super.beforeCheckFile(context)
-    }
-
-    override fun createUastHandler(context: JavaContext): UElementHandler =
-            object : UElementHandler() {
-                override fun visitFile(uFile: UFile) {
-                    when (phase) {
-                        State.BuildingClassHierarchy -> uFile.accept(chaVisitor)
-                        State.EvaluatingReceivers -> uFile.accept(receiverEvalVisitor)
-                        State.BuildingCallGraph -> uFile.accept(callGraphVisitor)
-                    }
-                }
-            }
-
-    /** Advance the analysis phase, returning false when there are no more phase changes left. */
-    private fun advanceState(): Boolean {
-        phase = when (phase) {
-            State.BuildingClassHierarchy -> State.EvaluatingReceivers
-            State.EvaluatingReceivers -> State.BuildingCallGraph
-            State.BuildingCallGraph -> return false
-        }
-        return true
-    }
-
-    override fun afterCheckProject(context: Context) {
-        if (advanceState()) {
-            context.driver.requestRepeat(this, SCOPE)
-            return
-        }
+    override fun analyzeCallGraph(context: Context, callGraph: CallGraphResult) {
         val badPaths = searchForInterproceduralThreadAnnotationViolations(
-                callGraphVisitor.callGraph,
-                receiverEvalVisitor.receiverEval)
+                callGraph.callGraph,
+                callGraph.receiverEval)
         for ((searchNodes, sourceAnnotation, sinkAnnotation) in badPaths) {
             if (searchNodes.size == 1) {
                 // This means that a node in the graph was annotated with both UiThread and
@@ -175,10 +126,8 @@ class WrongThreadInterproceduralDetector : Detector(), Detector.UastScanner {
             }
             val (_, second) = searchNodes
             val pathBeginning = second.cause
-            val containingFile = pathBeginning.getContainingFile() ?: continue
-            val javaContext = fileContexts[containingFile] ?: continue
-            javaContext.setJavaFile(containingFile.psi) // Needed for getLocation.
-            val location = javaContext.getLocation(pathBeginning)
+            val parser = context.client.getUastParser(context.project) ?: continue
+            val location = parser.createLocation(pathBeginning)
             val pathStr = searchNodes.joinToString(separator = " -> ") {
                 it.contextualNode.node.shortName
             }
@@ -191,7 +140,6 @@ class WrongThreadInterproceduralDetector : Detector(), Detector.UastScanner {
     }
 
     companion object {
-        val SCOPE: EnumSet<Scope> = EnumSet.of(Scope.ALL_JAVA_FILES)
         @JvmField
         val ISSUE = Issue.create(
                 "WrongThreadInterprocedural",
@@ -202,7 +150,8 @@ class WrongThreadInterproceduralDetector : Detector(), Detector.UastScanner {
                 Category.CORRECTNESS,
                 /*priority*/ 6,
                 Severity.ERROR,
-                Implementation(WrongThreadInterproceduralDetector::class.java, SCOPE))
+                Implementation(WrongThreadInterproceduralDetector::class.java,
+                        EnumSet.of(Scope.ALL_JAVA_FILES)))
                 .addMoreInfo("http://developer.android.com/guide/components/" +
                         "processes-and-threads.html#Threads")
                 .setEnabledByDefault(false)

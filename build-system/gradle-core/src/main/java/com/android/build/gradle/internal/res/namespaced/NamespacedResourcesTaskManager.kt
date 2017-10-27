@@ -25,7 +25,7 @@ import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.tasks.MergeResources
-import com.android.build.gradle.tasks.ProcessAndroidResources
+import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.builder.core.VariantType
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
@@ -50,7 +50,7 @@ class NamespacedResourcesTaskManager(
      *  the distinction between app and library is reduced. We can revisit that in the future if
      *  final ids in apps are a vital feature.
      *  2. Links the app and its dependency to produce the final APK. This re-uses the same
-     *  [ProcessAndroidResources] task, as it needs to be split aware.
+     *  [LinkApplicationAndroidResourcesTask] task, as it needs to be split aware.
      *
 
      * TODO: Test support, Synthesize non-namespaced output.
@@ -145,7 +145,7 @@ class NamespacedResourcesTaskManager(
                 "source/final-r/" + variantScope.variantConfiguration.dirName)
         val process = androidTasks.create(
                 tasks,
-                ProcessAndroidResources.NamespacedConfigAction(
+                LinkApplicationAndroidResourcesTask.NamespacedConfigAction(
                         variantScope,
                         runtimeRClassSources,
                         resPackageOutputFolder,

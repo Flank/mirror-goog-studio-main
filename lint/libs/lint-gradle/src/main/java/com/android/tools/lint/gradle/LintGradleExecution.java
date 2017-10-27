@@ -16,6 +16,10 @@
 
 package com.android.tools.lint.gradle;
 
+import static com.android.SdkConstants.DOT_XML;
+import static com.android.tools.lint.gradle.SyncOptions.createOutputPath;
+import static com.android.tools.lint.gradle.SyncOptions.validateOutputFile;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
@@ -41,6 +45,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -75,18 +80,25 @@ public class LintGradleExecution {
     // intended to be used via reflection. Everything else should be private:
     @SuppressWarnings("unused") // Used via reflection from ReflectiveLintRunner
     public void analyze() throws IOException {
-        AndroidProject modelProject = createAndroidProject(descriptor.getProject());
-        String variantName = descriptor.getVariantName();
+        ToolingModelBuilderRegistry toolingRegistry = descriptor.getToolingRegistry();
+        if (toolingRegistry != null) {
+            AndroidProject modelProject = createAndroidProject(descriptor.getProject(),
+                    toolingRegistry);
+            String variantName = descriptor.getVariantName();
 
-        if (variantName != null) {
-            for (Variant variant : modelProject.getVariants()) {
-                if (variant.getName().equals(variantName)) {
-                    lintSingleVariant(modelProject, variant);
-                    return;
+            if (variantName != null) {
+                for (Variant variant : modelProject.getVariants()) {
+                    if (variant.getName().equals(variantName)) {
+                        lintSingleVariant(variant);
+                        return;
+                    }
                 }
+            } else { // All variants
+                lintAllVariants(modelProject);
             }
-        } else { // All variants
-            lintAllVariants(modelProject);
+        } else {
+            // Not applying the Android Gradle plugin
+            lintNonAndroid();
         }
     }
 
@@ -98,10 +110,6 @@ public class LintGradleExecution {
     @Nullable
     private File getSdkHome() {
         return descriptor.getSdkHome();
-    }
-
-    private ToolingModelBuilderRegistry getToolingRegistry() {
-        return descriptor.getToolingRegistry();
     }
 
     private boolean isFatalOnly() {
@@ -181,15 +189,10 @@ public class LintGradleExecution {
 
     /** Runs lint on the given variant and returns the set of warnings */
     private Pair<List<Warning>, LintBaseline> runLint(
-            /*
-             * Note that as soon as we disable {@link #MODEL_LIBRARIES} this is
-             * unused and we can delete it and all the callers passing it recursively
-             */
-            @NonNull AndroidProject modelProject,
-            @NonNull Variant variant,
+            @Nullable Variant variant,
             @NonNull VariantInputs variantInputs,
-            boolean report) {
-        IssueRegistry registry = createIssueRegistry();
+            boolean report, boolean isAndroid) {
+        IssueRegistry registry = createIssueRegistry(isAndroid);
         LintCliFlags flags = new LintCliFlags();
         LintGradleClient client =
                 new LintGradleClient(
@@ -200,7 +203,8 @@ public class LintGradleExecution {
                         descriptor.getSdkHome(),
                         variant,
                         variantInputs,
-                        descriptor.getBuildTools());
+                        descriptor.getBuildTools(),
+                        isAndroid);
         boolean fatalOnly = descriptor.isFatalOnly();
         if (fatalOnly) {
             flags.setFatalOnly(true);
@@ -216,6 +220,20 @@ public class LintGradleExecution {
                     descriptor.getReportsDir(),
                     report,
                     fatalOnly);
+        } else {
+            // Set up some default reporters
+            flags.getReporters().add(Reporter.createTextReporter(client, flags, null,
+                    new PrintWriter(System.out, true), false));
+            File html = validateOutputFile(createOutputPath(descriptor.getProject(), null, ".html",
+                    null, flags.isFatalOnly()));
+            File xml = validateOutputFile(createOutputPath(descriptor.getProject(), null, DOT_XML,
+                    null, flags.isFatalOnly()));
+            try {
+                flags.getReporters().add(Reporter.createHtmlReporter(client, html, flags, false));
+                flags.getReporters().add(Reporter.createXmlReporter(client, xml, false));
+            } catch (IOException e) {
+                throw new GradleException(e.getMessage(), e);
+            }
         }
         if (!report || fatalOnly) {
             flags.setQuiet(true);
@@ -261,10 +279,10 @@ public class LintGradleExecution {
         }
     }
 
-    protected AndroidProject createAndroidProject(@NonNull Project gradleProject) {
+    protected static AndroidProject createAndroidProject(@NonNull Project gradleProject,
+            @NonNull ToolingModelBuilderRegistry toolingRegistry) {
         String modelName = AndroidProject.class.getName();
-        ToolingModelBuilder modelBuilder = descriptor.getToolingRegistry().getBuilder(modelName);
-        assert modelBuilder != null;
+        ToolingModelBuilder modelBuilder = toolingRegistry.getBuilder(modelName);
 
         // setup the level 3 sync.
         final ExtraPropertiesExtension ext = gradleProject.getExtensions().getExtraProperties();
@@ -281,8 +299,12 @@ public class LintGradleExecution {
         }
     }
 
-    private static BuiltinIssueRegistry createIssueRegistry() {
-        return new LintGradleIssueRegistry();
+    private static BuiltinIssueRegistry createIssueRegistry(boolean isAndroid) {
+        if (isAndroid) {
+            return new LintGradleIssueRegistry();
+        } else {
+            return new NonAndroidIssueRegistry();
+        }
     }
 
     // Issue registry when Lint is run inside Gradle: we replace the Gradle
@@ -314,10 +336,21 @@ public class LintGradleExecution {
     }
 
     /** Runs lint on a single specified variant */
-    public void lintSingleVariant(@NonNull AndroidProject modelProject, @NonNull Variant variant) {
+    public void lintSingleVariant(@NonNull Variant variant) {
         VariantInputs variantInputs = descriptor.getVariantInputs(variant.getName());
         if (variantInputs != null) {
-            runLint(modelProject, variant, variantInputs, true);
+            runLint(variant, variantInputs, true, true);
+        }
+    }
+
+    /**
+     * Runs lint for a non-Android project (such as a project that only applies the
+     * Kotlin Gradle plugin, not the Android Gradle plugin
+     */
+    public void lintNonAndroid() {
+        VariantInputs variantInputs = descriptor.getVariantInputs("");
+        if (variantInputs != null) {
+            runLint(null, variantInputs, true, false);
         }
     }
 
@@ -339,7 +372,7 @@ public class LintGradleExecution {
             final VariantInputs variantInputs = descriptor.getVariantInputs(variant.getName());
             if (variantInputs != null) {
                 Pair<List<Warning>, LintBaseline> pair =
-                        runLint(modelProject, variant, variantInputs, false);
+                        runLint(variant, variantInputs, false, true);
                 List<Warning> warnings = pair.getFirst();
                 warningMap.put(variant, warnings);
                 LintBaseline baseline = pair.getSecond();
@@ -400,7 +433,8 @@ public class LintGradleExecution {
                     getSdkHome(),
                     variant,
                     variantInputs,
-                    descriptor.getBuildTools());
+                    descriptor.getBuildTools(),
+                    true);
             syncOptions(
                     lintOptions,
                     client,

@@ -17,8 +17,10 @@
 package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
+import org.gradle.api.Incubating
 
 /** Base interface for CMake per-variant info.  */
+@Incubating
 interface ExternalNativeCmakeOptions : Initializable<ExternalNativeCmakeOptions> {
     /** The ndk-build build system Flags  */
     var arguments: MutableList<String>

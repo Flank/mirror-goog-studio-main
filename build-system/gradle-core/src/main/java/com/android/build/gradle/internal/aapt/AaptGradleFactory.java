@@ -29,7 +29,6 @@ import com.android.builder.utils.FileCache;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.LoggedProcessOutputHandler;
 import com.android.ide.common.process.ProcessOutputHandler;
-import com.android.ide.common.process.TeeProcessOutputHandler;
 import com.android.sdklib.BuildToolInfo;
 import com.android.utils.ILogger;
 import com.google.common.base.Preconditions;
@@ -75,16 +74,17 @@ public final class AaptGradleFactory {
         Preconditions.checkNotNull(target, "target == null");
         BuildToolInfo buildTools = target.getBuildTools();
 
-        ProcessOutputHandler teeOutputHandler =
-                new TeeProcessOutputHandler(
-                        outputHandler,
-                        new LoggedProcessOutputHandler(new FilteringLogger(builder.getLogger())));
+        if (outputHandler == null) {
+            // If we weren't passed any output handlers, use a logged process output handler.
+            outputHandler =
+                    new LoggedProcessOutputHandler(new FilteringLogger(builder.getLogger()));
+        }
 
         switch (aaptGeneration) {
             case AAPT_V1:
                 return new AaptV1(
                         builder.getProcessExecutor(),
-                        teeOutputHandler,
+                        outputHandler,
                         buildTools,
                         new FilteringLogger(builder.getLogger()),
                         crunchPng ? AaptV1.PngProcessMode.ALL : AaptV1.PngProcessMode.NO_CRUNCH,
@@ -92,7 +92,7 @@ public final class AaptGradleFactory {
             case AAPT_V2:
                 return new OutOfProcessAaptV2(
                         builder.getProcessExecutor(),
-                        teeOutputHandler,
+                        outputHandler,
                         buildTools,
                         intermediateDir,
                         new FilteringLogger(builder.getLogger()));
@@ -100,11 +100,11 @@ public final class AaptGradleFactory {
                 return new AaptV2Jni(
                         intermediateDir,
                         WaitableExecutor.useGlobalSharedThreadPool(),
-                        teeOutputHandler,
+                        outputHandler,
                         fileCache);
             case AAPT_V2_DAEMON_MODE:
                 return new QueueableAapt2(
-                        teeOutputHandler,
+                        outputHandler,
                         buildTools,
                         intermediateDir,
                         new FilteringLogger(builder.getLogger()),

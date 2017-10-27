@@ -20,10 +20,12 @@ import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.build.api.transform.SecondaryFile
 import com.android.build.api.transform.Transform
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.FileCollection
 
 /** Partial extension properties for modules that build a variant aware android artifact  */
+@Incubating
 interface BuildProperties {
     /** Build tools version. If null, uses the default value  */
     var buildToolsVersion: String?

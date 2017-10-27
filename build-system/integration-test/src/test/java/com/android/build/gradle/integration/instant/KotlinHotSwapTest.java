@@ -39,6 +39,7 @@ import com.google.common.truth.Expect;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -108,6 +109,7 @@ public class KotlinHotSwapTest {
     }
 
     @Test
+    @Ignore("b/68305039")
     @Category(DeviceTests.class)
     public void artHotSwapChangeTest() throws Exception {
         doHotSwapChangeTest(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));

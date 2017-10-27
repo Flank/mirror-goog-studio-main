@@ -103,8 +103,10 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
     public static File ourRootDir;
 
     @NonNull
-    private static SourcePosition findMessagePositionInFile(@NonNull File file, @NonNull String msgText, int locationLine, ILogger logger) {
-        SourcePosition exactPosition = findExactMessagePositionInFile(file, msgText, locationLine, logger);
+    private static SourcePosition findMessagePositionInFile(
+            @NonNull File file, @NonNull String msgText, int locationLine, ILogger logger) {
+        SourcePosition exactPosition =
+                findExactMessagePositionInFile(file, msgText, locationLine, logger);
         if (exactPosition != null) {
             return exactPosition;
         } else {
@@ -113,7 +115,11 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
     }
 
     @Nullable
-    private static SourcePosition findExactMessagePositionInFile(@NonNull File file, @NonNull String msgText, int locationLine, @NonNull ILogger logger) {
+    private static SourcePosition findExactMessagePositionInFile(
+            @NonNull File file,
+            @NonNull String msgText,
+            int locationLine,
+            @NonNull ILogger logger) {
         Matcher matcher = PROPERTY_NAME_AND_VALUE.matcher(msgText);
         if (matcher.find()) {
             String name = matcher.group(1);
@@ -195,7 +201,8 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
     }
 
     @Nullable
-    private static SourcePosition findLineStart(@NonNull File file, int locationLine, ILogger logger) {
+    private static SourcePosition findLineStart(
+            @NonNull File file, int locationLine, ILogger logger) {
         ReadOnlyDocument document = getDocument(file, logger);
         if (document == null) {
             return null;
@@ -279,7 +286,8 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
      * "string/group2_string" it will locate an element {@code <string name="group2_string">} or
      * {@code <item type="string" name="group2_string"}
      */
-    public static SourcePosition findResourceLine(@NonNull File file, @NonNull String key, @NonNull ILogger logger) {
+    public static SourcePosition findResourceLine(
+            @NonNull File file, @NonNull String key, @NonNull ILogger logger) {
         int slash = key.indexOf('/');
         if (slash == -1) {
             assert false : slash; // invalid key format
@@ -296,8 +304,11 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
      * Locates a resource value declaration in a given file and returns the corresponding line
      * number, or -1 if not found.
      */
-    public static SourcePosition findValueDeclaration(@NonNull File file, @NonNull final String type,
-            @NonNull final String name, @NonNull ILogger logger) {
+    public static SourcePosition findValueDeclaration(
+            @NonNull File file,
+            @NonNull final String type,
+            @NonNull final String name,
+            @NonNull ILogger logger) {
         if (!file.exists()) {
             return SourcePosition.UNKNOWN;
         }
@@ -321,8 +332,8 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
         // Try looking for name="$name"
         int nameIndex = document.findText("name=\"" + name + "\"", 0);
         if (nameIndex != -1) {
-            // TODO: Disambiguate by type, so if values.xml contains both R.string.foo and R.dimen.foo we
-            // pick the right one!
+            // TODO: Disambiguate by type, so if values.xml contains both R.string.foo and
+            // R.dimen.foo we pick the right one!
             return document.sourcePosition(nameIndex);
         }
 
@@ -344,45 +355,50 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
         final int[] possible = new int[]{-1,
                 0}; // line,column for possible match, not confirmed by type
 
-        final AtomicReference<Integer> line = new AtomicReference<Integer>(-1);
-        final DefaultHandler handler = new DefaultHandler() {
-            private int myDepth;
+        final AtomicReference<Integer> line = new AtomicReference<>(-1);
+        final DefaultHandler handler =
+                new DefaultHandler() {
+                    private int myDepth;
 
-            private Locator myLocator;
+                    private Locator myLocator;
 
-            @Override
-            public void setDocumentLocator(final Locator locator) {
-                myLocator = locator;
-            }
+                    @Override
+                    public void setDocumentLocator(final Locator locator) {
+                        myLocator = locator;
+                    }
 
-            @Override
-            public void startElement(String uri, String localName, String qName,
-                    Attributes attributes) throws SAXException {
-                myDepth++;
-                if (myDepth == 2) {
-                    if (name.equals(attributes.getValue(ATTR_NAME))) {
-                        int lineNumber = myLocator.getLineNumber() - 1;
-                        int column = myLocator.getColumnNumber() - 1;
-                        if (qName.equals(type) || TAG_ITEM.equals(qName) && type
-                                .equals(attributes.getValue(ATTR_TYPE))) {
-                            line.set(lineNumber);
-                            certain[0] = lineNumber;
-                            certain[1] = column;
-                        } else if (line.get() < 0) {
-                            // Use a negative number to indicate a match where we're not totally confident (type didn't match)
-                            line.set(-lineNumber);
-                            possible[0] = lineNumber;
-                            possible[1] = column;
+                    @Override
+                    public void startElement(
+                            String uri, String localName, String qName, Attributes attributes)
+                            throws SAXException {
+                        myDepth++;
+                        if (myDepth == 2) {
+                            if (name.equals(attributes.getValue(ATTR_NAME))) {
+                                int lineNumber = myLocator.getLineNumber() - 1;
+                                int column = myLocator.getColumnNumber() - 1;
+                                if (qName.equals(type)
+                                        || TAG_ITEM.equals(qName)
+                                                && type.equals(attributes.getValue(ATTR_TYPE))) {
+                                    line.set(lineNumber);
+                                    certain[0] = lineNumber;
+                                    certain[1] = column;
+                                } else if (line.get() < 0) {
+                                    // Use a negative number to indicate a match where we're not totally
+                                    // confident (type didn't match)
+                                    line.set(-lineNumber);
+                                    possible[0] = lineNumber;
+                                    possible[1] = column;
+                                }
+                            }
                         }
                     }
-                }
-            }
 
-            @Override
-            public void endElement(String uri, String localName, String qName) throws SAXException {
-                myDepth--;
-            }
-        };
+                    @Override
+                    public void endElement(String uri, String localName, String qName)
+                            throws SAXException {
+                        myDepth--;
+                    }
+                };
 
         SAXParserFactory factory = SAXParserFactory.newInstance();
         try {
@@ -391,7 +407,8 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
             SAXParser saxParser = XmlUtils.createSaxParser(factory);
             saxParser.parse(new InputSource(new StringReader(document.getContents())), handler);
         } catch (Throwable t) {
-            // Ignore parser errors; we might have found the error position earlier than the parse error position
+            // Ignore parser errors; we might have found the error position earlier than the parse
+            // error position
         }
 
         int endLineNumber;
@@ -404,7 +421,8 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
             endColumn = possible[1];
         }
         if (endLineNumber != -1) {
-            // SAX' locator will point to the END of the opening declaration, meaning that if it spans multiple lines, we are pointing
+            // SAX' locator will point to the END of the opening declaration, meaning that if it
+            // spans multiple lines, we are pointing
             // to the last line:
             //     <item
             //       type="dimen"
@@ -414,8 +432,13 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
             int offset = document.findTextBackwards(name, endOffset);
             if (offset != -1) {
                 SourcePosition start = document.sourcePosition(offset);
-                return new SourcePosition(start.getStartLine(), start.getStartColumn(), start.getStartOffset(),
-                                          endLineNumber, endColumn, endOffset);
+                return new SourcePosition(
+                        start.getStartLine(),
+                        start.getStartColumn(),
+                        start.getStartOffset(),
+                        endLineNumber,
+                        endColumn,
+                        endOffset);
             }
             return new SourcePosition(endLineNumber, endColumn, endOffset);
         }
@@ -424,7 +447,7 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
     }
 
     @Nullable
-    final Matcher getNextLineMatcher(@NonNull OutputLineReader reader, @NonNull Pattern pattern) {
+    static Matcher getNextLineMatcher(@NonNull OutputLineReader reader, @NonNull Pattern pattern) {
         // unless we can't, because we reached the last line
         String line = reader.readLine();
         if (line == null) {
@@ -436,12 +459,14 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
     }
 
     @NonNull
-    Message createMessage(@NonNull Message.Kind kind,
-                                    @NonNull String text,
-                                    @Nullable String sourcePath,
-                                    @Nullable String lineNumberAsText,
-                                    @NonNull String original,
-                                    ILogger logger) throws ParsingFailedException {
+    static Message createMessage(
+            @NonNull Message.Kind kind,
+            @NonNull String text,
+            @Nullable String sourcePath,
+            @Nullable String lineNumberAsText,
+            @NonNull String original,
+            ILogger logger)
+            throws ParsingFailedException {
         File file = null;
         if (sourcePath != null) {
             file = new File(sourcePath);
@@ -452,10 +477,10 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
 
         SourcePosition errorPosition = parseLineNumber(lineNumberAsText);
         if (sourcePath != null) {
-            SourceFilePosition source = findSourcePosition(file, errorPosition.getStartLine(), text, logger);
+            SourceFilePosition source =
+                    findSourcePosition(file, errorPosition.getStartLine(), text, logger);
             if (source != null) {
                 file = source.getFile().getSourceFile();
-                sourcePath = file.getPath();
                 if (source.getPosition().getStartLine() != -1) {
                     errorPosition = source.getPosition();
                 }
@@ -463,16 +488,24 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
         }
 
         // Attempt to determine the exact range of characters affected by this error.
-        // This will look up the actual text of the file, go to the particular error line and findText for the specific string mentioned in the
-        // error.
+        // This will look up the actual text of the file, go to the particular error line and
+        // findText for the specific string mentioned in the error.
         if (file != null && errorPosition.getStartLine() != -1) {
-            errorPosition = findMessagePositionInFile(file, text, errorPosition.getStartLine(), logger);
+            errorPosition =
+                    findMessagePositionInFile(file, text, errorPosition.getStartLine(), logger);
         }
-        return new Message(kind, text, original, AAPT_TOOL_NAME,
-                new SourceFilePosition(file, errorPosition));
+        return new Message(
+                kind,
+                text,
+                original,
+                AAPT_TOOL_NAME,
+                file == null
+                        ? SourceFilePosition.UNKNOWN
+                        : new SourceFilePosition(file, errorPosition));
     }
 
-    private SourcePosition parseLineNumber(String lineNumberAsText) throws ParsingFailedException {
+    private static SourcePosition parseLineNumber(String lineNumberAsText)
+            throws ParsingFailedException {
         int lineNumber = -1;
         if (lineNumberAsText != null) {
             try {
@@ -481,21 +514,13 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
                 throw new ParsingFailedException();
             }
         }
-
         return new SourcePosition(lineNumber - 1, -1, -1);
     }
 
-    /**
-     *
-     * @param file
-     * @param locationLine
-     * @param message
-     * @param logger
-     * @return null if could not be found, new SourceFilePosition(new SourceFile file,
-     */
+    /** @return null if could not be found, new SourceFilePosition(new SourceFile file, */
     @Nullable
-    protected static SourceFilePosition findSourcePosition(@NonNull File file, int locationLine,
-            String message, ILogger logger) {
+    protected static SourceFilePosition findSourcePosition(
+            @NonNull File file, int locationLine, String message, ILogger logger) {
         if (!file.getPath().endsWith(DOT_XML)) {
             return null;
         }
@@ -524,7 +549,8 @@ public abstract class AbstractAaptOutputParser implements PatternAwareOutputPars
         assert start < searchStart;
 
         if (start == -1 && isManifest && searchStart < document.length()) {
-            // If the manifest file didn't need to merge, it will place the source reference at the end instead
+            // If the manifest file didn't need to merge, it will place the source reference at the
+            // end instead
             searchStart = document.length();
             if (searchStart != -1L) {
                 start = document.findTextBackwards(START_MARKER, searchStart);

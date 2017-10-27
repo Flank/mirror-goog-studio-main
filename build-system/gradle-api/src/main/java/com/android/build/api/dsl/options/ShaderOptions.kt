@@ -18,8 +18,10 @@ package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
 import com.google.common.collect.ListMultimap
+import org.gradle.api.Incubating
 
 /** Options for configuring scoped shader options.  */
+@Incubating
 interface ShaderOptions : Initializable<ShaderOptions> {
 
     /** Returns the list of glslc args.  */

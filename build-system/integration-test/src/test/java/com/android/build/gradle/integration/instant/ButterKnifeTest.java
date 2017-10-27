@@ -42,6 +42,7 @@ import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -139,6 +140,7 @@ public class ButterKnifeTest {
     }
 
     @Test
+    @Ignore("b/68305039")
     @Category(DeviceTests.class)
     public void hotSwap_art() throws Exception {
         doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));

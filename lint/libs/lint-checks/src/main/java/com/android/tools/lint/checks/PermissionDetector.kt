@@ -142,10 +142,10 @@ class PermissionDetector : AbstractAnnotationDetector(), Detector.UastScanner {
                 } else {
                     assert(method != null)
                     val containingClass = method!!.containingClass
-                    if (containingClass != null) {
-                        name = containingClass.name + "." + method.name
+                    name = if (containingClass != null) {
+                        containingClass.name + "." + method.name
                     } else {
-                        name = method.name
+                        method.name
                     }
                     operation = PermissionFinder.Operation.CALL
                 }

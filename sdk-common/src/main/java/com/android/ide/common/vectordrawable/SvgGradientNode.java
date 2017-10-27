@@ -15,6 +15,8 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static com.android.utils.XmlUtils.formatFloatAttribute;
+
 import com.google.common.collect.ImmutableMap;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
@@ -180,7 +182,7 @@ public class SvgGradientNode extends SvgNode {
         } else {
             writer.write("        <aapt:attr name=\"android:strokeColor\">\n");
         }
-        writer.write("<gradient \n");
+        writer.write("<gradient ");
 
         // By default, the dimensions of the gradient is the bounding box of the path.
         setBoundingBox();
@@ -215,8 +217,16 @@ public class SvgGradientNode extends SvgNode {
             }
         }
 
-        // Apply the path's transformations to the gradient.
-        mLocalTransform.preConcatenate(mSvgLeafNode.mStackedTransform);
+        // According to the SVG spec, the gradient transformation (mLocalTransform) always needs
+        // to be applied to the gradient. However, the geometry transformation (mStackedTransform)
+        // will be affecting gradient only when it is using user space because we flatten
+        // everything.
+        // If we are not using user space, at this moment, the bounding box already contains
+        // the geometry transformation, when we apply percentage to the bounding box, we don't
+        // need to multiply the geometry transformation the second time.
+        if (isUserSpaceOnUse) {
+            mLocalTransform.preConcatenate(mSvgLeafNode.mStackedTransform);
+        }
 
         // Source and target arrays to which we apply the local transform.
         double[] gradientBounds;
@@ -301,9 +311,9 @@ public class SvgGradientNode extends SvgNode {
             Point2D transformedRadius = new Point2D.Double(r, 0);
             mLocalTransform.deltaTransform(radius, transformedRadius);
 
-            mVdAttributesMap.put("cx", String.valueOf(transformedBounds[0]));
-            mVdAttributesMap.put("cy", String.valueOf(transformedBounds[1]));
-            mVdAttributesMap.put("r", String.valueOf(transformedRadius.distance(0, 0)));
+            mVdAttributesMap.put("cx", formatFloatAttribute(transformedBounds[0]));
+            mVdAttributesMap.put("cy", formatFloatAttribute(transformedBounds[1]));
+            mVdAttributesMap.put("r", formatFloatAttribute(transformedRadius.distance(0, 0)));
         }
 
         for (String key : mVdAttributesMap.keySet()) {
@@ -325,7 +335,7 @@ public class SvgGradientNode extends SvgNode {
                 vdValue = SvgLeafNode.colorMap.get(vdValue.toLowerCase(Locale.ENGLISH));
             } else if (vectorCoordinateMap.containsKey(key)) {
                 double x = transformedBounds[vectorCoordinateMap.get(key)];
-                vdValue = String.valueOf(x);
+                vdValue = formatFloatAttribute(x);
             } else if (key.equals("spreadMethod")) {
                 if (vdValue.equals("pad")) {
                     vdValue = "clamp";
@@ -333,7 +343,7 @@ public class SvgGradientNode extends SvgNode {
                     vdValue = "mirror";
                 }
             } else if (vdValue.endsWith("%")) {
-                vdValue = String.valueOf(getGradientCoordinate(key, 0));
+                vdValue = formatFloatAttribute(getGradientCoordinate(key, 0).getValue());
             }
             if (!gradientAttr.isEmpty()) {
                 writer.write("\n        " + gradientAttr + "=\"" + vdValue + "\"");

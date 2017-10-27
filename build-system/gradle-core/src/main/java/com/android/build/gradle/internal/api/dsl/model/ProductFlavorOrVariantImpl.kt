@@ -22,7 +22,6 @@ import com.android.build.api.dsl.options.InstrumentationOptions
 import com.android.build.api.dsl.options.VectorDrawablesOptions
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
-import com.android.builder.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
 

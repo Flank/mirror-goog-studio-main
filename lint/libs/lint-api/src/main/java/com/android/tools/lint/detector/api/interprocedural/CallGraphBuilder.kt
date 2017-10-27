@@ -210,11 +210,11 @@ class CallGraphVisitor(
         var foundExplicitCall: Boolean = false
 
         override fun visitCallExpression(node: UCallExpression): Boolean {
-            if (node.methodName == "super") {
+            return if (node.methodName == "super") {
                 foundExplicitCall = true
-                return true
+                true
             } else {
-                return false
+                false
             }
         }
 

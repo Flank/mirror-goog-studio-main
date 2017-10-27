@@ -21,6 +21,7 @@ import static com.google.common.truth.Truth.assertThat;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.dsl.Splits;
+import com.android.build.gradle.internal.fixtures.FakeInstantiator;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.LongOption;
@@ -41,8 +42,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Task;
-import org.gradle.internal.reflect.Instantiator;
-import org.gradle.internal.reflect.ObjectInstantiationException;
 import org.junit.Test;
 
 public class AnalyticsUtilTest {
@@ -72,19 +71,8 @@ public class AnalyticsUtilTest {
 
     @Test
     public void splitConverterTest() throws IOException {
-        Splits splits =
-                new Splits(
-                        new Instantiator() {
-                            @Override
-                            public <T> T newInstance(Class<? extends T> aClass, Object... objects)
-                                    throws ObjectInstantiationException {
-                                try {
-                                    return aClass.getConstructor().newInstance();
-                                } catch (Exception e) {
-                                    throw new ObjectInstantiationException(aClass, e);
-                                }
-                            }
-                        });
+        Splits splits = new Splits(new FakeInstantiator());
+
         // Defaults
         {
             GradleBuildSplits proto = AnalyticsUtil.toProto(splits);

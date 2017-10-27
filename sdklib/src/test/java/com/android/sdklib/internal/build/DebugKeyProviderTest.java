@@ -18,6 +18,7 @@ package com.android.sdklib.internal.build;
 
 import com.android.sdklib.internal.build.DebugKeyProvider.IKeyGenOutput;
 
+import com.google.common.truth.Truth;
 import junit.framework.TestCase;
 
 import java.io.File;
@@ -70,7 +71,10 @@ public class DebugKeyProviderTest extends TestCase {
         assertNotNull(provider);
 
         assertEquals("", keygenOutput.getOut());
-        assertEquals("", keygenOutput.getErr());
+        if (!keygenOutput.getErr().isEmpty()) {
+            Truth.assertThat(keygenOutput.getErr())
+                    .contains("The JKS keystore uses a proprietary format. It is recommended to migrate to PKCS12");
+        }
 
         PrivateKey key = provider.getDebugKey();
         assertNotNull(key);

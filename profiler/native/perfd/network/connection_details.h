@@ -46,8 +46,8 @@ struct ConnectionDetails final {
 
     // A unique ID which can be used as a key to fetch the contents of a request
     // payload (or empty string otherwise).
-    // Available when |downloading_timestamp| is non-zero.
-    std::string payload_id;  // TODO: Populate this
+    // Available when |uploaded_timestamp| is non-zero.
+    std::string payload_id;
   };
 
   // TODO: It seems like all Response data is available when |end_timestamp| is
@@ -86,6 +86,8 @@ struct ConnectionDetails final {
   int32_t app_id = 0;
   // Time when this connection was created. This should always be set.
   int64_t start_timestamp = 0;
+  // Time when request body upload completes. This value will be 0 until set.
+  int64_t uploaded_timestamp = 0;
   // Time when the server responded back with the first byte (and downloading
   // the complete response has begun). This value will be 0 until then.
   int64_t downloading_timestamp = 0;

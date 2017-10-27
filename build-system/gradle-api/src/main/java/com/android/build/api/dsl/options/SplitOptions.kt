@@ -17,8 +17,10 @@
 package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
+import org.gradle.api.Incubating
 
 /** Base data representing how an FULL_APK should be split for a given dimension (density, abi).  */
+@Incubating
 interface SplitOptions : Initializable<SplitOptions> {
 
     /** Whether to split in this dimension.  */

@@ -27,11 +27,11 @@ import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskFactory;
+import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
 import com.android.build.gradle.internal.ide.SyncIssueImpl;
 import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
-import com.android.builder.errors.ConfigurableErrorHandler;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
@@ -91,7 +91,7 @@ public class TaskTestUtils {
         private SyncIssue syncIssue = null;
 
         protected FakeConfigurableErrorReporter(@NonNull EvaluationMode mode) {
-            super(mode);
+            super(mode, "fake");
         }
 
         public SyncIssue getSyncIssue() {

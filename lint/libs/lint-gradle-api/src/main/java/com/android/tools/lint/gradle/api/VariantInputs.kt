@@ -22,11 +22,11 @@ interface VariantInputs {
     /** The variant name */
     val name: String
 
-    /** The lint rule jars  */
+    /** The lint rule jars, if any */
     val ruleJars: List<File>
 
     /** The merged manifest of the current module  */
-    val mergedManifest: File
+    val mergedManifest: File?
 
     /** The manifest merger report file, if any */
     val manifestMergeReport: File?

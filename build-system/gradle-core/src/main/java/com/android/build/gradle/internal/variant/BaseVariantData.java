@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.scope.VariantScopeImpl;
 import com.android.build.gradle.internal.tasks.CheckManifest;
@@ -663,10 +664,12 @@ public abstract class BaseVariantData implements TaskContainer {
             }
 
             // then all the generated src folders.
-            if (scope.getProcessResourcesTask() != null) {
+            if (scope.hasOutput(TaskOutputHolder.TaskOutputType.NOT_NAMESPACED_R_CLASS_SOURCES)) {
+                FileCollection rClassSource =
+                        scope.getOutput(
+                                TaskOutputHolder.TaskOutputType.NOT_NAMESPACED_R_CLASS_SOURCES);
                 sourceSets.add(
-                        project.fileTree(scope.getRClassSourceOutputDir())
-                                .builtBy(scope.getProcessResourcesTask().getName()));
+                        project.fileTree(rClassSource.getSingleFile()).builtBy(rClassSource));
             }
 
             // for the other, there's no duplicate so no issue.

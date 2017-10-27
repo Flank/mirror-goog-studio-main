@@ -19,7 +19,7 @@ package com.android.build.gradle.options;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.builder.errors.ConfigurableErrorHandler;
+import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
 import com.android.builder.model.AndroidProject;
 
 public final class SyncOptions {

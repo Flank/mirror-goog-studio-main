@@ -18,6 +18,7 @@ package com.android.build.api.dsl.options
 
 import com.android.build.api.dsl.Initializable
 import org.gradle.api.Action
+import org.gradle.api.Incubating
 
 /**
  * DSL object for configuring APK Splits options.
@@ -26,6 +27,7 @@ import org.gradle.api.Action
  * See [APK
  * Splits](https://developer.android.com/studio/build/configure-apk-splits.html).
  */
+@Incubating
 interface Splits : Initializable<Splits> {
 
     /** Density settings.  */

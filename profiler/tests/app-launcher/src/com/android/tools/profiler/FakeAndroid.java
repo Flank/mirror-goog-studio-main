@@ -112,8 +112,8 @@ public class FakeAndroid implements SimpleWebServer.RequestHandler {
     public synchronized String onRequest(List<SimpleWebServer.QueryParam> params) {
         for (SimpleWebServer.QueryParam param : params) {
             if (param.getKey().equals("attach-agent")) {
-                notify();
                 myAttachAgentPath = param.getValue();
+                notify();
             }
             if (param.getKey().equals("set-property")) {
                 String[] property = param.getValue().split(",");

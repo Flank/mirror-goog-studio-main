@@ -52,7 +52,38 @@ service ProfilerService {
   rpc GetAgentStatus(AgentStatusRequest) returns (AgentStatusResponse) {
   }
 
+  // TODO (b/67508564): Delete this and updated affected sites to call
+  // BeginSession instead.
   rpc AttachAgent(AgentAttachRequest) returns (AgentAttachResponse) {
+  }
+
+  // Start a new session. As a side effect, this also starts all profilers for
+  // the PID being targeted by this session.
+  // If a session with the same PID is already running, this method will
+  // essentially be a no-op (except it will move the session to the top of the
+  // sorted-by-recency list).
+  rpc BeginSession(BeginSessionRequest) returns (BeginSessionResponse) {
+  }
+
+  // Stop a target session (if currently running). As a side effect,
+  // this also stops all profilers for the PID being targeted by this session.
+  rpc EndSession(EndSessionRequest) returns (EndSessionResponse) {
+  }
+
+  // Request a session by ID.
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
+  }
+
+  // Requests all sessions in the time range from |start_timestamp| (exclusive)
+  // to |end_timestamp| (inclusive), or mathematically written as the interval
+  // (start_timestamp, end_timestamp]. Results will be returned ordered by
+  // recency (most recent first).
+  rpc GetSessions(GetSessionsRequest) returns (GetSessionsResponse) {
+  }
+
+  // Delete a session by ID. If it is currently running, |EndSession| will
+  // automatically be called on it.
+  rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse) {
   }
 }
 
@@ -109,6 +140,47 @@ message GetProcessesRequest {
 message GetProcessesResponse {
   repeated Process process = 2;
 }
+
+message BeginSessionRequest {
+  int32 pid = 1;
+}
+
+message BeginSessionResponse {
+  Session session = 1;
+}
+
+message EndSessionRequest {
+  int64 session_id = 1;
+}
+
+message EndSessionResponse {
+}
+
+message GetSessionRequest {
+  int64 session_id = 1;
+}
+
+message GetSessionResponse {
+  // Will not be set if no session with a matching ID was found.
+  Session session = 1;
+}
+
+message GetSessionsRequest {
+  int64 start_timestamp = 1;
+  int64 end_timestamp = 2;
+}
+
+message GetSessionsResponse {
+  repeated Session sessions = 1;
+}
+
+message DeleteSessionRequest {
+  int64 session_id = 1;
+}
+
+message DeleteSessionResponse {
+}
+
 
 message BytesRequest {
   // ID for fetching contents from a cache. The value will always be safe to use

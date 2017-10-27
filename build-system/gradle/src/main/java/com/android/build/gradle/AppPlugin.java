@@ -23,30 +23,20 @@ import com.android.build.gradle.internal.ApplicationTaskManager;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.TaskManager;
-import com.android.build.gradle.internal.api.dsl.extensions.ApkPropertiesImpl;
 import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.EmbeddedTestPropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.OnDeviceTestPropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.VariantAwarePropertiesImpl;
-import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.plugin.AppPluginDelegate;
+import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.variant.ApplicationVariantFactory;
-import com.android.build.gradle.internal.variant2.AppAndroidTestVariantFactory;
-import com.android.build.gradle.internal.variant2.AppVariantFactory;
-import com.android.build.gradle.internal.variant2.VariantFactory2;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.profile.Recorder;
-import com.google.common.collect.ImmutableList;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
-import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
@@ -142,32 +132,9 @@ public class AppPlugin extends BasePlugin<AppExtensionImpl> implements Plugin<Pr
                 globalScope, instantiator, androidBuilder, androidConfig);
     }
 
-    @NonNull
-    @Override
-    protected AppExtensionImpl createNewExtension(
-            @NonNull BuildPropertiesImpl buildProperties,
-            @NonNull VariantOrExtensionPropertiesImpl variantExtensionProperties,
-            @NonNull VariantAwarePropertiesImpl variantAwareProperties) {
-        EvalIssueReporter issueReporter = extraModelInfo;
 
-        return project.getExtensions()
-                .create(
-                        "android",
-                        AppExtensionImpl.class,
-                        buildProperties,
-                        variantExtensionProperties,
-                        variantAwareProperties,
-                        new ApkPropertiesImpl(issueReporter),
-                        new EmbeddedTestPropertiesImpl(issueReporter),
-                        new OnDeviceTestPropertiesImpl(issueReporter),
-                        issueReporter);
-    }
-
-    @NonNull
     @Override
-    protected List<VariantFactory2<AppExtensionImpl>> getVariantFactories() {
-        return ImmutableList.of(
-                new AppVariantFactory(extraModelInfo),
-                new AppAndroidTestVariantFactory(extraModelInfo));
+    protected TypedPluginDelegate<AppExtensionImpl> getTypedDelegate() {
+        return new AppPluginDelegate();
     }
 }

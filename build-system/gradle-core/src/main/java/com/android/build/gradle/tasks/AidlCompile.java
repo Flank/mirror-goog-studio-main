@@ -39,6 +39,7 @@ import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.res2.FileStatus;
 import com.android.utils.FileUtils;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import java.io.File;
@@ -141,12 +142,8 @@ public class AidlCompile extends IncrementalTask {
     /** Returns the import folders. */
     @NonNull
     @Internal
-    private List<File> getImportFolders() {
-        List<File> fullImportDir = Lists.newArrayList();
-        fullImportDir.addAll(getImportDirs().getFiles());
-        fullImportDir.addAll(sourceDirs.get());
-
-        return fullImportDir;
+    private Iterable<File> getImportFolders() {
+        return Iterables.concat(getImportDirs().getFiles(), sourceDirs.get());
     }
 
     /**
@@ -160,7 +157,7 @@ public class AidlCompile extends IncrementalTask {
     private void compileSingleFile(
             @NonNull File sourceFolder,
             @NonNull File file,
-            @Nullable List<File> importFolders,
+            @Nullable Iterable<File> importFolders,
             @NonNull DependencyFileProcessor dependencyFileProcessor,
             @NonNull ProcessOutputHandler processOutputHandler)
             throws InterruptedException, ProcessException, IOException {
@@ -220,7 +217,7 @@ public class AidlCompile extends IncrementalTask {
             return;
         }
 
-        final List<File> importFolders = getImportFolders();
+        final Iterable<File> importFolders = getImportFolders();
         final DepFileProcessor processor = new DepFileProcessor();
         final ProcessOutputHandler processOutputHandler =
                 new LoggedProcessOutputHandler(getILogger());

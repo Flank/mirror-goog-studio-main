@@ -29,20 +29,20 @@ import java.util.List;
 public class AaptOutputParser implements PatternAwareOutputParser {
 
     private static final AbstractAaptOutputParser[] PARSERS = {
-            new SkippingHiddenFileParser(),
-            new Error1Parser(),
-            // this needs to be tested before ERROR_2 since they both start with 'ERROR:'
-            new Error6Parser(),
-            new Error2Parser(),
-            new Error3Parser(),
-            new Error4Parser(),
-            new Warning1Parser(),
-            new Error5Parser(),
-            new Error7Parser(),
-            new Error8Parser(),
-            new SkippingWarning2Parser(),
-            new SkippingWarning1Parser(),
-            new BadXmlBlockParser()
+        new SkippingHiddenFileParser(),
+        new Error1Parser(),
+        // this needs to be tested before ERROR_2 since they both start with 'ERROR:'
+        new Error6Parser(),
+        new Error2Parser(),
+        new Error3Parser(),
+        new Error4Parser(),
+        new Warning1Parser(),
+        new Error5Parser(),
+        new Error7Parser(),
+        new Error8Parser(),
+        new SkippingWarning2Parser(),
+        new SkippingWarning1Parser(),
+        new BadXmlBlockParser()
     };
 
     @Override

@@ -84,10 +84,10 @@ public abstract class Aapt2Result {
                                     message));
         }
 
-        abstract Builder setReturnCode(int returnCode);
+        public abstract Builder setReturnCode(int returnCode);
 
         abstract ImmutableList.Builder<Message> messagesBuilder();
 
-        abstract Aapt2Result build();
+        public abstract Aapt2Result build();
     }
 }

@@ -130,6 +130,15 @@ public final class HttpTracker {
         private OutputStream myWrapped;
         private boolean myFirstWrite = true;
 
+        private final ByteBatcher myByteBatcher =
+                new ByteBatcher(
+                        new ByteBatcher.FlushReceiver() {
+                            @Override
+                            public void receive(byte[] bytes) {
+                                reportBytes(myConnectionTracker.myId, bytes);
+                            }
+                        });
+
         OutputStreamTracker(OutputStream wrapped, Connection connectionTracker) {
             myWrapped = wrapped;
             myConnectionTracker = connectionTracker;
@@ -138,6 +147,7 @@ public final class HttpTracker {
         @Override
         public void close() throws IOException {
             myWrapped.close();
+            myByteBatcher.flush();
             onClose(myConnectionTracker.myId);
         }
 
@@ -153,6 +163,7 @@ public final class HttpTracker {
                 myFirstWrite = false;
             }
             myWrapped.write(buffer, offset, length);
+            myByteBatcher.addBytes(buffer, offset, length);
             myConnectionTracker.trackThread();
         }
 
@@ -163,6 +174,7 @@ public final class HttpTracker {
                 myFirstWrite = false;
             }
             myWrapped.write(oneByte);
+            myByteBatcher.addByte(oneByte);
             myConnectionTracker.trackThread();
         }
 
@@ -173,6 +185,7 @@ public final class HttpTracker {
 
         private native void onClose(long id);
         private native void onWriteBegin(long id);
+        private native void reportBytes(long id, byte[] bytes);
     }
 
 
@@ -210,10 +223,17 @@ public final class HttpTracker {
             onError(myId, message);
         }
 
+        /**
+         * Returns output stream with tracker if StudioFlags.PROFILER_TRACK_REQUEST_BODY flag is on,
+         * otherwise returns the original output stream.
+         */
         @Override
         public OutputStream trackRequestBody(OutputStream stream) {
-            onRequestBody(myId);
-            return new OutputStreamTracker(stream, this);
+            if (myRequestPayloadEnabled) {
+                onRequestBody(myId);
+                return new OutputStreamTracker(stream, this);
+            }
+            return stream;
         }
 
         @Override
@@ -268,6 +288,8 @@ public final class HttpTracker {
         private native void onError(long id, String status);
     }
 
+    private static boolean myRequestPayloadEnabled = false;
+
     /**
      * Starts tracking a HTTP request
      *
@@ -279,5 +301,8 @@ public final class HttpTracker {
     public static HttpConnectionTracker trackConnection(String url, StackTraceElement[] callstack) {
         return new Connection(url, callstack);
     }
-}
 
+    public static void setRequestPayloadEnabled(boolean enabled) {
+        myRequestPayloadEnabled = enabled;
+    }
+}

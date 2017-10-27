@@ -23,16 +23,16 @@ import com.android.build.api.dsl.model.FallbackStrategy
 import com.android.build.api.dsl.model.VariantProperties
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.core.BuilderConstants
-import com.android.builder.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 
 class BuildTypeImpl(
         private val named: String,
-        private val deprecationReporter: DeprecationReporter,
         private val variantProperties: VariantPropertiesImpl,
         private val buildTypeOrProductFlavor: BuildTypeOrProductFlavorImpl,
         internal val buildTypeOrVariant: BuildTypeOrVariantImpl,
         private val fallbackStrategy: FallbackStrategyImpl,
+        private val deprecationReporter: DeprecationReporter,
         issueReporter: EvalIssueReporter)
     : SealableObject(issueReporter),
         BuildType,
@@ -48,13 +48,13 @@ class BuildTypeImpl(
         get() {
             deprecationReporter.reportObsoleteUsage(
                     "BuildType.crunchPngsDefault",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             return field
         }
         set(value) {
             deprecationReporter.reportObsoleteUsage(
                     "BuildType.crunchPngsDefault",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             if (checkSeal()) {
                 field = value
             }
@@ -88,7 +88,7 @@ class BuildTypeImpl(
         deprecationReporter.reportDeprecatedUsage(
                 "BuildType.crunchPngs",
                 "BuildType.isCrunchPngs",
-                DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                DeprecationReporter.DeprecationTarget.EOY2018)
         return crunchPngs
     }
 
@@ -98,14 +98,14 @@ class BuildTypeImpl(
             deprecationReporter.reportDeprecatedUsage(
                     "PostprocessingOptions",
                     "BuildType.minifyEnabled",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             return postprocessing.isObfuscate || postprocessing.isRemoveUnusedCode
         }
         set(value) {
             deprecationReporter.reportDeprecatedUsage(
                     "PostprocessingOptions",
                     "BuildType.minifyEnabled",
-                    DeprecationReporter.DeprecationTarget.VERSION_4_0)
+                    DeprecationReporter.DeprecationTarget.EOY2018)
             postprocessing.isObfuscate = true
             postprocessing.isRemoveUnusedCode = true
         }

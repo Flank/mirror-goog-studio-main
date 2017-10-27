@@ -131,7 +131,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
             allPackageAnnotations: MutableList<UAnnotation>) {
         when (qualifiedName) {
             COLOR_INT_ANNOTATION -> checkColor(context, argument)
-            HALF_FLOAT_ANNOTATION -> checkHalfFloat(context, argument, method)
+            HALF_FLOAT_ANNOTATION -> checkHalfFloat(context, argument)
             DIMENSION_ANNOTATION, PX_ANNOTATION ->  checkPx(context, argument)
             else -> {
                 if (isResourceAnnotation(qualifiedName)) {
@@ -148,7 +148,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
                     // data?
                     if (expression is UBinaryExpression) {
                         // Comparing resource types is suspicious
-                        val operator = (expression as UBinaryExpression).operator
+                        val operator = expression.operator
                         if (operator is UastBinaryOperator.ComparisonOperator &&
                                 operator !== UastBinaryOperator.EQUALS &&
                                 operator !== UastBinaryOperator.NOT_EQUALS &&
@@ -225,9 +225,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
      * accidentally widening the result to int
      */
     private fun checkHalfFloat(
-            context: JavaContext,
-            argument: UElement,
-            method: PsiMethod?) {
+        context: JavaContext,
+        argument: UElement) {
         if (argument is UIfExpression) {
             val thenExpression = argument.thenExpression
             if (thenExpression != null) {
@@ -245,13 +244,10 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
 
         // TODO: Look up dimension resources too
         if (types != null && !types.isEmpty()) {
-            val type: String
-            if (types.contains(DIMENSION_MARKER_TYPE)) {
-                type = "dimension"
-            } else if (types.contains(COLOR_INT_MARKER_TYPE)) {
-                type = "color"
-            } else {
-                type = "resource id"
+            val type = when {
+                types.contains(DIMENSION_MARKER_TYPE) -> "dimension"
+                types.contains(COLOR_INT_MARKER_TYPE) -> "color"
+                else -> "resource id"
             }
             val message = String.format("Expected a half float here, not a %1\$s", type)
             // TODO: Change issue to HALF_FLOAT
@@ -269,7 +265,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
                 break
             }
             val expressionType = curr.getExpressionType()
-            if (expressionType != null && !PsiType.SHORT.equals(expressionType)) {
+            if (expressionType != null && PsiType.SHORT != expressionType) {
                 if (PsiType.VOID == expressionType || PsiType.BOOLEAN == expressionType) {
                     break
                 }
@@ -280,7 +276,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
                 break
             }
 
-            curr = curr.getParentOfType<UExpression>(UExpression::class.java, true)
+            curr = curr.getParentOfType(UExpression::class.java, true)
         }
     }
 

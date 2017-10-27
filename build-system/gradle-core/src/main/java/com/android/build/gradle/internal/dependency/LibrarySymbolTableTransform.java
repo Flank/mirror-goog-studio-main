@@ -21,6 +21,7 @@ import static com.android.SdkConstants.FN_RESOURCE_TEXT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
 import com.android.builder.symbols.SymbolIo;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -37,8 +38,7 @@ import org.gradle.api.artifacts.transform.ArtifactTransform;
  * table.
  *
  * <p>This means that one artifact contains all the information needed to build a {@link
- * com.android.builder.symbols.SymbolTable} for {@link
- * com.android.build.gradle.tasks.ProcessAndroidResources}
+ * com.android.builder.symbols.SymbolTable} for {@link LinkApplicationAndroidResourcesTask}
  */
 public class LibrarySymbolTableTransform extends ArtifactTransform {
 

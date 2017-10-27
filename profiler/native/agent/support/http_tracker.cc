@@ -49,8 +49,52 @@ std::atomic_int id_generator_(1);
 // once at the next opportunity. This can be a major performance boost, as it's
 // faster to send one 10K message than ten 1K messages, which gives the system
 // a chance to catch up.
-std::mutex chunks_mutex_;
-std::unordered_map<uint64_t, std::deque<std::string>> chunks_;
+struct PayloadChunk {
+  std::mutex chunks_mutex;
+  std::unordered_map<uint64_t, std::deque<std::string>> chunks;
+
+  void AddBytes(jlong juid, JByteArrayWrapper* bytes, ChunkRequest::Type type) {
+    std::lock_guard<std::mutex> guard(chunks_mutex);
+    const auto &itr = chunks.find(juid);
+    if (itr != chunks.end()) {
+      itr->second.push_back(bytes->get());
+    } else {
+      // We're pushing the first chunk onto the buffer, so also spawn a
+      // background thread to consume it. Additional bytes reported before the
+      // background thread finally runs will be sent out at the same time.
+      chunks[juid].push_back(bytes->get());
+      Agent::Instance().SubmitNetworkTasks(
+          {[juid, this, type](InternalNetworkService::Stub &stub, ClientContext &ctx) {
+            std::ostringstream batched_bytes;
+            {
+              std::lock_guard<std::mutex> guard(chunks_mutex);
+              for (const std::string &chunk : chunks[juid]) {
+                batched_bytes << chunk;
+              }
+              chunks.erase(juid);
+            }
+
+            ChunkRequest chunk;
+            chunk.set_conn_id(juid);
+            chunk.set_content(batched_bytes.str());
+            chunk.set_type(type);
+
+            EmptyNetworkReply reply;
+            Status result = stub.SendChunk(&ctx, chunk, &reply);
+
+            // Send failed, push the chunks back into front of deque
+            if (!result.ok()) {
+              std::lock_guard<std::mutex> guard(chunks_mutex);
+              chunks[juid].push_front(batched_bytes.str());
+            }
+
+            return result;
+          }});
+    }
+  }
+};
+PayloadChunk response_payload_chunk_;
+PayloadChunk request_payload_chunk_;
 
 const SteadyClock &GetClock() {
   static SteadyClock clock;
@@ -129,56 +173,25 @@ JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_reportBytes(
     JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes) {
   JByteArrayWrapper bytes(env, jbytes);
-
-  {
-    std::lock_guard<std::mutex> guard(chunks_mutex_);
-    const auto &itr = chunks_.find(juid);
-    if (itr != chunks_.end()) {
-      itr->second.push_back(bytes.get());
-    } else {
-      // We're pushing the first chunk onto the buffer, so also spawn a
-      // background thread to consume it. Additional bytes reported before the
-      // background thread finally runs will be sent out at the same time.
-      chunks_[juid].push_back(bytes.get());
-      Agent::Instance().SubmitNetworkTasks(
-          {[juid](InternalNetworkService::Stub &stub, ClientContext &ctx) {
-            std::ostringstream batched_bytes;
-            {
-              std::lock_guard<std::mutex> guard(chunks_mutex_);
-              for (const std::string &chunk : chunks_[juid]) {
-                batched_bytes << chunk;
-              }
-              chunks_.erase(juid);
-            }
-
-            ChunkRequest chunk;
-            chunk.set_conn_id(juid);
-            chunk.set_content(batched_bytes.str());
-            chunk.set_type(ChunkRequest::RESPONSE);
-
-            EmptyNetworkReply reply;
-            Status result = stub.SendChunk(&ctx, chunk, &reply);
-
-            // Send failed, push the chunks back into front of deque
-            if (!result.ok()) {
-              std::lock_guard<std::mutex> guard(chunks_mutex_);
-              chunks_[juid].push_front(batched_bytes.str());
-            }
-
-            return result;
-          }});
-    }
-  }
+  response_payload_chunk_.AddBytes(juid, &bytes, ChunkRequest::RESPONSE);
 }
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTracker_onClose(
-    JNIEnv *env, jobject thiz, jlong juid) {}
+    JNIEnv *env, jobject thiz, jlong juid) {
+  EnqueueHttpEvent(juid, HttpEventRequest::UPLOAD_COMPLETED);
+}
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTracker_onWriteBegin(
     JNIEnv *env, jobject thiz, jlong juid) {
-  // TODO: Report request body upload started
+}
+
+JNIEXPORT void JNICALL
+Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTracker_reportBytes(
+    JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes) {
+  JByteArrayWrapper bytes(env, jbytes);
+  request_payload_chunk_.AddBytes(juid, &bytes, ChunkRequest::REQUEST);
 }
 
 JNIEXPORT void JNICALL

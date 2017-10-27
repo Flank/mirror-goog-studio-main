@@ -16,6 +16,9 @@
 
 package com.android.build.api.dsl
 
+import org.gradle.api.Incubating
+
+@Incubating
 interface Initializable<in T : Initializable<T>> {
     /**
      * Copies all properties from the given item of the same type

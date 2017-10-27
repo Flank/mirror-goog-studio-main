@@ -63,7 +63,9 @@ import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.TextFormat;
+import com.android.tools.lint.helpers.DefaultJavaEvaluator;
 import com.android.tools.lint.helpers.DefaultUastParser;
+import com.android.tools.lint.kotlin.LintKotlinUtils;
 import com.android.utils.CharSequences;
 import com.android.utils.StdLogger;
 import com.google.common.annotations.Beta;
@@ -81,6 +83,8 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.pom.java.LanguageLevel;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
+import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiParameter;
 import com.intellij.util.lang.UrlClassLoader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -92,12 +96,16 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UExpression;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -994,24 +1002,7 @@ public class LintCliClient extends LintClient {
             // matches)
         }
 
-        IAndroidTarget buildTarget = null;
-        for (Project project : knownProjects) {
-            IAndroidTarget t = project.getBuildTarget();
-            if (t != null) {
-                if (buildTarget == null) {
-                    buildTarget = t;
-                } else if (buildTarget.getVersion().compareTo(t.getVersion()) > 0) {
-                    buildTarget = t;
-                }
-            }
-        }
-
-        if (buildTarget != null) {
-            File file = buildTarget.getFile(IAndroidTarget.ANDROID_JAR);
-            if (file != null) {
-                files.add(file);
-            }
-        }
+        addBootClassPath(knownProjects, files);
 
         projectEnvironment.registerPaths(files);
 
@@ -1038,6 +1029,31 @@ public class LintCliClient extends LintClient {
         }
 
         super.initializeProjects(knownProjects);
+    }
+
+    protected boolean addBootClassPath(@NonNull Collection<? extends Project> knownProjects,
+            List<File> files) {
+        IAndroidTarget buildTarget = null;
+        for (Project project : knownProjects) {
+            IAndroidTarget t = project.getBuildTarget();
+            if (t != null) {
+                if (buildTarget == null) {
+                    buildTarget = t;
+                } else if (buildTarget.getVersion().compareTo(t.getVersion()) > 0) {
+                    buildTarget = t;
+                }
+            }
+        }
+
+        if (buildTarget != null) {
+            File file = buildTarget.getFile(IAndroidTarget.ANDROID_JAR);
+            if (file != null) {
+                files.add(file);
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -1229,6 +1245,34 @@ public class LintCliClient extends LintClient {
             //noinspection ConstantConditions
             super(project, ideaProject);
             this.project = project;
+        }
+
+        @NotNull
+        @Override
+        protected DefaultJavaEvaluator createEvaluator(
+                @Nullable Project project,
+                @NonNull com.intellij.openapi.project.Project p) {
+            assert project != null;
+            return new DefaultJavaEvaluator(p, project) {
+                @NonNull
+                @Override
+                public Map<UExpression, PsiParameter> computeArgumentMapping(
+                        @NonNull UCallExpression call,
+                        @NonNull PsiMethod method) {
+
+                    if (method.getParameterList().getParametersCount() == 0) {
+                        return Collections.emptyMap();
+                    }
+
+                    Map<UExpression, PsiParameter> kotlinMap =
+                            LintKotlinUtils.computeKotlinArgumentMapping(call, method);
+                    if (kotlinMap != null) {
+                        return kotlinMap;
+                    }
+
+                    return super.computeArgumentMapping(call, method);
+                }
+            };
         }
 
         @Override

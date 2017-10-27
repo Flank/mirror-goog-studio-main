@@ -373,8 +373,8 @@ def iml_module(name,
   prod_deps = []
   test_deps = []
   for dep in deps:
-    label, tags = _get_label_and_tags(dep)
-    if "test" not in tags:
+    label, label_tags = _get_label_and_tags(dep)
+    if "test" not in label_tags:
       prod_deps += [label]
     test_deps += [label]
 
@@ -382,6 +382,7 @@ def iml_module(name,
   split_test_srcs = split_srcs(test_srcs, test_resources, exclude)
   _iml_module_(
     name = name,
+    tags = tags,
     visibility = visibility,
     java_srcs = srcs.javas,
     kotlin_srcs = srcs.kotlins,
@@ -408,14 +409,17 @@ def iml_module(name,
 
   _iml_test_module_(
     name = name + "_testlib",
+    tags = tags,
     iml_module = ":" + name,
     visibility = visibility,
   )
 
+  test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
   if test_srcs:
     test_utils = [] if name == "studio.testutils" else ["//tools/base/testutils:studio.testutils"]
     native.java_test(
         name = name + "_tests",
+        tags = test_tags,
         runtime_deps = test_runtime_deps + [
           ":" + name + "_testlib",
           "//tools/base/bazel:langtools",
@@ -424,7 +428,6 @@ def iml_module(name,
         shard_count = test_shard_count,
         data = test_data,
         jvm_flags = ["-Dtest.suite.jar=" + name + "_test.jar"],
-        tags = test_tags,
         test_class = test_class,
         visibility = visibility,
         main_class = test_main_class,

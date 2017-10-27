@@ -330,7 +330,7 @@ fun buildParamContextsFromCall(
     val cartesianProd = Lists.cartesianProduct(nonEmptyArgReceivers)
     val numImplicitArgs = if (implicitThisDispatchReceivers.isNotEmpty()) 1 else 0
     val paramContexts = cartesianProd
-            .take(graphExpansionLimit) // Cap combinatorial explosions.
+            .take(GRAPH_EXPANSION_LIMIT) // Cap combinatorial explosions.
             .map { receiverTuple ->
                 val zipped = paramsWithReceivers.zip(receiverTuple)
                 val dispatchReceiver = receiverTuple.take(numImplicitArgs).firstOrNull()
@@ -397,7 +397,7 @@ fun ContextualNode.computeEdges(
 }
 
 // Limits the number of times a given call graph node can be specialized on a parameter context.
-const val graphExpansionLimit = 1000
+const val GRAPH_EXPANSION_LIMIT = 1000
 
 interface ContextualCallGraph {
     val contextualNodes: Collection<ContextualNode>
@@ -443,7 +443,7 @@ fun CallGraph.buildContextualCallGraph(
                 n.computeEdges(this, nonContextualReceiverEval)
                         .asSequence()
                         .onEach { (nbr, _) -> contextualGraph.expansionMap.put(nbr.node, nbr) }
-                        .filter { (nbr, _) -> nbr.node.numContextualNodes() <= graphExpansionLimit }
+                        .filter { (nbr, _) -> nbr.node.numContextualNodes() <= GRAPH_EXPANSION_LIMIT }
                         .onEach { edge ->
                             contextualGraph.outEdgeMap.put(n, edge)
                             contextualGraph.inEdgeMap.put(

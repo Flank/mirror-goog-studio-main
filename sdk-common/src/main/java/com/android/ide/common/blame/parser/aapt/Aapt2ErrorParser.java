@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 public class Aapt2ErrorParser extends AbstractAaptOutputParser {
 
     /**
-     * Single-line aapt error
+     * Single-line aapt error containing a path.
      *
      * <pre>
      * ERROR: &lt;path&gt;:&lt;line&gt; &lt;error&gt;

@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.checks
 
-import com.android.SdkConstants
 import com.android.SdkConstants.INT_DEF_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.FLOAT_RANGE_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION

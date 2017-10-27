@@ -36,38 +36,47 @@ import java.util.stream.Collectors
  * all methods returning sub collections, or iterators will return sealable versions
  * of this classes. Sealing the main collection will seal all the sub-items.
  *
- * @param B the base interface exposed by the sealable container
- * @param I the actual implementation that the wrapped container contains
+ * @param InterfaceT the base interface exposed by the sealable container
+ * @param ImplementationT the actual type that the wrapped container contains
  *
  * @see SealableObject
  */
-class SealableNamedDomainObjectContainer<B, I: B>(
-            private val container: NamedDomainObjectContainer<I>,
-            private val implClass: Class<I>,
+class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT>(
+            private val container: NamedDomainObjectContainer<ImplementationT>,
+            private val implClass: Class<ImplementationT>,
             issueReporter: EvalIssueReporter)
-    : SealableObject(issueReporter), NamedDomainObjectContainer<B> {
+    : SealableObject(issueReporter), NamedDomainObjectContainer<InterfaceT> {
+
+    override fun seal() {
+        super.seal()
+        container.forEach {
+            if (it is Sealable) {
+                it.seal()
+            }
+        }
+    }
 
     // wrapper with checkSeal
 
-    override fun create(name: String?): B {
+    override fun create(name: String?): InterfaceT {
         // cant use if (checkSeal) because we need to return something if checkSeal returns false
         checkSeal()
         return container.create(name)
     }
 
-    override fun create(name: String?, closure: Closure<*>?): B {
+    override fun create(name: String?, closure: Closure<*>?): InterfaceT {
         // cant use if (checkSeal) because we need to return something if checkSeal returns false
         checkSeal()
         return container.create(name, closure)
     }
 
-    override fun create(name: String?, action: Action<in B>?): B {
+    override fun create(name: String?, action: Action<in InterfaceT>?): InterfaceT {
         // cant use if (checkSeal) because we need to return something if checkSeal returns false
         checkSeal()
         return container.create(name, action)
     }
 
-    override fun addAll(elements: Collection<B>): Boolean {
+    override fun addAll(elements: Collection<InterfaceT>): Boolean {
         if (checkSeal()) {
             val recastedElements = elements.stream()
                     .filter(implClass::isInstance)
@@ -96,13 +105,13 @@ class SealableNamedDomainObjectContainer<B, I: B>(
         }
     }
 
-    override fun maybeCreate(name: String?): B {
+    override fun maybeCreate(name: String?): InterfaceT {
         // cant use if (checkSeal) because we need to return something if checkSeal returns false
         checkSeal()
         return container.create(name)
     }
 
-    override fun remove(element: B): Boolean {
+    override fun remove(element: InterfaceT): Boolean {
         if (checkSeal()) {
             return container.remove(element)
         }
@@ -110,7 +119,7 @@ class SealableNamedDomainObjectContainer<B, I: B>(
         return false
     }
 
-    override fun removeAll(elements: Collection<B>): Boolean {
+    override fun removeAll(elements: Collection<InterfaceT>): Boolean {
         if (checkSeal()) {
             return container.removeAll(elements)
         }
@@ -118,7 +127,7 @@ class SealableNamedDomainObjectContainer<B, I: B>(
         return false
     }
 
-    override fun add(element: B): Boolean {
+    override fun add(element: InterfaceT): Boolean {
         if (checkSeal()) {
             return if (implClass.isInstance(element)) {
                 container.add(implClass.cast(element))
@@ -132,7 +141,7 @@ class SealableNamedDomainObjectContainer<B, I: B>(
         return false
     }
 
-    override fun retainAll(elements: Collection<B>): Boolean {
+    override fun retainAll(elements: Collection<InterfaceT>): Boolean {
         if (checkSeal()) {
             return container.retainAll(elements)
         }
@@ -146,10 +155,23 @@ class SealableNamedDomainObjectContainer<B, I: B>(
         container.whenObjectRemoved(closure)
     }
 
-    override fun whenObjectRemoved(action: Action<in B>?): Action<in B> {
+    override fun whenObjectRemoved(action: Action<in InterfaceT>): Action<in InterfaceT> {
         container.whenObjectRemoved(action)
-        return action as Action<in B>
+        return action
     }
+
+    override fun whenObjectAdded(closure: Closure<*>?) {
+        container.whenObjectAdded(closure)
+    }
+
+    override fun whenObjectAdded(action: Action<in InterfaceT>): Action<in InterfaceT> {
+        container.whenObjectAdded(action)
+        return action
+    }
+
+    override fun getByName(name: String?): InterfaceT = container.getByName(name)
+
+    override fun findByName(name: String?): InterfaceT? = container.findByName(name)
 
     override fun getRules(): MutableList<Rule> = container.rules
 
@@ -159,43 +181,43 @@ class SealableNamedDomainObjectContainer<B, I: B>(
 
     override fun addRule(p0: Rule?): Rule = container.addRule(p0)
 
-    override fun <S : B> withType(p0: Class<S>?, p1: Closure<*>?): DomainObjectCollection<S> {
+    override fun <S : InterfaceT> withType(p0: Class<S>?, p1: Closure<*>?): DomainObjectCollection<S> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun <S : B> withType(p0: Class<S>?): NamedDomainObjectSet<S> {
+    override fun <S : InterfaceT> withType(p0: Class<S>?): NamedDomainObjectSet<S> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun <S : B> withType(p0: Class<S>?, p1: Action<in S>?): DomainObjectCollection<S> {
+    override fun <S : InterfaceT> withType(p0: Class<S>?, p1: Action<in S>?): DomainObjectCollection<S> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun configure(p0: Closure<*>?): NamedDomainObjectContainer<B> {
+    override fun configure(p0: Closure<*>?): NamedDomainObjectContainer<InterfaceT> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun matching(p0: Spec<in B>?): NamedDomainObjectSet<B> {
+    override fun matching(p0: Spec<in InterfaceT>?): NamedDomainObjectSet<InterfaceT> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun matching(p0: Closure<*>?): NamedDomainObjectSet<B> {
+    override fun matching(p0: Closure<*>?): NamedDomainObjectSet<InterfaceT> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun getNamer(): Namer<B> {
+    override fun getNamer(): Namer<InterfaceT> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun getAsMap(): SortedMap<String, B> {
+    override fun getAsMap(): SortedMap<String, InterfaceT> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun iterator(): MutableIterator<B> {
+    override fun iterator(): MutableIterator<InterfaceT> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun all(p0: Action<in B>?) {
+    override fun all(p0: Action<in InterfaceT>?) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
@@ -203,7 +225,7 @@ class SealableNamedDomainObjectContainer<B, I: B>(
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun getAt(p0: String?): B {
+    override fun getAt(p0: String?): InterfaceT {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
@@ -211,34 +233,22 @@ class SealableNamedDomainObjectContainer<B, I: B>(
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun containsAll(elements: Collection<B>): Boolean {
+    override fun containsAll(elements: Collection<InterfaceT>): Boolean {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
     override val size: Int
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
-    override fun getByName(p0: String?): B {
+    override fun getByName(p0: String?, p1: Closure<*>?): InterfaceT {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun getByName(p0: String?, p1: Closure<*>?): B {
+    override fun getByName(p0: String?, p1: Action<in InterfaceT>?): InterfaceT {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun getByName(p0: String?, p1: Action<in B>?): B {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun whenObjectAdded(p0: Closure<*>?) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun whenObjectAdded(p0: Action<in B>?): Action<in B> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun contains(element: B): Boolean {
+    override fun contains(element: InterfaceT): Boolean {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
@@ -246,11 +256,7 @@ class SealableNamedDomainObjectContainer<B, I: B>(
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun findAll(p0: Closure<*>?): MutableSet<B> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun findByName(p0: String?): B {
+    override fun findAll(p0: Closure<*>?): MutableSet<InterfaceT> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }

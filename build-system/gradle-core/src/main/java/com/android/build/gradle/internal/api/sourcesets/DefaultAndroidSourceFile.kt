@@ -25,7 +25,7 @@ import org.gradle.api.Project
 /**
  */
 class DefaultAndroidSourceFile internal constructor(private val name: String,
-        private val project: Project,
+        private val filesProvider: FilesProvider,
         issueReporter: EvalIssueReporter) : SealableObject(issueReporter), AndroidSourceFile {
 
     private lateinit var _srcFile: File
@@ -43,7 +43,7 @@ class DefaultAndroidSourceFile internal constructor(private val name: String,
         }
 
     override fun srcFile(srcPath: Any): AndroidSourceFile {
-        srcFile = project.file(srcPath)
+        srcFile = filesProvider.file(srcPath)
         return this
     }
 

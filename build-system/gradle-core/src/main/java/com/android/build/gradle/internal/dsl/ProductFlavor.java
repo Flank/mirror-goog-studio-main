@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.VariantManager;
-import com.android.builder.errors.ConfigurableErrorHandler;
+import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
 import com.android.builder.model.BaseConfig;
 import com.google.common.collect.ImmutableList;
 import java.util.List;

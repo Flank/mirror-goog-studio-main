@@ -20,11 +20,21 @@ import static com.android.SdkConstants.ANDROID_PKG;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.JavaContext;
+import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.interprocedural.CallGraph;
+import com.android.tools.lint.detector.api.interprocedural.CallGraphResult;
+import com.android.tools.lint.detector.api.interprocedural.CallGraphVisitor;
+import com.android.tools.lint.detector.api.interprocedural.ClassHierarchyVisitor;
+import com.android.tools.lint.detector.api.interprocedural.IntraproceduralDispatchReceiverEvaluator;
+import com.android.tools.lint.detector.api.interprocedural.IntraproceduralDispatchReceiverVisitor;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -42,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UAnnotation;
 import org.jetbrains.uast.UArrayAccessExpression;
@@ -132,6 +143,7 @@ public class UElementVisitor {
     private final Map<String, List<VisitingDetector>> superClassDetectors =
             new HashMap<>();
     private final AnnotationHandler annotationHandler;
+    private final List<UastScanner> callGraphDetectors = new ArrayList<>();
 
     UElementVisitor(@NonNull UastParser parser, @NonNull List<Detector> detectors) {
         this.parser = parser;
@@ -215,6 +227,10 @@ public class UElementVisitor {
                 for (String annotation : annotations) {
                     annotationScanners.put(annotation, uastScanner);
                 }
+            }
+
+            if (uastScanner.isCallGraphRequired()) {
+                callGraphDetectors.add(uastScanner);
             }
         }
 
@@ -308,6 +324,83 @@ public class UElementVisitor {
     public boolean prepare(@NonNull List<JavaContext> contexts,
             @NonNull List<JavaContext> testContexts) {
         return parser.prepare(contexts, testContexts);
+    }
+
+    public void visitGroups(
+            @NonNull Context projectContext,
+            @NonNull List<JavaContext> allContexts) {
+        if (!allContexts.isEmpty() && allDetectors.stream().anyMatch(visitingDetector ->
+                visitingDetector.getUastScanner() != null &&
+                        visitingDetector.getUastScanner().isCallGraphRequired())) {
+            CallGraphResult callGraph = generateCallGraph(projectContext, parser, allContexts);
+            if (callGraph != null && !callGraphDetectors.isEmpty()) {
+                for (UastScanner scanner : callGraphDetectors) {
+                    projectContext.getClient().runReadAction(() -> {
+                        ProgressManager.checkCanceled();
+                        scanner.analyzeCallGraph(projectContext, callGraph);
+                    });
+                }
+            }
+        }
+    }
+
+    @Nullable
+    private CallGraphResult generateCallGraph(
+            Context projectContext,
+            UastParser parser,
+            List<JavaContext> contexts) {
+        if (contexts.isEmpty()) {
+            return null;
+        }
+
+        try {
+            ClassHierarchyVisitor chaVisitor = new ClassHierarchyVisitor();
+            IntraproceduralDispatchReceiverVisitor receiverEvalVisitor =
+                    new IntraproceduralDispatchReceiverVisitor(chaVisitor.getClassHierarchy());
+            CallGraphVisitor callGraphVisitor = new CallGraphVisitor(
+                    receiverEvalVisitor.getReceiverEval(),
+                    chaVisitor.getClassHierarchy(), false);
+
+            for (JavaContext context : contexts) {
+                UFile uFile = parser.parse(context);
+                if (uFile != null) {
+                    uFile.accept(chaVisitor);
+                }
+            }
+            for (JavaContext context : contexts) {
+                UFile uFile = parser.parse(context);
+                if (uFile != null) {
+                    uFile.accept(receiverEvalVisitor);
+                }
+            }
+            for (JavaContext context : contexts) {
+                UFile uFile = parser.parse(context);
+                if (uFile != null) {
+                    uFile.accept(callGraphVisitor);
+                }
+            }
+
+            CallGraph callGraph = callGraphVisitor.getCallGraph();
+            IntraproceduralDispatchReceiverEvaluator
+                    receiverEval = receiverEvalVisitor.getReceiverEval();
+            return new CallGraphResult(callGraph, receiverEval);
+        } catch (OutOfMemoryError oom) {
+            List<String> detectors = Lists.newArrayList();
+            for (UastScanner detector : callGraphDetectors) {
+                detectors.add(detector.getClass().getSimpleName());
+            }
+            String detectorNames = "[" + Joiner.on(", ").join(detectors) + "]";
+            String message = "Lint ran out of memory while building a callgraph (requested by " +
+                    "these detectors: " + detectorNames + "). You can either disable these " +
+                    "checks, or give lint more heap space.";
+            if (LintClient.isGradle()) {
+                message += " For example, to set the Gradle daemon to use 4 GB, edit " +
+                        "`gradle.properties` to contains `org.gradle.jvmargs=-Xmx4g`";
+            }
+            projectContext.report(IssueRegistry.LINT_ERROR,
+                    Location.create(projectContext.getProject().getDir()), message);
+            return null;
+        }
     }
 
     public void dispose() {

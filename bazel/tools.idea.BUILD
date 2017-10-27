@@ -19,8 +19,8 @@ iml_module(
     deps = [
         "//tools:swing-testing/fest-swing/lib/fest-reflect-2.0-SNAPSHOT",
         "//tools:swing-testing/fest-swing/lib/fest-util-1.3.0-SNAPSHOT",
-        "//tools:swing-testing/fest-swing/lib/fest-assert-1.5.0-SNAPSHOT",
         "//tools:swing-testing/fest-swing/lib/annotations-13.0",
+        "//tools:swing-testing/fest-swing/lib/fest-assert-1.5.0-SNAPSHOT",
         "//tools/idea/.idea/libraries:JUnit4[test]",
         "//tools/idea/.idea/libraries:mockito[test]",
         "//tools:swing-testing/fest-swing/lib/MultithreadedTC-1.01[test]",

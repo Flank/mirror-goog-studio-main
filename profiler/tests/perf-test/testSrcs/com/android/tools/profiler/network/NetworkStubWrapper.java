@@ -22,7 +22,6 @@ import com.android.tools.profiler.proto.NetworkServiceGrpc.NetworkServiceBlockin
 
 /** Wrapper of stub calls that is shared among tests. */
 final class NetworkStubWrapper {
-    private static final int TIMEOUT_MS = 5000;
     private static final int SLEEP_TIME_MS = 200;
     private final NetworkServiceBlockingStub myNetworkStub;
 
@@ -52,12 +51,13 @@ final class NetworkStubWrapper {
      * returns empty string. Because there is some time gap between connection tracking and payload
      * track complete, it need some time to set the payload id.
      */
-    String getResponsePayloadId(long connectionId) {
-        long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < TIMEOUT_MS + SLEEP_TIME_MS) {
-            NetworkProfiler.HttpDetailsResponse responseBodyDetails =
-                    getHttpDetails(connectionId, Type.RESPONSE_BODY);
-            String payloadId = responseBodyDetails.getResponseBody().getPayloadId();
+    String getPayloadId(long connectionId, Type type) {
+        while (true) {
+            NetworkProfiler.HttpDetailsResponse result = getHttpDetails(connectionId, type);
+            String payloadId =
+                    type == Type.RESPONSE_BODY
+                            ? result.getResponseBody().getPayloadId()
+                            : result.getRequestBody().getPayloadId();
             if (!payloadId.isEmpty()) {
                 return payloadId;
             }
@@ -67,6 +67,5 @@ final class NetworkStubWrapper {
                 e.printStackTrace(System.out);
             }
         }
-        return "";
     }
 }
