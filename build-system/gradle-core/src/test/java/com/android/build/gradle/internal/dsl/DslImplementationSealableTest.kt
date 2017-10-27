@@ -16,6 +16,8 @@
 
 package com.android.build.gradle.internal.dsl
 
+import com.android.SdkConstants
+import com.android.build.api.dsl.extension.AppExtension
 import com.android.build.api.dsl.model.TypedValue
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrProductFlavorImpl
@@ -35,11 +37,16 @@ import com.android.builder.errors.EvalIssueReporter
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ListMultimap
 import com.google.common.truth.Truth
+import com.google.common.truth.Truth.assertThat
+import jdk.internal.org.objectweb.asm.Type
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
 import java.io.File
+import java.net.URL
+import java.util.jar.JarFile
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.reflect.KClass
@@ -47,6 +54,8 @@ import kotlin.reflect.KProperty
 import kotlin.reflect.KType
 
 class DslImplementationSealableTest {
+
+    val DOT_CLASS_LENTGTH: Int = SdkConstants.DOT_CLASS.length
 
     @Mock lateinit var issueReporter: EvalIssueReporter
     @Mock lateinit var depecationReporter : DeprecationReporter
@@ -65,6 +74,84 @@ class DslImplementationSealableTest {
     @Before
     fun setUp() {
         MockitoAnnotations.initMocks(this)
+    }
+
+    /**
+     * Starts at {@link AppExtension} class and use class loader tricks to find all the classes
+     * in the parent package. This has to work using Gradle/Bazel or unit testing in the IDE
+     * which respectively use jar files or directories to store compiled classes.
+     *
+     * For each class, it will determine if the dsl API implementation is a correct sealable
+     * object.
+     */
+    @Test
+    fun findAllDslInterfaces() {
+        val appExtensionResource = Type.getInternalName(AppExtension::class.java) + SdkConstants.DOT_CLASS
+        // let's find the resource associated with that class.
+        val url = AppExtension::class.java.classLoader.getResource(appExtensionResource)
+        assertThat(url).isNotNull()
+
+        val base = url.toString().substring(0, url.toString().length - appExtensionResource.length)
+        findAllAPIs(base,
+                URL(url.toString().substring(0, url.toString().length -
+                        (AppExtension::class.simpleName + SdkConstants.DOT_CLASS).length)))
+    }
+
+    /**
+     * Find all DSL API classes from a URL representing a directory or a jar file.
+     */
+    private fun findAllAPIs(base: String, url : URL) {
+        when (url.protocol) {
+            "file" -> parseDirectory(base.substring("file:".length), File(url.toURI()).parentFile)
+            "jar" -> parseJar(url)
+            else -> fail(url.protocol + " protocol not handled")
+        }
+    }
+
+    /**
+     * Recursively parse a directory and find all .class files. Invoke {@link #testAPI} on each
+     * found file.
+     */
+    private fun parseDirectory(base: String, file: File) {
+
+        file.listFiles().forEach { it ->
+            if (it.isDirectory) {
+                parseDirectory(base, it)
+            } else {
+                if (it.name.endsWith(SdkConstants.DOT_CLASS)) {
+                    testAPI(it.absolutePath
+                            .substring(base.length, it.absolutePath.length - DOT_CLASS_LENTGTH)
+                            .replace(File.separatorChar, '.'))
+                }
+            }
+        }
+    }
+
+    /**
+     * Parse a jar file and find all .class files located in the DSL public package. Invoke
+     * {@link #testAPI} on each found file.
+     */
+    private fun parseJar(url: URL) {
+        val jarFile = JarFile(url.path.substring("file:".length, url.path.indexOf('!')))
+        for (entry in jarFile.entries()) {
+            if (!entry.isDirectory
+                    && entry.name.contains("com/android/build/api/dsl")
+                    && entry.name.endsWith(SdkConstants.DOT_CLASS)) {
+                testAPI(entry.name
+                        .replace('/', '.')
+                        .substring(0, entry.name.length - DOT_CLASS_LENTGTH))
+            }
+        }
+    }
+
+    /**
+     * Test a DSL API implementation.
+     *
+     * so far, only loads the class and ensure it is loaded successfully.
+     */
+    private fun testAPI(className : String) {
+        val apiClass = javaClass.classLoader.loadClass(className)
+        assertThat(apiClass).isNotNull()
     }
 
     @Test
