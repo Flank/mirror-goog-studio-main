@@ -242,6 +242,19 @@ java_binary(
 )
 
 java_binary(
+    name = "gradlew",
+    srcs = ["src/com/android/tools/gradle/GradleW.java"],
+    main_class = "com.android.tools.gradle.GradleW",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tools/base/annotations",
+        "//tools/base/build-system:gradle-api",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.guava_guava",
+    ],
+)
+
+java_binary(
     name = "antlr",
     srcs = ["src/com/android/tools/binaries/AntlrCompiler.java"],
     main_class = "com.android.tools.binaries.AntlrCompiler",
