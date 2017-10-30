@@ -21,6 +21,7 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
+import com.android.utils.Pair;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpBackOffIOExceptionHandler;
@@ -32,29 +33,38 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.util.ExponentialBackOff;
-import com.google.api.client.util.Joiner;
-import com.google.api.client.util.Maps;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
+import com.google.api.client.util.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Uploader that pushes profile results to act-d. */
 public class ActdProfileUploader implements ProfileUploader {
+    public enum Mode {
+        NORMAL,
+        BACKFILL
+    }
+
     /**
      * A threshold below which samples will not be uploaded.
      *
@@ -68,20 +78,58 @@ public class ActdProfileUploader implements ProfileUploader {
     @NonNull private static final String ACTD_ADD_SERIE_URL = "/apis/addSerie";
     @NonNull private static final String ACTD_ADD_SAMPLE_URL = "/apis/addSample";
 
+    /**
+     * This main method is for doing data backfill.
+     *
+     * <p>There are a bunch of things you need to keep in mind if you want to run this main method,
+     * its usage is extremely tricky.
+     *
+     * <p>1) You'll need to acquire the GradleBenchmarkResult data in a format fit for consumption.
+     * The format in question is a directory filled with files, one proto per file.
+     *
+     * <p>2) You'll need to give the process quite a lot of RAM. I recommend -Xms64g -Xmx64g.
+     *
+     * <p>3) If you want to backfill all of the data, you'll need to split it into chunks. I
+     * recommend one month's worth of data at a time.
+     */
+    public static void main(String... args) throws IOException {
+        ActdProfileUploader uploader = ActdProfileUploader.fromEnvironment();
+
+        if (args.length == 0) {
+            System.err.println("you must supply directories to read protos from as arguments");
+            System.exit(1);
+        }
+
+        for (String arg : args) {
+            Path protoDir = Paths.get(arg);
+
+            if (Files.notExists(protoDir)) {
+                System.err.println("directory " + protoDir + " does not exist");
+                System.exit(1);
+            }
+
+            System.out.println("starting upload from " + protoDir);
+            uploader.uploadDataFromDirectory(protoDir);
+        }
+    }
+
     @NonNull private final String actdBaseUrl;
     @NonNull private final String actdProjectId;
     @NonNull private final String buildbotMasterUrl;
     @NonNull private final String buildbotBuilderName;
+    private final Mode mode;
 
     private ActdProfileUploader(
             @NonNull String actdBaseUrl,
             @NonNull String actdProjectId,
             @NonNull String buildbotMasterUrl,
-            @NonNull String buildbotBuilderName) {
+            @NonNull String buildbotBuilderName,
+            @NonNull Mode mode) {
         this.actdBaseUrl = actdBaseUrl;
         this.actdProjectId = actdProjectId;
         this.buildbotMasterUrl = buildbotMasterUrl;
         this.buildbotBuilderName = buildbotBuilderName;
+        this.mode = mode;
     }
 
     /**
@@ -94,9 +142,10 @@ public class ActdProfileUploader implements ProfileUploader {
             @NonNull String actdBaseUrl,
             @NonNull String actdProjectId,
             @NonNull String buildbotMasterUrl,
-            @NonNull String buildbotBuilderName) {
+            @NonNull String buildbotBuilderName,
+            @NonNull Mode mode) {
         return new ActdProfileUploader(
-                actdBaseUrl, actdProjectId, buildbotMasterUrl, buildbotBuilderName);
+                actdBaseUrl, actdProjectId, buildbotMasterUrl, buildbotBuilderName, mode);
     }
 
     /**
@@ -135,7 +184,8 @@ public class ActdProfileUploader implements ProfileUploader {
                 envRequired("ACTD_BASE_URL"),
                 actdProjectId,
                 envRequired("ACTD_BUILDBOT_MASTER_URL"),
-                envRequired("ACTD_BUILDBOT_BUILDER_NAME"));
+                envRequired("ACTD_BUILDBOT_BUILDER_NAME"),
+                Mode.NORMAL);
     }
 
     /**
@@ -201,8 +251,18 @@ public class ActdProfileUploader implements ProfileUploader {
     @VisibleForTesting
     @NonNull
     public Infos infos(long buildId) throws IOException {
-        Change change = getChange(buildId);
         Infos infos = new Infos();
+
+        if (mode == Mode.BACKFILL) {
+            infos.hash = "0000000000000000000000000000000000000000";
+            infos.abbrevHash = infos.hash.substring(0, 7);
+            infos.authorName = "No commit info";
+            infos.authorEmail = "nobody@google.com";
+            infos.subject = "Sorry, no commit info available";
+            return infos;
+        }
+
+        Change change = getChange(buildId);
 
         if (change == null) {
             infos.hash = "0000000000000000000000000000000000000000";
@@ -388,71 +448,106 @@ public class ActdProfileUploader implements ProfileUploader {
         }
     }
 
-    private static long getBuildId(@NonNull Collection<GradleBenchmarkResult> results) {
-        List<Long> buildIds =
-                results.stream()
-                        .map(result -> result.getScheduledBuild().getBuildbotBuildNumber())
-                        .distinct()
-                        .collect(Collectors.toList());
-
-        if (buildIds.size() != 1) {
-            throw new IllegalArgumentException(
-                    String.format(
-                            "results list contains more than one distinct build ID: %s",
-                            Joiner.on(',').join(buildIds)));
-        }
-
-        return Iterables.getOnlyElement(buildIds);
-    }
-
-    /**
-     * Because there can be multiple of each task happening per build (e.g. if there are multiple
-     * projects), we sum the times for each task and take the overall time spent doing that type of
-     * task per build.
-     */
     @VisibleForTesting
     @NonNull
     public Collection<SampleRequest> sampleRequests(
-            @NonNull Collection<GradleBenchmarkResult> results) throws IOException {
-        if (results.isEmpty()) {
-            return Collections.emptyList();
-        }
+            @NonNull Collection<GradleBenchmarkResult> results) {
+        return sampleRequests(results.stream());
+    }
 
-        long buildId = getBuildId(results);
-        Change change = getChange(buildId);
-        Map<String, SampleRequest> summedSeriesDurations = Maps.newHashMap();
+    @VisibleForTesting
+    @NonNull
+    public Collection<SampleRequest> sampleRequests(
+            @NonNull Stream<GradleBenchmarkResult> results) {
+        return results.parallel()
+                .filter(Objects::nonNull)
+                .filter(r -> r.getScheduledBuild() != null)
+                .filter(r -> r.getProfile() != null)
+                .flatMap(
+                        result ->
+                                result.getProfile()
+                                        .getSpanList()
+                                        .stream()
+                                        .map(
+                                                span -> {
+                                                    Sample sample = new Sample();
+                                                    sample.buildId =
+                                                            result.getScheduledBuild()
+                                                                    .getBuildbotBuildNumber();
+                                                    sample.value = span.getDurationInMs();
 
-        for (GradleBenchmarkResult result : results) {
-            if (result.getProfile() == null) {
-                // Shouldn't happen, but it's worth being defensive.
-                continue;
-            }
+                                                    Change change;
+                                                    try {
+                                                        change = getChange(sample.buildId);
+                                                    } catch (IOException e) {
+                                                        throw new UncheckedIOException(e);
+                                                    }
+                                                    sample.url =
+                                                            change == null ? "" : change.revlink;
 
-            for (GradleBuildProfileSpan span : result.getProfile().getSpanList()) {
-                String seriesId = seriesId(result, span);
-                SampleRequest sampleReq =
-                        summedSeriesDurations.computeIfAbsent(
-                                seriesId,
-                                key -> {
-                                    SampleRequest req = new SampleRequest();
-                                    req.projectId = actdProjectId;
-                                    req.serieId = seriesId;
-                                    req.sample.buildId = buildId;
-                                    req.sample.value = 0;
-                                    req.sample.url = change == null ? "" : change.revlink;
-                                    return req;
-                                });
-
-                sampleReq.sample.value += span.getDurationInMs();
-            }
-        }
-
-        // filter out low-value, noisy samples before returning a set of samples
-        return summedSeriesDurations
-                .values()
+                                                    return Pair.of(seriesId(result, span), sample);
+                                                }))
+                .collect(Collectors.groupingBy(Pair::getFirst)) // grouping by seriesId
+                .entrySet()
                 .stream()
-                .filter(req -> req.sample.value > BENCHMARK_VALUE_THRESHOLD_MILLIS)
+                .parallel()
+                .map(
+                        entry -> {
+                            Collection<Sample> samples =
+                                    entry.getValue()
+                                            .stream()
+                                            .parallel()
+                                            .map(Pair::getSecond)
+                                            .collect(Collectors.toList());
+                            samples = mergeSameBuildId(samples);
+                            samples =
+                                    samples.stream()
+                                            .parallel()
+                                            .filter(
+                                                    sample ->
+                                                            sample.value
+                                                                    > BENCHMARK_VALUE_THRESHOLD_MILLIS)
+                                            .collect(Collectors.toList());
+
+                            SampleRequest req = new SampleRequest();
+                            req.projectId = actdProjectId;
+                            req.serieId = entry.getKey();
+                            req.samples = samples;
+
+                            // If backfillMode is on, we want to skip analysis and override what's already
+                            // there.
+                            req.override = mode == Mode.BACKFILL;
+                            req.skipAnalysis = mode == Mode.BACKFILL;
+
+                            return req;
+                        })
+                .filter(req -> !req.samples.isEmpty())
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Because we can have multiple samples for a given series and build ID (maybe we have multiple
+     * projects running the same task multiple times), and we don't want these samples to overwrite
+     * each other, we instead sum them.
+     *
+     * <p>This function assumes that you're passing in a collection of samples that all share a
+     * series ID.
+     */
+    @NonNull
+    Collection<Sample> mergeSameBuildId(@NonNull Collection<Sample> samples) {
+        Map<Long, Sample> byBuildId = new LinkedHashMap<>();
+
+        for (Sample sample : samples) {
+            byBuildId.merge(
+                    sample.buildId,
+                    sample,
+                    (a, b) -> {
+                        a.value += b.value;
+                        return a;
+                    });
+        }
+
+        return byBuildId.values();
     }
 
     @VisibleForTesting
@@ -463,8 +558,12 @@ public class ActdProfileUploader implements ProfileUploader {
         buildReq.build.infos = infos(buildId);
         buildReq.build.buildId = buildId;
 
-        Change change = getChange(buildId);
-        buildReq.build.infos.url = change != null ? change.revlink : "";
+        if (mode == Mode.BACKFILL) {
+            buildReq.build.infos.url = "";
+        } else {
+            Change change = getChange(buildId);
+            buildReq.build.infos.url = change == null ? "" : change.revlink;
+        }
 
         return buildReq;
     }
@@ -473,45 +572,135 @@ public class ActdProfileUploader implements ProfileUploader {
     @NonNull
     public Collection<SerieRequest> serieRequests(
             @NonNull Collection<SampleRequest> sampleRequests) {
-        Set<String> serieIds =
-                sampleRequests
-                        .stream()
-                        .map(req -> req.serieId)
-                        .distinct()
-                        .collect(Collectors.toSet());
+        Preconditions.checkNotNull(sampleRequests);
+        Preconditions.checkArgument(
+                !sampleRequests.isEmpty(), "got an empty collection of sample requests");
 
-        List<SerieRequest> serieRequests = Lists.newArrayListWithExpectedSize(serieIds.size());
-        for (String serieId : serieIds) {
-            SerieRequest serieReq = new SerieRequest();
-            serieReq.projectId = actdProjectId;
-            serieReq.serieId = serieId;
-            serieRequests.add(serieReq);
-        }
-        return serieRequests;
+        return sampleRequests
+                .stream()
+                .parallel()
+                .map(req -> req.serieId)
+                .distinct()
+                .map(
+                        serieId -> {
+                            SerieRequest serieReq = new SerieRequest();
+                            serieReq.projectId = actdProjectId;
+                            serieReq.serieId = serieId;
+                            return serieReq;
+                        })
+                .collect(Collectors.toList());
+    }
+
+    @VisibleForTesting
+    @NonNull
+    public Collection<BuildRequest> buildRequests(
+            @NonNull Collection<SampleRequest> sampleRequests) {
+        Preconditions.checkNotNull(sampleRequests);
+        Preconditions.checkArgument(
+                !sampleRequests.isEmpty(), "got an empty collection of sample requests");
+
+        return sampleRequests
+                .stream()
+                .parallel()
+                .flatMap(req -> req.samples.stream())
+                .map(sample -> sample.buildId)
+                .distinct()
+                .map(
+                        buildId -> {
+                            try {
+                                return buildRequest(buildId);
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(e);
+                            }
+                        })
+                .collect(Collectors.toList());
+    }
+
+    @NonNull
+    private Stream<GradleBenchmarkResult> resultsFromDir(@NonNull Path dir) throws IOException {
+        return Files.walk(dir)
+                .parallel()
+                .filter(Files::isRegularFile)
+                .map(
+                        path -> {
+                            try {
+                                return Files.readAllBytes(path);
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                .map(
+                        bytes -> {
+                            try {
+                                return GradleBenchmarkResult.parseFrom(bytes);
+                            } catch (InvalidProtocolBufferException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
     }
 
     @Override
-    public void uploadData(@NonNull List<GradleBenchmarkResult> results) throws IOException {
-        long buildId = getBuildId(results);
-        BuildRequest br = buildRequest(buildId);
-        addBuild(br);
+    public void uploadData(@NonNull List<GradleBenchmarkResult> results) {
+        Preconditions.checkNotNull(results);
+        Preconditions.checkArgument(!results.isEmpty(), "got an empty list of results");
 
-        Collection<SampleRequest> sampleRequests = sampleRequests(results);
+        uploadFromSamples(sampleRequests(results.stream()));
+    }
+
+    private void uploadDataFromDirectory(@NonNull Path dir) throws IOException {
+        uploadFromSamples(sampleRequests(resultsFromDir(dir)));
+    }
+
+    private void uploadFromSamples(@NonNull Collection<SampleRequest> sampleRequests) {
+        Preconditions.checkNotNull(sampleRequests);
+        Preconditions.checkArgument(
+                !sampleRequests.isEmpty(), "got an empty collection of sample requests");
+
         Collection<SerieRequest> serieRequests = serieRequests(sampleRequests);
+        Collection<BuildRequest> buildRequests = buildRequests(sampleRequests);
 
-        System.out.println("found " + serieRequests.size() + " unique series IDs");
-        System.out.println("ensuring all series exist");
+        System.out.println("got " + buildRequests.size() + " build requests");
+        System.out.println("got " + serieRequests.size() + " series requests");
+        System.out.println("got " + sampleRequests.size() + " sample requests");
 
-        // Make sure that all series we're about to upload data for exist in Dana.
-        for (SerieRequest serieReq : serieRequests) {
-            addSerie(serieReq);
-        }
+        System.out.println("adding builds...");
+        buildRequests
+                .stream()
+                .parallel()
+                .forEach(
+                        buildRequest -> {
+                            try {
+                                addBuild(buildRequest);
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(e);
+                            }
+                        });
 
-        System.out.println("starting uplaod of " + sampleRequests.size() + " samples");
-        for (SampleRequest sampleReq : sampleRequests) {
-            addSample(sampleReq);
-        }
-        System.out.println("successfully uploaded act-d data for build ID " + buildId);
+        System.out.println("adding series...");
+        serieRequests
+                .stream()
+                .parallel()
+                .forEach(
+                        serieRequest -> {
+                            try {
+                                addSerie(serieRequest);
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(e);
+                            }
+                        });
+
+        System.out.println("adding samples...");
+        sampleRequests
+                .stream()
+                .parallel()
+                .forEach(
+                        sampleRequest -> {
+                            try {
+                                addSample(sampleRequest);
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(e);
+                            }
+                        });
     }
 
     /**
@@ -570,7 +759,9 @@ public class ActdProfileUploader implements ProfileUploader {
     public static final class SampleRequest {
         public String projectId;
         public String serieId;
-        public Sample sample = new Sample();
+        public Collection<Sample> samples = new LinkedList<>();
+        public boolean override = false;
+        public boolean skipAnalysis = false;
     }
 
     @VisibleForTesting
