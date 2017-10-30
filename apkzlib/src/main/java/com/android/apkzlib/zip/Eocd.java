@@ -215,7 +215,7 @@ class Eocd {
      * @return the size, in bytes, of the EOCD
      */
     long getEocdSize() {
-        return F_COMMENT_SIZE.endOffset() + comment.length;
+        return (long) F_COMMENT_SIZE.endOffset() + comment.length;
     }
 
     /**

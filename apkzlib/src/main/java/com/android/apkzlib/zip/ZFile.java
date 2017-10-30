@@ -351,8 +351,8 @@ public class ZFile implements Closeable {
     private final List<IOExceptionRunnable> toRun;
 
     /**
-     * {@code true} when {@link #notify(com.android.apkzlib.utils.IOExceptionFunction)} is notifying extensions. Used
-     * to avoid reordering notifications.
+     * {@code true} when {@link #notify(com.android.apkzlib.utils.IOExceptionFunction)} is
+     * notifying extensions. Used to avoid reordering notifications.
      */
     private boolean isNotifying;
 
@@ -2491,7 +2491,7 @@ public class ZFile implements Closeable {
                 // We found a possible EOCD signature at position i. Try to read it.
                 ByteBuffer bytes = ByteBuffer.wrap(comment, i, comment.length - i);
                 try {
-                    Eocd eocdInComment = new Eocd(bytes);
+                    new Eocd(bytes);
                     throw new IllegalArgumentException(
                             "Position "
                                     + i

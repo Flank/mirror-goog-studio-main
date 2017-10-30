@@ -499,7 +499,7 @@ public class StoredEntry {
 
         long ddStart = cdh.getOffset() + FIXED_LOCAL_FILE_HEADER_SIZE
                 + cdh.getName().length() + localExtra.size() + compressInfo.getCompressedSize();
-        byte ddData[] = new byte[DataDescriptorType.DATA_DESCRIPTOR_WITH_SIGNATURE.size];
+        byte[] ddData = new byte[DataDescriptorType.DATA_DESCRIPTOR_WITH_SIGNATURE.size];
         file.directFullyRead(ddStart, ddData);
 
         ByteBuffer ddBytes = ByteBuffer.wrap(ddData);
