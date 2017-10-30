@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.android.build.gradle.integration.performance.ActdProfileUploader;
 import com.android.build.gradle.integration.performance.ActdProfileUploader.SampleRequest;
-import com.android.testutils.TestUtils;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.common.collect.Lists;
@@ -34,7 +33,6 @@ import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleTaskExecution;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
-import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,14 +42,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ActdProfileUploaderTest {
-    private final ActdProfileUploader.Infos infos = new ActdProfileUploader.Infos();
     private final int buildId = 1234;
-    private final File repo = TestUtils.getWorkspaceFile("tools/base");
-    private final String hostname = "me.here.corp.google.com";
     private final String actdBaseUrl = "http://example.com";
     private final String actdProjectId = "test";
-    private final String actdBuildUrl = "http://example.com";
-    private final String actdCommitUrl = null;
+    private final String buildbotMasterUrl = "http://example.com";
+    private final String buildbotBuilderName = "fred";
 
     private ActdProfileUploader uploader;
 
@@ -60,12 +55,19 @@ public class ActdProfileUploaderTest {
         uploader =
                 ActdProfileUploader.create(
                         buildId,
-                        repo,
-                        hostname,
                         actdBaseUrl,
                         actdProjectId,
-                        actdBuildUrl,
-                        actdCommitUrl);
+                        buildbotMasterUrl,
+                        buildbotBuilderName);
+
+        ActdProfileUploader.BuildbotResponse buildInfo = new ActdProfileUploader.BuildbotResponse();
+        buildInfo.sourceStamp.changes =
+                new ActdProfileUploader.Change[] {new ActdProfileUploader.Change()};
+        buildInfo.sourceStamp.changes[0].comments = "comments";
+        buildInfo.sourceStamp.changes[0].rev = "00000000000000000000000000000000000000";
+        buildInfo.sourceStamp.changes[0].revlink = "http://example.com";
+        buildInfo.sourceStamp.changes[0].who = "you@google.com";
+        uploader.setBuildInfo(buildInfo);
     }
 
     /**
@@ -154,14 +156,8 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void hostname() throws IOException {
-        assertThat(ActdProfileUploader.hostname()).isNotEmpty();
-    }
-
-    @Test
     public void infos() throws IOException {
-        ActdProfileUploader.Infos infos =
-                ActdProfileUploader.infos(TestUtils.getWorkspaceFile("tools/base"));
+        ActdProfileUploader.Infos infos = uploader.infos();
 
         assertThat(infos.abbrevHash).isNotEmpty();
         assertThat(infos.abbrevHash).doesNotContain("\n");
@@ -183,7 +179,32 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void flags() throws IOException {
+    public void infosManualTrigger() throws IOException {
+        uploader.setBuildInfo(new ActdProfileUploader.BuildbotResponse());
+
+        ActdProfileUploader.Infos infos = uploader.infos();
+
+        assertThat(infos.abbrevHash).isNotEmpty();
+        assertThat(infos.abbrevHash).doesNotContain("\n");
+        assertThat(infos.abbrevHash).doesNotContain(" ");
+        assertThat(infos.abbrevHash.length()).isLessThan(infos.hash.length());
+
+        assertThat(infos.hash).isNotEmpty();
+        assertThat(infos.hash).doesNotContain("\n");
+        assertThat(infos.hash).doesNotContain(" ");
+
+        assertThat(infos.authorEmail).isNotEmpty();
+        assertThat(infos.authorEmail).doesNotContain("\n");
+        assertThat(infos.authorEmail).contains("@google.com");
+
+        assertThat(infos.authorName).isNotEmpty();
+        assertThat(infos.authorName).doesNotContain("\n");
+
+        assertThat(infos.subject).isNotEmpty();
+    }
+
+    @Test
+    public void flags() {
         GradleBenchmarkResult gbr = randomBenchmarkResult();
         assertThat(ActdProfileUploader.flags(gbr)).isNotEmpty();
 
@@ -192,7 +213,7 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void seriesId() throws IOException {
+    public void seriesId() {
         GradleBenchmarkResult gbr = randomBenchmarkResult();
 
         assertThat(gbr.getProfile()).isNotNull();
@@ -207,7 +228,7 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void description() throws IOException {
+    public void description() {
         GradleBenchmarkResult gbr = randomBenchmarkResult();
 
         assertThat(gbr.getProfile()).isNotNull();
