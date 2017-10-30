@@ -37,6 +37,8 @@ import com.google.gson.reflect.TypeToken;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -64,12 +66,11 @@ public class DefaultNdkInfo implements NdkInfo {
         File abiFile = new File(root, ABI_LIST_FILE);
         if (abiFile.isFile()) {
             Map<String, AbiInfo> infoMap;
-            try {
+            try (FileReader reader = new FileReader(abiFile)) {
                 infoMap =
                         new Gson()
                                 .fromJson(
-                                        new FileReader(abiFile),
-                                        new TypeToken<Map<String, AbiInfo>>() {}.getType());
+                                        reader, new TypeToken<Map<String, AbiInfo>>() {}.getType());
             } catch (FileNotFoundException e) {
                 throw new RuntimeException("Unreachable. Unable to find abi list file: " + abiFile);
             } catch (JsonParseException e) {
@@ -81,6 +82,8 @@ public class DefaultNdkInfo implements NdkInfo {
                                         + "default ABI list.");
                 abiInfoList = getDefaultAbiInfoList();
                 return;
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
             ImmutableList.Builder<AbiInfo> builder = ImmutableList.builder();
             for (Map.Entry<String, AbiInfo> entry : infoMap.entrySet()) {
