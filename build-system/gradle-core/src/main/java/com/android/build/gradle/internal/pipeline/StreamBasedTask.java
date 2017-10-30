@@ -75,7 +75,11 @@ public class StreamBasedTask extends AndroidBuilderTask {
                 new ArrayList<>(consumedInputStreams.size() + referencedInputStreams.size());
         for (TransformStream stream :
                 Iterables.concat(consumedInputStreams, referencedInputStreams)) {
-            getInputs().files(stream.getAsFileTree()).withPathSensitivity(PathSensitivity.RELATIVE);
+            // This cannot be PathSensitivity.RELATIVE, as transforms currently decide where to
+            // place outputs based on input names, which are lost by this input, but full file path
+            // is not a terrible approximation for this.
+            // See https://issuetracker.google.com/68144982
+            getInputs().files(stream.getAsFileTree()).withPathSensitivity(PathSensitivity.ABSOLUTE);
 
             inputNames.add(stream.getName());
         }

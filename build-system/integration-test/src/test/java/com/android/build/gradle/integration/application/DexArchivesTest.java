@@ -166,6 +166,25 @@ public class DexArchivesTest {
         }
     }
 
+    /** Regression test for http://b/68144982. */
+    @Test
+    public void testIncrementalDexingRemoteDependency() throws IOException, InterruptedException {
+        // Add an arbitrary external *AAR* dependency
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "android.defaultConfig.minSdkVersion=10\n"
+                        + "dependencies { implementation ('org.jdeferred:jdeferred-android-aar:1.2.2') {   transitive = false } }");
+
+        project.executor().run("assembleDebug");
+
+        // Minor version update
+        TestFileUtils.appendToFile(
+                project.getBuildFile(),
+                "\ndependencies { implementation ('org.jdeferred:jdeferred-android-aar:1.2.3') {   transitive = false } }");
+        project.executor().run("assembleDebug");
+    }
+
     private void checkIntermediaryDexArchives(@NonNull Collection<String> dexEntryNames) {
         TransformOutputContent content = new TransformOutputContent(builderDir());
         assertThat(content).hasSize(1);
