@@ -1253,6 +1253,7 @@ public final class SdkConstants {
     public static final String ATTR_ORIENTATION = "orientation"; //$NON-NLS-1$
     public static final String ATTR_BARRIER_DIRECTION = "barrierDirection"; //$NON-NLS-1$
     public static final String ATTR_TRANSITION = "transition"; //$NON-NLS-1$
+    public static final String ATTR_TRANSITION_SHOW_PATHS = "showPaths"; //$NON-NLS-1$
     public static final String ATTR_TRANSITION_STATE = "transitionState"; //$NON-NLS-1$
     public static final String ATTR_TRANSITION_POSITION = "transitionPosition"; //$NON-NLS-1$
     public static final String ATTR_LAYOUT = "layout"; //$NON-NLS-1$
