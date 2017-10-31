@@ -31,6 +31,7 @@ class GradleW {
         String outPath = null;
         String gradleVersion = null;
         LinkedList<File> repos = new LinkedList<>();
+        LinkedList<String> tasks = new LinkedList<>();
 
         Iterator<String> it = args.iterator();
         while (it.hasNext()) {
@@ -45,19 +46,22 @@ class GradleW {
                 gradleVersion = it.next();
             } else if (arg.equals("--repo") && it.hasNext()) {
                 repos.add(new File(it.next()));
+            } else if (arg.equals("--repo") && it.hasNext()) {
+                repos.add(new File(it.next()));
+            } else if (arg.equals("--task") && it.hasNext()) {
+                tasks.add(it.next());
             }
         }
-        gradlew(outFile, outPath, gradleFile, repos, gradleVersion);
+        gradlew(outFile, outPath, gradleFile, tasks, repos, gradleVersion);
         return 0;
     }
 
-    public void gradlew(
-            File outFile, String outPath, File gradleFile, List<File> repos, String gradleVersion)
-            throws IOException {
-
+    public void gradlew(File outFile, String outPath, File gradleFile, List<String> tasks,
+            List<File> repos, String gradleVersion) throws IOException {
         File outDir = new File(outFile.getParentFile(), outFile.getName() + ".temp");
         outDir.mkdirs();
         File buildDir = new File(outDir, "_build").getAbsoluteFile();
+        buildDir.mkdirs();
         File androidDir = new File(outDir, "_android").getAbsoluteFile();
         File homeDir = new File(outDir, "_home").getAbsoluteFile();
         File repoDir = new File(outDir, "_repo").getAbsoluteFile();
@@ -79,8 +83,11 @@ class GradleW {
                 projectConnection
                         .newBuild()
                         .setEnvironmentVariables(env)
-                        .withArguments("--offline", "--init-script", initScript.getAbsolutePath())
-                        .forTasks("build");
+                        .withArguments("--offline", "--init-script", initScript.getAbsolutePath(),
+                                "--debug", "--stacktrace")
+                        .forTasks(tasks.toArray(new String[tasks.size()]));
+        launcher.setStandardOutput(System.out);
+        launcher.setStandardError(System.err);
 
         launcher.run();
         Files.move(new File(buildDir, outPath).toPath(), outFile.toPath());

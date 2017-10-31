@@ -1,9 +1,11 @@
-load("//tools/base/bazel:gradle.bzl", "gradle_aar")
+load("//tools/base/bazel:gradle.bzl", "gradle_build")
 
-gradle_aar(
+gradle_build(
     name = "lib",
-    aar = "outputs/aar/library-release.aar",
+    output_file = "outputs/aar/library-release.aar",
+    output_file_source = "outputs/aar/library-release.aar",
     build_file = "library/build.gradle",
+    tasks = ["build"],
     data = [
         "//tools/base/build-system:gradle-distrib",
         "//prebuilts/studio/sdk:platforms/latest",
