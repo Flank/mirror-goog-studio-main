@@ -18,6 +18,7 @@ package com.android.ide.common.xml;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.ide.common.xml.ManifestData.Activity;
 import com.android.ide.common.xml.ManifestData.Instrumentation;
 import com.android.ide.common.xml.ManifestData.SupportsScreens;
@@ -25,7 +26,6 @@ import com.android.ide.common.xml.ManifestData.UsesConfiguration;
 import com.android.ide.common.xml.ManifestData.UsesFeature;
 import com.android.ide.common.xml.ManifestData.UsesLibrary;
 import com.android.io.IAbstractFile;
-import com.android.io.IAbstractFolder;
 import com.android.io.StreamException;
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
@@ -33,7 +33,6 @@ import com.android.resources.TouchScreen;
 import com.android.utils.XmlUtils;
 import com.android.xml.AndroidManifest;
 import java.io.BufferedInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -76,7 +75,6 @@ public class AndroidManifestParser {
          * <p>
          * Errors are put as {@code org.eclipse.core.resources.IMarker} on the manifest file.
          *
-         * @param locator
          * @param className the fully qualified name of the class to test.
          * @param superClassName the fully qualified name of the class it is supposed to extend.
          * @param testVisibility if <code>true</code>, the method will check the visibility of
@@ -94,9 +92,9 @@ public class AndroidManifestParser {
      */
     private static class ManifestHandler extends DefaultHandler {
 
-        //--- temporary data/flags used during parsing
-        private final ManifestData mManifestData;
-        private final ManifestErrorHandler mErrorHandler;
+        // --- temporary data/flags used during parsing
+        @Nullable private final ManifestData mManifestData;
+        @Nullable private final ManifestErrorHandler mErrorHandler;
         private int mCurrentLevel = 0;
         private int mValidLevel = 0;
         private Activity mCurrentActivity = null;
@@ -105,12 +103,11 @@ public class AndroidManifestParser {
         /**
          * Creates a new {@link ManifestHandler}.
          *
-         * @param manifestFile The manifest file being parsed. Can be null.
          * @param manifestData Class containing the manifest info obtained during the parsing.
          * @param errorHandler An optional error handler.
          */
-        ManifestHandler(IAbstractFile manifestFile, ManifestData manifestData,
-                ManifestErrorHandler errorHandler) {
+        ManifestHandler(
+                @Nullable ManifestData manifestData, @Nullable ManifestErrorHandler errorHandler) {
             super();
             mManifestData = manifestData;
             mErrorHandler = errorHandler;
@@ -420,8 +417,7 @@ public class AndroidManifestParser {
             if (value != null) {
                 mManifestData.mKeepClasses.add(
                         new ManifestData.KeepClass(
-                                AndroidManifest.combinePackageAndClassName(
-                                        mManifestData.mPackage, value),
+                                combinePackageAndClassName(mManifestData.mPackage, value),
                                 null,
                                 AndroidManifest.NODE_APPLICATION));
             }
@@ -435,8 +431,7 @@ public class AndroidManifestParser {
             if (value != null) {
                 mManifestData.mKeepClasses.add(
                         new ManifestData.KeepClass(
-                                AndroidManifest.combinePackageAndClassName(
-                                        mManifestData.mPackage, value),
+                                combinePackageAndClassName(mManifestData.mPackage, value),
                                 null,
                                 AndroidManifest.ATTRIBUTE_BACKUP_AGENT));
             }
@@ -452,8 +447,7 @@ public class AndroidManifestParser {
             String activityName = getAttributeValue(attributes, AndroidManifest.ATTRIBUTE_NAME,
                     true /* hasNamespace */);
             if (activityName != null) {
-                activityName = AndroidManifest.combinePackageAndClassName(mManifestData.mPackage,
-                        activityName);
+                activityName = combinePackageAndClassName(mManifestData.mPackage, activityName);
 
                 // get the exported flag.
                 String exportedStr = getAttributeValue(attributes,
@@ -502,8 +496,7 @@ public class AndroidManifestParser {
             String serviceName = getAttributeValue(attributes, AndroidManifest.ATTRIBUTE_NAME,
                     true /* hasNamespace */);
             if (serviceName != null) {
-                serviceName = AndroidManifest.combinePackageAndClassName(mManifestData.mPackage,
-                        serviceName);
+                serviceName = combinePackageAndClassName(mManifestData.mPackage, serviceName);
 
                 if (mErrorHandler != null) {
                     mErrorHandler.checkClass(mLocator, serviceName, superClassName,
@@ -537,8 +530,8 @@ public class AndroidManifestParser {
                     AndroidManifest.ATTRIBUTE_NAME,
                     true /* hasNamespace */);
             if (instrumentationName != null) {
-                String instrClassName = AndroidManifest.combinePackageAndClassName(
-                        mManifestData.mPackage, instrumentationName);
+                String instrClassName =
+                        combinePackageAndClassName(mManifestData.mPackage, instrumentationName);
                 String targetPackage = getAttributeValue(attributes,
                         AndroidManifest.ATTRIBUTE_TARGET_PACKAGE,
                         true /* hasNamespace */);
@@ -653,6 +646,41 @@ public class AndroidManifestParser {
             return null;
         }
 
+        /**
+         * Combines a java package, with a class value from the manifest to make a fully qualified
+         * class name
+         *
+         * @param javaPackage the java package from the manifest.
+         * @param className the class name from the manifest.
+         * @return the fully qualified class name.
+         */
+        @Nullable
+        private static String combinePackageAndClassName(
+                @Nullable String javaPackage, @Nullable String className) {
+            if (className == null || className.isEmpty()) {
+                return javaPackage;
+            }
+            if (javaPackage == null || javaPackage.isEmpty()) {
+                return className;
+            }
+
+            // the class name can be a subpackage (starts with a '.'
+            // char), a simple class name (no dot), or a full java package
+            boolean startWithDot = (className.charAt(0) == '.');
+            boolean hasDot = (className.indexOf('.') != -1);
+            if (startWithDot || !hasDot) {
+
+                // add the concatenation of the package and class name
+                if (startWithDot) {
+                    return javaPackage + className;
+                } else {
+                    return javaPackage + '.' + className;
+                }
+            } else {
+                // just add the class as it should be a fully qualified java name.
+                return className;
+            }
+        }
     }
 
     private static final SAXParserFactory sParserFactory;
@@ -690,7 +718,7 @@ public class AndroidManifestParser {
                 data = new ManifestData();
             }
 
-            ManifestHandler manifestHandler = new ManifestHandler(manifestFile, data, errorHandler);
+            ManifestHandler manifestHandler = new ManifestHandler(data, errorHandler);
 
             try (InputStream is = manifestFile.getContents()) {
                 parser.parse(new InputSource(is), manifestHandler);
@@ -710,22 +738,11 @@ public class AndroidManifestParser {
      * <p>This is the equivalent of calling {@code parse(manifestFile, true, null)}.
      *
      * @param manifestFile the manifest file to parse.
-     * @throws IOException
-     * @throws SAXException
      */
     public static ManifestData parse(IAbstractFile manifestFile) throws IOException, SAXException {
         return parse(manifestFile, true, null);
     }
 
-    public static ManifestData parse(IAbstractFolder projectFolder)
-            throws IOException, SAXException {
-        IAbstractFile manifestFile = AndroidManifest.getManifest(projectFolder);
-        if (manifestFile == null) {
-            throw new FileNotFoundException();
-        }
-
-        return parse(manifestFile, true, null);
-    }
 
     /**
      * Parses the Android Manifest from an {@link InputStream}, and returns a {@link ManifestData}
@@ -741,7 +758,7 @@ public class AndroidManifestParser {
 
             ManifestData data = new ManifestData();
 
-            ManifestHandler manifestHandler = new ManifestHandler(null, data, null);
+            ManifestHandler manifestHandler = new ManifestHandler(data, null);
             parser.parse(new InputSource(manifestFileStream), manifestHandler);
 
             return data;
