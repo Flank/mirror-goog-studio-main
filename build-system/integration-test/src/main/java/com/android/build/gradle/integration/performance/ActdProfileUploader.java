@@ -465,9 +465,7 @@ public final class ActdProfileUploader implements ProfileUploader {
         buildReq.build.buildId = buildId;
 
         Change change = getChange();
-        if (change != null) {
-            buildReq.build.infos.url = change.revlink;
-        }
+        buildReq.build.infos.url = change != null ? change.revlink : "";
 
         return buildReq;
     }
