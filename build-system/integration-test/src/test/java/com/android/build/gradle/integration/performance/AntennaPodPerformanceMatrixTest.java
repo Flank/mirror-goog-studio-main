@@ -228,11 +228,7 @@ public class AntennaPodPerformanceMatrixTest {
     }
 
     public RunGradleTasks executor() {
-        return project.executor()
-                .withEnableInfoLogging(false)
-                .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
-                .with(BooleanOption.ENABLE_D8, projectScenario.useD8())
-                .withUseDexArchive(projectScenario.useDexArchive());
+        return projectScenario.configureExecutor(project.executor());
     }
 
     private void doEdit(

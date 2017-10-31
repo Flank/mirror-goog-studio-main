@@ -23,7 +23,6 @@ import com.android.build.gradle.integration.common.runner.FilterableParameterize
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
@@ -116,12 +115,7 @@ public class LargeGradleProjectPerformanceMatrixTest {
     }
 
     private RunGradleTasks executor() {
-        return project.executor()
-                .withEnableInfoLogging(false)
-                .withUseDexArchive(projectScenario.useDexArchive())
-                .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
-                .with(BooleanOption.ENABLE_D8, projectScenario.useD8())
-                .withoutOfflineFlag();
+        return projectScenario.configureExecutor(project.executor()).withoutOfflineFlag();
     }
 
     private void applyJavaChange(@NonNull Path sourceFile, boolean isAbiChange) throws IOException {
