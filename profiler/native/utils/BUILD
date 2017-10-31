@@ -35,7 +35,6 @@ cc_library(
             "clock.cc",
             "current_process.linux.cc",
             "filesystem_notifier.cc",
-            "native_backtrace.cc",
             "thread_name.cc",
         ],
     }) + select_android(
@@ -94,10 +93,7 @@ cc_library(
     ],
     deps = [
         "//tools/base/profiler/proto:profiler_cc_proto",
-    ] + select({
-        "//tools/base/bazel:darwin": [],
-        "//conditions:default": ["//external:libunwind"],
-    }),
+    ],
 )
 
 cc_test(
@@ -118,12 +114,7 @@ cc_test(
         "tokenizer_test.cc",
         "trie_test.cc",
         "uid_fetcher_test.cc",
-    ] + select({
-        "//tools/base/bazel:darwin": [],
-        "//conditions:default": [
-            "native_backtrace_test.cc",
-        ],
-    }),
+    ],
     copts = [
         "-Itools/base/profiler/native",
         "-I$(GENDIR)/tools/base/profiler",
