@@ -92,6 +92,11 @@ service MemoryService {
 
   rpc ForceGarbageCollection(ForceGarbageCollectionRequest)
       returns (ForceGarbageCollectionResponse) {}
+
+  // O+ studio-side only: Given a time interval returns a set of all events
+  // related to creations and deletions of global JNI references.
+  rpc GetJNIGlobalRefsEvents(JNIGlobalRefsEventsRequest)
+      returns (BatchJNIGlobalRefEvent) {}
 }
 
 message MemoryStartRequest {
@@ -191,6 +196,7 @@ message MemoryData {
   repeated HeapDumpInfo heap_dump_infos = 5;
   repeated AllocationsInfo allocations_info = 6;
   repeated BatchAllocationSample allocation_samples = 7;
+  repeated JNIGlobalReferenceEvent jni_reference_events = 8;
 }
 
 // Proto for describing a heap dump record.
@@ -483,6 +489,44 @@ message BatchAllocationSample {
   repeated AllocationStack.StackFrame methods = 4;
   repeated EncodedAllocationStack stacks = 5;
   repeated ThreadInfo thread_infos = 6;
+}
+
+// Raw representation of the native callstack, it is symbolized
+// and interpreted by Android Studio.
+message NativeBacktrace {
+  // Sequence of program counter addresses obtained during a native
+  // stack walk. Addresses are ordered bottom-up e.g. the first one
+  // is the return address of the innermost function.
+  repeated uint64 addresses = 1;
+}
+
+// Proto format for handling O+ JNI global reference creation / deletion.
+message JNIGlobalReferenceEvent {
+  enum Type {
+    UNSPECIFIED = 0;
+    CREATE_GLOBAL_REF = 1;
+    DELETE_GLOBAL_REF = 2;
+    CREATE_WEAK_REF = 3;
+    DELETE_WEAK_REF = 4;
+  };
+
+  Type event_type = 1;
+  int64 timestamp = 2;
+  NativeBacktrace backtrace = 3;
+  int32 object_tag = 4;
+  int32 thread_id = 5;
+}
+
+message JNIGlobalRefsEventsRequest {
+  int32 process_id = 1;
+  Session session = 2;
+  int64 start_time = 3;  // inclusive;
+  int64 end_time = 4; // exclusive;
+}
+
+message BatchJNIGlobalRefEvent {
+  int32 process_id = 1;
+  repeated JNIGlobalReferenceEvent events = 2;
 }
 
 // Proto format for handling O+ allocation data.

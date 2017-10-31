@@ -30,6 +30,9 @@ service InternalMemoryService {
 
   rpc RecordAllocationEvents(BatchAllocationSample)
     returns (EmptyMemoryReply) {}
+
+  rpc RecordJNIRefEvents(BatchJNIGlobalRefEvent)
+    returns (EmptyMemoryReply) {}
 }
 
 message RegisterMemoryAgentRequest {
