@@ -17,12 +17,6 @@ new_local_repository(
 )
 
 new_local_repository(
-    name = 'libunwind_repo',
-    build_file = 'tools/base/profiler/native/external/libunwind.BUILD',
-    path = 'external/libunwind'
-)
-
-new_local_repository(
     name = 'AntennaPod',
     build_file = 'tools/base/build-system/integration-test/AntennaPod.BUILD',
     path = 'external/AntennaPod'
@@ -66,11 +60,6 @@ local_repository(
 )
 load("@blaze//:bind.bzl", "blaze_binds")
 blaze_binds()
-
-bind(
-    name = "libunwind",
-    actual = "@libunwind_repo//:libunwind"
-)
 
 bind(
     name = "gtest_main",
