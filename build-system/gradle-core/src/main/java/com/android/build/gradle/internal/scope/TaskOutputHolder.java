@@ -89,6 +89,7 @@ public interface TaskOutputHolder {
         DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES,
         ABI_PROCESSED_SPLIT_RES,
         DENSITY_OR_LANGUAGE_PACKAGED_SPLIT,
+        INSTANT_RUN_MAIN_APK_RESOURCES,
         INSTANT_RUN_PACKAGED_RESOURCES,
 
         // --- Namespaced android res ---

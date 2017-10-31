@@ -52,6 +52,9 @@ public interface InstantRunVariantScope {
     File getInstantRunSupportDir();
 
     @NonNull
+    File getInstantRunMainApkResourcesDir();
+
+    @NonNull
     File getIncrementalVerifierDir();
 
     @NonNull
