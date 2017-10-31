@@ -459,13 +459,16 @@ public final class ActdProfileUploader implements ProfileUploader {
     @VisibleForTesting
     @NonNull
     public BuildRequest buildRequest() throws IOException {
-        BuildbotResponse res = getBuildInfo();
-
         BuildRequest buildReq = new BuildRequest();
         buildReq.projectId = actdProjectId;
         buildReq.build.infos = infos();
-        buildReq.build.infos.url = res.sourceStamp.changes[0].revlink;
         buildReq.build.buildId = buildId;
+
+        Change change = getChange();
+        if (change != null) {
+            buildReq.build.infos.url = change.revlink;
+        }
+
         return buildReq;
     }
 
