@@ -29,8 +29,10 @@ import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
+import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Variant;
 import com.android.builder.model.VariantBuildOutput;
+import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
@@ -63,8 +65,16 @@ public class OutputRenamingTest {
                         + "    }\n"
                         + "  }\n"
                         + "}");
-        model = project.executeAndReturnModel("clean", "assemble").getOnlyModel();
-        outputModel = project.model().getSingle(ProjectBuildOutput.class);
+        outputModel = project.executeAndReturnModel(ProjectBuildOutput.class, "clean", "assemble");
+        model =
+                project.model()
+                        .ignoreSyncIssues(SyncIssue.SEVERITY_WARNING)
+                        .getSingle()
+                        .getOnlyModel();
+        assertThat(model.getSyncIssues()).hasSize(1);
+        assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
+                .contains(
+                        "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false.");
     }
 
     @AfterClass

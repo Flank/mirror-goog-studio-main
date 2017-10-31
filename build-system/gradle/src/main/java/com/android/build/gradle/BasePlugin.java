@@ -47,6 +47,7 @@ import com.android.build.gradle.internal.dsl.ProductFlavor;
 import com.android.build.gradle.internal.dsl.ProductFlavorFactory;
 import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.dsl.SigningConfigFactory;
+import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
@@ -75,6 +76,7 @@ import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.LintBaseTask;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.internal.compiler.PreDexCache;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Version;
@@ -747,6 +749,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         boolean forceRegeneration =
                 projectOptions.get(BooleanOption.IDE_REFRESH_EXTERNAL_NATIVE_MODEL);
 
+        checkSplitConfiguration();
         if (ExternalNativeBuildTaskUtils.shouldRegenerateOutOfDateJsons(projectOptions)) {
             threadRecorder.record(
                     ExecutionType.VARIANT_MANAGER_EXTERNAL_NATIVE_CONFIG_VALUES,
@@ -764,6 +767,50 @@ public abstract class BasePlugin<E extends BaseExtension2>
                             }
                         }
                     });
+        }
+    }
+
+    private void checkSplitConfiguration() {
+        String configApkUrl = "https://d.android.com/topic/instant-apps/guides/config-splits.html";
+
+        boolean isFeatureModule = project.getPlugins().hasPlugin(FeaturePlugin.class);
+        boolean generatePureSplits = extension.getGeneratePureSplits();
+        Splits splits = extension.getSplits();
+        boolean splitsEnabled =
+                splits.getDensity().isEnable()
+                        || splits.getAbi().isEnable()
+                        || splits.getLanguage().isEnable();
+
+        // The Play Store doesn't allow Pure splits
+        if (!isFeatureModule && generatePureSplits) {
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportWarning(
+                            Type.GENERIC,
+                            "Configuration APKs are supported by the Google Play Store only when publishing Android Instant Apps. To instead generate stand-alone APKs for different device configurations, set generatePureSplits=false. For more information, go to "
+                                    + configApkUrl);
+        }
+
+        if (!isFeatureModule && !generatePureSplits && splits.getLanguage().isEnable()) {
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportWarning(
+                            Type.GENERIC,
+                            "Per-language APKs are supported only when building Android Instant Apps. For more information, go to "
+                                    + configApkUrl);
+        }
+
+        if (isFeatureModule && !generatePureSplits && splitsEnabled) {
+            extraModelInfo
+                    .getSyncIssueHandler()
+                    .reportWarning(
+                            Type.GENERIC,
+                            "Configuration APKs targeting different device configurations are "
+                                    + "automatically built when splits are enabled for a feature module.\n"
+                                    + "To suppress this warning, remove \"generatePureSplits false\" "
+                                    + "from your build.gradle file.\n"
+                                    + "To learn more, see "
+                                    + configApkUrl);
         }
     }
 

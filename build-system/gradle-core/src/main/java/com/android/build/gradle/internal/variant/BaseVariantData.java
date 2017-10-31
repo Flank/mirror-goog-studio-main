@@ -172,7 +172,8 @@ public abstract class BaseVariantData implements TaskContainer {
 
         // eventually, this will require a more open ended comparison.
         MultiOutputPolicy multiOutputPolicy =
-                androidConfig.getGeneratePureSplits()
+                (androidConfig.getGeneratePureSplits()
+                                        || variantConfiguration.getType() == VariantType.FEATURE)
                                 && variantConfiguration.getMinSdkVersionValue() >= 21
                         ? MultiOutputPolicy.SPLITS
                         : MultiOutputPolicy.MULTI_APK;

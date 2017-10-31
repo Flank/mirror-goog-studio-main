@@ -1104,12 +1104,6 @@ public abstract class BaseExtension implements AndroidConfig {
     }
 
     public void setGeneratePureSplits(boolean flag) {
-        if (flag) {
-            logger.warn(
-                    "Pure splits is currently supported only when publishing"
-                            + " Android Instant Apps. For more information, go to"
-                            + " https://d.android.com/instant-apps.");
-        }
         this.generatePureSplits = flag;
     }
 

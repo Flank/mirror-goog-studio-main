@@ -19,6 +19,7 @@ package com.android.build.gradle.integration.feature;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ModelBuilder;
 import com.android.build.gradle.integration.common.truth.ApkSubject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
@@ -27,6 +28,8 @@ import com.android.builder.model.InstantAppVariantBuildOutput;
 import com.android.builder.model.ProjectBuildOutput;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -55,19 +58,23 @@ public class FeatureAndAbiPureSplitsTest {
         // Build all the things.
         sProject.executor().withEnabledAapt2(true).run("clean", "assembleDebug");
 
-        Map<String, AndroidProject> projectModels = sProject.model().getMulti().getModelMap();
+        checkModel(sProject.model());
+    }
+
+    private static void checkModel(ModelBuilder model) throws IOException {
+        Map<String, AndroidProject> projectModels = model.getMulti().getModelMap();
         AndroidProject instantAppProject = projectModels.get(":bundle");
         assertThat(instantAppProject).isNotNull();
         assertThat(instantAppProject.getVariants()).hasSize(2);
         System.out.println(instantAppProject.getVariants());
 
         Map<String, ProjectBuildOutput> projectOutputModels =
-                sProject.model().getMulti(ProjectBuildOutput.class);
+                model.getMulti(ProjectBuildOutput.class);
         assertThat(projectOutputModels).hasSize(4);
         assertThat(projectOutputModels).doesNotContainKey(":bundle");
 
         Map<String, InstantAppProjectBuildOutput> models =
-                sProject.model().getMulti(InstantAppProjectBuildOutput.class);
+                model.getMulti(InstantAppProjectBuildOutput.class);
         assertThat(models).hasSize(1);
 
         InstantAppProjectBuildOutput instantAppModule = models.get(":bundle");
@@ -220,5 +227,26 @@ public class FeatureAndAbiPureSplitsTest {
                 .filter(output -> output.getName().equals("release"))
                 .findFirst()
                 .get();
+    }
+
+    @Test
+    public void testSplitConfigurationWarning() throws Exception {
+        TestFileUtils.searchAndReplace(
+                sProject.getSubproject(":feature_a").getBuildFile(),
+                "generatePureSplits true",
+                "generatePureSplits false");
+
+        sProject.executor().withEnabledAapt2(true).run("clean", "assembleDebug");
+
+        ModelBuilder modelBuilder = sProject.model().ignoreSyncIssues();
+
+        AndroidProject model = modelBuilder.getMulti().getModelMap().get(":feature_a");
+        assertThat(model.getSyncIssues()).named("Sync Issues").hasSize(1);
+        assertThat(Iterables.getOnlyElement(model.getSyncIssues()).getMessage())
+                .contains(
+                        "Configuration APKs targeting different device configurations are "
+                                + "automatically built when splits are enabled for a feature module.");
+
+        checkModel(modelBuilder);
     }
 }
