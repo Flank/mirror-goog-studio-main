@@ -33,6 +33,8 @@ import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.client.util.Maps;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
@@ -41,8 +43,6 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
 import java.security.GeneralSecurityException;
 import java.util.Collection;
 import java.util.Collections;
@@ -53,35 +53,30 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Uploader that pushes profile results to act-d. */
-public final class ActdProfileUploader implements ProfileUploader {
+public class ActdProfileUploader implements ProfileUploader {
     /**
      * A threshold below which samples will not be uploaded.
      *
      * <p>We seem to have a bunch of timeseries that take 1 or 2 milliseconds, so when they go up or
      * down it counts as a 100% regression/improvement. These are noisy, and we want to ignore them.
      */
-    public static final long BENCHMARK_VALUE_THRESHOLD = 50;
+    public static final long BENCHMARK_VALUE_THRESHOLD_MILLIS = 50;
 
     @NonNull private static final String ACTD_PROJECT_ID = "SamProjectTest3";
     @NonNull private static final String ACTD_ADD_BUILD_URL = "/apis/addBuild";
     @NonNull private static final String ACTD_ADD_SERIE_URL = "/apis/addSerie";
     @NonNull private static final String ACTD_ADD_SAMPLE_URL = "/apis/addSample";
 
-    private final int buildId;
     @NonNull private final String actdBaseUrl;
     @NonNull private final String actdProjectId;
     @NonNull private final String buildbotMasterUrl;
     @NonNull private final String buildbotBuilderName;
 
-    private volatile BuildbotResponse buildInfo;
-
     private ActdProfileUploader(
-            int buildId,
             @NonNull String actdBaseUrl,
             @NonNull String actdProjectId,
             @NonNull String buildbotMasterUrl,
             @NonNull String buildbotBuilderName) {
-        this.buildId = buildId;
         this.actdBaseUrl = actdBaseUrl;
         this.actdProjectId = actdProjectId;
         this.buildbotMasterUrl = buildbotMasterUrl;
@@ -95,13 +90,12 @@ public final class ActdProfileUploader implements ProfileUploader {
     @VisibleForTesting
     @NonNull
     public static ActdProfileUploader create(
-            int buildId,
             @NonNull String actdBaseUrl,
             @NonNull String actdProjectId,
             @NonNull String buildbotMasterUrl,
             @NonNull String buildbotBuilderName) {
         return new ActdProfileUploader(
-                buildId, actdBaseUrl, actdProjectId, buildbotMasterUrl, buildbotBuilderName);
+                actdBaseUrl, actdProjectId, buildbotMasterUrl, buildbotBuilderName);
     }
 
     /**
@@ -131,10 +125,14 @@ public final class ActdProfileUploader implements ProfileUploader {
      */
     @NonNull
     public static ActdProfileUploader fromEnvironment() {
+        String actdProjectId = System.getenv("ACTD_PROJECT_ID");
+        if (actdProjectId == null || actdProjectId.isEmpty()) {
+            actdProjectId = ACTD_PROJECT_ID;
+        }
+
         return new ActdProfileUploader(
-                Integer.parseInt(envRequired("BUILDBOT_BUILDNUMBER")),
                 envRequired("ACTD_BASE_URL"),
-                ACTD_PROJECT_ID,
+                actdProjectId,
                 envRequired("ACTD_BUILDBOT_MASTER_URL"),
                 envRequired("ACTD_BUILDBOT_BUILDER_NAME"));
     }
@@ -196,13 +194,13 @@ public final class ActdProfileUploader implements ProfileUploader {
     }
 
     /**
-     * Creates a valid {@code Infos} object for the head of the given repository. This relies on
-     * calling the builbot master API, hence the IOException.
+     * Creates a valid {@code Infos} object for the given buildId. This relies on calling the
+     * builbot master API, hence the IOException.
      */
     @VisibleForTesting
     @NonNull
-    public Infos infos() throws IOException {
-        Change change = getChange();
+    public Infos infos(long buildId) throws IOException {
+        Change change = getChange(buildId);
         Infos infos = new Infos();
 
         if (change == null) {
@@ -229,8 +227,8 @@ public final class ActdProfileUploader implements ProfileUploader {
      * <p>Don't use this function directly, instead use {@code addBuild(BuildRequest)} and {@code
      * addSample(SampleRequest)}.
      */
-    private static String jsonPost(@NonNull String url, @NonNull Object payload)
-            throws IOException {
+    @NonNull
+    private String jsonPost(@NonNull String url, @NonNull Object payload) throws IOException {
         byte[] bytes = new Gson().toJson(payload).getBytes();
         try (ByteArrayInputStream json = new ByteArrayInputStream(bytes)) {
             HttpRequest req =
@@ -243,25 +241,14 @@ public final class ActdProfileUploader implements ProfileUploader {
         }
     }
 
-    private String buildbotBuildInfoUrl(int buildId) {
+    @NonNull
+    private String buildbotBuildInfoUrl(long buildId) {
         return buildbotMasterUrl + "/json/builders/" + buildbotBuilderName + "/builds/" + buildId;
     }
 
-    /**
-     * Only to be used in tests. Modifies internal state that should not be modified during normal
-     * operation.
-     */
-    @VisibleForTesting
-    public synchronized void setBuildInfo(@Nullable BuildbotResponse res) {
-        this.buildInfo = res;
-    }
-
-    private synchronized BuildbotResponse getBuildInfo() throws IOException {
-        if (buildInfo == null) {
-            buildInfo = jsonGet(buildbotBuildInfoUrl(buildId), BuildbotResponse.class);
-        }
-
-        return buildInfo;
+    @NonNull
+    private BuildbotResponse getBuildInfo(long buildId) throws IOException {
+        return jsonGet(buildbotBuildInfoUrl(buildId), BuildbotResponse.class);
     }
 
     /**
@@ -270,8 +257,8 @@ public final class ActdProfileUploader implements ProfileUploader {
      * <p>If the build was triggered manually, this method will return null.
      */
     @Nullable
-    private Change getChange() throws IOException {
-        BuildbotResponse res = getBuildInfo();
+    private Change getChange(long buildId) throws IOException {
+        BuildbotResponse res = getBuildInfo(buildId);
 
         // When a build is manually triggered, there is no source stamp and thus no changes.
         if (res.sourceStamp.changes.length == 0) {
@@ -285,9 +272,12 @@ public final class ActdProfileUploader implements ProfileUploader {
      * Sends a GET request to a given URL, parsing the returning JSON with GSON in to an object of
      * the given type.
      */
-    private static <T> T jsonGet(@NonNull String url, Class<T> type) throws IOException {
+    @VisibleForTesting
+    @NonNull
+    public <T> T jsonGet(@NonNull String url, Class<T> type) throws IOException {
         Gson gson = new GsonBuilder().create();
         HttpRequest req = requestFactory().buildGetRequest(new GenericUrl(url));
+
         String json = executeAndRead(req);
         return gson.fromJson(json, type);
     }
@@ -299,15 +289,13 @@ public final class ActdProfileUploader implements ProfileUploader {
      * <p>Before executing the request, this method will attach retry handlers for non-200 responses
      * and transient network problems.
      *
-     * <p>Null is returned if some transient exception occurs and continues to re-occur after a
-     * number of retries.
-     *
-     * @throws IOException if a non-200 status code is received from the request.
+     * @throws IOException if a non-200 status code is received from the request, or some transient
+     *     network problem occurs and continues to occur after retrying.
      */
-    @Nullable
+    @NonNull
     private static String executeAndRead(@NonNull HttpRequest request) throws IOException {
         HttpResponse res = attachRetryHandlers(request).execute();
-        String content = null;
+        String content;
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(res.getContent()))) {
             content = br.lines().collect(Collectors.joining("\n"));
@@ -315,14 +303,6 @@ public final class ActdProfileUploader implements ProfileUploader {
                 throw new IOException(
                         "unsuccessful response: " + res.getStatusCode() + " -> " + content);
             }
-        } catch (SocketException | SocketTimeoutException e) {
-            /*
-             * These two exceptions are typically transient, caused by the endpoint having problems
-             * and there's not a whole lot we can do about it. Eventually, when we're hitting a more
-             * reliable instance of act-d, we should fail on this condition but for now, we're just
-             * going to let it slide.
-             */
-            System.out.println("transient exception HTTP request succeeding: " + e);
         } finally {
             res.disconnect();
         }
@@ -407,6 +387,21 @@ public final class ActdProfileUploader implements ProfileUploader {
         }
     }
 
+    private static long getBuildId(@NonNull Collection<GradleBenchmarkResult> results) {
+        List<Long> buildIds =
+                results.stream()
+                        .map(result -> result.getScheduledBuild().getBuildbotBuildNumber())
+                        .distinct()
+                        .collect(Collectors.toList());
+
+        if (buildIds.size() != 1) {
+            throw new IllegalArgumentException(
+                    "results list contains more than one distinct build ID");
+        }
+
+        return Iterables.getOnlyElement(buildIds);
+    }
+
     /**
      * Because there can be multiple of each task happening per build (e.g. if there are multiple
      * projects), we sum the times for each task and take the overall time spent doing that type of
@@ -414,13 +409,14 @@ public final class ActdProfileUploader implements ProfileUploader {
      */
     @VisibleForTesting
     @NonNull
-    public Collection<SampleRequest> sampleRequests(@NonNull List<GradleBenchmarkResult> results)
-            throws IOException {
+    public Collection<SampleRequest> sampleRequests(
+            @NonNull Collection<GradleBenchmarkResult> results) throws IOException {
         if (results.isEmpty()) {
             return Collections.emptyList();
         }
 
-        Change change = getChange();
+        long buildId = getBuildId(results);
+        Change change = getChange(buildId);
         Map<String, SampleRequest> summedSeriesDurations = Maps.newHashMap();
 
         for (GradleBenchmarkResult result : results) {
@@ -452,31 +448,28 @@ public final class ActdProfileUploader implements ProfileUploader {
         return summedSeriesDurations
                 .values()
                 .stream()
-                .filter(req -> req.sample.value > BENCHMARK_VALUE_THRESHOLD)
+                .filter(req -> req.sample.value > BENCHMARK_VALUE_THRESHOLD_MILLIS)
                 .collect(Collectors.toList());
     }
 
     @VisibleForTesting
     @NonNull
-    public BuildRequest buildRequest() throws IOException {
+    public BuildRequest buildRequest(long buildId) throws IOException {
         BuildRequest buildReq = new BuildRequest();
         buildReq.projectId = actdProjectId;
-        buildReq.build.infos = infos();
+        buildReq.build.infos = infos(buildId);
         buildReq.build.buildId = buildId;
 
-        Change change = getChange();
+        Change change = getChange(buildId);
         buildReq.build.infos.url = change != null ? change.revlink : "";
 
         return buildReq;
     }
 
-    @Override
-    public void uploadData(@NonNull List<GradleBenchmarkResult> results) throws IOException {
-        BuildRequest br = buildRequest();
-        addBuild(br);
-
-        Collection<SampleRequest> sampleRequests = sampleRequests(results);
-
+    @VisibleForTesting
+    @NonNull
+    public Collection<SerieRequest> serieRequests(
+            @NonNull Collection<SampleRequest> sampleRequests) {
         Set<String> serieIds =
                 sampleRequests
                         .stream()
@@ -484,15 +477,30 @@ public final class ActdProfileUploader implements ProfileUploader {
                         .distinct()
                         .collect(Collectors.toSet());
 
-        System.out.println("found " + serieIds.size() + " unique series IDs");
-        System.out.println("ensuring all series exist");
-
-        // Make sure that all series we're about to upload data for exist in Dana.
+        List<SerieRequest> serieRequests = Lists.newArrayListWithExpectedSize(serieIds.size());
         for (String serieId : serieIds) {
             SerieRequest serieReq = new SerieRequest();
             serieReq.projectId = actdProjectId;
             serieReq.serieId = serieId;
+            serieRequests.add(serieReq);
+        }
+        return serieRequests;
+    }
 
+    @Override
+    public void uploadData(@NonNull List<GradleBenchmarkResult> results) throws IOException {
+        long buildId = getBuildId(results);
+        BuildRequest br = buildRequest(buildId);
+        addBuild(br);
+
+        Collection<SampleRequest> sampleRequests = sampleRequests(results);
+        Collection<SerieRequest> serieRequests = serieRequests(sampleRequests);
+
+        System.out.println("found " + serieRequests.size() + " unique series IDs");
+        System.out.println("ensuring all series exist");
+
+        // Make sure that all series we're about to upload data for exist in Dana.
+        for (SerieRequest serieReq : serieRequests) {
             addSerie(serieReq);
         }
 
