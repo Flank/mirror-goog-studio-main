@@ -451,6 +451,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         Preconditions.checkArgument(request.getOutput().isDirectory(), "!output.isDirectory()");
 
         File outFile = compileOutputFor(request);
+        FileUtils.mkdirs(outFile.getParentFile());
         try {
             FileUtils.copyFile(request.getInput(), outFile);
         } catch (IOException e) {
@@ -475,6 +476,7 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
         }
 
         File outputFile = compileOutputFor(request);
+        FileUtils.mkdirs(outputFile.getParentFile());
 
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
         builder.setExecutable(getAaptExecutablePath());
@@ -488,16 +490,12 @@ public class AaptV1 extends AbstractProcessExecutionAapt {
      * Obtains the file that will receive the compilation output of a given file. This method will
      * return a unique file in the output directory for each input file.
      *
-     * <p>This method will also create any parent directories needed to hold the output file.
-     *
      * @return the output file
      */
     @NonNull
     @Override
     public File compileOutputFor(@NonNull CompileResourceRequest request) {
         File parentDir = new File(request.getOutput(), request.getFolderName());
-        FileUtils.mkdirs(parentDir);
-
         return new File(parentDir, request.getInput().getName());
     }
 

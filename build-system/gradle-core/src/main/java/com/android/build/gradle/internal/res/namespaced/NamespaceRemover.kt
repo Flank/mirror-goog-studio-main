@@ -43,6 +43,7 @@ class NamespaceRemover : QueueableResourceCompiler {
     override fun compile(request: CompileResourceRequest): Future<File> {
         val input = request.input
         val output = compileOutputFor(request)
+        FileUtils.mkdirs(output.parentFile)
 
         if (input.name.endsWith(SdkConstants.DOT_XML)) {
             // Remove namespace.
@@ -57,7 +58,6 @@ class NamespaceRemover : QueueableResourceCompiler {
 
     override fun compileOutputFor(request: CompileResourceRequest): File {
         val parentDir = File(request.output, request.folderName)
-        FileUtils.mkdirs(parentDir)
         return File(parentDir, request.input.name)
     }
 
