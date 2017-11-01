@@ -54,7 +54,7 @@ class VariantModelData(
      *
      * @param variants the variants to run the user callbacks on
      */
-    fun runVariantCallbacks(variants: List<Variant>) {
+    fun runVariantCallbacks(variants: Collection<Variant>) {
         // all callbacks are associated with a predicate that verifies whether the variants must
         // run on the associated actions.
         val predicates = variantCallbacks.keySet()

@@ -163,9 +163,8 @@ class DslModelDataImpl<in E: BaseExtension2>(
     private val hasUnitTests: Boolean
 
     init {
-        // detact the test level support
-        val variantTypes = variantFactories.stream().map({ it.generatedType}).collect(
-                Collectors.toSet())
+        // detect the test level support
+        val variantTypes = variantFactories.map { it.generatedType }
 
         mainVariantType = variantTypes
                 .stream()

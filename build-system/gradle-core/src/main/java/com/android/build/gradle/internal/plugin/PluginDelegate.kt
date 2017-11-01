@@ -142,7 +142,7 @@ class PluginDelegate<out E: BaseExtension2>(
         return newExtension
     }
 
-    fun afterEvaluate(): List<Variant> {
+    fun afterEvaluate(): Collection<Variant> {
         // callback for the afterEvaluate
         val preVariantActions = newExtension.preVariantCallbacks
         for (action in preVariantActions) {

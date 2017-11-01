@@ -16,9 +16,8 @@
 
 package com.android.build.gradle.internal.ide
 
-import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.builder.errors.EvalIssueReporter.Severity
+import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.builder.model.SyncIssue
 import com.google.common.base.Splitter
 import com.google.common.collect.ArrayListMultimap

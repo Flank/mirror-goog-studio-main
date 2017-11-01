@@ -37,7 +37,6 @@ import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
 import com.android.builder.errors.EvalIssueReporter.Type
-import com.android.utils.ImmutableCollectors
 import com.android.utils.StringHelper
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.ImmutableList
@@ -46,6 +45,7 @@ import com.google.common.collect.Lists
 import com.google.common.collect.Maps
 import org.gradle.api.Named
 import java.io.File
+import java.util.Collections
 import java.util.stream.Collectors
 
 /**
@@ -86,12 +86,12 @@ class VariantBuilder<in E: BaseExtension2>(
         }
 
     /** property-style getter for the shims as a read-only list */
-    val shims: List<Variant>
+    val shims: Collection<Variant>
         get() {
             if (!generated) {
                 throw RuntimeException("VariantBuilder.generateVariants() not called")
             }
-            return ImmutableList.copyOf(_shims.values)
+            return _shims.values
         }
 
     /** Computes the variants */
@@ -482,7 +482,7 @@ private fun <T, V> takeLastNonNull(outObject: T, inList: List<T>, setter: (T,V) 
  * @param flavors the list of flavors
  */
 private class FlavorCombination(val name: String?, val flavors: ImmutableList<ProductFlavor>) {
-    val flavorNames: List<String> = flavors.stream().map(Named::getName).collect(ImmutableCollectors.toImmutableList())
+    val flavorNames: List<String> = ImmutableList.copyOf(flavors.map(Named::getName))
 }
 
 /**
@@ -590,7 +590,7 @@ private fun combineSuffixes(
         items: MutableList<BuildTypeOrProductFlavor>,
         getter: (BuildTypeOrProductFlavor) -> String?,
         separator: Char?): String? {
-    val suffixes: MutableList<String> = items.stream().map(getter).filter({ it != null }).collect(Collectors.toList())
+    val suffixes: List<String> = items.mapNotNull(getter)
 
     if (suffixes.isEmpty()) {
         return null
@@ -638,26 +638,23 @@ private fun computeVariantName(
         buildTypeName: String,
         multiFlavorName: String?,
         type: VariantType,
-        testedType: VariantType?): String {
-    val sb = StringBuilder()
-
+        testedType: VariantType?) = buildString {
     if (multiFlavorName?.isEmpty() == false) {
-        sb.append(multiFlavorName)
-        sb.append(buildTypeName.capitalize())
+        append(multiFlavorName)
+        append(buildTypeName.capitalize())
     } else {
-        sb.append(buildTypeName)
+        append(buildTypeName)
     }
 
     if (type == VariantType.FEATURE) {
-        sb.append("Feature")
+        append("Feature")
     }
 
     if (type.isForTesting) {
         if (testedType == VariantType.FEATURE) {
-            sb.append("Feature")
+            append("Feature")
         }
-        sb.append(type.suffix)
+        append(type.suffix)
     }
-    return sb.toString()
 }
 

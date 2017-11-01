@@ -68,14 +68,14 @@ class BrokenTestModuleSyncTest {
         val issues = model.syncIssues
         TruthHelper.assertThat(issues).hasSize(2)
 
-        val severities = issues.stream().map(SyncIssue::getSeverity).collect(Collectors.toSet())
+        val severities = issues.map(SyncIssue::getSeverity)
         TruthHelper.assertThat(severities).containsExactly(SyncIssue.SEVERITY_ERROR)
 
-        val types = issues.stream().map(SyncIssue::getType).collect(Collectors.toSet())
+        val types = issues.map(SyncIssue::getType)
         TruthHelper.assertThat(types).containsExactly(SyncIssue.TYPE_UNRESOLVED_DEPENDENCY)
 
         // test messages?
-        val messages = issues.stream().map(SyncIssue::getMessage).collect(Collectors.toSet())
+        val messages = issues.map(SyncIssue::getMessage)
         TruthHelper.assertThat(messages).containsExactly(
                 "Unable to resolve dependency for ':test@debug/compileClasspath': Could not resolve project :app.",
                 "Unable to resolve dependency for ':test@debug/testTarget': Could not resolve project :app.")

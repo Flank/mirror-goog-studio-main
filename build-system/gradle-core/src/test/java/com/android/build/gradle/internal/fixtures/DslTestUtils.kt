@@ -40,20 +40,20 @@ fun <T: Named> getNamed(namedList: Collection<T>, name: String): T? {
     return null
 }
 
-fun getAppVariant(variants: List<Variant>,
+fun getAppVariant(variants: Collection<Variant>,
         name: String): ApplicationVariant = getVariant(variants, name, ApplicationVariant::class.java)!!
 
-fun getLibVariant(variants: List<Variant>,
+fun getLibVariant(variants: Collection<Variant>,
         name: String): LibraryVariant = getVariant(variants, name, LibraryVariant::class.java)!!
 
-fun getAndroidTestVariant(variants: List<Variant>,
+fun getAndroidTestVariant(variants: Collection<Variant>,
         name: String):AndroidTestVariant = getVariant(variants, name, AndroidTestVariant::class.java)!!
 
-fun getUnitTestVariant(variants: List<Variant>,
+fun getUnitTestVariant(variants: Collection<Variant>,
         name: String): UnitTestVariant = getVariant(variants, name, UnitTestVariant::class.java)!!
 
 fun <T : Variant> getVariant(
-        variants: List<Variant>,
+        variants: Collection<Variant>,
         name: String,
         variantType: Class<T>): T? {
     for (variant in variants) {
@@ -64,8 +64,8 @@ fun <T : Variant> getVariant(
     }
 
     Assert.fail(String.format("Could not find variant name %s. Existing variants: %s",
-            name,
-            variants.stream().map { it.name }.collect(Collectors.toSet())))
+            name, variants.map { it.name }))
+
     // this will never happen.
     return null
 }
