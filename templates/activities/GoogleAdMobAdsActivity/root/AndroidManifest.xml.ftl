@@ -6,10 +6,6 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
 
     <application>
-        <!--This meta-data tag is required to use Google Play Services. -->
-        <meta-data android:name="com.google.android.gms.version"
-        android:value="@integer/google_play_services_version" />
-
         <activity android:name="${packageName}.${activityClass}"
             <#if isNewProject>
             android:label="@string/app_name"
