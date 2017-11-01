@@ -30,7 +30,7 @@ public abstract class AbstractPatchesLoaderImpl implements PatchesLoader {
     private final Method get;
     private final Method set;
 
-    AbstractPatchesLoaderImpl() throws NoSuchMethodException {
+    public AbstractPatchesLoaderImpl() throws NoSuchMethodException {
         get = AtomicReference.class.getMethod("get");
         set = AtomicReference.class.getMethod("set", Object.class);
     }
