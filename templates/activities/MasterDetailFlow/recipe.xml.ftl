@@ -18,14 +18,12 @@
       <merge from="root/res/values-w900dp/refs.xml.ftl"
                to="${escapeXmlAttribute(resOut)}/values-w900dp/refs.xml" />
     </#if>
-    <merge from="root/res/values/strings.xml.ftl"
-             to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
 
     <#if isInstantApp!false>
-      <merge from="root/res/values/strings_iapp.xml.ftl"
+      <merge from="root/res/values/strings.xml.ftl"
                to="${escapeXmlAttribute(baseFeatureResOut)}/values/strings.xml" />
     <#else>
-      <merge from="root/res/values/strings_iapp.xml.ftl"
+      <merge from="root/res/values/strings.xml.ftl"
                to="${escapeXmlAttribute(resOut)}/values/strings.xml" />
     </#if>
 
