@@ -24,9 +24,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * DSL object for configuring per-language splits options.
+ * Encapsulates settings for <a
+ * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split">
+ * building per-language (or locale) APKs</a>.
  *
- * <p>See <a href="https://developer.android.com/studio/build/configure-apk-splits.html">APK Splits</a>.
+ * <p><b>Note:</b> Building per-language APKs is supported only when <a
+ * href="https://developer.android.com/topic/instant-apps/guides/config-splits.html">building
+ * configuration APKs</a> for <a
+ * href="https://developer.android.com/topic/instant-apps/index.html">Android Instant Apps</a>.
  */
 public class LanguageSplitOptions {
 

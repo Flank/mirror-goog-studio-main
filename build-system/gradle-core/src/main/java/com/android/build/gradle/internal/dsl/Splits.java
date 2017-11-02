@@ -23,9 +23,41 @@ import org.gradle.api.Action;
 import org.gradle.api.model.ObjectFactory;
 
 /**
- * DSL object for configuring APK Splits options.
+ * DSL object for configuring APK Splits options. Configuring this object allows you to build <a
+ * href="https://developer.android.com/studio/build/configure-apk-splits.html">Multiple APKs</a> and
+ * <a href="https://developer.android.com/topic/instant-apps/guides/config-splits.html">
+ * Configuration APKs</a>.
  *
- * <p>See <a href="https://developer.android.com/studio/build/configure-apk-splits.html">APK Splits</a>.
+ * <p>If your app targets multiple device configurations, such as different screen densities and <a
+ * href="https://developer.android.com/ndk/guides/abis.html">Application Binary Interfaces
+ * (ABIs)</a>, you might want to avoid packaging resources for all configurations into a single
+ * large APK. To reduce download sizes for your users, the Android plugin and Google Play Store
+ * provide the following strategies to generate and serve build artifiacts that each target a
+ * different device configuration--so users download only the resources they need:
+ *
+ * <ul>
+ *   <li><a href="https://developer.android.com/studio/build/configure-apk-splits.html">Multiple
+ *       APKs</a>: use this to generate multiple stand-alone APKs. Each APK contains the code and
+ *       resources required for a given device configuration. The Android plugin and Google Play
+ *       Store support generating multiple APKs based on screen density and ABI. Because each APK
+ *       represents a standalone APK that you upload to the Google Play Store, make sure you
+ *       appropriately <a
+ *       href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-APK-versions">
+ *       assign version codes to each APK</a> so that you are able to manage updates later.
+ *   <li><a href="https://developer.android.com/topic/instant-apps/guides/config-splits.html">
+ *       Configuration APKs</a>: use this only if you're building <a
+ *       href="https://developer.android.com/topic/instant-apps/index.html">Android Instant
+ *       Apps</a>. The Android plugin packages your app's device-agnostic code and resources in a
+ *       base APK, and each set of device-dependent binaries and resources in separate APKs, called
+ *       configuration APKs. Configuration APKs do not represent stand-alone versions of your app.
+ *       That is, devices need to download both the base APK and additional configuration APKs from
+ *       the Google Play Store to run your instant app. The Android plugin and Google Play Store
+ *       support generating configuration APKs based on screen density, ABI, and language locales.
+ *       You specify properties in this block just as you would when building multiple APKs.
+ *       However, you need to also set <a
+ *       href="http://google.github.io/android-gradle-dsl/current/com.android.build.gradle.BaseExtension.html#com.android.build.gradle.BaseExtension:generatePureSplits">
+ *       <code>generatePureSplits</code></a> to <code>true</code>.
+ * </ul>
  */
 public class Splits {
 
@@ -41,53 +73,87 @@ public class Splits {
     }
 
     /**
-     * Density settings.
+     * Encapsulates settings for <a
+     * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-density-split">
+     * building per-density APKs</a>.
      */
     public DensitySplitOptions getDensity() {
         return density;
     }
 
     /**
-     * Configures density split settings.
+     * Encapsulates settings for <a
+     * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-density-split">
+     * building per-density APKs</a>.
+     *
+     * <p>For more information about the properties you can configure in this block, see {@link
+     * DensitySplitOptions}.
      */
     public void density(Action<DensitySplitOptions> action) {
         action.execute(density);
     }
 
     /**
-     * ABI settings.
+     * Encapsulates settings for <a
+     * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split">
+     * building per-ABI APKs</a>.
      */
     public AbiSplitOptions getAbi() {
         return abi;
     }
 
     /**
-     * Configures ABI split settings.
+     * Encapsulates settings for <a
+     * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split">
+     * building per-ABI APKs</a>.
+     *
+     * <p>For more information about the properties you can configure in this block, see {@link
+     * AbiSplitOptions}.
      */
     public void abi(Action<AbiSplitOptions> action) {
         action.execute(abi);
     }
 
     /**
-     * Language settings.
+     * Encapsulates settings for <a
+     * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split">
+     * building per-language (or locale) APKs</a>.
+     *
+     * <p><b>Note:</b> Building per-language APKs is supported only when <a
+     * href="https://developer.android.com/topic/instant-apps/guides/config-splits.html">building
+     * configuration APKs</a> for <a
+     * href="https://developer.android.com/topic/instant-apps/index.html">Android Instant Apps</a>.
      */
     public LanguageSplitOptions getLanguage() {
         return language;
     }
 
     /**
-     * Configures the language split settings.
+     * Encapsulates settings for <a
+     * href="https://developer.android.com/studio/build/configure-apk-splits.html#configure-abi-split">
+     * building per-language (or locale) APKs</a>.
+     *
+     * <p><b>Note:</b> Building per-language APKs is supported only when <a
+     * href="https://developer.android.com/topic/instant-apps/guides/config-splits.html">building
+     * configuration APKs</a> for <a
+     * href="https://developer.android.com/topic/instant-apps/index.html">Android Instant Apps</a>.
+     *
+     * <p>For more information about the properties you can configure in this block, see {@link
+     * LanguageSplitOptions}.
      */
     public void language(Action<LanguageSplitOptions> action) {
         action.execute(language);
     }
 
     /**
-     * Returns the list of Density filters used for multi-apk.
+     * Returns the list of screen density configurations that the plugin will generate separate APKs
+     * for.
      *
-     * <p>null value is allowed, indicating the need to generate an apk with all densities.
+     * <p>If this property returns <code>null</code>, it means the plugin will not generate separate
+     * per-density APKs. That is, each APK will include resources for all screen density
+     * configurations your project supports.
      *
-     * @return a set of filters.
+     * @return a set of screen density configurations.
      */
     @NonNull
     public Set<String> getDensityFilters() {
@@ -95,11 +161,12 @@ public class Splits {
     }
 
     /**
-     * Returns the list of ABI filters used for multi-apk.
+     * Returns the list of ABIs that the plugin will generate separate APKs for.
      *
-     * <p>null value is allowed, indicating the need to generate an apk with all abis.
+     * <p>If this property returns <code>null</code>, it means the plugin will not generate separate
+     * per-ABI APKs. That is, each APK will include binaries for all ABIs your project supports.
      *
-     * @return a set of filters.
+     * @return a set of ABIs.
      */
     @NonNull
     public Set<String> getAbiFilters() {
@@ -107,11 +174,13 @@ public class Splits {
     }
 
     /**
-     * Returns the list of language filters used for multi-apk.
+     * Returns the list of languages (or locales) that the plugin will generate separate APKs for.
      *
-     * <p>null value is allowed, indicating the need to generate an apk with all languages.
+     * <p>If this property returns <code>null</code>, it means the plugin will not generate separate
+     * per-language APKs. That is, each APK will include resources for all languages your project
+     * supports.
      *
-     * @return a set of language filters.
+     * @return a set of languages (or lacales).
      */
     @NonNull
     public Set<String> getLanguageFilters() {
