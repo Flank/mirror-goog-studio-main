@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.incremental;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
+import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.builder.model.Version;
 import com.android.ide.common.xml.XmlPrettyPrinter;
 import com.android.sdklib.AndroidVersion;
@@ -686,7 +687,20 @@ public class InstantRunBuildContext {
         // Don't re-add existing splits.
         for (Artifact artifact : currentBuild.artifacts) {
             if (artifact.fileType == FileType.SPLIT) {
-                splitLocations.remove(artifact.location.getAbsolutePath());
+                // we have a new resource APK, make sure we remove the old one (which may have
+                // a different name).
+                if (artifact.location
+                        .getName()
+                        .startsWith(InstantRunResourcesApkBuilder.APK_FILE_NAME)) {
+                    splitLocations.removeIf(
+                            splitLocation ->
+                                    new File(splitLocation)
+                                            .getName()
+                                            .startsWith(
+                                                    InstantRunResourcesApkBuilder.APK_FILE_NAME));
+                } else {
+                    splitLocations.remove(artifact.location.getAbsolutePath());
+                }
             } else if (artifact.fileType == FileType.SPLIT_MAIN) {
                 main = null;
             }

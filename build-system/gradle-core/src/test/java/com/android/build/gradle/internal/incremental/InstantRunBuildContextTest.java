@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotNull;
 
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext.Build;
+import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.builder.model.Version;
 import com.android.sdklib.AndroidVersion;
 import com.android.utils.XmlUtils;
@@ -929,6 +930,58 @@ public class InstantRunBuildContextTest {
                                 .map(InstantRunBuildContext.Artifact::getType)
                                 .collect(Collectors.toList()))
                 .containsExactlyElementsIn(ImmutableList.of(FileType.SPLIT_MAIN, FileType.SPLIT));
+    }
+
+    @Test
+    public void testResourceSplitNameChange() throws Exception {
+        InstantRunBuildContext initial =
+                new InstantRunBuildContext(
+                        idAllocator,
+                        true,
+                        AaptGeneration.AAPT_V2_DAEMON_MODE,
+                        new AndroidVersion(21, null),
+                        null,
+                        null,
+                        true);
+
+        // set the initial build.
+        initial.addChangedFile(FileType.SPLIT_MAIN, new File("main.apk"));
+        initial.addChangedFile(FileType.SPLIT, new File("resources-arm64-v8a-debug.apk"));
+        initial.close();
+        String buildInfo = initial.toXml();
+
+        // re-add a new resource apk and a split
+        InstantRunBuildContext update =
+                new InstantRunBuildContext(
+                        idAllocator,
+                        true,
+                        AaptGeneration.AAPT_V2_DAEMON_MODE,
+                        new AndroidVersion(21, null),
+                        null,
+                        null,
+                        true);
+        update.setVerifierStatus(InstantRunVerifierStatus.FULL_BUILD_REQUESTED);
+        update.loadFromXml(buildInfo);
+        update.addChangedFile(FileType.SPLIT, new File("resources-x86-debug.apk"));
+        update.addChangedFile(FileType.SPLIT, new File("split1.apk"));
+        update.close();
+
+        // make sure resources APK is not added twice.
+        assertThat(update.getLastBuild()).isNotNull();
+        assertThat(update.getLastBuild().getArtifacts()).hasSize(3);
+        assertThat(
+                        update.getLastBuild()
+                                .getArtifacts()
+                                .stream()
+                                .map(InstantRunBuildContext.Artifact::getLocation)
+                                .filter(
+                                        it ->
+                                                it.getName()
+                                                        .startsWith(
+                                                                InstantRunResourcesApkBuilder
+                                                                        .APK_FILE_NAME))
+                                .count())
+                .isEqualTo(1);
     }
 
     @Test
