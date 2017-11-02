@@ -33,25 +33,35 @@ public class CombinedInputTest {
         input.add("outputDirectory2", null);
         assertThat(input.toString())
                 .isEqualTo(
-                        "outputFile=foo\n"
-                                + "outputDirectory=bar\n"
+                        "outputFile=non-null\n"
+                                + "outputDirectory=non-null\n"
                                 + "outputFile2=null\n"
                                 + "outputDirectory2=null");
 
-        CombinedInput newInput = new CombinedInput(input.toString());
-        assertThat(newInput.toString())
+        CombinedInput input2 = new CombinedInput();
+        input2.add("outputFile", null);
+        input2.add("outputDirectory", new File("bar"));
+        input2.add("outputFile2", null);
+        input2.add("outputDirectory2", new File("baz"));
+        assertThat(input2.toString())
                 .isEqualTo(
-                        "outputFile=foo\n"
-                                + "outputDirectory=bar\n"
+                        "outputFile=null\n"
+                                + "outputDirectory=non-null\n"
                                 + "outputFile2=null\n"
-                                + "outputDirectory2=null");
-        newInput.add("newOutputFile", new File("baz"));
-        assertThat(newInput.toString())
+                                + "outputDirectory2=non-null");
+        assertThat(input2.toString()).isNotEqualTo(input.toString());
+
+        CombinedInput extendedInput = new CombinedInput(input.toString());
+        assertThat(extendedInput.toString()).isEqualTo(input.toString());
+
+        extendedInput.add("newOutputFile", new File("baz"));
+        assertThat(extendedInput.toString())
                 .isEqualTo(
-                        "outputFile=foo\n"
-                                + "outputDirectory=bar\n"
+                        "outputFile=non-null\n"
+                                + "outputDirectory=non-null\n"
                                 + "outputFile2=null\n"
                                 + "outputDirectory2=null\n"
-                                + "newOutputFile=baz");
+                                + "newOutputFile=non-null");
+        assertThat(extendedInput.toString()).isNotEqualTo(input.toString());
     }
 }

@@ -21,19 +21,19 @@ import com.android.annotations.Nullable;
 import java.io.File;
 
 /**
- * An input that combines other inputs, so that every time an individual input is changed, the
- * combined input is also changed.
+ * An input that combines the nullability of other inputs, so that every time an individual input is
+ * changed between null and non-null, the combined input is also changed.
  *
  * <p>This is a workaround for a Gradle bug: If an {@code @Optional @OutputFile/@OutputDirectory}
  * property is set to null in a build, subsequent builds will always be UP-TO-DATE even if the
  * output file/directory is set to a different value. See https://issuetracker.google.com/67418335
  * for more details.
  *
- * <p>The workaround is to create a new property combining those properties and make this new
- * property an {@code @Input}. This way, the build will not be UP-TO-DATE if any of the output
- * files/directories changes.
+ * <p>By marking the combined value as an {@code @Input}, the build will not be UP-TO-DATE if any of
+ * the output files/directories is changed from null to non-null, or vice versa.
  *
- * <p>TODO: We will need to remove this workaround once Gradle has a fix.
+ * <p>TODO: We will need to remove this workaround after upgrading to Gradle 4.3 where Gradle has
+ * fixed this issue properly.
  */
 public final class CombinedInput {
 
@@ -56,10 +56,10 @@ public final class CombinedInput {
             input.append("\n");
         }
 
+        //noinspection VariableNotUsedInsideIf
         input.append(
                 String.format(
-                        "%1$s=%2$s",
-                        propertyName, propertyValue != null ? propertyValue.getPath() : "null"));
+                        "%1$s=%2$s", propertyName, propertyValue != null ? "non-null" : "null"));
 
         return this;
     }
