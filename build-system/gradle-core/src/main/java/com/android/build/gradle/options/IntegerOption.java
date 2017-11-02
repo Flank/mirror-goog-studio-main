@@ -23,7 +23,7 @@ import com.android.builder.model.AndroidProject;
 public enum IntegerOption implements Option<Integer> {
     ANDROID_TEST_SHARD_COUNT("android.androidTest.numShards"),
     ANDROID_SDK_CHANNEL("android.sdk.channel"),
-    THREAD_POOL_SIZE("android.threadPoolSize"),
+
     /**
      * Returns the level of model-only mode.
      *

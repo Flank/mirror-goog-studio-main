@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.ClasspathVerifier;
-import com.android.build.gradle.internal.ExecutionConfigurationUtil;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
@@ -87,7 +86,6 @@ import com.android.builder.sdk.SdkLibData;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
 import com.android.dx.command.dexer.Main;
-import com.android.ide.common.internal.ExecutorSingleton;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.repository.api.Channel;
 import com.android.repository.api.ConsoleProgressIndicator;
@@ -251,7 +249,6 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
 
         project.getPluginManager().apply(AndroidBasePlugin.class);
 
-        ExecutionConfigurationUtil.setThreadPoolSize(projectOptions);
         checkPathForErrors();
         checkModulesForErrors();
 
@@ -391,7 +388,6 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                         if (buildResult.getGradle().getParent() != null) {
                             return;
                         }
-                        ExecutorSingleton.shutdown();
                         sdkHandler.unload();
                         threadRecorder.record(
                                 ExecutionType.BASE_PLUGIN_BUILD_FINISHED,

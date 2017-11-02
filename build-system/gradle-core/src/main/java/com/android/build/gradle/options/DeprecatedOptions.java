@@ -34,8 +34,8 @@ public enum DeprecatedOptions implements Option<String> {
                     + "}"),
     THREAD_POOL_SIZE_OLD(
             "com.android.build.threadPoolSize",
-            "The com.android.build.threadPoolSize property has been replaced by "
-                    + IntegerOption.THREAD_POOL_SIZE.getPropertyName()),
+            "The com.android.build.threadPoolSize property has no effect"),
+    THREAD_POOL_SIZE("android.threadPoolSize", "The android.threadPoolSize property has no effect"),
     ENABLE_IMPROVED_DEPENDENCY_RESOLUTION(
             "android.enableImprovedDependenciesResolution",
             "The android.enableImprovedDependenciesResolution property does not have any effect. "
