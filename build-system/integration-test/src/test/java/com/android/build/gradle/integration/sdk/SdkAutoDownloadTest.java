@@ -31,6 +31,7 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.ide.common.repository.GradleCoordinate;
 import com.android.ide.common.repository.MavenRepositories;
 import com.android.ide.common.repository.SdkMavenRepository;
+import com.android.repository.Revision;
 import com.android.repository.io.FileOp;
 import com.android.repository.io.FileOpUtils;
 import com.android.sdklib.repository.AndroidSdkHandler;
@@ -64,7 +65,7 @@ public class SdkAutoDownloadTest {
             + System.lineSeparator()
             + "target_link_libraries(hello-jni log)";
 
-    private static final String BUILD_TOOLS_VERSION = AndroidBuilder.MIN_BUILD_TOOLS_REV.toString();
+    private static final String BUILD_TOOLS_VERSION = "27.0.0";
     private static final String PLATFORM_VERSION = "26";
 
     @Rule
@@ -533,7 +534,9 @@ public class SdkAutoDownloadTest {
         assertNotNull(result.getException());
 
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                .contains("Build-Tools " + AndroidBuilder.MIN_BUILD_TOOLS_REV.toShortString());
+                .contains(
+                        "Build-Tools "
+                                + Revision.parseRevision(BUILD_TOOLS_VERSION).toShortString());
         assertThat(Throwables.getRootCause(result.getException()).getMessage())
                 .contains("missing components");
     }
@@ -598,7 +601,9 @@ public class SdkAutoDownloadTest {
             assertNotNull(result.getException());
 
             assertThat(Throwables.getRootCause(result.getException()).getMessage())
-                    .contains("Build-Tools " + AndroidBuilder.MIN_BUILD_TOOLS_REV.toShortString());
+                    .contains(
+                            "Build-Tools "
+                                    + Revision.parseRevision(BUILD_TOOLS_VERSION).toShortString());
             assertThat(Throwables.getRootCause(result.getException()).getMessage())
                     .contains("not writeable");
         } finally {
