@@ -158,6 +158,16 @@ public class ExtraField {
             }
 
             byte[] data = new byte[dataSize];
+            if (buffer.remaining() < dataSize) {
+                throw new IOException(
+                        "Invalid data size for extra field segment with header ID "
+                                + headerId
+                                + ": "
+                                + dataSize
+                                + " (only "
+                                + buffer.remaining()
+                                + " bytes are available)");
+            }
             buffer.get(data);
 
             SegmentFactory factory = identifySegmentFactory(headerId);
