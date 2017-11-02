@@ -76,10 +76,10 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
-            annotations: MutableList<UAnnotation>,
-            allMemberAnnotations: MutableList<UAnnotation>,
-            allClassAnnotations: MutableList<UAnnotation>,
-            allPackageAnnotations: MutableList<UAnnotation>) {
+            annotations: List<UAnnotation>,
+            allMemberAnnotations: List<UAnnotation>,
+            allClassAnnotations: List<UAnnotation>,
+            allPackageAnnotations: List<UAnnotation>) {
         when (qualifiedName) {
             INT_DEF_ANNOTATION -> {
                 val flagAttribute = getAnnotationBooleanValue(annotation, TYPE_DEF_FLAG_ATTRIBUTE)
@@ -387,11 +387,6 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             errorNode: UElement?, flag: Boolean,
             allowedValues: List<UExpression>,
             allAnnotations: List<UAnnotation>) {
-        var errorNode = errorNode
-        if (errorNode == null) {
-            errorNode = node
-        }
-
         // Allow "0" as initial value in variable expressions
         if (UastLintUtils.isZero(node)) {
             val declaration = node.getParentOfType<UVariable>(UVariable::class.java, true)
@@ -416,7 +411,8 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             }
         }
 
-        report(context, TYPE_DEF, errorNode, context.getLocation(errorNode), message)
+        val locationNode = errorNode ?: node
+        report(context, TYPE_DEF, locationNode, context.getLocation(locationNode), message)
     }
 
     private fun listAllowedValues(context: UElement,

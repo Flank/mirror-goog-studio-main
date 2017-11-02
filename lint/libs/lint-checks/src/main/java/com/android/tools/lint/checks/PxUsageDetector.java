@@ -283,7 +283,7 @@ public class PxUsageDetector extends LayoutDetector {
 
     @NonNull
     private static LintFix createDpToSpFix() {
-        return fix().replace().pattern("\\d+(di?p)")
+        return LintFix.create().replace().pattern("\\d+(di?p)")
                 .with("sp")
                 .build();
     }

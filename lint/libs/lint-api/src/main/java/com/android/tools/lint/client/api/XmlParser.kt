@@ -14,75 +14,69 @@
  * limitations under the License.
  */
 
-package com.android.tools.lint.client.api;
+package com.android.tools.lint.client.api
 
-import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.tools.lint.detector.api.Context;
-import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.XmlContext;
-import com.google.common.annotations.Beta;
-import java.io.File;
-import java.io.IOException;
-import javax.xml.parsers.ParserConfigurationException;
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.xml.sax.SAXException;
+import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.XmlContext
+import com.google.common.annotations.Beta
+import java.io.File
+import java.io.IOException
+import javax.xml.parsers.ParserConfigurationException
+import org.w3c.dom.Attr
+import org.w3c.dom.Document
+import org.w3c.dom.Node
+import org.xml.sax.SAXException
 
 /**
  * A wrapper for an XML parser. This allows tools integrating lint to map directly
  * to builtin services, such as already-parsed data structures in XML editors.
- * <p>
- * <b>NOTE: This is not a public or final API; if you rely on this be prepared
- * to adjust your code for the next tools release.</b>
+ *
+ * **NOTE: This is not a public or final API; if you rely on this be prepared
+ * to adjust your code for the next tools release.**
  */
 @Beta
-public abstract class XmlParser {
+abstract class XmlParser {
     /**
      * Parse the given XML content and returns as a Document
      *
      * @param file the file to be parsed
      * @return the parsed DOM document
      */
-    @Nullable
-    public abstract Document parseXml(@NonNull File file)
-            throws IOException, SAXException, ParserConfigurationException;
+    @Throws(IOException::class, SAXException::class, ParserConfigurationException::class)
+    abstract fun parseXml(file: File): Document?
 
     /**
      * Parse the given XML string and return document, or null if any error
-     * occurs (does <b>not</b> throw parsing exceptions). Most clients should
-     * call {@link #parseXml(XmlContext)} instead.
+     * occurs (does **not** throw parsing exceptions). Most clients should
+     * call [.parseXml] instead.
      *
      * @param xml  the parsing string
-     * @param file the file corresponding to the XML string, <b>if known</b>.
-     *             May be null.
+     * @param file the file corresponding to the XML string, **if known**.
+     * May be null.
      * @return the parsed DOM document, or null if parsing fails
      */
-    @Nullable
-    public abstract Document parseXml(@NonNull CharSequence xml, @NonNull File file);
+    abstract fun parseXml(xml: CharSequence, file: File): Document?
 
     /**
      * Parse the file pointed to by the given context and return as a Document
      *
      * @param context the context pointing to the file to be parsed, typically
-     *            via {@link Context#getContents()} but the file handle (
-     *            {@link Context#file} can also be used to map to an existing
-     *            editor buffer in the surrounding tool, etc)
+     * via [Context.getContents] but the file handle (
+     * [Context.file] can also be used to map to an existing
+     * editor buffer in the surrounding tool, etc)
      * @return the parsed DOM document, or null if parsing fails
      */
-    @Nullable
-    public abstract Document parseXml(@NonNull XmlContext context);
+    abstract fun parseXml(context: XmlContext): Document?
 
     /**
-     * Returns a {@link Location} for the given DOM node
+     * Returns a [Location] for the given DOM node
      *
      * @param context information about the file being parsed
      * @param node the node to create a location for
      * @return a location for the given node
      */
-    @NonNull
-    public abstract Location getLocation(@NonNull XmlContext context, @NonNull Node node);
+    abstract fun getLocation(context: XmlContext, node: Node): Location
 
     /**
      * Attempt to create a location for a given XML node. Note that since DOM does not normally
@@ -95,12 +89,11 @@ public abstract class XmlParser {
      * @param node the node itself
      * @return a location for the node, if possible
      */
-    @NonNull
-    public abstract Location getLocation(@NonNull File file, @NonNull Node node);
+    abstract fun getLocation(file: File, node: Node): Location
 
     /**
-     * Returns a {@link Location} for the given DOM node. Like
-     * {@link #getLocation(XmlContext, Node)}, but allows a position range that
+     * Returns a [Location] for the given DOM node. Like
+     * [.getLocation], but allows a position range that
      * is a subset of the node range.
      *
      * @param context information about the file being parsed
@@ -109,71 +102,66 @@ public abstract class XmlParser {
      * @param end the ending position within the node, exclusive
      * @return a location for the given node
      */
-    @NonNull
-    public abstract Location getLocation(@NonNull XmlContext context, @NonNull Node node,
-            int start, int end);
+    abstract fun getLocation(context: XmlContext, node: Node,
+            start: Int, end: Int): Location
 
     /**
-     * Returns a {@link Location} for the given DOM node
+     * Returns a [Location] for the given DOM node
      *
      * @param context information about the file being parsed
      * @param node the node to create a location for
      * @return a location for the given node
      */
-    @NonNull
-    public abstract Location getNameLocation(@NonNull XmlContext context, @NonNull Node node);
+    abstract fun getNameLocation(context: XmlContext, node: Node): Location
 
     /**
-     * Returns a {@link Location} for the given DOM node
+     * Returns a [Location] for the given DOM node
      *
      * @param context information about the file being parsed
      * @param node the node to create a location for
      * @return a location for the given node
      */
-    @NonNull
-    public abstract Location getValueLocation(@NonNull XmlContext context, @NonNull Attr node);
+    abstract fun getValueLocation(context: XmlContext, node: Attr): Location
 
     /**
      * Creates a light-weight handle to a location for the given node. It can be
      * turned into a full fledged location by
-     * {@link com.android.tools.lint.detector.api.Location.Handle#resolve()}.
+     * [com.android.tools.lint.detector.api.Location.Handle.resolve].
      *
      * @param context the context providing the node
      * @param node the node (element or attribute) to create a location handle
-     *            for
+     * for
      * @return a location handle
      */
-    @NonNull
-    public abstract Location.Handle createLocationHandle(@NonNull XmlContext context,
-            @NonNull Node node);
+    abstract fun createLocationHandle(context: XmlContext,
+            node: Node): Location.Handle
 
     /**
      * Dispose any data structures held for the given context.
      * @param context information about the file previously parsed
      * @param document the document that was parsed and is now being disposed
      */
-    public void dispose(@NonNull XmlContext context, @NonNull Document document) {
-    }
+    open fun dispose(context: XmlContext, document: Document) {}
 
     /**
      * Returns the start offset of the given node, or -1 if not known
      *
      * @param context the context providing the node
      * @param node the node (element or attribute) to create a location handle
-     *            for
+     * for
      * @return the start offset, or -1 if not known
      */
-    public abstract int getNodeStartOffset(@NonNull XmlContext context, @NonNull Node node);
+    abstract fun getNodeStartOffset(context: XmlContext, node: Node): Int
 
     /**
      * Returns the end offset of the given node, or -1 if not known
      *
      * @param context the context providing the node
      * @param node the node (element or attribute) to create a location handle
-     *            for
+     * for
      * @return the end offset, or -1 if not known
      */
-    public abstract int getNodeEndOffset(@NonNull XmlContext context, @NonNull Node node);
+    abstract fun getNodeEndOffset(context: XmlContext, node: Node): Int
 
     /**
      * Returns the leaf node at the given offset (biased towards the right), or null if not found
@@ -181,6 +169,5 @@ public abstract class XmlParser {
      * @param offset the offset to search at
      * @return the leaf node, if any
      */
-    @Nullable
-    public abstract Node findNodeAt(@NonNull XmlContext context, int offset);
+    abstract fun findNodeAt(context: XmlContext, offset: Int): Node?
 }

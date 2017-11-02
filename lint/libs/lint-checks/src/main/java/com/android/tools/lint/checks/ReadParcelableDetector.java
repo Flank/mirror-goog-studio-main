@@ -119,7 +119,7 @@ public class ReadParcelableDetector extends Detector implements UastScanner {
 
     @NonNull
     private static LintFix createQuickfixData(String parameter) {
-        return fix()
+        return LintFix.create()
                 .name("Use getClass().getClassLoader()").replace().text(parameter)
                 .with("getClass().getClassLoader())")
                 .build();

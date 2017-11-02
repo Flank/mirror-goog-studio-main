@@ -47,7 +47,7 @@ public class GetSignaturesDetector extends Detector implements UastScanner  {
             "by this method.",
             Category.SECURITY,
             8,
-            Severity.INFORMATIONAL,
+            Severity.WARNING,
             new Implementation(
                     GetSignaturesDetector.class,
                     Scope.JAVA_FILE_SCOPE))

@@ -30,7 +30,7 @@ import java.util.List;
 public class BuiltinIssueRegistry extends IssueRegistry {
     private static final List<Issue> sIssues;
 
-    static final int INITIAL_CAPACITY = 313;
+    static final int INITIAL_CAPACITY = 314;
 
     static {
         List<Issue> issues = new ArrayList<>(INITIAL_CAPACITY);
@@ -260,6 +260,7 @@ public class BuiltinIssueRegistry extends IssueRegistry {
         issues.add(ResourceCycleDetector.CYCLE);
         issues.add(ResourcePrefixDetector.ISSUE);
         issues.add(ResourceTypeDetector.COLOR_USAGE);
+        issues.add(ResourceTypeDetector.HALF_FLOAT);
         issues.add(ResourceTypeDetector.RESOURCE_TYPE);
         issues.add(RestrictToDetector.RESTRICTED);
         issues.add(RestrictToDetector.TEST_VISIBILITY);
@@ -396,6 +397,6 @@ public class BuiltinIssueRegistry extends IssueRegistry {
      */
     @VisibleForTesting
     public static void reset() {
-        IssueRegistry.reset();
+        IssueRegistry.Companion.reset();
     }
 }

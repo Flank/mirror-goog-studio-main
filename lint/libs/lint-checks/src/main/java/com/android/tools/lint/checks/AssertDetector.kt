@@ -75,7 +75,7 @@ are typically more intended for tools usage than runtime checks.)""",
             listOf<Class<out UElement>>(UCallExpression::class.java)
 
     override fun createUastHandler(context: JavaContext): UElementHandler? {
-        if (!context.getMainProject().isAndroidProject) {
+        if (!context.mainProject.isAndroidProject) {
             return null
         }
 

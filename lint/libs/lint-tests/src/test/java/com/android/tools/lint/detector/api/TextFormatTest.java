@@ -22,10 +22,8 @@ import static com.android.tools.lint.detector.api.TextFormat.HTML_WITH_UNICODE;
 import static com.android.tools.lint.detector.api.TextFormat.RAW;
 import static com.android.tools.lint.detector.api.TextFormat.TEXT;
 
-import com.android.tools.lint.checks.BuiltinIssueRegistry;
 import com.android.tools.lint.checks.PrivateApiDetector;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
-import com.android.utils.SdkUtils;
 import junit.framework.TestCase;
 
 public class TextFormatTest extends TestCase {

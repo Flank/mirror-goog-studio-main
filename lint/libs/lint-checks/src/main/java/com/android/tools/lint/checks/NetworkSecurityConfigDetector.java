@@ -334,9 +334,9 @@ public class NetworkSecurityConfigDetector extends ResourceXmlDetector {
                     Attr digestAttr = child.getAttributeNode(ATTR_DIGEST);
                     if (!PIN_DIGEST_ALGORITHM.equalsIgnoreCase(digestAttr.getValue())) {
                         String values = LintUtils.formatList(getSupportedPinDigestAlgorithms(), 2);
-                        LintFix.GroupBuilder fixBuilder = fix().group();
+                        LintFix.GroupBuilder fixBuilder = LintFix.create().group();
                         for (String algorithm : getSupportedPinDigestAlgorithms()) {
-                            fixBuilder.add(fix()
+                            fixBuilder.add(LintFix.create()
                                     .name(String.format("Set digest to \"%1$s\"", algorithm))
                                     .replace().all().with(algorithm).build());
                         }

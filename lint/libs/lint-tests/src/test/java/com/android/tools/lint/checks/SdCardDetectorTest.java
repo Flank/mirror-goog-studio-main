@@ -347,7 +347,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                 kotlin(""
-                        + "package test.pkg;\n"
+                        + "package test.pkg\n"
                         + "\n"
                         + "class MyTest {\n"
                         + "    val s: String = \"/sdcard/mydir\"\n"

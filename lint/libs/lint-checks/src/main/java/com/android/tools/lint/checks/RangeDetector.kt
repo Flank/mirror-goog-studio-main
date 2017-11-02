@@ -55,10 +55,10 @@ class RangeDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
-            annotations: MutableList<UAnnotation>,
-            allMemberAnnotations: MutableList<UAnnotation>,
-            allClassAnnotations: MutableList<UAnnotation>,
-            allPackageAnnotations: MutableList<UAnnotation>) {
+            annotations: List<UAnnotation>,
+            allMemberAnnotations: List<UAnnotation>,
+            allClassAnnotations: List<UAnnotation>,
+            allPackageAnnotations: List<UAnnotation>) {
         when (qualifiedName) {
             INT_RANGE_ANNOTATION -> {
                 checkIntRange(context, annotation, argument, annotations)

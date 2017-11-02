@@ -254,7 +254,7 @@ public class InstantAppDetector extends ResourceXmlDetector implements UastScann
                     // More than one found: complain
                     LintClient client = context.getClient();
 
-                    Pair<File,Node> source = client.findManifestSourceNode(activity);
+                    Pair<File,? extends Node> source = client.findManifestSourceNode(activity);
                     if (source != null) {
                         XmlParser parser = client.getXmlParser();
                         // Don't search for the category tag directly; the manifest merger
@@ -269,7 +269,8 @@ public class InstantAppDetector extends ResourceXmlDetector implements UastScann
                         }
                         Location location = parser.getLocation(source.getFirst(),
                                 locationNode);
-                        Pair<File,Node> original = client.findManifestSourceNode(launchableActivity);
+                        Pair<File,? extends Node> original =
+                                client.findManifestSourceNode(launchableActivity);
                         if (original != null && original.getSecond() != source.getSecond()) {
                             locationNode = ManifestDetector.findLaunchableCategoryNode(
                                     (Element)original.getSecond());

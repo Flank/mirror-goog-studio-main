@@ -138,7 +138,7 @@ spectacularly (if the API behavior changes, since there are no guarantees for co
                 return
             }
             val apiLookup = ApiLookup.get(context.client,
-                    context.getMainProject().buildTarget) ?: return
+                    context.mainProject.buildTarget) ?: return
             isInternal = !apiLookup.containsClass(value)
         }
 

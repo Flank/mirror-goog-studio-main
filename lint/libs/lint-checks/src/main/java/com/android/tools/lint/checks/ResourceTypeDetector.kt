@@ -125,10 +125,10 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
-            annotations: MutableList<UAnnotation>,
-            allMemberAnnotations: MutableList<UAnnotation>,
-            allClassAnnotations: MutableList<UAnnotation>,
-            allPackageAnnotations: MutableList<UAnnotation>) {
+            annotations: List<UAnnotation>,
+            allMemberAnnotations: List<UAnnotation>,
+            allClassAnnotations: List<UAnnotation>,
+            allPackageAnnotations: List<UAnnotation>) {
         when (qualifiedName) {
             COLOR_INT_ANNOTATION -> checkColor(context, argument)
             HALF_FLOAT_ANNOTATION -> checkHalfFloat(context, argument)
@@ -206,7 +206,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
 
         if (types != null && types.contains(COLOR)) {
             val message = String.format(
-                    "Should pass resolved color instead of resource id here: " + "`getResources().getColor(%1\$s)`",
+                    "Should pass resolved color instead of resource id here: " +
+                            "`getResources().getColor(%1\$s)`",
                     argument.asSourceString())
             report(context, COLOR_USAGE, argument, context.getLocation(argument), message)
         }
@@ -242,7 +243,6 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
         val types = ResourceEvaluator.getResourceTypes(context.evaluator,
                 argument)
 
-        // TODO: Look up dimension resources too
         if (types != null && !types.isEmpty()) {
             val type = when {
                 types.contains(DIMENSION_MARKER_TYPE) -> "dimension"
@@ -250,34 +250,39 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
                 else -> "resource id"
             }
             val message = String.format("Expected a half float here, not a %1\$s", type)
-            // TODO: Change issue to HALF_FLOAT
-            report(context, COLOR_USAGE, argument, context.getLocation(argument), message)
+            report(context, HALF_FLOAT, argument, context.getLocation(argument), message)
             return
         }
 
         // TODO: Visit all occurrences of this member to see if it's used incorrectly
         //    -- expression type -> int -- widening
 
-        var curr = argument.getParentOfType<UExpression>(UExpression::class.java, false)
-        while (curr != null) {
+        for (curr in getParentSequence(argument, UExpression::class.java)) {
             if (curr is UBinaryExpressionWithType) {
                 // Explicit cast
                 break
             }
             val expressionType = curr.getExpressionType()
             if (expressionType != null && PsiType.SHORT != expressionType) {
-                if (PsiType.VOID == expressionType || PsiType.BOOLEAN == expressionType) {
+                if (PsiType.VOID == expressionType || PsiType.BOOLEAN == expressionType ||
+                        PsiType.BYTE == expressionType) {
                     break
                 }
                 val message = String.format("Half-float type in expression widened to %1\$s",
                         expressionType.canonicalText)
-                // TODO: Change issue to HALF_FLOAT
-                report(context, COLOR_USAGE, argument, context.getLocation(argument), message)
+                report(context, HALF_FLOAT, argument, context.getLocation(argument), message)
                 break
             }
-
-            curr = curr.getParentOfType(UExpression::class.java, true)
         }
+    }
+
+    // TODO: Move to utility extension method
+    private fun <T: UElement> getParentSequence(element: UElement, clz: Class<out T>): Sequence<T> {
+        val seed: T? = element.getParentOfType(clz, false)
+        val nextFunction: (T) -> T? = {
+            it.getParentOfType(clz, true)
+        }
+        return generateSequence(seed, nextFunction)
     }
 
     private fun checkPx(context: JavaContext, argument: UElement) {
@@ -469,7 +474,7 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
                 Severity.FATAL,
                 IMPLEMENTATION)
 
-        /** Attempting to set a resource id as a color  */
+        /** Attempting to set a resource id as a color */
         @JvmField
         val COLOR_USAGE = Issue.create(
                 "ResourceAsColor",
@@ -477,12 +482,29 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
 
                 "Methods that take a color in the form of an integer should be passed " +
                 "an RGB triple, not the actual color resource id. You must call " +
-                "`getResources().getColor(resource)` to resolve the actual color value first.",
+                "`getResources().getColor(resource)` to resolve the actual color value first.\n" +
+                        "\n" +
+                        "Similarly, methods that take a dimension integer should be passed " +
+                "an actual dimension (call `getResources().getDimension(resource)`",
 
                 Category.CORRECTNESS,
                 7,
                 Severity.ERROR,
                 IMPLEMENTATION)
 
+        /** Incorrect usage of half floats */
+        @JvmField
+        val HALF_FLOAT = Issue.create(
+                "HalfFloat",
+                "Incorrect Half Float",
+
+                "Half-precision floating point are stored in a short data type, and should be " +
+                        "manipulated using the `android.util.Half` class. This check flags " +
+                        "usages where it appears that these values are used incorrectly.",
+
+                Category.CORRECTNESS,
+                7,
+                Severity.ERROR,
+                IMPLEMENTATION)
     }
 }

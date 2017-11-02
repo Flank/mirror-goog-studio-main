@@ -320,7 +320,7 @@ public class InefficientWeightDetector extends LayoutDetector {
     }
 
     @NonNull
-    private static LintFix createOrientationFixes() {
+    private LintFix createOrientationFixes() {
         LintFix horizontal = fix()
                 .name("Set orientation=\"horizontal\" (default)")
                 .set(ANDROID_URI, ATTR_ORIENTATION, VALUE_HORIZONTAL)

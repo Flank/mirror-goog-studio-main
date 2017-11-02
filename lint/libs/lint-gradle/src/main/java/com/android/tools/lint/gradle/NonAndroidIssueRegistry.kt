@@ -18,12 +18,7 @@ package com.android.tools.lint.gradle
 
 import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.BuiltinIssueRegistry
-import com.android.tools.lint.checks.GradleDetector
 import com.android.tools.lint.checks.InvalidPackageDetector
-import com.android.tools.lint.checks.ManifestDetector
-import com.android.tools.lint.checks.ManifestTypoDetector
-import com.android.tools.lint.checks.NamespaceDetector
-import com.android.tools.lint.checks.ViewTypeDetector
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Scope
 import com.google.common.collect.Sets
@@ -31,21 +26,22 @@ import java.util.ArrayList
 
 class NonAndroidIssueRegistry : BuiltinIssueRegistry() {
 
-    override fun getIssues(): List<Issue> {
-        if (ourFilteredIssues == null) {
-            val sIssues = super.getIssues()
-            val result = ArrayList<Issue>(sIssues.size)
-            for (issue in sIssues) {
-                if (!isAndroidSpecific(issue)) {
-                    result.add(issue)
+    override val issues: List<Issue>
+        get() {
+            if (ourFilteredIssues == null) {
+                val sIssues = super.issues
+                val result = ArrayList<Issue>(sIssues.size)
+                for (issue in sIssues) {
+                    if (!isAndroidSpecific(issue)) {
+                        result.add(issue)
+                    }
                 }
+
+
+                ourFilteredIssues = result
             }
-
-
-            ourFilteredIssues = result
+            return ourFilteredIssues!!
         }
-        return ourFilteredIssues!!
-    }
 
     companion object {
         private var ourFilteredIssues: List<Issue>? = null

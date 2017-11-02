@@ -31,13 +31,13 @@ import com.android.annotations.Nullable;
 import com.android.resources.ResourceFolderType;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.Context;
+import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Detector.UastScanner;
 import com.android.tools.lint.detector.api.Detector.XmlScanner;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
-import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.XmlContext;
@@ -57,7 +57,7 @@ import org.w3c.dom.Element;
  * <p> Uses a {@code <meta-data>} tag with a {@code name="com.google.android.gms.car.application"}
  * as a trigger for validating Automotive specific issues.
  */
-public class AndroidAutoDetector extends ResourceXmlDetector
+public class AndroidAutoDetector extends Detector
         implements XmlScanner, UastScanner {
 
     // TODO: Use the new merged manifest model

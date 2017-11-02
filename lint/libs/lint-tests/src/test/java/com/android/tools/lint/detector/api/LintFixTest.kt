@@ -155,23 +155,23 @@ class LintFixTest : TestCase() {
 
         override fun visitMethod(
                 context: JavaContext,
-                call: UCallExpression,
+                node: UCallExpression,
                 method: PsiMethod) {
             val evaluator = context.evaluator
 
             if (evaluator.isMemberInClass(method, "android.util.Log")) {
-                val source = call.asSourceString()
+                val source = node.asSourceString()
                 @Language("RegExp")
                 val oldPattern = "(${Pattern.quote(source)})"
-                val receiver = call.receiver!!
+                val receiver = node.receiver!!
                 var replacement = source.replace(receiver.asSourceString(),
                         "MyLogger") + "; // Was: \\k<1>"
                 replacement = replacement.replace("\"TAG\", ", "")
 
-                val fix = Detector.fix()
+                val fix = LintFix.create()
                         .name("Fix Description")
                         .replace().pattern(oldPattern).with(replacement)
-                        .range(context.getLocation(call))
+                        .range(context.getLocation(node))
                         .shortenNames()
                         .build()
                 context.report(SAMPLE_ISSUE, context.getLocation(receiver),

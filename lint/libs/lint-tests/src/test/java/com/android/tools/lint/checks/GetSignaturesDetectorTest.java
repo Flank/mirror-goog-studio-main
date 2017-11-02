@@ -25,9 +25,9 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
         return new GetSignaturesDetector();
     }
 
-    public void testLintWarningOnSingleGetSignaturesFlag() throws Exception {
+    public void testLintWarningOnSingleGetSignaturesFlag() {
         String expected = ""
-                + "src/test/pkg/GetSignaturesSingleFlagTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "src/test/pkg/GetSignaturesSingleFlagTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
                 + "            .getPackageInfo(\"some.pkg\", PackageManager.GET_SIGNATURES);\n"
                 + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n";
@@ -49,9 +49,9 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testLintWarningOnGetSignaturesFlagInBitwiseOrExpression() throws Exception {
+    public void testLintWarningOnGetSignaturesFlagInBitwiseOrExpression() {
         String expected = ""
-                + "src/test/pkg/GetSignaturesBitwiseOrTest.java:11: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "src/test/pkg/GetSignaturesBitwiseOrTest.java:11: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
                 + "            .getPackageInfo(\"some.pkg\", GET_GIDS | GET_SIGNATURES | GET_PROVIDERS);\n"
                 + "                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n";
@@ -75,9 +75,9 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testLintWarningOnGetSignaturesFlagInBitwiseXorExpression() throws Exception {
+    public void testLintWarningOnGetSignaturesFlagInBitwiseXorExpression() {
         String expected = ""
-                + "src/test/pkg/GetSignaturesBitwiseXorTest.java:8: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "src/test/pkg/GetSignaturesBitwiseXorTest.java:8: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
                 + "        getPackageManager().getPackageInfo(\"some.pkg\", PackageManager.GET_SIGNATURES ^ 0x0);\n"
                 + "                                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n";
@@ -98,9 +98,9 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testLintWarningOnGetSignaturesFlagInBitwiseAndExpression() throws Exception {
+    public void testLintWarningOnGetSignaturesFlagInBitwiseAndExpression() {
         String expected = ""
-                + "src/test/pkg/GetSignaturesBitwiseAndTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "src/test/pkg/GetSignaturesBitwiseAndTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
                 + "            Integer.MAX_VALUE & PackageManager.GET_SIGNATURES);\n"
                 + "            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                 + "0 errors, 1 warnings\n";
@@ -122,9 +122,9 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testLintWarningOnFlagsInStaticField() throws Exception {
+    public void testLintWarningOnFlagsInStaticField() {
         String expected = ""
-                + "src/test/pkg/GetSignaturesStaticFieldTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "src/test/pkg/GetSignaturesStaticFieldTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
                 + "        getPackageManager().getPackageInfo(\"some.pkg\", FLAGS);\n"
                 + "                                                       ~~~~~\n"
                 + "0 errors, 1 warnings\n";
@@ -146,9 +146,9 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoLintWarningOnFlagsInLocalVariable() throws Exception {
+    public void testNoLintWarningOnFlagsInLocalVariable() {
         String expected = ""
-                + "src/test/pkg/GetSignaturesLocalVariableTest.java:9: Information: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
+                + "src/test/pkg/GetSignaturesLocalVariableTest.java:9: Warning: Reading app signatures from getPackageInfo: The app signatures could be exploited if not validated properly; see issue explanation for details. [PackageManagerGetSignatures]\n"
                 + "        getPackageManager().getPackageInfo(\"some.pkg\", flags);\n"
                 + "                                                       ~~~~~\n"
                 + "0 errors, 1 warnings\n";
@@ -170,7 +170,7 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoLintWarningOnGetSignaturesWithNoFlag() throws Exception {
+    public void testNoLintWarningOnGetSignaturesWithNoFlag() {
         //noinspection all // Sample code
         lint().files(
                 java("src/test/pkg/GetSignaturesNoFlagTest.java", ""
@@ -199,7 +199,7 @@ public class GetSignaturesDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoLintWarningOnGetPackageInfoOnNonPackageManagerClass() throws Exception {
+    public void testNoLintWarningOnGetPackageInfoOnNonPackageManagerClass() {
         //noinspection all // Sample code
         lint().files(
                 java("src/test/pkg/GetSignaturesNotPackageManagerTest.java", ""

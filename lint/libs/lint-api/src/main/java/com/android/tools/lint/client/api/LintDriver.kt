@@ -47,6 +47,7 @@ import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ClassContext
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
+import com.android.tools.lint.detector.api.Detector.XmlScanner
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintFix
@@ -55,7 +56,6 @@ import com.android.tools.lint.detector.api.LintUtils.isAnonymousClass
 import com.android.tools.lint.detector.api.Location
 import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.ResourceContext
-import com.android.tools.lint.detector.api.ResourceXmlDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.TextFormat
@@ -176,7 +176,7 @@ class LintDriver
     var scope: EnumSet<Scope> = request.getScope() ?: Scope.infer(projectRoots)
 
     private lateinit var applicableDetectors: List<Detector>
-    private lateinit var scopeDetectors: Map<Scope, List<Detector>>
+    private lateinit var scopeDetectors: Map<Scope, MutableList<Detector>>
     private var listeners: MutableList<LintListener>? = null
 
     /**
@@ -593,9 +593,9 @@ class LintDriver
         currentVisitor = null
 
         val configuration = project.getConfiguration(this)
-        scopeDetectors = EnumMap<Scope, List<Detector>>(Scope::class.java)
-        applicableDetectors = registry.createDetectors(client, configuration,
-                scope, scopeDetectors)
+        val map = EnumMap<Scope, MutableList<Detector>>(Scope::class.java)
+        scopeDetectors = map
+        applicableDetectors = registry.createDetectors(client, configuration, scope, map)
 
         validateScopeList()
     }
@@ -607,15 +607,14 @@ class LintDriver
             val resourceFileDetectors = scopeDetectors[Scope.RESOURCE_FILE]
             if (resourceFileDetectors != null) {
                 for (detector in resourceFileDetectors) {
-                    // This is wrong; it should allow XmlScanner instead of ResourceXmlScanner!
-                    assert(detector is ResourceXmlDetector) { detector }
+                    assert(detector is XmlScanner) { detector }
                 }
             }
 
             val manifestDetectors = scopeDetectors[Scope.MANIFEST]
             if (manifestDetectors != null) {
                 for (detector in manifestDetectors) {
-                    assert(detector is Detector.XmlScanner) { detector }
+                    assert(detector is XmlScanner) { detector }
                 }
             }
 
@@ -947,7 +946,14 @@ class LintDriver
                                 && main.isMergingManifests) && scope.contains(Scope.MANIFEST)) {
                             val detectors = scopeDetectors[Scope.MANIFEST]
                             if (detectors != null) {
-                                val v = ResourceVisitor(parser, detectors, null)
+                                val xmlDetectors = ArrayList<XmlScanner>(detectors.size)
+                                for (detector in detectors) {
+                                    if (detector is XmlScanner) {
+                                        xmlDetectors.add(detector)
+                                    }
+                                }
+
+                                val v = ResourceVisitor(parser, xmlDetectors, null)
                                 fireEvent(EventType.SCANNING_FILE, context)
                                 v.visitFile(context)
                             }
@@ -969,11 +975,11 @@ class LintDriver
                 val checks = union(scopeDetectors[Scope.RESOURCE_FILE],
                         scopeDetectors[Scope.ALL_RESOURCE_FILES]) ?: emptyList()
                 var haveXmlChecks = !checks.isEmpty()
-                val xmlDetectors: MutableList<ResourceXmlDetector>
+                val xmlDetectors: MutableList<XmlScanner>
                 if (haveXmlChecks) {
                     xmlDetectors = ArrayList(checks.size)
                     for (detector in checks) {
-                        if (detector is ResourceXmlDetector) {
+                        if (detector is XmlScanner) {
                             xmlDetectors.add(detector)
                         }
                     }
@@ -1080,7 +1086,7 @@ class LintDriver
                 fireEvent(EventType.SCANNING_FILE, context)
                 for (detector in detectors) {
                     detector.beforeCheckFile(context)
-                    detector.visitBuildScript(context, Maps.newHashMap<String, Any>())
+                    detector.visitBuildScript(context)
                     detector.afterCheckFile(context)
                 }
             }
@@ -1764,19 +1770,19 @@ class LintDriver
     }
 
     private var currentFolderType: ResourceFolderType? = null
-    private var currentXmlDetectors: List<ResourceXmlDetector>? = null
+    private var currentXmlDetectors: List<XmlScanner>? = null
     private var currentBinaryDetectors: List<Detector>? = null
     private var currentVisitor: ResourceVisitor? = null
 
     private fun getVisitor(
             type: ResourceFolderType,
-            checks: List<ResourceXmlDetector>,
+            checks: List<XmlScanner>,
             binaryChecks: List<Detector>?): ResourceVisitor? {
         if (type != currentFolderType) {
             currentFolderType = type
 
             // Determine which XML resource detectors apply to the given folder type
-            val applicableXmlChecks = ArrayList<ResourceXmlDetector>(checks.size)
+            val applicableXmlChecks = ArrayList<XmlScanner>(checks.size)
             for (check in checks) {
                 if (check.appliesTo(type)) {
                     applicableXmlChecks.add(check)
@@ -1819,7 +1825,7 @@ class LintDriver
             project: Project,
             main: Project?,
             res: File,
-            xmlChecks: List<ResourceXmlDetector>,
+            xmlChecks: List<XmlScanner>,
             dirChecks: List<Detector>?,
             binaryChecks: List<Detector>?) {
         val resourceDirs = res.listFiles() ?: return
@@ -1847,7 +1853,7 @@ class LintDriver
             main: Project?,
             dir: File,
             type: ResourceFolderType,
-            xmlChecks: List<ResourceXmlDetector>,
+            xmlChecks: List<XmlScanner>,
             dirChecks: List<Detector>?,
             binaryChecks: List<Detector>?) {
 
@@ -1930,7 +1936,7 @@ class LintDriver
     private fun checkIndividualResources(
             project: Project,
             main: Project?,
-            xmlDetectors: List<ResourceXmlDetector>,
+            xmlDetectors: List<XmlScanner>,
             dirChecks: List<Detector>?,
             binaryChecks: List<Detector>?,
             files: List<File>) {
@@ -2040,7 +2046,7 @@ class LintDriver
                 delegate.resolveMergeManifestSources(mergedManifest, reportFile)
 
         override fun findManifestSourceNode(
-                mergedNode: org.w3c.dom.Node): Pair<File, org.w3c.dom.Node>? =
+                mergedNode: org.w3c.dom.Node): Pair<File, out org.w3c.dom.Node>? =
                 delegate.findManifestSourceNode(mergedNode)
 
         override fun findManifestSourceLocation(mergedNode: org.w3c.dom.Node): Location? =

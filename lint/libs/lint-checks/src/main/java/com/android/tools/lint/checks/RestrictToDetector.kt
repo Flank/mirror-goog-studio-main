@@ -60,10 +60,10 @@ class RestrictToDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
-            annotations: MutableList<UAnnotation>,
-            allMemberAnnotations: MutableList<UAnnotation>,
-            allClassAnnotations: MutableList<UAnnotation>,
-            allPackageAnnotations: MutableList<UAnnotation>) {
+            annotations: List<UAnnotation>,
+            allMemberAnnotations: List<UAnnotation>,
+            allClassAnnotations: List<UAnnotation>,
+            allPackageAnnotations: List<UAnnotation>) {
 
         when (qualifiedName) {
             RESTRICT_TO_ANNOTATION,

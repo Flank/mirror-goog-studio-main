@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.SdkConstants.CLASS_APPLICATION;
 import static com.android.SdkConstants.CLASS_CONTEXT;
 import static com.android.SdkConstants.CLASS_FRAGMENT;
 import static com.android.SdkConstants.CLASS_VIEW;
@@ -174,7 +175,7 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
             return;
         }
 
-        if (LeakDetector.isLeakCandidate(cls, context.getEvaluator())) {
+        if (isLeakCandidate(cls, context.getEvaluator())) {
             context.report(LeakDetector.ISSUE, field, context.getLocation(field),
                     "This field leaks a context object");
         }
@@ -355,7 +356,8 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
     static boolean isLeakCandidate(
             @NonNull PsiClass cls,
             @NonNull JavaEvaluator evaluator) {
-        return evaluator.extendsClass(cls, CLASS_CONTEXT, false)
+        return evaluator.extendsClass(cls, CLASS_CONTEXT, false) &&
+                   !evaluator.extendsClass(cls, CLASS_APPLICATION, false)
                 || evaluator.extendsClass(cls, CLASS_VIEW, false)
                 || evaluator.extendsClass(cls, CLASS_FRAGMENT, false);
     }

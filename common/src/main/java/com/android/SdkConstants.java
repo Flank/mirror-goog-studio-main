@@ -1205,6 +1205,7 @@ public final class SdkConstants {
     public static final String ATTR_SPLIT_NAME = "splitName";
     public static final String ATTR_FEATURE_SPLIT = "featureSplit";
     public static final String ATTR_TARGET_SANDBOX_VERSION = "targetSandboxVersion";
+    public static final String ATTR_REQUIRED = "required";
 
     // Attributes: Resources
     public static final String ATTR_ATTR = "attr";
@@ -1980,6 +1981,20 @@ public final class SdkConstants {
     public static final String ATTR_MOCKUP_CROP = "mockup_crop"; //$NON-NLS-1$
     public static final String ATTR_MOCKUP_POSITION = "mockup_crop"; //$NON-NLS-1$
     public static final String ATTR_MOCKUP_OPACITY = "mockup_opacity"; //$NON-NLS-1$
+
+    // Baselines
+    /**
+     * Root tag in baseline files (which can be the XML output report files from lint, or a
+     * subset of these
+     */
+    @SuppressWarnings("unused") // used from IDE
+    public static final String TAG_ISSUES = "issues";
+    public static final String TAG_ISSUE = "issue";
+    public static final String TAG_LOCATION = "location";
+    public static final String ATTR_MESSAGE = "message";
+    public static final String ATTR_FILE = "file";
+    public static final String ATTR_LINE = "line";
+    public static final String ATTR_COLUMN = "column";
 
     public static final class ImageViewAttributes {
         public static final String TINT = "tint";

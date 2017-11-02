@@ -111,7 +111,7 @@ public class WrongCallDetector extends Detector implements UastScanner {
         String message = String.format(
                 "Suspicious method call; should probably call \"`%1$s`\" rather than \"`%2$s`\"",
                 suggestion, name);
-        LintFix fix = fix()
+        LintFix fix = LintFix.create()
                 .name("Replace call with " + suggestion + "()").replace().text(name)
                 .with(suggestion)
                 .build();

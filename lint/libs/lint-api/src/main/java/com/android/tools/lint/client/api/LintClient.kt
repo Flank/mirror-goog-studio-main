@@ -113,20 +113,12 @@ abstract class LintClient {
      * issue as enabled and has not filtered out the issue with its
      * [Configuration.ignore] method.
      *
-     *
-     *
      * @param context  the context used by the detector when the issue was found
-     *
      * @param issue    the issue that was found
-     *
      * @param severity the severity of the issue
-     *
      * @param location the location of the issue
-     *
      * @param message  the associated user message
-     *
      * @param format   the format of the description and location descriptions
-     *
      * @param fix      an optional set of extra data provided by the detector for this issue; this
      *                 is intended to pass metadata to the IDE to help construct quickfixes without
      *                 having to parse error messages (which is brittle) or worse having to include
@@ -1321,8 +1313,8 @@ abstract class LintClient {
 
     /** Cache used by [.findManifestSourceNode]  */
     @Suppress("MemberVisibilityCanPrivate")
-    protected val sourceNodeCache: MutableMap<Node, Pair<File, Node>> =
-        Maps.newIdentityHashMap<Node, Pair<File, Node>>()
+    protected val sourceNodeCache: MutableMap<Node, Pair<File, out Node>> =
+        Maps.newIdentityHashMap<Node, Pair<File, out Node>>()
 
     /**
      * For the given node from a merged manifest, find the corresponding
@@ -1332,7 +1324,7 @@ abstract class LintClient {
      *
      * @return the corresponding manifest node in one of the source files, if possible
      */
-    open fun findManifestSourceNode(mergedNode: Node): Pair<File, Node>? {
+    open fun findManifestSourceNode(mergedNode: Node): Pair<File, out Node>? {
         val doc = mergedNode.ownerDocument ?: return null
         val report = doc.getUserData(MERGED_MANIFEST) ?: return null
 
@@ -1376,7 +1368,7 @@ abstract class LintClient {
             reportFileCache.put(report, blameFile)
         }
 
-        var source: Pair<File, Node>? = null
+        var source: Pair<File, out Node>? = null
         if (blameFile !== BlameFile.NONE) {
             source = blameFile.findSourceNode(this, mergedNode)
         }

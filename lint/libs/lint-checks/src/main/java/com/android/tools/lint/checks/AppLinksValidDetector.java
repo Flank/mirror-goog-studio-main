@@ -422,13 +422,13 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             // At least one scheme must be specified
             boolean hasScheme = schemes != null;
             if (!hasScheme && (hosts != null || paths != null || ports != null)) {
-                LintFix fix = fix().set(ANDROID_URI, ATTR_SCHEME, "http").build();
+                LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_SCHEME, "http").build();
                 reportUrlError(context, firstData, context.getLocation(firstData),
                         "At least one `scheme` must be specified", fix);
             }
 
             if (hosts == null && (paths != null || ports != null)) {
-                LintFix fix = fix().set(ANDROID_URI, ATTR_HOST, "").build();
+                LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_HOST, "").build();
                 reportUrlError(context, firstData, context.getLocation(firstData),
                         "At least one `host` must be specified", fix);
             }
@@ -441,7 +441,7 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
             }
 
             if (actionView && (!hasScheme || implicitSchemes)) {
-                LintFix fix = fix().set(ANDROID_URI, ATTR_SCHEME, "http").build();
+                LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_SCHEME, "http").build();
                 reportUrlError(context, intent, context.getLocation(intent),
                         "Missing URL", fix);
             }
@@ -638,11 +638,12 @@ public class AppLinksValidDetector extends Detector implements Detector.XmlScann
 
             if (context != null
                     && !value.startsWith("/")
+                    && !isSubstituted(value)
                     && !value.startsWith(SdkConstants.PREFIX_RESOURCE_REF)
                     // Only enforce / for path and prefix; for pattern it seems to
                     // work without
                     && !attributeName.equals(ATTR_PATH_PATTERN)) {
-                LintFix fix = fix().replace().text(attribute.getValue())
+                LintFix fix = LintFix.create().replace().text(attribute.getValue())
                         .with("/" + value).build();
                 reportUrlError(context, attribute, context.getValueLocation(attribute),
                         String.format("`%1$s` attribute should start with `/`, but it is `"

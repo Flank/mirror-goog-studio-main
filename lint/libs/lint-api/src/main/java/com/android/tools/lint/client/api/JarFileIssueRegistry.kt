@@ -51,7 +51,7 @@ private constructor(
         /** The custom lint check's issue registry that this [JarFileIssueRegistry] wraps */
         registry: IssueRegistry) : IssueRegistry() {
 
-    private val issues: List<Issue> = registry.issues.toList()
+    override val issues: List<Issue> = registry.issues.toList()
     private var timestamp: Long = jarFile.lastModified()
 
     private var hasLombokLegacyDetectors: Boolean = false
@@ -67,9 +67,10 @@ private constructor(
         return hasPsiLegacyDetectors
     }
 
-    override fun isUpToDate(): Boolean {
-        return timestamp == jarFile.lastModified()
-    }
+    override val isUpToDate: Boolean
+        get() {
+            return timestamp == jarFile.lastModified()
+        }
 
     init {
         // If it's an old registry, look through the issues to see if it
@@ -92,10 +93,6 @@ private constructor(
         if (loader is URLClassLoader) {
             loadAndCloseURLClassLoader(client, jarFile, loader)
         }
-    }
-
-    override fun getIssues(): List<Issue> {
-        return issues
     }
 
     companion object Factory {

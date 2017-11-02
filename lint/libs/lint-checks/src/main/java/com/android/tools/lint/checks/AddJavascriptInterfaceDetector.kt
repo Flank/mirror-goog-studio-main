@@ -61,7 +61,7 @@ the injected object's public fields and thus manipulate the host application in 
     override fun visitMethod(context: JavaContext, node: UCallExpression,
                              method: PsiMethod) {
         // Ignore the issue if we never build for any API less than 17.
-        if (context.getMainProject().minSdk >= 17) {
+        if (context.mainProject.minSdk >= 17) {
             return
         }
 

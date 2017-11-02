@@ -617,7 +617,7 @@ public class ApiDetector extends ResourceXmlDetector
 
     @NonNull
     private static LintFix apiLevelFix(int api) {
-        return fix().data(api);
+        return LintFix.create().data(api);
     }
 
     /**

@@ -217,7 +217,7 @@ public class FontDetector extends ResourceXmlDetector {
                             + " of the " + APPCOMPAT_LIB_ARTIFACT_ID
                             + " library. Required version for using downloadable fonts: "
                             + MIN_APPSUPPORT_VERSION.getRevision() + " or higher.";
-                    LintFix fix = fix().data(APPCOMPAT_LIB_ARTIFACT_ID);
+                    LintFix fix = LintFix.create().data(APPCOMPAT_LIB_ARTIFACT_ID);
                     reportError(context, element, message, fix);
                 }
             }
@@ -230,7 +230,7 @@ public class FontDetector extends ResourceXmlDetector {
         if (fontTag == null) {
             return false;
         }
-        LintFix fix = fix().replace().with("").build();
+        LintFix fix = LintFix.create().replace().with("").build();
         reportError(context, fontTag, "A downloadable font cannot have a `<font>` sub tag", fix);
         return true;
     }
@@ -244,7 +244,7 @@ public class FontDetector extends ResourceXmlDetector {
             String message = String.format(
                     "For `minSdkVersion`=%1$d only `%2$s:` attributes should be used",
                     minSdk.getApiLevel(), namespace);
-            LintFix fix = fix().unset(first.getNamespaceURI(), first.getLocalName()).build();
+            LintFix fix = LintFix.create().unset(first.getNamespaceURI(), first.getLocalName()).build();
             reportWarning(context, first, message, fix);
         }
     }
@@ -362,7 +362,7 @@ public class FontDetector extends ResourceXmlDetector {
         if (provider.getPackageName().equals(packageName)) {
             return;
         }
-        LintFix fix = fix().name("Replace with " + provider.getPackageName())
+        LintFix fix = LintFix.create().name("Replace with " + provider.getPackageName())
                 .replace()
                 .text(packageName)
                 .with(provider.getPackageName())

@@ -56,10 +56,10 @@ class ThreadDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
-            annotations: MutableList<UAnnotation>,
-            allMemberAnnotations: MutableList<UAnnotation>,
-            allClassAnnotations: MutableList<UAnnotation>,
-            allPackageAnnotations: MutableList<UAnnotation>) {
+            annotations: List<UAnnotation>,
+            allMemberAnnotations: List<UAnnotation>,
+            allClassAnnotations: List<UAnnotation>,
+            allPackageAnnotations: List<UAnnotation>) {
         if (method != null) {
             checkThreading(context, argument, method, qualifiedName, annotation,
                     allMemberAnnotations,

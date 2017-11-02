@@ -180,7 +180,7 @@ public class ServiceCastDetector extends Detector implements UastScanner {
      * Checks that the given call to {@code Context#getSystemService(WIFI_SERVICE)} is
      * using the application context
      */
-    private static void checkWifiService(@NonNull JavaContext context,
+    private void checkWifiService(@NonNull JavaContext context,
             @NonNull UCallExpression call) {
         JavaEvaluator evaluator = context.getEvaluator();
         UExpression qualifier = call.getReceiver();
@@ -213,7 +213,7 @@ public class ServiceCastDetector extends Detector implements UastScanner {
      * @param element the reference to be checked
      * @param call    the original getSystemService call to report an error against
      */
-    private static boolean checkContextReference(
+    private boolean checkContextReference(
             @NonNull JavaContext context,
             @Nullable UElement element,
             @NonNull UCallExpression call) {
@@ -272,7 +272,7 @@ public class ServiceCastDetector extends Detector implements UastScanner {
      * <p>
      * Returns true if it finds and reports a problem.
      */
-    private static boolean checkWifiContextType(@NonNull JavaContext context,
+    private boolean checkWifiContextType(@NonNull JavaContext context,
             @NonNull UCallExpression call, @NonNull PsiType type,
             boolean flagPlainContext) {
         JavaEvaluator evaluator = context.getEvaluator();
@@ -294,7 +294,7 @@ public class ServiceCastDetector extends Detector implements UastScanner {
         return true;
     }
 
-    private static void reportWifiServiceLeak(@NonNull Issue issue, @NonNull JavaContext context,
+    private void reportWifiServiceLeak(@NonNull Issue issue, @NonNull JavaContext context,
             @NonNull UCallExpression call) {
         if (context.getMainProject().getMinSdk() >= 24) {
             // Bug is fixed in Nougat

@@ -388,7 +388,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     // ---- Implements Detector.GradleScanner ----
 
     @Override
-    public void visitBuildScript(@NonNull Context context, Map<String, Object> sharedData) {
+    public void visitBuildScript(@NonNull Context context) {
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -1255,7 +1255,7 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
     private static LintFix getUpdateDependencyFix(
             @NonNull String currentVersion,
             @NonNull String suggestedVersion) {
-        return fix()
+        return LintFix.create()
                 .name("Change to " + suggestedVersion).replace().text(currentVersion)
                 .with(suggestedVersion)
                 .build();

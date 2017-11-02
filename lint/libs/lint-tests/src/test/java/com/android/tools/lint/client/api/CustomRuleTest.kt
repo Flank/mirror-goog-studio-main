@@ -25,13 +25,13 @@ import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Project
 import org.junit.ClassRule
+import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
 import java.io.File
 
 class CustomRuleTest {
-
     @Test
     fun testProjectLintJar() {
         val expected = "" +

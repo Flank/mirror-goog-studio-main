@@ -53,8 +53,7 @@ class JarFileIssueRegistryTest : AbstractCheckTest() {
         // Access detector state. On Java 7/8 this will access the detector class after
         // the jar loader has been closed; this tests that we still have valid classes.
         val detector = registry1.issues[0].implementation.detectorClass.newInstance()
-        detector.applicableAsmNodeTypes
-        val applicableCallNames = detector.applicableCallNames
+        val applicableCallNames = detector.getApplicableCallNames()
         assertNotNull(applicableCallNames)
         assertTrue(applicableCallNames!!.contains("getActionBar"))
 

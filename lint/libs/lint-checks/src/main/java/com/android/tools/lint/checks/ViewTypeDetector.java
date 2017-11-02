@@ -371,7 +371,7 @@ public class ViewTypeDetector extends ResourceXmlDetector implements UastScanner
             return;
         }
 
-        LintFix fix = fix().replace()
+        LintFix fix = LintFix.create().replace()
           .name("Add cast")
           .text(FIND_VIEW_BY_ID)
           .shortenNames()

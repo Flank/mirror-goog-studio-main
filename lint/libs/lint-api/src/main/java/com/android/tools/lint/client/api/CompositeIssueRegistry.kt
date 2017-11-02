@@ -26,36 +26,37 @@ import com.android.tools.lint.detector.api.Issue
  */
 class CompositeIssueRegistry(
         private val registries: List<IssueRegistry>) : IssueRegistry() {
+    private var mergedIssues: List<Issue>? = null
 
-    private var issues: List<Issue>? = null
-
-    override fun getIssues(): List<Issue> {
-        val issues = this.issues
-        if (issues != null) {
-            return issues
-        }
-
-        var capacity = 0
-        for (registry in registries) {
-            capacity += registry.issues.size
-        }
-        val list = ArrayList<Issue>(capacity)
-        for (registry in registries) {
-            list.addAll(registry.issues)
-        }
-        this.issues = list
-        return list
-    }
-
-    override fun isUpToDate(): Boolean {
-        for (registry in registries) {
-            if (!registry.isUpToDate) {
-                return false
+    override val issues: List<Issue>
+        get() {
+            val issues = this.mergedIssues
+            if (issues != null) {
+                return issues
             }
+
+            var capacity = 0
+            for (registry in registries) {
+                capacity += registry.issues.size
+            }
+            val list = ArrayList<Issue>(capacity)
+            for (registry in registries) {
+                list.addAll(registry.issues)
+            }
+            this.mergedIssues = list
+            return list
         }
 
-        return true
-    }
+    override val isUpToDate: Boolean
+        get() {
+            for (registry in registries) {
+                if (!registry.isUpToDate) {
+                    return false
+                }
+            }
+
+            return true
+        }
 
     /** True if one or more java detectors were found that use the old Lombok-based API  */
     fun hasLombokLegacyDetectors(): Boolean {

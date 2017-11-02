@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+@file:JvmName("XmlScannerKt")
+
 package com.android.tools.lint.detector.api
 
 import com.android.resources.ResourceFolderType
@@ -191,6 +193,7 @@ open class XmlContext
     fun createLocationHandle(node: Node): Location.Handle =
             parser.createLocationHandle(this, node)
 
-    override fun getResourceFolder(): File? =
-            if (resourceFolderType != null) file.parentFile else null
+    override val resourceFolder: File?
+        // Like super, but for the parent folder instead of the context file
+        get() = if (resourceFolderType != null) file.parentFile else null
 }

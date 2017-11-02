@@ -738,31 +738,28 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(""
-                        + "src/test/pkg/HalfFloatTest.java:23: Error: Expected a half float here, not a resource id [ResourceAsColor]\n"
+                        + "src/test/pkg/HalfFloatTest.java:23: Error: Expected a half float here, not a resource id [HalfFloat]\n"
                         + "        method1(getDimension1()); // ERROR\n"
                         + "                ~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/HalfFloatTest.java:24: Error: Expected a half float here, not a dimension [ResourceAsColor]\n"
+                        + "src/test/pkg/HalfFloatTest.java:24: Error: Expected a half float here, not a dimension [HalfFloat]\n"
                         + "        method1(getDimension2()); // ERROR\n"
                         + "                ~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/HalfFloatTest.java:25: Error: Expected a half float here, not a color [ResourceAsColor]\n"
+                        + "src/test/pkg/HalfFloatTest.java:25: Error: Expected a half float here, not a color [HalfFloat]\n"
                         + "        method1(getActualColor()); // ERROR\n"
                         + "                ~~~~~~~~~~~~~~~~\n"
-                        + "src/test/pkg/HalfFloatTest.java:26: Error: Expected a half float here, not a resource id [ResourceAsColor]\n"
+                        + "src/test/pkg/HalfFloatTest.java:26: Error: Expected a half float here, not a resource id [HalfFloat]\n"
                         + "        method1(getTextId()); // ERROR\n"
                         + "                ~~~~~~~~~~~\n"
-                        + "src/test/pkg/HalfFloatTest.java:43: Error: Half-float type in expression widened to int [ResourceAsColor]\n"
+                        + "src/test/pkg/HalfFloatTest.java:43: Error: Half-float type in expression widened to int [HalfFloat]\n"
                         + "        int result3 = float1 + 1; // error: widening\n"
                         + "                      ~~~~~~\n"
-                        + "src/test/pkg/HalfFloatTest.java:44: Error: Half-float type in expression widened to int [ResourceAsColor]\n"
+                        + "src/test/pkg/HalfFloatTest.java:44: Error: Half-float type in expression widened to int [HalfFloat]\n"
                         + "        boolean result4 = float1 + 1 > 5; // error: widening\n"
                         + "                          ~~~~~~\n"
-                        + "src/test/pkg/HalfFloatTest.java:46: Error: Half-float type in expression widened to byte [ResourceAsColor]\n"
-                        + "        method1(b); // ERROR: widening\n"
-                        + "                ~\n"
-                        + "src/test/pkg/HalfFloatTest.java:50: Error: Half-float type in expression widened to int [ResourceAsColor]\n"
+                        + "src/test/pkg/HalfFloatTest.java:50: Error: Half-float type in expression widened to int [HalfFloat]\n"
                         + "        Math.round(float1); // Error: should use Half.round\n"
                         + "                   ~~~~~~\n"
-                        + "8 errors, 0 warnings\n")
+                        + "7 errors, 0 warnings\n")
     }
 
     fun testAnyRes() {

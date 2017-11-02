@@ -264,7 +264,7 @@ public class CommentDetector extends ResourceXmlDetector implements UastScanner 
     @NonNull
     private static LintFix createRemoveStopShipFix() {
         // TODO: Remove comment if that's all that remains
-        return fix()
+        return LintFix.create()
                 .name("Remove STOPSHIP").replace().pattern("(\\s*STOPSHIP)")
                 .with("")
                 .build();
