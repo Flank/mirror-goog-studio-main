@@ -716,6 +716,8 @@
                     <xsd:enumeration value="Gyroscope" />
                     <xsd:enumeration value="LightSensor" />
                     <xsd:enumeration value="ProximitySensor" />
+                    <xsd:enumeration value="StepCounter" />
+                    <xsd:enumeration value="StepDetector" />
                 </xsd:restriction>
             </xsd:simpleType>
         </xsd:list>
