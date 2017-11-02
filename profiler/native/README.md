@@ -18,7 +18,7 @@ between debug and release builds.
 
 ## To compile everything for release
 ```
-bazel --config release ...
+bazel build --config release ...
 ```
 
 The `release` config is defined in `.../tools/bazel.rc` and automatically
