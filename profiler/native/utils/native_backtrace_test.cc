@@ -21,6 +21,9 @@
 #include <vector>
 
 #include <gtest/gtest.h>
+#define DONT_OPTIMIZE __attribute__((noinline))\
+                      __attribute__((optimize("-O0")))\
+                      __attribute__((optnone))
 
 using profiler::backtrace;
 using std::uintptr_t;
@@ -44,13 +47,13 @@ struct BacktraceTestContext {
 // everything away and merging all FrameFunc<N> into a single one.
 std::atomic<int> global_side_effect;
 
-static uintptr_t __attribute__((noinline)) GetCurrentIP() {
+static uintptr_t DONT_OPTIMIZE GetCurrentIP() {
   global_side_effect++;
   return reinterpret_cast<uintptr_t>(__builtin_return_address(0));
 }
 
 template <int N>
-void FrameFunc(BacktraceTestContext *context, size_t n) {
+void DONT_OPTIMIZE FrameFunc(BacktraceTestContext *context, size_t n) {
   global_side_effect += N;
   size_t next_n = n + 1;
   size_t depth = static_cast<size_t>(context->depth);
@@ -122,7 +125,8 @@ TEST(NativeBacktrace, FullBacktraceInCorrectOrder) {
           << " seed: " << iteration;
       EXPECT_LE(*bt_address, *fun_end_address)
           << "backtrace address <= func end. Frame #" << frame
-          << " seed: " << iteration;
+          << " seed: " << iteration
+          << " function address: " << reinterpret_cast<uintptr_t>(*fun_address);
       bt_address++;
       fun_address++;
       fun_end_address++;
