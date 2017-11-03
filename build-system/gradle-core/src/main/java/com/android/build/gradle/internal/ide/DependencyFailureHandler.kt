@@ -16,6 +16,9 @@
 
 package com.android.build.gradle.internal.ide
 
+import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.errors.EvalIssueReporter.Type
+import com.android.builder.errors.EvalIssueReporter.Severity
 import com.android.builder.model.SyncIssue
 import com.google.common.base.Splitter
 import com.google.common.collect.ArrayListMultimap
@@ -53,15 +56,16 @@ class DependencyFailureHandler {
                     { data, messages ->
                         val issue = if (data != null) {
                             SyncIssueImpl(
-                                    SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                                    SyncIssue.SEVERITY_ERROR,
+                                    Type.UNRESOLVED_DEPENDENCY,
+                                    Severity.ERROR,
                                     data,
                                     "Unable to resolve dependency $data",
                                     null)
                         } else {
                             SyncIssueImpl(
-                                    SyncIssue.TYPE_UNRESOLVED_DEPENDENCY,
-                                    SyncIssue.SEVERITY_ERROR, null,
+                                    Type.UNRESOLVED_DEPENDENCY,
+                                    Severity.ERROR,
+                                    null,
                                     "Unable to resolve dependency for '$key': ${messages[0]}",
                                     messages)
                         }

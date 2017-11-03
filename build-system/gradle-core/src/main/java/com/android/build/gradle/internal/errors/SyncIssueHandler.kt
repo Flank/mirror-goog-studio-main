@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal;
+package com.android.build.gradle.internal.errors
 
-import com.android.build.gradle.options.IntegerOption;
-import com.android.build.gradle.options.ProjectOptions;
-import com.android.ide.common.internal.ExecutorSingleton;
+import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.model.SyncIssue
+import com.google.common.collect.ImmutableList
 
-public class ExecutionConfigurationUtil {
+/**
+ */
+interface SyncIssueHandler : EvalIssueReporter {
 
+    val syncIssues: ImmutableList<SyncIssue>
 
-    public static void setThreadPoolSize(ProjectOptions projectOptions) {
-        Integer size = projectOptions.get(IntegerOption.THREAD_POOL_SIZE);
-        if (size == null) {
-            return;
-        }
-
-        ExecutorSingleton.setThreadPoolSize(size);
-    }
+    /** Whether there are sync issues */
+    fun hasSyncIssue(type: EvalIssueReporter.Type): Boolean
 }

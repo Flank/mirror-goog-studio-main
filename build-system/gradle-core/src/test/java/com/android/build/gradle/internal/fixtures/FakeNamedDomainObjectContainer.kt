@@ -75,6 +75,10 @@ open class FakeNamedDomainObjectContainer<T>(
 
     override fun iterator() = items.values.iterator()
 
+    override val size: Int
+        get() = items.size
+
+    override fun isEmpty() = items.isEmpty()
 
     // --- internal fun
 
@@ -134,10 +138,6 @@ open class FakeNamedDomainObjectContainer<T>(
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun isEmpty(): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
     override fun addAll(elements: Collection<T>): Boolean {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
@@ -169,9 +169,6 @@ open class FakeNamedDomainObjectContainer<T>(
     override fun getByName(p0: String?, p1: Closure<*>?): T {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
-
-    override val size: Int
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
     override fun containsAll(elements: Collection<T>): Boolean {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.

@@ -146,7 +146,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                 getInteractiveMessageFromString(infoMessageString1);
 
         CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
-                mockLogger, interactiveMessage1);
+                mockLogger, interactiveMessage1, Mockito.mock(File.class));
         Mockito.verify(mockLogger, times(1)).info(message);
 
         message = "CMake error but should be logged as info";
@@ -161,7 +161,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                 getInteractiveMessageFromString(infoMessageString2);
 
         CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
-                mockLogger, interactiveMessage2);
+                mockLogger, interactiveMessage2, Mockito.mock(File.class));
         Mockito.verify(mockLogger, times(1)).info(message);
 
         message = "CMake warning but should be logged as info";
@@ -176,7 +176,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                 getInteractiveMessageFromString(infoMessageString3);
 
         CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
-                mockLogger, interactiveMessage3);
+                mockLogger, interactiveMessage3, Mockito.mock(File.class));
         Mockito.verify(mockLogger, times(1)).info(message);
 
         message = "CMake info";
@@ -192,7 +192,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                 getInteractiveMessageFromString(infoMessageString4);
 
         CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
-                mockLogger, interactiveMessage4);
+                mockLogger, interactiveMessage4, Mockito.mock(File.class));
         Mockito.verify(mockLogger, times(1)).info(message);
     }
 
@@ -212,7 +212,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                 getInteractiveMessageFromString(warningMessageString);
 
         CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
-                mockLogger, interactiveMessage);
+                mockLogger, interactiveMessage, Mockito.mock(File.class));
         Mockito.verify(mockLogger, times(1)).warning(message);
     }
 
@@ -233,7 +233,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
                 getInteractiveMessageFromString(warningMessageString);
 
         CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
-                mockLogger, interactiveMessage);
+                mockLogger, interactiveMessage, Mockito.mock(File.class));
         Mockito.verify(mockLogger, times(1)).warning(message);
     }
 
@@ -252,7 +252,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         InteractiveMessage interactiveMessage = getInteractiveMessageFromString(errorMessageString);
 
         CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
-                mockLogger, interactiveMessage);
+                mockLogger, interactiveMessage, Mockito.mock(File.class));
         Mockito.verify(mockLogger, times(1)).error(null, message);
     }
 
@@ -272,7 +272,7 @@ public class CmakeServerExternalNativeJsonGeneratorTest {
         InteractiveMessage interactiveMessage = getInteractiveMessageFromString(errorMessageString);
 
         CmakeServerExternalNativeJsonGenerator.logInteractiveMessage(
-                mockLogger, interactiveMessage);
+                mockLogger, interactiveMessage, Mockito.mock(File.class));
         Mockito.verify(mockLogger, times(1)).error(null, message);
     }
 

@@ -97,8 +97,8 @@ import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexMergerTool;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.BaseConfig;
-import com.android.builder.model.SyncIssue;
 import com.android.repository.api.ProgressIndicator;
 import com.android.sdklib.AndroidTargetHash;
 import com.android.sdklib.AndroidVersion;
@@ -240,7 +240,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope
                         .getErrorHandler()
                         .reportError(
-                                SyncIssue.TYPE_GENERIC,
+                                Type.GENERIC,
                                 "The 'android-gradle' code shrinker does not support obfuscating.");
             }
 
@@ -248,7 +248,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                 globalScope
                         .getErrorHandler()
                         .reportError(
-                                SyncIssue.TYPE_GENERIC,
+                                Type.GENERIC,
                                 "The 'android-gradle' code shrinker does not support optimizing code.");
             }
         }
@@ -425,9 +425,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (variantData.getType() == VariantType.LIBRARY) {
             globalScope
                     .getErrorHandler()
-                    .reportError(
-                            SyncIssue.TYPE_GENERIC,
-                            "Resource shrinker cannot be used for libraries.");
+                    .reportError(Type.GENERIC, "Resource shrinker cannot be used for libraries.");
             return false;
         }
 
@@ -435,7 +433,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             globalScope
                     .getErrorHandler()
                     .reportError(
-                            SyncIssue.TYPE_GENERIC,
+                            Type.GENERIC,
                             "Removing unused resources requires unused code shrinking to be turned on. See "
                                     + "http://d.android.com/r/tools/shrink-resources.html "
                                     + "for more information.");
@@ -2108,7 +2106,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         globalScope
                 .getErrorHandler()
                 .reportError(
-                        SyncIssue.TYPE_GENERIC,
+                        Type.GENERIC,
                         "Please add 'android.enableDesugar=true' to your "
                                 + "gradle.properties file to enable Java 8 "
                                 + "language support.",

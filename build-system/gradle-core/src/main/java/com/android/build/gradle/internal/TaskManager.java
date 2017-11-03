@@ -194,6 +194,7 @@ import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DesugarProcessBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexingType;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.DataBindingOptions;
 import com.android.builder.model.SyncIssue;
 import com.android.builder.profile.Recorder;
@@ -1694,7 +1695,7 @@ public abstract class TaskManager {
             androidBuilder
                     .getIssueReporter()
                     .reportError(
-                            SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                            Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
                             pathResolution.errorText,
                             scope.getVariantConfiguration().getFullName());
             return;
@@ -3219,7 +3220,7 @@ public abstract class TaskManager {
             androidBuilder
                     .getIssueReporter()
                     .reportError(
-                            SyncIssue.TYPE_GENERIC,
+                            Type.GENERIC,
                             "Internal error, could not add the ShrinkResourcesTransform");
         }
     }

@@ -25,6 +25,6 @@ public interface InterfaceWithDefault {
     }
 
     default String finalMethod() {
-        return "never changes";
+        return "actually changed";
     }
 }

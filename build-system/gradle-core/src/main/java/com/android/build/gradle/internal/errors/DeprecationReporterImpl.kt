@@ -17,38 +17,20 @@
 package com.android.build.gradle.internal.errors
 
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.SyncIssue
+import com.android.builder.errors.EvalIssueReporter.Severity
+import com.android.builder.errors.EvalIssueReporter.Type
 
-/**
- * An configurable error handler for project evaluation and execution.
- *
- *
- * The behavior of the handler varies depending on the evaluation mode ([ ]), indicating whether the IDE is querying the project or
- * not.
- */
-abstract class ConfigurableErrorHandler protected constructor(
-        val mode: EvaluationMode,
-        private val projectPath: String) :
-        EvalIssueReporter, DeprecationReporter {
-
-    enum class EvaluationMode {
-        /** Standard mode, errors should be breaking  */
-        STANDARD,
-        /** IDE mode. Errors should not be breaking and should generate a SyncIssue instead.  */
-        IDE,
-        /** Legacy IDE mode (Studio 1.0), where SyncIssue are not understood by the IDE.  */
-        IDE_LEGACY
-    }
-
-    abstract fun hasSyncIssue(type: Int): Boolean
+class DeprecationReporterImpl(
+        private val issueReporter: EvalIssueReporter,
+        private val projectPath: String) : DeprecationReporter {
 
     override fun reportDeprecatedUsage(
             newDslElement: String,
             oldDslElement: String,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        reportIssue(
-                SyncIssue.TYPE_DEPRECATED_DSL,
-                SyncIssue.SEVERITY_WARNING,
+        issueReporter.reportIssue(
+                Type.DEPRECATED_DSL,
+                Severity.WARNING,
                 "DSL element '$oldDslElement' is obsolete and has been replaced with '$newDslElement'.\n" +
                         "It will be removed ${deprecationTarget.removalTime}",
                 "$oldDslElement::$newDslElement::${deprecationTarget.name}")
@@ -59,9 +41,9 @@ abstract class ConfigurableErrorHandler protected constructor(
             oldDslElement: String,
             url: String,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        reportIssue(
-                SyncIssue.TYPE_DEPRECATED_DSL,
-                SyncIssue.SEVERITY_WARNING,
+        issueReporter.reportIssue(
+                Type.DEPRECATED_DSL,
+                Severity.WARNING,
                 "DSL element '$oldDslElement' is obsolete and has been replaced with '$newDslElement'.\n" +
                         "It will be removed ${deprecationTarget.removalTime}\n" +
                         "For more information, see $url",
@@ -70,9 +52,9 @@ abstract class ConfigurableErrorHandler protected constructor(
 
     override fun reportObsoleteUsage(oldDslElement: String,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        reportIssue(
-                SyncIssue.TYPE_DEPRECATED_DSL,
-                SyncIssue.SEVERITY_WARNING,
+        issueReporter.reportIssue(
+                Type.DEPRECATED_DSL,
+                Severity.WARNING,
                 "DSL element '$oldDslElement' is obsolete and will be removed ${deprecationTarget.removalTime}",
                 "$oldDslElement::::${deprecationTarget.name}")
     }
@@ -81,9 +63,9 @@ abstract class ConfigurableErrorHandler protected constructor(
             oldDslElement: String,
             url: String,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        reportIssue(
-                SyncIssue.TYPE_DEPRECATED_DSL,
-                SyncIssue.SEVERITY_WARNING,
+        issueReporter.reportIssue(
+                Type.DEPRECATED_DSL,
+                Severity.WARNING,
                 "DSL element '$oldDslElement' is obsolete and will be removed ${deprecationTarget.removalTime}\n" +
                         "For more information, see $url",
                 "$oldDslElement::::${deprecationTarget.name}")
@@ -93,9 +75,9 @@ abstract class ConfigurableErrorHandler protected constructor(
             newConfiguration: String,
             oldConfiguration: String,
             deprecationTarget: DeprecationReporter.DeprecationTarget) {
-        reportIssue(
-                SyncIssue.TYPE_DEPRECATED_CONFIGURATION,
-                SyncIssue.SEVERITY_WARNING,
+        issueReporter.reportIssue(
+                Type.DEPRECATED_CONFIGURATION,
+                Severity.WARNING,
                 "Configuration '$oldConfiguration' is obsolete and has been replaced with '$newConfiguration'.\n" +
                         "It will be removed ${deprecationTarget.removalTime}",
                 "$oldConfiguration::$newConfiguration::${deprecationTarget.name}")

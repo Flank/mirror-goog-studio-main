@@ -40,9 +40,11 @@ class FakeConfiguration(private val name: String): Configuration {
     private var description: String? = null
     private var canBeConsumed: Boolean = true
     private var canBeResolved: Boolean = true
+    private var extendsConfigs: MutableSet<Configuration> = mutableSetOf()
     private val dependencySet = FakeDependencySet()
 
     override fun getName() = name
+    override fun toString() = name
 
     override fun setVisible(p0: Boolean): Configuration {
         visible = p0
@@ -64,11 +66,12 @@ class FakeConfiguration(private val name: String): Configuration {
 
     override fun getAllDependencies() = dependencySet
 
-    override fun extendsFrom(vararg p0: Configuration?): Configuration {
-        // ignore for now
+    override fun extendsFrom(vararg p0: Configuration): Configuration {
+        extendsConfigs.addAll(p0.asList())
         return this
     }
 
+    override fun getExtendsFrom() = extendsConfigs
 
     // -----
 
@@ -289,10 +292,6 @@ class FakeConfiguration(private val name: String): Configuration {
     }
 
     override fun getAsPath(): String {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun getExtendsFrom(): MutableSet<Configuration> {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 

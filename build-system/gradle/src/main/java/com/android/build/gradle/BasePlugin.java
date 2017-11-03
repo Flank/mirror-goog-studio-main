@@ -32,7 +32,6 @@ import com.android.build.gradle.internal.ApiObjectFactory;
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.BuildCacheUtils;
 import com.android.build.gradle.internal.ClasspathVerifier;
-import com.android.build.gradle.internal.ExecutionConfigurationUtil;
 import com.android.build.gradle.internal.ExtraModelInfo;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
@@ -55,6 +54,7 @@ import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.plugin.PluginDelegate;
+import com.android.build.gradle.internal.plugin.ProjectWrapper;
 import com.android.build.gradle.internal.plugin.TypedPluginDelegate;
 import com.android.build.gradle.internal.process.GradleJavaProcessExecutor;
 import com.android.build.gradle.internal.process.GradleProcessExecutor;
@@ -69,6 +69,8 @@ import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.SyncOptions;
+import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
 import com.android.build.gradle.tasks.ExternalNativeBuildTaskUtils;
 import com.android.build.gradle.tasks.ExternalNativeJsonGenerator;
 import com.android.build.gradle.tasks.LintBaseTask;
@@ -84,7 +86,6 @@ import com.android.builder.sdk.SdkLibData;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
 import com.android.dx.command.dexer.Main;
-import com.android.ide.common.internal.ExecutorSingleton;
 import com.android.ide.common.repository.GradleVersion;
 import com.android.repository.api.Channel;
 import com.android.repository.api.ConsoleProgressIndicator;
@@ -248,7 +249,6 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
 
         project.getPluginManager().apply(AndroidBasePlugin.class);
 
-        ExecutionConfigurationUtil.setThreadPoolSize(projectOptions);
         checkPathForErrors();
         checkModulesForErrors();
 
@@ -287,8 +287,18 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
             project.getPlugins().apply(JacocoPlugin.class);
 
             // create the delegate
+            ProjectWrapper projectWrapper = new ProjectWrapper(project);
             PluginDelegate<E> delegate =
-                    new PluginDelegate<>(project, instantiator, projectOptions, getTypedDelegate());
+                    new PluginDelegate<>(
+                            project.getPath(),
+                            instantiator,
+                            project.getExtensions(),
+                            project.getConfigurations(),
+                            projectWrapper,
+                            projectWrapper,
+                            project.getLogger(),
+                            projectOptions,
+                            getTypedDelegate());
 
             delegate.prepareForEvaluation();
 
@@ -335,14 +345,13 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                         creator,
                         new GradleProcessExecutor(project),
                         new GradleJavaProcessExecutor(project),
-                        extraModelInfo,
-                        extraModelInfo,
+                        extraModelInfo.getSyncIssueHandler(),
+                        extraModelInfo.getMessageReceiver(),
                         getLogger(),
                         isVerbose());
         dataBindingBuilder = new DataBindingBuilder();
         dataBindingBuilder.setPrintMachineReadableOutput(
-                extraModelInfo.getErrorFormatMode() ==
-                        ExtraModelInfo.ErrorFormatMode.MACHINE_PARSABLE);
+                SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
         // Apply the Java and Jacoco plugins.
         project.getPlugins().apply(JavaBasePlugin.class);
@@ -379,7 +388,6 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                         if (buildResult.getGradle().getParent() != null) {
                             return;
                         }
-                        ExecutorSingleton.shutdown();
                         sdkHandler.unload();
                         threadRecorder.record(
                                 ExecutionType.BASE_PLUGIN_BUILD_FINISHED,
@@ -442,12 +450,18 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                 project.container(
                         BuildType.class,
                         new BuildTypeFactory(
-                                instantiator, project, extraModelInfo, extraModelInfo));
+                                instantiator,
+                                project,
+                                extraModelInfo.getSyncIssueHandler(),
+                                extraModelInfo.getDeprecationReporter()));
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
                 project.container(
                         ProductFlavor.class,
                         new ProductFlavorFactory(
-                                instantiator, project, project.getLogger(), extraModelInfo));
+                                instantiator,
+                                project,
+                                project.getLogger(),
+                                extraModelInfo.getDeprecationReporter()));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
                 project.container(SigningConfig.class, new SigningConfigFactory(instantiator));
 
@@ -768,7 +782,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                     androidBuilder,
                     SdkHandler.useCachedSdk(projectOptions));
 
-            sdkHandler.ensurePlatformToolsIsInstalled(extraModelInfo);
+            sdkHandler.ensurePlatformToolsIsInstalled(extraModelInfo.getSyncIssueHandler());
         }
     }
 

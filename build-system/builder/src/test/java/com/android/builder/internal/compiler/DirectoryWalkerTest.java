@@ -324,4 +324,24 @@ public class DirectoryWalkerTest {
         assertNotEquals(0, fileCounter.get());
         assertNotEquals(1, fileCounter.get());
     }
+
+    /**
+     * We should, by default, walk symlinks. This preserves behaviour that users depend on from at
+     * least 2.3.0, as seen in https://issuetracker.google.com/68262460.
+     */
+    @Test
+    public void testSymlink() throws IOException {
+        Path example = fromRoot(fs, "exampleSymlink");
+        Files.createSymbolicLink(example, fromRoot(fs, "src", "main", "com", "google", "example"));
+
+        List<Path> foundPaths = Lists.newArrayList();
+        DirectoryWalker.builder()
+                .root(example)
+                .action((root, path) -> foundPaths.add(path))
+                .build()
+                .walk();
+
+        assertThat(foundPaths)
+                .containsExactly(example.resolve("Main.java"), example.resolve("Utils.java"));
+    }
 }

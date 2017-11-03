@@ -16,8 +16,14 @@
 
 package com.android.build.gradle.internal.api.sourcesets
 
+import com.android.SdkConstants
+import com.android.build.api.sourcesets.AndroidSourceDirectorySet
+import com.android.build.api.sourcesets.AndroidSourceFile
+import com.android.build.api.sourcesets.AndroidSourceSet
+import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_ANNOTATION_PROCESSOR
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_API
+import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_APK
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_COMPILE
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_COMPILE_ONLY
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_IMPLEMENTATION
@@ -26,6 +32,7 @@ import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_N
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_RUNTIME_ONLY
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_ANNOTATION_PROCESSOR
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_API
+import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_APK
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_COMPILE
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_COMPILE_ONLY
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_IMPLEMENTATION
@@ -34,12 +41,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_N
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_RUNTIME_ONLY
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_S_WEAR_APP
 import com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_WEAR_APP
-
-import com.android.SdkConstants
-import com.android.build.api.sourcesets.AndroidSourceDirectorySet
-import com.android.build.api.sourcesets.AndroidSourceFile
-import com.android.build.api.sourcesets.AndroidSourceSet
-import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.Action
@@ -51,6 +52,7 @@ import org.gradle.util.GUtil
 class DefaultAndroidSourceSet(
         private val name: String,
         filesProvider: FilesProvider,
+        private val publishPackage: Boolean,
         private val deprecationReporter: DeprecationReporter,
         issueReporter: EvalIssueReporter) : SealableObject(issueReporter), AndroidSourceSet {
 
@@ -289,10 +291,20 @@ class DefaultAndroidSourceSet(
         }
 
     internal val _packageConfigurationName: String
-        get() = if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
-            CONFIG_NAME_PUBLISH
-        } else {
-            String.format(CONFIG_NAME_S_PUBLISH, name)
+        get() {
+            if (publishPackage) {
+                return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
+                    CONFIG_NAME_PUBLISH
+                } else {
+                    String.format(CONFIG_NAME_S_PUBLISH, name)
+                }
+            }
+
+            return if (name == SourceSet.MAIN_SOURCE_SET_NAME) {
+                CONFIG_NAME_APK
+            } else {
+                String.format(CONFIG_NAME_S_APK, name)
+            }
         }
 
     @Suppress("OverridingDeprecatedMember")

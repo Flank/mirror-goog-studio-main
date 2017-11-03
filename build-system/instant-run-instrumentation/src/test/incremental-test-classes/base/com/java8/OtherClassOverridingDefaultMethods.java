@@ -29,8 +29,6 @@ public class OtherClassOverridingDefaultMethods implements SubInterfaceWithDefau
 
     @Override
     public String someMethod() {
-        return "someOther" + getClass().getName();
-        // uncomment once we support grand parent methods.
-        //return "someOther" + getClass().getName() + SubInterfaceWithDefault.super.finalMethod();
+        return "someOther" + getClass().getName() + SubInterfaceWithDefault.super.finalMethod();
     }
 }

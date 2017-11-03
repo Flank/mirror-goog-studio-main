@@ -22,15 +22,15 @@ import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.GuardedBy;
-import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.SyncOptions;
+import com.android.build.gradle.options.SyncOptions.EvaluationMode;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.LibraryRequest;
 import com.android.builder.errors.EvalIssueReporter;
+import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.model.OptionalCompilationStep;
-import com.android.builder.model.SyncIssue;
 import com.android.builder.model.Version;
 import com.android.builder.sdk.DefaultSdkLoader;
 import com.android.builder.sdk.PlatformLoader;
@@ -102,8 +102,7 @@ public class SdkHandler {
         return projectOptions
                         .getOptionalCompilationSteps()
                         .contains(OptionalCompilationStep.INSTANT_DEV)
-                && SyncOptions.getModelQueryMode(projectOptions)
-                        == ConfigurableErrorHandler.EvaluationMode.STANDARD;
+                && SyncOptions.getModelQueryMode(projectOptions) == EvaluationMode.STANDARD;
     }
 
     public SdkHandler(@NonNull Project project,
@@ -145,7 +144,7 @@ public class SdkHandler {
             androidBuilder
                     .getIssueReporter()
                     .reportWarning(
-                            SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW,
+                            Type.BUILD_TOOLS_TOO_LOW,
                             String.format(
                                     "The specified Android SDK Build Tools version (%1$s) is "
                                             + "ignored, as it is below the minimum supported "
@@ -195,7 +194,7 @@ public class SdkHandler {
                 sdkLoader.installSdkTool(sdkLibData, SdkConstants.FD_PLATFORM_TOOLS);
             } else {
                 issueReporter.reportWarning(
-                        SyncIssue.TYPE_MISSING_SDK_PACKAGE,
+                        Type.MISSING_SDK_PACKAGE,
                         SdkConstants.FD_PLATFORM_TOOLS + " package is not installed.",
                         SdkConstants.FD_PLATFORM_TOOLS);
             }

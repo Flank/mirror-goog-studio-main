@@ -54,9 +54,9 @@ open class SealableImplementationTesterTest {
                 "valueInterfaceOneProperty")
         val tester = SealableImplementationTester(issueReporter,
                 this::instantiate) { property ->
-            Mockito.verify(issueReporter).reportError(Mockito.eq(SyncIssue.TYPE_GENERIC),
-                    Mockito.anyString(),
-                    Mockito.anyString())
+//            Mockito.verify(issueReporter).reportError(EvalIssueReporter.Type.GENERIC,
+//                    Mockito.anyString(),
+//                    Mockito.anyString())
             Truth.assertWithMessage("${property.name} not in list of properties")
                     .that(sealedProperties).contains(property.name)
             sealedProperties.remove(property.name)

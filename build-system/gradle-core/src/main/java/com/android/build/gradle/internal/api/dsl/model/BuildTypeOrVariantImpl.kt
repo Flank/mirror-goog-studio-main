@@ -27,16 +27,13 @@ import org.gradle.api.Action
 
 class BuildTypeOrVariantImpl(
             private val typeName: String,
-            debuggable: Boolean,
-            embedMicroApp: Boolean,
-            crunchPngs: Boolean,
             private val deprecationReporter: DeprecationReporter,
             issueReporter: EvalIssueReporter)
         : SealableObject(issueReporter), BuildTypeOrVariant {
 
     private val _postprocessing = OptionalSupplier({ PostprocessingOptionsImpl(issueReporter) })
 
-    override var debuggable: Boolean = debuggable
+    override var debuggable: Boolean = false
         set(value) {
             if (checkSeal()) {
                 field = value
@@ -85,14 +82,14 @@ class BuildTypeOrVariantImpl(
             }
         }
 
-    override var embedMicroApp: Boolean = embedMicroApp
+    override var embedMicroApp: Boolean = true
         set(value) {
             if (checkSeal()) {
                 field = value
             }
         }
 
-    override var crunchPngs: Boolean = crunchPngs
+    override var crunchPngs: Boolean = true
         set(value) {
             if (checkSeal()) {
                 field = value

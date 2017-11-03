@@ -175,6 +175,12 @@ public class GenerateBazelAction {
                 if (dependency instanceof JpsLibraryDependency) {
                     // A dependency to a jar file
                     JpsLibraryDependency libraryDependency = (JpsLibraryDependency) dependency;
+                    JpsLibrary library = libraryDependency.getLibrary();
+                    if (library == null) {
+                        System.err.println(String.format("Module %s: invalid item '%s' in the dependencies list",
+                                module.getName(), libraryDependency.getLibraryReference().getLibraryName()));
+                        continue;  // Like IDEA, ignore dependencies on non-existent libraries.
+                    }
                     List<ImlModule.Tag> scopes = new LinkedList<>();
                     if (isTest) {
                         scopes.add(ImlModule.Tag.TEST);
@@ -187,14 +193,13 @@ public class GenerateBazelAction {
                     JpsCompositeElement resolved = parent.resolve();
                     if (!(resolved instanceof JpsModule)) {
                         //noinspection ConstantConditions - getLibraryName() is not null for module-level libraries.
-                        String libName = libraryDependency.getLibrary().getName().replaceAll(":", "_");
+                        String libName = library.getName().replaceAll(":", "_");
                         namedLib = libraries.get(libName.toLowerCase());
                         if (namedLib == null) {
                             namedLib = new JavaLibrary(librariesPkg, libName);
                             libraries.put(libName.toLowerCase(), namedLib);
                         }
                     }
-                    JpsLibrary library = libraryDependency.getLibrary();
                     List<File> files = library.getFiles(JpsOrderRootType.COMPILED);
                     // Library files are sometimes returned in file system order. Which changes
                     // across systems. Choose alphabetical always:

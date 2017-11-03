@@ -24,6 +24,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.builder.core.AndroidBuilder;
+import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -82,6 +83,30 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
      */
     @NonNull
     abstract List<String> getCacheArguments(@NonNull String abi, int abiPlatformVersion);
+
+    /**
+     * Executes the JSON generation process. Return the combination of STDIO and STDERR from running
+     * the process.
+     *
+     * @param abi - ABI for which JSON generation process needs to be executed
+     * @param abiPlatformVersion - ABI's platform version
+     * @param outputJsonDir - directory where the JSON file and other information needs to be
+     *     created
+     * @return Returns the combination of STDIO and STDERR from running the process.
+     */
+    @NonNull
+    public abstract String executeProcessAndGetOutput(
+            @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
+            throws ProcessException, IOException;
+
+    @NonNull
+    @Override
+    public String executeProcess(
+            @NonNull String abi, int abiPlatformVersion, @NonNull File outputJsonDir)
+            throws ProcessException, IOException {
+        String output = executeProcessAndGetOutput(abi, abiPlatformVersion, outputJsonDir);
+        return correctMakefilePaths(output, getMakefile().getParentFile());
+    }
 
     @Override
     void processBuildOutput(@NonNull String buildOutput, @NonNull String abi,
@@ -204,7 +229,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
             // The whole multi-line output could contain multiple warnings/errors
             // so we split it into lines, fix the filenames, then recombine it.
             List<String> corrected = new ArrayList<>();
-            for (String entry : input.split("\n")) {
+            for (String entry : input.split(System.lineSeparator())) {
                 cmakeFinderMatcher = cmakeFileFinder.matcher(entry);
                 if (cmakeFinderMatcher.matches()) {
                     String fileName = cmakeFinderMatcher.group(3);
@@ -232,7 +257,7 @@ abstract class CmakeExternalNativeJsonGenerator extends ExternalNativeJsonGenera
                 }
             }
 
-            return Joiner.on('\n').join(corrected);
+            return Joiner.on(System.lineSeparator()).join(corrected);
         }
 
         return input;

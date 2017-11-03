@@ -38,7 +38,7 @@ import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.SyncIssue
+import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.utils.StringHelper
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectContainer
@@ -96,21 +96,10 @@ class DslModelDataImpl<in E: BaseExtension2>(
         private val logger: Logger): DslModelData, Sealable {
 
     // wrapped container for source sets.
-    internal val _sourceSets: NamedDomainObjectContainer<DefaultAndroidSourceSet> =
-            containerFactory.createContainer(
-                    DefaultAndroidSourceSet::class.java,
-                    AndroidSourceSetFactory(
-                            filesProvider,
-                            instantiator,
-                            deprecationReporter,
-                            issueReporter))
+    internal val _sourceSets: NamedDomainObjectContainer<DefaultAndroidSourceSet>
 
     // sealable container for source set.
-    override val sourceSets: SealableNamedDomainObjectContainer<AndroidSourceSet, DefaultAndroidSourceSet> =
-            createSealableContainer(
-                    AndroidSourceSet::class.java,
-                    DefaultAndroidSourceSet::class.java,
-                    _sourceSets)
+    override val sourceSets: SealableNamedDomainObjectContainer<AndroidSourceSet, DefaultAndroidSourceSet>
 
     // wrapped container for product flavors
     internal val _productFlavors: NamedDomainObjectContainer<ProductFlavorImpl> =
@@ -183,6 +172,18 @@ class DslModelDataImpl<in E: BaseExtension2>(
                 .filter { !it.isForTesting }
                 .reduce(toSingleItem())
                 .orElseThrow { RuntimeException("No main variant type") }
+
+        _sourceSets = containerFactory.createContainer(
+                DefaultAndroidSourceSet::class.java,
+                AndroidSourceSetFactory(
+                        filesProvider,
+                        mainVariantType == VariantType.LIBRARY,
+                        instantiator,
+                        deprecationReporter,
+                        issueReporter))
+
+        sourceSets = createSealableContainer(
+                AndroidSourceSet::class.java, DefaultAndroidSourceSet::class.java, _sourceSets)
 
         hasAndroidTests = variantTypes.contains(VariantType.ANDROID_TEST)
         hasUnitTests = variantTypes.contains(VariantType.UNIT_TEST)
@@ -261,7 +262,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
         }
 
         if (_buildTypes.any { it.name == name }) {
-            issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+            issueReporter.reportError(Type.GENERIC,
                     "ProductFlavor names cannot collide with BuildType names: $name")
 
             // don't want to keep going in case of sync
@@ -280,19 +281,13 @@ class DslModelDataImpl<in E: BaseExtension2>(
     private fun checkNewBuildType(buildType: BuildTypeImpl) {
         val name = buildType.name
 
-        // setup the signing config for debug build type
-        if (name == BuilderConstants.DEBUG) {
-            val signingConfig = signingConfigs.findByName(BuilderConstants.DEBUG)
-            buildType.signingConfig = signingConfig
-        }
-
         if (!checkName(name, "BuildType")) {
             // don't want to keep going in case of sync
             return
         }
 
         if (_productFlavors.any { it.name == name }) {
-            issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+            issueReporter.reportError(Type.GENERIC,
                     "BuildType names cannot collide with ProductFlavor names: $name")
 
             // don't want to keep going in case of sync
@@ -468,13 +463,13 @@ class DslModelDataImpl<in E: BaseExtension2>(
         }
 
         if (BuilderConstants.MAIN == name) {
-            issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+            issueReporter.reportError(Type.GENERIC,
                     "$displayName names cannot be '${BuilderConstants.MAIN}'")
             return false
         }
 
         if (BuilderConstants.LINT == name) {
-            issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+            issueReporter.reportError(Type.GENERIC,
                     "$displayName names cannot be '${BuilderConstants.LINT}'")
             return false
         }
@@ -484,7 +479,7 @@ class DslModelDataImpl<in E: BaseExtension2>(
 
     private fun checkPrefix(name: String, displayName: String, prefix: String): Boolean {
         if (name.startsWith(prefix)) {
-            issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+            issueReporter.reportError(Type.GENERIC,
                     "$displayName names cannot start with '$prefix'")
             return false
         }

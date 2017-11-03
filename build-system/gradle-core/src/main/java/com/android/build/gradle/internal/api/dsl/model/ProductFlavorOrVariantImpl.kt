@@ -20,6 +20,9 @@ import com.android.build.api.dsl.ApiVersion
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
 import com.android.build.api.dsl.options.InstrumentationOptions
 import com.android.build.api.dsl.options.VectorDrawablesOptions
+import com.android.build.gradle.internal.api.dsl.options.InstrumentationOptionsImpl
+import com.android.build.gradle.internal.api.dsl.options.NdkOptionsImpl
+import com.android.build.gradle.internal.api.dsl.sealing.OptionalSupplier
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.builder.errors.EvalIssueReporter
@@ -30,6 +33,7 @@ class ProductFlavorOrVariantImpl(
         : SealableObject(issueReporter), ProductFlavorOrVariant {
 
     private val _resConfigs: SealableList<String> = SealableList.new(issueReporter)
+    private val _instrumentationOptions = OptionalSupplier({ InstrumentationOptionsImpl(issueReporter) })
 
     override var applicationId: String? = null
         set(value) {
@@ -148,15 +152,15 @@ class ProductFlavorOrVariantImpl(
     }
 
     override val instrumentationOptions: InstrumentationOptions
-        get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
+        get() = _instrumentationOptions.get(isSealed())
 
     override fun instrumentationOptions(action: Action<InstrumentationOptions>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        action.execute(_instrumentationOptions.get(isSealed()))
     }
 
     internal fun initWith(that: ProductFlavorOrVariantImpl) {
         if (checkSeal()) {
-            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            _instrumentationOptions.copyFrom(that._instrumentationOptions)
         }
     }
 }

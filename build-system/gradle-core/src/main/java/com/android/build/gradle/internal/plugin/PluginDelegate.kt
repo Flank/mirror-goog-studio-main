@@ -16,7 +16,7 @@
 
 package com.android.build.gradle.internal.plugin
 
-import com.android.build.gradle.internal.ExtraModelInfo
+import com.android.build.api.dsl.variant.Variant
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2
 import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.extensions.VariantAwarePropertiesImpl
@@ -29,18 +29,24 @@ import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImp
 import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.sourcesets.FilesProvider
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.build.gradle.internal.errors.DeprecationReporterImpl
+import com.android.build.gradle.internal.errors.SyncIssueHandlerImpl
 import com.android.build.gradle.internal.variant2.ContainerFactory
 import com.android.build.gradle.internal.variant2.DslModelDataImpl
 import com.android.build.gradle.internal.variant2.VariantBuilder
 import com.android.build.gradle.internal.variant2.VariantFactory2
 import com.android.build.gradle.internal.variant2.VariantModelData
 import com.android.build.gradle.options.ProjectOptions
+import com.android.build.gradle.options.SyncOptions
 import com.android.builder.errors.EvalIssueReporter
+import com.android.builder.model.SyncIssue
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.NamedDomainObjectFactory
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ConfigurationContainer
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.ConfigurableFileTree
+import org.gradle.api.logging.Logger
 import org.gradle.api.plugins.ExtensionContainer
 import org.gradle.internal.reflect.Instantiator
 import java.io.File
@@ -60,33 +66,41 @@ interface TypedPluginDelegate<E: BaseExtension2> {
             deprecationReporter: DeprecationReporter,
             issueReporter: EvalIssueReporter): E
 
+    fun createDefaults(extension: E)
+
 }
 
 /**
  * Main plugin delegate that does all the work. The plugin is mostly calling into this
  * to drive the lifecycle.
  */
-class PluginDelegate<E: BaseExtension2>(
-        private val project: Project,
+class PluginDelegate<out E: BaseExtension2>(
+        projectPath: String,
         private val instantiator: Instantiator,
-        private val projectOptions: ProjectOptions,
+        private val extensionContainer: ExtensionContainer,
+        private val configurationContainer: ConfigurationContainer,
+        private val containerFactory: ContainerFactory,
+        private val filesProvider: FilesProvider,
+        private val logger: Logger,
+        projectOptions: ProjectOptions,
         private val typedDelegate: TypedPluginDelegate<E>) {
 
     private lateinit var dslModelData: DslModelDataImpl<E>
     private lateinit var variantModelData: VariantModelData
     private lateinit var newExtension: E
 
-    private lateinit var extraModelInfo: ExtraModelInfo
+    private val issueReporter = SyncIssueHandlerImpl(
+            SyncOptions.getModelQueryMode(projectOptions), logger)
+    private val deprecationReporter = DeprecationReporterImpl(issueReporter, projectPath)
 
-    fun prepareForEvaluation() {
-        // FIXME we don't want to keep this around in this form.
-        extraModelInfo = ExtraModelInfo(project.path,
-                projectOptions,
-                project.logger)
-        // FIXME, split in different implementations
-        val issueReporter = extraModelInfo
-        val deprecationReporter = extraModelInfo
+    init {
+        if (projectOptions.hasDeprecatedOptions()) {
+            issueReporter.reportError(
+                    EvalIssueReporter.Type.GENERIC, projectOptions.deprecatedOptionsErrorMessage)
+        }
+    }
 
+    fun prepareForEvaluation(): E {
         // create the default config implementation
         val baseFlavor = BaseFlavorImpl(deprecationReporter, issueReporter)
         val defaultConfig = DefaultConfigImpl(
@@ -98,23 +112,21 @@ class PluginDelegate<E: BaseExtension2>(
                 baseFlavor,
                 issueReporter)
 
-        val projectWrapper = ProjectWrapper(project)
-
         dslModelData = DslModelDataImpl(
                 defaultConfig,
                 typedDelegate.getVariantFactories(),
-                project.configurations,
-                filesProvider = projectWrapper,
-                containerFactory = projectWrapper,
-                instantiator = instantiator,
-                deprecationReporter = extraModelInfo,
-                issueReporter = extraModelInfo,
-                logger = project.logger)
+                configurationContainer,
+                filesProvider,
+                containerFactory,
+                instantiator,
+                deprecationReporter,
+                issueReporter,
+                logger)
 
-        variantModelData = VariantModelData(extraModelInfo)
+        variantModelData = VariantModelData(issueReporter)
 
         newExtension = typedDelegate.createNewExtension(
-                project.extensions,
+                extensionContainer,
                 BuildPropertiesImpl(dslModelData, issueReporter),
                 VariantOrExtensionPropertiesImpl(issueReporter),
                 VariantAwarePropertiesImpl(
@@ -124,9 +136,13 @@ class PluginDelegate<E: BaseExtension2>(
                         issueReporter),
                 deprecationReporter,
                 issueReporter)
+
+        typedDelegate.createDefaults(newExtension)
+
+        return newExtension
     }
 
-    fun afterEvaluate() {
+    fun afterEvaluate(): List<Variant> {
         // callback for the afterEvaluate
         val preVariantActions = newExtension.preVariantCallbacks
         for (action in preVariantActions) {
@@ -142,8 +158,8 @@ class PluginDelegate<E: BaseExtension2>(
         val builder = VariantBuilder(
                 dslModelData,
                 newExtension,
-                extraModelInfo,
-                extraModelInfo)
+                deprecationReporter,
+                issueReporter)
         builder.generateVariants()
         val variants = builder.variants
         val variantShims = builder.shims
@@ -166,13 +182,14 @@ class PluginDelegate<E: BaseExtension2>(
         // create the tasks
         // FIXME implement
 
+        return variantShims
     }
 }
 
 /**
  * Single wrapper around a [Project] that implements all our abstraction layers
  */
-private class ProjectWrapper(private val project: Project) : FilesProvider, ContainerFactory {
+class ProjectWrapper(private val project: Project) : FilesProvider, ContainerFactory {
 
     // --- FilesProvider
 

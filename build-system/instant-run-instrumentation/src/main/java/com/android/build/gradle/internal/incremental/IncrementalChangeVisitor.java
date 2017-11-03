@@ -55,12 +55,10 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
                 @NonNull
                 @Override
                 public IncrementalVisitor build(
-                        @NonNull ClassAndInterfacesNode classNode,
-                        @NonNull List<ClassAndInterfacesNode> parentNodes,
+                        @NonNull AsmClassNode classNode,
                         @NonNull ClassVisitor classVisitor,
                         @NonNull ILogger logger) {
-                    return new IncrementalChangeVisitor(
-                            classNode, parentNodes, classVisitor, logger);
+                    return new IncrementalChangeVisitor(classNode, classVisitor, logger);
                 }
 
                 @NonNull
@@ -100,11 +98,10 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
     }
 
     public IncrementalChangeVisitor(
-            @NonNull ClassAndInterfacesNode classNode,
-            @NonNull List<ClassAndInterfacesNode> parentNodes,
+            @NonNull AsmClassNode classNode,
             @NonNull ClassVisitor classVisitor,
             @NonNull ILogger logger) {
-        super(classNode, parentNodes, classVisitor, logger);
+        super(classNode, classVisitor, logger);
     }
 
     /**
@@ -207,6 +204,13 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
         access = Opcodes.ACC_PUBLIC | Opcodes.ACC_STATIC;
         if (name.equals(ByteCodeUtils.CONSTRUCTOR)) {
             MethodNode method = getMethodByNameInClass(name, desc, classAndInterfaceNode);
+            if (method == null) {
+                logger.warning(
+                        "Cannot find {} method in class {}",
+                        name,
+                        classAndInterfaceNode.getClassNode().name);
+                return null;
+            }
             Constructor constructor = ConstructorBuilder.build(visitedClassName, method);
 
             MethodVisitor mv = createMethodAdapter(access, constructor.args.name,
@@ -561,7 +565,7 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
             // #16 is the constant pool entry :
             // #16 = InvokeDynamic      #2:#87        // #2:apply:(I)Ljava/util/function/Function;
 
-            // and #2 here is the pointer to boostrap method entry :
+            // and #2 here is the pointer to bootstrap method entry :
             // 2: #69 invokestatic java/lang/invoke/LambdaMetafactory.metafactory:
             //                  (Ljava/lang/invoke/MethodHandles$Lookup;
             //                   Ljava/lang/String;
@@ -671,16 +675,16 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
 
         /**
          * Rewrites INVOKESPECIAL method calls:
+         *
          * <ul>
-         *  <li>calls to constructors are handled specially (see below)</li>
-         *  <li>calls to super methods are rewritten to call the 'access$super' trampoline we
-         *      injected into the original code</li>
-         *  <li>calls to methods in this class are rewritten to call the mathcin $override class
-         *  static method</li>
+         *   <li>calls to constructors are handled specially (see below)
+         *   <li>calls to super methods are rewritten to call the 'access$super' trampoline we
+         *       injected into the original code
+         *   <li>calls to methods in this class are rewritten to call the matching $override class
+         *       static method
          * </ul>
          */
-        private boolean handleSpecialOpcode(String owner, String name, String desc,
-                boolean itf) {
+        private boolean handleSpecialOpcode(String owner, String name, String desc, boolean itf) {
             if (name.equals("<init>")) {
                 return handleConstructor(owner, name, desc);
             }
@@ -1091,7 +1095,7 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
         // if invoked which should never happen.
         if (!instantRunDisabled) {
             //noinspection unchecked
-            allMethods.addAll(classAndInterfaceNode.classNode.methods);
+            allMethods.addAll(classAndInterfaceNode.getClassNode().methods);
             allMethods.addAll(addedMethods);
         }
 
@@ -1170,12 +1174,10 @@ public class IncrementalChangeVisitor extends IncrementalVisitor {
         return getPackage(visitedClassName).equals(getPackage(type));
     }
 
-    /**
-     * @return the package of the given / separated class name.
-     */
-    private String getPackage(@NonNull String className) {
+    /** @return the package of the given / separated class name. */
+    private static String getPackage(@NonNull String className) {
         int i = className.lastIndexOf('/');
-        return i == -1 ? className : className.substring(0, i);
+        return i == -1 ? "" : className.substring(0, i);
     }
 
     /**

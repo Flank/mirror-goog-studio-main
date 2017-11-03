@@ -18,7 +18,6 @@ package com.android.builder.core;
 
 import com.android.annotations.NonNull;
 import com.android.builder.errors.EvalIssueReporter;
-import com.android.builder.model.SyncIssue;
 import com.android.sdklib.IAndroidTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
@@ -114,7 +113,7 @@ public class BootClasspathBuilder {
         // look for not found requested libraries.
         for (LibraryRequest library : requestedLibs) {
             issueReporter.reportError(
-                    SyncIssue.TYPE_OPTIONAL_LIB_NOT_FOUND,
+                    EvalIssueReporter.Type.OPTIONAL_LIB_NOT_FOUND,
                     "Unable to find optional library: " + library.getName(),
                     library.getName());
         }

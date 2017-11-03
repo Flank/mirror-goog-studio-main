@@ -21,7 +21,6 @@ import com.android.build.gradle.internal.api.dsl.model.BaseFlavorImpl
 import com.android.build.gradle.internal.api.dsl.model.BuildTypeOrProductFlavorImpl
 import com.android.build.gradle.internal.api.dsl.model.DefaultConfigImpl
 import com.android.build.gradle.internal.api.dsl.model.FallbackStrategyImpl
-import com.android.build.gradle.internal.api.dsl.model.ProductFlavorImpl
 import com.android.build.gradle.internal.api.dsl.model.ProductFlavorOrVariantImpl
 import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.fixtures.FakeConfigurationContainer
@@ -36,14 +35,17 @@ import com.android.builder.core.BuilderConstants
 import com.android.builder.core.VariantType
 import com.google.common.truth.Truth
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.artifacts.Configuration
 import org.junit.Test
 
 class DslModelDataImplTest {
     private val issueReporter = FakeEvalIssueReporter()
     private val deprecationReporter = FakeDeprecationReporter()
+    private val configurationContainer = FakeConfigurationContainer()
+
 
     @Test
-    fun `default config data check`() {
+    fun `source sets for default config`() {
         val modelData = createModelData(
                 createFactories(BaseExtension2::class.java, VariantType.DEFAULT))
 
@@ -67,7 +69,68 @@ class DslModelDataImplTest {
     }
 
     @Test
-    fun `default config data check when no tests`() {
+    fun `configurations for default config`() {
+        val modelData = createModelData(
+                createFactories(BaseExtension2::class.java, VariantType.DEFAULT))
+
+        val defaultConfigData = modelData.defaultConfigData
+        Truth.assertThat(defaultConfigData).isNotNull()
+
+        val compile = getNonNullConfig("compile")
+        val api = getNonNullConfig("api")
+        Truth.assertThat(api.extendsFrom).containsExactly(compile)
+        val impl = getNonNullConfig("implementation")
+        Truth.assertThat(impl.extendsFrom).containsExactly(api)
+
+        Truth.assertThat(getNonNullConfig("compileOnly")).isNotNull()
+
+        val apkOnly = getNonNullConfig("apk")
+        val runtimeOnly = getNonNullConfig("runtimeOnly")
+        Truth.assertThat(runtimeOnly.extendsFrom).containsExactly(apkOnly)
+
+        // test test configuration
+        val testCompile = getNonNullConfig("testCompile")
+        val testApi = getNonNullConfig("testApi")
+        Truth.assertThat(testApi.extendsFrom).containsExactly(testCompile)
+        val testImpl = getNonNullConfig("testImplementation")
+        Truth.assertThat(testImpl.extendsFrom).containsExactly(testApi, impl)
+        val testApkOnly = getNonNullConfig("testApk")
+        val testRuntimeOnly = getNonNullConfig("testRuntimeOnly")
+        Truth.assertThat(testRuntimeOnly.extendsFrom).containsExactly(runtimeOnly, testApkOnly)
+
+        // test androidTest configuration
+        val androidTestCompile = getNonNullConfig("androidTestCompile")
+        val androidTestApi = getNonNullConfig("androidTestApi")
+        Truth.assertThat(androidTestApi.extendsFrom).containsExactly(androidTestCompile)
+        val androidTestImpl = getNonNullConfig("androidTestImplementation")
+        Truth.assertThat(androidTestImpl.extendsFrom).containsExactly(androidTestApi, impl)
+        val androidTestApkOnly = getNonNullConfig("androidTestApk")
+        val androidTestRuntimeOnly = getNonNullConfig("androidTestRuntimeOnly")
+        Truth.assertThat(androidTestRuntimeOnly.extendsFrom).containsExactly(runtimeOnly, androidTestApkOnly)
+
+        // always assert we haven't hit any deprecation
+        Truth.assertThat(deprecationReporter.deprecationWarnings).isEmpty()
+    }
+
+    @Test
+    fun `configurations for default config with library`() {
+        val modelData = createModelData(
+                createFactories(BaseExtension2::class.java, VariantType.LIBRARY))
+
+        val defaultConfigData = modelData.defaultConfigData
+        Truth.assertThat(defaultConfigData).isNotNull()
+
+        // test main configurations
+        val publishOnly = getNonNullConfig("publish")
+        val runtimeOnly = getNonNullConfig("runtimeOnly")
+        Truth.assertThat(runtimeOnly.extendsFrom).containsExactly(publishOnly)
+
+        // always assert we haven't hit any deprecation
+        Truth.assertThat(deprecationReporter.deprecationWarnings).isEmpty()
+    }
+
+    @Test
+    fun `source sets for default config when no tests`() {
         val modelData = createModelData(
                 createFactories(
                         BaseExtension2::class.java,
@@ -88,12 +151,16 @@ class DslModelDataImplTest {
         sourceSet = defaultConfigData.getSourceSet(VariantType.UNIT_TEST)
         Truth.assertThat(sourceSet).isNull()
 
+        // tests to make sure we don't have test source sets or configs.
+        checkNullConfiguration("testCompile")
+        checkNullConfiguration("androidTestCompile")
+
         // always assert we haven't hit any deprecation
         Truth.assertThat(deprecationReporter.deprecationWarnings).isEmpty()
     }
 
     @Test
-    fun `flavor data check when flavor is added to container`() {
+    fun `source sets for added flavors`() {
         val modelData = createModelData(
                 createFactories(BaseExtension2::class.java, VariantType.DEFAULT))
 
@@ -122,7 +189,53 @@ class DslModelDataImplTest {
     }
 
     @Test
-    fun `build type data check when build type added to container`() {
+    fun `configurations for added flavors`() {
+        val modelData = createModelData(
+                createFactories(BaseExtension2::class.java, VariantType.DEFAULT))
+
+        val flavorName = "free"
+        modelData.productFlavors.create(flavorName)
+
+        modelData.afterEvaluateCompute()
+
+        val compile = getNonNullConfig("freeCompile")
+        val api = getNonNullConfig("freeApi")
+        Truth.assertThat(api.extendsFrom).containsExactly(compile)
+        val impl = getNonNullConfig("freeImplementation")
+        Truth.assertThat(impl.extendsFrom).containsExactly(api)
+
+        Truth.assertThat(getNonNullConfig("freeCompileOnly")).isNotNull()
+
+        val apkOnly = getNonNullConfig("freeApk")
+        val runtimeOnly = getNonNullConfig("freeRuntimeOnly")
+        Truth.assertThat(runtimeOnly.extendsFrom).containsExactly(apkOnly)
+
+        // test test configuration
+        val testCompile = getNonNullConfig("testFreeCompile")
+        val testApi = getNonNullConfig("testFreeApi")
+        Truth.assertThat(testApi.extendsFrom).containsExactly(testCompile)
+        val testImpl = getNonNullConfig("testFreeImplementation")
+        Truth.assertThat(testImpl.extendsFrom).containsExactly(testApi, impl)
+        val testApkOnly = getNonNullConfig("testFreeApk")
+        val testRuntimeOnly = getNonNullConfig("testFreeRuntimeOnly")
+        Truth.assertThat(testRuntimeOnly.extendsFrom).containsExactly(runtimeOnly, testApkOnly)
+
+        // test androidTest configuration
+        val androidTestCompile = getNonNullConfig("androidTestFreeCompile")
+        val androidTestApi = getNonNullConfig("androidTestFreeApi")
+        Truth.assertThat(androidTestApi.extendsFrom).containsExactly(androidTestCompile)
+        val androidTestImpl = getNonNullConfig("androidTestFreeImplementation")
+        Truth.assertThat(androidTestImpl.extendsFrom).containsExactly(androidTestApi, impl)
+        val androidTestApkOnly = getNonNullConfig("androidTestFreeApk")
+        val androidTestRuntimeOnly = getNonNullConfig("androidTestFreeRuntimeOnly")
+        Truth.assertThat(androidTestRuntimeOnly.extendsFrom).containsExactly(runtimeOnly, androidTestApkOnly)
+
+        // always assert we haven't hit any deprecation
+        Truth.assertThat(deprecationReporter.deprecationWarnings).isEmpty()
+    }
+
+    @Test
+    fun `source sets for added build type`() {
         val modelData = createModelData(
                 createFactories(BaseExtension2::class.java, VariantType.DEFAULT))
 
@@ -145,6 +258,52 @@ class DslModelDataImplTest {
         sourceSet = data?.getSourceSet(VariantType.UNIT_TEST)
         Truth.assertThat(sourceSet).isNotNull()
         Truth.assertThat(sourceSet?.name).isEqualTo("testStaging")
+
+        // always assert we haven't hit any deprecation
+        Truth.assertThat(deprecationReporter.deprecationWarnings).isEmpty()
+    }
+
+    @Test
+    fun `configurations for added build type`() {
+        val modelData = createModelData(
+                createFactories(BaseExtension2::class.java, VariantType.DEFAULT))
+
+        val flavorName = "staging"
+        modelData.buildTypes.create(flavorName)
+
+        modelData.afterEvaluateCompute()
+
+        val compile = getNonNullConfig("stagingCompile")
+        val api = getNonNullConfig("stagingApi")
+        Truth.assertThat(api.extendsFrom).containsExactly(compile)
+        val impl = getNonNullConfig("stagingImplementation")
+        Truth.assertThat(impl.extendsFrom).containsExactly(api)
+
+        Truth.assertThat(getNonNullConfig("stagingCompileOnly")).isNotNull()
+
+        val apkOnly = getNonNullConfig("stagingApk")
+        val runtimeOnly = getNonNullConfig("stagingRuntimeOnly")
+        Truth.assertThat(runtimeOnly.extendsFrom).containsExactly(apkOnly)
+
+        // test test configuration
+        val testCompile = getNonNullConfig("testStagingCompile")
+        val testApi = getNonNullConfig("testStagingApi")
+        Truth.assertThat(testApi.extendsFrom).containsExactly(testCompile)
+        val testImpl = getNonNullConfig("testStagingImplementation")
+        Truth.assertThat(testImpl.extendsFrom).containsExactly(testApi, impl)
+        val testApkOnly = getNonNullConfig("testStagingApk")
+        val testRuntimeOnly = getNonNullConfig("testStagingRuntimeOnly")
+        Truth.assertThat(testRuntimeOnly.extendsFrom).containsExactly(runtimeOnly, testApkOnly)
+
+        // test androidTest configuration
+        val androidTestCompile = getNonNullConfig("androidTestStagingCompile")
+        val androidTestApi = getNonNullConfig("androidTestStagingApi")
+        Truth.assertThat(androidTestApi.extendsFrom).containsExactly(androidTestCompile)
+        val androidTestImpl = getNonNullConfig("androidTestStagingImplementation")
+        Truth.assertThat(androidTestImpl.extendsFrom).containsExactly(androidTestApi, impl)
+        val androidTestApkOnly = getNonNullConfig("androidTestStagingApk")
+        val androidTestRuntimeOnly = getNonNullConfig("androidTestStagingRuntimeOnly")
+        Truth.assertThat(androidTestRuntimeOnly.extendsFrom).containsExactly(runtimeOnly, androidTestApkOnly)
 
         // always assert we haven't hit any deprecation
         Truth.assertThat(deprecationReporter.deprecationWarnings).isEmpty()
@@ -219,6 +378,17 @@ class DslModelDataImplTest {
 
     // ----
 
+    private fun getNonNullConfig(name: String): Configuration {
+        val config = configurationContainer.findByName(name)
+        Truth.assertThat(config).named(name).isNotNull()
+        return config!!
+    }
+
+    private fun checkNullConfiguration(name: String) {
+        val config = configurationContainer.findByName(name)
+        Truth.assertThat(config).named(name).isNull()
+    }
+
     private fun <T> validateCollision(
             container: NamedDomainObjectContainer<T>,
             itemName: String,
@@ -244,7 +414,7 @@ class DslModelDataImplTest {
         return DslModelDataImpl(
                 defaultConfig,
                 factories,
-                FakeConfigurationContainer(),
+                configurationContainer,
                 FakeFilesProvider(),
                 FakeContainerFactory(),
                 FakeInstantiator(),

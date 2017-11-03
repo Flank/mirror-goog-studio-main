@@ -21,4 +21,9 @@ import com.android.build.gradle.internal.variant2.AppVariantImpl
 
 /** shim implementation of [ApplicationVariant] that delegates to an internal object */
 internal class ApplicationVariantShim internal constructor(internalObject: AppVariantImpl)
-    : ApplicationVariant by internalObject
+    : ApplicationVariant by internalObject {
+
+    override fun toString(): String {
+        return name
+    }
+}

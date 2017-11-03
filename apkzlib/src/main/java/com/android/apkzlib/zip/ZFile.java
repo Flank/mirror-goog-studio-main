@@ -232,9 +232,11 @@ public class ZFile implements Closeable {
     private static final int MAXIMUM_EXTENSION_CYCLE_COUNT = 10;
 
     /**
-     * Minimum size for the extra field.
+     * Minimum size for the extra field when we have to add one. We rely on the alignment segment
+     * to do that so the minimum size for the extra field is the minimum size of an alignment
+     * segment.
      */
-    private static final int MINIMUM_EXTRA_FIELD_SIZE = 6;
+    private static final int MINIMUM_EXTRA_FIELD_SIZE = ExtraField.AlignmentSegment.MINIMUM_SIZE;
 
     /**
      * Maximum size of the extra field.
@@ -349,8 +351,8 @@ public class ZFile implements Closeable {
     private final List<IOExceptionRunnable> toRun;
 
     /**
-     * {@code true} when {@link #notify(com.android.apkzlib.utils.IOExceptionFunction)} is notifying extensions. Used
-     * to avoid reordering notifications.
+     * {@code true} when {@link #notify(com.android.apkzlib.utils.IOExceptionFunction)} is
+     * notifying extensions. Used to avoid reordering notifications.
      */
     private boolean isNotifying;
 
@@ -2489,7 +2491,7 @@ public class ZFile implements Closeable {
                 // We found a possible EOCD signature at position i. Try to read it.
                 ByteBuffer bytes = ByteBuffer.wrap(comment, i, comment.length - i);
                 try {
-                    Eocd eocdInComment = new Eocd(bytes);
+                    new Eocd(bytes);
                     throw new IllegalArgumentException(
                             "Position "
                                     + i

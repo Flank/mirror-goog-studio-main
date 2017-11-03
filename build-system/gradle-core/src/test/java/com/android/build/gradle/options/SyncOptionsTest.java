@@ -18,8 +18,8 @@ package com.android.build.gradle.options;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.internal.ExtraModelInfo;
-import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
+import com.android.build.gradle.options.SyncOptions.ErrorFormatMode;
+import com.android.build.gradle.options.SyncOptions.EvaluationMode;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Test;
 
@@ -27,8 +27,7 @@ public class SyncOptionsTest {
     @Test
     public void getModelQueryMode() throws Exception {
         ProjectOptions noOptions = new ProjectOptions(ImmutableMap.of());
-        assertThat(SyncOptions.getModelQueryMode(noOptions))
-                .isEqualTo(ConfigurableErrorHandler.EvaluationMode.STANDARD);
+        assertThat(SyncOptions.getModelQueryMode(noOptions)).isEqualTo(EvaluationMode.STANDARD);
 
         ProjectOptions advancedOptions =
                 new ProjectOptions(
@@ -37,13 +36,7 @@ public class SyncOptionsTest {
                                 "true",
                                 "android.injected.build.model.only",
                                 "true"));
-        assertThat(SyncOptions.getModelQueryMode(advancedOptions))
-                .isEqualTo(ConfigurableErrorHandler.EvaluationMode.IDE);
-
-        ProjectOptions legacyOptions =
-                new ProjectOptions(ImmutableMap.of("android.injected.build.model.only", "true"));
-        assertThat(SyncOptions.getModelQueryMode(legacyOptions))
-                .isEqualTo(ConfigurableErrorHandler.EvaluationMode.IDE_LEGACY);
+        assertThat(SyncOptions.getModelQueryMode(advancedOptions)).isEqualTo(EvaluationMode.IDE);
     }
 
     @Test
@@ -51,11 +44,11 @@ public class SyncOptionsTest {
 
         ProjectOptions noOptions = new ProjectOptions(ImmutableMap.of());
         assertThat(SyncOptions.getErrorFormatMode(noOptions))
-                .isEqualTo(ExtraModelInfo.ErrorFormatMode.HUMAN_READABLE);
+                .isEqualTo(ErrorFormatMode.HUMAN_READABLE);
 
         ProjectOptions ideOptions =
                 new ProjectOptions(ImmutableMap.of("android.injected.invoked.from.ide", "true"));
         assertThat(SyncOptions.getErrorFormatMode(ideOptions))
-                .isEqualTo(ExtraModelInfo.ErrorFormatMode.MACHINE_PARSABLE);
+                .isEqualTo(ErrorFormatMode.MACHINE_PARSABLE);
     }
 }

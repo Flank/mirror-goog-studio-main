@@ -43,7 +43,7 @@ class LibraryVariantFactory : VariantFactory2<LibraryExtensionImpl> {
             buildTypOrVariant: BuildTypeOrVariantImpl,
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
-            variantMap: Map<VariantType, Map<Variant, Variant>>,
+            variantDispatcher: VariantDispatcher,
             issueReporter: EvalIssueReporter)
             : SealableVariant {
 
@@ -54,7 +54,7 @@ class LibraryVariantFactory : VariantFactory2<LibraryExtensionImpl> {
                 buildTypOrVariant,
                 variantExtensionProperties,
                 commonVariantProperties,
-                variantMap,
+                variantDispatcher,
                 issueReporter)
     }
 

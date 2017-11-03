@@ -442,7 +442,7 @@ public class ServerProtocolV1 implements Server {
                             gson.fromJson(message, InteractiveMessage.class);
                     serverReceiver.getMessageReceiver().receive(interactiveMessage);
                 }
-                return null;
+                return gson.fromJson(message, clazz);
             default:
                 throw new RuntimeException(
                         "Unsupported message type " + messageType + " received from CMake server.");

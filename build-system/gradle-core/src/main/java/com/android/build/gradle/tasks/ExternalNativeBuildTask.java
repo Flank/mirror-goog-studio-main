@@ -33,7 +33,7 @@ import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.ide.common.process.BuildCommandException;
 import com.android.ide.common.process.ProcessInfoBuilder;
 import com.android.utils.FileUtils;
@@ -412,7 +412,7 @@ public class ExternalNativeBuildTask extends AndroidBuilderTask {
                     androidBuilder
                             .getIssueReporter()
                             .reportWarning(
-                                    SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION,
+                                    EvalIssueReporter.Type.EXTERNAL_NATIVE_BUILD_CONFIGURATION,
                                     String.format(
                                             "Targeted device ABI or comma-delimited ABIs [%s] is not"
                                                     + " one of [%s]. Nothing to build.",

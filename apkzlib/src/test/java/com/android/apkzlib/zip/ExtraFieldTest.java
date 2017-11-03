@@ -19,6 +19,7 @@ package com.android.apkzlib.zip;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 import com.google.common.collect.ImmutableList;
 
@@ -330,6 +331,31 @@ public class ExtraFieldTest {
             byte[] sData = new byte[8];
             s.write(ByteBuffer.wrap(sData));
             assertArrayEquals(new byte[] { 0x54, 0x76, 0x04, 0x00, 2, 4, 2, 4 }, sData);
+        }
+    }
+
+    @Test
+    public void parseInvalidExtraFieldWithInvalidHeader() throws Exception {
+        byte[] raw = new byte[1];
+        ExtraField ef = new ExtraField(raw);
+        try {
+            ef.getSegments();
+            fail();
+        } catch (IOException e) {
+            // Expected.
+        }
+    }
+
+    @Test
+    public void parseInvalidExtraFieldWithInsufficientData() throws Exception {
+        // Remember: 0x05, 0x00 = 5 in little endian!
+        byte[] raw = new byte[] { /* Header */ 0x01, 0x02, /* Size */ 0x05, 0x00, /* Data */ 0x01 };
+        ExtraField ef = new ExtraField(raw);
+        try {
+            ef.getSegments();
+            fail();
+        } catch (IOException e) {
+            // Expected.
         }
     }
 }

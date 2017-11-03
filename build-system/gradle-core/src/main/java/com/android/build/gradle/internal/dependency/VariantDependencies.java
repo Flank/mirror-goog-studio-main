@@ -23,9 +23,9 @@ import com.android.build.api.attributes.ProductFlavorAttr;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
-import com.android.build.gradle.internal.errors.ConfigurableErrorHandler;
+import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.builder.core.VariantType;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.errors.EvalIssueReporter;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
@@ -102,7 +102,7 @@ public class VariantDependencies {
 
     public static final class Builder {
         @NonNull private final Project project;
-        @NonNull private final ConfigurableErrorHandler errorReporter;
+        @NonNull private final SyncIssueHandler errorReporter;
         @NonNull private final GradleVariantConfiguration variantConfiguration;
         private boolean baseSplit = false;
         private Map<Attribute<ProductFlavorAttr>, ProductFlavorAttr> flavorSelection;
@@ -123,7 +123,7 @@ public class VariantDependencies {
 
         protected Builder(
                 @NonNull Project project,
-                @NonNull ConfigurableErrorHandler errorReporter,
+                @NonNull SyncIssueHandler errorReporter,
                 @NonNull GradleVariantConfiguration variantConfiguration) {
             this.project = project;
             this.errorReporter = errorReporter;
@@ -385,7 +385,7 @@ public class VariantDependencies {
             // the variant manager is lenient about it.
             // In that case we're going to avoid resolving the dependencies anyway, so we can just
             // skip this.
-            if (errorReporter.hasSyncIssue(SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION)) {
+            if (errorReporter.hasSyncIssue(EvalIssueReporter.Type.UNNAMED_FLAVOR_DIMENSION)) {
                 return map;
             }
 
@@ -423,7 +423,7 @@ public class VariantDependencies {
 
     public static Builder builder(
             @NonNull Project project,
-            @NonNull ConfigurableErrorHandler errorReporter,
+            @NonNull SyncIssueHandler errorReporter,
             @NonNull GradleVariantConfiguration variantConfiguration) {
         return new Builder(project, errorReporter, variantConfiguration);
     }

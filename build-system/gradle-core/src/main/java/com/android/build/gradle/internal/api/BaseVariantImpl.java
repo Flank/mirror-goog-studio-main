@@ -38,10 +38,10 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.NdkCompile;
 import com.android.build.gradle.tasks.RenderscriptCompile;
 import com.android.builder.core.AndroidBuilder;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.model.BuildType;
 import com.android.builder.model.ProductFlavor;
 import com.android.builder.model.SourceProvider;
-import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
@@ -172,7 +172,8 @@ public abstract class BaseVariantImpl implements BaseVariant {
                 androidBuilder
                         .getIssueReporter()
                         .reportError(
-                                SyncIssue.TYPE_GENERIC, "Unknown SourceKind value: " + folderType);
+                                EvalIssueReporter.Type.GENERIC,
+                                "Unknown SourceKind value: " + folderType);
         }
 
         return ImmutableList.of();

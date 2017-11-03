@@ -17,6 +17,7 @@
 package com.android.build.gradle.internal.plugin
 
 import com.android.build.gradle.internal.api.dsl.extensions.ApkPropertiesImpl
+import com.android.build.gradle.internal.api.dsl.extensions.AppExtensionImpl
 import com.android.build.gradle.internal.api.dsl.extensions.BuildPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.extensions.EmbeddedTestPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.extensions.OnDeviceTestPropertiesImpl
@@ -25,6 +26,7 @@ import com.android.build.gradle.internal.api.dsl.extensions.VariantAwareProperti
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.variant2.TestVariantFactory
+import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.plugins.ExtensionContainer
 
@@ -49,5 +51,10 @@ class TestPluginDelegate : TypedPluginDelegate<TestExtensionImpl> {
                         EmbeddedTestPropertiesImpl(issueReporter),
                         OnDeviceTestPropertiesImpl(issueReporter),
                         issueReporter)
+    }
+
+    override fun createDefaults(extension: TestExtensionImpl) {
+        extension.buildTypes.create(BuilderConstants.DEBUG).signingConfig =
+                extension.signingConfigs.create(BuilderConstants.DEBUG)
     }
 }

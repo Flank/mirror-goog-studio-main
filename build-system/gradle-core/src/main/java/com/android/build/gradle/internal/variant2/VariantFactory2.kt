@@ -41,7 +41,7 @@ interface VariantFactory2<in E: BaseExtension2> {
             buildTypOrVariant: BuildTypeOrVariantImpl,
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
-            variantMap: Map<VariantType, Map<Variant, Variant>>,
+            variantDispatcher: VariantDispatcher,
             issueReporter: EvalIssueReporter
     ): SealableVariant
 

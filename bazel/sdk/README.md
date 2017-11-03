@@ -269,7 +269,7 @@ $ rm -rf prebuilts/studio/sdk/windows # unless you're windows
    ```remote-sdk-packages``` file
 
 3. Run the remote SDK updater
-   ```bazel run //tools/base/bazel/sdk:dev-sdk-updater```
+   ```bazel run //tools/base/bazel/sdk:remote-sdk-updater```
 
 4. If you are removing a component that is used, update build files and tests.
    Simply adding a new component should not affect the build or tests.

@@ -41,7 +41,7 @@ class AppVariantFactory : VariantFactory2<AppExtensionImpl> {
             buildTypOrVariant: BuildTypeOrVariantImpl,
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
-            variantMap: Map<VariantType, Map<Variant, Variant>>,
+            variantDispatcher: VariantDispatcher,
             issueReporter: EvalIssueReporter)
             : SealableVariant {
 
@@ -52,7 +52,7 @@ class AppVariantFactory : VariantFactory2<AppExtensionImpl> {
                 buildTypOrVariant,
                 variantExtensionProperties,
                 commonVariantProperties,
-                variantMap,
+                variantDispatcher,
                 issueReporter)
     }
 

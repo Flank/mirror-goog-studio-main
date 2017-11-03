@@ -20,6 +20,8 @@ import com.android.build.api.dsl.model.BuildTypeOrProductFlavor
 import com.android.build.api.dsl.model.ProductFlavor
 import com.android.build.api.dsl.model.ProductFlavorOrVariant
 import com.android.build.api.dsl.model.VariantProperties
+import com.android.build.api.dsl.variant.AndroidTestVariant
+import com.android.build.api.dsl.variant.UnitTestVariant
 import com.android.build.api.dsl.variant.Variant
 import com.android.build.api.sourcesets.AndroidSourceSet
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2
@@ -31,10 +33,10 @@ import com.android.build.gradle.internal.api.dsl.model.VariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.CommonVariantPropertiesImpl
 import com.android.build.gradle.internal.api.dsl.variant.SealableVariant
 import com.android.build.gradle.internal.api.sourcesets.DefaultAndroidSourceSet
-import com.android.builder.core.VariantType
 import com.android.build.gradle.internal.errors.DeprecationReporter
+import com.android.builder.core.VariantType
 import com.android.builder.errors.EvalIssueReporter
-import com.android.builder.model.SyncIssue
+import com.android.builder.errors.EvalIssueReporter.Type
 import com.android.utils.ImmutableCollectors
 import com.android.utils.StringHelper
 import com.google.common.collect.ArrayListMultimap
@@ -112,6 +114,8 @@ class VariantBuilder<in E: BaseExtension2>(
 
             }
         }
+
+        generated = true
     }
 
     /**
@@ -136,7 +140,7 @@ class VariantBuilder<in E: BaseExtension2>(
 
         // ensure that there is always a dimension
         if (flavorDimensions.isEmpty()) {
-            issueReporter.reportError(SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION,
+            issueReporter.reportError(Type.UNNAMED_FLAVOR_DIMENSION,
                     "All flavors must now belong to a named flavor dimension. "
                             + "Learn more at "
                             + "https://d.android.com/r/tools/flavorDimensions-missing-error-message.html")
@@ -244,9 +248,12 @@ class VariantBuilder<in E: BaseExtension2>(
         // The first key is the variant type that is requested from the dispatcher.
         // In the secondary map, the key is the variant making the request, and the value is the
         // variant of the type provided in the main key.
-        val variantDispatcher = mutableMapOf<VariantType, Map<Variant, Variant>>()
+        val variantDispatcher = VariantDispatchImpl()
         // map of generated variant by their type. Allow quick access when building the dispatcher
         val createdVariantMap = mutableMapOf<VariantType, Variant>()
+
+        var duplicateCommonProps = false
+
         for (factory in variantFactories) {
             // what does the factory generates?
             val generatedType = factory.generatedType
@@ -260,9 +267,6 @@ class VariantBuilder<in E: BaseExtension2>(
             val variantName = computeVariantName(
                     buildType.name, flavorCombo?.name, generatedType, factory.testTarget)
 
-            val commonVariantProperties = computeCommonVariantPropertiesImpl(
-                    generatedType, variantName, flavorCombo, buildType)
-
             // compute the application ID and feed it back into the delegate that holds it
             // FIXME I think we need to handle the case where there is no appId but there are
             // suffixes, in which case we would have to read the manifest which we really shouldn't...
@@ -272,13 +276,43 @@ class VariantBuilder<in E: BaseExtension2>(
 
             // FIXME do same for versionName
 
-            // FIXME we want to copy these items for each variant - Maybe have some sort of copy on write?
+            // These common properties are computed only once but they are used in more than one
+            // variants (prod + tests) so we need to duplicate them.
+            val variantPropertiesCopy = if (!duplicateCommonProps) {
+                variantProperties
+            } else {
+                cloneVariantProperties(variantProperties)
+            }
+
+            val productFlavorOrVariantCopy = if (!duplicateCommonProps) {
+                productFlavorOrVariant
+            } else {
+                cloneProductFlavorOrVariant(productFlavorOrVariant)
+            }
+
+            val buildTypOrVariantCopy = if (!duplicateCommonProps) {
+                buildTypOrVariant
+            } else {
+                cloneBuildTypeOrVariant(buildTypOrVariant)
+            }
+
+            val variantExtensionPropertiesCopy = if (!duplicateCommonProps) {
+                variantExtensionProperties
+            } else {
+                cloneVariantOrExtensionProperties(variantExtensionProperties)
+            }
+
+            // this property is specific to the variant due to the source sets
+            val commonVariantProperties = computeCommonVariantPropertiesImpl(
+                    generatedType, variantName, flavorCombo, buildType)
+
+
             val variant = factory.createVariant(
                     extension,
-                    variantProperties,
-                    productFlavorOrVariant,
-                    buildTypOrVariant,
-                    variantExtensionProperties,
+                    variantPropertiesCopy,
+                    productFlavorOrVariantCopy,
+                    buildTypOrVariantCopy,
+                    variantExtensionPropertiesCopy,
                     commonVariantProperties,
                     variantDispatcher,
                     issueReporter)
@@ -297,6 +331,9 @@ class VariantBuilder<in E: BaseExtension2>(
                 throw RuntimeException("More than one VariantFactory with same type $variantType")
             }
             createdVariantMap.put(variantType, variant)
+
+            // next variant must duplicate the common props
+            duplicateCommonProps = true
         }
 
         // -----
@@ -305,21 +342,12 @@ class VariantBuilder<in E: BaseExtension2>(
         for (factory in variantFactories) {
             val generatedVariant = createdVariantMap[factory.generatedType] ?: continue
 
-            val testTargetType = factory.testTarget
-            if (testTargetType != null) {
-                val testVariant = createdVariantMap[testTargetType]
-                if (testVariant != null) {
-                    val testMap = variantDispatcher.computeIfAbsent(testTargetType, { _ -> mutableMapOf() }) as MutableMap
-                    testMap[generatedVariant] = _shims[testVariant]!! // shim must be present
-                }
-            }
+            val shim = _shims[generatedVariant]!!
 
-            for (testedByType in factory.testedBy) {
-                val testedVariant = createdVariantMap[testedByType]
-                if (testedVariant != null) {
-                    val testedMap = variantDispatcher.computeIfAbsent(testedByType, { _ -> mutableMapOf() }) as MutableMap
-                    testedMap[generatedVariant] = _shims[testedVariant]!! // shim must be present
-                }
+            when (factory.generatedType) {
+                VariantType.UNIT_TEST -> variantDispatcher.unitTestVariant = shim as UnitTestVariant
+                VariantType.ANDROID_TEST -> variantDispatcher.androidTestVariant = shim as AndroidTestVariant
+                else -> variantDispatcher.productionVariant = shim
             }
         }
     }
@@ -334,6 +362,12 @@ class VariantBuilder<in E: BaseExtension2>(
         return variantProperties
     }
 
+    private fun cloneVariantProperties(that: VariantPropertiesImpl): VariantPropertiesImpl {
+        val clone = VariantPropertiesImpl(issueReporter)
+        clone.initWith(that)
+        return clone
+    }
+
     private fun mergeProductFlavorOrVariant(items: List<ProductFlavorOrVariant>): ProductFlavorOrVariantImpl {
         val productFlavorOrVariant = ProductFlavorOrVariantImpl(issueReporter)
 
@@ -343,19 +377,21 @@ class VariantBuilder<in E: BaseExtension2>(
         return productFlavorOrVariant
     }
 
-    private fun cloneBuildTypeOrVariant(that: BuildTypeImpl): BuildTypeOrVariantImpl {
+    private fun cloneProductFlavorOrVariant(that: ProductFlavorOrVariantImpl): ProductFlavorOrVariantImpl {
+        val clone = ProductFlavorOrVariantImpl(issueReporter)
+        clone.initWith(that)
+        return clone
+    }
+
+    private fun cloneBuildTypeOrVariant(that: BuildTypeImpl): BuildTypeOrVariantImpl =
+            cloneBuildTypeOrVariant(that.buildTypeOrVariant)
+
+    private fun cloneBuildTypeOrVariant(that: BuildTypeOrVariantImpl): BuildTypeOrVariantImpl {
         // values here don't matter, we're going to run initWith
-        val buildTypeOrVariant = BuildTypeOrVariantImpl(
-                "Variant",
-                false,
-                false,
-                false,
-                deprecationReporter,
-                issueReporter)
-
-        buildTypeOrVariant.initWith(that.buildTypeOrVariant)
-
-        return buildTypeOrVariant
+        val clone = BuildTypeOrVariantImpl(
+                "Variant", deprecationReporter, issueReporter)
+        clone.initWith(that)
+        return clone
     }
 
     private fun cloneVariantOrExtensionProperties(
@@ -391,7 +427,7 @@ class VariantBuilder<in E: BaseExtension2>(
 
         // create multi-flavor sourceset, optional, and add it
         var multiFlavorSourceSet: DefaultAndroidSourceSet? = null
-        flavorCombo?.name.let {
+        flavorCombo?.name?.let {
             // use the internal container to bypass the seal
             multiFlavorSourceSet = dslModelData._sourceSets.maybeCreate(it)
         }
@@ -477,7 +513,7 @@ private fun createCombinations(
         for (flavor in productFlavors) {
             if (flavor.dimension == null) {
                 issueReporter.reportError(
-                        SyncIssue.TYPE_GENERIC,
+                        Type.GENERIC,
                         "Flavor '${flavor.name}' has no flavor dimension.")
                 continue
             }
@@ -486,7 +522,7 @@ private fun createCombinations(
 
             if (!flavorDimensions.contains(flavorDimension)) {
                 issueReporter.reportError(
-                        SyncIssue.TYPE_GENERIC,
+                        Type.GENERIC,
                         "Flavor '${flavor.name}' has unknown dimension '$flavorDimension")
                 continue
             }
@@ -530,7 +566,7 @@ private fun createFlavorCombinations(
     // loop on all the flavors to add them to the current index and recursively fill the next
     // indices.
     if (flavorList.isEmpty()) {
-        issueReporter.reportError(SyncIssue.TYPE_GENERIC,
+        issueReporter.reportError(Type.GENERIC,
                 "No flavor is associated with flavor dimension '$dimensionName'.")
         return
     }

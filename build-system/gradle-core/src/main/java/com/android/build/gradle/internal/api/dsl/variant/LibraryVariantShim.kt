@@ -21,4 +21,9 @@ import com.android.build.gradle.internal.variant2.LibraryVariantImpl
 
 /** shim implementation of [LibraryVariant] that delegates to an internal object */
 internal class LibraryVariantShim internal constructor(internalObject: LibraryVariantImpl)
-    : LibraryVariant by internalObject
+    : LibraryVariant by internalObject {
+
+    override fun toString(): String {
+        return name
+    }
+}

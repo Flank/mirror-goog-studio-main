@@ -25,6 +25,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.testutils.truth.DexClassSubject;
 import com.google.common.io.Files;
 import java.io.File;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -94,6 +95,7 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
+    @Ignore("b/68252584")
     public void addVariable() throws Exception {
         project.execute(EXPORT_INFO_TASK);
         TestFileUtils.replaceLine(project.file(ACTIVITY_MAIN_XML), 20,
@@ -140,6 +142,7 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
+    @Ignore("b/68252584")
     public void addNewLayoutFolderAndFile() throws Exception {
         project.execute(EXPORT_INFO_TASK);
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);

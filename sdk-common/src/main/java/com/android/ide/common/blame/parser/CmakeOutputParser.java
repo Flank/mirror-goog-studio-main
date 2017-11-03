@@ -41,6 +41,7 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
     static final Pattern errorFileAndLineNumber =
             Pattern.compile(
                     "CMake (Error|Warning).*at (([A-Za-z]:)?[^:]+):([0-9]+)?.*(\\([^:]*\\))?:([0-9]+)?(.+)?");
+    private static final int SOURCE_POSITION_OFFSET = -1;
 
     @Override
     public boolean parse(
@@ -108,7 +109,11 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
 
             SourceFilePosition position =
                     new SourceFilePosition(
-                            file, new SourcePosition(fields.lineNumber, fields.columnNumber, -1));
+                            file,
+                            new SourcePosition(
+                                    fields.lineNumber + SOURCE_POSITION_OFFSET,
+                                    fields.columnNumber + SOURCE_POSITION_OFFSET,
+                                    SOURCE_POSITION_OFFSET));
             Message message = new Message(fields.kind, fields.errorMessage, position);
             messages.add(message);
             return true;
@@ -141,9 +146,9 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
 
     /**
      * Matches the following error or warning parsing CMakeLists.txt: <code>
-     *  CMake Error ... at
-     *  /path/to/file:1234 (message):1234
-     *  [Description of the error.]
+     * CMake Error ... at
+     * /path/to/file:1234 (message):1234
+     * [Description of the error.]
      * </code> Or the same error on a single line. If the line number and/or column number are
      * missing, it defaults to -1, and won't affect the code link. If the description is missing, it
      * will use the full line as the description.
@@ -162,7 +167,11 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
             ErrorFields fields = matchErrorFileAndLineNumberErrorParts(matcher, line);
             SourceFilePosition position =
                     new SourceFilePosition(
-                            file, new SourcePosition(fields.lineNumber, fields.columnNumber, -1));
+                            file,
+                            new SourcePosition(
+                                    fields.lineNumber + SOURCE_POSITION_OFFSET,
+                                    fields.columnNumber + SOURCE_POSITION_OFFSET,
+                                    SOURCE_POSITION_OFFSET));
             Message message = new Message(fields.kind, fields.errorMessage, position);
             messages.add(message);
             return true;
@@ -180,12 +189,12 @@ public class CmakeOutputParser implements PatternAwareOutputParser {
             fields.kind = Message.Kind.ERROR;
         }
 
-        fields.lineNumber = -1;
+        fields.lineNumber = 0;
         if (matcher.group(4) != null) {
             fields.lineNumber = Integer.valueOf(matcher.group(4));
         }
 
-        fields.columnNumber = -1;
+        fields.columnNumber = 0;
         if (matcher.group(6) != null) {
             fields.columnNumber = Integer.valueOf(matcher.group(6));
         }

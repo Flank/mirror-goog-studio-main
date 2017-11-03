@@ -17,11 +17,16 @@
 package com.android.build.gradle.integration.common.performance;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.*;
 
-import com.android.SdkConstants;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.performance.ActdProfileUploader;
+import com.android.build.gradle.integration.performance.ActdProfileUploader.BuildbotResponse;
+import com.android.build.gradle.integration.performance.ActdProfileUploader.Infos;
 import com.android.build.gradle.integration.performance.ActdProfileUploader.SampleRequest;
-import com.android.testutils.TestUtils;
+import com.android.build.gradle.integration.performance.ActdProfileUploader.SerieRequest;
 import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
 import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
 import com.google.common.collect.Lists;
@@ -31,43 +36,49 @@ import com.google.wireless.android.sdk.gradlelogging.proto.Logging.Benchmark;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult.Flags;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult.ScheduledBuild;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
 import com.google.wireless.android.sdk.stats.GradleTaskExecution;
 import com.google.wireless.android.sdk.stats.GradleTransformExecution;
-import java.io.File;
 import java.io.IOException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
-import org.junit.Assume;
+import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
 
 public class ActdProfileUploaderTest {
-    private final ActdProfileUploader.Infos infos = new ActdProfileUploader.Infos();
-    private final int buildId = 1234;
-    private final File repo = TestUtils.getWorkspaceFile("tools/base");
-    private final String hostname = "me.here.corp.google.com";
     private final String actdBaseUrl = "http://example.com";
     private final String actdProjectId = "test";
-    private final String actdBuildUrl = "http://example.com";
-    private final String actdCommitUrl = null;
+    private final String buildbotMasterUrl = "http://example.com";
+    private final String buildbotBuilderName = "fred";
 
     private ActdProfileUploader uploader;
 
     @Before
-    public void setUp() {
+    public void setUp() throws IOException {
+        BuildbotResponse buildInfo = new BuildbotResponse();
+        buildInfo.sourceStamp.changes =
+                new ActdProfileUploader.Change[] {new ActdProfileUploader.Change()};
+        buildInfo.sourceStamp.changes[0].comments = "comments";
+        buildInfo.sourceStamp.changes[0].rev = "00000000000000000000000000000000000000";
+        buildInfo.sourceStamp.changes[0].revlink = "http://example.com";
+        buildInfo.sourceStamp.changes[0].who = "you@google.com";
+
         uploader =
-                ActdProfileUploader.create(
-                        buildId,
-                        repo,
-                        hostname,
-                        actdBaseUrl,
-                        actdProjectId,
-                        actdBuildUrl,
-                        actdCommitUrl);
+                spy(
+                        ActdProfileUploader.create(
+                                actdBaseUrl,
+                                actdProjectId,
+                                buildbotMasterUrl,
+                                buildbotBuilderName));
+
+        doReturn(buildInfo).when(uploader).jsonGet(anyString(), eq(BuildbotResponse.class));
     }
 
     /**
@@ -79,7 +90,8 @@ public class ActdProfileUploaderTest {
      *     BenchmarkMode bm = random(BenchmarkMode.values());
      * </pre>
      */
-    private static <T extends ProtocolMessageEnum> T random(T[] array) {
+    @NonNull
+    private static <T extends ProtocolMessageEnum> T random(@NonNull T[] array) {
         T t;
         while (true) {
             t = array[new Random().nextInt(array.length)];
@@ -94,21 +106,33 @@ public class ActdProfileUploaderTest {
         }
     }
 
-    private static long randomPositiveLong() {
+    private static long randomDuration() {
         long value = Math.abs(new Random().nextLong());
         if (value == Long.MIN_VALUE) {
-            value = Long.MAX_VALUE;
+            return Long.MAX_VALUE;
         }
 
         // to make sure samples aren't filtered out, we add the threshold if it's below it
-        if (value < ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD) {
-            value += ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD;
+        if (value < ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS) {
+            value += ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS;
         }
 
         return value;
     }
 
-    private static Logging.GradleBenchmarkResult randomBenchmarkResult() {
+    private static long randomNonzeroLong() {
+        long value = Math.abs(new Random().nextLong());
+        if (value == Long.MIN_VALUE) {
+            return Long.MAX_VALUE;
+        }
+        return value + 1;
+    }
+
+    private static GradleBenchmarkResult randomBenchmarkResult() {
+        return randomBenchmarkResult(randomNonzeroLong());
+    }
+
+    private static GradleBenchmarkResult randomBenchmarkResult(long buildId) {
         Flags flags =
                 Flags.newBuilder()
                         .setAapt(random(Flags.Aapt.values()))
@@ -123,9 +147,7 @@ public class ActdProfileUploaderTest {
                         .setType(random(GradleTaskExecutionType.values()).getNumber());
 
         GradleBuildProfileSpan.Builder span =
-                GradleBuildProfileSpan.newBuilder()
-                        .setDurationInMs(randomPositiveLong())
-                        .setTask(task);
+                GradleBuildProfileSpan.newBuilder().setDurationInMs(randomDuration()).setTask(task);
 
         if (span.getTask().getType() == GradleTaskExecutionType.TRANSFORM_VALUE) {
             GradleTransformExecution.Builder transform =
@@ -135,54 +157,99 @@ public class ActdProfileUploaderTest {
             span.setTransform(transform);
         }
 
+        ScheduledBuild.Builder scheduledBuild =
+                ScheduledBuild.newBuilder().setBuildbotBuildNumber(buildId);
+
         GradleBuildProfile.Builder profile =
-                GradleBuildProfile.newBuilder().setBuildTime(randomPositiveLong()).addSpan(span);
+                GradleBuildProfile.newBuilder().setBuildTime(randomDuration()).addSpan(span);
 
         return Logging.GradleBenchmarkResult.newBuilder()
                 .setBenchmarkMode(random(BenchmarkMode.values()))
                 .setBenchmark(random(Benchmark.values()))
                 .setFlags(flags)
                 .setProfile(profile)
+                .setScheduledBuild(scheduledBuild)
                 .build();
     }
 
     private static List<GradleBenchmarkResult> randomBenchmarkResults() {
+        return randomBenchmarkResults(randomNonzeroLong());
+    }
+
+    private static List<GradleBenchmarkResult> randomBenchmarkResults(long buildId) {
         int count = new Random().nextInt(10) + 5; // must always be greater than 0
         List<GradleBenchmarkResult> results = Lists.newArrayListWithCapacity(count);
         for (int i = 0; i < count; i++) {
-            results.add(randomBenchmarkResult());
+            results.add(randomBenchmarkResult(buildId));
         }
         return results;
     }
 
-    @Test
-    public void hostname() throws IOException {
-        assertThat(ActdProfileUploader.hostname()).isNotEmpty();
-    }
-
-    @Test
-    public void lastCommitJson() throws IOException {
-        // b/67964499
-        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
-        assertThat(ActdProfileUploader.lastCommitJson(repo)).isNotEmpty();
-    }
-
-    @Test
-    public void infos() throws IOException {
-        // b/67964499
-        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
-        ActdProfileUploader.Infos infos =
-                ActdProfileUploader.infos(TestUtils.getWorkspaceFile("tools/base"));
+    private static void assertValidInfos(@Nullable Infos infos) {
+        assertThat(infos).isNotNull();
 
         assertThat(infos.abbrevHash).isNotEmpty();
+        assertThat(infos.abbrevHash).doesNotContain("\n");
+        assertThat(infos.abbrevHash).doesNotContain(" ");
+        assertThat(infos.abbrevHash.length()).isLessThan(infos.hash.length());
+
         assertThat(infos.hash).isNotEmpty();
+        assertThat(infos.hash).doesNotContain("\n");
+        assertThat(infos.hash).doesNotContain(" ");
+
         assertThat(infos.authorEmail).isNotEmpty();
+        assertThat(infos.authorEmail).doesNotContain("\n");
+        assertThat(infos.authorEmail).contains("@google.com");
+
         assertThat(infos.authorName).isNotEmpty();
+        assertThat(infos.authorName).doesNotContain("\n");
+
         assertThat(infos.subject).isNotEmpty();
     }
 
     @Test
-    public void flags() throws IOException {
+    public void infos() throws IOException {
+        assertValidInfos(uploader.infos(1));
+    }
+
+    @Test
+    public void infosManualTrigger() throws IOException {
+        doReturn(new BuildbotResponse())
+                .when(uploader)
+                .jsonGet(anyString(), eq(BuildbotResponse.class));
+        assertValidInfos(uploader.infos(1));
+    }
+
+    @Test
+    public void infosTransientNetworkProblem() throws IOException {
+        /*
+         * Note that doing the throw on jsonGet bypasses the retry mechanisms. This is a bit of a
+         * trade-off: we don't want the tests to go through the steps of sleeping and retrying
+         * for multiple minutes, but we do want to make sure that these errors propagate.
+         */
+        doThrow(SocketException.class)
+                .when(uploader)
+                .jsonGet(anyString(), eq(BuildbotResponse.class));
+        try {
+            uploader.infos(1);
+            fail("uploader.infos(1) should have thrown an exception");
+        } catch (IOException e) {
+            assertThat(e).isInstanceOf(SocketException.class);
+        }
+
+        doThrow(SocketTimeoutException.class)
+                .when(uploader)
+                .jsonGet(anyString(), eq(BuildbotResponse.class));
+        try {
+            uploader.infos(1);
+            fail("uploader.infos(1) should have thrown an exception");
+        } catch (IOException e) {
+            assertThat(e).isInstanceOf(SocketTimeoutException.class);
+        }
+    }
+
+    @Test
+    public void flags() {
         GradleBenchmarkResult gbr = randomBenchmarkResult();
         assertThat(ActdProfileUploader.flags(gbr)).isNotEmpty();
 
@@ -191,7 +258,7 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void seriesId() throws IOException {
+    public void seriesId() {
         GradleBenchmarkResult gbr = randomBenchmarkResult();
 
         assertThat(gbr.getProfile()).isNotNull();
@@ -206,7 +273,7 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void description() throws IOException {
+    public void description() {
         GradleBenchmarkResult gbr = randomBenchmarkResult();
 
         assertThat(gbr.getProfile()).isNotNull();
@@ -229,6 +296,7 @@ public class ActdProfileUploaderTest {
             // make sure the various IDs make sense
             assertThat(req.projectId).isNotEmpty();
             assertThat(req.sample.buildId).isGreaterThan(0L);
+            assertThat(req.sample.url).isNotNull();
         }
     }
 
@@ -236,5 +304,39 @@ public class ActdProfileUploaderTest {
     public void sampleRequestsEmpty() throws IOException {
         Collection<SampleRequest> reqs = uploader.sampleRequests(Arrays.asList());
         assertThat(reqs).isEmpty();
+    }
+
+    @Test
+    public void buildRequest() throws IOException {
+        ActdProfileUploader.BuildRequest buildRequest = uploader.buildRequest(1);
+
+        assertThat(buildRequest.build).isNotNull();
+        assertThat(buildRequest.build.buildId).isGreaterThan(0L);
+        assertThat(buildRequest.projectId).isNotEmpty();
+
+        assertValidInfos(buildRequest.build.infos);
+    }
+
+    @Test
+    public void serieRequests() throws IOException {
+        Collection<SampleRequest> sampleRequests =
+                uploader.sampleRequests(randomBenchmarkResults());
+        assertThat(sampleRequests).isNotEmpty();
+
+        Collection<SerieRequest> serieRequests = uploader.serieRequests(sampleRequests);
+        assertThat(serieRequests).isNotEmpty();
+
+        for (SerieRequest serieRequest : serieRequests) {
+            assertThat(serieRequest.projectId).isNotEmpty();
+            assertThat(serieRequest.serieId).isNotEmpty();
+        }
+
+        long numIds =
+                serieRequests
+                        .stream()
+                        .map(s -> s.serieId)
+                        .distinct()
+                        .collect(Collectors.counting());
+        assertThat(numIds).isEqualTo(serieRequests.size()); // all series should have a unique id
     }
 }

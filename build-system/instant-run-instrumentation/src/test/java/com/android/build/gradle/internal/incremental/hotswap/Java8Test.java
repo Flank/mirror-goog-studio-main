@@ -272,7 +272,10 @@ public class Java8Test {
         OtherClassOverridingDefaultMethods otherClassOverridingDefaultMethods =
                 new OtherClassOverridingDefaultMethods();
         assertThat(otherClassOverridingDefaultMethods.someMethod())
-                .isEqualTo("someOther" + OtherClassOverridingDefaultMethods.class.getName());
+                .isEqualTo(
+                        "someOther"
+                                + OtherClassOverridingDefaultMethods.class.getName()
+                                + "never changes");
         assertThat(otherClassOverridingDefaultMethods.defaultedMethod())
                 .isEqualTo("otherDefault" + OtherClassOverridingDefaultMethods.class.getName());
         assertThat(otherClassOverridingDefaultMethods.otherMethod())
@@ -315,10 +318,13 @@ public class Java8Test {
                         ""
                                 + classOverridingDefaultMethods.getClass().getName()
                                 + "new overriden default");
-        assertThat(classOverridingDefaultMethods.finalMethod()).isEqualTo("never changes");
+        assertThat(classOverridingDefaultMethods.finalMethod()).isEqualTo("actually changed");
 
         assertThat(otherClassOverridingDefaultMethods.someMethod())
-                .isEqualTo("someOther" + OtherClassOverridingDefaultMethods.class.getName());
+                .isEqualTo(
+                        "someNewOther"
+                                + OtherClassOverridingDefaultMethods.class.getName()
+                                + "actually changed");
         assertThat(otherClassOverridingDefaultMethods.defaultedMethod())
                 .isEqualTo("newOtherDefault" + OtherClassOverridingDefaultMethods.class.getName());
         assertThat(otherClassOverridingDefaultMethods.otherMethod())
@@ -369,18 +375,18 @@ public class Java8Test {
         assertThat(subject.yetAnotherMethod()).isEqualTo("another " + defaultMethodValue);
     }
 
-    // TODO uncomment once we support grand parents methods.
-    //@Test
-    //public void testClassUsingGrandParentInterfaceMethods()
-    //        throws ClassNotFoundException, IOException, NoSuchFieldException,
-    //        InstantiationException, IllegalAccessException {
-    //    harness.reset();
-    //    OtherClassOverridingDefaultMethods other = new OtherClassOverridingDefaultMethods();
-    //    assertThat(other.someMethod()).isEqualTo(
-    //            "someOthercom.java8.OtherClassOverridingDefaultMethodsnever changes");
-    //
-    //    harness.applyPatch("java8");
-    //    assertThat(other.someMethod()).isEqualTo(
-    //            "someNewOthercom.java8.OtherClassOverridingDefaultMethodsnever changes");
-    //}
+    @Test
+    public void testClassUsingGrandParentInterfaceMethods()
+            throws ClassNotFoundException, IOException, NoSuchFieldException,
+                    InstantiationException, IllegalAccessException {
+        harness.reset();
+        OtherClassOverridingDefaultMethods other = new OtherClassOverridingDefaultMethods();
+        assertThat(other.someMethod())
+                .isEqualTo("someOthercom.java8.OtherClassOverridingDefaultMethodsnever changes");
+
+        harness.applyPatch("java8");
+        assertThat(other.someMethod())
+                .isEqualTo(
+                        "someNewOthercom.java8.OtherClassOverridingDefaultMethodsactually changed");
+    }
 }

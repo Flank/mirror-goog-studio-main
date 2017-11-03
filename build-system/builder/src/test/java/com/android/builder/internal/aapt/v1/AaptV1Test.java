@@ -433,4 +433,18 @@ public class AaptV1Test {
             assertFalse(lenaResource.contains("final"));
         }
     }
+
+    @Test
+    public void callToCompileOutputForDoesNotCreateDirectories() throws Exception {
+        try (Aapt aapt = makeAapt()) {
+            File outputDir = mTemporaryFolder.newFolder("empty");
+            File input = new File(mTemporaryFolder.newFolder("values"), "values.xml");
+
+            CompileResourceRequest request = new CompileResourceRequest(input, outputDir, "values");
+            File output = aapt.compileOutputFor(request);
+
+            assertFalse(output.exists());
+            assertFalse(output.getParentFile().exists());
+        }
+    }
 }

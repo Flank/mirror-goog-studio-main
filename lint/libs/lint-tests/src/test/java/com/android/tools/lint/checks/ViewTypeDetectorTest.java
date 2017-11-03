@@ -402,6 +402,51 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
                         + "+         checkNotNull1((android.view.View)findViewById(R.id.textView)).setAlpha(0.5f); // WARN\n");
     }
 
+    public void testFindViewByIdNotCastDirectly() {
+        // Regression test for issue 68280786
+
+        //noinspection all // Sample code
+        lint().files(
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.content.Context;\n" +
+                        "import android.widget.ImageButton;\n" +
+                        "import android.widget.RelativeLayout;\n" +
+                        "\n" +
+                        "public class A extends RelativeLayout {\n" +
+                        "\n" +
+                        "    public A(Context context) {\n" +
+                        "        super(context);\n" +
+                        "        LayoutParams lp1 = (LayoutParams) findViewById(R.id.some_view).getLayoutParams();\n" +
+                        "        LayoutParams lp2 = (LayoutParams) this.findViewById(R.id.some_view).getLayoutParams();\n" +
+                        "    }\n" +
+                        "}"),
+                java(""
+                        + "package test.pkg;\n"
+                        + "public final class R {\n"
+                        + "    public static final class id {\n"
+                        + "        public static final int some_view = 0x7f0a0000;\n"
+                        + "    }\n"
+                        + "}\n"),
+                xml("res/layout/test.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\"\n" +
+                        "    android:orientation=\"vertical\">\n" +
+                        "\n" +
+                        "    <TextView\n" +
+                        "        android:id=\"@+id/some_view\"\n" +
+                        "        android:layout_width=\"wrap_content\"\n" +
+                        "        android:layout_height=\"wrap_content\"\n" +
+                        "        android:text=\"Hello World!\" />\n" +
+                        "\n" +
+                        "</LinearLayout>"))
+                .run()
+                .expectClean();
+    }
+
     public void test62445968() {
         // Regression test for https://issuetracker.google.com/62445968
         //noinspection all // Sample code

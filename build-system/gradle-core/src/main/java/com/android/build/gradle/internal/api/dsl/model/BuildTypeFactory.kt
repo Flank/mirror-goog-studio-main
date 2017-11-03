@@ -30,9 +30,6 @@ class BuildTypeFactory(
     override fun create(name: String): BuildTypeImpl {
         val buildTypeOrVariant = BuildTypeOrVariantImpl(
                 "BuildType",
-                false,
-                false,
-                false,
                 deprecationReporter,
                 issueReporter)
 

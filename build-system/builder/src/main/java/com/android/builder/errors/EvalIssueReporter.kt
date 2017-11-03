@@ -27,6 +27,45 @@ import com.android.builder.model.SyncIssue
  */
 interface EvalIssueReporter {
 
+    enum class Severity constructor(val severity: Int) {
+        WARNING(SyncIssue.SEVERITY_WARNING),
+        ERROR(SyncIssue.SEVERITY_ERROR),
+    }
+
+    @Suppress("DEPRECATION")
+    enum class Type constructor(val type: Int) {
+        GENERIC(SyncIssue.TYPE_GENERIC),
+        PLUGIN_OBSOLETE(SyncIssue.TYPE_PLUGIN_OBSOLETE),
+        UNRESOLVED_DEPENDENCY(SyncIssue.TYPE_UNRESOLVED_DEPENDENCY),
+        DEPENDENCY_IS_APK(SyncIssue.TYPE_DEPENDENCY_IS_APK),
+        DEPENDENCY_IS_APKLIB(SyncIssue.TYPE_DEPENDENCY_IS_APKLIB),
+        NON_JAR_LOCAL_DEP(SyncIssue.TYPE_NON_JAR_LOCAL_DEP),
+        NON_JAR_PACKAGE_DEP(SyncIssue.TYPE_NON_JAR_PACKAGE_DEP),
+        NON_JAR_PROVIDED_DEP(SyncIssue.TYPE_NON_JAR_PROVIDED_DEP),
+        JAR_DEPEND_ON_AAR(SyncIssue.TYPE_JAR_DEPEND_ON_AAR),
+        MISMATCH_DEP(SyncIssue.TYPE_MISMATCH_DEP),
+        OPTIONAL_LIB_NOT_FOUND(SyncIssue.TYPE_OPTIONAL_LIB_NOT_FOUND),
+        JACK_IS_NOT_SUPPORTED(SyncIssue.TYPE_JACK_IS_NOT_SUPPORTED),
+        GRADLE_TOO_OLD(SyncIssue.TYPE_GRADLE_TOO_OLD),
+        BUILD_TOOLS_TOO_LOW(SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW),
+        DEPENDENCY_MAVEN_ANDROID(SyncIssue.TYPE_DEPENDENCY_MAVEN_ANDROID),
+        DEPENDENCY_INTERNAL_CONFLICT(SyncIssue.TYPE_DEPENDENCY_INTERNAL_CONFLICT),
+        EXTERNAL_NATIVE_BUILD_CONFIGURATION(SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_CONFIGURATION),
+        EXTERNAL_NATIVE_BUILD_PROCESS_EXCEPTION(SyncIssue.TYPE_EXTERNAL_NATIVE_BUILD_PROCESS_EXCEPTION),
+        JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES(SyncIssue.TYPE_JACK_REQUIRED_FOR_JAVA_8_LANGUAGE_FEATURES),
+        DEPENDENCY_WEAR_APK_TOO_MANY(SyncIssue.TYPE_DEPENDENCY_WEAR_APK_TOO_MANY),
+        DEPENDENCY_WEAR_APK_WITH_UNBUNDLED(SyncIssue.TYPE_DEPENDENCY_WEAR_APK_WITH_UNBUNDLED),
+        JAR_DEPEND_ON_ATOM(SyncIssue.TYPE_JAR_DEPEND_ON_ATOM),
+        AAR_DEPEND_ON_ATOM(SyncIssue.TYPE_AAR_DEPEND_ON_ATOM),
+        ATOM_DEPENDENCY_PROVIDED(SyncIssue.TYPE_ATOM_DEPENDENCY_PROVIDED),
+        MISSING_SDK_PACKAGE(SyncIssue.TYPE_MISSING_SDK_PACKAGE),
+        STUDIO_TOO_OLD(SyncIssue.TYPE_STUDIO_TOO_OLD),
+        UNNAMED_FLAVOR_DIMENSION(SyncIssue.TYPE_UNNAMED_FLAVOR_DIMENSION),
+        INCOMPATIBLE_PLUGIN(SyncIssue.TYPE_INCOMPATIBLE_PLUGIN),
+        DEPRECATED_DSL(SyncIssue.TYPE_DEPRECATED_DSL),
+        DEPRECATED_CONFIGURATION(SyncIssue.TYPE_DEPRECATED_CONFIGURATION),
+    }
+
     /**
      * Reports an issue.
      *
@@ -45,7 +84,7 @@ interface EvalIssueReporter {
      * is created from this data and type. Default value is null
      * @see SyncIssue
      */
-    fun reportIssue(type: Int, severity: Int, msg: String, data: String?): SyncIssue
+    fun reportIssue(type: Type, severity: Severity, msg: String, data: String?): SyncIssue
 
     /**
      * Reports an issue.
@@ -62,7 +101,7 @@ interface EvalIssueReporter {
      * @return a SyncIssue if the issue.
      * @see SyncIssue
      */
-    fun reportIssue(type: Int, severity: Int, msg: String): SyncIssue {
+    fun reportIssue(type: Type, severity: Severity, msg: String): SyncIssue {
       return reportIssue(type, severity, msg, null)
     }
 
@@ -79,8 +118,8 @@ interface EvalIssueReporter {
      * is created from this data and type.
      * @return a [SyncIssue] if the error is only recorded.
      */
-    fun reportError(type: Int, msg: String, data: String?) = reportIssue(type,
-            SyncIssue.SEVERITY_ERROR,
+    fun reportError(type: Type, msg: String, data: String?) = reportIssue(type,
+            Severity.ERROR,
             msg,
             data)
 
@@ -94,7 +133,7 @@ interface EvalIssueReporter {
      * this particular issue type.)
      * @return a [SyncIssue] if the error is only recorded.
      */
-    fun reportError(type: Int, msg: String) = reportIssue(type, SyncIssue.SEVERITY_ERROR, msg, null)
+    fun reportError(type: Type, msg: String) = reportIssue(type, Severity.ERROR, msg, null)
 
     /**
      * Reports a warning.
@@ -109,8 +148,8 @@ interface EvalIssueReporter {
      * is created from this data and type.
      * @return a [SyncIssue] if the warning is only recorded.
      */
-    fun reportWarning(type: Int, msg: String, data: String?) = reportIssue(type,
-            SyncIssue.SEVERITY_WARNING,
+    fun reportWarning(type: Type, msg: String, data: String?) = reportIssue(type,
+            Severity.WARNING,
             msg,
             data)
 
@@ -124,9 +163,8 @@ interface EvalIssueReporter {
      * this particular issue type.)
      * @return a [SyncIssue] if the warning is only recorded.
      */
-    fun reportWarning(type: Int, msg: String) = reportIssue(type,
-            SyncIssue.SEVERITY_WARNING,
+    fun reportWarning(type: Type, msg: String) = reportIssue(type,
+            Severity.WARNING,
             msg,
             null)
-
 }

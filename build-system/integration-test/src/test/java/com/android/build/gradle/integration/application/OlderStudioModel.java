@@ -29,7 +29,7 @@ import org.junit.rules.ExpectedException;
 public class OlderStudioModel {
 
     public static final String THIS_GRADLE_PLUGIN_REQUIRES_STUDIO_3_0_MINIMUM =
-            "This Gradle plugin requires Studio 3.0 minimum";
+            "This Gradle plugin requires a newer IDE able to request IDE model level 3. For Android Studio this means version 3.0+";
 
     @Rule
     public GradleTestProject project =

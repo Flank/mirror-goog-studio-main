@@ -83,7 +83,7 @@ public final class BenchmarkRecorder {
 
         try {
             uploaders.add(ActdProfileUploader.fromEnvironment());
-        } catch (IllegalStateException | IOException e) {
+        } catch (IllegalStateException e) {
             System.out.println("unable to create act-d profile uploader: " + e);
         }
 

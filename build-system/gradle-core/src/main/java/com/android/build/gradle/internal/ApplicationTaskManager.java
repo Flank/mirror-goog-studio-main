@@ -50,7 +50,7 @@ import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.model.SyncIssue;
+import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
@@ -284,7 +284,9 @@ public class ApplicationTaskManager extends TaskManager {
                                     + "tools/java-8-support-message.html\n",
                             pluginName);
 
-            androidBuilder.getIssueReporter().reportWarning(SyncIssue.TYPE_GENERIC, warningMsg);
+            androidBuilder
+                    .getIssueReporter()
+                    .reportWarning(EvalIssueReporter.Type.GENERIC, warningMsg);
         }
 
         addJavacClassesStream(variantScope);

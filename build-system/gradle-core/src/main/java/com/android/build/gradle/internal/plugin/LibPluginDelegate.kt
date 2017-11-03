@@ -24,7 +24,9 @@ import com.android.build.gradle.internal.api.dsl.extensions.VariantAwareProperti
 import com.android.build.gradle.internal.api.dsl.extensions.VariantOrExtensionPropertiesImpl
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.build.gradle.internal.variant2.LibAndroidTestVariantFactory
+import com.android.build.gradle.internal.variant2.LibUnitTestVariantFactory
 import com.android.build.gradle.internal.variant2.LibraryVariantFactory
+import com.android.builder.core.BuilderConstants
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.plugins.ExtensionContainer
 
@@ -32,7 +34,8 @@ class LibPluginDelegate : TypedPluginDelegate<LibraryExtensionImpl> {
 
     override fun getVariantFactories() = listOf(
             LibraryVariantFactory(),
-            LibAndroidTestVariantFactory())
+            LibAndroidTestVariantFactory(),
+            LibUnitTestVariantFactory())
 
     override fun createNewExtension(
             extensionContainer: ExtensionContainer,
@@ -51,5 +54,16 @@ class LibPluginDelegate : TypedPluginDelegate<LibraryExtensionImpl> {
                         EmbeddedTestPropertiesImpl(issueReporter),
                         OnDeviceTestPropertiesImpl(issueReporter),
                         issueReporter)
+    }
+
+    override fun createDefaults(extension: LibraryExtensionImpl) {
+        val signingConfig = extension.signingConfigs.create(BuilderConstants.DEBUG)
+        val debug = extension.buildTypes.create(BuilderConstants.DEBUG)
+        debug.signingConfig = signingConfig
+        debug.debuggable = true
+        debug.embedMicroApp = false
+        debug.crunchPngs = false
+
+        extension.buildTypes.create(BuilderConstants.RELEASE)
     }
 }

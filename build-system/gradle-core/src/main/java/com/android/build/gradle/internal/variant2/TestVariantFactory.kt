@@ -42,10 +42,11 @@ class TestVariantFactory : VariantFactory2<TestExtensionImpl> {
             buildTypOrVariant: BuildTypeOrVariantImpl,
             variantExtensionProperties: VariantOrExtensionPropertiesImpl,
             commonVariantProperties: CommonVariantPropertiesImpl,
-            variantMap: Map<VariantType, Map<Variant, Variant>>,
+            variantDispatcher: VariantDispatcher,
             issueReporter: EvalIssueReporter)
             : SealableVariant {
 
+        // FIXME
         return AppVariantImpl(
                 VariantType.DEFAULT,
                 variantProperties,
@@ -53,7 +54,7 @@ class TestVariantFactory : VariantFactory2<TestExtensionImpl> {
                 buildTypOrVariant,
                 variantExtensionProperties,
                 commonVariantProperties,
-                variantMap,
+                variantDispatcher,
                 issueReporter)
     }
 

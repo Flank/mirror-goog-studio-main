@@ -41,7 +41,7 @@ class AndroidTestVariantImpl(
         private val buildTypeOrVariant: BuildTypeOrVariantImpl,
         private val variantExtensionProperties: VariantOrExtensionPropertiesImpl,
         private val internalVariantProperties: CommonVariantPropertiesImpl,
-        private val variantMap: Map<VariantType, Map<Variant, Variant>>,
+        private val variantDispatcher: VariantDispatcher,
         issueReporter: EvalIssueReporter)
     : SealableObject(issueReporter),
         AndroidTestVariant,
@@ -53,7 +53,7 @@ class AndroidTestVariantImpl(
         CommonVariantProperties by internalVariantProperties {
 
     override val testedVariant: Variant
-        get() = variantMap[VariantType.DEFAULT]!![this] as Variant // guaranteed to be in the map
+        get() = variantDispatcher.productionVariant
 
     override fun createShim(): Variant = AndroidTestVariantShim(this)
 
@@ -64,5 +64,9 @@ class AndroidTestVariantImpl(
         buildTypeOrVariant.seal()
         variantExtensionProperties.seal()
         internalVariantProperties.seal()
+    }
+
+    override fun toString(): String {
+        return name
     }
 }
