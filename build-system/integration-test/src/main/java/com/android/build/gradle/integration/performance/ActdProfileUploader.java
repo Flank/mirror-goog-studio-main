@@ -32,6 +32,7 @@ import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.util.ExponentialBackOff;
+import com.google.api.client.util.Joiner;
 import com.google.api.client.util.Maps;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
@@ -396,7 +397,9 @@ public class ActdProfileUploader implements ProfileUploader {
 
         if (buildIds.size() != 1) {
             throw new IllegalArgumentException(
-                    "results list contains more than one distinct build ID");
+                    String.format(
+                            "results list contains more than one distinct build ID: %s",
+                            Joiner.on(',').join(buildIds)));
         }
 
         return Iterables.getOnlyElement(buildIds);
