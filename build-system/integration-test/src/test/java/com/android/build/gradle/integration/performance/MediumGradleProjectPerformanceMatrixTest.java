@@ -103,7 +103,8 @@ public class MediumGradleProjectPerformanceMatrixTest {
     @Test
     public void runBenchmarks() throws Exception {
         // Warm up
-        Map<String, AndroidProject> models = model().getMulti().getModelMap();
+        Map<String, AndroidProject> models =
+                model().ignoreSyncIssueWarnings().getMulti().getModelMap();
         executor().run("clean");
         executor().run("assembleVanillaDebug");
 
