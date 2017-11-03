@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
 import org.gradle.api.JavaVersion;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -265,7 +264,6 @@ public class MultiDexTest {
     }
 
     @Test
-    @Ignore("b/62286076 Need to check in build tools 27.0.1")
     public void checkLegacyMultiDexAndroidTest()
             throws IOException, InterruptedException, ProcessException {
         // we use dex archives for this test, and we always run in-process

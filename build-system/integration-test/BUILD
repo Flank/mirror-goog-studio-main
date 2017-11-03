@@ -91,6 +91,7 @@ TEST_DATA = [
     "@gradle_perf_android_medium//:all_files",
     "@android_studio_gradle_test//:all_files",
     "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
+    "//prebuilts/studio/sdk:build-tools/27.0.1",
     "//prebuilts/studio/sdk:build-tools/24.0.3",
     "//prebuilts/studio/sdk:build-tools/minimum",
     "//prebuilts/studio/sdk:build-tools/latest",
