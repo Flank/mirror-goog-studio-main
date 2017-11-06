@@ -30,6 +30,7 @@
 #include "utils/log.h"
 #include "utils/process_manager.h"
 #include "utils/trace.h"
+#include "utils/tokenizer.h"
 
 using std::string;
 
@@ -37,6 +38,18 @@ namespace profiler {
 
 const char *AtraceManager::kAtraceExecutable = "/system/bin/atrace";
 const int kBufferSize = 1024 * 4;  // About the size of a page.
+const char *kCategories[] = {"gfx", "input",  "view", "wm",   "am",
+                             "sm",  "camera", "hal",  "app",  "res",
+                             "pm",  "sched",  "freq", "idle", "load"};
+const int kCategoriesCount = sizeof(kCategories) / sizeof(kCategories[0]);
+
+AtraceManager::AtraceManager(const Clock &clock, int dump_data_interval_ms)
+    : clock_(clock),
+      dump_data_interval_ms_(dump_data_interval_ms),
+      dumps_created_(0),
+      is_profiling_(false) {
+  categories_ = BuildSupportedCategoriesString();
+}
 
 AtraceManager::~AtraceManager() {}
 
@@ -67,11 +80,41 @@ bool AtraceManager::StartProfiling(const std::string &app_name,
 void AtraceManager::RunAtrace(const string &app_name, const string &path,
                               const string &command) {
   std::ostringstream args;
-  args << "-z -b 1024"
-       << " -a " << app_name << " -o " << path << " " << command
-       << " am sched freq idle memreclaim";
+  args << "-z -b 4096"
+       << " -a " << app_name << " -o " << path << " " << command << " "
+       << categories_;
   profiler::BashCommandRunner atrace(kAtraceExecutable);
   atrace.Run(args.str(), nullptr);
+}
+
+std::string AtraceManager::BuildSupportedCategoriesString() {
+  string output;
+  profiler::BashCommandRunner atrace(kAtraceExecutable);
+  atrace.Run("--list_categories", &output);
+  std::set<std::string> supportedCategories = ParseListCategoriesOutput(output);
+  std::ostringstream categories;
+  for (int i = 0; i < kCategoriesCount; i++) {
+    if (supportedCategories.find(string(kCategories[i])) !=
+        supportedCategories.end()) {
+      categories << " " << kCategories[i];
+    }
+  }
+  return categories.str();
+}
+
+std::set<std::string> AtraceManager::ParseListCategoriesOutput(
+    const std::string &output) {
+  string category;
+  std::set<std::string> supportedCategories;
+  std::istringstream categoriesList(output);
+  while (getline(categoriesList, category, '\n')) {
+    std::string name;
+    Tokenizer tokenizer = Tokenizer{category, " - "};
+    if (tokenizer.GetNextToken(&name)) {
+      supportedCategories.emplace(name);
+    }
+  }
+  return supportedCategories;
 }
 
 void AtraceManager::DumpData() {

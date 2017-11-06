@@ -21,6 +21,7 @@
 #include <mutex>
 #include <string>
 #include <thread>
+#include <set>
 
 #include "utils/clock.h"
 
@@ -36,11 +37,7 @@ struct AtraceProfilingMetadata {
 
 class AtraceManager {
  public:
-  explicit AtraceManager(const Clock &clock, int dump_data_interval_ms)
-      : clock_(clock),
-        dump_data_interval_ms_(dump_data_interval_ms),
-        dumps_created_(0),
-        is_profiling_(false) {}
+  explicit AtraceManager(const Clock &clock, int dump_data_interval_ms);
   ~AtraceManager();
 
   // Returns true if profiling of app |app_name| was started successfully.
@@ -64,6 +61,7 @@ class AtraceManager {
   AtraceProfilingMetadata profiled_app_;
   std::mutex start_stop_mutex_;  // Protects atrace start/stop
   std::thread atrace_thread_;
+  std::string categories_;
   int dump_data_interval_ms_;
   int dumps_created_;  // Incremented by the atrace_thread_.
   bool is_profiling_;  // Writen to by main thread, read from by atrace thread.
@@ -89,9 +87,20 @@ class AtraceManager {
   bool CombineFiles(const std::string &combine_file_prefix, int count,
                     const std::string &output_path);
 
+  // Runs --list_categories on connected device/emulator. Only categories that
+  // are supported by the device / emulator are returned. This set of
+  // categories is used to restrict what categories are selected when running
+  // atrace.
+  virtual std::string BuildSupportedCategoriesString();
+
   // Returns the trace_path with the current count of dumps. Then increments the
   // number of dumps captured.
   std::string GetNextDumpPath();
+
+ protected:
+  // Takes the output from atrace --list_categories parses the output and
+  // returns the set of supported categories.
+  std::set<std::string> ParseListCategoriesOutput(const std::string &output);
 };
 }  // namespace profiler
 
