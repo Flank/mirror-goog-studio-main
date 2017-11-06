@@ -291,6 +291,22 @@ public class FixStackFramesTransformTest {
         assertThatZip(output.resolve("input.jar").toFile()).doesNotContain("LICENSE");
     }
 
+    @Test
+    public void testNonIncrementalClearsOutput()
+            throws IOException, TransformException, InterruptedException {
+        Files.write(output.resolve("to-be-removed"), "".getBytes());
+
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setTransformOutputProvider(outputProvider)
+                        .setIncremental(false)
+                        .build();
+        FixStackFramesTransform transform =
+                new FixStackFramesTransform(ImmutableList::of, "", null);
+        transform.transform(invocation);
+        assertThat(output.toFile().list()).named("output artifacts").hasLength(0);
+    }
+
     /** Loads all classes from jars, to make sure no VerifyError is thrown. */
     private static void assertAllClassesAreValid(@NonNull Path... jars)
             throws IOException, ClassNotFoundException {

@@ -230,6 +230,9 @@ public class FixStackFramesTransform extends Transform {
                 Preconditions.checkNotNull(transformInvocation.getOutputProvider());
 
         boolean incremental = transformInvocation.isIncremental();
+        if (!incremental) {
+            outputProvider.deleteAll();
+        }
 
         try {
             for (TransformInput input : transformInvocation.getInputs()) {
