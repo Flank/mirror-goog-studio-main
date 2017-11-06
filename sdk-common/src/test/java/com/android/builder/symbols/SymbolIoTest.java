@@ -161,6 +161,19 @@ public class SymbolIoTest {
     }
 
     @Test
+    public void testInvalidType() throws Exception {
+        String r = "INVALID_TYPE xml LimitedSizeLinearLayout 0x7f010000\n";
+        File file = mTemporaryFolder.newFile();
+        Files.write(r, file, Charsets.UTF_8);
+        try {
+            SymbolTable table = SymbolIo.readFromAapt(file, null);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            assertThat(e.getMessage()).contains("LimitedSizeLinearLayout");
+        }
+    }
+
+    @Test
     public void writeReadSymbolFile() throws Exception {
         SymbolTable original =
                 SymbolTable.builder()

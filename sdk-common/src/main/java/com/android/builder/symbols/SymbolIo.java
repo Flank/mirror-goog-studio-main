@@ -232,6 +232,9 @@ public final class SymbolIo {
         String typeName = line.substring(0, pos);
 
         SymbolJavaType type = SymbolJavaType.getEnum(typeName);
+        if (type == null) {
+            throw new IOException("Invalid symbol type " + typeName);
+        }
         int pos2 = line.indexOf(' ', pos + 1);
         String className = line.substring(pos + 1, pos2);
 
