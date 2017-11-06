@@ -19,6 +19,7 @@ package com.android.builder.symbols;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.android.annotations.NonNull;
 import com.android.resources.ResourceType;
@@ -143,6 +144,21 @@ public class SymbolIoTest {
         assertEquals(expected, table);
     }
 
+    @Test
+    public void testDoesNotThrowNumberFormatExeption() throws Exception {
+        String r =
+                "int[] styleable LimitedSizeLinearLayout { 0x7f010000, 0x7f010001 }\n"
+                        + "int styleable LimitedSizeLinearLayout_a NOT_AN_INT!\n"
+                        + "int styleable LimitedSizeLinearLayout_b 0\n";
+        File file = mTemporaryFolder.newFile();
+        Files.write(r, file, Charsets.UTF_8);
+        try {
+            SymbolTable table = SymbolIo.readFromAapt(file, null);
+            fail("Expected IOException");
+        } catch (IOException e) {
+            assertThat(e.getMessage()).contains("LimitedSizeLinearLayout");
+        }
+    }
 
     @Test
     public void writeReadSymbolFile() throws Exception {

@@ -255,7 +255,7 @@ public final class SymbolIo {
         void handle(@NonNull SymbolData data);
 
         @NonNull
-        List<String> getChildrenNames();
+        List<String> getChildrenNames() throws IOException;
     }
 
     private abstract static class BaseHandler implements StyleableIndexHandler {
@@ -326,9 +326,13 @@ public final class SymbolIo {
 
         @NonNull
         @Override
-        public List<String> getChildrenNames() {
+        public List<String> getChildrenNames() throws IOException {
             // sort the data by their values.
-            allDatas.sort(Comparator.comparingInt(o -> Integer.parseInt(o.value)));
+            try {
+                allDatas.sort(Comparator.comparingInt(o -> Integer.parseInt(o.value)));
+            } catch (NumberFormatException e) {
+                throw new IOException(e);
+            }
 
             // now extract the names only, and remove the prefix
             return allDatas.stream().map(this::computeName).collect(Collectors.toList());
