@@ -50,6 +50,7 @@ import com.android.sdklib.repository.AndroidSdkHandler;
 import com.android.sdklib.repository.LoggerProgressIndicatorWrapper;
 import com.android.sdklib.repository.installer.SdkInstallerUtil;
 import com.android.sdklib.repository.meta.DetailsTypes;
+import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.android.utils.StdLogger;
 import com.google.common.base.Preconditions;
@@ -88,7 +89,7 @@ public class DefaultSdkLoader implements SdkLoader {
             @NonNull File sdkLocation) {
         if (sLoader == null) {
             sLoader = new DefaultSdkLoader(sdkLocation);
-        } else if (!sdkLocation.equals(sLoader.mSdkLocation)) {
+        } else if (!FileUtils.isSameFile(sdkLocation, sLoader.mSdkLocation)) {
             throw new IllegalStateException(String.format(
                     "%s already created using %s; cannot also use %s",
                     DefaultSdkLoader.class.getSimpleName(), sLoader.mSdkLocation, sdkLocation));
