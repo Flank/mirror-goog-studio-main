@@ -39,6 +39,7 @@ import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.sdklib.BuildToolInfo.SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS;
 
 import android.databinding.tool.DataBindingBuilder;
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.ProguardFiles;
@@ -1355,8 +1356,22 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
+    public File getAnnotationZipFile() {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                "annotations",
+                getVariantConfiguration().getDirName(),
+                SdkConstants.FN_ANNOTATIONS_ZIP);
+    }
+
+    @NonNull
+    @Override
     public File getTypedefFile() {
-        return new File(globalScope.getIntermediatesDir(), "typedefs.txt");
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                "extractedTypedefs",
+                getVariantConfiguration().getDirName(),
+                "typedefs.txt");
     }
 
     @NonNull

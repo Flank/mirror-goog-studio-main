@@ -24,11 +24,9 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.AndroidConfig;
-import com.android.build.gradle.internal.LibraryTaskManager;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -106,6 +104,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
         return lintClassPath;
     }
 
+    @NonNull
     @Override
     @PathSensitive(PathSensitivity.NAME_ONLY)
     @InputFiles
@@ -147,10 +146,6 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
     @OutputFile
     public File getTypedefFile() {
         return typedefFile;
-    }
-
-    public void setTypedefFile(File typedefFile) {
-        this.typedefFile = typedefFile;
     }
 
     /**
@@ -283,9 +278,8 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
 
     public static class ConfigAction implements TaskConfigAction<ExtractAnnotations> {
 
-        @NonNull private AndroidConfig extension;
-        @NonNull private VariantScope variantScope;
-        private File outputFile;
+        @NonNull private final AndroidConfig extension;
+        @NonNull private final VariantScope variantScope;
 
         public ConfigAction(
                 @NonNull AndroidConfig extension,
@@ -316,13 +310,21 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                             + variantConfig.getFullName()
                             + " variant into the archive file");
             task.setGroup(BasePlugin.BUILD_GROUP);
-            task.setDestinationDir(
-                    new File(
-                            variantScope.getGlobalScope().getIntermediatesDir(),
-                            LibraryTaskManager.ANNOTATIONS + "/" + variantConfig.getDirName()));
-            outputFile = new File(task.getDestinationDir(), SdkConstants.FN_ANNOTATIONS_ZIP);
-            task.setOutput(outputFile);
-            task.setTypedefFile(variantScope.getTypedefFile());
+
+            File annotationsZip = variantScope.getAnnotationZipFile();
+
+            task.setDestinationDir(annotationsZip.getParentFile());
+            task.setOutput(annotationsZip);
+            // publish intermediate annotation data
+            variantScope.addTaskOutput(
+                    TaskOutputHolder.TaskOutputType.ANNOTATIONS_ZIP, annotationsZip, getName());
+
+            File typeDefFile = variantScope.getTypedefFile();
+            task.typedefFile = typeDefFile;
+            variantScope.addTaskOutput(
+                    TaskOutputHolder.TaskOutputType.ANNOTATIONS_TYPEDEF_FILE,
+                    typeDefFile,
+                    getName());
 
             // FIXME Replace with TaskOutputHolder.AnchorOutputType.ALL_CLASSES
             // https://issuetracker.google.com/64344432

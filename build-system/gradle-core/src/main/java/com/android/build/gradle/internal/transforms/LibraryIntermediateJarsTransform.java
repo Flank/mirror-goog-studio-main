@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.gradle.api.file.FileCollection;
 
 /**
  * A Transforms that takes the project/project local streams for CLASSES and RESOURCES,
@@ -64,7 +65,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     public LibraryIntermediateJarsTransform(
             @NonNull File mainClassLocation,
             @NonNull File resJarLocation,
-            @Nullable File typedefRecipe,
+            @Nullable FileCollection typedefRecipe,
             @NonNull String packageName,
             boolean packageBuildConfig) {
         super(mainClassLocation, null, typedefRecipe, packageName, packageBuildConfig);
@@ -92,7 +93,7 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
     @Override
     public void transform(@NonNull TransformInvocation invocation)
             throws TransformException, InterruptedException, IOException {
-        if (typedefRecipe != null && !typedefRecipe.exists()) {
+        if (typedefRecipe != null && !typedefRecipe.getSingleFile().exists()) {
             throw new IllegalStateException("Type def recipe not found: " + typedefRecipe);
         }
         final boolean incrementalDisabled = !invocation.isIncremental();
@@ -174,7 +175,9 @@ public class LibraryIntermediateJarsTransform extends LibraryBaseTransform {
                                         || META_INF_PATTERN.matcher(archivePath).matches())
                                 && checkEntry(excludePatterns, archivePath);
         TypedefRemover typedefRemover =
-                typedefRecipe != null ? new TypedefRemover().setTypedefFile(typedefRecipe) : null;
+                typedefRecipe != null
+                        ? new TypedefRemover().setTypedefFile(typedefRecipe.getSingleFile())
+                        : null;
 
         handleJarOutput(mainClassInputs, mainClassLocation, filter, typedefRemover);
     }

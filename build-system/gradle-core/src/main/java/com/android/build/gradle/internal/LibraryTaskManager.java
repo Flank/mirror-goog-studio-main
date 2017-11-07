@@ -18,7 +18,6 @@ package com.android.build.gradle.internal;
 
 import static com.android.SdkConstants.FD_AIDL;
 import static com.android.SdkConstants.FD_JNI;
-import static com.android.SdkConstants.FN_ANNOTATIONS_ZIP;
 import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.SdkConstants.FN_INTERMEDIATE_FULL_JAR;
 import static com.android.SdkConstants.FN_INTERMEDIATE_RES_JAR;
@@ -67,7 +66,6 @@ import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
-import com.android.utils.StringHelper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -328,12 +326,7 @@ public class LibraryTaskManager extends TaskManager {
                                     tasks,
                                     new ExtractAnnotations.ConfigAction(extension, variantScope));
 
-            // publish intermediate annotation data
-            variantScope.addTaskOutput(
-                    TaskOutputType.ANNOTATIONS_ZIP,
-                    // FIXME with proper value?
-                    new File(variantBundleDir, FN_ANNOTATIONS_ZIP),
-                    extractAnnotationsTask.getName());
+
 
             bundle.dependsOn(extractAnnotationsTask.getName());
         } else {
@@ -496,8 +489,10 @@ public class LibraryTaskManager extends TaskManager {
                                 new LibraryAarJarsTransform(
                                         new File(variantBundleDir, FN_CLASSES_JAR),
                                         new File(variantBundleDir, LIBS_FOLDER),
-                                        extractAnnotationsTask != null
-                                                ? variantScope.getTypedefFile()
+                                        variantScope.hasOutput(
+                                                        TaskOutputType.ANNOTATIONS_TYPEDEF_FILE)
+                                                ? variantScope.getOutput(
+                                                        TaskOutputType.ANNOTATIONS_TYPEDEF_FILE)
                                                 : null,
                                         packageName,
                                         extension.getPackageBuildConfig());
@@ -565,10 +560,9 @@ public class LibraryTaskManager extends TaskManager {
                 variantScope.getOutput(TaskOutputType.LIBRARY_AND_LOCAL_JARS_JNI),
                 prependToCopyPath(SdkConstants.FD_JNI));
         bundle.from(variantBundleDir);
-        bundle.from(
-                FileUtils.join(
-                        intermediatesDir,
-                        StringHelper.toStrings(ANNOTATIONS, variantDirectorySegments)));
+        if (variantScope.hasOutput(TaskOutputType.ANNOTATIONS_ZIP)) {
+            bundle.from(variantScope.getOutput(TaskOutputType.ANNOTATIONS_ZIP));
+        }
         bundle.from(
                 variantScope.getOutput(TaskOutputType.LIBRARY_ASSETS),
                 prependToCopyPath(SdkConstants.FD_ASSETS));

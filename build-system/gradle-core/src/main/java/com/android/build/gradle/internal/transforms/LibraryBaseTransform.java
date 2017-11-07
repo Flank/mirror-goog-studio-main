@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import org.gradle.api.file.FileCollection;
 
 public abstract class LibraryBaseTransform extends Transform {
 
@@ -64,8 +65,7 @@ public abstract class LibraryBaseTransform extends Transform {
     @NonNull
     protected final String packagePath;
     protected final boolean packageBuildConfig;
-    @Nullable
-    protected final File typedefRecipe;
+    @Nullable protected final FileCollection typedefRecipe;
 
     @Nullable
     protected List<ExcludeListProvider> excludeListProviders;
@@ -73,7 +73,7 @@ public abstract class LibraryBaseTransform extends Transform {
     public LibraryBaseTransform(
             @NonNull File mainClassLocation,
             @Nullable File localJarsLocation,
-            @Nullable File typedefRecipe,
+            @Nullable FileCollection typedefRecipe,
             @NonNull String packageName,
             boolean packageBuildConfig) {
         this.mainClassLocation = mainClassLocation;
