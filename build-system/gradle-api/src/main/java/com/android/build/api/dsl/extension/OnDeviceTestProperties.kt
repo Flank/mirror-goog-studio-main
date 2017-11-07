@@ -25,7 +25,12 @@ import org.gradle.api.Incubating
 /** Partial extension properties for modules that contain on-device tests  */
 @Incubating
 interface OnDeviceTestProperties {
-    /** Adb options.  */
+    /**
+     * Specifies APK install options for the
+     * [Android Debug Bridge (ADB)](https://d.android.com/studio/command-line/adb.html).
+     *
+     * @see com.android.build.api.dsl.options.AdbOptions
+     */
     val adbOptions: AdbOptions
 
     fun adbOptions(action: Action<AdbOptions>)

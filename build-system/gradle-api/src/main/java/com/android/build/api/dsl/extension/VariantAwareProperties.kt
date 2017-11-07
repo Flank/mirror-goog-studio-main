@@ -50,10 +50,46 @@ interface VariantAwareProperties : DefaultConfig {
 
     fun signingConfigs(action: Action<NamedDomainObjectContainer<SigningConfig>>)
 
-    /** variant filters */
+    /**
+     * Specifies variants the Android plugin should include or remove from your Gradle project.
+     *
+     * By default, the Android plugin creates a build variant for every possible combination of
+     * the product flavors and build types that you configure, and adds them to your Gradle project.
+     * However, there may be certain build variants that either you do not need or do not make sense
+     * in the context of your project. You can remove certain build variant configurations by
+     * [creating a variant filter](https://d.android.com/studio/build/build-variants.html#filter-variants)
+     * in your module-level `build.gradle` file.
+     *
+     * The following example tells the plugin to ignore all variants that combine the "dev"
+     * product flavor, which you can configure to
+     * [optimize build speeds](https://d.android.com/studio/build/optimize-your-build.html#create_dev_variant)
+     * during development, and the "release" build type:
+     *
+     * ```
+     * android {
+     *     ...
+     *     variantFilter { variant ->
+     *
+     *         def buildTypeName = variant.buildType*.name
+     *         def flavorName = variant.flavors*.name
+     *
+     *         if (flavorName.contains("dev") && buildTypeName.contains("release")) {
+     *             // Tells Gradle to ignore each variant that satisfies the conditions above.
+     *             setIgnore(true)
+     *         }
+     *     }
+     * }
+     * ```
+     *
+     * During subsequent builds, Gradle ignores any build variants that meet the conditions you
+     * specify. If you're using [Android Studio](https://d.android.com/studio/index.html), those
+     * variants no longer appear in the drop down menu when you click
+     * __Build > Select Build Variant__ from the menu bar.
+     *
+     * @see com.android.build.api.variant.VariantFilter
+     */
     var variantFilters: MutableList<Action<VariantFilter>>
 
-    /** registers a new variant filter */
     fun variantFilter(action: Action<VariantFilter>)
 
     /** pre variant callbacks  */
@@ -71,6 +107,10 @@ interface VariantAwareProperties : DefaultConfig {
     fun postVariantCallback(action: Action<Collection<Variant>>)
 
     @Deprecated("Use flavorDimensions")
+    /**
+     * @suppress
+     * @see [flavorDimensions]
+     * */
     var flavorDimensionList: MutableList<String>
 
     /** Default config, shared by all flavors.  */

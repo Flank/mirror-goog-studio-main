@@ -22,7 +22,30 @@ import org.gradle.api.Incubating
 @Incubating
 interface LibraryExtension : BuildProperties, VariantOrExtensionProperties, VariantAwareProperties, EmbeddedTestProperties, OnDeviceTestProperties, AndroidExtension {
 
-    /** Name of the variant to publish.  */
+    /**
+     * Specifies the version of the module to publish externally. This property is generally useful
+     * only to library modules that you intend to publish to a remote repository, such as Maven.
+     *
+     * If you plan to only consume your library module locally, you do not need to configure this
+     * property. Android plugin 3.0.0 and higher use
+     * [variant-aware dependency resolution](https://d.android.com/studio/build/gradle-plugin-3-0-0-migration.html#variant_aware)
+     * to automatically match the variant of the producer to that of the
+     * consumer. That is, when publishing a module to another local module, the plugin no longer
+     * uses this property to determine which version of the module to publish to the consumer.
+     *
+     * For library modules that you intend to publish to a remote repository, such as Maven, the
+     * Android plugin publishes the release version of the module by default. You can use this
+     * property to specify a different build type that the plugin should publish. If you also
+     * configure [product flavors](https://d.android.com/studio/build/build-variants.html#product-flavors),
+     * you need to specify the name of the build variant you want the plugin to publish, as shown
+     * below:
+     *
+     * ```
+     * // Specifies the 'demoDebug' build variant as the default variant
+     * // that the plugin should publish to external consumers.
+     * defaultPublishConfig 'demoDebug'
+     * ```
+     */
     var defaultPublishConfig: String
 
     /** Aidl files to package in the aar.  */

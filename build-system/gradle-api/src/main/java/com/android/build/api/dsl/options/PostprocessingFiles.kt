@@ -23,21 +23,64 @@ import org.gradle.api.Incubating
 interface PostprocessingFiles {
 
     /**
-     * The ProGuard configuration files.
+     * Specifies the ProGuard configuration files that the plugin should use.
      *
-     * There are 2 default rules files
-     *  * proguard-android.txt
-     *  * proguard-android-optimize.txt
+     * There are two ProGuard rules files that ship with the Android plugin and are used by
+     * default:
      *
+     * *    `proguard-android.txt`
+     * *    `proguard-android-optimize.txt`
      *
-     * They are located in the SDK. Using `getDefaultProguardFile(String filename)`
-     * will return the full path to the files. They are identical except for enabling optimizations.
+     * The following sample uses a ProGuard rules file to enable code shrinking for the release
+     * build type:
+     *
+     * ```
+     * android {
+     *     buildTypes {
+     *         release {
+     *             minifyEnabled true
+     *             proguardFiles getDefaultProguardFile('proguard-android.txt')
+     *         }
+     *     }
+     * }
+     * ```
+     *
+     * When you build your project, the plugin creates a copy of the settings file in
+     * `project-root/build/intermediates/proguard-files/`. For even more code shrinking, try the
+     * `proguard-android-optimize.txt` file located in the same directory. It includes the same
+     * default ProGuard rules, but with other optimizations that perform analysis at the bytecode
+     * level—inside and across methods—to reduce your APK size further and help it run faster.
+     *
+     * To add ProGuard rules that are specific to each build variant, add another `proguardFiles`
+     * property in the corresponding [productFlavor][com.android.build.api.dsl.model.ProductFlavor]
+     * block. For example, the following Gradle file adds `flavor2-rules.pro` to the flavor2 product
+     * flavor. Now flavor2 uses both ProGuard rules files because those from the release block are
+     * also applied.
+     *
+     * ```
+     * android {
+     *     buildTypes {
+     *         release {...}
+     *     }
+     *     productFlavors {
+     *         flavor1 {}
+     *         flavor2 {
+     *             proguardFile 'flavor2-rules.pro'
+     *         }
+     *     }
+     * }
+     * ```
+     *
+     * To learn more about how to remove unused code and resources from your APK, read
+     * [Shrink Your Code and Resources](https://developer.android.com/studio/build/shrink-code.html).
+     *
+     * @return A non-null collection of files.
+     * @see testProguardFiles
      */
     var proguardFiles: MutableList<Any>
 
     /**
-     * Specifies proguard rule files to be used when processing test code.
-     *
+     * Specifies proguard rule files that you want to use when processing test code.
      *
      * Test code needs to be processed to apply the same obfuscation as was done to main code.
      */
@@ -50,9 +93,7 @@ interface PostprocessingFiles {
      * This proguard rule file will then be used by any application project that consume the AAR
      * (if proguard is enabled).
      *
-     *
      * This allows AAR to specify shrinking or obfuscation exclude rules.
-     *
      *
      * This is only valid for Library project. This is ignored in Application project.
      */

@@ -87,16 +87,18 @@ interface BuildTypeOrVariant {
     var embedMicroApp: Boolean
 
     /**
-     * Whether to crunch PNGs.
+     * Specifies whether to crunch PNG files.
      *
-     * This will reduce the size of the APK if PNGs resources are not already optimally
-     * compressed, at the cost of extra time to build.
+     * Setting this property to `true` reduces the size of PNG resources that are not already
+     * optimally compressed. However, this process increases build times. So, to reduce your APK
+     * size and its build time, try
+     * [converting your images to WebP](https://developer.android.com/studio/write/convert-webp.html#convert_images_to_webp).
      *
+     * __Note:__ PNG crunching is enabled by default in the release build type and disabled by
+     * default in the debug build type.
      *
-     * PNG crunching is enabled by default in the release build type and disabled by default in
-     * the debug build type.
+     * @since 3.0.0
      */
-    /** Sets whether to crunch PNGs  */
     var crunchPngs: Boolean
 
     /** Configures the post-processing options with the given action.  */
