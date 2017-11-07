@@ -499,6 +499,12 @@ public class PerformanceTestProjects {
                 "autoCommon\\s*: 'com.google.auto:auto-common:\\d+.\\d+'",
                 "autoCommon: 'com.google.auto:auto-common:0.6'");
 
+        // Hack for making test succeed with optional dependency resolution bug
+        TestFileUtils.searchAndReplace(
+                project.file("dependencies.gradle"),
+                "braintreesdk\\s*: 'com.braintreepayments.api:braintree:\\d+.\\d+.\\d+'",
+                "braintreesdk: 'com.braintreepayments.api:braintree:2.3.12'");
+
         TestFileUtils.appendToFile(
                 project.file("dependencies.gradle"),
                 "\n\n// Fixes for support lib versions.\n"
