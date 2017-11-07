@@ -150,6 +150,10 @@ public interface TaskOutputHolder {
         ANNOTATIONS_TYPEDEF_FILE,
         // the associated proguard file
         ANNOTATIONS_PROGUARD,
+        // The classes.jar for the AAR
+        AAR_MAIN_JAR,
+        // The libs/ directory for the AAR, containing secondary jars
+        AAR_LIBS_DIRECTORY,
 
         ABI_PACKAGED_SPLIT,
         FULL_APK,

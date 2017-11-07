@@ -1581,15 +1581,6 @@ public abstract class TaskManager {
 
         postJavacCreation(tasks, scope);
 
-        if (extension.getDataBinding().isEnabled()) {
-            // the data binding artifact is created by the annotation processor, so we register this
-            // task output (which also publishes it) with javac as the generating task.
-            scope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.DATA_BINDING_ARTIFACT,
-                    scope.getBundleFolderForDataBinding(),
-                    javacTask.getName());
-        }
-
         return javacTask;
     }
 

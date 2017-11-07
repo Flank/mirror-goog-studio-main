@@ -191,6 +191,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     File getManifestKeepListProguardFile();
 
     @NonNull
+    File getConsumerProguardFile();
+
+    @NonNull
     File getMainDexListFile();
 
     @NonNull
@@ -256,6 +259,12 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getPackagedAidlDir();
+
+    @NonNull
+    File getAarClassesJar();
+
+    @NonNull
+    File getAarLibsDirectory();
 
     @NonNull
     File getAnnotationZipFile();
@@ -331,9 +340,6 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
 
     @NonNull
     File getMicroApkResDirectory();
-
-    @NonNull
-    File getBaseBundleDir();
 
     @NonNull
     File getAarLocation();

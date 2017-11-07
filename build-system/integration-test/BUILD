@@ -82,6 +82,7 @@ TEST_DEPS = [
     "//tools/base/third_party:org.ow2.asm_asm",
     "//tools/base/third_party:org.ow2.asm_asm-tree",
     "//tools/base/third_party:org.smali_dexlib2",
+    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
 ]
 
 TEST_DATA = [

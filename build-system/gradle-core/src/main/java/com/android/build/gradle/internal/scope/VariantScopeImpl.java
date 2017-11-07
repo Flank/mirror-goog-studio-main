@@ -20,7 +20,7 @@ import static com.android.SdkConstants.FD_COMPILED;
 import static com.android.SdkConstants.FD_MERGED;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
-import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
+import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConfiguration.POSTPROCESSING_BLOCK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
@@ -38,7 +38,6 @@ import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.sdklib.BuildToolInfo.SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -1134,6 +1133,33 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return compile.minus(pkg);
     }
 
+    /**
+     * An intermediate directory for this variant.
+     *
+     * <p>Of the form build/intermediates/dirName/variant/
+     */
+    @NonNull
+    private File intermediate(@NonNull String directoryName) {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                directoryName,
+                getVariantConfiguration().getDirName());
+    }
+
+    /**
+     * An intermediate file for this variant.
+     *
+     * <p>Of the form build/intermediates/directoryName/variant/filename
+     */
+    @NonNull
+    private File intermediate(@NonNull String directoryName, @NonNull String fileName) {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                directoryName,
+                getVariantConfiguration().getDirName(),
+                fileName);
+    }
+
     @Override
     @NonNull
     public File getIntermediateJarOutputFolder() {
@@ -1153,6 +1179,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public File getManifestKeepListProguardFile() {
         return new File(globalScope.getIntermediatesDir(), "multi-dex/" + getVariantConfiguration().getDirName()
                 + "/manifest_keep.txt");
+    }
+
+    @NonNull
+    @Override
+    public File getConsumerProguardFile() {
+        return intermediate("publish-proguard", SdkConstants.FN_PROGUARD_TXT);
     }
 
     @Override
@@ -1346,7 +1378,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getPackagedAidlDir() {
-        return new File(getBaseBundleDir(), "aidl");
+        return intermediate("packaged-aidl");
+    }
+
+    @NonNull
+    @Override
+    public File getAarClassesJar() {
+        return intermediate("packaged-classes", FN_CLASSES_JAR);
+    }
+
+    @NonNull
+    @Override
+    public File getAarLibsDirectory() {
+        return intermediate("packaged-classes", SdkConstants.LIBS_FOLDER);
     }
 
     @NonNull
@@ -1425,7 +1469,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getBundleFolderForDataBinding() {
-        return new File(getBaseBundleDir(), DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
+        return intermediate("data-binding-bundle");
     }
 
     @Override
@@ -1624,23 +1668,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public void setManifestProcessorTask(
             AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask) {
         this.manifestProcessorTask = manifestProcessorTask;
-    }
-
-    @NonNull
-    @Override
-    public File getBaseBundleDir() {
-        // The base bundle dir must be recomputable from outside of this project.
-        // DirName is a set for folders (flavor1/flavor2/buildtype) which is difficult to
-        // recompute if all you have is the fullName (flavor1Flavor2Buildtype) as it would
-        // require string manipulation which could break if a flavor is using camelcase in
-        // its name (myFlavor).
-        // So here we use getFullName directly. It's a direct match with the externally visible
-        // variant name (which is == to getFullName), and set as the published artifact's
-        // classifier.
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                DIR_BUNDLES,
-                getVariantConfiguration().getFullName());
     }
 
     @NonNull
