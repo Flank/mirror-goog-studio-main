@@ -470,6 +470,10 @@ message AllocationSnapshotRequest {
   // as the end_time, without having to special case an invalid
   // duration value.
   int64 end_time = 5; // exclusive;
+
+  // Ignore |start_time| - include only objects that are still
+  // alive at point in time specified by |end_time|
+  bool live_objects_only = 6;
 }
 
 // Batched AllocationEvents to minimize number of grpc
