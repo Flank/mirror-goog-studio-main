@@ -15,8 +15,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-<#if (parentActivityClass != "" && minApiLevel lt 16)>import android.support.v4.app.NavUtils;</#if>
 <#if parentActivityClass != "">
+import android.support.v4.app.NavUtils;
 import ${actionBarClassFqcn};
 import android.view.MenuItem;
 </#if>
@@ -98,7 +98,7 @@ public class ${CollectionName}Activity extends ${superClass} {
             //
             // http://developer.android.com/design/patterns/navigation.html#up-vs-back
             //
-            ${(minApiLevel lt 16)?string('NavUtils.','')}navigateUpFromSameTask(this);
+            NavUtils.navigateUpFromSameTask(this);
             return true;
         }
         return super.onOptionsItemSelected(item);

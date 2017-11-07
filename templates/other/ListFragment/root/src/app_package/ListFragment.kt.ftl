@@ -18,23 +18,22 @@ import ${kotlinEscapedPackageName}.dummy.DummyContent.DummyItem
 
 /**
  * A fragment representing a list of Items.
- * <p />
- * Activities containing this fragment MUST implement the [OnListFragmentInteractionListener]
- * interface.
+ * Activities containing this fragment MUST implement the
+ * [${className}.OnListFragmentInteractionListener] interface.
  */
 class ${className} : Fragment() {
 
     // TODO: Customize parameters
-    private var mColumnCount = 1
+    private var columnCount = 1
 
-    private var mListener: OnListFragmentInteractionListener? = null
+    private var listener: OnListFragmentInteractionListener? = null
 
 <#if includeFactory>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (arguments != null) {
-            mColumnCount = arguments.getInt(ARG_COLUMN_COUNT)
+        arguments?.let {
+            columnCount = it.getInt(ARG_COLUMN_COUNT)
         }
     }
 
@@ -45,13 +44,13 @@ class ${className} : Fragment() {
 
         // Set the adapter
         if (view is RecyclerView) {
-            val context = view.getContext()
-            if (mColumnCount <= 1) {
-                view.layoutManager = LinearLayoutManager(context)
-            } else {
-                view.layoutManager = GridLayoutManager(context, mColumnCount)
+            with(view) {
+                layoutManager = when {
+                    columnCount <= 1 -> LinearLayoutManager(context)
+                    else -> GridLayoutManager(context, columnCount)
+                }
+                adapter = ${adapterClassName}(DummyContent.ITEMS, listener)
             }
-            view.adapter = ${adapterClassName}(DummyContent.ITEMS, mListener)
         }
         return view
     }
@@ -59,7 +58,7 @@ class ${className} : Fragment() {
     override fun onAttach(context: Context) {
         super.onAttach(context)
         if (context is OnListFragmentInteractionListener) {
-            mListener = context
+            listener = context
         } else {
             throw RuntimeException(context.toString() + " must implement OnListFragmentInteractionListener")
         }
@@ -67,7 +66,7 @@ class ${className} : Fragment() {
 
     override fun onDetach() {
         super.onDetach()
-        mListener = null
+        listener = null
     }
 
     /**
@@ -93,13 +92,13 @@ class ${className} : Fragment() {
         const val ARG_COLUMN_COUNT = "column-count"
 
         // TODO: Customize parameter initialization
-        fun newInstance(columnCount: Int): ${className} {
-            return ${className}().apply {
-                arguments = Bundle().apply {
-                    putInt(ARG_COLUMN_COUNT, columnCount)
+        @JvmStatic
+        fun newInstance(columnCount: Int) =
+                ${className}().apply {
+                    arguments = Bundle().apply {
+                        putInt(ARG_COLUMN_COUNT, columnCount)
+                    }
                 }
-            }
-        }
     }
 </#if>
 }
