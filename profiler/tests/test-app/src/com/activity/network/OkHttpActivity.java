@@ -39,7 +39,8 @@ public final class OkHttpActivity extends Activity {
         OKHTTP3_POST("OKHTTP3POST"),
         OKHTTP2_GET("OKHTTP2GET"),
         OKHTTP2_POST("OKHTTP2POST"),
-        OKHTTP2_AND_OKHTTP3_GET("OKHTTP2ANDOKHTTP3GET");
+        OKHTTP2_AND_OKHTTP3_GET("OKHTTP2ANDOKHTTP3GET"),
+        NULL_THREAD_CLASS_LOADER("NULLTHREADCLASSLOADER");
         private final String myMethodName;
 
         Method(String name) {
@@ -119,6 +120,37 @@ public final class OkHttpActivity extends Activity {
         OkHttpClient client = new OkHttpClient();
         String url =
             Utils.getUrl(server.getPort(), "method", Method.OKHTTP2_AND_OKHTTP3_GET.myMethodName);
+        Request request = new Request.Builder().url(url).build();
+        InputStream inputStream = null;
+        try {
+            Response response = client.newCall(request).execute();
+            inputStream = response.body().byteStream();
+        } catch (IOException e) {
+            System.out.println("Error in connection " + e.toString());
+        }
+        System.out.println(Utils.readResponse(inputStream));
+        okhttp3.OkHttpClient client2 = new okhttp3.OkHttpClient();
+        okhttp3.Request request2 = new okhttp3.Request.Builder().url(url).build();
+        try {
+            okhttp3.Response response2 = client2.newCall(request2).execute();
+            inputStream = response2.body().byteStream();
+        } catch (IOException e) {
+            System.out.println("Error in connection " + e.toString());
+        }
+        System.out.println(Utils.readResponse(inputStream));
+        server.stop();
+    }
+
+    public void runOkHttp2AndOkHttp3WithThreadClassLoaderIsNull() {
+        SimpleWebServer server = new SimpleWebServer(Utils.getAvailablePort(), HANDLER);
+        server.start();
+        // Older versions of our instrumentation relied on a valid context class loader,
+        // but the newer versions should not be affected by this being null.
+        Thread.currentThread().setContextClassLoader(null);
+        OkHttpClient client = new OkHttpClient();
+        String url =
+                Utils.getUrl(
+                        server.getPort(), "method", Method.NULL_THREAD_CLASS_LOADER.myMethodName);
         Request request = new Request.Builder().url(url).build();
         InputStream inputStream = null;
         try {
