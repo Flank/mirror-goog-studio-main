@@ -38,7 +38,7 @@ filegroup(
 
 filegroup(
     name = "build-tools/latest",
-    srcs = [":build-tools/26.0.2"],
+    srcs = [":build-tools/27.0.1"],
     visibility = ["//visibility:public"],
 )
 

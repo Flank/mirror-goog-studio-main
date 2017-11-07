@@ -686,28 +686,6 @@ public class PluginDslTest {
                                 + "as each version of the Android Gradle Plugin now has a default version of the build tools.");
     }
 
-    @Test
-    public void testBuildToolsVersionForLegacyMultiDexTests() {
-        android.setBuildToolsVersion(AndroidBuilder.MIN_BUILD_TOOLS_REV.toString());
-        android.getDefaultConfig().setMultiDexEnabled(true);
-        android.getDefaultConfig().setMinSdkVersion(19);
-        plugin.createAndroidTasks(false);
-        Collection<SyncIssue> syncIssues =
-                ((SyncIssueHandler) plugin.getAndroidBuilder().getIssueReporter()).getSyncIssues();
-        assertThat(syncIssues).hasSize(1);
-        SyncIssue issue = Iterables.getOnlyElement(syncIssues);
-        assertThat(issue.getType()).isEqualTo(SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);
-        assertThat(issue.getSeverity()).isEqualTo(SyncIssue.SEVERITY_WARNING);
-        assertThat(issue.getMessage())
-                .isEqualTo(
-                        "Test APK for debugAndroidTest will be built with multidex disabled. "
-                                + "Legacy multidex tests require build tools 27.0.1. "
-                                + "Please update \"buildToolsVersion\" in build.gradle file. "
-                                + "Version currently being used is "
-                                + AndroidBuilder.DEFAULT_BUILD_TOOLS_REVISION
-                                + ".");
-    }
-
     public void checkProguardFiles(Map<String, List<String>> expected) {
         Map<String, VariantScope> variantMap = getVariantMap();
         for (Map.Entry<String, List<String>> entry : expected.entrySet()) {

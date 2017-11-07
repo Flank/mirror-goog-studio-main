@@ -16,13 +16,9 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
 import org.junit.AfterClass;
 import org.junit.ClassRule;
@@ -71,10 +67,7 @@ public class JarJarTest {
                         + "}\n");
 
         project.executor().run("clean", "assembleDebug");
-        AndroidProject model = project.model().ignoreSyncIssueWarnings().getSingle().getOnlyModel();
-        assertThat(model.getSyncIssues()).hasSize(1);
-        SyncIssue issue = model.getSyncIssues().iterator().next();
-        assertThat(issue).hasType(SyncIssue.TYPE_BUILD_TOOLS_TOO_LOW);
+        project.model().getSingle().getOnlyModel();
         verifyApk();
     }
 
