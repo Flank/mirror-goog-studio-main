@@ -22,13 +22,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.android.SdkConstants;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Random;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -125,9 +123,6 @@ public class FileCacheByPathTest {
 
     @Test
     public void generateManyRandomFiles() throws Exception {
-        // FIXME: Re-enable when the test stops failing on bots. See b/68665751
-        Assume.assumeFalse(SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS);
-
         for (int i = 0; i < 10; i++) {
             File fi = makeRandomFile();
             cache.add(fi);
