@@ -41,21 +41,21 @@ fun <T: Named> getNamed(namedList: Collection<T>, name: String): T? {
 }
 
 fun getAppVariant(variants: Collection<Variant>,
-        name: String): ApplicationVariant = getVariant(variants, name, ApplicationVariant::class.java)!!
+        name: String): ApplicationVariant = getVariant(variants, name, ApplicationVariant::class.java)
 
 fun getLibVariant(variants: Collection<Variant>,
-        name: String): LibraryVariant = getVariant(variants, name, LibraryVariant::class.java)!!
+        name: String): LibraryVariant = getVariant(variants, name, LibraryVariant::class.java)
 
 fun getAndroidTestVariant(variants: Collection<Variant>,
-        name: String):AndroidTestVariant = getVariant(variants, name, AndroidTestVariant::class.java)!!
+        name: String):AndroidTestVariant = getVariant(variants, name, AndroidTestVariant::class.java)
 
 fun getUnitTestVariant(variants: Collection<Variant>,
-        name: String): UnitTestVariant = getVariant(variants, name, UnitTestVariant::class.java)!!
+        name: String): UnitTestVariant = getVariant(variants, name, UnitTestVariant::class.java)
 
 fun <T : Variant> getVariant(
         variants: Collection<Variant>,
         name: String,
-        variantType: Class<T>): T? {
+        variantType: Class<T>): T {
     for (variant in variants) {
         if (variant.name == name) {
             Truth.assertThat(variant).isInstanceOf(variantType)
@@ -63,11 +63,8 @@ fun <T : Variant> getVariant(
         }
     }
 
-    Assert.fail(String.format("Could not find variant name %s. Existing variants: %s",
+    throw AssertionError(String.format("Could not find variant name %s. Existing variants: %s",
             name, variants.map { it.name }))
-
-    // this will never happen.
-    return null
 }
 
 fun <T: BaseExtension2> configure(extension: T, action: T.() -> Unit) {

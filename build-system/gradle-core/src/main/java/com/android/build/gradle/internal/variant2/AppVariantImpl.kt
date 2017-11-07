@@ -76,6 +76,6 @@ class AppVariantImpl(
     }
 
     override fun toString(): String {
-        return name
+        return "ApplicationVariant[$name]"
     }
 }

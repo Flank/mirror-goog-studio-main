@@ -252,6 +252,7 @@ class VariantBuilder<in E: BaseExtension2>(
         // map of generated variant by their type. Allow quick access when building the dispatcher
         val createdVariantMap = mutableMapOf<VariantType, Variant>()
 
+        // Use the properties as is for the first variant, but duplicate them for the rest
         var duplicateCommonProps = false
 
         for (factory in variantFactories) {
