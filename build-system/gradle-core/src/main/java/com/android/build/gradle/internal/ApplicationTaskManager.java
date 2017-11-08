@@ -264,11 +264,9 @@ public class ApplicationTaskManager extends TaskManager {
         if (java8LangSupport == VariantScope.Java8LangSupport.INVALID) {
             return;
         }
-        // Only warn for users of retrolambda and dexguard
+        // Only warn for users of retrolambda
         String pluginName = null;
-        if (java8LangSupport == VariantScope.Java8LangSupport.DEXGUARD) {
-            pluginName = "dexguard";
-        } else if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
+        if (java8LangSupport == VariantScope.Java8LangSupport.RETROLAMBDA) {
             pluginName = "me.tatarka.retrolambda";
         }
 

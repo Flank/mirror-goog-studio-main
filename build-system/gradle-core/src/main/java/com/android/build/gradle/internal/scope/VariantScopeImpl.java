@@ -2176,10 +2176,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             return Java8LangSupport.RETROLAMBDA;
         }
 
-        if (globalScope.getProject().getPlugins().hasPlugin("dexguard")) {
-            return Java8LangSupport.DEXGUARD;
-        }
-
         if (isD8Desugaring) {
             return Java8LangSupport.D8;
         }

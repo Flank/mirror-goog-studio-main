@@ -154,8 +154,6 @@ public class AnalyticsUtil {
         switch (type) {
             case RETROLAMBDA:
                 return GradleBuildVariant.Java8LangSupport.RETROLAMBDA;
-            case DEXGUARD:
-                return GradleBuildVariant.Java8LangSupport.DEXGUARD;
             case DESUGAR:
                 return GradleBuildVariant.Java8LangSupport.INTERNAL;
             case D8:
