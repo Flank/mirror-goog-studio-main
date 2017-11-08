@@ -384,9 +384,6 @@ public abstract class BaseVariantData implements TaskContainer {
         Preconditions.checkNotNull(javacTask);
 
         javacTask.source(folder);
-        // Disable incremental compilation when annotation processor is present. (b/65519025)
-        // TODO: remove once https://github.com/gradle/gradle/issues/2996 is fixed.
-        javacTask.getOptions().setIncremental(false);
         addJavaSourceFoldersToModel(folder.getDir());
     }
 
