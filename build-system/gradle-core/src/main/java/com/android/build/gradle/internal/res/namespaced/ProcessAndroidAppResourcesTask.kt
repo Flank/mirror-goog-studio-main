@@ -51,17 +51,17 @@ import java.io.File
 @CacheableTask
 open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
 
-    @get:InputFiles lateinit var manifestFileDirectory: FileCollection
-    @get:InputFiles lateinit var thisSubProjectStaticLibrary: FileCollection
-    @get:InputFiles lateinit var libraryDependencies: FileCollection
-    @get:InputFiles lateinit var sharedLibraryDependencies: FileCollection
+    @get:InputFiles lateinit var manifestFileDirectory: FileCollection private set
+    @get:InputFiles lateinit var thisSubProjectStaticLibrary: FileCollection private set
+    @get:InputFiles lateinit var libraryDependencies: FileCollection private set
+    @get:InputFiles lateinit var sharedLibraryDependencies: FileCollection private set
 
-    @get:OutputDirectory lateinit var aaptIntermediateDir: File
-    @get:OutputDirectory lateinit var rClassSource: File
-    @get:OutputFile lateinit var resourceApUnderscore: File
+    @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
+    @get:OutputDirectory lateinit var rClassSource: File private set
+    @get:OutputFile lateinit var resourceApUnderscore: File private set
 
-    @get:Internal var fileCache: FileCache? = null
-    @get:Internal lateinit var outputScope: OutputScope
+    @get:Internal var fileCache: FileCache? = null; private set
+    @get:Internal lateinit var outputScope: OutputScope private set
 
     @TaskAction
     fun taskAction() {

@@ -50,21 +50,21 @@ import java.util.function.Supplier
 @CacheableTask
 open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
 
-    @get:InputFiles lateinit var manifestFileDirectory: FileCollection
-    @get:InputFiles lateinit var inputResourcesDir: FileCollection
-    @get:InputFiles lateinit var libraryDependencies: FileCollection
-    @get:InputFiles lateinit var sharedLibraryDependencies: FileCollection
-    @get:InputFiles @get:Optional var featureDependencies: FileCollection? = null
-    @get:InputFiles @get:Optional var tested: FileCollection? = null
+    @get:InputFiles lateinit var manifestFileDirectory: FileCollection private set
+    @get:InputFiles lateinit var inputResourcesDir: FileCollection private set
+    @get:InputFiles lateinit var libraryDependencies: FileCollection private set
+    @get:InputFiles lateinit var sharedLibraryDependencies: FileCollection private set
+    @get:InputFiles @get:Optional var featureDependencies: FileCollection? = null; private set
+    @get:InputFiles @get:Optional var tested: FileCollection? = null; private set
 
-    @get:Internal lateinit var packageForRSupplier: Supplier<String>
+    @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
     @get:Input val packageForR get() = packageForRSupplier.get()
 
-    @get:OutputDirectory lateinit var aaptIntermediateDir: File
-    @get:OutputDirectory @get:Optional var rClassSource: File? = null
-    @get:OutputFile lateinit var staticLibApk: File
+    @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
+    @get:OutputDirectory @get:Optional var rClassSource: File? = null; private set
+    @get:OutputFile lateinit var staticLibApk: File private set
 
-    @get:Internal var fileCache: FileCache? = null
+    @get:Internal var fileCache: FileCache? = null; private set
 
     @TaskAction
     fun taskAction() {
