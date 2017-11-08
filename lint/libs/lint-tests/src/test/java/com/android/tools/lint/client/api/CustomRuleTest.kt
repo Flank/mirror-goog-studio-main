@@ -25,7 +25,6 @@ import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Project
 import org.junit.ClassRule
-import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
@@ -246,14 +245,6 @@ class CustomRuleTest {
 
     @Test
     fun testLegacyLombokJavaLintRule() {
-        val expected = """
-project0: Warning: Lint found one or more custom checks using its older Java API; these checks are still run in compatibility mode, but this causes duplicated parsing, and in the next version lint will no longer include this legacy mode. Make sure the following lint detectors are upgraded to the new API: googleio.demo.MyDetector [ObsoleteLintCustomCheck]
-src/test/pkg/Test.java:5: Warning: Did you mean bar? [MyId]
-        foo(5);
-        ~~~~~~
-0 errors, 2 warnings
-"""
-
         //noinspection all // Sample code
         lint().files(
                 classpath(),
@@ -276,19 +267,21 @@ src/test/pkg/Test.java:5: Warning: Did you mean bar? [MyId]
                 .allowObsoleteLintChecks(false)
                 .allowCompilationErrors()
                 .run()
-                .expect(expected)
+                .check {
+                    it.contains("lint3.jar: Warning: Lint found one or more custom checks " +
+                            "that could not be loaded.")
+                    it.contains("The most likely reason for this is that it is using an older, " +
+                            "incompatible or unsupported API in lint. Make sure these lint " +
+                            "checks are updated to the new APIs.")
+                    it.contains("The issue registry class is googleio.demo.MyIssueRegistry.")
+                    it.contains("The class loading issue is com/android/tools/lint/detector/api/Detector\$JavaPsiScanner:")
+                    it.contains("ClassLoader.defineClass1(ClassLoader.java:")
+                    it.contains("0 errors, 1 warnings")
+                }
     }
 
     @Test
     fun testLegacyPsiJavaLintRule() {
-        val expected = """
-project0: Warning: Lint found one or more custom checks using its older Java API; these checks are still run in compatibility mode, but this causes duplicated parsing, and in the next version lint will no longer include this legacy mode. Make sure the following lint detectors are upgraded to the new API: com.example.google.lint.MainActivityDetector [ObsoleteLintCustomCheck]
-src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetector]
-        foo(5);
-        ~~~~~~
-1 errors, 1 warnings
-         """
-
         lint().files(
                 classpath(),
                 manifest().minSdk(1),
@@ -310,7 +303,17 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
                 .allowCompilationErrors()
                 .allowObsoleteLintChecks(false)
                 .run()
-                .expect(expected)
+                .check {
+                    it.contains("lint3.jar: Warning: Lint found one or more custom checks " +
+                            "that could not be loaded.")
+                    it.contains("The most likely reason for this is that it is using an older, " +
+                            "incompatible or unsupported API in lint. Make sure these lint " +
+                            "checks are updated to the new APIs.")
+                    it.contains("The issue registry class is com.example.google.lint.MyIssueRegistry.")
+                    it.contains("The class loading issue is com/android/tools/lint/detector/api/Detector\$JavaPsiScanner:")
+                    it.contains("ClassLoader.defineClass1(ClassLoader.java:")
+                    it.contains("0 errors, 1 warnings")
+                }
     }
 
     private // Sample code

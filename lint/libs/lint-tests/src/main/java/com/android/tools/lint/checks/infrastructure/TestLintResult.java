@@ -387,7 +387,7 @@ public class TestLintResult {
     public interface ResultChecker {
         /**
          * Checks that the result is as expected; should throw {@link AssertionError} if the output
-         * is not as expected
+         * is not as expected.
          *
          * @param output the output from lint
          */

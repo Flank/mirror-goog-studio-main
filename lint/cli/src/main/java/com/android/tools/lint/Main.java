@@ -166,23 +166,15 @@ public class Main {
                     @NonNull LintRequest request) {
                 LintDriver driver = super.createDriver(registry, request);
 
-                if (unexpectedGradleProject != null) {
-                    Project project = unexpectedGradleProject;
-                    @SuppressWarnings("SpellCheckingInspection")
+                Project project = unexpectedGradleProject;
+                if (project != null) {
                     String message = String.format("\"`%1$s`\" is a Gradle project. To correctly "
-                                    + "analyze Gradle projects, you should run \"`gradlew :lint`\" "
-                                    + "instead.", project.getName());
-                    Location location = Location.create(project.getDir());
-                    Context context = new Context(driver, project, project, project.getDir(), "");
-                    if (context.isEnabled(IssueRegistry.LINT_ERROR) &&
-                            !getConfiguration(project, null).isIgnored(context,
-                                    IssueRegistry.LINT_ERROR, location, message)) {
-                        report(context,
-                                IssueRegistry.LINT_ERROR,
-                                project.getConfiguration(null).getSeverity(
-                                        IssueRegistry.LINT_ERROR), location, message,
-                                TextFormat.RAW, null);
-                    }
+                            + "analyze Gradle projects, you should run \"`gradlew :lint`\" "
+                            + "instead.", project.getName());
+                    Location location =
+                            LintUtils.guessGradleLocation(this, project.getDir(), null);
+                    LintClient.Companion.report(this,IssueRegistry.LINT_ERROR,
+                            message, driver, project, location, null);
                 }
 
                 initializeDriver(driver);

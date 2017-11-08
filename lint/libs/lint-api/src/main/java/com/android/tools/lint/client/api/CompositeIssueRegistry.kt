@@ -57,29 +57,4 @@ class CompositeIssueRegistry(
 
             return true
         }
-
-    /** True if one or more java detectors were found that use the old Lombok-based API  */
-    fun hasLombokLegacyDetectors(): Boolean {
-        for (registry in registries) {
-            if (registry is JarFileIssueRegistry && registry.hasLombokLegacyDetectors()) {
-                return true
-            } else if (registry is CompositeIssueRegistry && registry.hasLombokLegacyDetectors()) {
-                return true
-            }
-        }
-
-        return false
-    }
-
-    /** True if one or more java detectors were found that use the old PSI-based API */
-    fun hasPsiLegacyDetectors(): Boolean {
-        for (registry in registries) {
-            if (registry is JarFileIssueRegistry && registry.hasPsiLegacyDetectors()) {
-                return true
-            } else if (registry is CompositeIssueRegistry && registry.hasPsiLegacyDetectors()) {
-                return true
-            }
-        }
-        return false
-    }
 }

@@ -465,15 +465,13 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 seen.addAll(chain)
                 Collections.reverse(chain)
                 val chains: MutableMap<ResourceType, MutableList<MutableList<String>>> =
-                        if (mChains == null) {
-                            val newMap = Maps.newEnumMap<ResourceType,
+                        mChains ?: run {
+                            val map = Maps.newEnumMap<ResourceType,
                                     MutableList<MutableList<String>>>(ResourceType::class.java)
-                            mChains = newMap
+                            mChains = map
                             mLocations = Maps.newEnumMap(ResourceType::class.java)
                             context.driver.requestRepeat(this, Scope.RESOURCE_FILE_SCOPE)
-                            newMap
-                        } else {
-                            mChains!!
+                            map
                         }
 
                 val list = chains[type]

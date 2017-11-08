@@ -67,7 +67,6 @@ import com.google.common.base.Objects
 import com.google.common.base.Splitter
 import com.google.common.collect.ArrayListMultimap
 import com.google.common.collect.Iterables
-import com.google.common.collect.Maps
 import com.google.common.collect.Sets
 import com.intellij.openapi.progress.ProcessCanceledException
 import com.intellij.openapi.project.IndexNotReadyException
@@ -80,15 +79,6 @@ import com.intellij.psi.PsiFile
 import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiModifierList
 import com.intellij.psi.PsiModifierListOwner
-import lombok.ast.AnnotationMethodDeclaration
-import lombok.ast.ArrayInitializer
-import lombok.ast.ConstructorDeclaration
-import lombok.ast.MethodDeclaration
-import lombok.ast.Modifiers
-import lombok.ast.Node
-import lombok.ast.StringLiteral
-import lombok.ast.TypeDeclaration
-import lombok.ast.VariableDefinition
 import org.jetbrains.annotations.Contract
 import org.jetbrains.uast.UElement
 import org.objectweb.asm.ClassReader
@@ -199,11 +189,6 @@ class LintDriver
     var isAbbreviating = true
 
     private var parserErrors: Boolean = false
-    private var properties: MutableMap<Any, Any>? = null
-    /** Whether we need to look for legacy (old Lombok-based Java API) detectors  */
-    private var runLombokCompatChecks = false
-    /** Whether we need to look for legacy (old PSI) detectors  */
-    private var runPsiCompatChecks = false
     /** Whether we should run all normal checks on test sources  */
     var isCheckTestSources: Boolean = false
     /** Whether we should include generated sources in the analysis  */
@@ -218,38 +203,6 @@ class LintDriver
     /** Cancels the current lint run as soon as possible  */
     fun cancel() {
         isCanceled = true
-    }
-
-    /**
-     * Records a property for later retrieval by [.getProperty]
-     *
-     * @param key the key to associate the value with
-     *
-     * @param value the value, or null to remove a previous binding
-     */
-    @Deprecated("This method will go away soon; use storage in your own detector")
-    fun putProperty(key: Any, value: Any?) {
-        if (properties == null) {
-            properties = Maps.newHashMap<Any, Any>()
-        }
-        if (value == null) {
-            properties!!.remove(key)
-        } else {
-            properties!!.put(key, value)
-        }
-    }
-
-    /**
-     * Returns the property previously stored with the given key, or null
-     *
-     * @param key the key
-     *
-     * @return the value or null if not found
-     */
-    @Deprecated("This method will go away soon; use storage in your own detector")
-    fun getProperty(key: Any): Any? {
-        val p = properties ?: return null
-        return p[key]
     }
 
     /**
@@ -325,13 +278,11 @@ class LintDriver
 
         circularProjectError?.let {
             val project = it.project
-            val location = it.location
             if (project != null) {
                 currentProject = project
-                val file = location?.file ?: project.dir
-                val context = Context(this, project, null, file)
-                context.report(IssueRegistry.LINT_ERROR, location ?: Location.create(file),
-                        it.message ?: "", null)
+                LintClient.report(client = client, issue = IssueRegistry.LINT_ERROR,
+                        message = it.message ?: "Circular project dependencies",
+                        project = project, driver = this, location = it.location)
                 currentProject = null
             }
             circularProjectError = null
@@ -429,34 +380,11 @@ class LintDriver
                 // Include the builtin checks too
                 registries.add(registry)
                 for (extraRegistry in extraRegistries) {
-                    if (extraRegistry.hasLombokLegacyDetectors()) {
-                        runLombokCompatChecks = true
-                        runPsiCompatChecks = true
-                    } else if (extraRegistry.hasPsiLegacyDetectors()) {
-                        runPsiCompatChecks = true
-                    }
                     registries.add(extraRegistry)
                 }
                 registry = CompositeIssueRegistry(registries)
             }
         }
-    }
-
-    /**
-     * Sets whether the lint driver should look for compatibility checks for Lombok and
-     * PSI (the older [JavaScanner][com.android.tools.lint.detector.api.Detector.JavaScanner] and
-     * [JavaPsiScanner][com.android.tools.lint.detector.api.Detector.JavaPsiScanner] APIs.)
-     *
-     * Lint normally figures this out on its own by inspecting JAR file registries
-     * etc. This is intended for test infrastructure usage.
-     *
-     * @param lombok whether to run Lombok compat checks
-     *
-     * @param psi    whether to run PSI compat checks
-     */
-    fun setRunCompatChecks(lombok: Boolean, psi: Boolean) {
-        runLombokCompatChecks = lombok
-        runPsiCompatChecks = psi
     }
 
     private fun runExtraPhases(project: Project, main: Project) {
@@ -621,10 +549,7 @@ class LintDriver
             val javaCodeDetectors = scopeDetectors[Scope.ALL_JAVA_FILES]
             if (javaCodeDetectors != null) {
                 for (detector in javaCodeDetectors) {
-                    @Suppress("DEPRECATION") // Backwards compatibility
-                    assert(detector is Detector.UastScanner ||
-                            detector is com.android.tools.lint.detector.api.Detector.JavaScanner ||
-                            detector is com.android.tools.lint.detector.api.Detector.JavaPsiScanner)
+                    assert(detector is Detector.UastScanner)
                     { detector }
                 }
             }
@@ -632,10 +557,7 @@ class LintDriver
             val javaFileDetectors = scopeDetectors[Scope.JAVA_FILE]
             if (javaFileDetectors != null) {
                 for (detector in javaFileDetectors) {
-                    @Suppress("DEPRECATION") // Backwards compatibility
-                    assert(detector is Detector.UastScanner ||
-                            detector is com.android.tools.lint.detector.api.Detector.JavaScanner ||
-                            detector is com.android.tools.lint.detector.api.Detector.JavaPsiScanner)
+                    assert(detector is Detector.UastScanner)
                     { detector }
                 }
             }
@@ -1201,11 +1123,8 @@ class LintDriver
             val message = String.format("No `.class` files were found in project \"%1\$s\", "
                     + "so none of the classfile based checks could be run. "
                     + "Does the project need to be built first?", project.name)
-            val location = Location.create(project.dir)
-            client.report(Context(this, project, main, project.dir),
-                    IssueRegistry.LINT_ERROR,
-                    project.getConfiguration(this).getSeverity(IssueRegistry.LINT_ERROR),
-                    location, message, TextFormat.RAW, null)
+            LintClient.report(client = client, issue = IssueRegistry.LINT_ERROR, message = message,
+                    project = project, mainProject = main, driver = this)
             emptyList()
         } else {
             ClassEntry.fromClassPath(client, classFolders, true)
@@ -1509,23 +1428,15 @@ class LintDriver
                                testContexts: List<JavaContext>) {
         // Temporary: we still have some builtin checks that aren't migrated to
         // PSI. Until that's complete, remove them from the list here
-        val scanners = ArrayList<Detector>(checks.size)
         val uastScanners = ArrayList<Detector>(checks.size)
         for (detector in checks) {
-            @Suppress("DEPRECATION")
             if (detector is Detector.UastScanner) {
                 uastScanners.add(detector)
-            } else if (detector is com.android.tools.lint.detector.api.Detector.JavaPsiScanner) {
-                scanners.add(detector)
             }
         }
 
         if (!uastScanners.isEmpty()) {
             val parser = client.getUastParser(currentProject)
-            if (parser == null) {
-                client.log(null, "No java parser provided to lint: not running Java checks")
-                return
-            }
             for (context in allContexts) {
                 context.uastParser = parser
             }
@@ -1564,156 +1475,6 @@ class LintDriver
                 }
             }
         }
-
-        if (runPsiCompatChecks) {
-            // Warn about these obsolete custom checks
-            val filtered = ArrayList<Detector>(checks.size)
-            for (detector in checks) {
-                @Suppress("DEPRECATION")
-                if (detector is com.android.tools.lint.detector.api.Detector.JavaPsiScanner) {
-                    filtered.add(detector)
-                }
-            }
-            if (!filtered.isEmpty()) {
-                warnObsoleteCustomChecks(filtered, srcContexts[0])
-            }
-
-            val parser = client.getJavaParser(project)
-            if (parser == null) {
-                client.log(null, "No java parser provided to lint: not running Java checks")
-                return
-            }
-
-            for (context in allContexts) {
-                @Suppress("DEPRECATION")
-                context.parser = parser
-            }
-
-            val visitor = JavaPsiVisitor(parser, scanners)
-            if (runLombokCompatChecks) {
-                visitor.setDisposeUnitsAfterUse(false)
-            }
-
-            parserErrors = !visitor.prepare(allContexts)
-
-            for (context in srcContexts) {
-                fireEvent(EventType.SCANNING_FILE, context)
-                visitor.visitFile(context)
-                if (isCanceled) {
-                    return
-                }
-            }
-
-            // Run tests separately: most checks aren't going to apply for tests
-            var testVisitor: JavaPsiVisitor? = null
-            if (!testContexts.isEmpty()) {
-                val testScanners = filterTestScanners(scanners)
-                if (!testScanners.isEmpty()) {
-                    testVisitor = JavaPsiVisitor(parser, testScanners)
-                    if (runLombokCompatChecks) {
-                        testVisitor.setDisposeUnitsAfterUse(false)
-                    }
-
-                    for (context in testContexts) {
-                        fireEvent(EventType.SCANNING_FILE, context)
-                        testVisitor.visitFile(context)
-                        if (isCanceled) {
-                            return
-                        }
-                    }
-                }
-            }
-
-            // Only if the user is using some custom lint rules that haven't been updated
-            // yet
-
-            if (runLombokCompatChecks) {
-                try {
-                    // Call EcjParser#disposePsi (if running from Gradle) to clear up PSI
-                    // caches that are full from the above JavaPsiVisitor call. We do this
-                    // instead of calling visitor.dispose because we want to *keep* the
-                    // ECJ parse around for use by the Lombok bridge.
-                    parser.javaClass.getMethod("disposePsi").invoke(parser)
-                } catch (ignore: Throwable) {
-                }
-
-                // Filter the checks to only those that implement JavaScanner
-                val lombokChecks = ArrayList<Detector>(checks.size)
-                for (detector in checks) {
-                    @Suppress("DEPRECATION")
-                    if (detector is com.android.tools.lint.detector.api.Detector.JavaScanner) {
-                        // Shouldn't be both
-                        assert(detector !is com.android.tools.lint.detector.api.Detector.JavaPsiScanner)
-                        lombokChecks.add(detector)
-                    }
-                }
-
-                if (!lombokChecks.isEmpty()) {
-                    warnObsoleteCustomChecks(lombokChecks, srcContexts[0])
-
-                    val oldVisitor = JavaVisitor(parser, lombokChecks)
-
-                    // NOTE: We do NOT call oldVisitor.prepare and dispose here since this
-                    // visitor is wrapping the same java parser as the one we used for PSI,
-                    // so calling prepare again would wipe out the results we're trying to reuse.
-                    for (context in srcContexts) {
-                        fireEvent(EventType.SCANNING_FILE, context)
-                        oldVisitor.visitFile(context)
-                        if (isCanceled) {
-                            return
-                        }
-                    }
-
-                    if (!testContexts.isEmpty()) {
-                        val testScanners = filterTestScanners(lombokChecks)
-                        if (!testScanners.isEmpty()) {
-                            val oldTestVisitor = JavaVisitor(parser, testScanners)
-                            for (context in testContexts) {
-                                fireEvent(EventType.SCANNING_FILE, context)
-                                oldTestVisitor.visitFile(context)
-                                if (isCanceled) {
-                                    return
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            visitor.dispose()
-            if (testVisitor != null) {
-                testVisitor.dispose()
-            }
-            for (context in allContexts) {
-                @Suppress("DEPRECATION")
-                context.parser = null
-            }
-        } else {
-            // the lombok compat support requires the psi compat checks too
-            assert(!runLombokCompatChecks)
-        }
-    }
-
-    /** Warns about obsolete detector classes */
-    private fun warnObsoleteCustomChecks(
-            detectors: List<Detector>,
-            first: JavaContext) {
-        val detectorNames = detectors.asSequence().
-                map { detector -> detector::class.java.name.replace('$','.') }.
-                sortedBy { it }.
-                joinToString(separator = ", ") { it }
-        val message = "Lint found one or more custom checks using its " +
-                "older Java API; these checks are still run in compatibility mode, " +
-                "but this causes duplicated parsing, and in the next version lint " +
-                "will no longer include this legacy mode. Make sure the following " +
-                "lint detectors are upgraded to the new API: $detectorNames"
-        val location = Location.create(first.project.dir)
-        val project = first.project
-        val configuration = project.getConfiguration(this)
-        client.report(first,
-                IssueRegistry.OBSOLETE_LINT_CHECK,
-                configuration.getSeverity(IssueRegistry.OBSOLETE_LINT_CHECK),
-                location, message, TextFormat.RAW, null)
     }
 
     private fun filterTestScanners(scanners: List<Detector>): List<Detector> {
@@ -2061,8 +1822,7 @@ class LintDriver
                 format: TextFormat,
                 fix: LintFix?) {
 
-            assert(currentProject != null)
-            if (!currentProject!!.reportIssues) {
+            if (currentProject != null && currentProject?.reportIssues == false) {
                 return
             }
 
@@ -2157,17 +1917,9 @@ class LintDriver
         override fun getProject(dir: File, referenceDir: File): Project =
                 delegate.getProject(dir, referenceDir)
 
-        override fun getJavaParser(project: Project?): JavaParser? = delegate.getJavaParser(project)
-
-        override fun getUastParser(project: Project?): UastParser? = delegate.getUastParser(project)
+        override fun getUastParser(project: Project?): UastParser = delegate.getUastParser(project)
 
         override fun findResource(relativePath: String): File? = delegate.findResource(relativePath)
-
-        @Suppress("OverridingDeprecatedMember") // forwarding required by API
-        override fun getCacheDir(create: Boolean): File? {
-            @Suppress("DEPRECATION")
-            return delegate.getCacheDir(create)
-        }
 
         override fun getCacheDir(name: String?, create: Boolean): File? =
                 delegate.getCacheDir(name, create)
@@ -2224,13 +1976,6 @@ class LintDriver
         override fun checkForSuppressComments(): Boolean = delegate.checkForSuppressComments()
 
         override fun supportsProjectResources(): Boolean = delegate.supportsProjectResources()
-
-        @Suppress("OverridingDeprecatedMember") // forwarding required by API
-        override fun getProjectResources(project: Project,
-                                         includeDependencies: Boolean): AbstractResourceRepository? {
-            @Suppress("DEPRECATION")
-            return delegate.getProjectResources(project, includeDependencies)
-        }
 
         override fun getResourceRepository(project: Project,
                                            includeModuleDependencies: Boolean,
@@ -2489,75 +2234,6 @@ class LintDriver
         return false
     }
 
-    /**
-     * Returns whether the given issue is suppressed in the given parse tree node.
-     *
-     * @param context the context for the source being scanned
-     *
-     * @param issue the issue to be checked, or null to just check for "all"
-     *
-     * @param scope the AST node containing the issue
-     *
-     * @return true if there is a suppress annotation covering the specific
-     *         issue in this class
-     */
-    fun isSuppressed(context: JavaContext?, issue: Issue,
-                     scope: Node?): Boolean {
-        var currentScope = scope
-        val checkComments = client.checkForSuppressComments() &&
-                context != null && context.containsCommentSuppress()
-        while (currentScope != null) {
-            when (currentScope) {
-                is VariableDefinition -> {
-                    // Variable
-                    val declaration = currentScope
-                    if (isSuppressed(issue, declaration.astModifiers())) {
-                        return true
-                    }
-                }
-                is MethodDeclaration -> {
-                    // Method
-                    // Look for annotations on the method
-                    val declaration = currentScope
-                    if (isSuppressed(issue, declaration.astModifiers())) {
-                        return true
-                    }
-                }
-                is ConstructorDeclaration -> {
-                    // Constructor
-                    // Look for annotations on the method
-                    val declaration = currentScope
-                    if (isSuppressed(issue, declaration.astModifiers())) {
-                        return true
-                    }
-                }
-                is TypeDeclaration -> {
-                    // Class, annotation, enum, interface
-                    val declaration = currentScope
-                    if (isSuppressed(issue, declaration.astModifiers())) {
-                        return true
-                    }
-                }
-                is AnnotationMethodDeclaration -> {
-                    // Look for annotations on the method
-                    val declaration = currentScope
-                    if (isSuppressed(issue, declaration.astModifiers())) {
-                        return true
-                    }
-                }
-            }
-
-            @Suppress("DEPRECATION")
-            if (checkComments && context!!.isSuppressedWithComment(currentScope, issue)) {
-                return true
-            }
-
-            currentScope = currentScope.parent
-        }
-
-        return false
-    }
-
     fun isSuppressed(context: JavaContext?, issue: Issue,
                      scope: UElement?): Boolean {
         var currentScope = scope
@@ -2748,6 +2424,26 @@ class LintDriver
             sb.append("`")
             sb.append(throwable.javaClass.simpleName)
             sb.append(':')
+            appendStackTraceSummary(throwable, sb)
+            sb.append("`")
+            sb.append("\n\nYou can set environment variable `LINT_PRINT_STACKTRACE=true` to " +
+                    "dump a full stacktrace to stdout.")
+
+            val message = sb.toString()
+            if (context != null) {
+                context.report(IssueRegistry.LINT_ERROR, Location.create(context.file), message)
+            } else {
+                driver.client.log(throwable, message)
+            }
+
+            if (VALUE_TRUE == System.getenv("LINT_PRINT_STACKTRACE")) {
+                throwable.printStackTrace()
+            }
+
+            return true
+        }
+
+        fun appendStackTraceSummary(throwable: Throwable, sb: StringBuilder) {
             val stackTrace = throwable.stackTrace
             var count = 0
             for (frame in stackTrace) {
@@ -2767,22 +2463,6 @@ class LintDriver
                     break
                 }
             }
-            sb.append("`")
-            sb.append("\n\nYou can set environment variable `LINT_PRINT_STACKTRACE=true` to " +
-                    "dump a full stacktrace to stdout.")
-
-            val message = sb.toString()
-            if (context != null) {
-                context.report(IssueRegistry.LINT_ERROR, Location.create(context.file), message)
-            } else {
-                driver.client.log(throwable, message)
-            }
-
-            if (VALUE_TRUE == System.getenv("LINT_PRINT_STACKTRACE")) {
-                throwable.printStackTrace()
-            }
-
-            return true
         }
 
         /**
@@ -2901,56 +2581,7 @@ class LintDriver
             return false
         }
 
-        /**
-         * Returns true if the given AST modifier has a suppress annotation for the
-         * given issue (which can be null to check for the "all" annotation)
-         *
-         * @param issue the issue to be checked
-         *
-         * @param modifiers the modifier to check
-         *
-         * @return true if the issue or all issues should be suppressed for this
-         *         modifier
-         */
-        private fun isSuppressed(issue: Issue?, modifiers: Modifiers?): Boolean {
-            if (modifiers == null) {
-                return false
-            }
-            val annotations = modifiers.astAnnotations() ?: return false
-
-            for (annotation in annotations) {
-                val t = annotation.astAnnotationTypeReference()
-                val typeName = t.typeName
-                if (typeName.endsWith(SUPPRESS_LINT) || typeName.endsWith("SuppressWarnings")) {
-                    val values = annotation.astElements()
-                    if (values != null) {
-                        for (element in values) {
-                            val valueNode = element.astValue() ?: continue
-                            if (valueNode is StringLiteral) {
-                                val value = valueNode.astValue()
-                                if (matches(issue, value)) {
-                                    return true
-                                }
-                            } else if (valueNode is ArrayInitializer) {
-                                val expressions = valueNode.astExpressions() ?: continue
-                                for (arrayElement in expressions) {
-                                    if (arrayElement is StringLiteral) {
-                                        val value = arrayElement.astValue()
-                                        if (matches(issue, value)) {
-                                            return true
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            return false
-        }
-
-        private val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
+        private const val SUPPRESS_WARNINGS_FQCN = "java.lang.SuppressWarnings"
 
         /**
          * Returns true if the given AST modifier has a suppress annotation for the

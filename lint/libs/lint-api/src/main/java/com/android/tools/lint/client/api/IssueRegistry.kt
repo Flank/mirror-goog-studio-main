@@ -298,11 +298,11 @@ protected constructor() {
                 "LintError",
                 "Lint Failure",
                 "This issue type represents a problem running lint itself. Examples include " +
-                        "failure to find bytecode for source files (which means certain detectors " +
-                        "could not be run), parsing errors in lint configuration files, etc." +
-                        "\n" +
-                        "These errors are not errors in your own code, but they are shown to make " +
-                        "it clear that some checks were not completed.",
+                "failure to find bytecode for source files (which means certain detectors " +
+                "could not be run), parsing errors in lint configuration files, etc." +
+                "\n" +
+                "These errors are not errors in your own code, but they are shown to make " +
+                "it clear that some checks were not completed.",
 
                 Category.LINT,
                 10,

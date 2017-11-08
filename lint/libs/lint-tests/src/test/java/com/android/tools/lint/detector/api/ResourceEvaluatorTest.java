@@ -70,7 +70,7 @@ public class ResourceEvaluatorTest extends TestCase {
         @Language("JAVA")
         String source = getString(statementsSource);
         Pair<JavaContext, Disposable> pair =
-                LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+                LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
         JavaContext context = pair.getFirst();
         Disposable disposable = pair.getSecond();
         assertNotNull(context);
@@ -126,7 +126,7 @@ public class ResourceEvaluatorTest extends TestCase {
         @Language("JAVA")
         String source = getString(statementsSource);
         Pair<JavaContext, Disposable> pair =
-                LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
+                LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
         JavaContext context = pair.getFirst();
         Disposable disposable = pair.getSecond();
         assertNotNull(context);
@@ -188,32 +188,32 @@ public class ResourceEvaluatorTest extends TestCase {
         check(expected, statementsSource, targetVariable, false, allowDereference);
     }
 
-    public void test() throws Exception {
+    public void testBasic() {
         checkType("@string/foo", "int x = R.string.foo", "x");
     }
 
-    public void testIndirectFieldReference() throws Exception {
+    public void testIndirectFieldReference() {
         checkType("@color/red", ""
                 + "int z = RED;\n"
                 + "int w = true ? z : 0",
                 "w");
     }
 
-    public void testMethodCall() throws Exception {
+    public void testMethodCall() {
         checkType("@color/green", ""
                         + "android.app.Activity context = null;"
                         + "int w = context.getResources().getColor(R.color.green);",
                 "w");
     }
 
-    public void testMethodCallNoDereference() throws Exception {
+    public void testMethodCallNoDereference() {
         check(null, ""
                         + "android.app.Activity context = null;"
                         + "int w = context.getResources().getColor(R.color.green);",
                 "w", true, false);
     }
 
-    public void testReassignment() throws Exception {
+    public void testReassignment() {
         checkType("@string/foo", ""
                         + "int x = R.string.foo;\n"
                         + "int y = x;\n"
@@ -225,7 +225,7 @@ public class ResourceEvaluatorTest extends TestCase {
 
     // Resource Types
 
-    public void testReassignmentType() throws Exception {
+    public void testReassignmentType() {
         checkTypes("[string]", ""
                         + "int x = R.string.foo;\n"
                         + "int y = x;\n"
@@ -235,7 +235,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 "z");
     }
 
-    public void testMethodCallTypes() throws Exception {
+    public void testMethodCallTypes() {
         // public=color int marker
         checkTypes("[public]", ""
                         + "android.app.Activity context = null;"
@@ -243,7 +243,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 "w");
     }
 
-    public void testConditionalTypes() throws Exception {
+    public void testConditionalTypes() {
         // Constant expression: we know exactly which branch to take
         checkTypes("[color]", ""
                         + "int z = RED;\n"
@@ -251,7 +251,7 @@ public class ResourceEvaluatorTest extends TestCase {
                 "w");
     }
 
-    public void testConditionalTypesUnknownCondition() throws Exception {
+    public void testConditionalTypesUnknownCondition() {
         // Constant expression: we know exactly which branch to take
         checkTypes("[color, string]", ""
                         + "int z = RED;\n"

@@ -353,7 +353,8 @@ internal class UElementVisitor constructor(private val parser: UastParser,
                     "these detectors: " + detectorNames + "). You can either disable these " +
                     "checks, or give lint more heap space."
             if (LintClient.isGradle) {
-                message += " For example, to set the Gradle daemon to use 4 GB, edit " + "`gradle.properties` to contains `org.gradle.jvmargs=-Xmx4g`"
+                message += " For example, to set the Gradle daemon to use 4 GB, edit " +
+                        "`gradle.properties` to contains `org.gradle.jvmargs=-Xmx4g`"
             }
             projectContext.report(IssueRegistry.LINT_ERROR,
                     Location.create(projectContext.project.dir), message)

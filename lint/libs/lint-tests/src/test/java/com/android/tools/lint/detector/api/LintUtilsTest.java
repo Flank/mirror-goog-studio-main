@@ -18,23 +18,22 @@ package com.android.tools.lint.detector.api;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
-import static com.android.SdkConstants.DOT_JAVA;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_BOOLEAN;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_BOOLEAN_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_BYTE;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_BYTE_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_CHAR;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_CHARACTER_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_DOUBLE;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_DOUBLE_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_FLOAT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_FLOAT_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_INT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_INTEGER_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_LONG;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_LONG_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BOOLEAN;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BOOLEAN_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BYTE;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BYTE_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_CHAR;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_CHARACTER_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_DOUBLE;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_DOUBLE_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_FLOAT;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_FLOAT_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INT;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INTEGER_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_LONG;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_LONG_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_SHORT;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_SHORT_WRAPPER;
 import static com.android.tools.lint.detector.api.LintUtils.computeResourceName;
 import static com.android.tools.lint.detector.api.LintUtils.convertVersion;
 import static com.android.tools.lint.detector.api.LintUtils.describeCounts;
@@ -54,7 +53,6 @@ import static com.android.tools.lint.detector.api.LintUtils.getPrimitiveType;
 import static com.android.tools.lint.detector.api.LintUtils.idReferencesMatch;
 import static com.android.tools.lint.detector.api.LintUtils.isDataBindingExpression;
 import static com.android.tools.lint.detector.api.LintUtils.isEditableTo;
-import static com.android.tools.lint.detector.api.LintUtils.isImported;
 import static com.android.tools.lint.detector.api.LintUtils.isJavaKeyword;
 import static com.android.tools.lint.detector.api.LintUtils.isModelOlderThan;
 import static com.android.tools.lint.detector.api.LintUtils.isXmlFile;
@@ -64,7 +62,6 @@ import static com.android.tools.lint.detector.api.LintUtils.startsWith;
 import static com.android.tools.lint.detector.api.LintUtils.stripIdPrefix;
 import static com.android.utils.SdkUtils.escapePropertyValue;
 import static com.google.common.truth.Truth.assertThat;
-import static java.io.File.separatorChar;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -77,12 +74,10 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
-import com.android.tools.lint.checks.infrastructure.ClassName;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.checks.infrastructure.TestFiles;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestLintClient;
-import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.UastParser;
@@ -93,7 +88,6 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.intellij.openapi.Disposable;
-import com.intellij.psi.PsiJavaFile;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -103,7 +97,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Locale;
 import junit.framework.TestCase;
-import lombok.ast.Node;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.uast.UFile;
 import org.w3c.dom.Document;
@@ -442,46 +435,6 @@ public class LintUtilsTest extends TestCase {
         assertEquals("ms", getLocaleAndRegion("values-ms-keyshidden"));
     }
 
-    @SuppressWarnings("all") // sample code
-    public void testIsImported() throws Exception {
-        assertFalse(isImported(getCompilationUnit(
-                "package foo.bar;\n" +
-                "class Foo {\n" +
-                "}\n"),
-                "android.app.Activity"));
-
-        assertTrue(isImported(getCompilationUnit(
-                "package foo.bar;\n" +
-                "import foo.bar.*;\n" +
-                "import android.app.Activity;\n" +
-                "import foo.bar.Baz;\n" +
-                "class Foo {\n" +
-                "}\n"),
-                "android.app.Activity"));
-
-        assertTrue(isImported(getCompilationUnit(
-                "package foo.bar;\n" +
-                "import android.app.Activity;\n" +
-                "class Foo {\n" +
-                "}\n"),
-                "android.app.Activity"));
-
-        assertTrue(isImported(getCompilationUnit(
-                "package foo.bar;\n" +
-                "import android.app.*;\n" +
-                "class Foo {\n" +
-                "}\n"),
-                "android.app.Activity"));
-
-        assertFalse(isImported(getCompilationUnit(
-                "package foo.bar;\n" +
-                "import android.app.*;\n" +
-                "import foo.bar.Activity;\n" +
-                "class Foo {\n" +
-                "}\n"),
-                "android.app.Activity"));
-    }
-
     public void testComputeResourceName() {
         assertEquals("", computeResourceName("", "", null));
         assertEquals("foo", computeResourceName("", "foo", null));
@@ -494,58 +447,6 @@ public class LintUtilsTest extends TestCase {
         assertEquals("my_prefix_name", computeResourceName("myPrefix", "name", ResourceFolderType.LAYOUT));
         assertEquals("UnitTestPrefixContentFrame", computeResourceName("unit_test_prefix_", "ContentFrame", ResourceFolderType.VALUES));
         assertEquals("MyPrefixMyStyle", computeResourceName("myPrefix_", "MyStyle", ResourceFolderType.VALUES));
-    }
-
-    public static Node getCompilationUnit(@Language("JAVA") String javaSource) {
-        return getCompilationUnit(javaSource, new File("test"));
-    }
-
-    public static Node getCompilationUnit(@Language("JAVA") String javaSource, File relativePath) {
-        JavaContext context = parse(javaSource, relativePath);
-        return context.getCompilationUnit();
-    }
-
-    public static Pair<JavaContext,Disposable> parsePsi(@Language("JAVA") String javaSource) {
-        // Figure out the "to" path: the package plus class name + java in the src/ folder
-        ClassName name = new ClassName(javaSource);
-        String pkg = name.packageNameWithDefault();
-        String cls = name.getClassName();
-        String path = "src/" + pkg.replace('.', '/') + '/' + cls + DOT_JAVA;
-        return parsePsi(javaSource, new File(path.replace('/', separatorChar)));
-    }
-
-    /** @deprecated Use {@link #parseUast(String, File)} or {@link #parsePsi(String, File)}
-     * instead */
-    @Deprecated
-    public static JavaContext parse(@Language("JAVA") String javaSource) {
-        // Figure out the "to" path: the package plus class name + java in the src/ folder
-        ClassName name = new ClassName(javaSource);
-        String pkg = name.packageNameWithDefault();
-        String cls = name.getClassName();
-        assertTrue("Couldn't find class declaration in source", cls != null);
-        String path = "src/" + pkg.replace('.', '/') + '/' + cls + DOT_JAVA;
-        return parse(javaSource, new File(path.replace('/', separatorChar)));
-    }
-
-    /** @deprecated Use {@link #parseUast(String, File)} or {@link #parsePsi(String, File)}
-     * instead */
-    @Deprecated
-    public static JavaContext parse(@Language("JAVA") final String javaSource,
-            final File relativePath) {
-        Pair<JavaContext, Disposable> parse =
-                parse(javaSource, relativePath, true, false, false);
-        // Disposal not necessary for lombok
-        return parse.getFirst();
-    }
-
-    public static Pair<JavaContext,Disposable> parsePsi(@Language("JAVA") final String javaSource,
-            final File relativePath) {
-        return parse(javaSource, relativePath, false, true, false);
-    }
-
-    public static Pair<JavaContext,Disposable> parseUast(@Language("JAVA") final String javaSource,
-            final File relativePath) {
-        return parse(javaSource, relativePath, false, true, true);
     }
 
     private static Project createTestProjectForFile(File dir, File relativePath, String source) {
@@ -610,7 +511,7 @@ public class LintUtilsTest extends TestCase {
     }
 
     public static Pair<JavaContext,Disposable>  parse(@Language("JAVA") final String javaSource,
-            final File relativePath, boolean lombok, boolean psi, boolean uast) {
+            final File relativePath) {
         // TODO: Clean up -- but where?
         File dir = Files.createTempDir();
         final File fullPath = new File(dir, relativePath.getPath());
@@ -628,31 +529,14 @@ public class LintUtilsTest extends TestCase {
                 new LintCliClient(), request);
         driver.setScope(Scope.JAVA_FILE_SCOPE);
         JavaTestContext context = new JavaTestContext(driver, client, project, javaSource, fullPath);
-        JavaParser parser = null;
-        if (lombok || psi) {
-            parser = client.getJavaParser(project);
-            context.setParser(parser);
-            assertNotNull(parser);
-            parser.prepareJavaParse(Collections.singletonList(context));
-        }
-        if (lombok) {
-            Node compilationUnit = parser.parseJava(context);
-            assertNotNull(javaSource, compilationUnit);
-            context.setCompilationUnit(compilationUnit);
-        }
-        if (psi) {
-            PsiJavaFile javaFile = parser.parseJavaToPsi(context);
-            assertNotNull("Couldn't parse source", javaFile);
-            context.setJavaFile(javaFile);
-        }
-        if (uast) {
-            UastParser uastParser = client.getUastParser(project);
-            assertNotNull(uastParser);
-            context.setUastParser(uastParser);
-            uastParser.prepare(Collections.singletonList(context), Collections.emptyList());
-            UFile uFile = uastParser.parse(context);
-            context.setUastFile(uFile);
-        }
+        UastParser uastParser = client.getUastParser(project);
+        assertNotNull(uastParser);
+        context.setUastParser(uastParser);
+        uastParser.prepare(Collections.singletonList(context), Collections.emptyList());
+        UFile uFile = uastParser.parse(context);
+        context.setUastFile(uFile);
+        assert uFile != null;
+        context.setJavaFile(uFile.getPsi());
         Disposable disposable = () -> client.disposeProjects(Collections.singletonList(project));
         return Pair.of(context, disposable);
     }

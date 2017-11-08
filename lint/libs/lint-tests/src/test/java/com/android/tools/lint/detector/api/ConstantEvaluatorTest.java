@@ -28,10 +28,6 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
-import lombok.ast.CompilationUnit;
-import lombok.ast.Expression;
-import lombok.ast.ForwardingAstVisitor;
-import lombok.ast.VariableDefinitionEntry;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UFile;
@@ -43,7 +39,7 @@ public class ConstantEvaluatorTest extends TestCase {
     private static void checkUast(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
         Pair<JavaContext, Disposable> pair =
-                LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+                LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
         JavaContext context = pair.getFirst();
         Disposable disposable = pair.getSecond();
         assertNotNull(context);
@@ -72,7 +68,7 @@ public class ConstantEvaluatorTest extends TestCase {
             assertNotNull("Couldn't compute value for " + source + ", expected "
                             + expected + " but was " + actual,
                     actual);
-            assertEquals(expected.getClass(), actual.getClass());
+            assertSame(expected.getClass(), actual.getClass());
             if (expected instanceof Object[] && actual instanceof Object[]) {
                 assertEquals(Arrays.toString((Object[]) expected),
                         Arrays.toString((Object[]) actual));
@@ -102,7 +98,7 @@ public class ConstantEvaluatorTest extends TestCase {
     private static void checkPsi(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
         Pair<JavaContext, Disposable> pair =
-                LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
+                LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
         JavaContext context = pair.getFirst();
         Disposable disposable = pair.getSecond();
         assertNotNull(context);
@@ -129,7 +125,7 @@ public class ConstantEvaluatorTest extends TestCase {
             assertNotNull("Couldn't compute value for " + source + ", expected "
                             + expected + " but was " + actual,
                     actual);
-            assertEquals(expected.getClass(), actual.getClass());
+            assertSame(expected.getClass(), actual.getClass());
             if (expected instanceof Object[] && actual instanceof Object[]) {
                 assertEquals(Arrays.toString((Object[]) expected),
                         Arrays.toString((Object[]) actual));
@@ -155,52 +151,14 @@ public class ConstantEvaluatorTest extends TestCase {
         Disposer.dispose(disposable);
     }
 
-    private void check(Object expected, @Language("JAVA") String source,
+    private static void check(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
         checkUast(expected, source, targetVariable);
         checkPsi(expected, source, targetVariable);
-
-        if (getName().equals("testArrays")) {
-            // Not correctly implemented in old Lombok based lookup
-            return;
-        }
-
-        JavaContext context = LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
-        assertNotNull(context);
-        CompilationUnit unit = (CompilationUnit) context.getCompilationUnit();
-        assertNotNull(unit);
-
-        // Find the expression
-        final AtomicReference<Expression> reference = new AtomicReference<>();
-        unit.accept(new ForwardingAstVisitor() {
-            @Override
-            public boolean visitVariableDefinitionEntry(VariableDefinitionEntry node) {
-                if (node.astName().astValue().equals(targetVariable)) {
-                    reference.set(node.astInitializer());
-                }
-                return super.visitVariableDefinitionEntry(node);
-            }
-        });
-        Expression expression = reference.get();
-        Object actual = ConstantEvaluator.evaluate(context, expression);
-        if (expected == null) {
-            assertNull(actual);
-        } else {
-            assertNotNull("Couldn't compute value for " + source + ", expected " + expected,
-                    actual);
-            assertEquals(expected.getClass(), actual.getClass());
-            assertEquals(expected.toString(), actual.toString());
-        }
-        assertEquals(expected, actual);
-        if (expected instanceof String) {
-            assertEquals(expected, ConstantEvaluator.evaluateString(context, expression,
-                    false));
-        }
-
         LintCoreApplicationEnvironment.disposeApplicationEnvironment();
     }
 
-    private void checkStatements(Object expected, String statementsSource,
+    private static void checkStatements(Object expected, String statementsSource,
             final String targetVariable) {
         @Language("JAVA")
         String source = ""
@@ -217,7 +175,7 @@ public class ConstantEvaluatorTest extends TestCase {
         check(expected, source, targetVariable);
     }
 
-    private void checkExpression(Object expected, String expressionSource) {
+    private static void checkExpression(Object expected, String expressionSource) {
         @Language("JAVA")
         String source = ""
                 + "package test.pkg;\n"
@@ -233,19 +191,19 @@ public class ConstantEvaluatorTest extends TestCase {
         check(expected, source, "expression");
     }
 
-    public void testStrings() throws Exception {
+    public void testStrings() {
         checkExpression(null, "null");
         checkExpression("hello", "\"hello\"");
         checkExpression("abcd", "\"ab\" + \"cd\"");
     }
 
-    public void testArrays() throws Exception {
+    public void testArrays() {
         checkExpression(new int[] {1, 2, 3}, "new int[] { 1,2,3] }");
         checkExpression(new int[0], "new int[0]");
         checkExpression(new byte[0], "new byte[0]");
     }
 
-    public void testBooleans() throws Exception {
+    public void testBooleans() {
         checkExpression(true, "true");
         checkExpression(false, "false");
         checkExpression(false, "false && true");
@@ -253,18 +211,18 @@ public class ConstantEvaluatorTest extends TestCase {
         checkExpression(true, "!false");
     }
 
-    public void testPolyadicBooleans() throws Exception {
+    public void testPolyadicBooleans() {
         checkExpression(false, "false && true && true");
         checkExpression(true, "false || false || true");
         checkExpression(true, "false ^ false ^ true");
     }
 
-    public void testChars() throws Exception {
+    public void testChars() {
         checkExpression('a', "'a'");
         checkExpression('\007', "'\007'");
     }
 
-    public void testCasts() throws Exception {
+    public void testCasts() {
         checkExpression(1, "(int)1");
         checkExpression(1L, "(long)1");
         checkExpression(1, "(int)1.1f");
@@ -274,7 +232,7 @@ public class ConstantEvaluatorTest extends TestCase {
         checkExpression(-5.0, "(double)-5");
     }
 
-    public void testArithmetic() throws Exception {
+    public void testArithmetic() {
         checkExpression(1, "1");
         checkExpression(1L, "1L");
         checkExpression(4, "1 + 3");
@@ -314,7 +272,7 @@ public class ConstantEvaluatorTest extends TestCase {
         checkExpression(3.5f, "1.0f + 2.5f");
     }
 
-    public void testPolyadicArithmetic() throws Exception {
+    public void testPolyadicArithmetic() {
         checkExpression(9, "1 + 3 + 5");
         checkExpression(94, "100 - 3 - 3");
         checkExpression(100, "2 * 5 * 10");
@@ -327,14 +285,14 @@ public class ConstantEvaluatorTest extends TestCase {
         checkExpression(true, "true && true && true");
     }
 
-    public void testFieldReferences() throws Exception {
+    public void testFieldReferences() {
         checkExpression(5, "MY_INT_FIELD");
         checkExpression("test", "MY_STRING_FIELD");
         checkExpression("prefix-test-postfix", "\"prefix-\" + MY_STRING_FIELD + \"-postfix\"");
         checkExpression(-4, "3 - (MY_INT_FIELD + 2)");
     }
 
-    public void testStatements() throws Exception {
+    public void testStatements() {
         checkStatements(9, ""
                         + "int x = +5;\n"
                         + "int y = x;\n"
@@ -350,7 +308,7 @@ public class ConstantEvaluatorTest extends TestCase {
                 "finalString");
     }
 
-    public void testConditionals() throws Exception {
+    public void testConditionals() {
         checkStatements(-5, ""
                         + "boolean condition = false;\n"
                         + "condition = !condition;\n"

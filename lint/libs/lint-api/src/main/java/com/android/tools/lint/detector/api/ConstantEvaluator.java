@@ -15,23 +15,12 @@
  */
 package com.android.tools.lint.detector.api;
 
-import static com.android.tools.lint.client.api.JavaParser.TYPE_BOOLEAN;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_BYTE;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_CHAR;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_DOUBLE;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_FLOAT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_INT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_LONG;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_OBJECT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_STRING;
-import static com.android.tools.lint.detector.api.JavaContext.getParentOfType;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_OBJECT;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_STRING;
 import static org.jetbrains.uast.UastBinaryExpressionWithTypeKind.TYPE_CAST;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.tools.lint.client.api.JavaParser.ResolvedField;
-import com.android.tools.lint.client.api.JavaParser.ResolvedNode;
 import com.google.common.collect.Lists;
 import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.JavaTokenType;
@@ -69,33 +58,7 @@ import com.intellij.psi.util.PsiTreeUtil;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.concurrent.atomic.AtomicBoolean;
-import lombok.ast.ArrayCreation;
-import lombok.ast.ArrayInitializer;
-import lombok.ast.BinaryExpression;
-import lombok.ast.BinaryOperator;
-import lombok.ast.BooleanLiteral;
-import lombok.ast.Cast;
-import lombok.ast.CharLiteral;
-import lombok.ast.Expression;
-import lombok.ast.ExpressionStatement;
-import lombok.ast.FloatingPointLiteral;
-import lombok.ast.InlineIfExpression;
-import lombok.ast.IntegralLiteral;
-import lombok.ast.Node;
-import lombok.ast.NullLiteral;
-import lombok.ast.Select;
-import lombok.ast.Statement;
-import lombok.ast.StrictListAccessor;
-import lombok.ast.StringLiteral;
-import lombok.ast.TypeReference;
-import lombok.ast.UnaryExpression;
-import lombok.ast.UnaryOperator;
-import lombok.ast.VariableDeclaration;
-import lombok.ast.VariableDefinition;
-import lombok.ast.VariableDefinitionEntry;
-import lombok.ast.VariableReference;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UBinaryExpressionWithType;
 import org.jetbrains.uast.UBlockExpression;
@@ -122,17 +85,14 @@ import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /** Evaluates constant expressions */
 public class ConstantEvaluator {
-    private final JavaContext context;
     private boolean allowUnknown;
     private boolean allowFieldInitializers;
 
     /**
      * Creates a new constant evaluator
      *
-     * @param context the context to use to resolve field references, if any
      */
-    public ConstantEvaluator(@Nullable JavaContext context) {
-        this.context = context;
+    public ConstantEvaluator() {
     }
 
     /**
@@ -149,461 +109,6 @@ public class ConstantEvaluator {
     public ConstantEvaluator allowFieldInitializers() {
         allowFieldInitializers = true;
         return this;
-    }
-
-    /**
-     * Evaluates the given node and returns the constant value it resolves to, if any
-     *
-     * @param node the node to compute the constant value for
-     * @return the corresponding constant value - a String, an Integer, a Float, and so on
-     * @deprecated Use {@link #evaluate(PsiElement)} instead
-     */
-    @Deprecated
-    @Nullable
-    public Object evaluate(@NonNull Node node) {
-        if (node instanceof NullLiteral) {
-            return null;
-        } else if (node instanceof BooleanLiteral) {
-            return ((BooleanLiteral)node).astValue();
-        } else if (node instanceof StringLiteral) {
-            StringLiteral string = (StringLiteral) node;
-            return string.astValue();
-        } else if (node instanceof CharLiteral) {
-            return ((CharLiteral)node).astValue();
-        } else if (node instanceof IntegralLiteral) {
-            IntegralLiteral literal = (IntegralLiteral) node;
-            // Don't combine to ?: since that will promote astIntValue to a long
-            if (literal.astMarkedAsLong()) {
-                return literal.astLongValue();
-            } else {
-                return literal.astIntValue();
-            }
-        } else if (node instanceof FloatingPointLiteral) {
-            FloatingPointLiteral literal = (FloatingPointLiteral) node;
-            // Don't combine to ?: since that will promote astFloatValue to a double
-            if (literal.astMarkedAsFloat()) {
-                return literal.astFloatValue();
-            } else {
-                return literal.astDoubleValue();
-            }
-        } else if (node instanceof UnaryExpression) {
-            UnaryOperator operator = ((UnaryExpression) node).astOperator();
-            Object operand = evaluate(((UnaryExpression) node).astOperand());
-            if (operand == null) {
-                return null;
-            }
-            switch (operator) {
-                case LOGICAL_NOT:
-                    if (operand instanceof Boolean) {
-                        return !(Boolean) operand;
-                    }
-                    break;
-                case UNARY_PLUS:
-                    return operand;
-                case BINARY_NOT:
-                    if (operand instanceof Integer) {
-                        return ~(Integer) operand;
-                    } else if (operand instanceof Long) {
-                        return ~(Long) operand;
-                    } else if (operand instanceof Short) {
-                        return ~(Short) operand;
-                    } else if (operand instanceof Character) {
-                        return ~(Character) operand;
-                    } else if (operand instanceof Byte) {
-                        return ~(Byte) operand;
-                    }
-                    break;
-                case UNARY_MINUS:
-                    if (operand instanceof Integer) {
-                        return -(Integer) operand;
-                    } else if (operand instanceof Long) {
-                        return -(Long) operand;
-                    } else if (operand instanceof Double) {
-                        return -(Double) operand;
-                    } else if (operand instanceof Float) {
-                        return -(Float) operand;
-                    } else if (operand instanceof Short) {
-                        return -(Short) operand;
-                    } else if (operand instanceof Character) {
-                        return -(Character) operand;
-                    } else if (operand instanceof Byte) {
-                        return -(Byte) operand;
-                    }
-                    break;
-                default:
-                    // Deliberately not handling all the other operators here
-            }
-        } else if (node instanceof InlineIfExpression) {
-            InlineIfExpression expression = (InlineIfExpression) node;
-            Object known = evaluate(expression.astCondition());
-            if (known == Boolean.TRUE && expression.astIfTrue() != null) {
-                return evaluate(expression.astIfTrue());
-            } else if (known == Boolean.FALSE && expression.astIfFalse() != null) {
-                return evaluate(expression.astIfFalse());
-            }
-        } else if (node instanceof BinaryExpression) {
-            BinaryOperator operator = ((BinaryExpression) node).astOperator();
-            Object operandLeft = evaluate(((BinaryExpression) node).astLeft());
-            Object operandRight = evaluate(((BinaryExpression) node).astRight());
-            if (operandLeft == null || operandRight == null) {
-                if (allowUnknown) {
-                    if (operandLeft == null) {
-                        return operandRight;
-                    } else {
-                        return operandLeft;
-                    }
-                }
-                return null;
-            }
-            if (operandLeft instanceof String && operandRight instanceof String) {
-                if (operator == BinaryOperator.PLUS) {
-                    return operandLeft.toString() + operandRight.toString();
-                }
-                return null;
-            } else if (operandLeft instanceof Boolean && operandRight instanceof Boolean) {
-                boolean left = (Boolean) operandLeft;
-                boolean right = (Boolean) operandRight;
-                switch (operator) {
-                    case LOGICAL_OR:
-                        return left || right;
-                    case LOGICAL_AND:
-                        return left && right;
-                    case BITWISE_OR:
-                        return left | right;
-                    case BITWISE_XOR:
-                        return left ^ right;
-                    case BITWISE_AND:
-                        return left & right;
-                    case EQUALS:
-                        return left == right;
-                    case NOT_EQUALS:
-                        return left != right;
-                    default:
-                        // Deliberately not handling all the other operators here
-                }
-            } else if (operandLeft instanceof Number && operandRight instanceof Number) {
-                Number left = (Number) operandLeft;
-                Number right = (Number) operandRight;
-                boolean isInteger =
-                        !(left instanceof Float || left instanceof Double
-                                || right instanceof Float || right instanceof Double);
-                boolean isWide =
-                        isInteger ? (left instanceof Long || right instanceof Long)
-                                : (left instanceof Double || right instanceof Double);
-
-                switch (operator) {
-                    case BITWISE_OR:
-                        if (isWide) {
-                            return left.longValue() | right.longValue();
-                        } else {
-                            return left.intValue() | right.intValue();
-                        }
-                    case BITWISE_XOR:
-                        if (isWide) {
-                            return left.longValue() ^ right.longValue();
-                        } else {
-                            return left.intValue() ^ right.intValue();
-                        }
-                    case BITWISE_AND:
-                        if (isWide) {
-                            return left.longValue() & right.longValue();
-                        } else {
-                            return left.intValue() & right.intValue();
-                        }
-                    case EQUALS:
-                        if (isInteger) {
-                            return left.longValue() == right.longValue();
-                        } else {
-                            return left.doubleValue() == right.doubleValue();
-                        }
-                    case NOT_EQUALS:
-                        if (isInteger) {
-                            return left.longValue() != right.longValue();
-                        } else {
-                            return left.doubleValue() != right.doubleValue();
-                        }
-                    case GREATER:
-                        if (isInteger) {
-                            return left.longValue() > right.longValue();
-                        } else {
-                            return left.doubleValue() > right.doubleValue();
-                        }
-                    case GREATER_OR_EQUAL:
-                        if (isInteger) {
-                            return left.longValue() >= right.longValue();
-                        } else {
-                            return left.doubleValue() >= right.doubleValue();
-                        }
-                    case LESS:
-                        if (isInteger) {
-                            return left.longValue() < right.longValue();
-                        } else {
-                            return left.doubleValue() < right.doubleValue();
-                        }
-                    case LESS_OR_EQUAL:
-                        if (isInteger) {
-                            return left.longValue() <= right.longValue();
-                        } else {
-                            return left.doubleValue() <= right.doubleValue();
-                        }
-                    case SHIFT_LEFT:
-                        if (isWide) {
-                            return left.longValue() << right.intValue();
-                        } else {
-                            return left.intValue() << right.intValue();
-                        }
-                    case SHIFT_RIGHT:
-                        if (isWide) {
-                            return left.longValue() >> right.intValue();
-                        } else {
-                            return left.intValue() >> right.intValue();
-                        }
-                    case BITWISE_SHIFT_RIGHT:
-                        if (isWide) {
-                            return left.longValue() >>> right.intValue();
-                        } else {
-                            return left.intValue() >>> right.intValue();
-                        }
-                    case PLUS:
-                        if (isInteger) {
-                            if (isWide) {
-                                return left.longValue() + right.longValue();
-                            } else {
-                                return left.intValue() + right.intValue();
-                            }
-                        } else {
-                            if (isWide) {
-                                return left.doubleValue() + right.doubleValue();
-                            } else {
-                                return left.floatValue() + right.floatValue();
-                            }
-                        }
-                    case MINUS:
-                        if (isInteger) {
-                            if (isWide) {
-                                return left.longValue() - right.longValue();
-                            } else {
-                                return left.intValue() - right.intValue();
-                            }
-                        } else {
-                            if (isWide) {
-                                return left.doubleValue() - right.doubleValue();
-                            } else {
-                                return left.floatValue() - right.floatValue();
-                            }
-                        }
-                    case MULTIPLY:
-                        if (isInteger) {
-                            if (isWide) {
-                                return left.longValue() * right.longValue();
-                            } else {
-                                return left.intValue() * right.intValue();
-                            }
-                        } else {
-                            if (isWide) {
-                                return left.doubleValue() * right.doubleValue();
-                            } else {
-                                return left.floatValue() * right.floatValue();
-                            }
-                        }
-                    case DIVIDE:
-                        if (isInteger) {
-                            if (isWide) {
-                                return left.longValue() / right.longValue();
-                            } else {
-                                return left.intValue() / right.intValue();
-                            }
-                        } else {
-                            if (isWide) {
-                                return left.doubleValue() / right.doubleValue();
-                            } else {
-                                return left.floatValue() / right.floatValue();
-                            }
-                        }
-                    case REMAINDER:
-                        if (isInteger) {
-                            if (isWide) {
-                                return left.longValue() % right.longValue();
-                            } else {
-                                return left.intValue() % right.intValue();
-                            }
-                        } else {
-                            if (isWide) {
-                                return left.doubleValue() % right.doubleValue();
-                            } else {
-                                return left.floatValue() % right.floatValue();
-                            }
-                        }
-                    default:
-                        return null;
-                }
-            }
-        } else if (node instanceof Cast) {
-            Cast cast = (Cast)node;
-            Object operandValue = evaluate(cast.astOperand());
-            if (operandValue instanceof Number) {
-                Number number = (Number)operandValue;
-                String typeName = cast.astTypeReference().getTypeName();
-                if (typeName.equals("float")) {
-                    return number.floatValue();
-                } else if (typeName.equals("double")) {
-                    return number.doubleValue();
-                } else if (typeName.equals("int")) {
-                    return number.intValue();
-                } else if (typeName.equals("long")) {
-                    return number.longValue();
-                } else if (typeName.equals("short")) {
-                    return number.shortValue();
-                } else if (typeName.equals("byte")) {
-                    return number.byteValue();
-                }
-            }
-            return operandValue;
-        } else if (context != null && (node instanceof VariableReference ||
-                node instanceof Select)) {
-            ResolvedNode resolved = context.resolve(node);
-            if (resolved instanceof ResolvedField) {
-                ResolvedField field = (ResolvedField) resolved;
-                Object value = field.getValue();
-                if (value != null) {
-                    return value;
-                }
-                Node astNode = field.findAstNode();
-                if (astNode instanceof VariableDeclaration) {
-                    VariableDeclaration declaration = (VariableDeclaration) astNode;
-                    VariableDefinition definition = declaration.astDefinition();
-                    if (definition != null && definition.astModifiers().isFinal()) {
-                        StrictListAccessor<VariableDefinitionEntry, VariableDefinition> variables =
-                                definition.astVariables();
-                        if (variables.size() == 1) {
-                            VariableDefinitionEntry first = variables.first();
-                            if (first.astInitializer() != null) {
-                                return evaluate(first.astInitializer());
-                            }
-                        }
-                    }
-                }
-                return null;
-            } else if (node instanceof VariableReference) {
-                Statement statement = getParentOfType(node, Statement.class, false);
-                if (statement != null) {
-                    ListIterator<Node> iterator = statement.getParent().getChildren().listIterator();
-                    while (iterator.hasNext()) {
-                        if (iterator.next() == statement) {
-                            if (iterator.hasPrevious()) { // should always be true
-                                iterator.previous();
-                            }
-                            break;
-                        }
-                    }
-
-                    String targetName = ((VariableReference)node).astIdentifier().astValue();
-                    while (iterator.hasPrevious()) {
-                        Node previous = iterator.previous();
-                        if (previous instanceof VariableDeclaration) {
-                            VariableDeclaration declaration = (VariableDeclaration) previous;
-                            VariableDefinition definition = declaration.astDefinition();
-                            for (VariableDefinitionEntry entry : definition
-                                    .astVariables()) {
-                                if (entry.astInitializer() != null
-                                        && entry.astName().astValue().equals(targetName)) {
-                                    return evaluate(entry.astInitializer());
-                                }
-                            }
-                        } else if (previous instanceof ExpressionStatement) {
-                            ExpressionStatement expressionStatement = (ExpressionStatement) previous;
-                            Expression expression = expressionStatement.astExpression();
-                            if (expression instanceof BinaryExpression &&
-                                    ((BinaryExpression) expression).astOperator()
-                                            == BinaryOperator.ASSIGN) {
-                                BinaryExpression binaryExpression = (BinaryExpression) expression;
-                                if (targetName.equals(binaryExpression.astLeft().toString())) {
-                                    return evaluate(binaryExpression.astRight());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else if (node instanceof ArrayCreation) {
-            ArrayCreation creation = (ArrayCreation) node;
-            ArrayInitializer initializer = creation.astInitializer();
-            if (initializer != null) {
-                TypeReference typeReference = creation.astComponentTypeReference();
-                StrictListAccessor<Expression, ArrayInitializer> expressions = initializer
-                        .astExpressions();
-                List<Object> values = Lists.newArrayListWithExpectedSize(expressions.size());
-                Class<?> commonType = null;
-                for (Expression expression : expressions) {
-                    Object value = evaluate(expression);
-                    if (value != null) {
-                        values.add(value);
-                        if (commonType == null) {
-                            commonType = value.getClass();
-                        } else {
-                            while (!commonType.isAssignableFrom(value.getClass())) {
-                                commonType = commonType.getSuperclass();
-                            }
-                        }
-                    } else if (!allowUnknown) {
-                        // Inconclusive
-                        return null;
-                    }
-                }
-                if (!values.isEmpty()) {
-                    Object o = Array.newInstance(commonType, values.size());
-                    return values.toArray((Object[]) o);
-                } else if (context != null) {
-                    ResolvedNode type = context.resolve(typeReference);
-                    System.out.println(type);
-                    // TODO: return new array of this type
-                }
-            } else {
-                // something like "new byte[3]" but with no initializer.
-                String type = creation.astComponentTypeReference().toString();
-                // TODO: Look up the size and only if small, use it. E.g. if it was byte[3]
-                // we could return a byte[3] array, but if it's say byte[1024*1024] we don't
-                // want to do that.
-                int size = 0;
-                if (TYPE_BYTE.equals(type)) {
-                    return new byte[size];
-                }
-                if (TYPE_BOOLEAN.equals(type)) {
-                    return new boolean[size];
-                }
-                if (TYPE_INT.equals(type)) {
-                    return new int[size];
-                }
-                if (TYPE_LONG.equals(type)) {
-                    return new long[size];
-                }
-                if (TYPE_CHAR.equals(type)) {
-                    return new char[size];
-                }
-                if (TYPE_FLOAT.equals(type)) {
-                    return new float[size];
-                }
-                if (TYPE_DOUBLE.equals(type)) {
-                    return new double[size];
-                }
-                if (TYPE_STRING.equals(type)) {
-                    //noinspection SSBasedInspection
-                    return new String[size];
-                }
-                if (TYPE_SHORT.equals(type)) {
-                    return new short[size];
-                }
-                if (TYPE_OBJECT.equals(type)) {
-                    //noinspection SSBasedInspection
-                    return new Object[size];
-                }
-            }
-        }
-
-        // TODO: Check for MethodInvocation and perform some common operations -
-        // Math.* methods, String utility methods like notNullize, etc
-
-        return null;
     }
 
     /**
@@ -2760,50 +2265,10 @@ public class ConstantEvaluator {
      * @param context the context to use to resolve field references, if any
      * @param node    the node to compute the constant value for
      * @return the corresponding constant value - a String, an Integer, a Float, and so on
-     * @deprecated Use {@link #evaluate(JavaContext, PsiElement)} instead
-     */
-    @Deprecated
-    @Nullable
-    public static Object evaluate(@NonNull JavaContext context, @NonNull Node node) {
-        return new ConstantEvaluator(context).evaluate(node);
-    }
-
-    /**
-     * Evaluates the given node and returns the constant string it resolves to, if any. Convenience
-     * wrapper which creates a new {@linkplain ConstantEvaluator}, evaluates the node and returns
-     * the result if the result is a string.
-     *
-     * @param context      the context to use to resolve field references, if any
-     * @param node         the node to compute the constant value for
-     * @param allowUnknown whether we should construct the string even if some parts of it are
-     *                     unknown
-     * @return the corresponding string, if any
-     * @deprecated Use {@link #evaluateString(JavaContext, PsiElement, boolean)} instead
-     */
-    @Deprecated
-    @Nullable
-    public static String evaluateString(@NonNull JavaContext context, @NonNull Node node,
-            boolean allowUnknown) {
-        ConstantEvaluator evaluator = new ConstantEvaluator(context);
-        if (allowUnknown) {
-            evaluator.allowUnknowns();
-        }
-        Object value = evaluator.evaluate(node);
-        return value instanceof String ? (String) value : null;
-    }
-
-    /**
-     * Evaluates the given node and returns the constant value it resolves to, if any. Convenience
-     * wrapper which creates a new {@linkplain ConstantEvaluator}, evaluates the node and returns
-     * the result.
-     *
-     * @param context the context to use to resolve field references, if any
-     * @param node    the node to compute the constant value for
-     * @return the corresponding constant value - a String, an Integer, a Float, and so on
      */
     @Nullable
     public static Object evaluate(@Nullable JavaContext context, @NonNull PsiElement node) {
-        Object evaluate = new ConstantEvaluator(context).evaluate(node);
+        Object evaluate = new ConstantEvaluator().evaluate(node);
         /* TODO: Switch to JavaConstantExpressionEvaluator (or actually, more accurately
           psiFacade.getConstantEvaluationHelper().computeConstantExpression(expressionToEvaluate);
           However, there are a few gaps; in particular, lint's evaluator will do more with arrays
@@ -2853,7 +2318,7 @@ public class ConstantEvaluator {
         if (element instanceof ULiteralExpression) {
             return ((ULiteralExpression) element).getValue();
         }
-        return new ConstantEvaluator(context).evaluate(element);
+        return new ConstantEvaluator().evaluate(element);
     }
 
     /**
@@ -2870,7 +2335,7 @@ public class ConstantEvaluator {
     @Nullable
     public static String evaluateString(@Nullable JavaContext context, @NonNull PsiElement node,
             boolean allowUnknown) {
-        ConstantEvaluator evaluator = new ConstantEvaluator(context);
+        ConstantEvaluator evaluator = new ConstantEvaluator();
         if (allowUnknown) {
             evaluator.allowUnknowns();
         }
@@ -2946,7 +2411,7 @@ public class ConstantEvaluator {
     @Nullable
     public static String evaluateString(@Nullable JavaContext context, @NonNull UElement element,
             boolean allowUnknown) {
-        ConstantEvaluator evaluator = new ConstantEvaluator(context);
+        ConstantEvaluator evaluator = new ConstantEvaluator();
         if (allowUnknown) {
             evaluator.allowUnknowns();
         }

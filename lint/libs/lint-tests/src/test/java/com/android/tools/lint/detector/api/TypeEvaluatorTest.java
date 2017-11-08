@@ -16,7 +16,6 @@
 
 package com.android.tools.lint.detector.api;
 
-import com.android.tools.lint.client.api.JavaParser.TypeDescriptor;
 import com.android.utils.Pair;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
@@ -28,10 +27,6 @@ import com.intellij.psi.PsiType;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
-import lombok.ast.CompilationUnit;
-import lombok.ast.Expression;
-import lombok.ast.ForwardingAstVisitor;
-import lombok.ast.VariableDefinitionEntry;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UFile;
@@ -43,7 +38,7 @@ public class TypeEvaluatorTest extends TestCase {
     private static void checkUast(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
         Pair<JavaContext, Disposable> pair =
-                LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+                LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
         JavaContext context = pair.getFirst();
         Disposable disposable = pair.getSecond();
 
@@ -89,7 +84,7 @@ public class TypeEvaluatorTest extends TestCase {
     private static void checkPsi(Object expected, @Language("JAVA") String source,
             final String targetVariable) {
         Pair<JavaContext, Disposable> pair =
-                LintUtilsTest.parsePsi(source, new File("src/test/pkg/Test.java"));
+                LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
         JavaContext context = pair.getFirst();
         Disposable disposable = pair.getSecond();
         assertNotNull(context);
@@ -133,43 +128,6 @@ public class TypeEvaluatorTest extends TestCase {
             final String targetVariable) {
         checkUast(expected, source, targetVariable);
         checkPsi(expected, source, targetVariable);
-
-        JavaContext context = LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
-        assertNotNull(context);
-        CompilationUnit unit = (CompilationUnit) context.getCompilationUnit();
-        assertNotNull(unit);
-
-        // Find the expression
-        final AtomicReference<Expression> reference = new AtomicReference<>();
-        unit.accept(new ForwardingAstVisitor() {
-            @Override
-            public boolean visitVariableDefinitionEntry(VariableDefinitionEntry node) {
-                if (node.astName().astValue().equals(targetVariable)) {
-                    reference.set(node.astInitializer());
-                }
-                return super.visitVariableDefinitionEntry(node);
-            }
-        });
-        Expression expression = reference.get();
-        TypeDescriptor actual = TypeEvaluator.evaluate(context, expression);
-
-        if (expected == PsiType.NULL) {
-            // TypeDescriptor doesn't have a null type; this test is
-            // intended for the new PSI type evaluator
-            expected = null;
-        }
-
-        if (expected == null) {
-            assertNull(actual);
-        } else {
-            assertNotNull("Couldn't compute type for " + source + ", expected " + expected,
-                    actual);
-            String expectedString = expected.toString();
-            if (expectedString.startsWith("class ")) {
-                expectedString = expectedString.substring("class ".length());
-            }
-            assertEquals(expectedString, actual.getName());
-        }
     }
 
     private static void checkStatements(Object expected, String statementsSource,
@@ -207,16 +165,16 @@ public class TypeEvaluatorTest extends TestCase {
         check(expected, source, "expression");
     }
 
-    public void testNull() throws Exception {
+    public void testNull() {
         checkExpression(PsiType.NULL, "null");
     }
 
-    public void testStrings() throws Exception {
+    public void testStrings() {
         checkExpression(String.class, "\"hello\"");
         checkExpression(String.class, "\"ab\" + \"cd\"");
     }
 
-    public void testBooleans() throws Exception {
+    public void testBooleans() {
         checkExpression(Boolean.TYPE, "true");
         checkExpression(Boolean.TYPE, "false");
         checkExpression(Boolean.TYPE, "false && true");
@@ -224,7 +182,7 @@ public class TypeEvaluatorTest extends TestCase {
         checkExpression(Boolean.TYPE, "!false");
     }
 
-    public void testCasts() throws Exception {
+    public void testCasts() {
         checkExpression(Integer.TYPE, "(int)1");
         checkExpression(Long.TYPE, "(long)1");
         checkExpression(Integer.TYPE, "(int)1.1f");
@@ -234,7 +192,7 @@ public class TypeEvaluatorTest extends TestCase {
         checkExpression(Double.TYPE, "(double)-5");
     }
 
-    public void testArithmetic() throws Exception {
+    public void testArithmetic() {
         checkExpression(Integer.TYPE, "1");
         checkExpression(Long.TYPE, "1L");
         checkExpression(Integer.TYPE, "1 + 3");
@@ -249,12 +207,6 @@ public class TypeEvaluatorTest extends TestCase {
         checkExpression(Integer.TYPE, "5 & 1");
         checkExpression(Integer.TYPE, "~5");
         checkExpression(Long.TYPE, "~(long)5");
-        // Psi and Lombok differ; PSI knows expression promotion
-        // and will treat bytes and shorts etc as promoted to int
-        //checkExpression(Integer.TYPE, "~(short)5");
-        //checkExpression(Byte.TYPE, "~(byte)5");
-        //checkExpression(Short.TYPE, "-(short)5");
-        //checkExpression(Byte.TYPE, "-(byte)5");
         checkExpression(Long.TYPE, "-(long)5");
         checkExpression(Double.TYPE, "-(double)5");
         checkExpression(Float.TYPE, "-(float)5");
@@ -276,14 +228,14 @@ public class TypeEvaluatorTest extends TestCase {
         checkExpression(Float.TYPE, "1.0f + 2.5f");
     }
 
-    public void testFieldReferences() throws Exception {
+    public void testFieldReferences() {
         checkExpression(Integer.TYPE, "MY_INT_FIELD");
         checkExpression(String.class, "MY_STRING_FIELD");
         checkExpression(String.class, "\"prefix-\" + MY_STRING_FIELD + \"-postfix\"");
         checkExpression(Integer.TYPE, "3 - (MY_INT_FIELD + 2)");
     }
 
-    public void testStatements() throws Exception {
+    public void testStatements() {
         checkStatements(Integer.TYPE, ""
                         + "int x = +5;\n"
                         + "int y = x;\n"
@@ -299,7 +251,7 @@ public class TypeEvaluatorTest extends TestCase {
                 "finalString");
     }
 
-    public void testConditionals() throws Exception {
+    public void testConditionals() {
         checkStatements(Integer.TYPE, ""
                         + "boolean condition = false;\n"
                         + "condition = !condition;\n"
@@ -311,14 +263,14 @@ public class TypeEvaluatorTest extends TestCase {
                 "z");
     }
 
-    public void testConstructorInvocation() throws Exception {
+    public void testConstructorInvocation() {
         checkStatements(String.class, ""
                         + "Object o = new String(\"test\");\n"
                         + "Object bar = o;\n",
                 "bar");
     }
 
-    public void testFieldInitializerType() throws Exception {
+    public void testFieldInitializerType() {
         checkStatements(String.class, ""
                         + "Object o = MY_OBJECT_FIELD;\n"
                         + "Object bar = o;\n",

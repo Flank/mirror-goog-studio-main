@@ -141,10 +141,8 @@ class LintBaseline(
             val baselineFile = file
             val message = describeBaselineFilter(foundErrorCount,
                     foundWarningCount, getDisplayPath(project, baselineFile))
-            client.report(Context(driver, project, project, baselineFile, null),
-                    IssueRegistry.BASELINE,
-                    client.getConfiguration(project, driver).getSeverity(IssueRegistry.BASELINE),
-                    Location.create(baselineFile), message, TextFormat.RAW, null)
+            LintClient.report(client, IssueRegistry.BASELINE, message,
+                    file = baselineFile, project = project, driver = driver)
         }
 
         val fixedCount = fixedCount
@@ -187,10 +185,9 @@ class LintBaseline(
                         "`android.lintOptions.checkDependencies=true`."
             }
             message += " Unmatched issue types: " + issueTypes
-            client.report(Context(driver, project, project, baselineFile, null),
-                    IssueRegistry.BASELINE,
-                    client.getConfiguration(project, driver).getSeverity(IssueRegistry.BASELINE),
-                    Location.create(baselineFile), message, TextFormat.RAW, null)
+
+            LintClient.report(client, IssueRegistry.BASELINE, message,
+                    file = baselineFile, project = project, driver = driver)
         }
     }
 

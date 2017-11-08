@@ -31,7 +31,7 @@ public class JavaContextTest extends TestCase {
         // Regression test for https://issuetracker.google.com/issues/37335487
         String source = "package test.pkg;\npublic class Test { }\n";
         Pair<JavaContext, Disposable> pair =
-                LintUtilsTest.parseUast(source, new File("src/test/pkg/Test.java"));
+                LintUtilsTest.parse(source, new File("src/test/pkg/Test.java"));
         JavaContext context = pair.getFirst();
         Disposable disposable = pair.getSecond();
         PsiElement compiled = Mockito.mock(PsiCompiledFile.class);

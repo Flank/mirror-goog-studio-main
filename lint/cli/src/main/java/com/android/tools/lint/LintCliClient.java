@@ -44,7 +44,6 @@ import com.android.tools.lint.checks.HardcodedValuesDetector;
 import com.android.tools.lint.client.api.Configuration;
 import com.android.tools.lint.client.api.DefaultConfiguration;
 import com.android.tools.lint.client.api.IssueRegistry;
-import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.client.api.LintBaseline;
 import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
@@ -96,7 +95,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -340,12 +338,7 @@ public class LintCliClient extends LintClient {
         return mFileContents.computeIfAbsent(file, k -> readFile(file));
     }
 
-    @Override
-    public JavaParser getJavaParser(@Nullable Project project) {
-        return new EcjParser(this, project);
-    }
-
-    @Nullable
+    @NonNull
     @Override
     public UastParser getUastParser(@Nullable Project project) {
         return new LintCliUastParser(project);
@@ -758,14 +751,11 @@ public class LintCliClient extends LintClient {
     protected void reportNonExistingIssueId(@Nullable Project project, @NonNull String id) {
         String message = String.format("Unknown issue id \"%1$s\"", id);
 
-        if (driver != null && project != null) {
+        if (driver != null && project != null && !isSuppressed(IssueRegistry.LINT_ERROR)) {
             Location location = LintUtils.guessGradleLocation(this, project.getDir(), id);
-            if (!isSuppressed(IssueRegistry.LINT_ERROR)) {
-                report(new Context(driver, project, project, project.getDir(), ""),
-                        IssueRegistry.LINT_ERROR,
-                        project.getConfiguration(driver).getSeverity(IssueRegistry.LINT_ERROR),
-                        location, message, TextFormat.RAW, LintFix.create().data(id));
-            }
+            LintClient.Companion.report(this,IssueRegistry.LINT_ERROR,
+                    message, driver, project, location, LintFix.create().data(id));
+
         } else {
             log(Severity.ERROR, null, "Lint: %1$s", message);
         }

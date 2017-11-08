@@ -16,7 +16,6 @@ dependencies {
     compile project(':base:manifest-merger')
     compile libs.kotlin_reflect
     compile libs.kotlin_stdlib
-    compile 'org.eclipse.jdt.core.compiler:ecj:4.6.1' // for old PSI bridge
 }
 
 sourceSets {

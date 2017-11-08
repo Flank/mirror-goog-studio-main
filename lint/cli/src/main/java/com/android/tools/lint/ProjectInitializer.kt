@@ -156,17 +156,13 @@ private class ProjectInitializer(val client: LintClient, val file: File,
         // associated directory, so we'll just randomly pick the folder containing
         // the project.xml folder itself. (In case it's not a full path, e.g.
         // just "project.xml", get the current directory instead.)
-        val dir = file.parentFile ?: File("").absoluteFile
-        val project = Project.create(client, dir, dir)
-        val location = if (element != null)
-            client.xmlParser.getLocation(file, element)
-        else
-            Location.create(file)
-        val request = LintRequest(client, emptyList())
-        val driver = LintDriver(BuiltinIssueRegistry(), client, request)
-        val context = Context(driver, project, project, file, null)
-        client.report(context, IssueRegistry.LINT_ERROR, IssueRegistry.LINT_ERROR.defaultSeverity,
-                location, message, TextFormat.RAW, null)
+        val location = when {
+            element != null -> client.xmlParser.getLocation(file, element)
+            else -> Location.create(file)
+        }
+        LintClient.report(client = client, issue = IssueRegistry.LINT_ERROR, message = message,
+                location = location,
+                file = file)
     }
 
     private fun parseModules(projectElement: Element): ProjectMetadata {

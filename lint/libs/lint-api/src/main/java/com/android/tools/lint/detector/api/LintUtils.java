@@ -35,22 +35,22 @@ import static com.android.ide.common.resources.configuration.FolderConfiguration
 import static com.android.ide.common.resources.configuration.LocaleQualifier.BCP_47_PREFIX;
 import static com.android.sdklib.SdkVersionInfo.camelCaseToUnderlines;
 import static com.android.sdklib.SdkVersionInfo.underlinesToCamelCase;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_BOOLEAN;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_BOOLEAN_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_BYTE;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_BYTE_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_CHAR;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_CHARACTER_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_DOUBLE;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_DOUBLE_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_FLOAT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_FLOAT_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_INT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_INTEGER_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_LONG;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_LONG_WRAPPER;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BOOLEAN;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BOOLEAN_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BYTE;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BYTE_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_CHAR;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_CHARACTER_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_DOUBLE;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_DOUBLE_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_FLOAT;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_FLOAT_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INT;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INTEGER_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_LONG;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_LONG_WRAPPER;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_SHORT;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_SHORT_WRAPPER;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
@@ -98,7 +98,6 @@ import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiClassType;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiImportStatement;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiMethod;
@@ -127,7 +126,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import lombok.ast.ImportDeclaration;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UFile;
 import org.jetbrains.uast.UParenthesizedExpression;
@@ -1043,55 +1041,6 @@ public class LintUtils {
     }
 
     /**
-     * Returns true if the given class (specified by a fully qualified class
-     * name) name is imported in the given compilation unit either through a fully qualified
-     * import or by a wildcard import.
-     *
-     * @param compilationUnit the compilation unit
-     * @param fullyQualifiedName the fully qualified class name
-     * @return true if the given imported name refers to the given fully
-     *         qualified name
-     * @deprecated Use PSI element hierarchies instead where type resolution is more directly
-     *  available (call {@link PsiImportStatement#resolve()})
-     */
-    @Deprecated
-    public static boolean isImported(
-            @Nullable lombok.ast.Node compilationUnit,
-            @NonNull String fullyQualifiedName) {
-        if (compilationUnit == null) {
-            return false;
-        }
-        int dotIndex = fullyQualifiedName.lastIndexOf('.');
-        int dotLength = fullyQualifiedName.length() - dotIndex;
-
-        boolean imported = false;
-        for (lombok.ast.Node rootNode : compilationUnit.getChildren()) {
-            if (rootNode instanceof ImportDeclaration) {
-                ImportDeclaration importDeclaration = (ImportDeclaration) rootNode;
-                String fqn = importDeclaration.asFullyQualifiedName();
-                if (fqn.equals(fullyQualifiedName)) {
-                    return true;
-                } else if (fullyQualifiedName.regionMatches(dotIndex, fqn,
-                        fqn.length() - dotLength, dotLength)) {
-                    // This import is importing the class name using some other prefix, so there
-                    // fully qualified class name cannot be imported under that name
-                    return false;
-                } else if (importDeclaration.astStarImport()
-                        && fqn.regionMatches(0, fqn, 0, dotIndex + 1)) {
-                    imported = true;
-                    // but don't break -- keep searching in case there's a non-wildcard
-                    // import of the specific class name, e.g. if we're looking for
-                    // android.content.SharedPreferences.Editor, don't match on the following:
-                    //   import android.content.SharedPreferences.*;
-                    //   import foo.bar.Editor;
-                }
-            }
-        }
-
-        return imported;
-    }
-
-    /**
      * Looks up the resource values for the given attribute given a style. Note that
      * this only looks project-level style values, it does not resume into the framework
      * styles.
@@ -1614,9 +1563,12 @@ public class LintUtils {
     public static Location guessGradleLocation(
             @NonNull LintClient client,
             @NonNull File projectDir,
-            @NonNull String string) {
+            @Nullable String string) {
         File gradle = new File(projectDir, FN_BUILD_GRADLE);
         if (gradle.isFile()) {
+            if (string == null) {
+                return Location.create(gradle);
+            }
             String contents = client.readFile(gradle).toString();
             int match = contents.indexOf(string);
             if (match != -1) {

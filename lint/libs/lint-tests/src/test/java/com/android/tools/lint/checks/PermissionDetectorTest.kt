@@ -19,9 +19,6 @@ package com.android.tools.lint.checks
 import com.android.SdkConstants.TAG_USES_PERMISSION
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_23
 import com.android.SdkConstants.TAG_USES_PERMISSION_SDK_M
-import com.android.tools.lint.ExternalAnnotationRepository
-import com.android.tools.lint.ExternalAnnotationRepositoryTest
-import com.android.tools.lint.checks.AnnotationDetector.PERMISSION_ANNOTATION
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.detector.api.Detector
 
@@ -461,21 +458,6 @@ class PermissionDetectorTest : AbstractCheckTest() {
     }
 
     fun testIntentPermission() {
-        val client = createClient()
-        val repository = ExternalAnnotationRepository.get(client)
-        val method = ExternalAnnotationRepositoryTest.createMethod(
-                "android.content.Context", "void", "startActivity",
-                "android.content.Intent")
-
-        repository.getAnnotation(method,
-                0,
-                PERMISSION_ANNOTATION) ?: // Running tests from outside the IDE (where it can't find the
-                // bundled up to date annotations in tools/adt/idea/android/annotations)
-                // and we have the annotations.zip file available in platform-tools,
-                // but its contents are old (it's from Android M Preview 1, not including
-                // the new intent-annotation data); skip this test for now.
-                return
-
         val expected = "" +
                 "src/test/pkg/ActionTest.java:36: Error: Missing permissions required by intent ActionTest.ACTION_CALL: android.permission.CALL_PHONE [MissingPermission]\n" +
                 "        activity.startActivity(intent);\n" +

@@ -24,9 +24,6 @@ import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
 import com.android.tools.lint.checks.infrastructure.TestLintTask;
-import com.android.tools.lint.client.api.IssueRegistry;
-import com.android.tools.lint.client.api.LintDriver;
-import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
 import com.google.common.collect.Sets;
@@ -63,6 +60,7 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         return issues;
     }
 
+    @NonNull
     @Override
     public InputStream getTestResource(String relativePath, boolean expectExists) {
         fail("We should not be using file-based resources in the lint builtin unit tests.");
@@ -90,7 +88,6 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         // instead of super.lint: don't set issues such that we can compute and compare
         // detector results below
         TestLintTask task = TestLintTask.lint();
-        task.runCompatChecks(false);
 
         task.checkMessage((context, issue, severity, location, message, fix)
                 -> AbstractCheckTest.super.checkReportedError(context, issue, severity, location,
@@ -134,19 +131,6 @@ public abstract class AbstractCheckTest extends LintDetectorTest {
         @Override
         public File getSdkHome() {
             return TestUtils.getSdk();
-        }
-
-        @NonNull
-        @Override
-        protected LintDriver createDriver(@NonNull IssueRegistry registry,
-                @NonNull LintRequest request) {
-            LintDriver driver = super.createDriver(registry, request);
-            // All the builtin tests have been migrated; make tests faster
-            // by not computing PSI/Lombok trees when not necessary, and better yet,
-            // make sure that no new tests are accidentally integrated that are using
-            // the old mechanism (with this the tests won't work)
-            driver.setRunCompatChecks(false, false);
-            return driver;
         }
     }
 

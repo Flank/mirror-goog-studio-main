@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.detector.api;
 
+import static com.android.tools.lint.detector.api.LintUtilsTest.parse;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.lint.detector.api.Location.SearchDirection;
@@ -23,12 +24,11 @@ import com.android.tools.lint.detector.api.Location.SearchHints;
 import com.android.utils.Pair;
 import com.intellij.openapi.Disposable;
 import java.io.File;
-import java.io.IOException;
 import junit.framework.TestCase;
 
 @SuppressWarnings("javadoc")
 public class LocationTest extends TestCase {
-    public void testReverse() throws IOException {
+    public void testReverse() {
         File file1 = new File("parent/location1");
         File file2 = new File("parent/location2");
         File file3 = new File("parent/location3");
@@ -68,7 +68,7 @@ public class LocationTest extends TestCase {
         assertSame(location1, location2.getSecondary());
     }
 
-    public void testCycles() throws Exception {
+    public void testCycles() {
         File[] paths = new File[] {
                 new File("values-zh-rTW/arrays.xml"), new File("values-zh-rCN/arrays.xml"),
                 new File("values-vi/arrays.xml"), new File("values-uk/arrays.xml"),
@@ -172,8 +172,8 @@ public class LocationTest extends TestCase {
 
     public void testDefaultLocationHandle() {
         //noinspection all // sample code
-        Pair<JavaContext, Disposable> pair = LintUtilsTest
-                .parsePsi("package test.pkg;\nclass Foo{}\n");
+        Pair<JavaContext, Disposable> pair =
+                parse("package test.pkg;\nclass Foo{}\n", new File("src/test/pkg/Test.java"));
         Location.DefaultLocationHandle handle = new Location.DefaultLocationHandle(
                 pair.getFirst(), 0, 10);
         Location location = handle.resolve();

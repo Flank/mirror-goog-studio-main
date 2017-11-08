@@ -72,7 +72,6 @@ kotlin_library(
         "//tools/base/third_party:org.antlr_antlr-runtime",
         "//tools/base/third_party:org.apache.commons_commons-compress",  # TODO: remove?
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
-        "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
         "//tools/base/third_party:org.jacoco_org.jacoco.core",
         "//tools/base/third_party:org.jacoco_org.jacoco.report",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
@@ -129,7 +128,6 @@ kotlin_test(
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
-        "//tools/base/third_party:org.eclipse.jdt.core.compiler_ecj",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jsoup_jsoup",
         "//tools/base/third_party:org.mockito_mockito-core",

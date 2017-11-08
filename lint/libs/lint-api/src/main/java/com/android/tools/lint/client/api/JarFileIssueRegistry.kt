@@ -13,18 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// This class deliberately refers to deprecated APIs like Lombok and PSI
-@file:Suppress("DEPRECATION")
 
 package com.android.tools.lint.client.api
 
 import com.android.SdkConstants
 import com.android.SdkConstants.DOT_CLASS
-import com.android.tools.lint.detector.api.Detector.JavaPsiScanner
-import com.android.tools.lint.detector.api.Detector.JavaScanner
+import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.Scope
+import com.android.tools.lint.detector.api.Location
+import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.TextFormat
 import com.android.utils.SdkUtils
 import java.io.File
 import java.io.IOException
@@ -54,41 +53,12 @@ private constructor(
     override val issues: List<Issue> = registry.issues.toList()
     private var timestamp: Long = jarFile.lastModified()
 
-    private var hasLombokLegacyDetectors: Boolean = false
-    private var hasPsiLegacyDetectors: Boolean = false
-
-    /** True if one or more java detectors were found that use the old Lombok-based API  */
-    fun hasLombokLegacyDetectors(): Boolean {
-        return hasLombokLegacyDetectors
-    }
-
-    /** True if one or more java detectors were found that use the old PSI-based API  */
-    fun hasPsiLegacyDetectors(): Boolean {
-        return hasPsiLegacyDetectors
-    }
-
     override val isUpToDate: Boolean
         get() {
             return timestamp == jarFile.lastModified()
         }
 
     init {
-        // If it's an old registry, look through the issues to see if it
-        // provides Java scanning and if so create the old style visitors
-        for (issue in issues) {
-            val scope = issue.implementation.scope
-            if (scope.contains(Scope.JAVA_FILE) || scope.contains(Scope.JAVA_LIBRARIES)
-                    || scope.contains(Scope.ALL_JAVA_FILES)) {
-                val detectorClass = issue.implementation.detectorClass
-                if (JavaScanner::class.java.isAssignableFrom(detectorClass)) {
-                    hasLombokLegacyDetectors = true
-                } else if (JavaPsiScanner::class.java.isAssignableFrom(detectorClass)) {
-                    hasPsiLegacyDetectors = true
-                }
-                break
-            }
-        }
-
         val loader = registry.javaClass.classLoader
         if (loader is URLClassLoader) {
             loadAndCloseURLClassLoader(client, jarFile, loader)
@@ -205,11 +175,49 @@ private constructor(
                 val loader = client.createUrlClassLoader(arrayOf(url),
                         JarFileIssueRegistry::class.java.classLoader)
                 val registryClass = Class.forName(className, true, loader)
-                registryClass.newInstance() as IssueRegistry
+                val registry = registryClass.newInstance() as IssueRegistry
+
+                try {
+                    registry.issues
+                } catch (e: Throwable) {
+                    warnObsoleteCustomChecks(client, jarFile, className, e)
+                    return null
+                }
+
+                registry
             } catch (e: Throwable) {
                 client.log(e, "Could not load custom lint check jar file %1\$s", jarFile)
                 null
             }
+        }
+
+        /** Warns about obsolete detector classes */
+        private fun warnObsoleteCustomChecks(
+                client: LintClient,
+                jarFile: File,
+                className: String,
+                e: Throwable) {
+            val stacktrace = StringBuilder()
+            LintDriver.appendStackTraceSummary(e, stacktrace)
+
+            val message = "Lint found one or more custom checks that could not " +
+                    "be loaded. The most likely reason for this is that it is using an " +
+                    "older, incompatible or unsupported API in lint. Make sure these " +
+                    "lint checks are updated to the new APIs. The issue registry class " +
+                    "is $className. The class loading issue is ${e.message}: $stacktrace"
+            // Create a context to report this issue against
+            val location = Location.create(jarFile)
+            val request = LintRequest(client, emptyList())
+            val dir = jarFile.parentFile ?: File("").absoluteFile
+            val project = Project.create(client, dir, dir)
+            val driver = LintDriver(object : IssueRegistry() {
+                override val issues: List<Issue> = emptyList()
+            }, client, request)
+            val context = Context(driver, project, project, jarFile, null)
+            client.report(context,
+                    IssueRegistry.OBSOLETE_LINT_CHECK,
+                    IssueRegistry.OBSOLETE_LINT_CHECK.defaultSeverity,
+                    location, message, TextFormat.RAW, null)
         }
 
         /**
@@ -228,9 +236,6 @@ private constructor(
                     var isLegacy = false
                     if (attribute == null) {
                         attribute = attrs[Attributes.Name(MF_LINT_REGISTRY_OLD)]
-                        // It's an old rule. We don't yet conclude that
-                        //   hasLombokLegacyDetectors=true
-                        // because the lint checks may not be Java related.
                         if (attribute != null) {
                             isLegacy = true
                         }

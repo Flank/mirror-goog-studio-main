@@ -16,9 +16,8 @@
 
 package com.android.tools.lint.checks
 
-
-import com.android.tools.lint.client.api.JavaParser.TYPE_OBJECT
-import com.android.tools.lint.client.api.JavaParser.TYPE_STRING
+import com.android.tools.lint.client.api.TYPE_OBJECT
+import com.android.tools.lint.client.api.TYPE_STRING
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation

@@ -23,13 +23,6 @@ maven_java_library(
 )
 
 maven_java_library(
-    name = "com.android.tools.external.lombok_lombok-ast",
-    export_artifact = "//prebuilts/tools/common/m2/repository/com/android/tools/external/lombok/lombok-ast/0.2.3:jar",
-    visibility = ["//visibility:public"],
-    exports = [":com.google.guava_guava"],
-)
-
-maven_java_library(
     name = "com.beust_jcommander",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/beust/jcommander/1.64:jar",
     visibility = ["//visibility:public"],
@@ -753,13 +746,6 @@ maven_java_library(
     export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/aether/aether-util/1.0.2.v20150114:jar",
     visibility = ["//visibility:public"],
     exports = [":org.eclipse.aether_aether-api"],
-)
-
-maven_java_library(
-    name = "org.eclipse.jdt.core.compiler_ecj",
-    export_artifact = "//prebuilts/tools/common/m2/repository/org/eclipse/jdt/core/compiler/ecj/4.6.1:jar",
-    visibility = ["//visibility:public"],
-    exports = [],
 )
 
 maven_java_library(

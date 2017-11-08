@@ -26,6 +26,7 @@ import com.android.tools.lint.detector.api.LayoutDetector
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.XmlContext
+import com.google.common.truth.Truth.assertThat
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UFile
 import org.w3c.dom.Element
@@ -36,21 +37,22 @@ class LintDriverCrashTest : AbstractCheckTest() {
         lint().files(
                 xml("res/layout/foo.xml", "<LinearLayout/>"),
                 java("""
-package test.pkg;
-@SuppressWarnings("ALL") class Foo {
-}
-"""))
+                    package test.pkg;
+                    @SuppressWarnings("ALL") class Foo {
+                    }
+                    """))
                 .allowSystemErrors(true)
+                .issues(CrashingDetector.CRASHING_ISSUE)
                 .run()
                 // Checking for manual substrings instead of doing an actual equals check
                 // since the stacktrace contains a number of specific line numbers from
                 // the lint implementation, including this test, which keeps shifting every
                 // time there is an edit
                 .check {
-                    it.contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
-                    it.contains("You can set environment variable LINT_PRINT_STACKTRACE=true to dump a full stacktrace to stdout. [LintError]")
-                    it.contains("ArithmeticException:LintDriverCrashTest\$CrashingDetector\$createUastHandler$1.visitFile(LintDriverCrashTest.kt:")
-                    it.contains("1 errors, 0 warnings")
+                    assertThat(it).contains("Foo.java: Error: Unexpected failure during lint analysis of Foo.java (this is a bug in lint or one of the libraries it depends on)")
+                    assertThat(it).contains("You can set environment variable LINT_PRINT_STACKTRACE=true to dump a full stacktrace to stdout. [LintError]")
+                    assertThat(it).contains("ArithmeticException:LintDriverCrashTest\$CrashingDetector\$createUastHandler$1.visitFile(LintDriverCrashTest.kt:")
+                    assertThat(it).contains("1 errors, 0 warnings")
                 }
         LintDriver.clearCrashCount()
     }

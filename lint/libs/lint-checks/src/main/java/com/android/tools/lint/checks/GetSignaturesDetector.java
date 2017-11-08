@@ -16,10 +16,12 @@
 
 package com.android.tools.lint.checks;
 
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INT;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_STRING;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.tools.lint.client.api.JavaEvaluator;
-import com.android.tools.lint.client.api.JavaParser;
 import com.android.tools.lint.detector.api.Category;
 import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.Detector;
@@ -70,8 +72,7 @@ public class GetSignaturesDetector extends Detector implements UastScanner  {
             @NonNull PsiMethod method) {
         JavaEvaluator evaluator = context.getEvaluator();
         if (!evaluator.methodMatches(method, PACKAGE_MANAGER_CLASS, true,
-                JavaParser.TYPE_STRING,
-                JavaParser.TYPE_INT)) {
+                TYPE_STRING, TYPE_INT)) {
             return;
         }
 

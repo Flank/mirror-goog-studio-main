@@ -717,7 +717,6 @@ class TypedefDetectorTest : AbstractCheckTest() {
                         + "}\n"),
                 SUPPORT_ANNOTATIONS_CLASS_PATH,
                 SUPPORT_ANNOTATIONS_JAR)
-                .skipExtraTokenChecks()
                 .run()
                 .expectInlinedMessages()
     }

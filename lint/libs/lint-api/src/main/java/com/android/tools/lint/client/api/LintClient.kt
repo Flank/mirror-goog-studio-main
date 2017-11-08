@@ -177,30 +177,16 @@ abstract class LintClient {
     abstract val xmlParser: XmlParser
 
     /**
-     * Returns a [JavaParser] to use to parse Java
+     * Returns a [UastParser] to use to parse Java
      *
      * @param project the project to parse, if known (this can be used to look up
      *                the class path for type attribution etc, and it can also be used
      *                to more efficiently process a set of files, for example to
      *                perform type attribution for multiple units in a single pass)
      *
-     * @return a new [JavaParser], or null if this client does not
-     *         support Java analysis
+     * @return a new [UastParser]
      */
-    abstract fun getJavaParser(project: Project?): JavaParser?
-
-    /**
-     * Returns a [JavaParser] to use to parse Java
-     *
-     * @param project the project to parse, if known (this can be used to look up
-     *                the class path for type attribution etc, and it can also be used
-     *                to more efficiently process a set of files, for example to
-     *                perform type attribution for multiple units in a single pass)
-     *
-     * @return a new [JavaParser], or null if this client does not
-     *         support Java analysis
-     */
-    abstract fun getUastParser(project: Project?): UastParser?
+    abstract fun getUastParser(project: Project?): UastParser
 
     /**
      * Returns an optimal detector, if applicable. By default, just returns the
@@ -344,25 +330,6 @@ abstract class LintClient {
      */
     open fun getSdkInfo(project: Project): SdkInfo = // By default no per-platform SDK info
             DefaultSdkInfo()
-
-    /**
-     * Returns a suitable location for storing cache files. Note that the
-     * directory may not exist. You can override the default location
-     * using `$ANDROID_SDK_CACHE_DIR` (though note that specific
-     * lint integrations may not honor that environment variable; for example,
-     * in Gradle the cache directory will **always** be build/intermediates/lint-cache/.)
-     *
-     * @param create if true, attempt to create the cache dir if it does not
-     *            exist
-     *
-     * @return a suitable location for storing cache files, which may be null if
-     *         the create flag was false, or if for some reason the directory
-     *         could not be created
-     *
-     */
-    @Deprecated("Use {@link #getCacheDir(String, boolean)} instead",
-            ReplaceWith("getCacheDir(null, create)"))
-    open fun getCacheDir(create: Boolean): File? = getCacheDir(null, create)
 
     /**
      * Returns a suitable location for storing cache files of a given named
@@ -1414,20 +1381,6 @@ abstract class LintClient {
     /**
      * Returns the project resources, if available
      *
-     * @param includeDependencies if true, include merged view of all dependencies
-     *
-     * @return the project resources, or null if not available
-     *
-     */
-    @Deprecated("Use {@link #getResourceRepository} instead",
-            ReplaceWith("getResourceRepository(project, includeDependencies, false)"))
-    open fun getProjectResources(project: Project, includeDependencies: Boolean):
-            AbstractResourceRepository? =
-            getResourceRepository(project, includeDependencies, false)
-
-    /**
-     * Returns the project resources, if available
-     *
      * @param includeModuleDependencies if true, include merged view of all module dependencies
      *
      * @param includeLibraries          if true, include merged view of all library dependencies
@@ -1592,5 +1545,120 @@ abstract class LintClient {
          */
         @JvmStatic val isGradle: Boolean
             get() = CLIENT_GRADLE == clientName
+
+        /**
+         * Reports an issue where we don't (necessarily) have a [Context] or [Project].
+         * Detectors should generally not use this facility; it's primarily used to
+         * report issues that happen outside of a normal lint analysis, e.g. issues
+         * with the project setup itself, or loading custom check jar files, etc.
+         *
+         * Even though this method takes a [LintClient] instance, it's here on the
+         * companion object instead because we don't want this report method to
+         * be surfaced along with the normal report methods people access via code
+         * completion.
+         */
+        fun report(
+                client: LintClient,
+                issue: Issue,
+                message: String,
+                file: File? = null,
+                format: TextFormat = TextFormat.RAW,
+                fix: LintFix? = null,
+                configuration: Configuration? = null,
+                severity: Severity? = null,
+                context: Context? = null,
+                project: Project? = null,
+                mainProject: Project? = null,
+                driver: LintDriver? = null,
+                location: Location? = null) {
+
+            val realLocation = when {
+                location != null -> location
+                file != null -> Location.create(file)
+                context != null -> Location.create(context.file)
+                project != null -> Location.create(project.dir)
+                else -> error("Must supply location or file or project")
+            }
+
+            val realFile = when {
+                file != null -> file
+                else -> realLocation.file
+            }
+
+            val realProject = when {
+                project != null -> project
+                context != null -> context.project
+                else -> {
+                    val dir = if (realFile.isDirectory)
+                        realFile
+                    else
+                        realFile.parentFile ?: File("").absoluteFile
+                    Project.create(client, dir, dir)
+                }
+            }
+
+            val realSeverity = when {
+                severity != null -> severity
+                configuration != null -> configuration.getSeverity(issue)
+                context != null -> context.configuration.getSeverity(issue)
+                project != null && driver != null ->
+                    project.getConfiguration(driver).getSeverity(issue)
+                else -> issue.defaultSeverity
+            }
+
+            val realContext = when {
+                context != null -> context
+                else -> {
+                    val realDriver = if (driver != null) {
+                        driver
+                    } else {
+                        val request = LintRequest(client, emptyList())
+                        LintDriver(object : IssueRegistry() {
+                            override val issues: List<Issue> = emptyList()
+                        }, client, request)
+                    }
+
+                    Context(realDriver, realProject, mainProject ?: realProject, realFile,
+                            if (realFile.isDirectory) "" else null)
+                }
+            }
+
+            // Create a context to report this issue against
+            client.report(realContext, issue, realSeverity, realLocation, message, format, fix)
+        }
+
+        /**
+         * Convenience helper for Java calls into the above reporting method, since Java
+         * does not have default parameters.
+         */
+        fun report(
+                client: LintClient,
+                issue: Issue,
+                message: String,
+                file: File,
+                project: Project?) {
+            report(client = client, issue = issue, message = message, file = file,
+                    project = project,
+                    // ensure we call the main reporting method, not a recursive call to self:
+                    driver = null)
+        }
+
+        /**
+         * Convenience helper for Java calls into the above reporting method, since Java
+         * does not have default parameters.
+         */
+        fun report(
+                client: LintClient,
+                issue: Issue,
+                message: String,
+                driver: LintDriver,
+                project: Project,
+                location: Location?,
+                fix: LintFix?) {
+            report(client = client, issue = issue, message = message,
+                    driver = driver, project = project, location = location, fix = fix,
+                    // ensure we call the main reporting method, not a recursive call to self:
+                    file = null)
+        }
     }
 }

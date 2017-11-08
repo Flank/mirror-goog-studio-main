@@ -40,7 +40,7 @@ import java.util.Set;
  *
  * <p>{@link #getField} returns the API level when the field was introduced.
  */
-final class ApiClass implements Comparable<ApiClass> {
+public final class ApiClass implements Comparable<ApiClass> {
     private final String mName;
     private final int mSince;
     private final int mDeprecatedIn;

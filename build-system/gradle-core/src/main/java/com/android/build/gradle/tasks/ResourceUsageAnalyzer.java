@@ -1446,7 +1446,7 @@ public class ResourceUsageAnalyzer {
         }
     }
 
-    // TODO: Use Lombok/ECJ here
+    // TODO: Use PSI here
     private void parseResourceClass(File file) throws IOException {
         String s = Files.toString(file, UTF_8);
         // Simple parser which handles only aapt's special R output
