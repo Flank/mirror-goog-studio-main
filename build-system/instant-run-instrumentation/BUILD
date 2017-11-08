@@ -1,4 +1,5 @@
 load("//tools/base/bazel:utils.bzl", "srcjar")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 java_library(
     name = "instant-run-instrumentation",
@@ -60,13 +61,15 @@ compile_and_instrument_patch("verifier", "incremental-change-visitor")
 
 compile_and_instrument_patch("java8", "incremental-change-visitor")
 
+compile_and_instrument_patch("kotlin", "incremental-change-visitor")
+
 compile_and_instrument_patch("java8PatchOne", "incremental-change-visitor")
 
 compile_and_instrument_patch("java8PatchTwo", "incremental-change-visitor")
 
-java_test(
+kotlin_test(
     name = "instant-run-instrumentation-tests",
-    srcs = glob(["src/test/java/**/*.java"]),
+    srcs = ["src/test/java"],
     data = [
         ":base-test-classes",
         ":instrument-base-classes",
@@ -75,6 +78,7 @@ java_test(
         ":instrument-java8-classes",
         ":instrument-java8PatchOne-classes",
         ":instrument-java8PatchTwo-classes",
+        ":instrument-kotlin-classes",
         ":instrument-lineChangingVerifier-classes",
         ":instrument-verifier-classes",
         ":lineChangingVerifier-test-classes",
