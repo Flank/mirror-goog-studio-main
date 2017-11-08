@@ -17,6 +17,7 @@ package com.android.layoutinspector.model;
 
 import static org.junit.Assert.*;
 
+import javax.swing.tree.TreePath;
 import org.junit.Test;
 
 public class ViewNodeTest {
@@ -91,6 +92,39 @@ public class ViewNodeTest {
         ViewProperty property = node.groupedProperties.get("properties").get(0);
         assertEquals("zoo", property.name);
         assertEquals("baz", property.getValue());
+    }
+
+    @Test
+    public void testGetPathNullRoot() {
+        ViewNode node = ViewNode.parseFlatString(getViewNodeFlatString());
+        ViewNode child = node.getChildAt(1).getChildAt(0);
+
+        ViewNode[] nodes = {child.parent.parent, child.parent, child};
+        TreePath path = new TreePath(nodes);
+        assertEquals(path, ViewNode.getPath(child));
+    }
+
+    @Test
+    public void testGetPathWithParent() {
+        ViewNode node = ViewNode.parseFlatString(getViewNodeFlatString());
+        ViewNode child = node.getChildAt(1).getChildAt(0);
+        ViewNode root = child.parent;
+
+        ViewNode[] nodes = {child.parent, child};
+        TreePath path = new TreePath(nodes);
+        assertEquals(path, ViewNode.getPathFromParent(child, root));
+    }
+
+    // root only affects the returned path if it's in the path.
+    @Test
+    public void testGetPathWithParentInvalid() {
+        ViewNode node = ViewNode.parseFlatString(getViewNodeFlatString());
+        ViewNode child = node.getChildAt(1).getChildAt(0);
+        ViewNode root = node.getChildAt(0);
+
+        ViewNode[] nodes = {child.parent.parent, child.parent, child};
+        TreePath path = new TreePath(nodes);
+        assertEquals(path, ViewNode.getPathFromParent(child, root));
     }
 
     private static byte[] getViewNodeFlatString() {
