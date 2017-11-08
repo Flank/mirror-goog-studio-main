@@ -92,7 +92,6 @@ public class InstantRunSlicerTest {
     @Before
     public void beforeTest() throws IOException {
         MockitoAnnotations.initMocks(this);
-        when(variantScope.getInstantRunSupportDir()).thenReturn(instantRunSupportDir.getRoot());
         when(variantScope.getRestartDexOutputFolder()).thenReturn(instantRunSupportDir.getRoot());
         when(buildContext.getPatchingPolicy()).thenReturn(
                 InstantRunPatchingPolicy.MULTI_APK);

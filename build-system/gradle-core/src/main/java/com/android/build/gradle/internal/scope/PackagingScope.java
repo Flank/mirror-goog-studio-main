@@ -56,12 +56,6 @@ public interface PackagingScope extends TaskOutputHolder {
     InstantRunBuildContext getInstantRunBuildContext();
 
     /**
-     * Directory with instant run support files.
-     */
-    @NonNull
-    File getInstantRunSupportDir();
-
-    /**
      * Returns the directory for storing incremental files.
      */
     @NonNull

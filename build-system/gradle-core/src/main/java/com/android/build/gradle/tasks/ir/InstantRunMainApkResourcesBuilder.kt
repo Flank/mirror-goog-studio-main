@@ -138,9 +138,7 @@ open class InstantRunMainApkResourcesBuilder : AndroidBuilderTask() {
             task.outputDirectory = variantScope.instantRunMainApkResourcesDir
             task.aaptGeneration = AaptGeneration.fromProjectOptions(packagingScope.projectOptions)
             task.fileCache = variantScope.globalScope.buildCache!!
-            task.aaptIntermediateFolder = File(
-                    packagingScope.getIncrementalDir("InstantRunMainApkRes"),
-                    "aapt-temp")
+            task.aaptIntermediateFolder = File(packagingScope.getIncrementalDir(name), "aapt-temp")
             task.outputScope = variantScope.outputScope
 
             variantScope.addTaskOutput(INSTANT_RUN_MAIN_APK_RESOURCES, task.outputDirectory, name)

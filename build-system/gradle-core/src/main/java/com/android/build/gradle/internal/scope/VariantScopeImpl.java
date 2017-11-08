@@ -920,9 +920,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getInstantRunSupportDir() {
-        return new File(globalScope.getIntermediatesDir(), "/instant-run-support/" +
-                variantData.getVariantConfiguration().getDirName());
+    public File getManifestCheckerDir() {
+        return new File(
+                globalScope.getIntermediatesDir(),
+                "/manifest-checker/" + variantData.getVariantConfiguration().getDirName());
     }
 
     @Override
@@ -931,13 +932,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return new File(
                 globalScope.getIntermediatesDir(),
                 "/instant-run-main-apk-res/" + variantData.getVariantConfiguration().getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getInstantRunSliceSupportDir() {
-        return new File(globalScope.getIntermediatesDir(), "/instant-run-slices/" +
-                variantData.getVariantConfiguration().getDirName());
     }
 
     @NonNull

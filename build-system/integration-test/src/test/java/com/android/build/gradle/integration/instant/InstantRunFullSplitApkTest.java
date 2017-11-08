@@ -97,7 +97,7 @@ public class InstantRunFullSplitApkTest {
         assertThat(main.file).hasName("project-armeabi-v7a-debug.apk");
         assertThat(
                         mProject.file(
-                                "build/intermediates/instant-run-support/debug/slice_0"
+                                "build/intermediates/incremental/ir_slices/debug/slice_0"
                                         + "/AndroidManifest.xml"))
                 .contains("android:versionCode=\"2001\"");
 

@@ -326,10 +326,12 @@ public class ApplicationTaskManager extends TaskManager {
                         AaptGeneration.fromProjectOptions(projectOptions),
                         packagingScope.getAaptOptions(),
                         new File(packagingScope.getInstantRunSplitApkOutputFolder(), "dep"),
-                        packagingScope.getInstantRunSupportDir(),
                         new File(
-                                packagingScope.getIncrementalDir(
-                                        "InstantRunDependenciesApkBuilder"),
+                                packagingScope.getIncrementalDir("ir_dep"),
+                                variantScope.getDirName()),
+                        new File(
+                                getIncrementalFolder(
+                                        variantScope, "InstantRunDependenciesApkBuilder"),
                                 "aapt-temp"));
 
         Optional<AndroidTask<TransformTask>> dependenciesApkBuilderTask =
@@ -353,9 +355,10 @@ public class ApplicationTaskManager extends TaskManager {
                         AaptGeneration.fromProjectOptions(projectOptions),
                         packagingScope.getAaptOptions(),
                         new File(packagingScope.getInstantRunSplitApkOutputFolder(), "slices"),
-                        packagingScope.getInstantRunSupportDir(),
+                        getIncrementalFolder(variantScope, "ir_slices"),
                         new File(
-                                packagingScope.getIncrementalDir("InstantRunSliceSplitApkBuilder"),
+                                getIncrementalFolder(
+                                        variantScope, "InstantRunSliceSplitApkBuilder"),
                                 "aapt-temp"),
                         globalScope.getProjectOptions().get(OptionalBooleanOption.SERIAL_AAPT2));
 
@@ -504,4 +507,7 @@ public class ApplicationTaskManager extends TaskManager {
                 writeTask.getName());
     }
 
+    private static File getIncrementalFolder(VariantScope variantScope, String taskName) {
+        return new File(variantScope.getIncrementalDir(taskName), variantScope.getDirName());
+    }
 }

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
-import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
@@ -49,7 +48,7 @@ public interface InstantRunVariantScope {
     File getRestartDexOutputFolder();
 
     @NonNull
-    File getInstantRunSupportDir();
+    File getManifestCheckerDir();
 
     @NonNull
     File getInstantRunMainApkResourcesDir();
@@ -62,9 +61,6 @@ public interface InstantRunVariantScope {
 
     @NonNull
     File getInstantRunPastIterationsFolder();
-
-    @NonNull
-    File getInstantRunSliceSupportDir();
 
     @NonNull
     File getIncrementalRuntimeSupportJar();
@@ -81,12 +77,6 @@ public interface InstantRunVariantScope {
      */
     @NonNull
     ImmutableList<File> getInstantRunBootClasspath();
-
-    AndroidTask<TransformTask> getInstantRunVerifierTask();
-    void setInstantRunVerifierTask(AndroidTask<TransformTask> verifierTask);
-
-    AndroidTask<TransformTask> getInstantRunSlicerTask();
-    void setInstantRunSlicerTask(AndroidTask<TransformTask> slicerTask);
 
     List<AndroidTask<? extends DefaultTask>> getColdSwapBuildTasks();
     void addColdSwapBuildTask(@NonNull AndroidTask<? extends DefaultTask> task);

@@ -175,8 +175,6 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
 
     protected InstantRunBuildContext instantRunContext;
 
-    protected File instantRunSupportDir;
-
     protected FileCollection manifests;
 
     @Nullable protected Collection<String> aaptOptionsNoCompress;
@@ -836,15 +834,15 @@ public abstract class PackageAndroidArtifact extends IncrementalTask {
             packageAndroidArtifact.instantRunContext = packagingScope.getInstantRunBuildContext();
             packageAndroidArtifact.aaptIntermediateFolder =
                     new File(
-                            packagingScope.getIncrementalDir("PackageAndroidArtifact"),
+                            packagingScope.getIncrementalDir(packageAndroidArtifact.getName()),
                             "aapt-temp");
 
-            packageAndroidArtifact.instantRunSupportDir =
-                    packagingScope.getInstantRunSupportDir();
             packageAndroidArtifact.resourceFiles = resourceFiles;
             packageAndroidArtifact.outputDirectory = outputDirectory;
             packageAndroidArtifact.setIncrementalFolder(
-                    packagingScope.getIncrementalDir(packageAndroidArtifact.getName()));
+                    new File(
+                            packagingScope.getIncrementalDir(packageAndroidArtifact.getName()),
+                            "tmp"));
             packageAndroidArtifact.outputScope = outputScope;
 
             packageAndroidArtifact.fileCache = fileCache;

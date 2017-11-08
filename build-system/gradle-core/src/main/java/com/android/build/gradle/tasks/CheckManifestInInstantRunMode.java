@@ -53,7 +53,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
     private static final Logger LOG = Logging.getLogger(CheckManifestInInstantRunMode.class);
 
     private InstantRunBuildContext buildContext;
-    private File instantRunSupportDir;
+    private File manifestCheckerDir;
     private OutputScope outputScope;
     private FileCollection instantRunManifests;
     private FileCollection processedRes;
@@ -118,7 +118,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
 
             File manifestFile = mergedManifest.getOutputFile();
             LOG.info("CheckManifestInInstantRunMode : Merged manifest %1$s", manifestFile);
-            runManifestChangeVerifier(buildContext, instantRunSupportDir, manifestFile);
+            runManifestChangeVerifier(buildContext, manifestCheckerDir, manifestFile);
 
             // Change THIS to not assume MAIN, time to add some API to the split scope that will
             // get MAIN, or UNIVERSAL or in case of FULL SPLIT, use the commented code to select
@@ -146,7 +146,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
             // would call .get() before the task run.
             LOG.info("CheckManifestInInstantRunMode : Resource APK %1$s", resourcesApk);
             if (resourcesApk.exists()) {
-                runManifestBinaryChangeVerifier(buildContext, instantRunSupportDir, resourcesApk);
+                runManifestBinaryChangeVerifier(buildContext, manifestCheckerDir, resourcesApk);
             }
         }
     }
@@ -253,8 +253,7 @@ public class CheckManifestInInstantRunMode extends AndroidVariantTask {
             task.processedRes = processedResources;
             task.outputScope = transformVariantScope.getOutputScope();
             task.buildContext = instantRunVariantScope.getInstantRunBuildContext();
-            task.instantRunSupportDir =
-                    new File(instantRunVariantScope.getInstantRunSupportDir(), "manifestChecker");
+            task.manifestCheckerDir = instantRunVariantScope.getManifestCheckerDir();
             task.setVariantName(transformVariantScope.getFullVariantName());
         }
     }

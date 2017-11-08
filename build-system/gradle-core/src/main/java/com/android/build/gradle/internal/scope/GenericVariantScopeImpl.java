@@ -29,31 +29,6 @@ import org.gradle.api.DefaultTask;
  */
 public abstract class GenericVariantScopeImpl extends TaskOutputHolderImpl implements InstantRunVariantScope {
 
-    private AndroidTask<TransformTask> instantRunVerifierTask;
-
-    @Override
-    public AndroidTask<TransformTask> getInstantRunVerifierTask() {
-        return instantRunVerifierTask;
-    }
-
-    @Override
-    public void setInstantRunVerifierTask(AndroidTask<TransformTask> verifierTask) {
-        instantRunVerifierTask = verifierTask;
-    }
-
-    private AndroidTask<TransformTask> instantRunSlicerTask;
-
-    @Override
-    public AndroidTask<TransformTask> getInstantRunSlicerTask() {
-        return instantRunSlicerTask;
-    }
-
-    @Override
-    public void setInstantRunSlicerTask(
-            AndroidTask<TransformTask> instantRunSlicerTask) {
-        this.instantRunSlicerTask = instantRunSlicerTask;
-    }
-
     private List<AndroidTask<? extends DefaultTask>> coldSwapBuildTasks = Lists.newArrayList();
 
     @Override
