@@ -247,6 +247,8 @@ public final class GradleTestProject implements TestRule {
     private final GradleTestProject rootProject;
     private final List<ProjectConnection> openConnections;
 
+    private boolean applied = false;
+
     GradleTestProject(
             @Nullable String name,
             @Nullable TestProject testProject,
@@ -382,6 +384,25 @@ public final class GradleTestProject implements TestRule {
 
     @Override
     public Statement apply(final Statement base, final Description description) {
+        /*
+         * We only ever want to call apply() once because a bunch of filesystem operations are done
+         * that assume they only happen once, and them happening multiple times could cause weird
+         * things. I also don't want to think about what happens when this is called multiple times.
+         */
+        if (applied) {
+            throw new IllegalStateException("apply() called more than once");
+        }
+        applied = true;
+
+        /*
+         * We only ever want to call apply on the root project because, again, I don't want to think
+         * about the combination of things that might happen if it's called on the subproject, or
+         * subproject + parent, or whatever.
+         */
+        if (rootProject != this) {
+            return rootProject.apply(base, description);
+        }
+
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {

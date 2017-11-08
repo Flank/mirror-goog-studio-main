@@ -99,7 +99,6 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         with(StringOption.BUILD_CACHE_DIR, getBuildCacheDir().getAbsolutePath());
     }
 
-
     /** Return the default build cache location for a project. */
     public final File getBuildCacheDir() {
         return new File(projectDirectory.toFile(), ".buildCache");
@@ -117,6 +116,20 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
                         + "order to record a benchmark.");
         this.benchmarkMode = benchmarkMode;
 
+        return (T) this;
+    }
+
+    /**
+     * Temporarily disable benchmarking for the duration of the given runnable.
+     *
+     * <p>If the executor was previously set to record, that state will be restored at the end of
+     * the runnable.
+     */
+    public final T dontRecord(Runnable r) {
+        Logging.BenchmarkMode prev = benchmarkMode;
+        benchmarkMode = null;
+        r.run();
+        benchmarkMode = prev;
         return (T) this;
     }
 
