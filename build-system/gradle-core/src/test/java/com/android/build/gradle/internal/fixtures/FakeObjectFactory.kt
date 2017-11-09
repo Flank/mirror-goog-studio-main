@@ -20,12 +20,11 @@ import org.gradle.api.Named
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.internal.reflect.Instantiator
 import org.gradle.internal.reflect.JavaReflectionUtil
 import java.lang.reflect.Constructor
 
 /**
- * a fake [Instantiator] to used in tests.
+ * a fake [ObjectFactory] to used in tests.
  *
  * This just calls the constructor directly.
  *
