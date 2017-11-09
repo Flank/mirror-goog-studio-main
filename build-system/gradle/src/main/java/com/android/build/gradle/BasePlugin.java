@@ -539,6 +539,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         GlobalScope globalScope =
                 new GlobalScope(
                         project,
+                        new ProjectWrapper(project),
                         projectOptions,
                         dslScope,
                         androidBuilder,
@@ -1061,8 +1062,10 @@ public abstract class BasePlugin<E extends BaseExtension2>
         return new SourceSetManager(
                 project,
                 isPackagePublished(),
-                extraModelInfo.getDeprecationReporter(),
-                extraModelInfo.getSyncIssueHandler());
+                new DslScopeImpl(
+                        extraModelInfo.getSyncIssueHandler(),
+                        extraModelInfo.getDeprecationReporter(),
+                        project.getObjects()));
     }
 
     /**

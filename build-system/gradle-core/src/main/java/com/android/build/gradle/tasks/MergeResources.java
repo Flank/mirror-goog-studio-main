@@ -22,10 +22,12 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
 import com.android.build.gradle.internal.aapt.WorkerExecutorResourceCompilationService;
+import com.android.build.gradle.internal.api.sourcesets.FilesProvider;
 import com.android.build.gradle.internal.res.namespaced.NamespaceRemover;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -66,6 +68,7 @@ import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.android.utils.ILogger;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
@@ -108,6 +111,8 @@ public class MergeResources extends IncrementalTask {
 
     // ----- PRIVATE TASK API -----
 
+    private FilesProvider filesProvider;
+
     /**
      * Optional file to write any publicly imported resource types and names to
      */
@@ -123,7 +128,8 @@ public class MergeResources extends IncrementalTask {
 
     // file inputs as raw files, lazy behind a memoized/bypassed supplier
     private Supplier<Collection<File>> sourceFolderInputs;
-    private Supplier<List<ResourceSet>> resSetSupplier;
+    private Map<String, BuildableArtifact> resources;
+    //private Supplier<List<ResourceSet>> resSetSupplier;
 
     private List<ResourceSet> processedInputs;
 
@@ -681,9 +687,26 @@ public class MergeResources extends IncrementalTask {
         return flags.stream().map(Enum::name).sorted().collect(Collectors.joining(","));
     }
 
+    @InputFiles
+    public Collection<BuildableArtifact> getResources() {
+        return resources.values();
+    }
+
     @VisibleForTesting
-    void setResSetSupplier(@NonNull Supplier<List<ResourceSet>> resSetSupplier) {
-        this.resSetSupplier = resSetSupplier;
+    public void setResources(Map<String, BuildableArtifact> resources) {
+        this.resources = resources;
+    }
+
+    private List<ResourceSet> getResSet() {
+        ImmutableList.Builder<ResourceSet> builder = ImmutableList.builder();
+        for (Map.Entry<String, BuildableArtifact> entry : resources.entrySet()) {
+            ResourceSet resourceSet =
+                    new ResourceSet(
+                            entry.getKey(), ResourceNamespace.RES_AUTO, null, validateEnabled);
+            resourceSet.addSources(entry.getValue().getFiles());
+            builder.add(resourceSet);
+        }
+        return builder.build();
     }
 
     /**
@@ -692,7 +715,7 @@ public class MergeResources extends IncrementalTask {
     @VisibleForTesting
     @NonNull
     List<ResourceSet> computeResourceSetList() {
-        List<ResourceSet> sourceFolderSets = resSetSupplier.get();
+        List<ResourceSet> sourceFolderSets = getResSet();
         int size = sourceFolderSets.size() + 4;
         if (libraries != null) {
             size += libraries.getArtifacts().size();
@@ -805,6 +828,7 @@ public class MergeResources extends IncrementalTask {
             BaseVariantData variantData = scope.getVariantData();
             Project project = scope.getGlobalScope().getProject();
 
+            mergeResourcesTask.filesProvider = scope.getGlobalScope().getFilesProvider();
             mergeResourcesTask.minSdk =
                     variantData.getVariantConfiguration().getMinSdkVersion().getApiLevel();
 
@@ -851,8 +875,7 @@ public class MergeResources extends IncrementalTask {
                         RUNTIME_CLASSPATH, ALL, ANDROID_RES);
             }
 
-            mergeResourcesTask.resSetSupplier =
-                    () -> variantData.getVariantConfiguration().getResourceSets(validateEnabled);
+            mergeResourcesTask.resources = variantData.getAndroidResources();
             mergeResourcesTask.sourceFolderInputs =
                     TaskInputHelper.bypassFileSupplier(
                             () ->

@@ -17,9 +17,13 @@
 package com.android.build.gradle.api;
 
 import com.android.annotations.NonNull;
+import com.android.build.api.artifact.BuildArtifactTransformBuilder;
+import com.android.build.api.artifact.BuildableArtifact;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
+import org.gradle.api.Incubating;
+import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileTree;
 import org.gradle.api.tasks.util.PatternFilterable;
@@ -101,4 +105,22 @@ public interface AndroidSourceDirectorySet extends PatternFilterable {
      */
     @NonNull
     Set<File> getSrcDirs();
+
+    /** Create a Task that generate additional sources for this source set. */
+    @Incubating
+    <T extends Task> void appendTo(
+            String taskName,
+            Class<T> taskType,
+            BuildArtifactTransformBuilder.SimpleConfigurationAction<T> configurationAction);
+
+    /** Create a Task that replaces sources for this source set. */
+    @Incubating
+    <T extends Task> void replace(
+            String taskName,
+            Class<T> taskType,
+            BuildArtifactTransformBuilder.SimpleConfigurationAction<T> configurationAction);
+
+    /** Returns the [BuildableArtifact] that represents this source sets. */
+    @Incubating
+    BuildableArtifact getBuildableArtifact();
 }

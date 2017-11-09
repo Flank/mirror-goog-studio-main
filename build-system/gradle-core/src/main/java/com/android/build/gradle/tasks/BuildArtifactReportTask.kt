@@ -17,18 +17,21 @@
 package com.android.build.gradle.tasks
 
 import com.android.build.api.artifact.ArtifactType
-import com.android.build.api.artifact.BuildArtifactType
 import com.android.build.api.artifact.BuildableArtifact
 import com.android.build.gradle.internal.scope.BuildArtifactsHolder
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet
+import com.android.build.gradle.internal.api.artifact.SourceArtifactType
+import com.android.build.gradle.internal.api.artifact.toArtifactType
+import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
-import com.android.build.gradle.internal.tasks.AndroidBuilderTask
 import com.android.build.gradle.options.StringOption
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import com.google.gson.reflect.TypeToken
+import org.gradle.api.DefaultTask
 import org.gradle.api.Task
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
@@ -43,11 +46,12 @@ import java.io.FileWriter
  */
 private typealias Report = Map<ArtifactType, List<BuildArtifactReportTask.BuildableArtifactData>>
 
-open class BuildArtifactReportTask : AndroidBuilderTask() {
-    private lateinit var buildArtifactsHolder: BuildArtifactsHolder
+open class BuildArtifactReportTask : DefaultTask() {
+    lateinit var buildArtifactsHolder: BuildArtifactsHolder
 
     @get:Input
-    private lateinit var types : Collection<ArtifactType>
+    lateinit var types : Collection<ArtifactType>
+        private set
 
     /**
      * Output file is optional.  If one is specified, the task will output to the file in JSON
@@ -55,7 +59,8 @@ open class BuildArtifactReportTask : AndroidBuilderTask() {
      */
     @get:Optional
     @get:OutputFile
-    private var outputFile : File? = null
+    var outputFile : File? = null
+        private set
 
     //FIXME: VisibleForTesting.  Make this internal when bazel supports it for tests (b/71602857)
     fun init(
@@ -92,20 +97,39 @@ open class BuildArtifactReportTask : AndroidBuilderTask() {
         }
     }
 
-    class ConfigAction(val scope : VariantScope) : TaskConfigAction<BuildArtifactReportTask> {
+    class SourceSetReportConfigAction(
+            val globalScope : GlobalScope,
+            val sourceSet : DefaultAndroidSourceSet) :
+            TaskConfigAction<BuildArtifactReportTask> {
+        override fun getName() = "reportSourceSetTransform" + sourceSet.name.capitalize()
+
+        override fun getType() = BuildArtifactReportTask::class.java
+
+        override fun execute(task: BuildArtifactReportTask) {
+            task.buildArtifactsHolder = sourceSet.buildArtifactsHolder
+            // TODO: include all SourceArtifactType.
+            task.types = listOf(SourceArtifactType.ANDROID_RESOURCES)
+            val outputFile = globalScope.projectOptions.get(StringOption.BUILD_ARTIFACT_REPORT_FILE)
+            if (outputFile != null) {
+                task.outputFile = globalScope.project.file(outputFile)
+            }
+        }
+    }
+
+    class BuildArtifactReportConfigAction(val scope : VariantScope) :
+            TaskConfigAction<BuildArtifactReportTask> {
         override fun getName() = scope.getTaskName("reportBuildArtifacts")
 
         override fun getType() = BuildArtifactReportTask::class.java
 
         override fun execute(task: BuildArtifactReportTask) {
-            task.variantName = scope.fullVariantName
             val outputFileName =
                     scope.globalScope.projectOptions.get(StringOption.BUILD_ARTIFACT_REPORT_FILE)
             val outputFile : File? =
                     if (outputFileName == null) null
                     else scope.globalScope.project.file(outputFileName)
 
-             // TODO: populate 'types' with all ArtifactType in buildArtifactsHolder.
+            // TODO: populate 'types' with all ArtifactType in buildArtifactsHolder.
             task.init(
                     buildArtifactsHolder = scope.buildArtifactsHolder,
                     types = listOf(),
@@ -141,7 +165,7 @@ open class BuildArtifactReportTask : AndroidBuilderTask() {
                                         },
                                         obj.getAsJsonArray("builtBy").map(JsonElement::getAsString))
                             }
-                    result.put(BuildArtifactType.valueOf(key), history)
+                    result.put(key.toArtifactType(), history)
                 }
             }
             return result

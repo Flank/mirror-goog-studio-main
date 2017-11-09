@@ -29,6 +29,7 @@ import com.android.build.api.artifact.ArtifactType;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.SdkHandler;
 import com.android.build.gradle.internal.api.dsl.DslScope;
+import com.android.build.gradle.internal.api.sourcesets.FilesProvider;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ndk.NdkHandler;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
@@ -56,6 +57,7 @@ public class GlobalScope extends TaskOutputHolderImpl
         implements TransformGlobalScope, TaskOutputHolder {
 
     @NonNull private final Project project;
+    @NonNull private final FilesProvider filesProvider;
     @NonNull private final AndroidBuilder androidBuilder;
     @NonNull private final AndroidConfig extension;
     @NonNull private final SdkHandler sdkHandler;
@@ -76,6 +78,7 @@ public class GlobalScope extends TaskOutputHolderImpl
 
     public GlobalScope(
             @NonNull Project project,
+            @NonNull FilesProvider filesProvider,
             @NonNull ProjectOptions projectOptions,
             @NonNull DslScope dslScope,
             @NonNull AndroidBuilder androidBuilder,
@@ -88,6 +91,7 @@ public class GlobalScope extends TaskOutputHolderImpl
         // have been fully configured yet (e.g. buildDir can still change).
         this.project = checkNotNull(project);
         this.dslScope = checkNotNull(dslScope);
+        this.filesProvider = filesProvider;
         this.androidBuilder = checkNotNull(androidBuilder);
         this.extension = checkNotNull(extension);
         this.sdkHandler = checkNotNull(sdkHandler);
@@ -103,6 +107,11 @@ public class GlobalScope extends TaskOutputHolderImpl
     @Override
     public Project getProject() {
         return project;
+    }
+
+    @NonNull
+    public FilesProvider getFilesProvider() {
+        return filesProvider;
     }
 
     @NonNull

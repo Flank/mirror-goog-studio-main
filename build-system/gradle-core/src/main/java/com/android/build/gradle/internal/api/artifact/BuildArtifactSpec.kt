@@ -16,8 +16,8 @@
 
 package com.android.build.gradle.internal.api.artifact
 
-import com.android.build.api.artifact.BuildArtifactType
 import com.android.build.api.artifact.ArtifactType
+import com.android.build.api.artifact.BuildArtifactType
 
 /**
  * Specification to define supported features of [BuildArtifactType]
@@ -25,21 +25,16 @@ import com.android.build.api.artifact.ArtifactType
 data class BuildArtifactSpec(
         val type : ArtifactType,
         val appendable : Boolean,
-        val replaceable: Boolean,
-        val singleFile : Boolean) {
+        val replaceable: Boolean) {
     companion object {
-        // TODO: make this variant type dependent
         private val specMap = mapOf(
-                //   type                                      appendable  replaceable  singleFile
-                spec(BuildArtifactType.JAVAC_CLASSES,          true,       true,        false),
-                spec(BuildArtifactType.JAVA_COMPILE_CLASSPATH, true,       false,       false))
+                //   type                                      appendable  replaceable
+                spec(BuildArtifactType.JAVAC_CLASSES,          true,       true),
+                spec(BuildArtifactType.JAVA_COMPILE_CLASSPATH, true,       false),
+                spec(SourceArtifactType.ANDROID_RESOURCES,     true,       true))
 
-        fun spec(
-                type : ArtifactType,
-                appendable : Boolean,
-                replaceable: Boolean,
-                singleFile : Boolean) =
-            type to BuildArtifactSpec(type, appendable, replaceable, singleFile)
+        fun spec(type : ArtifactType, appendable : Boolean, replaceable: Boolean) =
+            type to BuildArtifactSpec(type, appendable, replaceable)
 
         fun get(type : ArtifactType) =
                 specMap[type]

@@ -206,8 +206,9 @@ class ProjectWrapper(private val project: Project) : FilesProvider, ContainerFac
     // --- ContainerFactory
 
     override fun <T> createContainer(
-            itemClass: Class<T>,
-            factory: NamedDomainObjectFactory<T>): NamedDomainObjectContainer<T> {
+        itemClass: Class<T>,
+        factory: NamedDomainObjectFactory<T>
+    ): NamedDomainObjectContainer<T> {
         return project.container(itemClass, factory)
     }
 }

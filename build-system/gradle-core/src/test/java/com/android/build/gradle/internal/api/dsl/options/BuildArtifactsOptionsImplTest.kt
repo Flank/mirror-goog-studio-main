@@ -39,6 +39,7 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Test
 import java.io.File
+import java.util.Locale
 import kotlin.test.assertFailsWith
 
 /**
@@ -89,14 +90,14 @@ class BuildArtifactsOptionsImplTest {
             assertThat(t).isInstanceOf(TestTask::class.java)
             val task = t as TestTask
             assertThat(task.inputFiles.single()).hasName("out")
-            assertThat(task.outputFile).hasName(JAVAC_CLASSES.name)
+            assertThat(task.outputFile).hasName("${JAVAC_CLASSES.name.toLowerCase(Locale.US)}1")
             // TaskDependency.getDependencies accepts null.
             @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
             assertThat(task.inputFiles.buildDependencies.getDependencies(null))
                     .containsExactly(task0)
         }
         assertThat(taskHolder.getArtifactFiles(JAVAC_CLASSES).files.map(File::getName))
-                .containsExactly("out", JAVAC_CLASSES.name)
+                .containsExactly("out", "${JAVAC_CLASSES.name.toLowerCase(Locale.US)}1")
     }
 
     @Test
@@ -121,13 +122,13 @@ class BuildArtifactsOptionsImplTest {
             assertThat(t).isInstanceOf(TestTask::class.java)
             val task = t as TestTask
             assertThat(task.inputFiles.single()).hasName("out")
-            assertThat(task.outputFile).hasName(JAVAC_CLASSES.name)
+            assertThat(task.outputFile).hasName("${JAVAC_CLASSES.name.toLowerCase(Locale.US)}1")
             @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
             assertThat(task.inputFiles.buildDependencies.getDependencies(null))
                     .containsExactly(task0)
         }
         assertThat(taskHolder.getArtifactFiles(JAVAC_CLASSES).files.map(File::getName))
-                .containsExactly("out", JAVAC_CLASSES.name)
+                .containsExactly("out", "${JAVAC_CLASSES.name.toLowerCase(Locale.US)}1")
     }
 
     @Test
@@ -152,13 +153,13 @@ class BuildArtifactsOptionsImplTest {
             assertThat(t).isInstanceOf(TestTask::class.java)
             val task = t as TestTask
             assertThat(task.inputFiles.single()).hasName("out")
-            assertThat(task.outputFile).hasName(JAVAC_CLASSES.name)
+            assertThat(task.outputFile).hasName("${JAVAC_CLASSES.name.toLowerCase(Locale.US)}1")
             @Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
             assertThat(task.inputFiles.buildDependencies.getDependencies(null))
                     .containsExactly(task0)
         }
         assertThat(taskHolder.getArtifactFiles(JAVAC_CLASSES).files.map(File::getName))
-                .containsExactly(JAVAC_CLASSES.name)
+                .containsExactly("${JAVAC_CLASSES.name.toLowerCase(Locale.US)}1")
     }
 
     @Test

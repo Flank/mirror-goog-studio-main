@@ -26,13 +26,19 @@ import static com.android.build.gradle.internal.dependency.VariantDependencies.C
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_PUBLISH;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_RUNTIME_ONLY;
 import static com.android.build.gradle.internal.dependency.VariantDependencies.CONFIG_NAME_WEAR_APP;
+import static com.android.builder.model.AndroidProject.FD_INTERMEDIATES;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.api.AndroidSourceDirectorySet;
 import com.android.build.gradle.api.AndroidSourceFile;
 import com.android.build.gradle.api.AndroidSourceSet;
+import com.android.build.gradle.internal.api.artifact.SourceArtifactType;
+import com.android.build.gradle.internal.api.dsl.DslScope;
+import com.android.build.gradle.internal.scope.BuildArtifactsHolder;
 import com.android.builder.model.SourceProvider;
+import com.android.utils.FileUtils;
+import com.google.common.collect.ImmutableList;
 import groovy.lang.Closure;
 import java.io.File;
 import java.util.Collection;
@@ -63,45 +69,83 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
     private final AndroidSourceDirectorySet jniLibs;
     private final AndroidSourceDirectorySet shaders;
     private final String displayName;
+    private final BuildArtifactsHolder buildArtifactsHolder;
 
     @Inject
-    public DefaultAndroidSourceSet(@NonNull String name, Project project, boolean publishPackage) {
+    public DefaultAndroidSourceSet(
+            @NonNull String name, Project project, boolean publishPackage, DslScope dslScope) {
         this.name = name;
         this.publishPackage = publishPackage;
         displayName = GUtil.toWords(this.name);
 
-        String javaSrcDisplayName = displayName + " Java source";
+        buildArtifactsHolder =
+                new BuildArtifactsHolder(
+                        project,
+                        name,
+                        FileUtils.join(project.getBuildDir(), FD_INTERMEDIATES, "sources", name),
+                        name,
+                        ImmutableList.of(SourceArtifactType.ANDROID_RESOURCES),
+                        dslScope);
 
-        javaSource = new DefaultAndroidSourceDirectorySet(javaSrcDisplayName, project);
+        String javaSrcDisplayName = displayName + " Java source";
+        javaSource =
+                new DefaultAndroidSourceDirectorySet(
+                        javaSrcDisplayName, project, SourceArtifactType.JAVA_SOURCES, dslScope);
         javaSource.getFilter().include("**/*.java");
 
         String javaResourcesDisplayName = displayName + " Java resources";
-        javaResources = new DefaultAndroidSourceDirectorySet(javaResourcesDisplayName, project);
+        javaResources =
+                new DefaultAndroidSourceDirectorySet(
+                        javaResourcesDisplayName,
+                        project,
+                        SourceArtifactType.JAVA_RESOURCES,
+                        dslScope);
         javaResources.getFilter().exclude("**/*.java");
 
         String manifestDisplayName = displayName + " manifest";
         manifest = new DefaultAndroidSourceFile(manifestDisplayName, project);
 
         String assetsDisplayName = displayName + " assets";
-        assets = new DefaultAndroidSourceDirectorySet(assetsDisplayName, project);
+        assets =
+                new DefaultAndroidSourceDirectorySet(
+                        assetsDisplayName, project, SourceArtifactType.ASSETS, dslScope);
 
         String resourcesDisplayName = displayName + " resources";
-        res = new DefaultAndroidSourceDirectorySet(resourcesDisplayName, project);
+        res =
+                new DefaultAndroidSourceDirectorySet(
+                        resourcesDisplayName,
+                        project,
+                        SourceArtifactType.ANDROID_RESOURCES,
+                        dslScope,
+                        buildArtifactsHolder);
 
         String aidlDisplayName = displayName + " aidl";
-        aidl = new DefaultAndroidSourceDirectorySet(aidlDisplayName, project);
+        aidl =
+                new DefaultAndroidSourceDirectorySet(
+                        aidlDisplayName, project, SourceArtifactType.AIDL, dslScope);
 
         String renderscriptDisplayName = displayName + " renderscript";
-        renderscript = new DefaultAndroidSourceDirectorySet(renderscriptDisplayName, project);
+        renderscript =
+                new DefaultAndroidSourceDirectorySet(
+                        renderscriptDisplayName,
+                        project,
+                        SourceArtifactType.RENDERSCRIPT,
+                        dslScope);
 
         String jniDisplayName = displayName + " jni";
-        jni = new DefaultAndroidSourceDirectorySet(jniDisplayName, project);
+        jni =
+                new DefaultAndroidSourceDirectorySet(
+                        jniDisplayName, project, SourceArtifactType.JNI, dslScope);
 
         String libsDisplayName = displayName + " jniLibs";
-        jniLibs = new DefaultAndroidSourceDirectorySet(libsDisplayName, project);
+        jniLibs =
+                new DefaultAndroidSourceDirectorySet(
+                        libsDisplayName, project, SourceArtifactType.JNI_LIBS, dslScope);
 
         String shaderDisplayName = displayName + " shaders";
-        shaders = new DefaultAndroidSourceDirectorySet(shaderDisplayName, project);
+        shaders =
+                new DefaultAndroidSourceDirectorySet(
+                        shaderDisplayName, project, SourceArtifactType.SHADERS, dslScope);
 
         setRoot("src/" + getName());
     }
@@ -120,6 +164,11 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    @NonNull
+    public BuildArtifactsHolder getBuildArtifactsHolder() {
+        return buildArtifactsHolder;
     }
 
     @NonNull

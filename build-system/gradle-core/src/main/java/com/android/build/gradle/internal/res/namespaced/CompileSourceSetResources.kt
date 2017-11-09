@@ -15,12 +15,15 @@
  */
 package com.android.build.gradle.internal.res.namespaced
 
+import com.android.build.api.artifact.BuildableArtifact
+import com.android.build.gradle.internal.api.artifact.BuildableArtifactImpl
 import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.tasks.IncrementalTask
 import com.android.ide.common.res2.CompileResourceRequest
 import com.android.ide.common.res2.FileStatus
 import com.android.utils.FileUtils
+import org.gradle.api.file.FileCollection
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
@@ -29,6 +32,7 @@ import org.gradle.workers.IsolationMode
 import org.gradle.workers.WorkerExecutor
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.Path
 import javax.inject.Inject
 
 /**
@@ -39,7 +43,7 @@ import javax.inject.Inject
 open class CompileSourceSetResources
 @Inject constructor(private val workerExecutor: WorkerExecutor) : IncrementalTask() {
 
-    @get:InputFiles @get:SkipWhenEmpty lateinit var inputDirectory: File private set
+    @get:InputFiles @get:SkipWhenEmpty lateinit var inputDirectories: FileCollection private set
     @get:Input var isPngCrunching: Boolean = false; private set
     @get:Input var isPseudoLocalize: Boolean = false; private set
     @get:OutputDirectory lateinit var outputDirectory: File private set
@@ -49,18 +53,29 @@ open class CompileSourceSetResources
 
     override fun doFullTaskAction() {
         FileUtils.cleanOutputDir(outputDirectory)
-        if (!inputDirectory.isDirectory) {
-            // This should be covered by the @SkipWhenEmpty above.
-            return
-        }
         val requests = mutableListOf<CompileResourceRequest>()
+        val addedFiles = mutableMapOf<Path, Path>()
+        for (inputDirectory in inputDirectories) {
+            if (!inputDirectory.isDirectory) {
+                continue
+            }
 
-        /** Only look at files in first level subdirectories of the input directory */
-        Files.list(inputDirectory.toPath()).forEach { subDir ->
-            if (Files.isDirectory(subDir)) {
-                Files.list(subDir).forEach { resFile ->
-                    if (Files.isRegularFile(resFile)) {
-                        requests.add(compileRequest(resFile.toFile()))
+            /** Only look at files in first level subdirectories of the input directory */
+            Files.list(inputDirectory.toPath()).forEach { subDir ->
+                if (Files.isDirectory(subDir)) {
+                    Files.list(subDir).forEach { resFile ->
+                        if (Files.isRegularFile(resFile)) {
+                            val relativePath = inputDirectory.toPath().relativize(resFile)
+                            if (addedFiles.contains(relativePath)) {
+                                throw RuntimeException(
+                                        "Duplicated resource '$relativePath' found in a source " +
+                                                "set:\n" +
+                                                "    - ${addedFiles[relativePath]}\n" +
+                                                "    - $resFile")
+                            }
+                            requests.add(compileRequest(resFile.toFile()))
+                            addedFiles.put(relativePath, resFile)
+                        }
                     }
                 }
             }
@@ -74,7 +89,7 @@ open class CompileSourceSetResources
         val deletes = mutableListOf<File>()
         /** Only consider at files in first level subdirectories of the input directory */
         changedInputs.forEach { file, status ->
-            if (willCompile(file) && (inputDirectory == file.parentFile.parentFile)) {
+            if (willCompile(file) && (inputDirectories.any { it == file.parentFile.parentFile })) {
                 when (status) {
                     FileStatus.NEW, FileStatus.CHANGED -> {
                         requests.add(compileRequest(file))
@@ -123,14 +138,18 @@ open class CompileSourceSetResources
 
     class ConfigAction(
             private val name: String,
-            private val inputDirectory: File,
+            private val inputDirectories: BuildableArtifact,
             private val outputDirectory: File,
             private val variantScope: VariantScope,
-            private val aaptIntermediateDirectory: File) : TaskConfigAction<CompileSourceSetResources> {
+            private val aaptIntermediateDirectory: File)
+            : TaskConfigAction<CompileSourceSetResources> {
         override fun getName() = name
         override fun getType() = CompileSourceSetResources::class.java
         override fun execute(task: CompileSourceSetResources) {
-            task.inputDirectory = inputDirectory
+            // TODO: use BuildableArtifact directly in Gradle 4.5.
+            task.inputDirectories =
+                    (inputDirectories as BuildableArtifactImpl).fileCollection
+                            ?: variantScope.globalScope.project.files()
             task.outputDirectory = outputDirectory
             task.variantName = variantScope.fullVariantName
             task.isPngCrunching = variantScope.isCrunchPngs

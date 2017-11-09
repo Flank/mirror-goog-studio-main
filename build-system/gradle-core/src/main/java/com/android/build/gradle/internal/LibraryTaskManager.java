@@ -116,7 +116,8 @@ public class LibraryTaskManager extends TaskManager {
 
         createCheckManifestTask(variantScope);
 
-        taskFactory.create(new BuildArtifactReportTask.ConfigAction(variantScope));
+        taskFactory.create(
+                new BuildArtifactReportTask.BuildArtifactReportConfigAction(variantScope));
 
         // Add a task to create the res values
         recorder.record(

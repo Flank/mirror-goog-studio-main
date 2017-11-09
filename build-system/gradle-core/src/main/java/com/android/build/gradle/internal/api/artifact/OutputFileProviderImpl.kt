@@ -53,7 +53,7 @@ class OutputFileProviderImpl(
         for (artifactType in replacedArtifacts) {
             val spec = BuildArtifactSpec.get(artifactType)
             val files = filenamesMap.get(artifactType)
-            if (spec.singleFile) {
+            if (!spec.appendable) {
                 if (files.isEmpty()) {
                     dslScope.issueReporter.reportError(
                             EvalIssueReporter.Type.GENERIC,

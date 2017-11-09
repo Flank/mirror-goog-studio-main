@@ -19,6 +19,7 @@ import android.databinding.tool.LayoutXmlProcessor;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
+import com.android.build.api.artifact.BuildableArtifact;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.TaskManager;
@@ -65,11 +66,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -636,6 +639,24 @@ public abstract class BaseVariantData implements TaskContainer {
         sourceSets.addAll(extraGeneratedSourceFileTrees);
 
         return sourceSets.build();
+    }
+
+    public Map<String, BuildableArtifact> getAndroidResources() {
+        return getVariantConfiguration()
+                .getSortedSourceProviders()
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                SourceProvider::getName,
+                                (provider) ->
+                                        ((AndroidSourceSet) provider)
+                                                .getRes()
+                                                .getBuildableArtifact(),
+                                (u, v) -> {
+                                    throw new IllegalStateException(
+                                            String.format("Duplicate key %s", u));
+                                },
+                                LinkedHashMap::new));
     }
 
     /**

@@ -48,7 +48,6 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
-import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.profile.Recorder;
@@ -111,7 +110,7 @@ public class ApplicationTaskManager extends TaskManager {
         createApplicationIdWriterTask(variantScope);
 
         taskFactory.create(new MainApkListPersistence.ConfigAction(variantScope));
-        taskFactory.create(new BuildArtifactReportTask.ConfigAction(variantScope));
+        createBuildArtifactReportTask(variantScope);
 
         // Add a task to process the manifest(s)
         recorder.record(

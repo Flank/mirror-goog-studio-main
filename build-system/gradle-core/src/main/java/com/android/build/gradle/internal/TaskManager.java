@@ -73,9 +73,11 @@ import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.AndroidConfig;
+import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.api.AnnotationProcessorOptions;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
+import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoConfigurations;
@@ -166,6 +168,7 @@ import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.build.gradle.tasks.AidlCompile;
+import com.android.build.gradle.tasks.BuildArtifactReportTask;
 import com.android.build.gradle.tasks.CleanBuildCache;
 import com.android.build.gradle.tasks.CompatibleScreensManifest;
 import com.android.build.gradle.tasks.CopyOutputs;
@@ -590,8 +593,6 @@ public abstract class TaskManager {
         globalScope.addTaskOutput(PLATFORM_R_TXT, platformRtxt, task.getName());
     }
 
-    public void createBuildArtifactReportTask(@NonNull final VariantScope scope) {}
-
     protected void createDependencyStreams(@NonNull final VariantScope variantScope) {
         // Since it's going to chance the configurations, we need to do it before
         // we start doing queries to fill the streams.
@@ -739,6 +740,20 @@ public abstract class TaskManager {
                                     testedVariantScope.getArtifactCollection(
                                             RUNTIME_CLASSPATH, ALL, CLASSES))
                             .build());
+        }
+    }
+
+    public void createBuildArtifactReportTask(@NonNull VariantScope scope) {
+        taskFactory.create(new BuildArtifactReportTask.BuildArtifactReportConfigAction(scope));
+    }
+
+    public void createSourceSetArtifactReportTask(@NonNull GlobalScope scope) {
+        for (AndroidSourceSet sourceSet : scope.getExtension().getSourceSets()) {
+            if (sourceSet instanceof DefaultAndroidSourceSet) {
+                taskFactory.create(
+                        new BuildArtifactReportTask.SourceSetReportConfigAction(
+                                scope, (DefaultAndroidSourceSet) sourceSet));
+            }
         }
     }
 
