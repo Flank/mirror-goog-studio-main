@@ -76,6 +76,14 @@ public class MediumGradleProjectPerformanceMatrixTest {
     @Before
     public void initializeProject() throws Exception {
         PerformanceTestProjects.initializeWordpress(project);
+
+        // Replace files direct access to file collection lazy access, since variants resolved
+        // dependencies cannot be accessed in configuration time
+        TestFileUtils.searchAndReplace(
+                project.file("libs/utils/WordPressUtils/build.gradle"),
+                "files\\(variant\\.javaCompile\\.classpath\\.files, android\\.getBootClasspath\\(\\)\\)",
+                "files{[variant.javaCompile.classpath.files, android.getBootClasspath()]}");
+
         if (projectScenario != ProjectScenario.DEX_OUT_OF_PROCESS) {
             TestFileUtils.searchAndReplace(
                     project.file("WordPress/build.gradle"), "javaMaxHeapSize = \"6g\"", "");
