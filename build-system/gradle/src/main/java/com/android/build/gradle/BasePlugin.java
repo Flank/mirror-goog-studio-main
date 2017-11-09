@@ -129,7 +129,8 @@ import org.gradle.api.tasks.StopExecutionException;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Base class for all Android plugins */
-public abstract class BasePlugin<E extends BaseExtension2> implements ToolingRegistryProvider {
+public abstract class BasePlugin<E extends BaseExtension2>
+        implements Plugin<Project>, ToolingRegistryProvider {
 
     @VisibleForTesting
     public static final GradleVersion GRADLE_MIN_VERSION =
@@ -217,8 +218,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
         return variantManager;
     }
 
-    @VisibleForTesting
-    BaseExtension getExtension() {
+    public BaseExtension getExtension() {
         return extension;
     }
 
@@ -235,7 +235,8 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
         return loggerWrapper;
     }
 
-    protected void apply(@NonNull Project project) {
+    @Override
+    public void apply(@NonNull Project project) {
         // We run by default in headless mode, so the JVM doesn't steal focus.
         System.setProperty("java.awt.headless", "true");
 

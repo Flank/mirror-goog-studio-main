@@ -39,12 +39,11 @@ import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'library' projects. */
-public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> implements Plugin<Project> {
+public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> {
 
     @Inject
     public LibraryPlugin(ToolingModelBuilderRegistry registry) {

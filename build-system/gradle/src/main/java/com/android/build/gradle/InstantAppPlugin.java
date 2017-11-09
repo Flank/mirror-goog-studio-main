@@ -40,12 +40,11 @@ import com.android.builder.profile.Recorder;
 import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'instantapp' projects. */
-public class InstantAppPlugin extends BasePlugin<BaseExtension2> implements Plugin<Project> {
+public class InstantAppPlugin extends BasePlugin<BaseExtension2> {
     @Inject
     public InstantAppPlugin(ToolingModelBuilderRegistry registry) {
         super(registry);

@@ -434,6 +434,8 @@ public class JarContentsTest {
                 "com/android/build/gradle/",
                 "com/android/build/gradle/internal/",
                 "com/android/build/gradle/internal/dsl/",
+                "com/android/build/gradle/internal/plugins/",
+                "com/android/build/gradle/internal/tasks/",
                 "NOTICE",
                 "META-INF/MANIFEST.MF",
                 "META-INF/",

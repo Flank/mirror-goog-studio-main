@@ -20,5 +20,6 @@
     <orderEntry type="module" module-name="instant-run-annotations" />
     <orderEntry type="module" module-name="builder-model" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
+    <orderEntry type="library" scope="TEST" name="KotlinJavaRuntime" level="project" />
   </component>
 </module>
