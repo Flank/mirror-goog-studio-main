@@ -41,6 +41,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @NonNull private final Collection<ProductFlavorContainer> myProductFlavors;
     @NonNull private final Collection<SyncIssue> mySyncIssues;
     @NonNull private final Collection<Variant> myVariants;
+    @NonNull private final Collection<String> myVariantNames;
     @NonNull private final Collection<String> myFlavorDimensions;
     @NonNull private final String myCompileTarget;
     @NonNull private final Collection<String> myBootClassPath;
@@ -107,6 +108,10 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                                         modelCache,
                                         dependenciesFactory,
                                         myParsedModelVersion));
+        myVariantNames =
+                copyNewProperty(
+                        () -> ImmutableList.copyOf(project.getVariantNames()),
+                        Collections.<String>emptyList());
         myFlavorDimensions =
                 copyNewProperty(
                         () -> ImmutableList.copyOf(project.getFlavorDimensions()),
@@ -211,6 +216,12 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
     @NonNull
     public Collection<Variant> getVariants() {
         return myVariants;
+    }
+
+    @Override
+    @NonNull
+    public Collection<String> getVariantNames() {
+        return myVariantNames;
     }
 
     @Override
@@ -352,6 +363,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 && Objects.equals(myBuildToolsVersion, project.myBuildToolsVersion)
                 && Objects.equals(mySyncIssues, project.mySyncIssues)
                 && Objects.equals(myVariants, project.myVariants)
+                && Objects.equals(myVariantNames, project.myVariantNames)
                 && Objects.equals(myFlavorDimensions, project.myFlavorDimensions)
                 && Objects.equals(myCompileTarget, project.myCompileTarget)
                 && Objects.equals(myBootClassPath, project.myBootClassPath)
@@ -381,6 +393,7 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 myBuildToolsVersion,
                 mySyncIssues,
                 myVariants,
+                myVariantNames,
                 myFlavorDimensions,
                 myCompileTarget,
                 myBootClassPath,
@@ -421,6 +434,8 @@ public final class IdeAndroidProjectImpl extends IdeModel implements IdeAndroidP
                 + mySyncIssues
                 + ", myVariants="
                 + myVariants
+                + ", myVariantNames="
+                + myVariantNames
                 + ", myFlavorDimensions="
                 + myFlavorDimensions
                 + ", myCompileTarget='"
