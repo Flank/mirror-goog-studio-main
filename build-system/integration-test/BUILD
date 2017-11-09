@@ -153,6 +153,7 @@ java_test(
         "block-network",
         "cpu:3",
         "gradle_integration",
+        "no_test_mac",  # b/69151132 Time out frequently when run on mac.
         "slow",
     ],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
@@ -179,6 +180,7 @@ java_test(
         "block-network",
         "cpu:3",
         "gradle_integration",
+        "no_test_mac",  # b/69151132 Time out frequently when run on mac.
         "slow",
     ],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
