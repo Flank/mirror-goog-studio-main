@@ -15,6 +15,7 @@
  */
 package com.android.tools.lint.client.api
 
+import com.android.tools.lint.detector.api.CURRENT_API
 import com.android.tools.lint.detector.api.Issue
 
 /**
@@ -46,6 +47,8 @@ class CompositeIssueRegistry(
             this.mergedIssues = list
             return list
         }
+
+    override val api: Int = CURRENT_API
 
     override val isUpToDate: Boolean
         get() {

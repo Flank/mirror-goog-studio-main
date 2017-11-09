@@ -34,6 +34,7 @@ import com.android.tools.lint.checks.GradleDetector;
 import com.android.tools.lint.checks.UnusedResourceDetector;
 import com.android.tools.lint.client.api.IssueRegistry;
 import com.android.tools.lint.client.api.LintBaseline;
+import com.android.tools.lint.detector.api.ApiKt;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Severity;
@@ -343,6 +344,11 @@ public class LintGradleExecution {
             }
 
             return issues;
+        }
+
+        @Override
+        public int getApi() {
+            return ApiKt.CURRENT_API;
         }
     }
 

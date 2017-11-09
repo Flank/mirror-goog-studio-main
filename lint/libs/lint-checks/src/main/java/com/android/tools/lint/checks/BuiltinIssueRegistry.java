@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.android.tools.lint.client.api.IssueRegistry;
+import com.android.tools.lint.detector.api.ApiKt;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.Scope;
 import java.util.ArrayList;
@@ -388,6 +389,11 @@ public class BuiltinIssueRegistry extends IssueRegistry {
             }
             return initialSize;
         }
+    }
+
+    @Override
+    public int getApi() {
+        return ApiKt.CURRENT_API;
     }
 
     /**

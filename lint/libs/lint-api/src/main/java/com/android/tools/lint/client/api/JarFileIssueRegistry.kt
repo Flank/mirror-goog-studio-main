@@ -18,12 +18,10 @@ package com.android.tools.lint.client.api
 
 import com.android.SdkConstants
 import com.android.SdkConstants.DOT_CLASS
-import com.android.tools.lint.detector.api.Context
+import com.android.tools.lint.detector.api.CURRENT_API
 import com.android.tools.lint.detector.api.Issue
-import com.android.tools.lint.detector.api.Location
-import com.android.tools.lint.detector.api.Project
 import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.detector.api.TextFormat
+import com.android.tools.lint.detector.api.describeApi
 import com.android.utils.SdkUtils
 import java.io.File
 import java.io.IOException
@@ -64,6 +62,8 @@ private constructor(
             loadAndCloseURLClassLoader(client, jarFile, loader)
         }
     }
+
+    override val api: Int = com.android.tools.lint.detector.api.CURRENT_API
 
     companion object Factory {
         /** Service key for automatic discovery of lint rules */
@@ -178,9 +178,61 @@ private constructor(
                 val registry = registryClass.newInstance() as IssueRegistry
 
                 try {
+                    val apiField = registryClass.getDeclaredMethod("getApi")
+                    val api = apiField.invoke(registry) as Int
+                    if (api < CURRENT_API) {
+                        val message = "Lint found an issue registry (`$className`) which is " +
+                                "older than the current API level; these checks may not work " +
+                                "correctly.\n" +
+                                "\n" +
+                                "Recompile the checks against the latest version. " +
+                                "Custom check API version is $api (${describeApi(api)}), " +
+                                "current lint API level is $CURRENT_API " +
+                                "(${describeApi(CURRENT_API)})"
+                        LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
+                                message = message, file = jarFile)
+                        // Not returning here: try to run the checks
+                    } else {
+                        try {
+                            val minApi = registry.minApi
+                            if (minApi > CURRENT_API) {
+                                val message = "Lint found an issue registry (`$className`) which " +
+                                        "requires a newer API level. That means that the custom " +
+                                        "lint checks are intended for a newer lint version; please " +
+                                        "upgrade"
+                                LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
+                                        message = message, file = jarFile)
+                                return null
+                            }
+                        } catch (ignore: Throwable) {
+                        }
+                    }
+                } catch (e: Throwable) {
+                    val message = "Lint found an issue registry (`$className`) which did not " +
+                            "specify the Lint API version it was compiled with.\n" +
+                            "This means that the lint checks are likely not compatible.\n" +
+                            "To fix this, make your lint `IssueRegistry` class contain\n" +
+                            "  `override val api: Int = com.android.tools.lint.detector.api.CURRENT_API`\n" +
+                            "or from Java,\n" +
+                            "  `@Override public int getApi() { return com.android.tools.lint.detector.api.ApiKt.CURRENT_API; }`"
+                    LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
+                            message = message, file = jarFile)
+                    // Not returning here: try to run the checks
+                }
+
+                try {
                     registry.issues
                 } catch (e: Throwable) {
-                    warnObsoleteCustomChecks(client, jarFile, className, e)
+                    val stacktrace = StringBuilder()
+                    LintDriver.appendStackTraceSummary(e, stacktrace)
+                    val message = "Lint found one or more custom checks that could not " +
+                            "be loaded. The most likely reason for this is that it is using an " +
+                            "older, incompatible or unsupported API in lint. Make sure these " +
+                            "lint checks are updated to the new APIs. The issue registry class " +
+                            "is $className. The class loading issue is ${e.message}: $stacktrace"
+
+                    LintClient.report(client = client, issue = OBSOLETE_LINT_CHECK,
+                            message = message, file = jarFile)
                     return null
                 }
 
@@ -189,35 +241,6 @@ private constructor(
                 client.log(e, "Could not load custom lint check jar file %1\$s", jarFile)
                 null
             }
-        }
-
-        /** Warns about obsolete detector classes */
-        private fun warnObsoleteCustomChecks(
-                client: LintClient,
-                jarFile: File,
-                className: String,
-                e: Throwable) {
-            val stacktrace = StringBuilder()
-            LintDriver.appendStackTraceSummary(e, stacktrace)
-
-            val message = "Lint found one or more custom checks that could not " +
-                    "be loaded. The most likely reason for this is that it is using an " +
-                    "older, incompatible or unsupported API in lint. Make sure these " +
-                    "lint checks are updated to the new APIs. The issue registry class " +
-                    "is $className. The class loading issue is ${e.message}: $stacktrace"
-            // Create a context to report this issue against
-            val location = Location.create(jarFile)
-            val request = LintRequest(client, emptyList())
-            val dir = jarFile.parentFile ?: File("").absoluteFile
-            val project = Project.create(client, dir, dir)
-            val driver = LintDriver(object : IssueRegistry() {
-                override val issues: List<Issue> = emptyList()
-            }, client, request)
-            val context = Context(driver, project, project, jarFile, null)
-            client.report(context,
-                    IssueRegistry.OBSOLETE_LINT_CHECK,
-                    IssueRegistry.OBSOLETE_LINT_CHECK.defaultSeverity,
-                    location, message, TextFormat.RAW, null)
         }
 
         /**

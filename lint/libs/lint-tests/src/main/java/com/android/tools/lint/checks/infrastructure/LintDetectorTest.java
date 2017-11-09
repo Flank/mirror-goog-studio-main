@@ -61,6 +61,7 @@ import com.android.tools.lint.client.api.LintClient;
 import com.android.tools.lint.client.api.LintDriver;
 import com.android.tools.lint.client.api.LintRequest;
 import com.android.tools.lint.client.api.UastParser;
+import com.android.tools.lint.detector.api.ApiKt;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Issue;
@@ -193,6 +194,11 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
         @Override
         public List<Issue> getIssues() {
             return LintDetectorTest.this.getIssues();
+        }
+
+        @Override
+        public int getApi() {
+            return ApiKt.CURRENT_API;
         }
     }
 

@@ -28,4 +28,9 @@ public class MyIssueRegistry extends IssueRegistry {
     public List<Issue> getIssues() {
         return Collections.singletonList(MyDetector.ISSUE);
     }
+
+    @Override
+    public int getApi() {
+        return com.android.tools.lint.detector.api.ApiKt.CURRENT_API;
+    }
 }
