@@ -20,6 +20,7 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Longs;
@@ -32,7 +33,10 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -53,6 +57,19 @@ import java.util.stream.Collectors;
  *     </ol>
  */
 public final class BenchmarkRecorder {
+    public enum UploadStrategy {
+        /*
+         * Instructs BenchmarkRecorder to upload all of the GradleBenchmarkResults that it records.
+         */
+        ALL,
+
+        /*
+         * Instructs BenchmarkRecorder to upload all only the fastest of the GradleBenchmarkResults
+         * that has been recorded. Useful if you want to run a benchmark a number of times in order
+         * to get a more stable result.
+         */
+        FASTEST
+    }
 
     @NonNull private final Logging.Benchmark benchmark;
 
@@ -61,6 +78,8 @@ public final class BenchmarkRecorder {
     @NonNull private final List<ProfileUploader> uploaders;
 
     @NonNull private final List<GradleBenchmarkResult.Builder> benchmarkResults = new ArrayList<>();
+
+    @NonNull private final UploadStrategy uploadStrategy;
 
     public BenchmarkRecorder(
             @NonNull Logging.Benchmark benchmark, @NonNull ProjectScenario projectScenario) {
@@ -72,9 +91,18 @@ public final class BenchmarkRecorder {
             @NonNull Logging.Benchmark benchmark,
             @NonNull ProjectScenario projectScenario,
             @Nullable List<ProfileUploader> uploaders) {
+        this(benchmark, projectScenario, uploaders, UploadStrategy.ALL);
+    }
+
+    public BenchmarkRecorder(
+            @NonNull Logging.Benchmark benchmark,
+            @NonNull ProjectScenario projectScenario,
+            @Nullable List<ProfileUploader> uploaders,
+            @NonNull UploadStrategy uploadStrategy) {
         this.benchmark = benchmark;
         this.projectScenario = projectScenario;
         this.uploaders = uploaders == null ? defaultUploaders() : uploaders;
+        this.uploadStrategy = uploadStrategy;
     }
 
     private List<ProfileUploader> defaultUploaders() {
@@ -157,6 +185,15 @@ public final class BenchmarkRecorder {
                         .collect(Collectors.toList());
 
         checkAllUploadsAreDistinct(results);
+
+        if (uploadStrategy == UploadStrategy.FASTEST) {
+            Optional<GradleBenchmarkResult> result =
+                    results.stream()
+                            .min(Comparator.comparingLong(r -> r.getProfile().getBuildTime()));
+
+            Preconditions.checkArgument(result.isPresent(), "empty list of benchmarkResults found");
+            results = Arrays.asList(result.get());
+        }
 
         for (ProfileUploader uploader : uploaders) {
             uploader.uploadData(results);
