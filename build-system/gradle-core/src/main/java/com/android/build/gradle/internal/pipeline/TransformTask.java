@@ -108,8 +108,8 @@ public class TransformTask extends StreamBasedTask implements Context {
 
         ImmutableMap.Builder<String, File> builder = new ImmutableMap.Builder<>();
         int index = 0;
-        for (File outputFolder : transform.getSecondaryFileOutputs()) {
-            builder.put("otherFileOutput" + Integer.toString(++index), outputFolder);
+        for (File outputFile : transform.getSecondaryFileOutputs()) {
+            builder.put("otherFileOutput" + Integer.toString(++index), outputFile);
         }
 
         return builder.build();
