@@ -31,7 +31,7 @@ data class Benchmark(
         val benchmark: Logging.Benchmark,
         val benchmarkMode: Logging.BenchmarkMode,
         val projectFactory: (GradleTestProjectBuilder) -> GradleTestProject,
-        val postApplyProject: (GradleTestProject) -> GradleTestProject = { p -> p },
+        val postApplyProject: (GradleTestProject, RunGradleTasks) -> GradleTestProject = { p, _ -> p },
         val setup: (GradleTestProject, RunGradleTasks, BuildModel) -> Unit,
         val recordedAction: (RunGradleTasks, BuildModel) -> Unit) {
     fun run() {
@@ -53,16 +53,16 @@ data class Benchmark(
                          * apply before we call getSubproject, and this hack was the least bad way
                          * we could think of doing it.
                          */
-                        project = postApplyProject(project)
-
-                        val model = project.model().ignoreSyncIssues().withoutOfflineFlag()
-                        PerformanceTestProjects.assertNoSyncErrors(model.multi.modelMap)
-
                         val executor = project.executor()
                                 .withEnableInfoLogging(false)
                                 .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
                                 .with(BooleanOption.ENABLE_D8, scenario.useD8())
                                 .withUseDexArchive(scenario.useDexArchive())
+
+                        project = postApplyProject(project, executor)
+
+                        val model = project.model().ignoreSyncIssues().withoutOfflineFlag()
+                        PerformanceTestProjects.assertNoSyncErrors(model.multi.modelMap)
 
                         setup(project, executor, model)
 

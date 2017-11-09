@@ -161,7 +161,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                 scenario = scenario,
                 benchmark = Logging.Benchmark.ANTENNA_POD,
                 benchmarkMode = benchmarkMode,
-                postApplyProject = { project ->
+                postApplyProject = { project, _ ->
                     PerformanceTestProjects.initializeAntennaPod(project)
                     project.getSubproject("AntennaPod")
                 },
