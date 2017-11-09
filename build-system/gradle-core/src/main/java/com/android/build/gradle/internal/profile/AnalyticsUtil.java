@@ -158,6 +158,8 @@ public class AnalyticsUtil {
                 return GradleBuildVariant.Java8LangSupport.DEXGUARD;
             case DESUGAR:
                 return GradleBuildVariant.Java8LangSupport.INTERNAL;
+            case D8:
+                return GradleBuildVariant.Java8LangSupport.D8;
             case INVALID:
                 // fall through
             case UNUSED:

@@ -25,6 +25,7 @@ import com.android.build.gradle.tasks.PackageAndroidArtifact;
 import com.android.ide.common.build.ApkData;
 import com.google.common.base.MoreObjects;
 import java.io.File;
+import javax.inject.Inject;
 import org.gradle.api.Task;
 
 /**
@@ -35,6 +36,7 @@ import org.gradle.api.Task;
  */
 public class ApkVariantOutputImpl extends BaseVariantOutputImpl implements ApkVariantOutput {
 
+    @Inject
     public ApkVariantOutputImpl(@NonNull ApkData apkData, @NonNull TaskContainer taskContainer) {
         super(apkData, taskContainer);
     }

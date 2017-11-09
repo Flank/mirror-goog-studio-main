@@ -317,7 +317,7 @@ public class SecurityDetector extends Detector implements XmlScanner, UastScanne
         if (getExported(element) && isUnprotectedByPermission(element) &&
                 !isStandardReceiver(element)) {
             // No declared permission for this exported receiver: complain
-            LintFix fix = fix().set(ANDROID_URI, ATTR_PERMISSION, "").build();
+            LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_PERMISSION, "").build();
             context.report(EXPORTED_RECEIVER, element, context.getLocation(element),
                            "Exported receiver does not require permission", fix);
         }
@@ -327,7 +327,7 @@ public class SecurityDetector extends Detector implements XmlScanner, UastScanne
         if (getExported(element) && isUnprotectedByPermission(element)
                 && !isWearableListenerServiceAction(element)) {
             // No declared permission for this exported service: complain
-            LintFix fix = fix().set(ANDROID_URI, ATTR_PERMISSION, "").build();
+            LintFix fix = LintFix.create().set(ANDROID_URI, ATTR_PERMISSION, "").build();
             context.report(EXPORTED_SERVICE, element, context.getLocation(element),
                            "Exported service does not require permission", fix);
         }
@@ -383,7 +383,7 @@ public class SecurityDetector extends Detector implements XmlScanner, UastScanne
                         }
 
                         if (!hasPermission) {
-                            LintFix fix = fix()
+                            LintFix fix = LintFix.create()
                                     .set(ANDROID_URI, ATTR_EXPORTED, VALUE_FALSE).build();
                             context.report(EXPORTED_PROVIDER, element,
                                     context.getLocation(element),

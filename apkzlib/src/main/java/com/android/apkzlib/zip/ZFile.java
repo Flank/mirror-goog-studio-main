@@ -414,6 +414,11 @@ public class ZFile implements Closeable {
     @Nullable
     private byte[] eocdComment;
 
+    /**
+     * Is the file in read-only mode? In read-only mode no changes are allowed.
+     */
+    private boolean readOnly;
+
 
     /**
      * Creates a new zip file. If the zip file does not exist, then no file is created at this
@@ -439,12 +444,30 @@ public class ZFile implements Closeable {
      * @throws IOException some file exists but could not be read
      */
     public ZFile(@Nonnull File file, @Nonnull ZFileOptions options) throws IOException {
+        this(file, options, false);
+    }
+
+    /**
+     * Creates a new zip file. If the zip file does not exist, then no file is created at this
+     * point and {@code ZFile} will contain an empty structure. However, an (empty) zip file will
+     * be created if either {@link #update()} or {@link #close()} are used. If a zip file exists,
+     * it will be parsed and read.
+     *
+     * @param file the zip file
+     * @param options configuration options
+     * @param readOnly should the file be open in read-only mode? If {@code true} then the file must
+     * exist and no methods can be invoked that could potentially change the file
+     * @throws IOException some file exists but could not be read
+     */
+    public ZFile(@Nonnull File file, @Nonnull ZFileOptions options, boolean readOnly)
+            throws IOException {
         this.file = file;
         map = new FileUseMap(
                 0,
                 options.getCoverEmptySpaceUsingExtraField()
                         ? MINIMUM_EXTRA_FIELD_SIZE
                         : 0);
+        this.readOnly = readOnly;
         dirty = false;
         closedControl = null;
         alignmentRule = options.getAlignmentRule();
@@ -466,6 +489,8 @@ public class ZFile implements Closeable {
 
         if (file.exists()) {
             openReadOnly();
+        } else if (readOnly) {
+            throw new IOException("File does not exist but read-only mode requested");
         } else {
             dirty = true;
         }
@@ -873,8 +898,11 @@ public class ZFile implements Closeable {
      * @param notify should listeners be notified of the deletion? This will only be
      * {@code false} if the entry is being removed as part of a replacement
      * @throws IOException failed to delete the entry
+     * @throws IllegalStateException if open in read-only mode
      */
     void delete(@Nonnull final StoredEntry entry, boolean notify) throws IOException {
+        checkNotInReadOnlyMode();
+
         String path = entry.getCentralDirectoryHeader().getName();
         FileUseMapEntry<StoredEntry> mapEntry = entries.get(path);
         Preconditions.checkNotNull(mapEntry, "mapEntry == null");
@@ -891,6 +919,17 @@ public class ZFile implements Closeable {
     }
 
     /**
+     * Checks that the file is not in read-only mode.
+     *
+     * @throws IllegalStateException if the file is in read-only mode
+     */
+    private void checkNotInReadOnlyMode() {
+        if (readOnly) {
+            throw new IllegalStateException("Illegal operation in read only model");
+        }
+    }
+
+    /**
      * Updates the file writing new entries and removing deleted entries. This will force
      * reopening the file as read/write if the file wasn't open in read/write mode.
      *
@@ -898,6 +937,8 @@ public class ZFile implements Closeable {
      * the compressor but only reported here
      */
     public void update() throws IOException {
+        checkNotInReadOnlyMode();
+
         /*
          * Process all background stuff before calling in the extensions.
          */
@@ -1193,7 +1234,9 @@ public class ZFile implements Closeable {
         // We need to make sure to release raf, otherwise we end up locking the file on
         // Windows. Use try-with-resources to handle exception suppressing.
         try (Closeable ignored = this::innerClose) {
-            update();
+            if (!readOnly) {
+                update();
+            }
         }
 
         notify(ext -> {
@@ -1489,6 +1532,9 @@ public class ZFile implements Closeable {
      * has been modified outside the control of this object
      */
     private void reopenRw() throws IOException {
+        // We an never open a file RW in read-only mode. We should never get this far, though.
+        Verify.verify(!readOnly);
+
         if (state == ZipFileState.OPEN_RW) {
             return;
         }
@@ -1537,8 +1583,10 @@ public class ZFile implements Closeable {
      * and the name should not end in slash
      * @param stream the source for the file's data
      * @throws IOException failed to read the source data
+     * @throws IllegalStateException if the file is in read-only mode
      */
     public void add(@Nonnull String name, @Nonnull InputStream stream) throws IOException {
+        checkNotInReadOnlyMode();
         add(name, stream, true);
     }
 
@@ -1656,9 +1704,11 @@ public class ZFile implements Closeable {
      * @param mayCompress can the file be compressed? This flag will be ignored if the alignment
      * rules force the file to be aligned, in which case the file will not be compressed.
      * @throws IOException failed to read the source data
+     * @throws IllegalStateException if the file is in read-only mode
      */
     public void add(@Nonnull String name, @Nonnull InputStream stream, boolean mayCompress)
             throws IOException {
+        checkNotInReadOnlyMode();
 
         /*
          * Clean pending background work, if needed.
@@ -1868,9 +1918,12 @@ public class ZFile implements Closeable {
      * @param ignoreFilter predicate that, if {@code true}, identifies files in <em>src</em> that
      * should be ignored by merging; merging will behave as if these files were not there
      * @throws IOException failed to read from <em>src</em> or write on the output
+     * @throws IllegalStateException if the file is in read-only mode
      */
     public void mergeFrom(@Nonnull ZFile src, @Nonnull Predicate<String> ignoreFilter)
             throws IOException {
+        checkNotInReadOnlyMode();
+
         for (StoredEntry fromEntry : src.entries()) {
             if (ignoreFilter.test(fromEntry.getCentralDirectoryHeader().getName())) {
                 continue;
@@ -1960,8 +2013,11 @@ public class ZFile implements Closeable {
     /**
      * Forcibly marks this zip file as touched, forcing it to be updated when {@link #update()}
      * or {@link #close()} are invoked.
+     *
+     * @throws IllegalStateException if the file is in read-only mode
      */
     public void touch() {
+        checkNotInReadOnlyMode();
         dirty = true;
     }
 
@@ -1988,8 +2044,11 @@ public class ZFile implements Closeable {
      * of {@code ZFile} may refer to {@link StoredEntry}s that are no longer valid
      * @throws IOException failed to realign the zip; some entries in the zip may have been lost
      * due to the I/O error
+     * @throws IllegalStateException if the file is in read-only mode
      */
     public boolean realign() throws IOException {
+        checkNotInReadOnlyMode();
+
         boolean anyChanges = false;
         for (StoredEntry entry : entries()) {
             anyChanges |= entry.realign();
@@ -2103,8 +2162,10 @@ public class ZFile implements Closeable {
      * Adds an extension to this zip file.
      *
      * @param extension the listener to add
+     * @throws IllegalStateException if the file is in read-only mode
      */
     public void addZFileExtension(@Nonnull ZFileExtension extension) {
+        checkNotInReadOnlyMode();
         extensions.add(extension);
     }
 
@@ -2112,8 +2173,10 @@ public class ZFile implements Closeable {
      * Removes an extension from this zip file.
      *
      * @param extension the listener to remove
+     * @throws IllegalStateException if the file is in read-only mode
      */
     public void removeZFileExtension(@Nonnull ZFileExtension extension) {
+        checkNotInReadOnlyMode();
         extensions.remove(extension);
     }
 
@@ -2157,9 +2220,12 @@ public class ZFile implements Closeable {
      * @param start start offset in  {@code data} where data to write is located
      * @param count number of bytes of data to write
      * @throws IOException failed to write the data
+     * @throws IllegalStateException if the file is in read-only mode
      */
     public void directWrite(long offset, @Nonnull byte[] data, int start, int count)
             throws IOException {
+        checkNotInReadOnlyMode();
+
         Preconditions.checkArgument(offset >= 0, "offset < 0");
         Preconditions.checkArgument(start >= 0, "start >= 0");
         Preconditions.checkArgument(count >= 0, "count >= 0");
@@ -2184,8 +2250,10 @@ public class ZFile implements Closeable {
      * @param offset the offset at which data should be written
      * @param data the data to write, may be an empty array
      * @throws IOException failed to write the data
+     * @throws IllegalStateException if the file is in read-only mode
      */
     public void directWrite(long offset, @Nonnull byte[] data) throws IOException {
+        checkNotInReadOnlyMode();
         directWrite(offset, data, 0, data.length);
     }
 
@@ -2322,8 +2390,10 @@ public class ZFile implements Closeable {
      * @param file a file or directory; if it is a directory, all files and directories will be
      * added recursively
      * @throws IOException failed to some (or all ) of the files
+     * @throws IllegalStateException if the file is in read-only mode
      */
     public void addAllRecursively(@Nonnull File file) throws IOException {
+        checkNotInReadOnlyMode();
         addAllRecursively(file, f -> true);
     }
 
@@ -2334,10 +2404,13 @@ public class ZFile implements Closeable {
      * added recursively
      * @param mayCompress a function that decides whether files may be compressed
      * @throws IOException failed to some (or all ) of the files
+     * @throws IllegalStateException if the file is in read-only mode
      */
     public void addAllRecursively(
             @Nonnull File file,
             @Nonnull Function<? super File, Boolean> mayCompress) throws IOException {
+        checkNotInReadOnlyMode();
+
         /*
          * The case of file.isFile() is different because if file.isFile() we will add it to the
          * zip in the root. However, if file.isDirectory() we won't add it and add its children.
@@ -2469,8 +2542,11 @@ public class ZFile implements Closeable {
      *
      * @param comment the new comment; no conversion is done, these exact bytes will be placed in
      * the EOCD comment
+     * @throws IllegalStateException if file is in read-only mode
      */
     public void setEocdComment(@Nonnull byte[] comment) {
+        checkNotInReadOnlyMode();
+
         if (comment.length > MAX_EOCD_COMMENT_SIZE) {
             throw new IllegalArgumentException(
                     "EOCD comment size ("
@@ -2514,8 +2590,10 @@ public class ZFile implements Closeable {
      * updated.
      *
      * @param offset the offset or {@code 0} to write the central directory at its current location
+     * @throws IllegalStateException if file is in read-only mode
      */
     public void setExtraDirectoryOffset(long offset) {
+        checkNotInReadOnlyMode();
         Preconditions.checkArgument(offset >= 0, "offset < 0");
 
         if (extraDirectoryOffset != offset) {
@@ -2551,8 +2629,10 @@ public class ZFile implements Closeable {
      * written to disk.
      *
      * @throws IOException failed to load or move a file in the zip
+     * @throws IllegalStateException if file is in read-only mode
      */
     public void sortZipContents() throws IOException {
+        checkNotInReadOnlyMode();
         reopenRw();
 
         processAllReadyEntriesWithWait();

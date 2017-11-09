@@ -19,6 +19,8 @@
 
 #include <string>
 
+#include "utils/bash_command.h"
+
 namespace profiler {
 
 // Service to manage interactions related with simpleperf profiling tool
@@ -26,7 +28,17 @@ namespace profiler {
 // Designed to be easily inherited and used in tests.
 class Simpleperf {
  public:
+  explicit Simpleperf(const std::string& simpleperf_dir, const bool is_emulator)
+      : simpleperf_dir_(simpleperf_dir), is_emulator_(is_emulator) {}
   ~Simpleperf() = default;
+
+  // Invoke `simpleperf record` given the |pid| of the process to be profiled,
+  // its corresponding package name, the path of the resulting trace file, and
+  // the sampling interval. Also redirects stdout and stderr to a log file
+  // located at |log_path|.
+  void Record(int pid, const std::string& pkg_name,
+              const std::string& trace_path, int sampling_interval_us,
+              const std::string& log_path) const;
 
   // Make sure profiling is enabled on the platform (otherwise LinuxSE prevents
   // it). Returns true on success.
@@ -35,26 +47,33 @@ class Simpleperf {
   // Kill simpleperf and returns true if it was killed successfully.
   virtual bool KillSimpleperf(int simpleperf_pid) const;
 
-  // Invoke `simpleperf record` given the directory containing the simpleperf
-  // binary, the |pid| of the process to be profiled, its corresponding package
-  // name, the path of the resulting trace file, and the sampling interval. Also
-  // redirects stdout and stderr to a log file located at |log_path|.
-  virtual void Record(const std::string& simpleperf_dir, int pid,
-                      const std::string& pkg_name,
-                      const std::string& trace_path, int sampling_interval_us,
-                      const std::string& log_path) const;
-
-  // Receives the directory containing the simpleperf binary and invokes
-  // `simpleperf report-sample` passing |input_path| as input file and
+  // Invokes `simpleperf report-sample` passing |input_path| as input file and
   // |output_path| as the protobuf output file. Adds the command output to
-  // |output| and return trues on success.
-  virtual bool ReportSample(const std::string& simpleperf_dir,
-                            const std::string& input_path,
+  // |output| and return true on success.
+  virtual bool ReportSample(const std::string& input_path,
                             const std::string& output_path,
                             std::string* output) const;
 
+ protected:
+  // Returns a string with the full `simpleperf record` command, containing all
+  // the flags and arguments passed.
+  std::string GetRecordCommand(int pid, const std::string& pkg_name,
+                               const std::string& trace_path,
+                               int sampling_interval_us) const;
+
+  // Split a simpleperf record command from a single string to an array of
+  // strings. The original string should have its whitespaces removed, so the
+  // resulting array doesn't contain any. For example:
+  // |original_cmd|: "simpleperf record -p 13 -o test.data"
+  // |split_cmd|: {"simpleperf", "record", "-p", "13", "-o", "test.data"}
+  void SplitRecordCommand(char* original_cmd, char** split_cmd) const;
+
+  // Returns a string with the features supported by this device.
+  virtual std::string GetFeatures() const;
+
  private:
-  static const char* kSimpleperfExecutable;
+  const std::string simpleperf_dir_;
+  const bool is_emulator_;
 };
 }
 

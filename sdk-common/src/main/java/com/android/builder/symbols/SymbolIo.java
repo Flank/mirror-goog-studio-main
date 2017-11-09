@@ -232,6 +232,9 @@ public final class SymbolIo {
         String typeName = line.substring(0, pos);
 
         SymbolJavaType type = SymbolJavaType.getEnum(typeName);
+        if (type == null) {
+            throw new IOException("Invalid symbol type " + typeName);
+        }
         int pos2 = line.indexOf(' ', pos + 1);
         String className = line.substring(pos + 1, pos2);
 
@@ -255,7 +258,7 @@ public final class SymbolIo {
         void handle(@NonNull SymbolData data);
 
         @NonNull
-        List<String> getChildrenNames();
+        List<String> getChildrenNames() throws IOException;
     }
 
     private abstract static class BaseHandler implements StyleableIndexHandler {
@@ -326,9 +329,13 @@ public final class SymbolIo {
 
         @NonNull
         @Override
-        public List<String> getChildrenNames() {
+        public List<String> getChildrenNames() throws IOException {
             // sort the data by their values.
-            allDatas.sort(Comparator.comparingInt(o -> Integer.parseInt(o.value)));
+            try {
+                allDatas.sort(Comparator.comparingInt(o -> Integer.parseInt(o.value)));
+            } catch (NumberFormatException e) {
+                throw new IOException(e);
+            }
 
             // now extract the names only, and remove the prefix
             return allDatas.stream().map(this::computeName).collect(Collectors.toList());

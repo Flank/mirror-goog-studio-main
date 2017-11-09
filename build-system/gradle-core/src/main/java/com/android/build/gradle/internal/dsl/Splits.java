@@ -18,8 +18,9 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import java.util.Set;
+import javax.inject.Inject;
 import org.gradle.api.Action;
-import org.gradle.internal.reflect.Instantiator;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * DSL object for configuring APK Splits options.
@@ -32,10 +33,11 @@ public class Splits {
     private final AbiSplitOptions abi;
     private final LanguageSplitOptions language;
 
-    public Splits(@NonNull Instantiator instantiator) {
-        density = instantiator.newInstance(DensitySplitOptions.class);
-        abi = instantiator.newInstance(AbiSplitOptions.class);
-        language = instantiator.newInstance(LanguageSplitOptions.class);
+    @Inject
+    public Splits(@NonNull ObjectFactory objectFactory) {
+        density = objectFactory.newInstance(DensitySplitOptions.class);
+        abi = objectFactory.newInstance(AbiSplitOptions.class);
+        language = objectFactory.newInstance(LanguageSplitOptions.class);
     }
 
     /**

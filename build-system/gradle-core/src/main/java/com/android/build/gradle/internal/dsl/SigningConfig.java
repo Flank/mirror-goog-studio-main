@@ -21,6 +21,7 @@ import com.android.builder.signing.DefaultSigningConfig;
 import com.google.common.base.MoreObjects;
 import java.io.File;
 import java.io.Serializable;
+import javax.inject.Inject;
 import org.gradle.api.Named;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -37,8 +38,8 @@ public class SigningConfig extends DefaultSigningConfig implements Serializable,
      * Creates a SigningConfig with a given name.
      *
      * @param name the name of the signingConfig.
-     *
      */
+    @Inject
     public SigningConfig(@NonNull String name) {
         super(name);
     }

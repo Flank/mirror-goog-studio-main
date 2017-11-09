@@ -69,12 +69,12 @@ implementation as part of your method.
 
     override fun createUastHandler(context: JavaContext): UElementHandler? =
             object : UElementHandler() {
-                override fun visitMethod(method: UMethod) {
-                    val superMethod = getRequiredSuperMethod(context, method) ?: return
-                    if (!callsSuper(method, superMethod)) {
-                        val message = "Overriding method should call `super.${method.name}`"
-                        val location = context.getNameLocation(method)
-                        context.report(ISSUE, method, location, message)
+                override fun visitMethod(node: UMethod) {
+                    val superMethod = getRequiredSuperMethod(context, node) ?: return
+                    if (!callsSuper(node, superMethod)) {
+                        val message = "Overriding method should call `super.${node.name}`"
+                        val location = context.getNameLocation(node)
+                        context.report(ISSUE, node, location, message)
                     }
                 }
             }

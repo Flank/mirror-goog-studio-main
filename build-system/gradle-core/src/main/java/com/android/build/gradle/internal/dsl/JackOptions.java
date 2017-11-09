@@ -26,6 +26,7 @@ import com.google.common.collect.Maps;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
 
 /**
  * The Jack toolchain is <em>deprecated</em>.
@@ -57,6 +58,7 @@ public class JackOptions implements CoreJackOptions {
 
     @NonNull private final DeprecationReporter deprecationReporter;
 
+    @Inject
     public JackOptions(@NonNull DeprecationReporter deprecationReporter) {
         this.deprecationReporter = deprecationReporter;
     }

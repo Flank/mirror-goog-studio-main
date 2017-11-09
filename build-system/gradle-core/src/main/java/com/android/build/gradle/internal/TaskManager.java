@@ -37,6 +37,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.AAPT_FRIENDLY_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.ANNOTATION_PROCESSOR_LIST;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MAIN_APK_RESOURCES;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.INSTANT_RUN_MERGED_MANIFESTS;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.LIBRARY_MANIFEST;
@@ -189,6 +190,7 @@ import com.android.build.gradle.tasks.factory.AndroidUnitTest;
 import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
 import com.android.build.gradle.tasks.factory.ProcessJavaResConfigAction;
 import com.android.build.gradle.tasks.factory.TestServerTaskConfigAction;
+import com.android.build.gradle.tasks.ir.InstantRunMainApkResourcesBuilder;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
 import com.android.builder.core.DesugarProcessBuilder;
@@ -2419,6 +2421,11 @@ public abstract class TaskManager {
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
                 new DexArchiveBuilderTransform(
+                        () ->
+                                variantScope
+                                        .getGlobalScope()
+                                        .getAndroidBuilder()
+                                        .getBootClasspath(false),
                         dexOptions,
                         variantScope.getGlobalScope().getMessageReceiver(),
                         userLevelCache,
@@ -2427,7 +2434,8 @@ public abstract class TaskManager {
                         projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS),
                         projectOptions.get(IntegerOption.DEXING_READ_BUFFER_SIZE),
                         projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE),
-                        variantScope.getVariantConfiguration().getBuildType().isDebuggable());
+                        variantScope.getVariantConfiguration().getBuildType().isDebuggable(),
+                        variantScope.getJava8LangSupportType());
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
@@ -2859,10 +2867,28 @@ public abstract class TaskManager {
                         ? TaskOutputHolder.TaskOutputType.FULL_APK
                         : TaskOutputHolder.TaskOutputType.APK;
 
+        boolean useSeparateApkForResources =
+                variantScope.getInstantRunBuildContext().isInInstantRunMode()
+                        && (variantScope.getInstantRunBuildContext().getPatchingPolicy()
+                                == InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES);
+
         VariantScope.TaskOutputType resourceFilesInputType =
                 variantScope.useResourceShrinker()
                         ? VariantScope.TaskOutputType.SHRUNK_PROCESSED_RES
                         : VariantScope.TaskOutputType.PROCESSED_RES;
+
+        TaskOutputHolder.TaskOutputType resourcesForAppOrBaseApkPackaging = resourceFilesInputType;
+        if (useSeparateApkForResources) {
+            // add a task to create an empty resource with the merged manifest file that
+            // will eventually get packaged in the main APK.
+            // We need to pass the published resource type as the generated manifest can use
+            // a String resource for its version name (so AAPT can check for resources existence).
+            androidTasks.create(
+                    tasks,
+                    new InstantRunMainApkResourcesBuilder.ConfigAction(
+                            variantScope, packagingScope, resourceFilesInputType));
+            resourcesForAppOrBaseApkPackaging = INSTANT_RUN_MAIN_APK_RESOURCES;
+        }
 
         AndroidTask<PackageApplication> packageApp =
                 androidTasks.create(
@@ -2870,8 +2896,8 @@ public abstract class TaskManager {
                         new PackageApplication.StandardConfigAction(
                                 packagingScope,
                                 outputDirectory,
-                                resourceFilesInputType,
-                                variantScope.getOutput(resourceFilesInputType),
+                                resourcesForAppOrBaseApkPackaging,
+                                variantScope.getOutput(resourcesForAppOrBaseApkPackaging),
                                 manifests,
                                 manifestType,
                                 variantScope.getOutputScope(),
@@ -2882,8 +2908,7 @@ public abstract class TaskManager {
         AndroidTask<? extends Task> packageInstantRunResources = null;
 
         if (variantScope.getInstantRunBuildContext().isInInstantRunMode()) {
-            if (variantScope.getInstantRunBuildContext().getPatchingPolicy()
-                    == InstantRunPatchingPolicy.MULTI_APK_SEPARATE_RESOURCES) {
+            if (useSeparateApkForResources) {
                 packageInstantRunResources =
                         androidTasks.create(
                                 tasks,

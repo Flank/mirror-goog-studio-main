@@ -17,17 +17,12 @@ import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
-import com.google.common.collect.Lists;
 import java.io.File;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileTree;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.PathSensitivity;
 
 /**
  * Configuration Action for a JavaCompile task.
@@ -84,16 +79,6 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                                             globalScope
                                                     .getAndroidBuilder()
                                                     .getBootClasspathAsStrings(false)));
-
-            // Workaround to avoid absolute paths making it into the configuration of javacTask
-            // This won't be needed with Gradle 4.3, as bootClasspath is replaced with bootstrapClasspath
-            javacTask.getInputs().property("options.bootClasspath", null);
-            javacTask
-                    .getInputs()
-                    .files(globalScope.getAndroidBuilder().getBootClasspath(false))
-                    .withPathSensitivity(PathSensitivity.RELATIVE)
-                    .withPropertyName("options.bootClasspath.override");
-
         }
 
         FileCollection classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
@@ -172,33 +157,6 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
         javacTask.getOptions().getCompilerArgs().add(
                 scope.getAnnotationProcessorOutputDir().getAbsolutePath());
         javacTask.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
-
-        // Filter the annotation processor output folder from compiler arguments to avoid absolute path.
-        // The output folder is already represented as an output via AndroidJavaCompile.getAnnotationProcessorOutputFolder()
-        // so we only need to prevent it being tracked as a string in the compiler argument list.
-        javacTask.getInputs().property("options.compilerArgs", null);
-        javacTask
-                .getInputs()
-                .property(
-                        "options.compilerArgs.filtered",
-                        (Callable<Object>)
-                                () -> {
-                                    List<String> compilerArgs =
-                                            javacTask.getOptions().getCompilerArgs();
-                                    List<String> filteredArgs = Lists.newArrayList();
-                                    Iterator<String> iCompilerArgs = compilerArgs.iterator();
-                                    while (iCompilerArgs.hasNext()) {
-                                        String compilerArg = iCompilerArgs.next();
-                                        if ("-s".equals(compilerArg)) {
-                                            if (iCompilerArgs.hasNext()) {
-                                                iCompilerArgs.next();
-                                            }
-                                        } else {
-                                            filteredArgs.add(compilerArg);
-                                        }
-                                    }
-                                    return filteredArgs;
-                                });
 
         // if data binding is enabled and this variant has merged dependency artifacts, then
         // make the javac task depend on them. (test variants don't do the merge so they

@@ -17,8 +17,11 @@
 package com.android.builder.dexing;
 
 import com.android.annotations.NonNull;
+import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.stream.Stream;
+import javax.annotation.Nonnull;
 
 /**
  * An abstract dex archive builder that converts input class files to dex files that are written to
@@ -37,8 +40,15 @@ public abstract class DexArchiveBuilder {
 
     /** Creates an instance that is using d8 to convert class files to dex files. */
     @NonNull
-    public static DexArchiveBuilder createD8DexBuilder(int minSdkVersion, boolean isDebug) {
-        return new D8DexArchiveBuilder(minSdkVersion, isDebug);
+    public static DexArchiveBuilder createD8DexBuilder(
+            int minSdkVersion,
+            boolean isDebug,
+            @NonNull List<Path> bootClasspath,
+            @NonNull List<Path> classpath,
+            @Nonnull ClassFileProviderFactory providerFactory,
+            boolean desugaring) {
+        return new D8DexArchiveBuilder(
+                minSdkVersion, isDebug, bootClasspath, classpath, providerFactory, desugaring);
     }
 
     /**

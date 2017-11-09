@@ -475,7 +475,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
      * Checks that the main {@code <application>} tag specifies both an icon and allowBackup,
      * possibly merged from some upstream dependency
      */
-    private static void checkMergedApplication(@NonNull XmlContext context,
+    private void checkMergedApplication(@NonNull XmlContext context,
             Element sourceApplicationElement) {
         if (context.getProject().isLibrary()) {
             return;
@@ -559,7 +559,7 @@ public class ManifestDetector extends Detector implements Detector.XmlScanner {
         }
     }
 
-    private static void checkDocumentElement(XmlContext context, Element element) {
+    private void checkDocumentElement(XmlContext context, Element element) {
         Attr codeNode = element.getAttributeNodeNS(ANDROID_URI, ATTR_VERSION_CODE);
         if (codeNode != null && codeNode.getValue().startsWith(PREFIX_RESOURCE_REF)
                 && context.isEnabled(ILLEGAL_REFERENCE)) {

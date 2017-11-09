@@ -241,7 +241,7 @@ public class TypoDetector extends ResourceXmlDetector {
         }
     }
 
-    private static void checkRepeatedWords(XmlContext context, Element element, Node node,
+    private void checkRepeatedWords(XmlContext context, Element element, Node node,
             String text, int lastWordBegin, int lastWordEnd, int begin, int end) {
         if (lastWordBegin != -1 && end - begin == lastWordEnd - lastWordBegin
                 && end - begin > 1) {
@@ -345,7 +345,7 @@ public class TypoDetector extends ResourceXmlDetector {
     }
 
     /** Report the typo found at the given offset and suggest the given replacements */
-    private static void reportTypo(XmlContext context, Node node, String text, int begin,
+    private void reportTypo(XmlContext context, Node node, String text, int begin,
             List<String> replacements) {
         if (replacements.size() < 2) {
             return;
@@ -400,7 +400,7 @@ public class TypoDetector extends ResourceXmlDetector {
     }
 
     /** Reports a repeated word */
-    private static void reportRepeatedWord(XmlContext context, Node node, String text,
+    private void reportRepeatedWord(XmlContext context, Node node, String text,
             int lastWordBegin,
             int begin, int end) {
         String word = text.substring(begin, end);

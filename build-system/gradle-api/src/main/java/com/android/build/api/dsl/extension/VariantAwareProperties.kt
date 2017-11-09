@@ -65,10 +65,10 @@ interface VariantAwareProperties : DefaultConfig {
     val variants: VariantCallbackHandler<Variant>
 
     /** post variant callbacks  */
-    var postVariants: MutableList<Action<List<Variant>>>
+    var postVariants: MutableList<Action<Collection<Variant>>>
 
     /** register a post-variant callback */
-    fun postVariantCallback(action: Action<List<Variant>>)
+    fun postVariantCallback(action: Action<Collection<Variant>>)
 
     @Deprecated("Use flavorDimensions")
     var flavorDimensionList: MutableList<String>

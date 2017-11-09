@@ -2134,9 +2134,9 @@ public class GradleDetectorTest extends AbstractCheckTest {
         }
 
         @Override
-        public void visitBuildScript(@NonNull final Context context, Map<String, Object> sharedData) {
+        public void visitBuildScript(@NonNull final Context context) {
             try {
-                visitQuietly(context, sharedData);
+                visitQuietly(context);
             } catch (Throwable t) {
                 // ignore
                 // Parsing the build script can involve class loading that we sometimes can't
@@ -2150,8 +2150,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
             }
         }
 
-        private void visitQuietly(@NonNull final Context context,
-                @SuppressWarnings("UnusedParameters") Map<String, Object> sharedData) {
+        private void visitQuietly(@NonNull final Context context) {
             final CharSequence contents = context.getContents();
             if (contents == null) {
                 return;

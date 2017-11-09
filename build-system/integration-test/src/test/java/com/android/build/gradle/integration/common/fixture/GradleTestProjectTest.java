@@ -62,7 +62,7 @@ public class GradleTestProjectTest {
             fail("Expected assertion to propagate");
         } catch (AssertionError e) {
             assertThat(e).isEqualTo(error);
-            assertThat(capture.toString()).contains("Executing task ':help'");
+            assertThat(capture.toString()).contains("Tasks to be executed: [task ':help']");
         } finally {
             System.setErr(stderr);
         }

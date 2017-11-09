@@ -25,6 +25,7 @@ import com.android.build.gradle.api.UnitTestVariant;
 import com.android.build.gradle.internal.variant.ApkVariantData;
 import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.builder.core.AndroidBuilder;
+import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.model.ObjectFactory;
 
@@ -41,6 +42,7 @@ public class FeatureVariantImpl extends ApkVariantImpl implements FeatureVariant
     @Nullable private TestVariant testVariant = null;
     @Nullable private UnitTestVariant unitTestVariant = null;
 
+    @Inject
     public FeatureVariantImpl(
             @NonNull FeatureVariantData variantData,
             @NonNull ObjectFactory objectFactory,

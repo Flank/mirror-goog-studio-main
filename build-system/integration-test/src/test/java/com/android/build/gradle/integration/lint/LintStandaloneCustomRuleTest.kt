@@ -26,7 +26,7 @@ import org.junit.Test
  *
  *
  * To run just this test:
- * ./gradlew :base:integration-test:test -D:base:integration-test:test.single=LintStandaloneTest
+ * ./gradlew :base:integration-test:test -D:base:integration-test:test.single=LintStandaloneCustomRuleTest
  */
 class LintStandaloneCustomRuleTest {
     @Rule

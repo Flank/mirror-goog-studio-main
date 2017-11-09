@@ -18,6 +18,7 @@ package com.android.tools.lint.checks
 
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_NAME
+import com.android.SdkConstants.ATTR_REQUIRED
 import com.android.SdkConstants.CLASS_INTENT
 import com.android.SdkConstants.TAG_APPLICATION
 import com.android.SdkConstants.TAG_PERMISSION
@@ -44,7 +45,6 @@ import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.utils.XmlUtils
-import com.android.xml.AndroidManifest
 import com.google.common.collect.Sets
 import com.intellij.psi.PsiClassType
 import com.intellij.psi.PsiMethod
@@ -74,10 +74,10 @@ class PermissionDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
-            annotations: MutableList<UAnnotation>,
-            allMemberAnnotations: MutableList<UAnnotation>,
-            allClassAnnotations: MutableList<UAnnotation>,
-            allPackageAnnotations: MutableList<UAnnotation>) {
+            annotations: List<UAnnotation>,
+            allMemberAnnotations: List<UAnnotation>,
+            allClassAnnotations: List<UAnnotation>,
+            allPackageAnnotations: List<UAnnotation>) {
         if (annotations === allMemberAnnotations) {
             // Permission annotation specified on method:
             val requirement = PermissionRequirement.create(annotation)
@@ -164,11 +164,11 @@ class PermissionDetector : AbstractAnnotationDetector(), Detector.UastScanner {
 
                 report(context, MISSING_PERMISSION, node, location, message,
                         // Pass data to IDE quickfix: names to add, and max applicable API version
-                        Detector.fix().data(requirement.getMissingPermissions(permissions),
+                        fix().data(requirement.getMissingPermissions(permissions),
                                 requirement.lastApplicableApi))
             }
         } else if (requirement.isRevocable(permissions)
-                && context.getMainProject().targetSdkVersion.featureLevel >= 23
+                && context.mainProject.targetSdkVersion.featureLevel >= 23
                 && requirement.lastApplicableApi >= 23
                 && !isAndroidThingsProject(context)) {
 
@@ -193,7 +193,7 @@ class PermissionDetector : AbstractAnnotationDetector(), Detector.UastScanner {
                 val location = context.getLocation(node)
                 report(context, MISSING_PERMISSION, node, location, message,
                         // Pass data to IDE quickfix: revocable names, and permission requirement
-                        Detector.fix().data(requirement.getRevocablePermissions(permissions),
+                        fix().data(requirement.getRevocablePermissions(permissions),
                                 requirement))
             }
         }
@@ -333,7 +333,7 @@ class PermissionDetector : AbstractAnnotationDetector(), Detector.UastScanner {
         if (mPermissions == null) {
             val permissions = Sets.newHashSetWithExpectedSize<String>(30)
             val revocable = Sets.newHashSetWithExpectedSize<String>(4)
-            val mainProject = context.getMainProject()
+            val mainProject = context.mainProject
             val mergedManifest = mainProject.mergedManifest
 
             if (mergedManifest != null) {
@@ -373,7 +373,7 @@ class PermissionDetector : AbstractAnnotationDetector(), Detector.UastScanner {
 
     private fun isAndroidThingsProject(context: Context): Boolean {
         if (mIsAndroidThingsProject == null) {
-            val project = context.getMainProject()
+            val project = context.mainProject
             val mergedManifest = project.mergedManifest ?: return false
             val manifest = mergedManifest.documentElement ?: return false
 
@@ -384,8 +384,7 @@ class PermissionDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             while (usesLibrary != null && mIsAndroidThingsProject == null) {
                 val name = usesLibrary.getAttributeNS(ANDROID_URI, ATTR_NAME)
                 var isThingsLibraryRequired = true
-                val required = usesLibrary.getAttributeNS(ANDROID_URI,
-                        AndroidManifest.ATTRIBUTE_REQUIRED)
+                val required = usesLibrary.getAttributeNS(ANDROID_URI, ATTR_REQUIRED)
                 if (VALUE_FALSE == required) {
                     isThingsLibraryRequired = false
                 }

@@ -421,14 +421,13 @@ public class MergeResourcesTest {
                 appProject.getApk(GradleTestProject.ApkType.DEBUG).getContentsSize();
 
         // Run an incremental build with shrinkResources disabled, the MergeResources task should
-        // not be UP-TO-DATE
+        // not be UP-TO-DATE and the apk size should be larger
         TestFileUtils.searchAndReplace(
                 appBuildFile, "shrinkResources true", "shrinkResources false");
         result = project.executor().run(":app:assembleDebug");
         assertThat(result.getTask(":app:mergeDebugResources")).wasNotUpToDate();
         long apkSizeWithoutShrinkResources =
                 appProject.getApk(GradleTestProject.ApkType.DEBUG).getContentsSize();
-
         assertThat(apkSizeWithoutShrinkResources).isGreaterThan(apkSizeWithShrinkResources);
 
         // Run an incremental build again with shrinkResources enabled, the MergeResources task

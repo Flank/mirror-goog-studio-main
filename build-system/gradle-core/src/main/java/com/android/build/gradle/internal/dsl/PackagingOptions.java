@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.google.common.collect.Sets;
 import java.util.Set;
+import javax.inject.Inject;
 import org.gradle.api.tasks.Input;
 
 /**
@@ -136,6 +137,7 @@ import org.gradle.api.tasks.Input;
  */
 public class PackagingOptions implements com.android.builder.model.PackagingOptions {
 
+    @Inject
     public PackagingOptions() {
         // ATTENTION - keep this in sync with JavaDoc above.
         exclude("/META-INF/LICENSE");

@@ -21,16 +21,14 @@ import com.android.build.gradle.api.AndroidSourceSet;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
-import org.gradle.internal.reflect.Instantiator;
+import org.gradle.api.model.ObjectFactory;
 
 /**
- * Factory to create AndroidSourceSet object using an {@link Instantiator} to add
- * the DSL methods.
+ * Factory to create AndroidSourceSet object using an {@link ObjectFactory} to add the DSL methods.
  */
 public class AndroidSourceSetFactory implements NamedDomainObjectFactory<AndroidSourceSet> {
 
-    @NonNull
-    private final Instantiator instantiator;
+    @NonNull private final ObjectFactory objectFactory;
     @NonNull
     private final Project project;
 
@@ -39,20 +37,22 @@ public class AndroidSourceSetFactory implements NamedDomainObjectFactory<Android
     /**
      * Constructor for this AndroidSourceSetFactory.
      *
-     * @param instantiator the instantiator for this AndroidSourceSetFactory.
+     * @param objectFactory the objectFactory for this AndroidSourceSetFactory.
      * @param project the project for this AndroidSourceSetFactory.
      * @param publishPackage true to set the package name to "publish", false to set it to "apk".
      */
     public AndroidSourceSetFactory(
-            @NonNull Instantiator instantiator, @NonNull Project project, boolean publishPackage) {
-        this.instantiator = instantiator;
+            @NonNull ObjectFactory objectFactory,
+            @NonNull Project project,
+            boolean publishPackage) {
+        this.objectFactory = objectFactory;
         this.publishPackage = publishPackage;
         this.project = project;
     }
 
     @Override
     public AndroidSourceSet create(String name) {
-        return instantiator.newInstance(
+        return objectFactory.newInstance(
                 DefaultAndroidSourceSet.class, name, project, publishPackage);
     }
 }

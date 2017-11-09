@@ -66,7 +66,8 @@ public class JarJarTest {
                         + "    multiDexEnabled true\n"
                         + "}\n");
 
-        project.executeAndReturnModel("clean", "assembleDebug");
+        project.executor().run("clean", "assembleDebug");
+        project.model().getSingle().getOnlyModel();
         verifyApk();
     }
 

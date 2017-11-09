@@ -51,15 +51,16 @@ import org.jetbrains.uast.getContainingFile
 open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.project.Project?,
         private val myLintProject: Project?) : JavaEvaluator() {
 
-    override fun getDependencies(): Dependencies? {
-        if (myLintProject != null && myLintProject.isAndroidProject) {
-            val variant = myLintProject.currentVariant
-            if (variant != null) {
-                return variant.mainArtifact.dependencies
+    override val dependencies: Dependencies?
+        get() {
+            if (myLintProject != null && myLintProject.isAndroidProject) {
+                val variant = myLintProject.currentVariant
+                if (variant != null) {
+                    return variant.mainArtifact.dependencies
+                }
             }
+            return null
         }
-        return null
-    }
 
     override fun extendsClass(cls: PsiClass?, className: String, strict: Boolean): Boolean {
         // TODO: This checks interfaces too. Let's find a cheaper method which only checks direct super classes!
@@ -82,9 +83,9 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
                 GlobalSearchScope.allScope(myProject))
     }
 
-    override fun getClassType(cls: PsiClass?): PsiClassType? {
-        return if (myProject != null && cls != null)
-            JavaPsiFacade.getElementFactory(myProject).createType(cls)
+    override fun getClassType(psiClass: PsiClass?): PsiClassType? {
+        return if (myProject != null && psiClass != null)
+            JavaPsiFacade.getElementFactory(myProject).createType(psiClass)
         else
             null
     }
@@ -196,6 +197,7 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
         return psiClass.qualifiedName
     }
 
+    @Suppress("OverridingDeprecatedMember", "DEPRECATION")
     override fun getInternalName(psiClassType: PsiClassType): String? {
         val erased = erasure(psiClassType)
         return if (erased is PsiClassType) {
@@ -204,6 +206,7 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
 
     }
 
+    @Suppress("OverridingDeprecatedMember")
     override fun getInternalName(psiClass: PsiClass): String? {
         return LintUtils.getInternalName(psiClass)
     }

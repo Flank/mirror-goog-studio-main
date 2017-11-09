@@ -23,6 +23,7 @@ import com.android.build.gradle.api.TestVariant;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.android.builder.core.AndroidBuilder;
 import java.util.List;
+import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.model.ObjectFactory;
@@ -40,6 +41,7 @@ public class TestVariantImpl extends ApkVariantImpl implements TestVariant {
     @NonNull
     private final BaseVariant testedVariantData;
 
+    @Inject
     public TestVariantImpl(
             @NonNull TestVariantData variantData,
             @NonNull BaseVariant testedVariantData,

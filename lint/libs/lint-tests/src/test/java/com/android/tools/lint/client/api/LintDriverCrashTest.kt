@@ -67,10 +67,10 @@ package test.pkg;
 
         override fun createUastHandler(context: JavaContext): UElementHandler? =
                 object : UElementHandler() {
-                    override fun visitFile(uFile: UFile) {
+                    override fun visitFile(node: UFile) {
                         @Suppress("DIVISION_BY_ZERO", "UNUSED_VARIABLE") // Intentional crash
                         val x = 1 / 0
-                        super.visitFile(uFile)
+                        super.visitFile(node)
                     }
                 }
 

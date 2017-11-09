@@ -322,4 +322,42 @@ public class VectorPathDetectorTest extends AbstractCheckTest {
                 .run()
                 .expectClean();
     }
+
+    public void testTextRange() {
+        // Regression test for https://issuetracker.google.com/issues/68285472
+        lint().files(
+                xml("res/drawable/my_vector.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    android:width=\"24dp\"\n" +
+                        "    android:height=\"24dp\"\n" +
+                        "    android:viewportWidth=\"24\"\n" +
+                        "    android:viewportHeight=\"24\">\n" +
+                        "\n" +
+                        "    <path\n" +
+                        "        android:fillColor=\"#000000\"\n" +
+                        "        android:pathData=\"M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2”\" />\n" +
+                        "</vector>"))
+                .incremental("res/drawable/my_vector.xml")
+                .run()
+                .expect("res/drawable/my_vector.xml:10: Error: Use -0.9 instead of -.9 to avoid crashes on some devices [InvalidVectorPath]\n" +
+                        "        android:pathData=\"M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2”\" />\n" +
+                        "                                                          ~~~\n" +
+                        "res/drawable/my_vector.xml:10: Error: Use -0.9 instead of -.9 to avoid crashes on some devices [InvalidVectorPath]\n" +
+                        "        android:pathData=\"M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2”\" />\n" +
+                        "                                                                 ~~~\n" +
+                        "res/drawable/my_vector.xml:10: Error: Use 0.9 instead of .9 to avoid crashes on some devices [InvalidVectorPath]\n" +
+                        "        android:pathData=\"M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2”\" />\n" +
+                        "                                         ~~\n" +
+                        "res/drawable/my_vector.xml:10: Error: Use 0.9 instead of .9 to avoid crashes on some devices [InvalidVectorPath]\n" +
+                        "        android:pathData=\"M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2”\" />\n" +
+                        "                                                ~~\n" +
+                        "res/drawable/my_vector.xml:10: Error: Use 0.9 instead of .9 to avoid crashes on some devices [InvalidVectorPath]\n" +
+                        "        android:pathData=\"M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2”\" />\n" +
+                        "                                                                                            ~~\n" +
+                        "res/drawable/my_vector.xml:10: Error: Use 0.9 instead of .9 to avoid crashes on some devices [InvalidVectorPath]\n" +
+                        "        android:pathData=\"M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2”\" />\n" +
+                        "                                                                                                   ~~\n" +
+                        "6 errors, 0 warnings");
+    }
 }

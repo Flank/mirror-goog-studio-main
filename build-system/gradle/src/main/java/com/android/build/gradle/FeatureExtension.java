@@ -31,7 +31,6 @@ import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
-import org.gradle.internal.reflect.Instantiator;
 
 /**
  * The {@code android} extension for {@code com.android.feature} projects.
@@ -54,7 +53,6 @@ public class FeatureExtension extends LibraryExtension {
     public FeatureExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
@@ -65,7 +63,6 @@ public class FeatureExtension extends LibraryExtension {
         super(
                 project,
                 projectOptions,
-                instantiator,
                 androidBuilder,
                 sdkHandler,
                 buildTypes,

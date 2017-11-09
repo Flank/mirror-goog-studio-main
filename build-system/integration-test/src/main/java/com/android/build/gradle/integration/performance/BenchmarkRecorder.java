@@ -143,6 +143,12 @@ public final class BenchmarkRecorder {
     }
 
     public void doUploads() throws IOException {
+        // If a benchmark failed or was skipped for whatever reason, there will be no results. In
+        // this case, there's no uploading to do so we just break early.
+        if (benchmarkResults.isEmpty()) {
+            return;
+        }
+
         Timestamp timestamp = Timestamps.fromMillis(System.currentTimeMillis());
         List<GradleBenchmarkResult> results =
                 benchmarkResults

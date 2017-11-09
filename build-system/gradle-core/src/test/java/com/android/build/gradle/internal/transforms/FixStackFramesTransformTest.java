@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import static com.android.testutils.truth.MoreTruth.assertThatZip;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
@@ -46,6 +47,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -57,8 +59,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Collectors;
+import java.util.zip.CRC32;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.zip.ZipOutputStream;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -246,6 +250,61 @@ public class FixStackFramesTransformTest {
 
         assertThat(readZipEntry(jar, "test/A.class"))
                 .isEqualTo(readZipEntry(output.resolve("input.jar"), "test/A.class"));
+    }
+
+    @Test
+    public void testOnlyClassesProcessed() throws Exception {
+        Path jar = tmp.getRoot().toPath().resolve("input");
+
+        try (ZipOutputStream outputZip =
+                new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(jar)))) {
+            ZipEntry outEntry = new ZipEntry("LICENSE");
+            byte[] newEntryContent = {0x10, 0x20, 0x30};
+            CRC32 crc32 = new CRC32();
+            crc32.update(newEntryContent);
+            outEntry.setCrc(crc32.getValue());
+            outEntry.setMethod(ZipEntry.STORED);
+            outEntry.setSize(newEntryContent.length);
+            outEntry.setCompressedSize(newEntryContent.length);
+
+            outputZip.putNextEntry(outEntry);
+            outputZip.write(newEntryContent);
+            outputZip.closeEntry();
+        }
+
+        JarInput jarInput =
+                TransformTestHelper.jarBuilder(jar.toFile())
+                        .setScopes(QualifiedContent.Scope.EXTERNAL_LIBRARIES)
+                        .build();
+        TransformInput input = TransformTestHelper.inputBuilder().addInput(jarInput).build();
+
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setInputs(ImmutableSet.of(input))
+                        .setTransformOutputProvider(outputProvider)
+                        .build();
+
+        FixStackFramesTransform transform =
+                new FixStackFramesTransform(ImmutableList::of, "", null);
+        transform.transform(invocation);
+
+        assertThatZip(output.resolve("input.jar").toFile()).doesNotContain("LICENSE");
+    }
+
+    @Test
+    public void testNonIncrementalClearsOutput()
+            throws IOException, TransformException, InterruptedException {
+        Files.write(output.resolve("to-be-removed"), "".getBytes());
+
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .setTransformOutputProvider(outputProvider)
+                        .setIncremental(false)
+                        .build();
+        FixStackFramesTransform transform =
+                new FixStackFramesTransform(ImmutableList::of, "", null);
+        transform.transform(invocation);
+        assertThat(output.toFile().list()).named("output artifacts").hasLength(0);
     }
 
     /** Loads all classes from jars, to make sure no VerifyError is thrown. */

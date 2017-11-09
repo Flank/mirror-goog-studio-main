@@ -20,13 +20,15 @@
 #include <map>
 #include <string>
 
+#include "perfd/cpu/atrace_manager.h"
 #include "perfd/cpu/cpu_cache.h"
 #include "perfd/cpu/cpu_usage_sampler.h"
 #include "perfd/cpu/simpleperf.h"
 #include "perfd/cpu/simpleperf_manager.h"
-#include "perfd/cpu/atrace_manager.h"
 #include "perfd/cpu/thread_monitor.h"
 #include "proto/cpu.grpc.pb.h"
+#include "utils/current_process.h"
+#include "utils/device_info.h"
 
 namespace profiler {
 
@@ -87,7 +89,8 @@ class CpuServiceImpl final : public profiler::proto::CpuService::Service {
   CpuUsageSampler& usage_sampler_;
   // The monitor that detects thread activities (i.e., state changes).
   ThreadMonitor& thread_monitor_;
-  const Simpleperf simpleperf_;
+  const Simpleperf simpleperf_{CurrentProcess::dir(),
+                               DeviceInfo::is_emulator()};
   SimpleperfManager simplerperf_manager_;
   AtraceManager atrace_manager_;
   // Absolute on-device path to the trace file. Activity manager or simpleperf

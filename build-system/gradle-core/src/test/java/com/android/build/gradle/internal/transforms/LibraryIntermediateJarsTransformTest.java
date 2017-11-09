@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.gradle.api.file.FileCollection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +42,7 @@ public class LibraryIntermediateJarsTransformTest {
 
     private File mainClassLocation;
     private File resJarLocation;
-    private File typedefRecipe;
+    private FileCollection typedefRecipe;
     private String packageName;
 
     private LibraryIntermediateJarsTransform transform;

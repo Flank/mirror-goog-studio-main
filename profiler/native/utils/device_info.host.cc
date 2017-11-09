@@ -31,6 +31,7 @@ const char* const kSerial = "ro.serialno";
 const char* const kCodeName = "ro.build.version.codename";
 const char* const kRelease = "ro.build.version.release";
 const char* const kSdk = "ro.build.version.sdk";
+const char* const kCharacteristics = "ro.build.characteristics";
 // API codename of a release (non preview) system image or platform.
 const char* const kCodeNameRelease = "REL";
 
@@ -44,6 +45,8 @@ DeviceInfo::DeviceInfo()
       code_name_(GetSystemProperty(kCodeName)),
       release_(GetSystemProperty(kRelease)),
       sdk_(atoi(GetSystemProperty(kSdk).c_str())),
+      is_emulator_(GetSystemProperty(kCharacteristics).find("emulator") !=
+                   string::npos),
       // If the codename property is empty or a known fixed string ("REL"),
       // it is a release system image and feature level is the same as sdk
       // level. Otherwise, it is a preview impage, and feature level is sdk

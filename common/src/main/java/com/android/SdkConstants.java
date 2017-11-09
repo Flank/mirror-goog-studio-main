@@ -1205,6 +1205,7 @@ public final class SdkConstants {
     public static final String ATTR_SPLIT_NAME = "splitName";
     public static final String ATTR_FEATURE_SPLIT = "featureSplit";
     public static final String ATTR_TARGET_SANDBOX_VERSION = "targetSandboxVersion";
+    public static final String ATTR_REQUIRED = "required";
 
     // Attributes: Resources
     public static final String ATTR_ATTR = "attr";
@@ -1981,6 +1982,20 @@ public final class SdkConstants {
     public static final String ATTR_MOCKUP_POSITION = "mockup_crop"; //$NON-NLS-1$
     public static final String ATTR_MOCKUP_OPACITY = "mockup_opacity"; //$NON-NLS-1$
 
+    // Baselines
+    /**
+     * Root tag in baseline files (which can be the XML output report files from lint, or a
+     * subset of these
+     */
+    @SuppressWarnings("unused") // used from IDE
+    public static final String TAG_ISSUES = "issues";
+    public static final String TAG_ISSUE = "issue";
+    public static final String TAG_LOCATION = "location";
+    public static final String ATTR_MESSAGE = "message";
+    public static final String ATTR_FILE = "file";
+    public static final String ATTR_LINE = "line";
+    public static final String ATTR_COLUMN = "column";
+
     public static final class ImageViewAttributes {
         public static final String TINT = "tint";
     }
@@ -2199,7 +2214,7 @@ public final class SdkConstants {
     public static final String GRADLE_PLUGIN_NAME = "com.android.tools.build:gradle:";
     public static final String GRADLE_EXPERIMENTAL_PLUGIN_NAME =
             "com.android.tools.build:gradle-experimental:";
-    public static final String GRADLE_MINIMUM_VERSION = "4.1";
+    public static final String GRADLE_MINIMUM_VERSION = "4.4-20171031235950+0000";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
     public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "2.3.2";
@@ -2209,7 +2224,7 @@ public final class SdkConstants {
     public static final String GRADLE_TEST_COMPILE_CONFIGURATION = "testCompile";
     public static final String GRADLE_ANDROID_TEST_COMPILE_CONFIGURATION = "androidTestCompile";
     public static final String GRADLE_ANDROID_TEST_UTIL_CONFIGURATION = "androidTestUtil";
-    public static final String CURRENT_BUILD_TOOLS_VERSION = "26.0.2";
+    public static final String CURRENT_BUILD_TOOLS_VERSION = "27.0.1";
     public static final String SUPPORT_LIB_GROUP_ID = "com.android.support";
     public static final String SUPPORT_LIB_ARTIFACT = "com.android.support:support-v4";
     public static final String DESIGN_LIB_ARTIFACT = "com.android.support:design";

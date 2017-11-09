@@ -365,7 +365,7 @@ public class LintCliClient extends LintClient {
         if (severity.isError()) {
             hasErrors = true;
             errorCount++;
-        } else {
+        } else if (severity == Severity.WARNING) { // Don't count informational as a warning
             warningCount++;
         }
 

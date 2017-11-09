@@ -42,14 +42,13 @@ import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.internal.reflect.Instantiator;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'instantapp' projects. */
 public class InstantAppPlugin extends BasePlugin<BaseExtension2> implements Plugin<Project> {
     @Inject
-    public InstantAppPlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
-        super(instantiator, registry);
+    public InstantAppPlugin(ToolingModelBuilderRegistry registry) {
+        super(registry);
     }
 
     @Override
@@ -62,7 +61,6 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> implements Plug
     protected BaseExtension createExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
@@ -76,7 +74,6 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> implements Plug
                         InstantAppExtension.class,
                         project,
                         projectOptions,
-                        instantiator,
                         androidBuilder,
                         sdkHandler,
                         buildTypeContainer,
@@ -139,11 +136,9 @@ public class InstantAppPlugin extends BasePlugin<BaseExtension2> implements Plug
     @Override
     protected InstantAppVariantFactory createVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig) {
-        return new InstantAppVariantFactory(
-                globalScope, instantiator, androidBuilder, androidConfig);
+        return new InstantAppVariantFactory(globalScope, androidBuilder, androidConfig);
     }
 
     @Override

@@ -129,7 +129,7 @@ class PermissionDetectorTest : AbstractCheckTest() {
                 import android.location.LocationManager;
                 import java.io.IOException;
                 import java.security.AccessControlException;
-                @SuppressWarnings({"ClassNameDiffersFromFileName", "TryWithIdenticalCatches", "RedundantThrows"}) 
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "TryWithIdenticalCatches", "RedundantThrows"})
                 public class RevokeTest {
                     public static void test1(LocationManager locationManager, String provider) {
                         try {

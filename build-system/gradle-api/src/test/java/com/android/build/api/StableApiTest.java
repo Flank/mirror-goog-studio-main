@@ -38,6 +38,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -94,7 +95,7 @@ public class StableApiTest {
 
         // Compare the two as strings, to get a nice diff UI in the IDE.
         Iterable<String> expectedApiElements =
-                Splitter.on(System.lineSeparator())
+                Splitter.on("\n")
                         .omitEmptyStrings()
                         .split(Resources.toString(INCUBATING_API_URL, Charsets.UTF_8));
 
@@ -113,7 +114,7 @@ public class StableApiTest {
         // ATTENTION REVIEWER: if this needs to be changed, please make sure changes to api-list.txt
         // are backwards compatible.
         assertEquals(
-                "2293875af8a6b0700f099823ea4556d90fab3578",
+                "f483e41bc0e810e66ccca54033498c3d2e805a7d",
                 Hashing.sha1()
                         .hashString(
                                 Resources.toString(STABLE_API_URL, Charsets.UTF_8)

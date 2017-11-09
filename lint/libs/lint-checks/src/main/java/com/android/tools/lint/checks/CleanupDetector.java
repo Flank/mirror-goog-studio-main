@@ -540,7 +540,7 @@ public class CleanupDetector extends Detector implements Detector.UastScanner {
         }
     }
 
-    private static void checkEditorApplied(@NonNull JavaContext context,
+    private void checkEditorApplied(@NonNull JavaContext context,
             @NonNull UCallExpression node, @NonNull PsiMethod calledMethod) {
         if (isSharedEditorCreation(context, calledMethod)) {
             PsiVariable boundVariable = getVariableElement(node, true, true);
@@ -624,7 +624,7 @@ public class CleanupDetector extends Detector implements Detector.UastScanner {
         return false;
     }
 
-    private static boolean isEditorCommittedInChainedCalls(@NonNull JavaContext context,
+    private boolean isEditorCommittedInChainedCalls(@NonNull JavaContext context,
             @NonNull UCallExpression node) {
         List<UExpression> chain = getQualifiedChain(getOutermostQualified(node));
         if (!chain.isEmpty()) {
@@ -641,7 +641,7 @@ public class CleanupDetector extends Detector implements Detector.UastScanner {
         return false;
     }
 
-    private static boolean isEditorCommitMethodCall(@NonNull JavaContext context,
+    private boolean isEditorCommitMethodCall(@NonNull JavaContext context,
             @NonNull UCallExpression call) {
         String methodName = call.getMethodName();
         if (COMMIT.equals(methodName)) {
@@ -676,7 +676,7 @@ public class CleanupDetector extends Detector implements Detector.UastScanner {
         return false;
     }
 
-    private static void suggestApplyIfApplicable(@NonNull JavaContext context,
+    private void suggestApplyIfApplicable(@NonNull JavaContext context,
             @NonNull UCallExpression node) {
         if (context.getProject().getMinSdkVersion().getApiLevel() >= 9) {
             // See if the return value is read: can only replace commit with

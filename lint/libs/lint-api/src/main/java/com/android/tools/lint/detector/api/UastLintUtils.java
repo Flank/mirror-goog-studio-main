@@ -249,7 +249,7 @@ public class UastLintUtils {
 
     @Nullable
     public static ResourceReference toAndroidReferenceViaResolve(UElement element) {
-        return ResourceReference.get(element);
+        return ResourceReference.Companion.get(element);
     }
 
     public static boolean areIdentifiersEqual(UExpression first, UExpression second) {

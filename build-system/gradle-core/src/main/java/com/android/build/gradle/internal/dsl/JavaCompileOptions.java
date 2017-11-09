@@ -19,8 +19,9 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
+import javax.inject.Inject;
 import org.gradle.api.Action;
-import org.gradle.internal.reflect.Instantiator;
+import org.gradle.api.model.ObjectFactory;
 
 /** DSL object for javaCompileOptions. */
 @SuppressWarnings("unused") // exposed in DSL
@@ -33,8 +34,9 @@ public class JavaCompileOptions implements com.android.build.gradle.api.JavaComp
         annotationProcessorOptions = new AnnotationProcessorOptions();
     }
 
-    public JavaCompileOptions(Instantiator instantiator) {
-        annotationProcessorOptions = instantiator.newInstance(AnnotationProcessorOptions.class);
+    @Inject
+    public JavaCompileOptions(ObjectFactory objectFactory) {
+        annotationProcessorOptions = objectFactory.newInstance(AnnotationProcessorOptions.class);
     }
 
     /**

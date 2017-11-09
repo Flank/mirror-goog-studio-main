@@ -36,7 +36,7 @@ class ClassName(source: String) {
  * Strips line and block comments from the given Java or Kotlin source file
  */
 @Suppress("LocalVariableName")
-fun stripComments(source: String): String {
+fun stripComments(source: String, stripLineComments: Boolean = true): String {
     val sb = StringBuilder(source.length)
     var state = 0
     val INIT = 0
@@ -54,9 +54,9 @@ fun stripComments(source: String): String {
                 }
             }
             INIT_SLASH -> {
-                when (c) {
-                    '*' -> state = BLOCK_COMMENT
-                    '/' -> state = LINE_COMMENT
+                when {
+                    c == '*' -> state = BLOCK_COMMENT
+                    c == '/' && stripLineComments -> state = LINE_COMMENT
                     else -> {
                         state = INIT
                         sb.append('/') // because we skipped it in init

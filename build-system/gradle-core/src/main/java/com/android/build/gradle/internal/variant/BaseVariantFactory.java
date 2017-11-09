@@ -24,24 +24,20 @@ import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import org.gradle.api.Project;
-import org.gradle.internal.reflect.Instantiator;
 
 /** Common superclass for all {@link VariantFactory} implementations. */
 public abstract class BaseVariantFactory implements VariantFactory {
 
     @NonNull protected final GlobalScope globalScope;
-    @NonNull protected final Instantiator instantiator;
     @NonNull protected final AndroidConfig extension;
     @NonNull protected final AndroidBuilder androidBuilder;
 
     public BaseVariantFactory(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidConfig extension) {
         this.globalScope = globalScope;
         this.androidBuilder = androidBuilder;
-        this.instantiator = instantiator;
         this.extension = extension;
     }
 

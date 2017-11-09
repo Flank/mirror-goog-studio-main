@@ -380,6 +380,7 @@ public class StoredEntry {
      * To eventually write updates to disk, {@link ZFile#update()} must be called.
      *
      * @throws IOException failed to delete the entry
+     * @throws IllegalStateException if the zip file was open in read-only mode
      */
     public void delete() throws IOException {
         delete(true);
@@ -392,6 +393,7 @@ public class StoredEntry {
      * @param notify should listeners be notified of the deletion? This will only be
      * {@code false} if the entry is being removed as part of a replacement
      * @throws IOException failed to delete the entry
+     * @throws IllegalStateException if the zip file was open in read-only mode
      */
     void delete(boolean notify) throws IOException {
         Preconditions.checkState(!deleted, "deleted");

@@ -29,14 +29,12 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.internal.reflect.Instantiator;
 
 /** {@code android} extension for {@code com.android.instantapp} projects. */
 class InstantAppExtension extends BaseExtension {
     public InstantAppExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
@@ -47,7 +45,6 @@ class InstantAppExtension extends BaseExtension {
         super(
                 project,
                 projectOptions,
-                instantiator,
                 androidBuilder,
                 sdkHandler,
                 buildTypes,

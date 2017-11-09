@@ -91,7 +91,7 @@ Similarly, in manifest files, nearly all attributes should be in the `android:` 
             || folderType == COLOR
             || folderType == INTERPOLATOR
 
-    override fun getApplicableAttributes(): Collection<String>? = Detector.XmlScanner.ALL
+    override fun getApplicableAttributes(): Collection<String>? = ALL
 
     private fun isNoPrefixAttribute(attribute: String): Boolean =
             when (attribute) {

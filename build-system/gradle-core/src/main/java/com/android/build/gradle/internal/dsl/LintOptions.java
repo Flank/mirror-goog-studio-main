@@ -25,6 +25,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
+import javax.inject.Inject;
 import org.gradle.api.GradleException;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -68,8 +69,8 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
     private Map<String,Integer> severities = Maps.newHashMap();
     private File baselineFile;
 
-    public LintOptions() {
-    }
+    @Inject
+    public LintOptions() {}
 
     public LintOptions(
             @NonNull Set<String> disable,

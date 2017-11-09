@@ -90,10 +90,9 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
       break;  // Useless but make the compiler happy.
     }
     case 0: {  // Child Process
-      simpleperf_.Record(CurrentProcess::dir(), pid,
-                         ProcessManager::GetPackageNameFromAppName(app_name),
-                         entry.raw_trace_path, sampling_interval_us,
-                         entry.log_file_path);
+      simpleperf_.Record(
+          pid, ProcessManager::GetPackageNameFromAppName(app_name),
+          entry.raw_trace_path, sampling_interval_us, entry.log_file_path);
       exit(EXIT_FAILURE);
       break;  // Useless break but makes compiler happy.
     }
@@ -108,7 +107,7 @@ bool SimpleperfManager::StartProfiling(const std::string &app_name,
 }
 
 string SimpleperfManager::GetFileBaseName(const string &app_name) const {
-  std::stringstream trace_filebase;
+  std::ostringstream trace_filebase;
   trace_filebase << "simpleperf-";
   trace_filebase << app_name;
   trace_filebase << "-";
@@ -209,8 +208,7 @@ bool SimpleperfManager::ConvertRawToProto(
     const OnGoingProfiling &ongoing_recording, string *error) const {
   string output;
   bool report_sample_result = simpleperf_.ReportSample(
-      CurrentProcess::dir(), ongoing_recording.raw_trace_path,
-      ongoing_recording.trace_path, &output);
+      ongoing_recording.raw_trace_path, ongoing_recording.trace_path, &output);
   if (!report_sample_result) {
     string msg = "Unable to generate simpleperf report:" + output;
     Log::D("%s", msg.c_str());

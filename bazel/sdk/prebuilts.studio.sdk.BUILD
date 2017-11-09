@@ -27,8 +27,18 @@ java_binary(
 )
 
 filegroup(
+    name = "build-tools/27.0.1",
+    srcs = glob(
+        include = ["*/build-tools/27.0.1/**"],
+    ),
+    visibility = [
+        "//tools/base/build-system/integration-test:__subpackages__",
+    ],
+)
+
+filegroup(
     name = "build-tools/latest",
-    srcs = [":build-tools/26.0.2"],
+    srcs = [":build-tools/27.0.1"],
     visibility = ["//visibility:public"],
 )
 

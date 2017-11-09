@@ -107,7 +107,7 @@ public class PropertyFileDetector extends Detector {
                 https.replace("\\", "\\\\"));
             int startOffset = offset + valueStart;
             int endOffset = startOffset + 4; // 4: "http".length()
-            LintFix fix = fix().replace().text("http").with("https").build();
+            LintFix fix = LintFix.create().replace().text("http").with("https").build();
             Location location = Location.create(context.file, contents, startOffset, endOffset);
             context.report(HTTP, location, message, fix);
         }
@@ -163,7 +163,7 @@ public class PropertyFileDetector extends Detector {
 
             String locationRange = contents.subSequence(startOffset, endOffset).toString();
             String escapedRange = suggestEscapes(locationRange);
-            LintFix fix = fix()
+            LintFix fix = LintFix.create()
                     .name("Escape").replace().text(locationRange)
                     .with(escapedRange)
                     .build();

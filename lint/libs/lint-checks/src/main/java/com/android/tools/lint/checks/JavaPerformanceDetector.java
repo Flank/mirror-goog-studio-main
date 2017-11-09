@@ -233,7 +233,7 @@ public class JavaPerformanceDetector extends Detector implements Detector.UastSc
                     String argument = node.getValueArguments().get(0).asSourceString();
 
                     String replacedType = typeName.substring(typeName.lastIndexOf('.') + 1);
-                    LintFix fix = fix()
+                    LintFix fix = LintFix.create()
                             .name("Replace with valueOf()").replace()
                             .pattern("(new\\s+" + replacedType + ")")
                             .with(replacedType + ".valueOf")

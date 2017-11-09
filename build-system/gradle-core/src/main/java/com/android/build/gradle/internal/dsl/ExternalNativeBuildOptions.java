@@ -19,8 +19,9 @@ package com.android.build.gradle.internal.dsl;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
+import javax.inject.Inject;
 import org.gradle.api.Action;
-import org.gradle.internal.reflect.Instantiator;
+import org.gradle.api.model.ObjectFactory;
 
 /**
  * DSL object for per-variant CMake and ndk-build configurations, such as toolchain arguments and
@@ -69,9 +70,10 @@ public class ExternalNativeBuildOptions implements CoreExternalNativeBuildOption
         cmakeOptions = new ExternalNativeCmakeOptions();
     }
 
-    public ExternalNativeBuildOptions(@NonNull Instantiator instantiator) {
-        ndkBuildOptions = instantiator.newInstance(ExternalNativeNdkBuildOptions.class);
-        cmakeOptions = instantiator.newInstance(ExternalNativeCmakeOptions.class);
+    @Inject
+    public ExternalNativeBuildOptions(@NonNull ObjectFactory objectFactory) {
+        ndkBuildOptions = objectFactory.newInstance(ExternalNativeNdkBuildOptions.class);
+        cmakeOptions = objectFactory.newInstance(ExternalNativeCmakeOptions.class);
     }
 
     public void _initWith(ExternalNativeBuildOptions that) {

@@ -22,6 +22,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import java.util.Arrays;
 import java.util.List;
+import javax.inject.Inject;
 
 /**
  * Implementation of CoreShaderOptions for usage in the non-model based Gradle plugin DSL.
@@ -30,6 +31,9 @@ public class ShaderOptions implements CoreShaderOptions {
 
     List<String> args = Lists.newArrayListWithExpectedSize(2);
     ListMultimap<String, String> scopedArgs = ArrayListMultimap.create();
+
+    @Inject
+    public ShaderOptions() {}
 
     @Override
     public List<String> getGlslcArgs() {

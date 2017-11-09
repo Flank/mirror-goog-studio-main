@@ -30,7 +30,6 @@ import com.android.dx.Version;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
-import com.google.common.collect.Multimap;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -42,14 +41,34 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
+import java.util.stream.Collectors;
 
 /** helper class used to cache dex archives in the user or build caches. */
 class DexArchiveBuilderCacheHandler {
+
+    static final class CacheableItem {
+        @NonNull final QualifiedContent input;
+        @NonNull final Collection<File> cachable;
+        @NonNull final List<String> bootclasspath;
+        @NonNull final List<String> classpath;
+
+        CacheableItem(
+                @NonNull QualifiedContent input,
+                @NonNull Collection<File> cachable,
+                @NonNull List<String> bootclasspath,
+                @NonNull List<String> classpath) {
+            this.input = input;
+            this.cachable = cachable;
+            this.bootclasspath = bootclasspath;
+            this.classpath = classpath;
+        }
+    }
 
     private static final LoggerWrapper logger =
             LoggerWrapper.getLogger(DexArchiveBuilderTransform.class);
@@ -77,7 +96,8 @@ class DexArchiveBuilderCacheHandler {
     }
 
     @Nullable
-    File getCachedVersionIfPresent(JarInput input) throws IOException {
+    File getCachedVersionIfPresent(
+            JarInput input, List<String> bootclasspath, List<String> classpath) throws IOException {
         FileCache cache =
                 PreDexTransform.getBuildCache(
                         input.getFile(), isExternalLib(input), userLevelCache);
@@ -88,32 +108,46 @@ class DexArchiveBuilderCacheHandler {
 
         FileCache.Inputs buildCacheInputs =
                 DexArchiveBuilderCacheHandler.getBuildCacheInputs(
-                        input.getFile(), dexOptions, dexer, minSdkVersion, isDebuggable);
+                        input.getFile(),
+                        dexOptions,
+                        dexer,
+                        minSdkVersion,
+                        isDebuggable,
+                        bootclasspath,
+                        classpath);
         return cache.cacheEntryExists(buildCacheInputs)
                 ? cache.getFileInCache(buildCacheInputs)
                 : null;
     }
 
-    void populateCache(Multimap<QualifiedContent, File> cacheableItems)
+    void populateCache(@NonNull Collection<CacheableItem> cacheableItems)
             throws IOException, ExecutionException {
 
-        for (QualifiedContent input : cacheableItems.keys()) {
+        for (CacheableItem cacheableItem : cacheableItems) {
             FileCache cache =
                     PreDexTransform.getBuildCache(
-                            input.getFile(), isExternalLib(input), userLevelCache);
+                            cacheableItem.input.getFile(),
+                            isExternalLib(cacheableItem.input),
+                            userLevelCache);
             if (cache != null) {
                 FileCache.Inputs buildCacheInputs =
                         DexArchiveBuilderCacheHandler.getBuildCacheInputs(
-                                input.getFile(), dexOptions, dexer, minSdkVersion, isDebuggable);
+                                cacheableItem.input.getFile(),
+                                dexOptions,
+                                dexer,
+                                minSdkVersion,
+                                isDebuggable,
+                                cacheableItem.bootclasspath,
+                                cacheableItem.classpath);
                 FileCache.QueryResult result =
                         cache.createFileInCacheIfAbsent(
                                 buildCacheInputs,
                                 in -> {
-                                    Collection<File> dexArchives = cacheableItems.get(input);
+                                    Collection<File> dexArchives = cacheableItem.cachable;
                                     logger.verbose(
                                             "Merging %1$s into %2$s",
                                             Joiner.on(',').join(dexArchives), in.getAbsolutePath());
-                                    mergeJars(in, cacheableItems.get(input));
+                                    mergeJars(in, cacheableItem.cachable);
                                 });
                 if (result.getQueryEvent().equals(FileCache.QueryEvent.CORRUPTED)) {
                     Verify.verifyNotNull(result.getCauseOfCorruption());
@@ -203,6 +237,12 @@ class DexArchiveBuilderCacheHandler {
 
         /** If generate dex is debuggable. */
         IS_DEBUGGABLE,
+
+        /** The bootclasspath files. */
+        BOOTCLASSPATH,
+
+        /** The classpath files. */
+        CLASSPATH,
     }
 
     /**
@@ -215,7 +255,9 @@ class DexArchiveBuilderCacheHandler {
             @NonNull DexOptions dexOptions,
             @NonNull DexerTool dexerTool,
             int minSdkVersion,
-            boolean isDebuggable)
+            boolean isDebuggable,
+            @NonNull List<String> bootclasspath,
+            @NonNull List<String> classpath)
             throws IOException {
         // To use the cache, we need to specify all the inputs that affect the outcome of a pre-dex
         // (see DxDexKey for an exhaustive list of these inputs)
@@ -235,7 +277,13 @@ class DexArchiveBuilderCacheHandler {
                 .putString(FileCacheInputParams.DEXER_TOOL.name(), dexerTool.name())
                 .putLong(FileCacheInputParams.CACHE_KEY_VERSION.name(), CACHE_KEY_VERSION)
                 .putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion)
-                .putBoolean(FileCacheInputParams.IS_DEBUGGABLE.name(), isDebuggable);
+                .putBoolean(FileCacheInputParams.IS_DEBUGGABLE.name(), isDebuggable)
+                .putFiles(
+                        FileCacheInputParams.BOOTCLASSPATH.name(),
+                        bootclasspath.stream().map(File::new).collect(Collectors.toList()))
+                .putFiles(
+                        FileCacheInputParams.CLASSPATH.name(),
+                        classpath.stream().map(File::new).collect(Collectors.toList()));
 
         return buildCacheInputs.build();
     }

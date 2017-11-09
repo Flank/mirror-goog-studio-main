@@ -19,10 +19,10 @@ package com.android.build.gradle.internal.api.dsl.model
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
 import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.internal.reflect.Instantiator
+import org.gradle.api.model.ObjectFactory
 
 class ProductFlavorFactory(
-            private val instantiator: Instantiator,
+            private val objectFactory: ObjectFactory,
             private val deprecationReporter: DeprecationReporter,
             private val issueReporter: EvalIssueReporter)
         : NamedDomainObjectFactory<ProductFlavorImpl> {
@@ -31,7 +31,7 @@ class ProductFlavorFactory(
 
         val baseFlavor= BaseFlavorImpl(deprecationReporter, issueReporter)
 
-        return instantiator.newInstance(ProductFlavorImpl::class.java,
+        return objectFactory.newInstance(ProductFlavorImpl::class.java,
                 name,
                 VariantPropertiesImpl(issueReporter),
                 BuildTypeOrProductFlavorImpl(deprecationReporter, issueReporter, { baseFlavor.postprocessing }),

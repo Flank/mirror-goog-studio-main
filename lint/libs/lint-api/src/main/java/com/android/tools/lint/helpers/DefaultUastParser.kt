@@ -52,13 +52,13 @@ open class DefaultUastParser(
         // class traffics in Project from both lint and openapi so be explicit
         project: com.android.tools.lint.detector.api.Project?,
         p: com.intellij.openapi.project.Project) : UastParser() {
-    private val uastContext: UastContext?
+    private val uContext: UastContext?
     private val javaEvaluator: JavaEvaluator
 
     init {
         @Suppress("LeakingThis")
         javaEvaluator = createEvaluator(project, p)
-        uastContext = if (!p.isDisposed) {
+        uContext = if (!p.isDisposed) {
             ServiceManager.getService(p, UastContext::class.java)
         } else {
             null
@@ -92,7 +92,7 @@ open class DefaultUastParser(
      *
      * @return an evaluator
      */
-    override fun getEvaluator(): JavaEvaluator = javaEvaluator
+    override val evaluator = javaEvaluator
 
     /**
      * Parse the file pointed to by the given context.
@@ -107,7 +107,9 @@ open class DefaultUastParser(
             return context.uastFile
         }
 
-        val ideaProject = uastContext?.project ?: return null
+        val uast = uastContext ?: return null
+
+        val ideaProject = uast.project
         if (ideaProject.isDisposed) {
             return null
         }
@@ -142,7 +144,7 @@ open class DefaultUastParser(
             return null
         }
 
-        return uastContext.convertElementWithParent(psiFile, UFile::class.java) as? UFile ?:
+        return uast.convertElementWithParent(psiFile, UFile::class.java) as? UFile ?:
                 // No need to log this; the parser should be reporting
                 // a full warning (such as IssueRegistry#PARSER_ERROR)
                 // with details, location, etc.
@@ -152,7 +154,7 @@ open class DefaultUastParser(
     /**
      * Returns a UastContext which can provide UAST representations for source files
      */
-    override fun getUastContext(): UastContext? = uastContext
+    override val uastContext = uContext
 
     /**
      * Returns a [Location] for the given element

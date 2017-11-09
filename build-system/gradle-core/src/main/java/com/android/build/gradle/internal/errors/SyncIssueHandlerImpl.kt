@@ -38,7 +38,7 @@ class SyncIssueHandlerImpl(
         get() = ImmutableList.copyOf(_syncIssues.values)
 
     override fun hasSyncIssue(type: EvalIssueReporter.Type): Boolean {
-        return _syncIssues.values.stream().anyMatch { issue -> issue.type == type.type }
+        return _syncIssues.values.any { issue -> issue.type == type.type }
     }
 
     override fun reportIssue(

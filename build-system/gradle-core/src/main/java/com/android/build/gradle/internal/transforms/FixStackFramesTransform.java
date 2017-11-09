@@ -230,6 +230,9 @@ public class FixStackFramesTransform extends Transform {
                 Preconditions.checkNotNull(transformInvocation.getOutputProvider());
 
         boolean incremental = transformInvocation.isIncremental();
+        if (!incremental) {
+            outputProvider.deleteAll();
+        }
 
         try {
             for (TransformInput input : transformInvocation.getInputs()) {
@@ -298,16 +301,15 @@ public class FixStackFramesTransform extends Transform {
                 Enumeration<? extends ZipEntry> inEntries = inputZip.entries();
                 while (inEntries.hasMoreElements()) {
                     ZipEntry entry = inEntries.nextElement();
+                    if (!entry.getName().endsWith(SdkConstants.DOT_CLASS)) {
+                        continue;
+                    }
                     InputStream originalFile =
                             new BufferedInputStream(inputZip.getInputStream(entry));
                     ZipEntry outEntry = new ZipEntry(entry.getName());
-                    byte[] newEntryContent;
-                    if (!entry.getName().endsWith(SdkConstants.DOT_CLASS)) {
-                        // just copy it
-                        newEntryContent = ByteStreams.toByteArray(originalFile);
-                    } else {
-                        newEntryContent = getFixedClass(originalFile, getClassLoader(invocation));
-                    }
+
+                    byte[] newEntryContent =
+                            getFixedClass(originalFile, getClassLoader(invocation));
                     CRC32 crc32 = new CRC32();
                     crc32.update(newEntryContent);
                     outEntry.setCrc(crc32.getValue());

@@ -53,8 +53,8 @@ import org.w3c.dom.Element;
  *
  * TODO: What about id's?
  */
-public class ResourcePrefixDetector extends ResourceXmlDetector implements
-        Detector.BinaryResourceScanner {
+public class ResourcePrefixDetector extends Detector implements
+        Detector.BinaryResourceScanner, Detector.XmlScanner {
     /** The main issue discovered by this detector */
     @SuppressWarnings("unchecked")
     public static final Issue ISSUE = Issue.create(

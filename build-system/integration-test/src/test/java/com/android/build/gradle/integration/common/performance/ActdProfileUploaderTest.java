@@ -76,7 +76,8 @@ public class ActdProfileUploaderTest {
                                 actdBaseUrl,
                                 actdProjectId,
                                 buildbotMasterUrl,
-                                buildbotBuilderName));
+                                buildbotBuilderName,
+                                ActdProfileUploader.Mode.NORMAL));
 
         doReturn(buildInfo).when(uploader).jsonGet(anyString(), eq(BuildbotResponse.class));
     }
@@ -285,23 +286,26 @@ public class ActdProfileUploaderTest {
     }
 
     @Test
-    public void sampleRequests() throws IOException {
+    public void sampleRequests() {
         Collection<SampleRequest> reqs = uploader.sampleRequests(randomBenchmarkResults());
         assertThat(reqs).isNotEmpty();
 
         for (ActdProfileUploader.SampleRequest req : reqs) {
-            // act-d baulks on 0 values, so we should not return them from sampleRequests()
-            assertThat(req.sample.value).isGreaterThan(0L);
-
             // make sure the various IDs make sense
             assertThat(req.projectId).isNotEmpty();
-            assertThat(req.sample.buildId).isGreaterThan(0L);
-            assertThat(req.sample.url).isNotNull();
+
+            for (ActdProfileUploader.Sample sample : req.samples) {
+                // act-d baulks on 0 values, so we should not return them from sampleRequests()
+                assertThat(sample.value).isGreaterThan(0L);
+
+                assertThat(sample.buildId).isGreaterThan(0L);
+                assertThat(sample.url).isNotNull();
+            }
         }
     }
 
     @Test
-    public void sampleRequestsEmpty() throws IOException {
+    public void sampleRequestsEmpty() {
         Collection<SampleRequest> reqs = uploader.sampleRequests(Arrays.asList());
         assertThat(reqs).isEmpty();
     }

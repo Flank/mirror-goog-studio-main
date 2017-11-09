@@ -301,7 +301,7 @@ public class DuplicateResourceDetector extends ResourceXmlDetector {
      * in frameworks/base/libs/androidfw/ResourceTypes.cpp (and in particular,
      * the stringToValue and collectString methods)
      */
-    private static void checkXmlEscapes(@NonNull XmlContext context, @NonNull Node textNode,
+    private void checkXmlEscapes(@NonNull XmlContext context, @NonNull Node textNode,
             @NonNull Element element,
             @NonNull String string) {
         int s = 0;

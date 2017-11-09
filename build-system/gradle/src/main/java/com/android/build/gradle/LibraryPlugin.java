@@ -41,15 +41,14 @@ import javax.inject.Inject;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.internal.reflect.Instantiator;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'library' projects. */
 public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> implements Plugin<Project> {
 
     @Inject
-    public LibraryPlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
-        super(instantiator, registry);
+    public LibraryPlugin(ToolingModelBuilderRegistry registry) {
+        super(registry);
     }
 
     @NonNull
@@ -57,7 +56,6 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> implements P
     protected BaseExtension createExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypeContainer,
@@ -71,7 +69,6 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> implements P
                         getExtensionClass(),
                         project,
                         projectOptions,
-                        instantiator,
                         androidBuilder,
                         sdkHandler,
                         buildTypeContainer,
@@ -96,10 +93,9 @@ public class LibraryPlugin extends BasePlugin<LibraryExtensionImpl> implements P
     @Override
     protected VariantFactory createVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig) {
-        return new LibraryVariantFactory(globalScope, androidBuilder, instantiator, androidConfig);
+        return new LibraryVariantFactory(globalScope, androidBuilder, androidConfig);
     }
 
     @Override

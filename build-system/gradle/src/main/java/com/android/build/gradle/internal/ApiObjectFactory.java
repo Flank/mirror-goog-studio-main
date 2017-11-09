@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.variant.TestedVariantData;
 import com.android.build.gradle.internal.variant.VariantFactory;
 import com.android.builder.core.AndroidBuilder;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.internal.reflect.Instantiator;
 
 /**
  * Factory to create ApiObject from VariantData.
@@ -47,7 +46,6 @@ public class ApiObjectFactory {
     @NonNull private final AndroidBuilder androidBuilder;
     @NonNull private final BaseExtension extension;
     @NonNull private final VariantFactory variantFactory;
-    @NonNull private final Instantiator instantiator;
     @NonNull private final ObjectFactory objectFactory;
 
     @NonNull
@@ -57,12 +55,10 @@ public class ApiObjectFactory {
             @NonNull AndroidBuilder androidBuilder,
             @NonNull BaseExtension extension,
             @NonNull VariantFactory variantFactory,
-            @NonNull Instantiator instantiator,
             @NonNull ObjectFactory objectFactory) {
         this.androidBuilder = androidBuilder;
         this.extension = extension;
         this.variantFactory = variantFactory;
-        this.instantiator = instantiator;
         this.objectFactory = objectFactory;
     }
 
@@ -75,7 +71,6 @@ public class ApiObjectFactory {
 
         BaseVariantImpl variantApi =
                 variantFactory.createVariantApi(
-                        instantiator,
                         objectFactory,
                         androidBuilder,
                         variantData,
@@ -90,7 +85,7 @@ public class ApiObjectFactory {
 
             if (androidTestVariantData != null) {
                 TestVariantImpl androidTestVariant =
-                        instantiator.newInstance(
+                        objectFactory.newInstance(
                                 TestVariantImpl.class,
                                 androidTestVariantData,
                                 variantApi,
@@ -112,7 +107,7 @@ public class ApiObjectFactory {
                     ((TestedVariantData) variantData).getTestVariantData(UNIT_TEST);
             if (unitTestVariantData != null) {
                 UnitTestVariantImpl unitTestVariant =
-                        instantiator.newInstance(
+                        objectFactory.newInstance(
                                 UnitTestVariantImpl.class,
                                 unitTestVariantData,
                                 variantApi,
@@ -145,7 +140,7 @@ public class ApiObjectFactory {
                         (variantData.getType() == LIBRARY)
                                 ? LibraryVariantOutputImpl.class
                                 : ApkVariantOutputImpl.class,
-                        instantiator,
+                        objectFactory,
                         extension,
                         variantApi,
                         variantData);

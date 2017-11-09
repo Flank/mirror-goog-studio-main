@@ -61,6 +61,8 @@ class LibPluginDelegate : TypedPluginDelegate<LibraryExtensionImpl> {
         val debug = extension.buildTypes.create(BuilderConstants.DEBUG)
         debug.signingConfig = signingConfig
         debug.debuggable = true
+        debug.jniDebuggable = true
+        debug.renderscriptDebuggable = true
         debug.embedMicroApp = false
         debug.crunchPngs = false
 

@@ -67,7 +67,7 @@ class ResourceVisitor {
             new ArrayList<>();
     private final List<Detector.XmlScanner> allAttributeDetectors =
             new ArrayList<>();
-    private final List<? extends Detector> allDetectors;
+    private final List<XmlScanner> allDetectors;
     private final List<? extends Detector> binaryDetectors;
     private final XmlParser parser;
 
@@ -77,7 +77,7 @@ class ResourceVisitor {
     // but it makes client code tricky and ugly.
     ResourceVisitor(
             @NonNull XmlParser parser,
-            @NonNull List<? extends Detector> allDetectors,
+            @NonNull List<XmlScanner> allDetectors,
             @Nullable List<Detector> binaryDetectors) {
         this.parser = parser;
         this.binaryDetectors = binaryDetectors;
@@ -85,7 +85,7 @@ class ResourceVisitor {
 
         // TODO: Check appliesTo() for files, and find a quick way to enable/disable
         // rules when running through a full project!
-        for (Detector detector : allDetectors) {
+        for (XmlScanner detector : allDetectors) {
             Detector.XmlScanner xmlDetector = (XmlScanner) detector;
             Collection<String> attributes = xmlDetector.getApplicableAttributes();
             if (attributes == XmlScanner.ALL) {
@@ -125,7 +125,7 @@ class ResourceVisitor {
 
     void visitFile(@NonNull XmlContext context) {
         try {
-            for (Detector check : allDetectors) {
+            for (XmlScanner check : allDetectors) {
                 check.beforeCheckFile(context);
             }
 
@@ -138,7 +138,7 @@ class ResourceVisitor {
                 visitElement(context, context.document.getDocumentElement());
             }
 
-            for (Detector check : allDetectors) {
+            for (XmlScanner check : allDetectors) {
                 check.afterCheckFile(context);
             }
         } catch (RuntimeException e) {

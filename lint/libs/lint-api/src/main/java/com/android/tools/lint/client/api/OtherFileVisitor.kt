@@ -52,7 +52,7 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
         var scopes = EnumSet.noneOf(Scope::class.java)
         for (detector in detectors) {
             val fileScanner = detector as OtherFileScanner
-            val applicable = fileScanner.applicableFiles
+            val applicable = fileScanner.getApplicableFiles()
             if (applicable.contains(Scope.OTHER)) {
                 scopes = Scope.ALL
                 break
@@ -145,9 +145,7 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
                 }
             } else {
                 val manifestFiles = project.manifestFiles
-                if (manifestFiles != null) {
-                    files.put(Scope.MANIFEST, manifestFiles)
-                }
+                files.put(Scope.MANIFEST, manifestFiles)
             }
         }
 
@@ -155,7 +153,7 @@ internal class OtherFileVisitor(private val detectors: List<Detector>) {
             val applicable = ArrayList<Detector>(detectors.size)
             for (detector in detectors) {
                 val fileScanner = detector as OtherFileScanner
-                val appliesTo = fileScanner.applicableFiles
+                val appliesTo = fileScanner.getApplicableFiles()
                 if (appliesTo.contains(Scope.OTHER) || appliesTo.contains(scope)) {
                     applicable.add(detector)
                 }

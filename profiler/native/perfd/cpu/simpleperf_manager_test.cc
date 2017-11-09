@@ -32,7 +32,8 @@ namespace profiler {
 class FakeSimpleperf final : public Simpleperf {
  public:
   explicit FakeSimpleperf()
-      : enable_profiling_success_(true),
+      : Simpleperf("/fake/path/", false),
+        enable_profiling_success_(true),
         kill_simpleperf_success_(true),
         report_sample_success_(true) {}
 
@@ -42,12 +43,8 @@ class FakeSimpleperf final : public Simpleperf {
     return kill_simpleperf_success_;
   }
 
-  void Record(const string& simpleperf_dir, int pid, const string& pkg_name,
-              const string& trace_path, int sampling_interval_us,
-              const string& log_path) const {}
-
-  bool ReportSample(const string& simpleperf_dir, const string& input_path,
-                    const string& output_path, string* output) const {
+  bool ReportSample(const string& input_path, const string& output_path,
+                    string* output) const {
     return report_sample_success_;
   }
 

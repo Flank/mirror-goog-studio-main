@@ -257,6 +257,9 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getPackagedAidlDir();
 
+    @NonNull
+    File getAnnotationZipFile();
+
     /**
      * Returns the path to an optional recipe file (only used for libraries) which describes
      * typedefs defined in the library, and how to process them (typically which typedefs
@@ -460,6 +463,7 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     enum Java8LangSupport {
         INVALID,
         UNUSED,
+        D8,
         DESUGAR,
         RETROLAMBDA,
         DEXGUARD,

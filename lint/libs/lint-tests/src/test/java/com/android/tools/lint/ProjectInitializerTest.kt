@@ -274,7 +274,7 @@ res${File.separatorChar}values${File.separatorChar}strings.xml:4: Error: string1
     <permission android:name="bar.permission.SEND_SMS"
                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     AndroidManifest.xml:9: Previous permission here
-3 errors, 1 warnings (1 error filtered by baseline baseline.xml)
+3 errors, 0 warnings (1 error filtered by baseline baseline.xml)
 
 """,
                 "",

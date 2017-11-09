@@ -25,6 +25,7 @@ import java.io.File;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.Convention;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
@@ -49,8 +50,20 @@ public class LintPlugin implements Plugin<Project> {
         withJavaPlugin(plugin -> {
             JavaPluginConvention javaConvention = getJavaPluginConvention();
             if (javaConvention != null) {
-                LintStandaloneTask task = createTask(project, javaConvention);
-                task.setLintChecks(TaskManager.createCustomLintChecksConfig(project));
+                Configuration customLintChecksConfig =
+                        TaskManager.createCustomLintChecksConfig(project);
+
+                String projectName = project.getName();
+                LintStandaloneTask task = createTask("lint",
+                        "Run Android Lint analysis on project '" + projectName + "'",
+                        project, javaConvention, customLintChecksConfig);
+                // Make the check task depend on the lint
+                project.getTasks().findByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn(task);
+
+                LintStandaloneTask lintVital = createTask("lintVital",
+                        "Runs lint on just the fatal issues in the project '" + projectName + "'",
+                        project, javaConvention, customLintChecksConfig);
+                lintVital.setFatalOnly(true);
             }
         });
     }
@@ -65,20 +78,19 @@ public class LintPlugin implements Plugin<Project> {
 
     @NonNull
     private LintStandaloneTask createTask(
+            @NonNull String taskName,
+            @NonNull String description,
             @NonNull Project project,
-            @NonNull JavaPluginConvention javaConvention) {
+            @NonNull JavaPluginConvention javaConvention,
+            @NonNull Configuration customLintChecksConfig) {
         File testResultsDir = javaConvention.getTestResultsDir();
         TaskContainer tasks = project.getTasks();
-        LintStandaloneTask task = tasks.create("lint", LintStandaloneTask.class);
-        String desc = "Run Android Lint analysis on project '" + project.getName() + "'";
+        LintStandaloneTask task = tasks.create(taskName, LintStandaloneTask.class);
         task.setGroup(JavaBasePlugin.VERIFICATION_GROUP);
-        task.setDescription(desc);
+        task.setDescription(description);
         task.setReportDir(testResultsDir);
         task.setLintOptions(lintOptions);
-
-        // Make check task depend on lint
-        tasks.findByName(JavaBasePlugin.CHECK_TASK_NAME).dependsOn(task);
-
+        task.setLintChecks(customLintChecksConfig);
         return task;
     }
 

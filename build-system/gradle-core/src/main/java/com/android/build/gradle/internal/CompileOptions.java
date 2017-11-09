@@ -24,6 +24,7 @@ import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.tasks.factory.JavaCompileConfigAction;
 import com.google.common.base.Charsets;
 import java.util.Locale;
+import javax.inject.Inject;
 import org.gradle.api.JavaVersion;
 
 /**
@@ -48,6 +49,9 @@ public class CompileOptions {
     @NonNull
     @VisibleForTesting
     JavaVersion defaultJavaVersion = JavaVersion.VERSION_1_6;
+
+    @Inject
+    public CompileOptions() {}
 
     /** @see #getSourceCompatibility() */
     public void setSourceCompatibility(@NonNull Object sourceCompatibility) {

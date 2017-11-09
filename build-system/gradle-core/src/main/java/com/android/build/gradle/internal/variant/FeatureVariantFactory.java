@@ -36,16 +36,14 @@ import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.internal.reflect.Instantiator;
 
 public class FeatureVariantFactory extends BaseVariantFactory {
 
     public FeatureVariantFactory(
             @NonNull GlobalScope globalScope,
             @NonNull AndroidBuilder androidBuilder,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidConfig extension) {
-        super(globalScope, androidBuilder, instantiator, extension);
+        super(globalScope, androidBuilder, extension);
     }
 
     @NonNull

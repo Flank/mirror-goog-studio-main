@@ -50,10 +50,10 @@ class CheckResultDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
-            annotations: MutableList<UAnnotation>,
-            allMemberAnnotations: MutableList<UAnnotation>,
-            allClassAnnotations: MutableList<UAnnotation>,
-            allPackageAnnotations: MutableList<UAnnotation>) {
+            annotations: List<UAnnotation>,
+            allMemberAnnotations: List<UAnnotation>,
+            allClassAnnotations: List<UAnnotation>,
+            allPackageAnnotations: List<UAnnotation>) {
         if (method != null) {
             checkResult(context, argument, method, annotation)
         }
@@ -101,6 +101,12 @@ class CheckResultDetector : AbstractAnnotationDetector(), Detector.UastScanner {
 
             val location = context.getLocation(expression)
             report(context, issue, expression, location, message, fix)
+        }
+    }
+
+    private fun foo(any: Any) {
+        if (any.toString() != null) {
+
         }
     }
 

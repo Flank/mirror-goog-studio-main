@@ -108,6 +108,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
                                 new File(
                                         outputDirectory,
                                         mangleApkName(apkData) + SdkConstants.DOT_ANDROID_PACKAGE);
+                        FileUtils.deleteIfExists(outputFile);
                         Files.createParentDirs(outputFile);
 
                         // packageCodeSplitApk uses a temporary directory for incremental runs.

@@ -70,9 +70,11 @@ public class VectorPathDetector extends ResourceXmlDetector {
     public static final Issue PATH_VALID = Issue.create(
             "InvalidVectorPath",
             "Invalid vector paths",
-            "This check ensures that vector paths are valid. For example, it makes "
-                    + "sure that the numbers are not using scientific notation (such as 1.0e3) "
-                    + "which can lead to runtime crashes on older devices.",
+            "This check ensures that vector paths are valid. For example, it makes " +
+                    "sure that the numbers are not using scientific notation (such as 1.0e3) " +
+                    "which can lead to runtime crashes on older devices. As another example, " +
+                    "it flags numbers like `.5` which should be written as `0.5` instead to " +
+                    "avoid crashes on some pre-Marshmallow devices.",
 
             Category.CORRECTNESS,
             5,
@@ -170,7 +172,7 @@ public class VectorPathDetector extends ResourceXmlDetector {
      * Check the given path data and throw a number format exception (containing the
      * exact invalid string) if it finds a problem
      */
-    public static void validatePath(
+    public void validatePath(
             @NonNull XmlContext context,
             @NonNull Attr attribute,
             @NonNull String path) {
@@ -204,7 +206,7 @@ public class VectorPathDetector extends ResourceXmlDetector {
     // resemble the original code.
     // (frameworks/support/compat/java/android/support/v4/graphics/PathParser.java)
 
-    private static void checkFloats(@NonNull XmlContext context, @NonNull Attr attribute,
+    private void checkFloats(@NonNull XmlContext context, @NonNull Attr attribute,
             @NonNull String s, int start, int end) {
         if (s.charAt(start) == 'z' || s.charAt(start) == 'Z') {
             return;
@@ -303,7 +305,7 @@ public class VectorPathDetector extends ResourceXmlDetector {
         }
     }
 
-    private static void reportInvalidPathData(@NonNull XmlContext context, @NonNull Attr attribute,
+    private void reportInvalidPathData(@NonNull XmlContext context, @NonNull Attr attribute,
             @NonNull String s, int startPosition, int currentIndex, @NonNull String number,
             @Nullable String replace, @NonNull String message) {
         Location location = context.getValueLocation(attribute);

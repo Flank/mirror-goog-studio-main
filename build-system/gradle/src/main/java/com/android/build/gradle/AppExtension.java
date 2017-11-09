@@ -15,7 +15,6 @@ import org.gradle.api.DomainObjectSet;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
 import org.gradle.api.internal.DefaultDomainObjectSet;
-import org.gradle.internal.reflect.Instantiator;
 
 /** The {@code android} extension for {@code com.android.application} projects. */
 public class AppExtension extends TestedExtension {
@@ -26,7 +25,6 @@ public class AppExtension extends TestedExtension {
     public AppExtension(
             @NonNull Project project,
             @NonNull ProjectOptions projectOptions,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
@@ -37,7 +35,6 @@ public class AppExtension extends TestedExtension {
         super(
                 project,
                 projectOptions,
-                instantiator,
                 androidBuilder,
                 sdkHandler,
                 buildTypes,

@@ -210,16 +210,11 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
     @NonNull
     private BuildModel model() {
-        return project.model().withoutOfflineFlag();
+        return project.model().withoutOfflineFlag().ignoreSyncIssueWarnings();
     }
 
     @NonNull
     private RunGradleTasks executor() {
-        return project.executor()
-                .withEnableInfoLogging(false)
-                .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
-                .with(BooleanOption.ENABLE_AAPT2, false)
-                .with(BooleanOption.ENABLE_D8, projectScenario.useD8())
-                .withUseDexArchive(projectScenario.useDexArchive());
+        return projectScenario.configureExecutor(project.executor());
     }
 }

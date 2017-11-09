@@ -41,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.Set;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.internal.reflect.Instantiator;
 
 /**
  * An implementation of VariantFactory for a project that generates APKs.
@@ -52,10 +51,9 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
 
     public ApplicationVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
-        super(globalScope, androidBuilder, instantiator, extension);
+        super(globalScope, androidBuilder, extension);
     }
 
     @Override

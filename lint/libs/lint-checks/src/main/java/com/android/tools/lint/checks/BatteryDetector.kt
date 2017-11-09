@@ -110,7 +110,7 @@ For more details on how to update your code, please seehttp://developer.android.
         if (resolved is PsiField &&
                 context.evaluator.isMemberInSubClassOf(resolved,
                         "android.provider.Settings", false)
-                && context.getMainProject().targetSdkVersion.featureLevel >= 23) {
+                && context.mainProject.targetSdkVersion.featureLevel >= 23) {
             context.report(ISSUE, reference, context.getNameLocation(reference),
                     "Use of `REQUEST_IGNORE_BATTERY_OPTIMIZATIONS` violates the " +
                     "Play Store Content Policy regarding acceptable use cases, as described in " +

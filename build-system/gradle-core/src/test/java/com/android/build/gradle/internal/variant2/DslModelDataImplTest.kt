@@ -28,7 +28,7 @@ import com.android.build.gradle.internal.fixtures.FakeContainerFactory
 import com.android.build.gradle.internal.fixtures.FakeDeprecationReporter
 import com.android.build.gradle.internal.fixtures.FakeEvalIssueReporter
 import com.android.build.gradle.internal.fixtures.FakeFilesProvider
-import com.android.build.gradle.internal.fixtures.FakeInstantiator
+import com.android.build.gradle.internal.fixtures.FakeObjectFactory
 import com.android.build.gradle.internal.fixtures.FakeLogger
 import com.android.build.gradle.internal.fixtures.FakeVariantFactory2
 import com.android.builder.core.BuilderConstants
@@ -417,7 +417,7 @@ class DslModelDataImplTest {
                 configurationContainer,
                 FakeFilesProvider(),
                 FakeContainerFactory(),
-                FakeInstantiator(),
+                FakeObjectFactory(),
                 deprecationReporter,
                 issueReporter,
                 FakeLogger())

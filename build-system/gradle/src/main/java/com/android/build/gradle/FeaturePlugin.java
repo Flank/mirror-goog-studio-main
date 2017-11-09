@@ -34,15 +34,14 @@ import com.google.wireless.android.sdk.stats.GradleBuildProject;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.internal.reflect.Instantiator;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Gradle plugin class for 'feature' projects. */
 public class FeaturePlugin extends LibraryPlugin {
 
     @Inject
-    public FeaturePlugin(Instantiator instantiator, ToolingModelBuilderRegistry registry) {
-        super(instantiator, registry);
+    public FeaturePlugin(ToolingModelBuilderRegistry registry) {
+        super(registry);
     }
 
     @Override
@@ -79,11 +78,9 @@ public class FeaturePlugin extends LibraryPlugin {
     @Override
     protected VariantFactory createVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig androidConfig) {
-        return new MultiTypeVariantFactory(
-                globalScope, androidBuilder, instantiator, androidConfig);
+        return new MultiTypeVariantFactory(globalScope, androidBuilder, androidConfig);
     }
 
     @Override

@@ -317,7 +317,7 @@ public class MissingClassDetector extends LayoutDetector implements ClassScanner
                 String message = "Use '$' instead of '.' for inner classes (or use only lowercase letters in package names); replace \"" +
                         className + "\" with \"" + fixed + "\"";
                 Location location = context.getLocation(classNameNode);
-                LintFix fix = fix().replace().text(className).with(fixed).build();
+                LintFix fix = LintFix.create().replace().text(className).with(fixed).build();
                 context.report(INNERCLASS, element, location, message, fix);
             }
         }

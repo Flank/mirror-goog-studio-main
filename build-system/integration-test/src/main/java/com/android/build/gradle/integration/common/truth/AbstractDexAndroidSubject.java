@@ -79,6 +79,21 @@ public class AbstractDexAndroidSubject<
         return () -> DexClassSubject.FACTORY.getSubject(failureStrategy, classDef);
     }
 
+    public void hasDexVersion(int expectedDexVersion) {
+
+        try {
+            if (expectedDexVersion
+                    != getSubject()
+                            .getMainDexFile()
+                            .orElseThrow(AssertionError::new)
+                            .getVersion()) {
+                fail("dex version", expectedDexVersion);
+            }
+        } catch (IOException e) {
+            fail("has a dex");
+        }
+    }
+
     private DexBackedClassDef getMainClass(@NonNull String className) throws IOException {
         Optional<Dex> classesDex = getSubject().getMainDexFile();
         if (!classesDex.isPresent()) {

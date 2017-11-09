@@ -19,6 +19,7 @@ package com.android.build.gradle.internal.dsl;
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.List;
+import javax.inject.Inject;
 
 /**
  * Options for the adb tool.
@@ -28,6 +29,9 @@ public class AdbOptions implements com.android.builder.model.AdbOptions {
     int timeOutInMs;
 
     List<String> installOptions;
+
+    @Inject
+    public AdbOptions() {}
 
     /**
      * Returns the time out used for all adb operations.

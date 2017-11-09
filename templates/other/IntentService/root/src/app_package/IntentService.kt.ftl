@@ -65,7 +65,7 @@ class ${className} : IntentService("${className}") {
          */
         // TODO: Customize helper method
         @JvmStatic fun startActionFoo(context: Context, param1: String, param2: String) {
-            val intent = Intent(context, MyIntentService::class.java).apply {
+            val intent = Intent(context, ${className}::class.java).apply {
                 action = ACTION_FOO
                 putExtra(EXTRA_PARAM1, param1)
                 putExtra(EXTRA_PARAM2, param2)
@@ -81,7 +81,7 @@ class ${className} : IntentService("${className}") {
          */
         // TODO: Customize helper method
         @JvmStatic fun startActionBaz(context: Context, param1: String, param2: String) {
-            val intent = Intent(context, MyIntentService::class.java).apply {
+            val intent = Intent(context, ${className}::class.java).apply {
                 action = ACTION_BAZ
                 putExtra(EXTRA_PARAM1, param1)
                 putExtra(EXTRA_PARAM2, param2)

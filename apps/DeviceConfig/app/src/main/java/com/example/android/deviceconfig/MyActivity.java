@@ -49,7 +49,7 @@ public class MyActivity extends Activity implements OnClickListener {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.main);
-        LinearLayout vg = (LinearLayout) findViewById(R.id.buttonHolder);
+        LinearLayout vg = findViewById(R.id.buttonHolder);
         if (vg == null) {
             return;
         }
@@ -61,11 +61,11 @@ public class MyActivity extends Activity implements OnClickListener {
         mGl.setLayoutParams(params);
         vg.addView(mGl);
 
-        Button btn = (Button) findViewById(R.id.generateConfigButton);
+        Button btn = findViewById(R.id.generateConfigButton);
         btn.setOnClickListener(this);
         Configuration config = getResources().getConfiguration();
 
-        TextView tv = (TextView) findViewById(R.id.keyboard_state_api);
+        TextView tv = findViewById(R.id.keyboard_state_api);
         if (tv != null) {
             String separator = config.orientation == Configuration.ORIENTATION_PORTRAIT ? "\n" : "";
             String foo = "keyboardHidden=" + separator;
@@ -92,7 +92,7 @@ public class MyActivity extends Activity implements OnClickListener {
             tv.setText(foo);
         }
 
-        tv = (TextView) findViewById(R.id.nav_state_api);
+        tv = findViewById(R.id.nav_state_api);
         if (tv != null) {
             if (config.navigationHidden == Configuration.NAVIGATIONHIDDEN_NO) {
                 tv.setText("EXPOSED");
@@ -105,9 +105,9 @@ public class MyActivity extends Activity implements OnClickListener {
             }
         }
 
-        DisplayMetrics metrics = getResources().getDisplayMetrics();
+        DisplayMetrics metrics = ConfigGenerator.getDisplayMetrics(this);
 
-        tv = (TextView) findViewById(R.id.size_api);
+        tv = findViewById(R.id.size_api);
         if (tv != null) {
             WindowManager windowManager = getWindowManager();
             int widthPixels = ConfigGenerator.getScreenWidth(windowManager, metrics);
@@ -115,21 +115,21 @@ public class MyActivity extends Activity implements OnClickListener {
             tv.setText(widthPixels + "x" + heightPixels);
         }
 
-        tv = (TextView) findViewById(R.id.xdpi);
+        tv = findViewById(R.id.xdpi);
         if (tv != null) {
             tv.setText(String.format("%f", metrics.xdpi));
         }
-        tv = (TextView) findViewById(R.id.ydpi);
+        tv = findViewById(R.id.ydpi);
         if (tv != null) {
             tv.setText(String.format("%f", metrics.ydpi));
         }
 
-        tv = (TextView) findViewById(R.id.scaled_density);
+        tv = findViewById(R.id.scaled_density);
         if (tv != null) {
             tv.setText(String.format("%f", metrics.scaledDensity));
         }
 
-        tv = (TextView) findViewById(R.id.font_scale);
+        tv = findViewById(R.id.font_scale);
         if (tv != null) {
             tv.setText(String.format("%f", config.fontScale));
         }

@@ -126,7 +126,7 @@ public class LintCliXmlParser extends XmlParser {
     @NonNull
     @Override
     public Location getLocation(@NonNull File file, @NonNull Node node) {
-        Pair<File,Node> mergedSource = findManifestSource(node);
+        Pair<File, ? extends Node> mergedSource = findManifestSource(node);
         if (mergedSource != null) {
             file = mergedSource.getFirst();
             node = mergedSource.getSecond();
@@ -140,7 +140,7 @@ public class LintCliXmlParser extends XmlParser {
     public Location getLocation(@NonNull XmlContext context, @NonNull Node node,
             int start, int end) {
         File file = context.file;
-        Pair<File,Node> mergedSource = findManifestSource(node);
+        Pair<File,? extends Node> mergedSource = findManifestSource(node);
         if (mergedSource != null) {
             file = mergedSource.getFirst();
             node = mergedSource.getSecond();
@@ -151,7 +151,7 @@ public class LintCliXmlParser extends XmlParser {
     }
 
     @Nullable
-    private Pair<File,Node> findManifestSource(@NonNull Node node) {
+    private Pair<File,? extends Node> findManifestSource(@NonNull Node node) {
         if (client.isMergeManifestNode(node)) {
             return client.findManifestSourceNode(node);
         }
@@ -205,7 +205,7 @@ public class LintCliXmlParser extends XmlParser {
 
     @Override
     public int getNodeStartOffset(@NonNull XmlContext context, @NonNull Node node) {
-        Pair<File,Node> mergedSource = findManifestSource(node);
+        Pair<File,? extends Node> mergedSource = findManifestSource(node);
         if (mergedSource != null) {
             node = mergedSource.getSecond();
         }
@@ -214,7 +214,7 @@ public class LintCliXmlParser extends XmlParser {
 
     @Override
     public int getNodeEndOffset(@NonNull XmlContext context, @NonNull Node node) {
-        Pair<File,Node> mergedSource = findManifestSource(node);
+        Pair<File,? extends Node> mergedSource = findManifestSource(node);
         if (mergedSource != null) {
             node = mergedSource.getSecond();
         }
@@ -245,7 +245,7 @@ public class LintCliXmlParser extends XmlParser {
         public Location resolve() {
             Node node = this.node;
             File file = this.file;
-            Pair<File,Node> source = parser.findManifestSource(node);
+            Pair<File, ? extends Node> source = parser.findManifestSource(node);
             if (source != null) {
                 file = source.getFirst();
                 node = source.getSecond();

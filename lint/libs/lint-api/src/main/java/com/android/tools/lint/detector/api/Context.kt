@@ -61,7 +61,7 @@ open class Context
          * different top level projects, so there isn't **one** main project,
          * just one per main project being analyzed with its library projects.
          */
-        private val mainProject: Project?,
+        main: Project?,
         /**
          * The file being checked. Note that this may not always be to a concrete
          * file. For example, in the [Detector.beforeCheckProject]
@@ -96,7 +96,7 @@ open class Context
      *
      * @return the main project, never null
      */
-    fun getMainProject(): Project = mainProject ?: project
+     val mainProject: Project = main ?: project
 
     /**
      * The lint client requesting the lint check

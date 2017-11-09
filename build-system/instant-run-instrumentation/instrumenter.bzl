@@ -1,4 +1,5 @@
 load("//tools/base/bazel:jasmin.bzl", "jasmin_library")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test")
 
 def _instrumenter_impl(ctx):
   #baseClasses, baseInstrumentedClasses, androidJar
@@ -41,11 +42,11 @@ def _compile_and_instrument(is_base, patch_name, path, instrumenter):
   classes = []
 
   java_library_name = patch_name + "-test-classes"
-  native.java_library(
+  kotlin_library(
       name = java_library_name,
-      srcs = native.glob([
-          "src/test/incremental-test-classes/" + path + "/**/*.java",
-      ]),
+      srcs = [
+          "src/test/incremental-test-classes/" + path,
+      ],
       visibility = ["//visibility:private"],
       deps = [
           ":instant-run-instrumentation",

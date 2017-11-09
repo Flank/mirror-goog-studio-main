@@ -1220,6 +1220,33 @@ public class AppLinksValidDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void test68322249() {
+        // Regression test for https://issuetracker.google.com/issues/68322249
+
+        //noinspection all // Sample code
+        lint().files(
+                xml("AndroidManifest.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
+                        + "    xmlns:tools=\"http://schemas.android.com/tools\""
+                        + "    package=\"test.pkg\" >\n"
+                        + "\n"
+                        + "    <application>\n"
+                        + "        <activity>\n"
+                        + "            <intent-filter android:autoVerify=\"true\">\n"
+                        + "                <data\n"
+                        + "                    android:scheme=\"http\"\n"
+                        + "                    android:host=\"example.com\"\n"
+                        + "                    android:pathPrefix=\"${DEEPLINK_PREFIX}\" />\n"
+                        + "            </intent-filter>\n"
+                        + "        </activity>\n"
+                        + "    </application>\n"
+                        + "\n"
+                        + "</manifest>\n"))
+                .run()
+                .expectClean();
+    }
+
     public void testStaticValidation()
             throws IOException, SAXException, ParserConfigurationException {
         // Usage outside of lint

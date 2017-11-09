@@ -36,17 +36,15 @@ import com.android.builder.profile.Recorder;
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.internal.reflect.Instantiator;
 
 /** An implementation of VariantFactory for a project that generates AppBundles. */
 public class InstantAppVariantFactory extends BaseVariantFactory {
 
     public InstantAppVariantFactory(
             @NonNull GlobalScope globalScope,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull AndroidConfig extension) {
-        super(globalScope, androidBuilder, instantiator, extension);
+        super(globalScope, androidBuilder, extension);
     }
 
     @NonNull

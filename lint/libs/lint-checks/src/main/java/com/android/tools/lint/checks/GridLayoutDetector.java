@@ -144,7 +144,7 @@ public class GridLayoutDetector extends LayoutDetector {
         }
     }
 
-    private static void ensureAppNamespace(XmlContext context, Element element, String name) {
+    private void ensureAppNamespace(XmlContext context, Element element, String name) {
         Attr attribute = element.getAttributeNodeNS(ANDROID_URI, name);
         if (attribute != null) {
             String prefix = getNamespacePrefix(element.getOwnerDocument(), AUTO_URI);

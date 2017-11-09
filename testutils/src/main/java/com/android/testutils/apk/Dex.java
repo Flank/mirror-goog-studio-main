@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Supplier;
 import org.jf.dexlib2.dexbacked.DexBackedClassDef;
+import org.jf.dexlib2.dexbacked.raw.HeaderItem;
 
 @Immutable
 public final class Dex {
@@ -76,6 +77,10 @@ public final class Dex {
         }
         classes = mapBuilder.build();
         return classes;
+    }
+
+    public int getVersion() {
+        return HeaderItem.getVersion(fileBytesSupplier.get(), 0);
     }
 
     @Override

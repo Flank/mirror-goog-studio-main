@@ -70,9 +70,9 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.internal.reflect.Instantiator;
 
 /**
  * Base extension for all Android plugins.
@@ -183,7 +183,6 @@ public abstract class BaseExtension implements AndroidConfig {
     BaseExtension(
             @NonNull final Project project,
             @NonNull final ProjectOptions projectOptions,
-            @NonNull Instantiator instantiator,
             @NonNull AndroidBuilder androidBuilder,
             @NonNull SdkHandler sdkHandler,
             @NonNull NamedDomainObjectContainer<BuildType> buildTypes,
@@ -205,38 +204,41 @@ public abstract class BaseExtension implements AndroidConfig {
 
         logger = Logging.getLogger(this.getClass());
 
+        ObjectFactory objectFactory = project.getObjects();
+
         defaultConfig =
-                instantiator.newInstance(
+                objectFactory.newInstance(
                         DefaultConfig.class,
                         BuilderConstants.MAIN,
                         project,
-                        instantiator,
+                        objectFactory,
                         project.getLogger(),
                         extraModelInfo.getDeprecationReporter());
 
-        aaptOptions = instantiator.newInstance(AaptOptions.class);
+        aaptOptions = objectFactory.newInstance(AaptOptions.class);
         dexOptions =
-                instantiator.newInstance(DexOptions.class, extraModelInfo.getDeprecationReporter());
-        lintOptions = instantiator.newInstance(LintOptions.class);
-        externalNativeBuild = instantiator.newInstance(
-                ExternalNativeBuild.class, instantiator, project);
-        testOptions = instantiator.newInstance(TestOptions.class, instantiator);
-        compileOptions = instantiator.newInstance(CompileOptions.class);
-        packagingOptions = instantiator.newInstance(PackagingOptions.class);
-        jacoco = instantiator.newInstance(JacocoOptions.class);
-        adbOptions = instantiator.newInstance(AdbOptions.class);
-        splits = instantiator.newInstance(Splits.class, instantiator);
-        dataBinding = instantiator.newInstance(DataBindingOptions.class);
+                objectFactory.newInstance(
+                        DexOptions.class, extraModelInfo.getDeprecationReporter());
+        lintOptions = objectFactory.newInstance(LintOptions.class);
+        externalNativeBuild =
+                objectFactory.newInstance(ExternalNativeBuild.class, objectFactory, project);
+        testOptions = objectFactory.newInstance(TestOptions.class, objectFactory);
+        compileOptions = objectFactory.newInstance(CompileOptions.class);
+        packagingOptions = objectFactory.newInstance(PackagingOptions.class);
+        jacoco = objectFactory.newInstance(JacocoOptions.class);
+        adbOptions = objectFactory.newInstance(AdbOptions.class);
+        splits = objectFactory.newInstance(Splits.class, objectFactory);
+        dataBinding = objectFactory.newInstance(DataBindingOptions.class);
 
         sourceSetsContainer =
                 project.container(
                         AndroidSourceSet.class,
-                        new AndroidSourceSetFactory(instantiator, project, publishPackage));
+                        new AndroidSourceSetFactory(objectFactory, project, publishPackage));
 
         sourceSetsContainer.whenObjectAdded(
                 new Action<AndroidSourceSet>() {
                     @Override
-                    public void execute(AndroidSourceSet sourceSet) {
+                    public void execute(@NonNull AndroidSourceSet sourceSet) {
                         ConfigurationContainer configurations = project.getConfigurations();
 
                         final String implementationName =

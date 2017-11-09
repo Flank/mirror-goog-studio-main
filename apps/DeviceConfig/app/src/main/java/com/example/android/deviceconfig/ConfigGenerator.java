@@ -18,6 +18,7 @@ package com.example.android.deviceconfig;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.FeatureInfo;
@@ -68,7 +69,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 public class ConfigGenerator {
-    private Context mCtx;
+    private Activity mCtx;
     private String mExtensions;
 
     public static final String NS_DEVICES_XSD = "http://schemas.android.com/sdk/devices/1";
@@ -166,10 +167,25 @@ public class ConfigGenerator {
 
     private static final String TAG = "ConfigGenerator";
 
-    public ConfigGenerator(Context context, String extensions) {
+    public ConfigGenerator(Activity context, String extensions) {
         mCtx = context;
         mExtensions = extensions;
     }
+
+    public static DisplayMetrics getDisplayMetrics(Activity context) {
+        if (Build.VERSION.SDK_INT >= 17) {
+            try {
+                Display display = context.getWindowManager().getDefaultDisplay();
+                DisplayMetrics metrics = new DisplayMetrics();
+                display.getRealMetrics(metrics);
+                return metrics;
+            } catch (Exception ignored) {
+            }
+        }
+
+        return context.getResources().getDisplayMetrics();
+    }
+
 
     public static int getScreenWidth(WindowManager windowManager, DisplayMetrics metrics) {
         Display display = windowManager.getDefaultDisplay();
@@ -216,7 +232,7 @@ public class ConfigGenerator {
     public String generateConfig() {
         Resources resources = mCtx.getResources();
         PackageManager packageMgr = mCtx.getPackageManager();
-        DisplayMetrics metrics = resources.getDisplayMetrics();
+        DisplayMetrics metrics = getDisplayMetrics(mCtx);
         Configuration config = resources.getConfiguration();
 
         WindowManager wm = (WindowManager) mCtx.getSystemService(Context.WINDOW_SERVICE);
@@ -309,8 +325,17 @@ public class ConfigGenerator {
             case DisplayMetrics.DENSITY_XXXHIGH:
                 pixelDensityText = doc.createTextNode("xxxhdpi");
                 break;
+            case DisplayMetrics.DENSITY_260:
+                pixelDensityText = doc.createTextNode("260dpi");
+                break;
             case DisplayMetrics.DENSITY_280:
                 pixelDensityText = doc.createTextNode("280dpi");
+                break;
+            case DisplayMetrics.DENSITY_300:
+                pixelDensityText = doc.createTextNode("300dpi");
+                break;
+            case DisplayMetrics.DENSITY_340:
+                pixelDensityText = doc.createTextNode("340dpi");
                 break;
             case DisplayMetrics.DENSITY_360:
                 pixelDensityText = doc.createTextNode("360dpi");
@@ -444,6 +469,24 @@ public class ConfigGenerator {
             }
             if (packageMgr.hasSystemFeature(PackageManager.FEATURE_SENSOR_PROXIMITY)) {
                 sensorsText.appendData("\nProximitySensor");
+            }
+            if (packageMgr.hasSystemFeature(PackageManager.FEATURE_SENSOR_AMBIENT_TEMPERATURE)) {
+                sensorsText.appendData("\nAmbientTemperatureSensor");
+            }
+            if (packageMgr.hasSystemFeature(PackageManager.FEATURE_SENSOR_HEART_RATE)) {
+                sensorsText.appendData("\nHeartRate");
+            }
+            if (packageMgr.hasSystemFeature(PackageManager.FEATURE_SENSOR_HEART_RATE_ECG)) {
+                sensorsText.appendData("\nECG");
+            }
+            if (packageMgr.hasSystemFeature(PackageManager.FEATURE_SENSOR_RELATIVE_HUMIDITY)) {
+                sensorsText.appendData("\nRelativeHumiditySensor");
+            }
+            if (packageMgr.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER)) {
+                sensorsText.appendData("\nStepCounter");
+            }
+            if (packageMgr.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_DETECTOR)) {
+                sensorsText.appendData("\nStepDetector");
             }
             sensorsText.appendData("\n");
 
@@ -710,7 +753,7 @@ public class ConfigGenerator {
 
             Element skin = doc.createElement(PREFIX + NODE_SKIN);
             hardware.appendChild(skin);
-            skin.appendChild(doc.createTextNode(android.os.Build.MODEL.toLowerCase().replace(' ', '_'));
+            skin.appendChild(doc.createTextNode(android.os.Build.MODEL.toLowerCase().replace(' ', '_')));
 
             Element software = doc.createElement(PREFIX + NODE_SOFTWARE);
             device.appendChild(software);

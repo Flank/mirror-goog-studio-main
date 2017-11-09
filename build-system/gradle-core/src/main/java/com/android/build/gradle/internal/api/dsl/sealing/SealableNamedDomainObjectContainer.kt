@@ -78,15 +78,13 @@ class SealableNamedDomainObjectContainer<InterfaceT, ImplementationT: InterfaceT
 
     override fun addAll(elements: Collection<InterfaceT>): Boolean {
         if (checkSeal()) {
-            val recastedElements = elements.stream()
+            val recastedElements = elements.asSequence()
                     .filter(implClass::isInstance)
                     .map(implClass::cast)
-                    .collect(Collectors.toSet())
+                    .toSet()
 
             if (recastedElements.size != elements.size) {
-                val wrongTypeElements = elements.stream()
-                        .filter({ !implClass.isInstance(it) })
-                        .collect(Collectors.toSet())
+                val wrongTypeElements = elements.filter { !implClass.isInstance(it) }
 
                 issueReporter.reportError(EvalIssueReporter.Type.GENERIC,
                         "Expected type ${implClass.name} for items: $wrongTypeElements")

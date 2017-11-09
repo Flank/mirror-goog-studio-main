@@ -126,14 +126,14 @@ import java.util.zip.ZipFile;
 public class AndroidBuilder {
 
     /** Minimal supported version of build tools. */
-    public static final Revision MIN_BUILD_TOOLS_REV = new Revision(26, 0, 2);
+    public static final Revision MIN_BUILD_TOOLS_REV = new Revision(27, 0, 1);
 
     /**
      * Default version of build tools that will be used if the user does not specify.
      *
      * <p><strong>Update the DSL documentation on BaseExtension when changing this value.</strong>
      */
-    public static final Revision DEFAULT_BUILD_TOOLS_REVISION = new Revision(26, 0, 2);
+    public static final Revision DEFAULT_BUILD_TOOLS_REVISION = new Revision(27, 0, 1);
 
     /** API level for split APKs. */
     private static final int API_LEVEL_SPLIT_APK = 21;

@@ -22,6 +22,7 @@ import com.google.common.collect.Sets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 
 /**
  * DSL object for per-variant CMake options, such as CMake arguments and compiler flags.
@@ -43,6 +44,9 @@ public class ExternalNativeCmakeOptions implements CoreExternalNativeCmakeOption
     private final Set<String> abiFilters = Sets.newHashSet();
     @NonNull
     private final Set<String> targets = Sets.newHashSet();
+
+    @Inject
+    public ExternalNativeCmakeOptions() {}
 
     /** {@inheritDoc} */
     @NonNull

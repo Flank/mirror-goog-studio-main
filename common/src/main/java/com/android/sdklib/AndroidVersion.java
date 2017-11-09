@@ -73,6 +73,7 @@ public final class AndroidVersion implements Comparable<AndroidVersion> {
         public static final int N = 24;
         public static final int N_MR1 = 25;
         public static final int O = 26;
+        public static final int O_MR1 = 27;
     }
 
     private final int mApiLevel;

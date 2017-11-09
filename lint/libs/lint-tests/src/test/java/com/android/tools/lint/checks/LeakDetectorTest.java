@@ -324,4 +324,24 @@ public class LeakDetectorTest extends AbstractCheckTest {
                         + "    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n"
                         + "0 errors, 2 warnings\n");
     }
+
+    public void testApplicationOk() {
+        //noinspection all // Sample code
+        lint().files(
+                java("package test.pkg;\n" +
+                        "\n" +
+                        "import android.app.Application;\n" +
+                        "import android.content.Context;\n" +
+                        "\n" +
+                        "public class ApplicationTest {\n" +
+                        "    public static Application application;\n" +
+                        "    public static MyApp app;\n" +
+                        "\n" +
+                        "    public static class MyApp {\n" +
+                        "        private Application application;\n" +
+                        "    }\n" +
+                        "}\n"))
+                .run()
+                .expectClean();
+    }
 }

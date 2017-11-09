@@ -52,7 +52,7 @@ class VariantAwarePropertiesImpl(
     private val _flavorDimensions: SealableList<String> = SealableList.new(issueReporter)
     private val _variantFilters: SealableList<Action<VariantFilter>> = SealableList.new(issueReporter)
     private val _preVariants: SealableList<Action<Void>> = SealableList.new(issueReporter)
-    private val _postVariants: SealableList<Action<List<Variant>>> = SealableList.new(issueReporter)
+    private val _postVariants: SealableList<Action<Collection<Variant>>> = SealableList.new(issueReporter)
 
     override val variants: VariantCallbackHandler<Variant> =
             variantCallbackHolder.createVariantCallbackHandler()
@@ -99,13 +99,13 @@ class VariantAwarePropertiesImpl(
         }
     }
 
-    override var postVariants: MutableList<Action<List<Variant>>>
+    override var postVariants: MutableList<Action<Collection<Variant>>>
         get() = _postVariants
         set(value) {
             _postVariants.reset(value)
         }
 
-    override fun postVariantCallback(action: Action<List<Variant>>) {
+    override fun postVariantCallback(action: Action<Collection<Variant>>) {
         if (checkSeal()) {
             _postVariants.add(action)
         }

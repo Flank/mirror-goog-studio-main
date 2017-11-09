@@ -31,14 +31,14 @@ java_test(
     # Note: this test is slightly unusual in testing the auto download, hence the hardcoded file
     # references. This is not necessarily the pattern to follow in other tests.
     data = [
-        "//prebuilts/studio/sdk:build-tools/27.0.0",
+        "//prebuilts/studio/sdk:build-tools/27.0.1",
         "//prebuilts/studio/sdk:ndk-bundle",
         "//prebuilts/studio/sdk:platform-tools",
         "//prebuilts/studio/sdk:platforms/latest",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/addon2-1.xml",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/build-tools_r27-linux.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/build-tools_r27-macosx.zip",
-        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/build-tools_r27-windows.zip",
+        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/build-tools_r27.0.1-linux.zip",
+        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/build-tools_r27.0.1-macosx.zip",
+        "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/build-tools_r27.0.1-windows.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/cmake-3.6.4111459-darwin-x86_64.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/cmake-3.6.4111459-linux-x86_64.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/cmake-3.6.4111459-windows-x86_64.zip",

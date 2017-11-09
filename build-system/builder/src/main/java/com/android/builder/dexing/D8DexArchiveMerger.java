@@ -27,11 +27,18 @@ import com.android.tools.r8.errors.CompilationError;
 import com.android.tools.r8.errors.DexOverflowException;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 final class D8DexArchiveMerger implements DexArchiveMerger {
+
+    @NonNull
+    private static final Logger LOGGER = Logger.getLogger(D8DexArchiveMerger.class.getName());
 
     private static final String ERROR_MULTIDEX =
             "Cannot fit requested classes in a single dex file";
@@ -56,6 +63,15 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
             @Nullable Path mainDexClasses,
             @NonNull DexingType dexingType)
             throws DexArchiveMergerException {
+        LOGGER.log(
+                Level.INFO,
+                "Merging to '"
+                        + outputDir.toAbsolutePath().toString()
+                        + "' with D8 from "
+                        + Streams.stream(inputs)
+                                .map(path -> path.toAbsolutePath().toString())
+                                .collect(Collectors.joining(", ")));
+
         if (Iterables.isEmpty(inputs)) {
             return;
         }
@@ -76,7 +92,11 @@ final class D8DexArchiveMerger implements DexArchiveMerger {
             if (mainDexClasses != null) {
                 builder.addMainDexListFiles(mainDexClasses);
             }
-            builder.setMinApiLevel(minSdkVersion).setMode(compilationMode).setOutputPath(outputDir);
+            builder.setMinApiLevel(minSdkVersion)
+                    .setMode(compilationMode)
+                    .setOutputPath(outputDir)
+                    .setEnableDesugaring(false)
+                    .setIntermediate(false);
             D8.run(builder.build());
         } catch (CompilationException | IOException | CompilationError e) {
             throw getExceptionToRethrow(e, inputs);

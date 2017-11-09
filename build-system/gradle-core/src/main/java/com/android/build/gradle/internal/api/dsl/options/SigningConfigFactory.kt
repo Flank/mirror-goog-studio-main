@@ -22,7 +22,7 @@ import com.android.builder.errors.EvalIssueReporter
 import com.android.ide.common.signing.KeystoreHelper
 import com.android.prefs.AndroidLocation
 import org.gradle.api.NamedDomainObjectFactory
-import org.gradle.internal.reflect.Instantiator
+import org.gradle.api.model.ObjectFactory
 import org.gradle.tooling.BuildException
 import java.io.File
 
@@ -30,13 +30,13 @@ private val DEFAULT_PASSWORD = "android"
 private val DEFAULT_ALIAS = "AndroidDebugKey"
 
 class SigningConfigFactory(
-            private val instantiator: Instantiator,
+            private val objectFactory: ObjectFactory,
             private val deprecationReporter: DeprecationReporter,
             private val issueReporter: EvalIssueReporter)
         : NamedDomainObjectFactory<SigningConfigImpl> {
 
     override fun create(name: String): SigningConfigImpl {
-        val newInstance = instantiator.newInstance(SigningConfigImpl::class.java,
+        val newInstance = objectFactory.newInstance(SigningConfigImpl::class.java,
                 name, deprecationReporter, issueReporter)
 
         if (BuilderConstants.DEBUG == name) {
