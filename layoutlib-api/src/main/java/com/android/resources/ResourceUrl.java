@@ -108,6 +108,7 @@ public class ResourceUrl implements Serializable {
      * @param type the resource type
      * @param name the name
      */
+    @NonNull
     public static ResourceUrl create(
             @Nullable String namespace, @NonNull ResourceType type, @NonNull String name) {
         return new ResourceUrl(

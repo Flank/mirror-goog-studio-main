@@ -64,7 +64,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -277,7 +276,7 @@ public class Main {
 
             @NonNull
             @Override
-            public List<File> findRuleJars(@NotNull Project project) {
+            public List<File> findRuleJars(@NonNull Project project) {
                 if (metadata != null) {
                     List<File> jars = metadata.getLintChecks().get(project);
                     if (jars != null) {

@@ -101,7 +101,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 import org.w3c.dom.Document;
@@ -1237,7 +1236,7 @@ public class LintCliClient extends LintClient {
             this.project = project;
         }
 
-        @NotNull
+        @NonNull
         @Override
         protected DefaultJavaEvaluator createEvaluator(
                 @Nullable Project project,

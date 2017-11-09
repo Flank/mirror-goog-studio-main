@@ -21,6 +21,7 @@ import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_COLOR
 import com.android.SdkConstants.ATTR_DRAWABLE
 import com.android.SdkConstants.ATTR_FONT
+import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.ATTR_LAYOUT
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_PARENT
@@ -28,16 +29,20 @@ import com.android.SdkConstants.ATTR_TYPE
 import com.android.SdkConstants.COLOR_RESOURCE_PREFIX
 import com.android.SdkConstants.DRAWABLE_PREFIX
 import com.android.SdkConstants.FONT_PREFIX
+import com.android.SdkConstants.ID_PREFIX
 import com.android.SdkConstants.LAYOUT_RESOURCE_PREFIX
 import com.android.SdkConstants.NEW_ID_PREFIX
+import com.android.SdkConstants.PREFIX_RESOURCE_REF
 import com.android.SdkConstants.STYLE_RESOURCE_PREFIX
 import com.android.SdkConstants.TAG_COLOR
 import com.android.SdkConstants.TAG_FONT
 import com.android.SdkConstants.TAG_ITEM
 import com.android.SdkConstants.TAG_STYLE
 import com.android.SdkConstants.VIEW_INCLUDE
+import com.android.resources.FolderTypeRelationship
 import com.android.resources.ResourceFolderType
 import com.android.resources.ResourceType
+import com.android.resources.ResourceUrl
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Implementation
@@ -56,6 +61,7 @@ import com.google.common.collect.Maps
 import com.google.common.collect.Multimap
 import com.google.common.collect.Multimaps
 import com.google.common.collect.Sets
+import org.w3c.dom.Attr
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.util.Arrays
@@ -107,6 +113,8 @@ class ResourceCycleDetector : ResourceXmlDetector() {
     override fun getApplicableElements(): Collection<String>? {
         return Arrays.asList(VIEW_INCLUDE, TAG_STYLE, TAG_COLOR, TAG_ITEM, TAG_FONT)
     }
+
+    override fun getApplicableAttributes(): Collection<String>? = ALL
 
     private fun recordReference(type: ResourceType, from: String, to: String) {
         if (to.isEmpty() || to.startsWith(ANDROID_PREFIX)) {
@@ -223,25 +231,21 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 val color = element.getAttributeNS(ANDROID_URI, ATTR_COLOR)
                 if (color != null && color.startsWith(COLOR_RESOURCE_PREFIX)) {
                     val currentColor = LintUtils.getBaseName(context.file.name)
-                    if (mLocations != null) {
-                        recordLocation(context, element, ResourceType.COLOR,
-                                currentColor)
-                    } else {
-                        recordReference(ResourceType.COLOR, currentColor,
-                                color.substring(COLOR_RESOURCE_PREFIX.length))
-                    }
+                    handleReference(context,
+                            element,
+                            ResourceType.COLOR,
+                            currentColor,
+                            color.substring(COLOR_RESOURCE_PREFIX.length))
                 }
             } else if (folderType == ResourceFolderType.DRAWABLE) {
                 val drawable = element.getAttributeNS(ANDROID_URI, ATTR_DRAWABLE)
                 if (drawable != null && drawable.startsWith(DRAWABLE_PREFIX)) {
                     val currentColor = LintUtils.getBaseName(context.file.name)
-                    if (mLocations != null) {
-                        recordLocation(context, element, ResourceType.DRAWABLE,
-                                currentColor)
-                    } else {
-                        recordReference(ResourceType.DRAWABLE, currentColor,
-                                drawable.substring(DRAWABLE_PREFIX.length))
-                    }
+                    handleReference(context,
+                            element,
+                            ResourceType.DRAWABLE,
+                            currentColor,
+                            drawable.substring(DRAWABLE_PREFIX.length))
                 }
             }
         } else if (tagName == TAG_STYLE) {
@@ -251,29 +255,22 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             if (parentNode != null && nameNode != null) {
                 val name = nameNode.value
                 val parent = parentNode.value
-                if (parent.endsWith(name) &&
-                        parent == STYLE_RESOURCE_PREFIX + name && context.isEnabled(CYCLE)
-                        && context.driver.phase == 1) {
-                    context.report(CYCLE, parentNode, context.getLocation(parentNode),
-                            String.format("Style `%1\$s` should not extend itself", name))
-                } else if (parent.startsWith(STYLE_RESOURCE_PREFIX)
+                if (parent.startsWith(STYLE_RESOURCE_PREFIX)
                         && parent.startsWith(name, STYLE_RESOURCE_PREFIX.length)
-                        && parent.startsWith(".", STYLE_RESOURCE_PREFIX.length + name.length)
-                        && context.isEnabled(CYCLE) && context.driver.phase == 1) {
-                    context.report(CYCLE, parentNode, context.getLocation(parentNode),
-                            String.format("Potential cycle: `%1\$s` is the implied parent of `%2\$s` and " + "this defines the opposite",
-                                    name,
-                                    parent.substring(STYLE_RESOURCE_PREFIX.length)))
+                        && parent.startsWith(".", STYLE_RESOURCE_PREFIX.length + name.length)) {
+                    if (context.isEnabled(CYCLE) && context.driver.phase == 1) {
+                        context.report(CYCLE, parentNode, context.getLocation(parentNode),
+                                "Potential cycle: `$name` is the implied parent of `${
+                                        parent.substring(STYLE_RESOURCE_PREFIX.length)}` and " +
+                                        "this defines the opposite")
+                    }
                     // Don't record this reference; we don't want to double report this
                     // as a chain, since this error is more helpful
                     return
                 }
-                if (mReferences != null && !parent.isEmpty()) {
-                    if (mLocations != null) {
-                        recordLocation(context, parentNode, ResourceType.STYLE, name)
-                    } else {
-                        recordReference(ResourceType.STYLE, name, parent)
-                    }
+                if (!parent.isEmpty()) {
+                    val parentName = parent.substring(parent.lastIndexOf('/') + 1)
+                    handleReference(context, parentNode, ResourceType.STYLE, name, parentName)
                 }
             } else if (mReferences != null && nameNode != null) {
                 val name = nameNode.value
@@ -304,23 +301,11 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 val layout = layoutNode.value
                 if (layout.startsWith(LAYOUT_RESOURCE_PREFIX)) {
                     val currentLayout = LintUtils.getBaseName(context.file.name)
-                    if (mReferences != null) {
-                        if (mLocations != null) {
-                            recordLocation(context, layoutNode, ResourceType.LAYOUT,
-                                    currentLayout)
-                        } else {
-                            recordReference(ResourceType.LAYOUT, currentLayout, layout)
-                        }
-                    }
-                    if (layout.startsWith(currentLayout, LAYOUT_RESOURCE_PREFIX.length) &&
-                            layout.length == currentLayout.length + LAYOUT_RESOURCE_PREFIX.length
-                            && context.isEnabled(CYCLE)
-                            && context.driver.phase == 1) {
-                        val message = String.format("Layout `%1\$s` should not include itself",
-                                currentLayout)
-                        context.report(CYCLE, layoutNode, context.getLocation(layoutNode),
-                                message)
-                    }
+                    handleReference(context,
+                            layoutNode,
+                            ResourceType.LAYOUT,
+                            currentLayout,
+                            layout)
                 }
             }
         } else if (tagName == TAG_COLOR) {
@@ -340,20 +325,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                         } else if (text.startsWith(COLOR_RESOURCE_PREFIX, k)) {
                             val color = text.trim { it <= ' ' }.substring(COLOR_RESOURCE_PREFIX.length)
                             val name = element.getAttribute(ATTR_NAME)
-                            if (mReferences != null) {
-                                if (mLocations != null) {
-                                    recordLocation(context, child, ResourceType.COLOR, name)
-                                } else {
-                                    recordReference(ResourceType.COLOR, name, color)
-                                }
-                            }
-                            if (color == name
-                                    && context.isEnabled(CYCLE)
-                                    && context.driver.phase == 1) {
-                                context.report(CYCLE, child, context.getLocation(child),
-                                        String.format("Color `%1\$s` should not reference itself",
-                                                color))
-                            }
+                            handleReference(context, child, ResourceType.COLOR, name, color)
                         } else {
                             break
                         }
@@ -367,22 +339,7 @@ class ResourceCycleDetector : ResourceXmlDetector() {
             if (text != null && text.value.startsWith(FONT_PREFIX)) {
                 val font = text.value.trim { it <= ' ' }.substring(FONT_PREFIX.length)
                 val currentFont = LintUtils.getBaseName(context.file.name)
-                if (mReferences != null) {
-                    if (mLocations != null) {
-                        recordLocation(context, text, ResourceType.FONT, currentFont)
-                    } else {
-                        recordReference(ResourceType.FONT, currentFont, font)
-                    }
-                }
-                if (currentFont == font
-                        && context.isEnabled(CYCLE)
-                        && context.driver.phase == 1) {
-                    context.report(
-                            CYCLE,
-                            text,
-                            context.getLocation(text),
-                            String.format("Font `%1\$s` should not reference itself", font))
-                }
+                handleReference(context, text, ResourceType.FONT, currentFont, font)
             }
         }
     }
@@ -449,6 +406,76 @@ class ResourceCycleDetector : ResourceXmlDetector() {
         }
     }
 
+    override fun visitAttribute(context: XmlContext, attribute: Attr) {
+        val resourceFolderType = context.resourceFolderType
+        if (resourceFolderType == null || resourceFolderType == ResourceFolderType.VALUES) {
+            // Null resource type means manifest, and there are no cycles there.
+            // Within values there are special considerations (for example around styles)
+            // and this is all handled from visitElement
+            return
+        }
+
+        val value = attribute.value
+        if (value.isEmpty() ||
+                !value.startsWith(PREFIX_RESOURCE_REF) ||
+                value.startsWith(NEW_ID_PREFIX) || // id's can't have cycles
+                value.startsWith(ID_PREFIX)) {
+            return
+        }
+
+        // Optimization to avoid parsing URLs for the very common case where the referenced
+        // resource is unrelated to the current folder type (e.g. a drawable reference
+        // in a layout file etc)
+        val types = FolderTypeRelationship.getRelatedResourceTypes(resourceFolderType)
+        val primary = types[0].getName() // Guaranteed to not be the primary type, not the id
+        if (!value.regionMatches(1, primary, 0, primary.length, false)) {
+            return
+        }
+
+        val url = ResourceUrl.parse(value) ?: return
+
+        // We don't need to check !url.framework here since our optimization above
+        // already made sure the resource types matched *and* there was no "android:" prefix
+        // before the resource type
+
+        // Ensure that we're referring to the same resource type here; e.g. we're not complaining
+        // that @layout/foo references @drawable/foo
+        if (!types.contains(url.type)) {
+            return
+        }
+
+        val from = LintUtils.getBaseName(context.file.name)
+        handleReference(context, attribute, url.type, from, url.name)
+    }
+
+    private fun handleReference(context: XmlContext,
+            node: Node,
+            type: ResourceType,
+            from: String,
+            to: String) {
+        if (from == to) {
+            // Report immediately; don't record
+            if (context.isEnabled(CYCLE)
+                    && context.driver.phase == 1) {
+
+                context.report(CYCLE, node, context.getLocation(node),
+                        "${type.displayName} `$to` should not ${
+                        when (type) {
+                            ResourceType.LAYOUT -> "include"
+                            ResourceType.STYLE -> "extend"
+                            else -> "reference"
+                        }
+                        } itself")
+            }
+        } else if (mReferences != null) {
+            if (mLocations != null) {
+                recordLocation(context, node, type, from)
+            } else {
+                recordReference(type, from, to)
+            }
+        }
+    }
+
     private fun findCycles(
             context: Context,
             type: ResourceType,
@@ -466,12 +493,12 @@ class ResourceCycleDetector : ResourceXmlDetector() {
                 Collections.reverse(chain)
                 val chains: MutableMap<ResourceType, MutableList<MutableList<String>>> =
                         mChains ?: run {
-                            val map = Maps.newEnumMap<ResourceType,
+                            val newMap = Maps.newEnumMap<ResourceType,
                                     MutableList<MutableList<String>>>(ResourceType::class.java)
-                            mChains = map
+                            mChains = newMap
                             mLocations = Maps.newEnumMap(ResourceType::class.java)
                             context.driver.requestRepeat(this, Scope.RESOURCE_FILE_SCOPE)
-                            map
+                            newMap
                         }
 
                 val list = chains[type]

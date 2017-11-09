@@ -58,7 +58,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.gradle.api.GradleException;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 
 public class LintGradleClient extends LintCliClient {
@@ -143,7 +142,7 @@ public class LintGradleClient extends LintCliClient {
 
     @Nullable
     @Override
-    public File findResource(@NotNull String relativePath) {
+    public File findResource(@NonNull String relativePath) {
         if (!isAndroid) {
             // Don't attempt to look up resources from an $ANDROID_HOME; may not
             // exist and those checks shouldn't apply in non-Android contexts
