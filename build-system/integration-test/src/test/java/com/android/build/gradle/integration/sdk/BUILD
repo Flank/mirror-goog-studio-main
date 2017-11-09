@@ -61,6 +61,8 @@ java_test(
     ],
     tags = [
         "block-network",
+        "no_mac",
+        "no_windows",
     ],
     test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
     runtime_deps = [
