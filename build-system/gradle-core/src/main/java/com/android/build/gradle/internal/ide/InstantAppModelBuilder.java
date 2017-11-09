@@ -175,6 +175,7 @@ public class InstantAppModelBuilder implements ToolingModelBuilder {
                 buildTypes,
                 productFlavors,
                 variants,
+                Collections.emptyList(),
                 "android-" + SdkVersionInfo.HIGHEST_KNOWN_STABLE_API,
                 Collections.emptyList(),
                 Collections.emptyList(),

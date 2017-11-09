@@ -69,6 +69,7 @@ import com.android.builder.model.BuildTypeContainer;
 import com.android.builder.model.Dependencies;
 import com.android.builder.model.JavaArtifact;
 import com.android.builder.model.LintOptions;
+import com.android.builder.model.ModelBuilderParameter;
 import com.android.builder.model.NativeLibrary;
 import com.android.builder.model.NativeToolchain;
 import com.android.builder.model.ProductFlavor;
@@ -115,12 +116,12 @@ import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.initialization.IncludedBuild;
 import org.gradle.api.invocation.Gradle;
-import org.gradle.tooling.provider.model.ToolingModelBuilder;
+import org.gradle.tooling.provider.model.ParameterizedToolingModelBuilder;
 
 /**
  * Builder for the custom Android model.
  */
-public class ModelBuilder implements ToolingModelBuilder {
+public class ModelBuilder implements ParameterizedToolingModelBuilder<ModelBuilderParameter> {
     public static final String CURRENT_BUILD_NAME = "__current_build__";
 
     @NonNull
@@ -182,7 +183,8 @@ public class ModelBuilder implements ToolingModelBuilder {
         // The default name for a model is the name of the Java interface.
         return modelName.equals(AndroidProject.class.getName())
                 || modelName.equals(GlobalLibraryMap.class.getName())
-                || modelName.equals(ProjectBuildOutput.class.getName());
+                || modelName.equals(ProjectBuildOutput.class.getName())
+                || modelName.equals(Variant.class.getName());
     }
 
     @Override
@@ -192,13 +194,46 @@ public class ModelBuilder implements ToolingModelBuilder {
         initBuildMapping(project);
 
         if (modelName.equals(AndroidProject.class.getName())) {
-            return buildAndroidProject(project);
+            return buildAndroidProject(project, true);
         }
+        if (modelName.equals(Variant.class.getName())) {
+            throw new RuntimeException(
+                    "Please use parameterized tooling API to obtain Variant model.");
+        }
+        return buildNonParameterizedModels(modelName);
+    }
+
+    // Build parameterized model. This method is invoked if model is obtained by
+    // BuildController::findModel(Model var1, Class<T> var2, Class<P> var3, Action<? super P> var4).
+    @Override
+    public Object buildAll(
+            @NonNull String modelName,
+            @NonNull ModelBuilderParameter parameter,
+            @NonNull Project project) {
+        // build a map from included build name to rootDir (as rootDir is the only thing
+        // that we have access to on the tooling API side).
+        initBuildMapping(project);
+        if (modelName.equals(AndroidProject.class.getName())) {
+            return buildAndroidProject(project, parameter.getShouldBuildVariant());
+        }
+        if (modelName.equals(Variant.class.getName())) {
+            return buildVariant(parameter.getVariantName());
+        }
+        return buildNonParameterizedModels(modelName);
+    }
+
+    @NonNull
+    private Object buildNonParameterizedModels(@NonNull String modelName) {
         if (modelName.equals(ProjectBuildOutput.class.getName())) {
             return buildMinimalisticModel();
         }
-
         return buildGlobalLibraryMap();
+    }
+
+    @Override
+    @NonNull
+    public Class<ModelBuilderParameter> getParameterType() {
+        return ModelBuilderParameter.class;
     }
 
     @VisibleForTesting
@@ -263,7 +298,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         return new GlobalLibraryMapImpl(ArtifactDependencyGraph.getGlobalLibMap());
     }
 
-    private Object buildAndroidProject(Project project) {
+    private Object buildAndroidProject(Project project, boolean shouldBuildVariant) {
         // Cannot be injected, as the project might not be the same as the project used to construct
         // the model builder e.g. when lint explicitly builds the model.
         ProjectOptions projectOptions = new ProjectOptions(project);
@@ -322,7 +357,7 @@ public class ModelBuilder implements ToolingModelBuilder {
         Collection<BuildTypeContainer> buildTypes = Lists.newArrayList();
         Collection<ProductFlavorContainer> productFlavors = Lists.newArrayList();
         Collection<Variant> variants = Lists.newArrayList();
-
+        Collection<String> variantNames = Lists.newArrayList();
 
         for (BuildTypeData btData : variantManager.getBuildTypes().values()) {
             buildTypes.add(BuildTypeContainerImpl.create(
@@ -337,7 +372,10 @@ public class ModelBuilder implements ToolingModelBuilder {
 
         for (VariantScope variantScope : variantManager.getVariantScopes()) {
             if (!variantScope.getVariantData().getType().isForTesting()) {
-                variants.add(createVariant(variantScope.getVariantData()));
+                variantNames.add(variantScope.getFullVariantName());
+                if (shouldBuildVariant) {
+                    variants.add(createVariant(variantScope.getVariantData()));
+                }
             }
         }
 
@@ -348,6 +386,7 @@ public class ModelBuilder implements ToolingModelBuilder {
                 buildTypes,
                 productFlavors,
                 variants,
+                variantNames,
                 androidBuilder.getTargetInfo() != null
                         ? androidBuilder.getTarget().hashString()
                         : "",
@@ -389,6 +428,21 @@ public class ModelBuilder implements ToolingModelBuilder {
                             ndkHandler.getCppCompiler(abi)));
         }
         return toolchains;
+    }
+
+    @NonNull
+    private VariantImpl buildVariant(@Nullable String variantName) {
+        if (variantName == null) {
+            throw new IllegalArgumentException("Variant name cannot be null.");
+        }
+        for (VariantScope variantScope : variantManager.getVariantScopes()) {
+            if (!variantScope.getVariantData().getType().isForTesting()
+                    && variantScope.getFullVariantName().equals(variantName)) {
+                return createVariant(variantScope.getVariantData());
+            }
+        }
+        throw new IllegalArgumentException(
+                String.format("Variant with name '%s' doesn't exist.", variantName));
     }
 
     @NonNull

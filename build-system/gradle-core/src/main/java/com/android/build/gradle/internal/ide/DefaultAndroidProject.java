@@ -85,6 +85,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     private final Collection<BuildTypeContainer> buildTypes;
     private final Collection<ProductFlavorContainer> productFlavors;
     private final Collection<Variant> variants;
+    private final Collection<String> variantNames;
 
     @NonNull
     private final Collection<String> flavorDimensions;
@@ -96,6 +97,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
             @NonNull Collection<BuildTypeContainer> buildTypes,
             @NonNull Collection<ProductFlavorContainer> productFlavors,
             @NonNull Collection<Variant> variants,
+            @NonNull Collection<String> variantNames,
             @NonNull String compileTarget,
             @NonNull Collection<String> bootClasspath,
             @NonNull Collection<File> frameworkSource,
@@ -119,6 +121,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
         this.buildTypes = buildTypes;
         this.productFlavors = productFlavors;
         this.variants = variants;
+        this.variantNames = variantNames;
         this.compileTarget = compileTarget;
         this.bootClasspath = bootClasspath;
         this.frameworkSource = frameworkSource;
@@ -177,6 +180,12 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
     @NonNull
     public Collection<Variant> getVariants() {
         return variants;
+    }
+
+    @NonNull
+    @Override
+    public Collection<String> getVariantNames() {
+        return variantNames;
     }
 
     @NonNull
@@ -318,6 +327,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 && Objects.equals(buildTypes, that.buildTypes)
                 && Objects.equals(productFlavors, that.productFlavors)
                 && Objects.equals(variants, that.variants)
+                && Objects.equals(variantNames, that.variantNames)
                 && Objects.equals(defaultConfig, that.defaultConfig)
                 && Objects.equals(flavorDimensions, that.flavorDimensions)
                 && Objects.equals(baseSplit, that.baseSplit);
@@ -346,6 +356,7 @@ final class DefaultAndroidProject implements AndroidProject, Serializable {
                 buildTypes,
                 productFlavors,
                 variants,
+                variantNames,
                 defaultConfig,
                 flavorDimensions,
                 baseSplit);
