@@ -672,7 +672,12 @@ public class ActdProfileUploader implements ProfileUploader {
                             try {
                                 addBuild(buildRequest);
                             } catch (IOException e) {
-                                throw new UncheckedIOException(e);
+                                String req =
+                                        new GsonBuilder()
+                                                .setPrettyPrinting()
+                                                .create()
+                                                .toJson(buildRequest);
+                                throw new UncheckedIOException("failed request to Dana: " + req, e);
                             }
                         });
 
@@ -685,7 +690,12 @@ public class ActdProfileUploader implements ProfileUploader {
                             try {
                                 addSerie(serieRequest);
                             } catch (IOException e) {
-                                throw new UncheckedIOException(e);
+                                String req =
+                                        new GsonBuilder()
+                                                .setPrettyPrinting()
+                                                .create()
+                                                .toJson(serieRequest);
+                                throw new UncheckedIOException("failed request to Dana: " + req, e);
                             }
                         });
 
@@ -698,7 +708,12 @@ public class ActdProfileUploader implements ProfileUploader {
                             try {
                                 addSample(sampleRequest);
                             } catch (IOException e) {
-                                throw new UncheckedIOException(e);
+                                String req =
+                                        new GsonBuilder()
+                                                .setPrettyPrinting()
+                                                .create()
+                                                .toJson(sampleRequest);
+                                throw new UncheckedIOException("failed request to Dana: " + req, e);
                             }
                         });
     }
