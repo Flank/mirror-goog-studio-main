@@ -25,7 +25,7 @@
                       __attribute__((optimize("-O0")))\
                       __attribute__((optnone))
 
-using profiler::backtrace;
+using profiler::GetBacktrace;
 using std::uintptr_t;
 using std::vector;
 
@@ -58,7 +58,7 @@ void DONT_OPTIMIZE FrameFunc(BacktraceTestContext *context, size_t n) {
   size_t next_n = n + 1;
   size_t depth = static_cast<size_t>(context->depth);
   if (next_n >= context->functions.size() || next_n >= depth) {
-    context->backtrace = backtrace(context->backtrace_size);
+    context->backtrace = GetBacktrace(context->backtrace_size);
   } else {
     context->functions[next_n](context, next_n);
   }

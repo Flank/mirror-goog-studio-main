@@ -87,6 +87,16 @@ void EnqueueAllocationEvents(proto::BatchAllocationSample& request) {
       }});
 }
 
+void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request) {
+  request.set_process_id(getpid());
+
+  Agent::Instance().memory_component().SubmitMemoryTasks(
+      {[request](InternalMemoryService::Stub& stub, ClientContext& ctx) {
+        EmptyMemoryReply reply;
+        return stub.RecordJNIRefEvents(&ctx, request, &reply);
+      }});
+}
+
 }  // namespace profiler
 
 extern "C" {

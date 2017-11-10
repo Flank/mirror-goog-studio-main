@@ -57,7 +57,7 @@ _Unwind_Reason_Code UnwindCallback(_Unwind_Context* unwind_ctx, void* arg) {
   }
 }
 
-vector<uintptr_t> backtrace(int max_frames) {
+vector<uintptr_t> GetBacktrace(int max_frames) {
   BacktraceContext backtrace_context;
   backtrace_context.max_frames = static_cast<size_t>(max_frames);
   // One frame for profiler::backtrace itself needs to be skipped.

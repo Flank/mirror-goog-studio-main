@@ -22,7 +22,6 @@
 #include <string>
 
 #include "agent/agent.h"
-#include "jni_function_table.h"
 #include "jvmti_helper.h"
 #include "memory/memory_tracking_env.h"
 #include "scoped_local_ref.h"
@@ -416,20 +415,10 @@ extern "C" JNIEXPORT jint JNICALL Agent_OnAttach(JavaVM* vm, char* options,
   }
   jvmti_env->Deallocate(reinterpret_cast<unsigned char*>(loaded_classes));
 
-  auto mem_env = MemoryTrackingEnv::Instance(
-      vm, agent_config.mem_config().use_live_alloc(),
-      agent_config.mem_config().max_stack_depth());
-
-  // Register a new JNI env function table, only if perfa needs to track
-  // allocation and deletion of JNI global references. JNI table is
-  // not used for anything else yet.
-  if (agent_config.mem_config().track_global_jni_refs()) {
-    if (!RegisterNewJniTable(jvmti_env, mem_env)) {
-      Log::E("Error while register new JNI table.");
-      return JNI_ERR;
-    }
-    Log::V("New JNI function table registered.");
-  }
+  MemoryTrackingEnv::Instance(vm,
+                            agent_config.mem_config().use_live_alloc(),
+                            agent_config.mem_config().max_stack_depth(),
+                            agent_config.mem_config().track_global_jni_refs());
 
   return JNI_OK;
 }

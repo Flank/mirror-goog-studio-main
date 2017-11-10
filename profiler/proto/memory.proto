@@ -532,7 +532,12 @@ message JNIGlobalReferenceEvent {
   int64 timestamp = 2;
   NativeBacktrace backtrace = 3;
   int32 object_tag = 4;
+
+  // Same as in AllocationEvent.
   int32 thread_id = 5;
+
+  // Same as in AllocationEvent.
+  string thread_name = 10;
 }
 
 message JNIGlobalRefsEventsRequest {

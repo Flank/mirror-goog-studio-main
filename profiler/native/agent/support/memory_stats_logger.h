@@ -34,6 +34,10 @@ void EnqueueGcStats(int64_t start_time, int64_t end_time);
 // Note the non-const request, as pid is set on the request before the queue.
 void EnqueueAllocationEvents(proto::BatchAllocationSample& request);
 
+// Queues the BatchJNIGlobalRefEvent to be sent to perfd.
+// Note the non-const request, as pid is set on the request before the queue.
+void EnqueueJNIGlobalRefEvents(proto::BatchJNIGlobalRefEvent& request);
+
 }  // end of namespace profiler
 
 #endif  // MEMORY_STATS_LOGGER_H
