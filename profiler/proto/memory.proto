@@ -52,12 +52,12 @@ service MemoryService {
   rpc TrackAllocations(TrackAllocationsRequest)
       returns (TrackAllocationsResponse) {}
 
-  // Post-O only: Suspend allocation tracking when switching to another
+  // O+ only: Suspend allocation tracking when switching to another
   // session to optimize the performance.
   // This call will disable allocation callbacks and clear the event queue.
   rpc SuspendTrackAllocations(SuspendTrackAllocationsRequest)
       returns (SuspendTrackAllocationsResponse) {}
-  // Post-O only: Resume allocation tracking when switching back.
+  // O+ only: Resume allocation tracking when switching back.
   // This call will retrieve class data from beginning and enable allocation
   // callbacks.
   rpc ResumeTrackAllocations(ResumeTrackAllocationsRequest)
@@ -79,6 +79,11 @@ service MemoryService {
   // and collected within the time range, it would not be included in the result.
   rpc GetAllocations(AllocationSnapshotRequest)
       returns (BatchAllocationSample) {}
+
+  // O+ studio-side only: inquire for the latest timestamp for which alloc/free
+  // data is available for a particular session.
+  rpc GetLatestAllocationTime(LatestAllocationTimeRequest)
+      returns (LatestAllocationTimeResponse) {}
 
   // O+ studio-side only: Grabs the allocation classes and callstack info for
   // GetAllocations results.
@@ -349,6 +354,15 @@ message LegacyAllocationContextsRequest {
   Session session = 2;
   repeated int32 class_ids = 3;
   repeated int32 stack_ids = 4;
+}
+
+message LatestAllocationTimeRequest {
+  int32 process_id = 1;
+  Session session = 2;
+}
+
+message LatestAllocationTimeResponse {
+  int64 timestamp = 1;
 }
 
 message AllocationContextsRequest {
