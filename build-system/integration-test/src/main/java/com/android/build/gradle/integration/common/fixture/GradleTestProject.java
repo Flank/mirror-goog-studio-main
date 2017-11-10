@@ -78,6 +78,7 @@ import org.gradle.tooling.GradleConnector;
 import org.gradle.tooling.ProjectConnection;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.gradle.util.GradleVersion;
+import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -107,6 +108,8 @@ public final class GradleTestProject implements TestRule {
     public static final String DEVICE_PROVIDER_NAME =
             REMOTE_TEST_PROVIDER != null ? REMOTE_TEST_PROVIDER : BuilderConstants.CONNECTED;
 
+    private static final boolean USE_LATEST_NIGHTLY_GRADLE_VERSION =
+            Boolean.parseBoolean(System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
     public static final String GRADLE_TEST_VERSION;
 
     public static final String ANDROID_GRADLE_PLUGIN_VERSION;
@@ -146,17 +149,14 @@ public final class GradleTestProject implements TestRule {
 
             GRADLE_USER_HOME = getGradleUserHome(BUILD_DIR);
 
-            boolean useNightly =
-                    Boolean.parseBoolean(
-                            System.getenv().getOrDefault("USE_GRADLE_NIGHTLY", "false"));
-
-            String nightlyVersion = getLatestGradleCheckedIn();
-            if (useNightly) {
-                assertNotNull("Failed to find latest nightly version.", nightlyVersion);
+            if (USE_LATEST_NIGHTLY_GRADLE_VERSION) {
+                GRADLE_TEST_VERSION =
+                        Preconditions.checkNotNull(
+                                getLatestGradleCheckedIn(),
+                                "Failed to find latest nightly version.");
+            } else {
+                GRADLE_TEST_VERSION = BasePlugin.GRADLE_MIN_VERSION.toString();
             }
-
-            GRADLE_TEST_VERSION =
-                    useNightly ? nightlyVersion : BasePlugin.GRADLE_MIN_VERSION.toString();
 
             // These are some properties that we use in the integration test projects, when generating
             // build.gradle files. In case you would like to change any of the parameters, for instance
@@ -406,6 +406,14 @@ public final class GradleTestProject implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
+                if (USE_LATEST_NIGHTLY_GRADLE_VERSION
+                        && GRADLE_TEST_VERSION.equals(BasePlugin.GRADLE_MIN_VERSION.toString())) {
+                    String errorMessage =
+                            "Running tests with gradle nightly skipped as the minimum plugin version is equal to the latest nightly version. "
+                                    + description;
+                    System.err.println(errorMessage);
+                    throw new AssumptionViolatedException(errorMessage);
+                }
                 createTestDirectory(description.getTestClass(), description.getMethodName());
                 boolean testFailed = false;
                 try {

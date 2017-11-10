@@ -157,12 +157,11 @@ public final class BenchmarkRecorder {
 
         GradleBuildProfile profile = benchmarkResult.getProfile();
 
-        if (profile.hasGradleVersion()) {
-            if (profile.getGradleVersion().endsWith("+0000")
-                    || !Strings.isNullOrEmpty(System.getenv("USE_GRADLE_NIGHTLY"))) {
-                // Using nightly gradle version.
-                flags.setGradleVersion(GradleBenchmarkResult.Flags.GradleVersion.UPCOMING_GRADLE);
-            }
+        // The environment variable USE_GRADLE_NIGHTLY is somewhat misnamed,
+        // It really means test against the newest version that we have checked in.
+        // Those tests will be skipped if that is the same as the minimum version.
+        if (!Strings.isNullOrEmpty(System.getenv("USE_GRADLE_NIGHTLY"))) {
+            flags.setGradleVersion(GradleBenchmarkResult.Flags.GradleVersion.UPCOMING_GRADLE);
         }
 
         benchmarkResult.setFlags(flags);
