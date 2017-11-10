@@ -16,15 +16,14 @@
 
 package com.android.build.gradle.internal.tasks
 
-import com.android.build.gradle.BaseExtension
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.DefaultTask
+import org.gradle.api.file.RegularFile
+import org.gradle.api.provider.Provider
 
-class GatherAndroidModuleInfo : GatherModuleInfo() {
+abstract class GatherModuleInfoTask : DefaultTask() {
 
-    lateinit var extension: BaseExtension
+    lateinit var outputProvider: Provider<RegularFile>
 
-    @TaskAction
-    fun action() {
-
-    }
+    var hasKotlin = false
+    lateinit var pluginName: String
 }

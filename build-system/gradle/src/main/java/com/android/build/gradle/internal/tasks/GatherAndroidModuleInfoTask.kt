@@ -19,12 +19,17 @@ package com.android.build.gradle.internal.tasks
 import com.android.build.gradle.BaseExtension
 import org.gradle.api.tasks.TaskAction
 
-class GatherJavaModuleInfo : GatherModuleInfo() {
+open class GatherAndroidModuleInfoTask : GatherModuleInfoTask() {
 
     lateinit var extension: BaseExtension
 
     @TaskAction
     fun action() {
+        ModuleInfo(
+                project.path,
+                pluginName,
+                hasKotlin
 
+        ).save(outputProvider.get().asFile)
     }
 }

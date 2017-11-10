@@ -16,18 +16,17 @@
 
 package com.android.build.gradle.internal.tasks
 
-import org.gradle.api.DefaultTask
-import org.gradle.api.file.RegularFile
-import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.OutputFile
-import java.io.File
+import org.gradle.api.tasks.TaskAction
 
-abstract class GatherModuleInfo : DefaultTask() {
+open class GatherJavaModuleInfoTask : GatherModuleInfoTask() {
 
-    lateinit var outputProvider: Provider<RegularFile>
+    @TaskAction
+    fun action() {
+        ModuleInfo(
+                project.path,
+                pluginName,
+                hasKotlin
 
-    @get:OutputFile
-    val outputFile: File
-        get() = outputProvider.get().asFile
-
+        ).save(outputProvider.get().asFile)
+    }
 }

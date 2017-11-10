@@ -140,8 +140,8 @@ public final class SubStream {
 
         // just in case
         FileUtils.mkdirs(rootFolder);
-        Files.write(
-                gson.toJson(subStreams), new File(rootFolder, FN_FOLDER_CONTENT), Charsets.UTF_8);
+        Files.asCharSink(new File(rootFolder, FN_FOLDER_CONTENT), Charsets.UTF_8)
+                .write(gson.toJson(subStreams));
     }
 
     private String computeFilename() {
