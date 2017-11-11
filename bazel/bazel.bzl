@@ -435,9 +435,14 @@ def iml_module(name,
 
 def split_srcs(src_dirs, res_dirs, exclude):
   roots = src_dirs + res_dirs
+  exts = ["java", "kt", "groovy", "DS_Store", "form", "flex"]
+  excludes = []
+  for root in roots:
+    excludes += [ root + "/**/*." + ext for ext in exts]
+
   resources = native.glob(
       include = [src + "/**" for src in roots],
-      exclude = ["**/*.java", "**/*.kt", "**/*.groovy", "**/.DS_Store", "**/*.form", "**/*.flex"]
+      exclude = excludes,
   )
   javas = native.glob([src + "/**/*.java" for src in src_dirs], exclude)
   kotlins = native.glob([src + "/**/*.kt" for src in src_dirs], exclude)
