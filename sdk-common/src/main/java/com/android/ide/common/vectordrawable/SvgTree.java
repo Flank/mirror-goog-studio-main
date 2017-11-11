@@ -26,7 +26,12 @@ import java.awt.geom.AffineTransform;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.util.*;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.w3c.dom.Document;
@@ -297,9 +302,20 @@ class SvgTree {
      *
      * @return the parent node, or null if node is not in the tree.
      */
-    public @Nullable SvgGroupNode findParent(@NonNull SvgNode node) {
+    @Nullable
+    public SvgGroupNode findParent(@NonNull SvgNode node) {
         SvgGroupNode[] result = new SvgGroupNode[1];
         mRoot.findParent(node, result);
         return result[0];
+    }
+
+    /**
+     * Returns a {@link DecimalFormat] of sufficient precision to use for formatting coordinate
+     * values within the viewport.
+     */
+    public DecimalFormat getCoordinateFormat() {
+        float viewportWidth = getViewportWidth();
+        float viewportHeight = getViewportHeight();
+        return VdUtil.getCoordinateFormat(Math.max(viewportHeight, viewportWidth));
     }
 }

@@ -45,7 +45,7 @@ abstract class SvgNode {
 
     protected final String mName;
     // Keep a reference to the tree in order to dump the error log.
-    private final SvgTree mSvgTree;
+    protected final SvgTree mSvgTree;
     // Use document node to get the line number for error reporting.
     private final Node mDocumentNode;
 
@@ -232,26 +232,6 @@ abstract class SvgNode {
 
     public abstract void flatten(AffineTransform transform);
 
-    protected String getDecimalFormatString() {
-        float viewportWidth = getTree().getViewportWidth();
-        float viewportHeight = getTree().getViewportHeight();
-        float minSize = Math.min(viewportHeight, viewportWidth);
-        float exponent = Math.round(Math.log10(minSize));
-        int decimalPlace = (int) Math.floor(exponent - 4);
-        StringBuilder decimalFormatStringBuilder = new StringBuilder("#");
-        if (decimalPlace < 0) {
-            // Build a string with decimal places for "#.##...", and cap on 6 digits.
-            if (decimalPlace < -6) {
-                decimalPlace = -6;
-            }
-            decimalFormatStringBuilder.append('.');
-            for (int i = 0; i < -decimalPlace; i++) {
-                decimalFormatStringBuilder.append('#');
-            }
-        }
-        return decimalFormatStringBuilder.toString();
-    }
-
     /**
      * Returns a String containing the value of the given attribute. Returns an empty string if the
      * attribute does not exist.
@@ -276,5 +256,4 @@ abstract class SvgNode {
         newInstance.fillEmptyAttributes(mVdAttributesMap);
         newInstance.mLocalTransform = (AffineTransform) mLocalTransform.clone();
     }
-
 }

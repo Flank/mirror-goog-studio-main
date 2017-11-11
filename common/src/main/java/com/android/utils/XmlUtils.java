@@ -799,19 +799,43 @@ public class XmlUtils {
         // We use Float.toString as opposed to Double.toString to avoid writing too many
         // insignificant digits.
         String result = Float.toString((float) value);
-        int pos = result.lastIndexOf('.');
+        return trimInsignificantZeros(result);
+    }
+
+    /**
+     * Removes trailing zeros after the decimal dot and also the dot itself if there were non-zero
+     * digits after it.
+     *
+     * @param floatingPointNumber the string representing a floating point number
+     * @return the original number with trailing zeros removed
+     */
+    public static String trimInsignificantZeros(String floatingPointNumber) {
+        int pos = floatingPointNumber.lastIndexOf('.');
         if (pos < 0) {
-            return result;
+            return floatingPointNumber;
         }
         if (pos == 0) {
             pos = 2;
         }
 
-        int i = result.length();
-        while (--i > pos && result.charAt(i) == '0') {
-            // Skip trailing zeros.
+        int exponent = floatingPointNumber.indexOf('e', pos);
+        if (exponent < 0) {
+            exponent = floatingPointNumber.indexOf('E', pos);
         }
-        return result.substring(0, i == pos ? i : i + 1);
+        int i = exponent >= 0 ? exponent : floatingPointNumber.length();
+        while (--i > pos) {
+            if (floatingPointNumber.charAt(i) != '0') {
+                i++;
+                break;
+            }
+        }
+        if (exponent < 0) {
+            return floatingPointNumber.substring(0, i);
+        } else if (exponent == i) {
+            return floatingPointNumber;
+        } else {
+            return floatingPointNumber.substring(0, i) + floatingPointNumber.substring(exponent);
+        }
     }
 
     /**

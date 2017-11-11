@@ -20,17 +20,17 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import javax.imageio.ImageIO;
 
 /**
  * Shared test infrastructure for asset (either bitmap or vector) generator.
  */
 public class GeneratorTester {
-
   private final String mTestDataRelPath;
 
   private GeneratorTester(String testDataRelPath) {
@@ -41,22 +41,29 @@ public class GeneratorTester {
     return new GeneratorTester(testDataRelPath);
   }
 
+  public String getTestDataRelPath() {
+    return mTestDataRelPath;
+  }
+
   public String generateGoldenImage(BufferedImage goldenImage, String missingFilePath,
           String filePath) throws IOException {
-    File targetDir = getTargetDir();
-    if (targetDir == null) {
-      fail(
-        "Did not find " + missingFilePath + ". Set $ANDROID_SRC to have it created automatically");
+    File file = new File(missingFilePath);
+    if (!file.isAbsolute()) {
+      File targetDir = getTargetDir();
+      if (targetDir == null) {
+        fail("Did not find " + missingFilePath
+                + ". Set $ANDROID_SRC to have it created automatically");
+      }
+      file = new File(targetDir, filePath);
     }
-    File fileName = new File(targetDir, filePath);
-    assertFalse(fileName.exists());
-    if (!fileName.getParentFile().exists()) {
-      boolean mkdir = fileName.getParentFile().mkdirs();
-      assertTrue(fileName.getParent(), mkdir);
+    assertFalse(file.exists());
+    if (!file.getParentFile().exists()) {
+      boolean mkdir = file.getParentFile().mkdirs();
+      assertTrue(file.getParent(), mkdir);
     }
 
-    ImageIO.write(goldenImage, "PNG", fileName);
-    return fileName.getPath();
+    ImageIO.write(goldenImage, "PNG", file);
+    return file.getPath();
   }
 
   public static void assertImageSimilar(String imageName,
@@ -168,7 +175,7 @@ public class GeneratorTester {
   }
 
   /**
-   * Get the location to write missing golden files to
+   * Returns the location to write missing golden files to.
    */
   private File getTargetDir() {
     // Set $ANDROID_SRC to point to your git AOSP working tree

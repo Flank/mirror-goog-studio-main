@@ -393,8 +393,8 @@ class SvgLeafNode extends SvgNode {
         if (!finalTransform.isIdentity() || needsConvertRelativeMoveAfterClose) {
             VdPath.Node.transform(finalTransform, n);
         }
-        String decimalFormatString = getDecimalFormatString();
-        mPathData = VdPath.Node.NodeListToString(n, decimalFormatString);
+        DecimalFormat decimalFormat = mSvgTree.getCoordinateFormat();
+        mPathData = VdPath.Node.nodeListToString(n, decimalFormat);
     }
 
     @Override
@@ -468,5 +468,4 @@ class SvgLeafNode extends SvgNode {
             writer.write("</path>\n");
         }
     }
-
 }
