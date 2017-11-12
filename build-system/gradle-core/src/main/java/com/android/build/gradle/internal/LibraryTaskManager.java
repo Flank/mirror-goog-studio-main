@@ -217,10 +217,6 @@ public class LibraryTaskManager extends TaskManager {
                 projectPath,
                 variantName,
                 () -> {
-                    // create data binding merge task before the javac task so that it can
-                    // parse jars before any consumer
-                    createDataBindingMergeArtifactsTaskIfNecessary(variantScope);
-
                     // Add data binding tasks if enabled
                     createDataBindingTasksIfNecessary(variantScope, MergeType.PACKAGE);
 

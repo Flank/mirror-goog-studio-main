@@ -79,6 +79,10 @@ open class AndroidZip : Zip() {
                 bundle.from(
                         variantScope.getOutput(TaskOutputType.DATA_BINDING_ARTIFACT),
                         prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR))
+                bundle.from(
+                        variantScope.getOutput(TaskOutputType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
+                        prependToCopyPath(
+                                DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR))
             }
             bundle.from(variantScope.getOutput(TaskOutputType.LIBRARY_MANIFEST))
             // TODO: this should be unconditional b/69358522

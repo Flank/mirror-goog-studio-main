@@ -62,6 +62,8 @@ public class AndroidArtifacts {
     private static final String TYPE_SYMBOL_WITH_PACKAGE_NAME = "android-symbol-with-package-name";
     private static final String TYPE_PROGUARD_RULES = "android-proguad";
     private static final String TYPE_DATA_BINDING_ARTIFACT = "android-databinding";
+    private static final String TYPE_DATA_BINDING_BASE_CLASS_LOG_ARTIFACT =
+            "android-databinding-class-log";
     private static final String TYPE_EXPLODED_AAR = "android-exploded-aar";
 
     // types for additional artifacts to go with APK
@@ -143,6 +145,7 @@ public class AndroidArtifacts {
         AIDL(TYPE_AIDL),
         RENDERSCRIPT(TYPE_RENDERSCRIPT),
         DATA_BINDING_ARTIFACT(TYPE_DATA_BINDING_ARTIFACT),
+        DATA_BINDING_BASE_CLASS_LOG_ARTIFACT(TYPE_DATA_BINDING_BASE_CLASS_LOG_ARTIFACT),
         COMPILE_ONLY_NAMESPACED_R_CLASS_JAR(TYPE_ANDROID_NAMESPACED_R_CLASS_JAR),
 
         // runtime only elements

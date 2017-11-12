@@ -173,7 +173,11 @@ public class VariantPublishingSpec {
                         outputSpec(
                                 TaskOutputType.DATA_BINDING_ARTIFACT,
                                 ArtifactType.DATA_BINDING_ARTIFACT,
-                                API_ELEMENTS_ONLY),
+                                API_AND_RUNTIME_ELEMENTS),
+                        outputSpec(
+                                TaskOutputType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
+                                ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
+                                API_AND_RUNTIME_ELEMENTS),
                         outputSpec(LIBRARY_CLASSES, ArtifactType.CLASSES, API_AND_RUNTIME_ELEMENTS),
                         outputSpec(FULL_JAR, ArtifactType.JAR, API_AND_RUNTIME_ELEMENTS),
                         outputSpec(LIBRARY_JAVA_RES, ArtifactType.JAVA_RES, RUNTIME_ELEMENTS_ONLY),

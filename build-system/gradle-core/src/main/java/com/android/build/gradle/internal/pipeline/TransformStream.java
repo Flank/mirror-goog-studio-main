@@ -60,7 +60,8 @@ public abstract class TransformStream {
             new PatternSet().include("**/*.so").include("**/*.jar");
     private static final PatternSet INCLUDE_DEX =
             new PatternSet().include("**/*.dex").include("**/*.jar");
-    private static final PatternSet INCLUDE_DATABINDING = new PatternSet();
+    private static final PatternSet INCLUDE_DATABINDING_BIN = new PatternSet();
+    private static final PatternSet INCLUDE_DATABINDING_BASE_LOG = new PatternSet();
 
     @NonNull private final String name;
     @NonNull private final Set<ContentType> contentTypes;
@@ -185,7 +186,9 @@ public abstract class TransformStream {
                 case CLASSES_ENHANCED:
                     return INCLUDE_CLASSES;
                 case DATA_BINDING:
-                    return INCLUDE_DATABINDING;
+                    return INCLUDE_DATABINDING_BIN;
+                case DATA_BINDING_BASE_CLASS_LOG:
+                    return INCLUDE_DATABINDING_BASE_LOG;
                 default:
                     throw new RuntimeException("Unsupported ExtendedContentType value: " + type);
             }

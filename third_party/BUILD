@@ -208,6 +208,13 @@ maven_java_library(
 )
 
 maven_java_library(
+    name = "com.squareup_javapoet",
+    export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/javapoet/1.8.0:jar",
+    visibility = ["//visibility:public"],
+    exports = [],
+)
+
+maven_java_library(
     name = "com.squareup_javawriter",
     export_artifact = "//prebuilts/tools/common/m2/repository/com/squareup/javawriter/2.5.0:jar",
     visibility = ["//visibility:public"],

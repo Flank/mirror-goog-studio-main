@@ -82,6 +82,7 @@ public class AarTransform extends ArtifactTransform {
             ArtifactType.PUBLIC_RES,
             ArtifactType.SYMBOL_LIST,
             ArtifactType.DATA_BINDING_ARTIFACT,
+            ArtifactType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT,
             ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
             ArtifactType.RES_STATIC_LIBRARY,
             ArtifactType.RES_SHARED_STATIC_LIBRARY,
@@ -147,6 +148,11 @@ public class AarTransform extends ArtifactTransform {
             case DATA_BINDING_ARTIFACT:
                 return listIfExists(
                         new File(input, DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR));
+            case DATA_BINDING_BASE_CLASS_LOG_ARTIFACT:
+                return listIfExists(
+                        new File(
+                                input,
+                                DataBindingBuilder.DATA_BINDING_CLASS_LOG_ROOT_FOLDER_IN_AAR));
             default:
                 throw new RuntimeException("Unsupported type in AarTransform: " + targetType);
         }

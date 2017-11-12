@@ -1441,54 +1441,50 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getClassOutputForDataBinding() {
-        return new File(globalScope.getGeneratedDir(),
-                "source/dataBinding/" + getVariantConfiguration().getDirName());
+        return new File(
+                globalScope.getGeneratedDir(),
+                "source/dataBinding/trigger/" + getVariantConfiguration().getDirName());
     }
+
 
     @Override
     @NonNull
     public File getLayoutInfoOutputForDataBinding() {
-        return new File(globalScope.getIntermediatesDir() + "/data-binding-info/" +
-                getVariantConfiguration().getDirName());
+        return dataBindingIntermediate("layout-info");
     }
 
     @Override
     @NonNull
     public File getLayoutFolderOutputForDataBinding() {
-        return new File(globalScope.getIntermediatesDir() + "/data-binding-layout-out/" +
-                getVariantConfiguration().getDirName());
+        return dataBindingIntermediate("layout-out");
     }
 
     @Override
     @NonNull
     public File getLayoutInputFolderForDataBinding() {
-        return new File(
-                globalScope.getIntermediatesDir()
-                        + "/data-binding-layout-in/"
-                        + getVariantConfiguration().getDirName());
+        return dataBindingIntermediate("layout-in");
     }
 
     @Override
     @NonNull
     public File getBuildFolderForDataBindingCompiler() {
-        return new File(globalScope.getIntermediatesDir() + "/data-binding-compiler/" +
-                getVariantConfiguration().getDirName());
+        return dataBindingIntermediate("compiler");
     }
 
     @Override
     @NonNull
     public File getGeneratedClassListOutputFileForDataBinding() {
-        return new File(
-                globalScope.getIntermediatesDir()
-                        + "/data-binding-class-list/"
-                        + getVariantConfiguration().getDirName()
-                        + "/_generated.txt");
+        return new File(dataBindingIntermediate("class-list"), "_generated.txt");
     }
 
     @NonNull
     @Override
-    public File getBundleFolderForDataBinding() {
-        return intermediate("data-binding-bundle");
+    public File getBundleArtifactFolderForDataBinding() {
+        return dataBindingIntermediate("bundle-bin");
+    }
+
+    private File dataBindingIntermediate(String name) {
+        return intermediate("data-binding", name);
     }
 
     @Override

@@ -18,6 +18,8 @@ package com.android.build.gradle.integration.databinding;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.options.BooleanOption;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
@@ -25,23 +27,37 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(FilterableParameterized.class)
 public class DataBindingExternalArtifactDependencyTest {
     private static final String MAVEN_REPO_ARG_PREFIX = "-Ptest_maven_repo=";
 
-    @Rule
-    public GradleTestProject library =
-            GradleTestProject.builder()
-                    .fromDataBindingIntegrationTest("IndependentLibrary")
-                    .create();
+    @Rule public GradleTestProject library;
 
-    @Rule
-    public GradleTestProject app =
-            GradleTestProject.builder()
-                    .fromDataBindingIntegrationTest("MultiModuleTestApp")
-                    .create();
+    @Rule public GradleTestProject app;
 
     @Rule public TemporaryFolder mavenRepo = new TemporaryFolder();
+
+    public DataBindingExternalArtifactDependencyTest(boolean enableV2) {
+        String v2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + enableV2;
+        library =
+                GradleTestProject.builder()
+                        .fromDataBindingIntegrationTest("IndependentLibrary")
+                        .addGradleProperties(v2)
+                        .create();
+        app =
+                GradleTestProject.builder()
+                        .fromDataBindingIntegrationTest("MultiModuleTestApp")
+                        .addGradleProperties(v2)
+                        .create();
+    }
+
+    @Parameterized.Parameters(name = "useV2_{0}")
+    public static Iterable<Boolean> classNames() {
+        return ImmutableList.of(true, false);
+    }
 
     @Before
     public void clean() throws IOException, InterruptedException {

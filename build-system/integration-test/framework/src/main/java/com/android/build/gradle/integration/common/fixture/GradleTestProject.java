@@ -801,6 +801,15 @@ public final class GradleTestProject implements TestRule {
         return FileUtils.join(getIntermediatesDir(), paths);
     }
 
+    /** Returns a File under the generated folder. */
+    public File getGeneratedSourceFile(String... paths) {
+        return FileUtils.join(getGeneratedDir(), paths);
+    }
+
+    public File getGeneratedDir() {
+        return FileUtils.join(getTestDir(), "build", AndroidProject.FD_GENERATED);
+    }
+
     /** Returns the directory to look for profiles in. Defaults to build/profile/ */
     @NonNull
     public Path getProfileDirectory() {

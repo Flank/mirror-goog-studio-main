@@ -373,18 +373,6 @@ public abstract class BaseVariantImpl implements BaseVariant {
                         generatorKey);
     }
 
-    @NonNull
-    @Override
-    public FileCollection getDataBindingDependencyArtifacts() {
-        VariantScope scope = getVariantData().getScope();
-        if (scope.hasOutput(TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
-            return scope.getOutput(
-                    TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS);
-        }
-
-        return scope.getGlobalScope().getProject().files();
-    }
-
     @Override
     public void buildConfigField(
             @NonNull String type, @NonNull String name, @NonNull String value) {

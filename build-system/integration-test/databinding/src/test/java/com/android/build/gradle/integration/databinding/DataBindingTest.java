@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.apk.Aar;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.Dex;
@@ -38,21 +39,23 @@ import org.junit.runners.Parameterized;
 @RunWith(FilterableParameterized.class)
 public class DataBindingTest {
 
-    @Parameterized.Parameters(name = "library={0},withoutAdapters={1}")
+    @Parameterized.Parameters(name = "library={0},withoutAdapters={1},useV2={2}")
     public static Collection<Object[]> getParameters() {
         List<Object[]> options = new ArrayList<>();
-        for (int i = 0; i < 4; i++) {
-            options.add(new Object[] {(i & 1) != 0, (i & 2) != 0});
+        for (int i = 0; i < 8; i++) {
+            options.add(new Object[] {(i & 1) != 0, (i & 2) != 0, (i & 4) != 0});
         }
         return options;
     }
     private final boolean myWithoutAdapters;
     private final boolean myLibrary;
     private final String buildFile;
+    private final boolean myUseV2;
 
-    public DataBindingTest(boolean library, boolean withoutAdapters) {
+    public DataBindingTest(boolean library, boolean withoutAdapters, boolean useV2) {
         myWithoutAdapters = withoutAdapters;
         myLibrary = library;
+        myUseV2 = useV2;
         List<String> options = new ArrayList<>();
         if (library) {
             options.add("library");
@@ -60,7 +63,12 @@ public class DataBindingTest {
         if (withoutAdapters) {
             options.add("withoutadapters");
         }
-        project = GradleTestProject.builder().fromTestProject("databinding").create();
+        String v2 = BooleanOption.ENABLE_DATA_BINDING_V2.getPropertyName() + "=" + useV2;
+        project =
+                GradleTestProject.builder()
+                        .fromTestProject("databinding")
+                        .addGradleProperties(v2)
+                        .create();
         buildFile = options.isEmpty()
                 ? null
                 : "build." + Joiner.on('-').join(options) + ".gradle";
@@ -74,11 +82,19 @@ public class DataBindingTest {
         project.setBuildFile(buildFile);
         GradleBuildResult result = project.executor().run("assembleDebug");
 
+        String bindingClass = "Landroid/databinding/testapp/databinding/ActivityMainBinding;";
+        // only in v2
+        String implClass = "Landroid/databinding/testapp/databinding/ActivityMainBindingImpl;";
         if (myLibrary) {
             Aar aar = project.getAar("debug");
-            assertThat(aar)
-                    .doesNotContainClass(
-                            "Landroid/databinding/testapp/databinding/ActivityMainBinding;");
+            if (myUseV2) {
+                assertThat(aar).containsClass(bindingClass);
+                assertThat(aar).doesNotContainClass(implClass);
+            } else {
+                assertThat(aar).doesNotContainClass(bindingClass);
+                assertThat(aar).doesNotContainClass(implClass);
+            }
+
             assertThat(aar).doesNotContainClass("Landroid/databinding/adapters/Converters;");
             assertThat(aar).doesNotContainClass("Landroid/databinding/DataBindingComponent;");
 
@@ -89,12 +105,16 @@ public class DataBindingTest {
             assertThat(testApk.getFile()).isFile();
             Optional<Dex> dexOptional = testApk.getMainDexFile();
             assertThat(dexOptional).isPresent();
-            MoreTruth.assertThat(dexOptional.get())
-                    .containsClass("Landroid/databinding/testapp/databinding/ActivityMainBinding;");
-
+            MoreTruth.assertThat(dexOptional.get()).containsClass(bindingClass);
+            if (myUseV2) {
+                MoreTruth.assertThat(dexOptional.get()).containsClass(implClass);
+            }
         } else {
             Apk apk = project.getApk("debug");
-            assertThat(apk).containsClass("Landroid/databinding/testapp/databinding/ActivityMainBinding;");
+            assertThat(apk).containsClass(bindingClass);
+            if (myUseV2) {
+                assertThat(apk).containsClass(implClass);
+            }
             assertThat(apk).containsClass("Landroid/databinding/DataBindingComponent;");
             if (myWithoutAdapters) {
                 assertThat(apk).doesNotContainClass("Landroid/databinding/adapters/Converters;");

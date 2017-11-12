@@ -670,12 +670,13 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
 
 
     /**
-     * Returns the original application ID before any overrides from flavors.
-     * If the variant is a test variant, then the application ID is the one coming from the
-     * configuration of the tested variant, and this call is similar to {@link #getApplicationId()}
+     * Returns the original application ID before any overrides from flavors. If the variant is a
+     * test variant, then the application ID is the one coming from the configuration of the tested
+     * variant, and this call is similar to {@link #getApplicationId()}
+     *
      * @return the original application ID
      */
-    @Nullable
+    @NonNull
     public String getOriginalApplicationId() {
         if (mType.isForTesting()) {
             return getApplicationId();
@@ -920,10 +921,8 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         return getTestLabelFromManifest();
     }
 
-    /**
-     * Reads the package name from the manifest. This is unmodified by the build type.
-     */
-    @Nullable
+    /** Reads the package name from the manifest. This is unmodified by the build type. */
+    @NonNull
     public String getPackageFromManifest() {
         checkState(!mType.isForTesting());
 

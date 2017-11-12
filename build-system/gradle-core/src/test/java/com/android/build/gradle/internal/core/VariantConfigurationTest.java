@@ -16,6 +16,7 @@
 
 package com.android.build.gradle.internal.core;
 
+import com.android.annotations.NonNull;
 import com.android.builder.core.DefaultBuildType;
 import com.android.builder.core.DefaultProductFlavor;
 import com.android.builder.core.VariantType;
@@ -163,6 +164,7 @@ public class VariantConfigurationTest extends TestCase {
                         VariantType.DEFAULT,
                         null /*signingConfigOverride*/) {
 
+                    @NonNull
                     @Override
                     public String getPackageFromManifest() {
                         return "fake.package.name";

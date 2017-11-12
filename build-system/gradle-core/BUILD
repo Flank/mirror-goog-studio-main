@@ -123,6 +123,7 @@ kotlin_test(
         "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
         "//tools/base/third_party:junit_junit",
         "//tools/base/third_party:nl.jqno.equalsverifier_equalsverifier",
+        "//tools/base/third_party:org.antlr_antlr-runtime",
         "//tools/base/third_party:org.codehaus.groovy_groovy-all",
         "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
         "//tools/base/third_party:org.jsoup_jsoup",
