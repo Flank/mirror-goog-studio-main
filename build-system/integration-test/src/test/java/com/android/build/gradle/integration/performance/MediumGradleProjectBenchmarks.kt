@@ -133,7 +133,7 @@ object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                 scenario = scenario,
                 benchmark = Logging.Benchmark.PERF_ANDROID_MEDIUM,
                 benchmarkMode = benchmarkMode,
-                postApplyProject = { project, _ ->
+                postApplyProject = { project ->
                     PerformanceTestProjects.initializeWordpress(project)
 
                     if (scenario.flags.multiDex == Logging.GradleBenchmarkResult.Flags.MultiDexMode.NATIVE) {

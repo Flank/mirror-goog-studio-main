@@ -153,12 +153,12 @@ object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                         .withHeap("20G")
                         .create()
                 },
-                postApplyProject = { project, executor ->
+                postApplyProject = { project ->
                     PerformanceTestProjects.initializeUberSkeleton(project)
-                    executor.run("addSources")
                     project
                 },
                 setup = { project, executor, model ->
+                    executor.run("addSources")
                     executor.run("clean")
                     executor.run(":phthalic:assembleDebug")
                     executor.run("clean")

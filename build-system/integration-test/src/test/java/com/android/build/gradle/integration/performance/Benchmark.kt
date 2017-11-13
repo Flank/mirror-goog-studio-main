@@ -31,10 +31,15 @@ data class Benchmark(
         val benchmark: Logging.Benchmark,
         val benchmarkMode: Logging.BenchmarkMode,
         val projectFactory: (GradleTestProjectBuilder) -> GradleTestProject,
-        val postApplyProject: (GradleTestProject, RunGradleTasks) -> GradleTestProject = { p, _ -> p },
+        val postApplyProject: (GradleTestProject) -> GradleTestProject = { p -> p },
         val setup: (GradleTestProject, RunGradleTasks, BuildModel) -> Unit,
         val recordedAction: (RunGradleTasks, BuildModel) -> Unit) {
     fun run() {
+        /*
+         * Any common project configuration should happen here. Note that it isn't possible to take
+         * a subproject until _after_ project.apply has been called, so if you do need to do that
+         * you'll have to supply a postApplyProject function and do it in there.
+         */
         var project = projectFactory(
                 GradleTestProject.builder()
                         .forBenchmarkRecording(BenchmarkRecorder(benchmark, scenario)))
@@ -43,23 +48,25 @@ data class Benchmark(
                 object : Statement() {
                     override fun evaluate() {
                         /*
-                         * This was added for the sole reason of supporting the weird structure of
-                         * the AntennaPod project. Please don't use it unless you've thought very
-                         * hard about alternatives.
+                         * Anything that needs to be done to the project before the executor and
+                         * model are taken from it should happen in the postApplyProject function.
                          *
-                         * The problem arises because calling getSubproject involved a call to
-                         * getTestDir, and getTestDir will fail unless createTestDirectory has been
-                         * called, which is only ever called by apply. So we need to have called
-                         * apply before we call getSubproject, and this hack was the least bad way
-                         * we could think of doing it.
+                         * This is commonly used to do any initialisation, like changing the
+                         * contents of build files and whatnot.
+                         */
+                        project = postApplyProject(project)
+
+                        /*
+                         * Any common configuration for the executor should happen here. The
+                         * philosophy is that the benchmark creator should not have to configure
+                         * the executor, it should be possible for us to do that based on what
+                         * scenario has been passed in.
                          */
                         val executor = project.executor()
                                 .withEnableInfoLogging(false)
                                 .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
                                 .with(BooleanOption.ENABLE_D8, scenario.useD8())
                                 .withUseDexArchive(scenario.useDexArchive())
-
-                        project = postApplyProject(project, executor)
 
                         val model = project.model().ignoreSyncIssues().withoutOfflineFlag()
                         PerformanceTestProjects.assertNoSyncErrors(model.multi.modelMap)
@@ -77,9 +84,15 @@ data class Benchmark(
                          * the executor _or_ the model, or you want to disable recording on one of
                          * them like so:
                          *
-                         *   executor.recordBenchmark(null)
+                         *   executor.dontRecord {
+                         *     // code here...
+                         *   }
+                         *
+                         * This method has the benefit of returning them to whatever state they
+                         * were in previously.
                          */
-                        recordedAction(executor.recordBenchmark(benchmarkMode),
+                        recordedAction(
+                                executor.recordBenchmark(benchmarkMode),
                                 model.recordBenchmark(benchmarkMode))
                     }
                 }

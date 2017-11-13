@@ -38,13 +38,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
             ProjectScenario.DEX_ARCHIVE_MONODEX_J8,
             ProjectScenario.D8_MONODEX_J8)
 
-    private val DEFAULT_SETUP = { project: GradleTestProject, executor: RunGradleTasks, _: BuildModel ->
-        executor.run("assembleDebug", "assembleDebugAndroidTest")
-        executor.run("clean")
-        FileUtils.cleanOutputDir(executor.buildCacheDir)
-    }
-
-    private const val MAIN_ACTIVITY_PATH = "app/src/main/java/de/danoeh/antennapod/activity/MainActivity.java"
+    private const val ACTIVITY_PATH = "app/src/main/java/de/danoeh/antennapod/activity/MainActivity.java"
 
     private val INSTANT_RUN_TARGET_DEVICE_VERSION = AndroidVersion(24, null)
 
@@ -76,7 +70,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE,
                             setup = { project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                addMethodToActivity(project.file(MAIN_ACTIVITY_PATH))
+                                addMethodToActivity(project.file(ACTIVITY_PATH))
                             },
                             recordedAction = { executor, _ -> executor.run(":app:assembleDebug") }
                     ),
@@ -86,7 +80,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
                             setup = { project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                changeActivity(project.file(MAIN_ACTIVITY_PATH))
+                                changeActivity(project.file(ACTIVITY_PATH))
                             },
                             recordedAction = { executor, _ -> executor.run(":app:assembleDebug") }
                     ),
@@ -102,7 +96,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__API_CHANGE,
                             setup = { project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                addMethodToActivity(project.file(MAIN_ACTIVITY_PATH))
+                                addMethodToActivity(project.file(ACTIVITY_PATH))
                             },
                             recordedAction = { executor, _ ->
                                 executor.run(":app:assembleDebug")
@@ -114,7 +108,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                             benchmarkMode = Logging.BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
                             setup = { project, executor, _ ->
                                 executor.run(":app:assembleDebug")
-                                changeActivity(project.file(MAIN_ACTIVITY_PATH))
+                                changeActivity(project.file(ACTIVITY_PATH))
                             },
                             recordedAction = { executor, _ ->
                                 executor.run(":app:assembleDebug")
@@ -161,7 +155,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                 scenario = scenario,
                 benchmark = Logging.Benchmark.ANTENNA_POD,
                 benchmarkMode = benchmarkMode,
-                postApplyProject = { project, _ ->
+                postApplyProject = { project ->
                     PerformanceTestProjects.initializeAntennaPod(project)
                     project.getSubproject("AntennaPod")
                 },
@@ -174,7 +168,9 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                         .create()
                 },
                 setup = { project, executor, model ->
-                    DEFAULT_SETUP(project, executor, model)
+                    executor.run("assembleDebug", "assembleDebugAndroidTest")
+                    executor.run("clean")
+                    FileUtils.cleanOutputDir(executor.buildCacheDir)
                     setup(project, executor, model)
                 },
                 recordedAction = recordedAction
