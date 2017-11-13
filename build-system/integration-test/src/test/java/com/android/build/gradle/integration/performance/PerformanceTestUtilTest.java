@@ -19,14 +19,17 @@ package com.android.build.gradle.integration.performance;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import org.junit.Test;
 
 public final class PerformanceTestUtilTest {
 
     @Test
-    public void checkGetEditType() throws Exception {
+    public void checkGetEditType() {
         Set<PerformanceTestUtil.EditType> editTypes =
                 EnumSet.allOf(PerformanceTestUtil.EditType.class);
         for (Logging.BenchmarkMode mode: PerformanceTestUtil.BENCHMARK_MODES) {
@@ -45,7 +48,7 @@ public final class PerformanceTestUtilTest {
     }
 
     @Test
-    public void checkGetgetSubProjectType() throws Exception {
+    public void checkGetgetSubProjectType() {
         Set<PerformanceTestUtil.SubProjectType> subprojectTypes =
                 EnumSet.allOf(PerformanceTestUtil.SubProjectType.class);
         for (Logging.BenchmarkMode mode: PerformanceTestUtil.BENCHMARK_MODES) {
@@ -61,5 +64,52 @@ public final class PerformanceTestUtilTest {
         }
 
         assertThat(subprojectTypes).named("Subproject types without a benchmark mode").isEmpty();
+    }
+
+    /**
+     * This test makes sure that for many different list sizes, all shards reconstruct back to the
+     * original list.
+     */
+    @Test
+    public void shardCorrectnessTest() {
+        for (int listSize = 0; listSize < 20; listSize++) {
+            List<Integer> list = new ArrayList<>(listSize);
+            for (int i = 0; i < listSize; i++) {
+                list.add(i);
+            }
+
+            for (int numShards = 1; numShards <= listSize; numShards++) {
+                List<Integer> sharded = new ArrayList<>(listSize);
+                for (int i = 0; i < numShards; i++) {
+                    sharded.addAll(PerformanceTestUtil.shard(list, i, numShards));
+                }
+
+                assertThat(sharded).containsExactlyElementsIn(list);
+            }
+        }
+    }
+
+    /**
+     * This test makes sure that shards are equally balanced. We don't want any shards to be
+     * significantly larger than the others.
+     */
+    @Test
+    public void shardBalanceTest() {
+        for (int listSize = 1; listSize < 20; listSize++) {
+            List<Integer> list = new ArrayList<>(listSize);
+            for (int i = 0; i < listSize; i++) {
+                list.add(i);
+            }
+
+            for (int numShards = 1; numShards <= listSize; numShards++) {
+                List<Integer> shardSizes = new ArrayList<>(listSize);
+                for (int i = 0; i < numShards; i++) {
+                    shardSizes.add(PerformanceTestUtil.shard(list, i, numShards).size());
+                }
+
+                int range = Collections.max(shardSizes) - Collections.min(shardSizes);
+                assertThat(range).isLessThan(2);
+            }
+        }
     }
 }

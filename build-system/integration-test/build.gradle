@@ -73,7 +73,8 @@ def testEnvironment =
         System.getenv().findAll { entry ->
             String key = entry.key
             key.startsWith("CUSTOM_") ||
-                    key.startsWith("ACTD_") ||
+                    key.startsWith("ACTD_") || // environment variables for uploading to Dana
+                    key.startsWith("PERF_") || // environment variables for controlling perf tests
                     key == "USE_GRADLE_NIGHTLY" ||
                     key == "BENCHMARK_EXPERIMENT" ||
                     key == "DEBUG_INNER_TEST" ||

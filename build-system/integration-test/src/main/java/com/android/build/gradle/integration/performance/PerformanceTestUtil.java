@@ -17,8 +17,11 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
+import com.google.common.base.Preconditions;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 
 public final class PerformanceTestUtil {
 
@@ -140,5 +143,23 @@ public final class PerformanceTestUtil {
         RES__EDIT,
         /** Adding a resource. */
         RES__ADD,
+    }
+
+    /**
+     * Gets a subset of the given list based on a total number of shards and a given shard number.
+     *
+     * <p>This is used to distribute tests over multiple machines.
+     */
+    @NonNull
+    public static <T> List<T> shard(@NonNull List<T> list, int shardNum, int shardTotal) {
+        Preconditions.checkNotNull(list);
+        Preconditions.checkArgument(
+                shardNum < shardTotal, "shard number must be less than the total number of shards");
+
+        List<T> shard = new ArrayList<>(list.size() / shardTotal + 1);
+        for (int i = shardNum; i < list.size(); i += shardTotal) {
+            shard.add(list.get(i));
+        }
+        return shard;
     }
 }
