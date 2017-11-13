@@ -153,8 +153,6 @@ object MediumGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                 },
                 setup = { project, executor, model ->
                     executor.run("clean")
-                    executor.run("assembleVanillaDebug")
-                    executor.run("clean")
                     FileUtils.cleanOutputDir(executor.buildCacheDir)
                     setup(project, executor, model)
                 },

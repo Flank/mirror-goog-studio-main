@@ -168,7 +168,6 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                         .create()
                 },
                 setup = { project, executor, model ->
-                    executor.run("assembleDebug", "assembleDebugAndroidTest")
                     executor.run("clean")
                     FileUtils.cleanOutputDir(executor.buildCacheDir)
                     setup(project, executor, model)

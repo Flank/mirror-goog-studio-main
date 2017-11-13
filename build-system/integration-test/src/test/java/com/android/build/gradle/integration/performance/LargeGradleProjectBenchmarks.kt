@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.RunGradleTasks
 import com.android.build.gradle.integration.common.utils.ModelHelper
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.utils.FileUtils
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging
 import java.io.File
 import java.nio.file.Paths
@@ -160,8 +161,7 @@ object LargeGradleProjectBenchmarks : Supplier<List<Benchmark>> {
                 setup = { project, executor, model ->
                     executor.run("addSources")
                     executor.run("clean")
-                    executor.run(":phthalic:assembleDebug")
-                    executor.run("clean")
+                    FileUtils.cleanOutputDir(executor.buildCacheDir)
                     setup(project, executor, model)
                 },
                 recordedAction = recordedAction
