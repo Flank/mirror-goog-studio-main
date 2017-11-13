@@ -141,11 +141,9 @@ public class AutoPureSplits {
         expected.add("xhdpi");
         expected.add("xxhdpi");
         expected.add("en");
-        expected.add("fr");
-        expected.add("fr-rBE");
-        expected.add("fr-rCA");
+        expected.add("fr,fr-rBE,fr-rCA");
 
-        assertEquals(9, debugVariantOutput.getOutputs().size());
+        assertThat(debugVariantOutput.getOutputs()).hasSize(7);
         Set<String> actual = new HashSet<>();
         for (OutputFile outputFile : debugVariantOutput.getOutputs()) {
             String filter = ModelHelper.getFilter(outputFile, OutputFile.DENSITY);

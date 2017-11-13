@@ -77,10 +77,17 @@ public class LanguageSplitOptions {
     }
 
     /**
-     * Sets whether the build system should determine the splits based on the "language-*" folders
-     * in the resources. If the auto mode is set to true, the include list will be ignored.
-     * @param auto true to automatically set the splits list based on the folders presence, false
-     *             to use the include list.
+     * Sets whether the build system should determine the splits based on the "values-*" folders in
+     * the resources. If the auto mode is set to true, the include list will be ignored.
+     *
+     * <p>Additionally, if AAPT2 is enabled and resources are included targeting multiple regional
+     * variants of the same language, a single APK will be generated for each such language,
+     * containing all of the resources for all of the targeted regions. For example: if resources
+     * are included in "values-fr/," "values-fr-rCA/", and "values-fr-rBE/", a single configuration
+     * APK will be built containing all of those resources.
+     *
+     * @param auto true to automatically set the splits list based on the folders presence, false to
+     *     use the include list.
      */
     public void setAuto(boolean auto) {
         this.auto = auto;
