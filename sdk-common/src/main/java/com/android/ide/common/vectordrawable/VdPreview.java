@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.NonNull;
@@ -22,25 +21,27 @@ import com.android.ide.common.util.AssetUtil;
 import com.google.common.base.Charsets;
 import com.sun.org.apache.xml.internal.serialize.OutputFormat;
 import com.sun.org.apache.xml.internal.serialize.XMLSerializer;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.Locale;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.awt.image.BufferedImage;
-import java.io.*;
-import java.util.Locale;
-
 /**
- * Generate a Image based on the VectorDrawable's XML content.
+ * Generates a Image based on the VectorDrawable's XML content.
  *
  * <p>This class also contains a main method, which can be used to preview a vector drawable file.
  */
 public class VdPreview {
-
     private static final String ANDROID_ALPHA = "android:alpha";
     private static final String ANDROID_AUTO_MIRRORED = "android:autoMirrored";
     private static final String ANDROID_HEIGHT = "android:height";
@@ -272,15 +273,9 @@ public class VdPreview {
         if (xmlFileContent == null || xmlFileContent.isEmpty()) {
             return null;
         }
-        VdParser p = new VdParser();
-        VdTree vdTree;
 
-        InputStream inputStream = new ByteArrayInputStream(
-            xmlFileContent.getBytes(Charsets.UTF_8));
-        vdTree = p.parse(inputStream, vdErrorLog);
-        if (vdTree == null) {
-            return null;
-        }
+        InputStream inputStream = new ByteArrayInputStream(xmlFileContent.getBytes(Charsets.UTF_8));
+        VdTree vdTree = VdParser.parse(inputStream, vdErrorLog);
 
         return getPreviewFromVectorTree(targetSize, vdTree, vdErrorLog);
     }

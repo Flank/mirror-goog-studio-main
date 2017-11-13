@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import com.android.ide.common.util.AssetUtil;
-import java.awt.*;
+import java.awt.AlphaComposite;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.w3c.dom.Document;
@@ -30,15 +30,15 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Used to represent the whole VectorDrawable XML file's tree.
+ * Represents the whole VectorDrawable XML file's tree.
  */
 class VdTree {
-    private static final Logger logger = Logger.getLogger(VdTree.class.getSimpleName());
-
     private static final String SHAPE_VECTOR = "vector";
     private static final String SHAPE_PATH = "path";
     private static final String SHAPE_GROUP = "group";
     private static final String SHAPE_CLIP_PATH = "clip-path";
+    private static final Pattern ATTRIBUTE_PATTERN =
+            Pattern.compile("^\\s*(\\d+(\\.\\d+)*)\\s*([a-zA-Z]+)\\s*$");
 
     private final VdGroup mRootGroup = new VdGroup();
 
@@ -167,15 +167,11 @@ class VdTree {
     }
 
     private void parseSize(NamedNodeMap attributes) {
-
-        Pattern pattern = Pattern.compile("^\\s*(\\d+(\\.\\d+)*)\\s*([a-zA-Z]+)\\s*$");
-
         int len = attributes.getLength();
-
         for (int i = 0; i < len; i++) {
             String name = attributes.item(i).getNodeName();
             String value = attributes.item(i).getNodeValue();
-            Matcher matcher = pattern.matcher(value);
+            Matcher matcher = ATTRIBUTE_PATTERN.matcher(value);
             float size = 0;
             if (matcher.matches()) {
                 size = Float.parseFloat(matcher.group(1));

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_COLOR;
@@ -174,20 +173,20 @@ abstract class SvgNode {
     }
 
     /**
-     * dump the current node's debug info.
+     * Dumps the current node's debug info.
      */
     public abstract void dumpNode(String indent);
 
-    /** Write the Node content into the VectorDrawable's XML file. */
+    /** Writes the Node content into the VectorDrawable's XML file. */
     public abstract void writeXML(OutputStreamWriter writer, boolean inClipPath) throws IOException;
 
     /**
-     * @return true the node is a group node.
+     * Returns true the node is a group node.
      */
     public abstract boolean isGroupNode();
 
     /**
-     * Transform the current Node with the transformation matrix.
+     * Transforms the current Node with the transformation matrix.
      */
     public abstract void transformIfNeeded(AffineTransform finalTransform);
 
@@ -233,8 +232,8 @@ abstract class SvgNode {
     public abstract void flatten(AffineTransform transform);
 
     /**
-     * Returns a String containing the value of the given attribute. Returns an empty string if the
-     * attribute does not exist.
+     * Returns a string containing the value of the given attribute. Returns an empty string if
+     * the attribute does not exist.
      */
     public String getAttributeValue(String attribute) {
         NamedNodeMap a = mDocumentNode.getAttributes();
@@ -245,6 +244,7 @@ abstract class SvgNode {
             String name = n.getNodeName();
             if (name.equals(attribute)) {
                 value = n.getNodeValue();
+                break;
             }
         }
         return value;

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.NonNull;
@@ -39,7 +38,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
 /**
- * Represent the SVG file in an internal data structure as a tree.
+ * Represents the SVG file in an internal data structure as a tree.
  */
 class SvgTree {
     private static final Logger logger = Logger.getLogger(SvgTree.class.getSimpleName());
@@ -59,10 +58,9 @@ class SvgTree {
 
     private final ArrayList<String> mErrorLines = new ArrayList<>();
 
-    private boolean mHasLeafNode = false;
+    private boolean mHasLeafNode;
 
-    private boolean mHasGradient = false;
-
+    private boolean mHasGradient;
 
     public float getWidth() { return w; }
     public float getHeight() { return h; }
@@ -304,15 +302,14 @@ class SvgTree {
      */
     @Nullable
     public SvgGroupNode findParent(@NonNull SvgNode node) {
-        SvgGroupNode[] result = new SvgGroupNode[1];
-        mRoot.findParent(node, result);
-        return result[0];
+        return mRoot.findParent(node);
     }
 
     /**
      * Returns a {@link DecimalFormat] of sufficient precision to use for formatting coordinate
      * values within the viewport.
      */
+    @NonNull
     public DecimalFormat getCoordinateFormat() {
         float viewportWidth = getViewportWidth();
         float viewportHeight = getViewportHeight();

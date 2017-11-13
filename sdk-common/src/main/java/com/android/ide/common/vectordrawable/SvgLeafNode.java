@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_FILL_OPACITY;
@@ -31,7 +30,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.w3c.dom.Node;
 
-/** Represent a SVG file's leaf element. */
+/** Represents an SVG file's leaf element. */
 class SvgLeafNode extends SvgNode {
     private static final Logger logger = Logger.getLogger(SvgLeafNode.class.getSimpleName());
 
@@ -268,7 +267,7 @@ class SvgLeafNode extends SvgNode {
                 }
                 continue;
             }
-            String attr = "\n        " + vectorDrawableAttr + "=\"" +
+            String attr = System.lineSeparator() + "        " + vectorDrawableAttr + "=\"" +
                           vdValue + "\"";
             sb.insert(0, attr);
 
@@ -296,7 +295,7 @@ class SvgLeafNode extends SvgNode {
     }
 
     /**
-     * Parse the SVG path's opacity attribute into fill and stroke.
+     * Parses the SVG path's opacity attribute into fill and stroke.
      */
     private void parsePathOpacity() {
         float opacityInFloat = getOpacityValueFromMap(SVG_OPACITY);
@@ -430,25 +429,29 @@ class SvgLeafNode extends SvgNode {
             }
 
             // Second, write the color info handling the default values.
-            writer.write("    <path\n");
+            writer.write("    <path");
+            writer.write(System.lineSeparator());
             if (!mVdAttributesMap.containsKey(Svg2Vector.SVG_FILL_COLOR) && !mHasFillGradient) {
                 logger.log(Level.FINE, "ADDING FILL SVG_FILL_COLOR");
-                writer.write("        android:fillColor=\"#FF000000\"\n");
+                writer.write("        android:fillColor=\"#FF000000\"");
+                writer.write(System.lineSeparator());
             }
             if (!emptyStroke
                     && !mVdAttributesMap.containsKey(Svg2Vector.SVG_STROKE_WIDTH)
                     && !mHasStrokeGradient) {
                 logger.log(Level.FINE, "Adding default stroke width");
-                writer.write("        android:strokeWidth=\"1\"\n");
+                writer.write("        android:strokeWidth=\"1\"");
+                writer.write(System.lineSeparator());
             }
 
             // Last, write the path data and all associated attributes.
             writer.write("        android:pathData=\"" + mPathData + "\"");
             writer.write(getAttributeValues());
             if (!hasGradient()) {
-                writer.write("/");
+                writer.write('/');
             }
-            writer.write(">\n");
+            writer.write('>');
+            writer.write(System.lineSeparator());
         } else {
             // Writes data that is part of the clip-path data.
             writer.write(mPathData);
@@ -465,7 +468,8 @@ class SvgLeafNode extends SvgNode {
             mStrokeGradientNode.writeXML(writer, inClipPath);
         }
         if (hasGradient()) {
-            writer.write("</path>\n");
+            writer.write("</path>");
+            writer.write(System.lineSeparator());
         }
     }
 }

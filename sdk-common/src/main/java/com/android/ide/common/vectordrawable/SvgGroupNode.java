@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -25,7 +26,7 @@ import java.util.logging.Logger;
 import org.w3c.dom.Node;
 
 /**
- * Represent a SVG file's group element.
+ * Represents an SVG file's group element.
  */
 class SvgGroupNode extends SvgNode {
     private static final Logger logger = Logger.getLogger(SvgGroupNode.class.getSimpleName());
@@ -82,14 +83,19 @@ class SvgGroupNode extends SvgNode {
      *
      * @return the parent node, or null if node is not in the tree.
      */
-    public void findParent(SvgNode node, SvgGroupNode[] result) {
+    @Nullable
+    public SvgGroupNode findParent(@NonNull SvgNode node) {
         for (SvgNode n : mChildren) {
             if (n == node) {
-                result[0] = this;
+                return this;
             } else if (n.isGroupNode()) {
-                ((SvgGroupNode) n).findParent(node, result);
+                SvgGroupNode parent = ((SvgGroupNode) n).findParent(node);
+                if (parent != null) {
+                    return parent;
+                }
             }
         }
+        return null;
     }
 
     @Override

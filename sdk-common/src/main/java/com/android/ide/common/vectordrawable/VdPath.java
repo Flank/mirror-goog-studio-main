@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import com.android.SdkConstants;
@@ -95,7 +94,7 @@ class VdPath extends VdElement {
     }
 
     /**
-     * Represent one segment of the path data. Like "l 0,0 1,1"
+     * Represents one segment of the path data. Like "l 0,0 1,1"
      */
     public static class Node {
         private char mType;

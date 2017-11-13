@@ -33,7 +33,6 @@ import org.w3c.dom.Node;
 
 /** Represents a SVG gradient that is referenced by a SvgLeafNode. */
 public class SvgGradientNode extends SvgNode {
-
     private static final Logger logger = Logger.getLogger(SvgGroupNode.class.getSimpleName());
 
     private final ArrayList<GradientStop> myGradientStops = new ArrayList<>();
@@ -178,9 +177,11 @@ public class SvgGradientNode extends SvgNode {
             return;
         }
         if (mGradientUsage == GradientUsage.FILL) {
-            writer.write("        <aapt:attr name=\"android:fillColor\">\n");
+            writer.write("        <aapt:attr name=\"android:fillColor\">");
+            writer.write(System.lineSeparator());
         } else {
-            writer.write("        <aapt:attr name=\"android:strokeColor\">\n");
+            writer.write("        <aapt:attr name=\"android:strokeColor\">");
+            writer.write(System.lineSeparator());
         }
         writer.write("<gradient ");
 
@@ -346,10 +347,12 @@ public class SvgGradientNode extends SvgNode {
                 vdValue = formatFloatAttribute(getGradientCoordinate(key, 0).getValue());
             }
             if (!gradientAttr.isEmpty()) {
-                writer.write("\n        " + gradientAttr + "=\"" + vdValue + "\"");
+                writer.write(System.lineSeparator());
+                writer.write("        " + gradientAttr + "=\"" + vdValue + "\"");
             }
         }
-        writer.write(">\n");
+        writer.write('>');
+        writer.write(System.lineSeparator());
 
         writeGradientStops(writer);
         writer.write("            </gradient>");
@@ -379,7 +382,8 @@ public class SvgGradientNode extends SvgNode {
             color = "#" + hex;
 
             writer.write("<item android:offset=\"" + g.getOffset() + "\"");
-            writer.write(" android:color=\"" + color + "\" />\n");
+            writer.write(" android:color=\"" + color + "\" />");
+            writer.write(System.lineSeparator());
 
             if (myGradientStops.size() == 1) {
                 getTree()
@@ -388,7 +392,8 @@ public class SvgGradientNode extends SvgNode {
                                 getDocumentNode(),
                                 SvgTree.SvgLogLevel.WARNING);
                 writer.write("<item android:offset=\"1.0\"");
-                writer.write(" android:color=\"" + color + "\" />\n");
+                writer.write(" android:color=\"" + color + "\" />");
+                writer.write(System.lineSeparator());
             }
         }
     }

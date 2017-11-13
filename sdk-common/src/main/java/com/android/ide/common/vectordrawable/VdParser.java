@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.NonNull;
@@ -25,14 +24,15 @@ import java.net.URL;
 import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
+
 /**
- * Parse a VectorDrawable's XML file, and generate an internal tree representation,
+ * Parses a VectorDrawable's XML file, and generate an internal tree representation,
  * which can be used for drawing / previewing.
  */
 class VdParser {
-    // Note that the incoming file is the VectorDrawable's XML file, not the SVG.
-    @Nullable
-    public VdTree parse(@NonNull InputStream is, @Nullable StringBuilder vdErrorLog) {
+    // Note that the incoming file is an VectorDrawable's XML file, not an SVG.
+    @NonNull
+    public static VdTree parse(@NonNull InputStream is, @Nullable StringBuilder vdErrorLog) {
         final VdTree tree = new VdTree();
         try {
             Document doc = PositionXmlParser.parse(is, true);
@@ -46,8 +46,8 @@ class VdParser {
         return tree;
     }
 
-    @Nullable
-    public VdTree parse(URL r, StringBuilder vdErrorLog) throws IOException {
+    @NonNull
+    public static VdTree parse(URL r, StringBuilder vdErrorLog) throws IOException {
         return parse(r.openStream(), vdErrorLog);
     }
 }
