@@ -20,6 +20,7 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.classpath
 import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
+import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.detector.api.Context
@@ -407,6 +408,40 @@ class CustomRuleTest {
                 .run()
                 .expectClean()
     }
+
+    @Test
+    fun testLintScannerXmlAll() {
+        // In 3.1 we moved the Detector.XmlScanner.ALL constant up into super interface
+        // XmlScannerConstants (because the whole Detector class was ported to Kotlin), and
+        // in Kotlin you can't specify a constant on the interface like that (the constant super
+        // interface is in Java). This test ensures that this is a backwards compatible
+        // change: this is a custom detector compiled against 3.0 referencing the XmlScanner.ALL
+        // constant.
+        //  public java.util.Collection<java.lang.String> getApplicableElements();
+        //    Code:
+        //       0: getstatic     #6                  // Field ALL:Ljava/util/List;
+        //       3: areturn
+        lint().files(
+                classpath(),
+                manifest().minSdk(1),
+                xml("res/values/strings.xml",
+                        "<resources>\n" +
+                        "<string name='test'>Test</string>\n" +
+                        "</resources>"))
+                .client(object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = listOf(lintXmlScannerAll30)
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                })
+                .issueIds("ShortUniqueId")
+                .allowMissingSdk()
+                .allowCompilationErrors()
+                .allowObsoleteLintChecks(false)
+                .run()
+                .check {
+                    assertThat(it).contains("res/values/strings.xml:2: Warning: All tags are now flagged: string [ShortUniqueId]")
+                }
+    }
+
 
     private // Sample code
     val appCompatTestSource = java("" +
@@ -843,6 +878,79 @@ class CustomRuleTest {
                 "hFOVsx19UcXz/c3mtNux9287dij/TjXLyees8i+pPd6R/zdr3hrOt2dLToD9" +
                 "0Nl56u/d+voPd/fnrhoLAAA="
 
+        // A lint check compatible with 3.0 which references XmlScanner.ALL
+        // (which moved in 3.1)
+        private val LINT_XML_SCANNER_ALL_30 = "" +
+                "H4sIAAAAAAAAAJ1XeTTUexsfjWjGkt3YkhhZh7FMQsLYxzD2XbbJvhMyqYTs" +
+                "GqRrS2QvO2UsJXtZxpIrYZCism9FmN7Ovb3nlnvznvs+5zz//M7n8/k+5/t7" +
+                "nud8PxgUkBIMABw7BrCR8UQBvsURwJ8B+pZodWMVcW09DQkgAPMTcDvapU3/" +
+                "G8D8W7L8CESr6GlrqBsZw9AaG+jeHl2UOGyQDiUu0t9LrDGUfCk9/W79ea/o" +
+                "IJ0OmigGEy59KS5dbajVTxxBlWn1indrj/RQvPgIdc4XdGZfOHojUjEuDmVk" +
+                "/zGEEEw4UMCPlVJ+S0dvz78V+SOG9jsGG2zv6eOBPRTLeADr4eoVcCgB8k8E" +
+                "Rxeso7v/33jRJQm6FkAA4Do1ACB1CM/oj09IbyesGjYA6xjg7ScAhzl62Pv7" +
+                "3zaZ0ufSZCD3Q/qVEpWz2LSG8gsH2rMSjgvt428JevIMy8kaCDimGitWKklc" +
+                "nMHNL5YxfkXy7qae5zdAPlDcrDP8Wlj8cXEsAXP997R3k81j6d4Xn6RP7m9U" +
+                "PH4KNEfKJoDebla6zDBx04SwGJpXYyIyW6vvmg3VR5rQ5NiLRxK39iJjJNA4" +
+                "rN1e9A6NLUQo7CHtQ+PmyqXqe8LIwQATyBf8QpwyAV1eX6T6oTrRh7eG3/Rj" +
+                "+kMuiNHuKUtzBCY6YQfuHoQjSW98IgRBCHXmxuDMPXtezfFJ5uuYz3SLc1Fw" +
+                "bvnWDk+gNp29XbXIEXL+uJcPoYNTSVtqZMCRjEhRvfo5UjsbT9HIRGmdhmNT" +
+                "z1KKQ6oRKlVBerwxWsWlGGupp7gJvGKsGgTi4zeCeTQBLOdMjjnp1yhm6LUf" +
+                "f5G7oUPfgnRi4NarhFQWFZRzsLJTvRKNpZd42uCyGhq+4pMS+CYePcF3vq5S" +
+                "9NwTPhmgtLORiBskr5I7OAzC2Ctotms/3G7DtVDvPCslhRCEY2fBTxC+U51A" +
+                "HNLJrbD7RoL3Gg/eMuASp2XtsJA8QifY5X48HfPUeHAEeLBJ/a3zufUszw1l" +
+                "A4TBJTOuRVKfPD1rHTT94xcxku+xN/CweySuQsTLeXYZ/DzNOsdjTPOiP08L" +
+                "v+EGQUZyy/tEya0bobI+YylZwrZFyc1dEz10U/3sFtbcCqw4gaJQV3LTcm7u" +
+                "lHIgFOe2mc5mNt67sv7CVmKQjBi8FDb7qdnAZb7WUucCzHKsZWtCOHJIKUWW" +
+                "nNcDTKqQILu0eEirb+JJNwk1ypaOtYYPRnqo1oF405g8WBFggo+jUAF/bOBz" +
+                "eCxxYu4r9Nwx8nmfL046JBCUsONa+ebz+jYREkUzw+33GF9A/ZbpnFBMifCV" +
+                "aIqMD2ruoP2KaSDGxsUkb4Ux43T2HhdEb4aOqb8CEsIqqjcspxHbYtQ7IMfD" +
+                "pe/ANnotuICP7otNl+aVlhw4J7B87irSr2aVOrkCnD7IHN/cbs3nePfkFlNN" +
+                "v4RWk4Z8xfwe6GHvNshjyV/gU0hC0xFZ1deqnIHmwRrbxKrwbLlED2Lbrpyp" +
+                "L/DM869CaavwJUFJzSEZphW79O23bCXELpD4tFFGyuZlUqeJpYWTDCNy2vvn" +
+                "Qd174fwKehQAUKUDACT/1aB+H1NTzyBmdZawtMIxQY8QbdcQA8mTL2uFbcBC" +
+                "Wm6ydBThfB0eVsXF2EaOIfHMyUoFYXWcyj7SkOhqkEgGXE3KOUca83AZjpgV" +
+                "PJuenj0RmqNAvDK2szt1nnzEh+Npuy/TsJRSjCNVzottscRj1fB4O1Naglw5" +
+                "v8SsBjdc9/h04W/eS5oUjzs++q8F+QKCqDCcLda0QWvqtFgXqTmsWHtldKjU" +
+                "clyINu2FTng8tS8usgKL45/NpSywG+/ts2iYh+urXlUZZltnGlJvKylpsPHl" +
+                "qcnz66pSHJHyLDeFOFMFWZtUZLo92+AU4+eT93wtmIMfuMNplcrw/Cyr4Izd" +
+                "YK1FiYGV/XLTE4dBvbz3kIa64sbCYHoEP25E4C2IF+/5vq6hI8O8U0T6RGjp" +
+                "nDcocxToE85dInW3bFR8mMGULSCJeP5BHLOAoWOH7BUbM66J2pd5H3yTE10v" +
+                "jvwe0gZtwt1sCdgYG1oq/SgNz4bJe5nYOOI6RtDjRlxOF2y6rR52etxNz62I" +
+                "aIvqCVhGTp3KE5vTCU4Fd4x7hvecRThzKUp/QtC1SYF673jzUctRwrjQgSCj" +
+                "c/w6EC9+CUm9CR73+4Lz5mwWkjyZxoKk9VGvZZnljEsjpzUtzpxLoU6DToC7" +
+                "evYzRvyGjrcMo6Is+ZrZ1k4RYJtuMd0O4uejGjNuS0qiPc4YyZWfpRu1O6OL" +
+                "z9RU8Pc2zDJ7xtEkMWP9WEw4I4vQcHuquLF3I/oUhyiY1ji6fVU47JKOneTR" +
+                "JIzJrXZXjgdg3Yd4o1COHM/fTNXzp2IeYqEE263khp7kRxsyO91DD0xMCWnG" +
+                "q5C0+IwjXInhDZC71wKo6ky63tE82sl/Bn47e9JEXJ/EZ9sdOMh4EfShilaf" +
+                "QhPZ2RBe9OqWD9z4BkMXE/dCa0bE2ipld3DhtJViker488amyWLXeNFteiIr" +
+                "TiJKelulMwlsO30aZNYqZ3LxLq/DCzxPZQ7Umu7+nqBS3rIskn3SqJX8qGjG" +
+                "K1LVmP4yi1icbxebjWbr2MvyN+lWFvzPdO/MbUmOoNwXmykMDLawceqgm/JV" +
+                "p0NFEQ7hlnHv1/uCiYWvweVqiU+aZ+rGPMYYvNmbbZ0RBXM7xs41HAuvwKXX" +
+                "WW42sCiwyoXIVZihLieA97RKh6+9p55wLQdNYgNFGEASrVuVcwpVG6+asxt6" +
+                "VNhvkNeuIvw2DUvll6Vj1b3Krfvn51Ah6PuYqPV7BdmgmMKqwLmMrIG3oWN+" +
+                "JZgGDraSAm0tx9y3dEUwy/WlRYdLZ60anlj3u/vTvLMO29HI/a0ISM+qwHl0" +
+                "TOl9Dw0eK34m6M4yAukZWzap67YifnK4g3QDFnpKKldvuogKa7zx5uRMDmyH" +
+                "262oSJntcpxGvYD3wgIfqiHQiva2WVlY1HAAnRIIVPQ+yLrp2AcSd4Fs8zVX" +
+                "RZS+SB9T3/7s+C3bIQfe/qOqypz3ZUTQFLhrLH0ssPiUVMwTBiFN5l3b3JXR" +
+                "c68JNq8HlRWWenQHSCG6VLDegbIrvH1ro9FiCUWPB5+ODtlMDWkZiVQKmLpN" +
+                "P2OBUZ1AU51QRzBOumOxd87jEVdhgyQsDrJdo7N+RSap8Ayffv7pR5KrnFUF" +
+                "nu3Mu4/v6e4lqoBqX7VeF+eemBFb3jUr2CpNSvWwDJldEdrZxScpxYrW6wwB" +
+                "t7fRJ8Fy0yg0lB5Kf5opEyLPMtmOH4XY6sR7vHH5miP36OXjmNnXTDzLEY8S" +
+                "gmxnJqdOPt28Ue3fu+G0nbFiTLUymHXPhLKPKCyGTOokA39euSRZJ9k0CgBg" +
+                "4dvDCv4/V662v38g1hDr7Oof4Bfyfecaor2Z4QxXvJTSIvJdgdfD2AXoXQ2q" +
+                "btVDwTcN83UemDq4rvR3vq6Xu1S3UDZ9oc5amXubYk+oPZh5sDRSZ6wteO9T" +
+                "c/pazdV98hpzC5fig/vhmrKKGkWJp4M57aAtIsi6ing/YJRh0HxqbpO3ZnIu" +
+                "qwh/0vpzTCFvB4Z5iN5TbLNE6/YUsaWa60G8vUT8UkQP0cGvHDr6Qu5EEnZP" +
+                "eNaAgueiBex8txoWtj/kWAwdYoW4jk9mr+paH7urUBCixaIfbewQ0WP0ce0T" +
+                "fe6FWuaLqZayb/ots9GZifkpVTXC7POx7HSXgaWmSR53O9eb1/kr9hzzzZ6E" +
+                "AU0oKX7nNO/SuNZH9aiyb9Uv8T589asumzvUdUdhtM7hM/kLWZ7Ul9iBORuf" +
+                "lwLkdKOnhsiPflqyKou595BvITNdKiatn3NFpC1u+aWLuG5r0k1ntcVJArei" +
+                "Zrpt8le2liZnFt6BxOEXLmWLYcBGkbBRIVMaH57A2ARhiuPCwHdoMaaeuAvE" +
+                "9mdmYjjND+tpuIUoxd+eWx11jql8d8r9KwUGRXGEBfhrl/FnMACWVAA/WomD" +
+                "tIOe47+Rf134Fw7ksIMpfzq49Hu3Hcag/YnRf6A/D2My/sT88k+dfRgd8hNd" +
+                "lOLXg3FQ5aDZ+OvKHA9R+bX1OKh/8I30lz7t0X//YjqofnAd/KV+Ffx/LAcM" +
+                "6ijVny0HAtz8Jun0xw/9Dyg43kUBDwAA"
+
         @ClassRule @JvmField var temp = TemporaryFolder()
         init {
             temp.create()
@@ -855,5 +963,6 @@ class CustomRuleTest {
         private val lintApiLevel0: File = base64gzip("lint5.jar", LINT5_JAR).createFile(temp.root)
         private val lintApiLevel1000: File = base64gzip("lint6.jar", LINT6_JAR).createFile(temp.root)
         private val lintApiLevel1000min1: File = base64gzip("lint7.jar", LINT7_JAR).createFile(temp.root)
+        private val lintXmlScannerAll30: File = base64gzip("lint8.jar", LINT_XML_SCANNER_ALL_30).createFile(temp.root)
     }
 }

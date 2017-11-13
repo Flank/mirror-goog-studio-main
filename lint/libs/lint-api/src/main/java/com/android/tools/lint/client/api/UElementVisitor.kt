@@ -221,7 +221,7 @@ internal class UElementVisitor constructor(private val parser: UastParser,
 
     fun visitFile(context: JavaContext) {
         try {
-            val uastParser = context.uastParser ?: return
+            val uastParser = context.uastParser
 
             val uFile = uastParser.parse(context) ?: // No need to log this; the parser should be reporting
                     // a full warning (such as IssueRegistry#PARSER_ERROR)
