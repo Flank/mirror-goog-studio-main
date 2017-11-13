@@ -40,6 +40,8 @@ import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import java.util.function.Supplier
@@ -50,12 +52,12 @@ import java.util.function.Supplier
 @CacheableTask
 open class LinkLibraryAndroidResourcesTask : AndroidBuilderTask() {
 
-    @get:InputFiles lateinit var manifestFileDirectory: FileCollection private set
-    @get:InputFiles lateinit var inputResourcesDir: FileCollection private set
-    @get:InputFiles lateinit var libraryDependencies: FileCollection private set
-    @get:InputFiles lateinit var sharedLibraryDependencies: FileCollection private set
-    @get:InputFiles @get:Optional var featureDependencies: FileCollection? = null; private set
-    @get:InputFiles @get:Optional var tested: FileCollection? = null; private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var inputResourcesDir: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var featureDependencies: FileCollection? = null; private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) @get:Optional var tested: FileCollection? = null; private set
 
     @get:Internal lateinit var packageForRSupplier: Supplier<String> private set
     @get:Input val packageForR get() = packageForRSupplier.get()
