@@ -1135,7 +1135,10 @@ public class JarContentsTest {
 
     @Test
     public void checkDataBinding() throws Exception {
-        checkGroup("com/android/databinding", GMAVEN_ZIP);
+        // Checks compiler and compilerCommon
+        checkGroup("com/android/databinding/compilerCommon", GMAVEN_ZIP);
+        checkGroup("com/android/databinding/compiler", GMAVEN_ZIP);
+        checkGroup("com/android/databinding/baseLibrary", GMAVEN_ZIP);
     }
 
     @Test
@@ -1165,10 +1168,15 @@ public class JarContentsTest {
             }
         }
 
+        String groupPrefixThenForwardSlash = groupPrefix + "/";
         List<String> expectedJars =
                 EXPECTED.keySet()
                         .stream()
-                        .filter(name -> name.startsWith(groupPrefix))
+                        // Allow subdirectories and exact matches, but don't conflate databinding/compilerCommon with databinding/compiler
+                        .filter(
+                                name ->
+                                        name.startsWith(groupPrefixThenForwardSlash)
+                                                || name.equals(groupPrefix))
                         .filter(path -> !isIgnored(path))
                         .collect(Collectors.toList());
         // Test only artifact need not be there.
