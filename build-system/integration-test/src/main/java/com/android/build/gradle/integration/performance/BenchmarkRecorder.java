@@ -112,7 +112,12 @@ public final class BenchmarkRecorder {
         try {
             uploaders.add(ActdProfileUploader.fromEnvironment());
         } catch (IllegalStateException e) {
-            System.out.println("unable to create act-d profile uploader: " + e);
+            System.err.println(
+                    "warning: unable to create act-d (Dana) profile uploader. This is "
+                            + "not a problem if you're running locally, but if you're seeing this message "
+                            + "on a build machine, it's likely that an environment variable is missing. "
+                            + "Error: "
+                            + e);
         }
 
         return uploaders;
