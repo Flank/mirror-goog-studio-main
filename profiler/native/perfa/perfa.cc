@@ -254,7 +254,7 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
   BindJNIMethod(jni,
                 "com/android/tools/profiler/support/network/"
                 "HttpTracker$InputStreamTracker",
-                "reportBytes", "(J[B)V");
+                "reportBytes", "(J[BI)V");
   BindJNIMethod(jni,
                 "com/android/tools/profiler/support/network/"
                 "HttpTracker$OutputStreamTracker",
@@ -266,7 +266,7 @@ void LoadDex(jvmtiEnv* jvmti, JNIEnv* jni, AgentConfig* agent_config) {
   BindJNIMethod(jni,
                 "com/android/tools/profiler/support/network/"
                 "HttpTracker$OutputStreamTracker",
-                "reportBytes", "(J[B)V");
+                "reportBytes", "(J[BI)V");
   BindJNIMethod(
       jni, "com/android/tools/profiler/support/network/HttpTracker$Connection",
       "nextId", "()J");

@@ -18,12 +18,12 @@ package com.android.tools.profiler.support.util;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import org.junit.Assert;
+import org.junit.Test;
 
 
 public class ByteBatcherTest {
@@ -35,7 +35,7 @@ public class ByteBatcherTest {
         Assert.assertThat(r.getReceived().size(), equalTo(0));
         b.flush();
         Assert.assertThat(r.getReceived().size(), equalTo(1));
-        Assert.assertThat(r.getReceived().get(0), equalTo(Arrays.asList((byte)123)));
+        Assert.assertThat(r.getReceived().get(0), equalTo(Collections.singletonList((byte) 123)));
     }
 
     @Test
@@ -93,8 +93,7 @@ public class ByteBatcherTest {
 
         b.flush();
         Assert.assertThat(r.getReceived().size(), equalTo(3));
-        Assert.assertThat(r.getReceived().get(2),
-                equalTo(Arrays.asList((byte) 90)));
+        Assert.assertThat(r.getReceived().get(2), equalTo(Collections.singletonList((byte) 90)));
     }
 
     @Test
@@ -111,8 +110,7 @@ public class ByteBatcherTest {
 
         b.flush();
         Assert.assertThat(r.getReceived().size(), equalTo(2));
-        Assert.assertThat(r.getReceived().get(1),
-                equalTo(Arrays.asList((byte) 78)));
+        Assert.assertThat(r.getReceived().get(1), equalTo(Collections.singletonList((byte) 78)));
     }
 
     private static class TestFlushReceiver implements ByteBatcher.FlushReceiver {
@@ -121,15 +119,15 @@ public class ByteBatcherTest {
         private List<List<Byte>> mReceived = new ArrayList<List<Byte>>();
 
         @Override
-        public void receive(byte[] bytes) {
-            ArrayList<Byte> byteList = new ArrayList<Byte>(bytes.length);
-            for (byte b : bytes) {
-                byteList.add(b);
+        public void receive(byte[] bytes, int validBytesLength) {
+            ArrayList<Byte> byteList = new ArrayList<Byte>(validBytesLength);
+            for (int i = 0; i < validBytesLength; i++) {
+                byteList.add(bytes[i]);
             }
             mReceived.add(byteList);
         }
 
-        public List<List<Byte>> getReceived() {
+        private List<List<Byte>> getReceived() {
             return mReceived;
         }
     }

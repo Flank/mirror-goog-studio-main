@@ -171,8 +171,8 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTrac
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024InputStreamTracker_reportBytes(
-    JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes) {
-  JByteArrayWrapper bytes(env, jbytes);
+    JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes, jint jlen) {
+  JByteArrayWrapper bytes(env, jbytes, jlen);
   response_payload_chunk_.AddBytes(juid, &bytes, ChunkRequest::RESPONSE);
 }
 
@@ -189,8 +189,8 @@ Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTra
 
 JNIEXPORT void JNICALL
 Java_com_android_tools_profiler_support_network_HttpTracker_00024OutputStreamTracker_reportBytes(
-    JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes) {
-  JByteArrayWrapper bytes(env, jbytes);
+    JNIEnv *env, jobject thiz, jlong juid, jbyteArray jbytes, jint jlen) {
+  JByteArrayWrapper bytes(env, jbytes, jlen);
   request_payload_chunk_.AddBytes(juid, &bytes, ChunkRequest::REQUEST);
 }
 
