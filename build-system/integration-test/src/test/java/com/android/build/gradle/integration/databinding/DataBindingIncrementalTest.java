@@ -22,6 +22,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
+import com.android.testutils.TestUtils;
 import com.android.testutils.truth.DexClassSubject;
 import com.google.common.io.Files;
 import java.io.File;
@@ -36,6 +37,8 @@ public class DataBindingIncrementalTest {
     public GradleTestProject project;
 
     private static final String EXPORT_INFO_TASK = ":dataBindingExportBuildInfoDebug";
+
+    private static final String MERGE_RESOURCES_TASK = ":mergeDebugResources";
 
     private static final String MAIN_ACTIVITY_BINDING_CLASS =
             "Landroid/databinding/testapp/databinding/ActivityMainBinding;";
@@ -228,12 +231,23 @@ public class DataBindingIncrementalTest {
         Files.copy(mainActivity, activity2);
         GradleBuildResult result = project.executor().run("assembleDebug");
 
+        File activity2DataBindinInfo =
+                project.getIntermediateFile("data-binding-info", "debug", "activity2-layout.xml");
+        assertThat(activity2DataBindinInfo).exists();
+        long lastModified = activity2DataBindinInfo.lastModified();
+
+        TestUtils.waitForFileSystemTick();
+
         assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
 
         assertThat(project.getApk(DEBUG)).containsClass(activity2ClassName);
         TestFileUtils.replaceLine(project.file("src/main/res/layout/activity2.xml"), 19,
                 "<data class=\"MyCustomName\">");
         result = project.executor().run("assembleDebug");
+
+        assertThat(result.getTask(MERGE_RESOURCES_TASK)).wasNotUpToDate();
+        assertThat(activity2DataBindinInfo).exists();
+        assertThat(activity2DataBindinInfo.lastModified()).isNotEqualTo(lastModified);
 
         assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
 
