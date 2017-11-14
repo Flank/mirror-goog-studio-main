@@ -2227,7 +2227,7 @@ public final class SdkConstants {
     public static final String GRADLE_MINIMUM_VERSION = "4.4-rc-3";
     public static final String GRADLE_LATEST_VERSION = GRADLE_MINIMUM_VERSION;
     public static final String GRADLE_PLUGIN_MINIMUM_VERSION = "1.0.0";
-    public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "2.3.2";
+    public static final String GRADLE_PLUGIN_RECOMMENDED_VERSION = "3.0.0";
     // Temporary - can be removed once the recommended version supports AIA (with splits).
     public static final String GRADLE_PLUGIN_LATEST_VERSION = GRADLE_PLUGIN_RECOMMENDED_VERSION;
     public static final String GRADLE_COMPILE_CONFIGURATION = "compile";
