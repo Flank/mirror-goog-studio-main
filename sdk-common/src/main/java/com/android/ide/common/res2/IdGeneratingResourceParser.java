@@ -146,7 +146,7 @@ class IdGeneratingResourceParser {
                     // the list of pending ids.
                     if (value.startsWith(NEW_ID_PREFIX) && !ATTR_ID.equals(attrName)) {
                         String id = value.substring(NEW_ID_PREFIX.length());
-                        if (!pendingResourceIds.contains(id)) {
+                        if (!id.isEmpty()) {
                             pendingResourceIds.add(id);
                         }
                     }
@@ -168,8 +168,10 @@ class IdGeneratingResourceParser {
                             continue;
                         }
                         pendingResourceIds.remove(id);
-                        ResourceItem item = new IdResourceItem(id, mNamespace, ResourceType.ID);
-                        items.add(item);
+                        if (!id.isEmpty()) {
+                            ResourceItem item = new IdResourceItem(id, mNamespace, ResourceType.ID);
+                            items.add(item);
+                        }
                     }
                 }
             }

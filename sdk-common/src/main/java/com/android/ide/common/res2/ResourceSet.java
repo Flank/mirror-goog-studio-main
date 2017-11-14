@@ -36,6 +36,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -453,12 +454,19 @@ public class ResourceSet extends DataSet<ResourceItem, ResourceFile> {
             } else if (mShouldParseResourceIds && folderData.isIdGenerating &&
                        SdkUtils.endsWithIgnoreCase(file.getPath(), SdkConstants.DOT_XML)) {
                 String resourceName = getNameForFile(file);
-                IdGeneratingResourceParser parser =
-                        new IdGeneratingResourceParser(
-                                file, resourceName, folderData.type, mNamespace);
-                List<ResourceItem> items = parser.getIdResourceItems();
-                ResourceItem fileItem = parser.getFileResourceItem();
-                items.add(fileItem);
+                List<ResourceItem> items;
+
+                if (resourceName.isEmpty()) {
+                    // This is only possible if validation is disabled, like when running from the IDE.
+                    items = Collections.emptyList();
+                } else {
+                    IdGeneratingResourceParser parser =
+                            new IdGeneratingResourceParser(
+                                    file, resourceName, folderData.type, mNamespace);
+                    items = parser.getIdResourceItems();
+                    ResourceItem fileItem = parser.getFileResourceItem();
+                    items.add(fileItem);
+                }
                 return new ResourceFile(file, items, folderData.qualifiers, folderData.folderConfiguration);
             } else {
                 return new ResourceFile(
