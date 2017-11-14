@@ -24,7 +24,7 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_IN_PROCESS_AAPT2("android.enableAapt2jni", false),
     ENABLE_DAEMON_MODE_AAPT2("android.enableAapt2DaemonMode", true),
     ENABLE_BUILD_CACHE("android.enableBuildCache", true),
-    ENABLE_PROFILE_JSON("android.enableProfileJson", true),
+    ENABLE_PROFILE_JSON("android.enableProfileJson", false),
     ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true),
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
     ENABLE_DEX_ARCHIVE("android.useDexArchive", true),
