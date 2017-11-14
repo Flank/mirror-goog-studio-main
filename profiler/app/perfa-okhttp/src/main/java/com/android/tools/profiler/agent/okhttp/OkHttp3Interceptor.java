@@ -19,11 +19,13 @@ import com.android.tools.profiler.support.network.HttpConnectionTracker;
 import com.android.tools.profiler.support.network.HttpTracker;
 import com.android.tools.profiler.support.util.StudioLog;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import okhttp3.*;
+import okio.BufferedSink;
 import okio.BufferedSource;
 import okio.Okio;
 
@@ -46,6 +48,11 @@ public final class OkHttp3Interceptor implements Interceptor {
         }
         Response response = chain.proceed(request);
         try {
+            trackRequestBody(tracker, request);
+        } catch (Exception ex) {
+            StudioLog.e("Could not track an OkHttp3 request body", ex);
+        }
+        try {
             response = track(tracker, response);
         } catch (Exception ex) {
             StudioLog.e("Could not track an OkHttp3 response", ex);
@@ -60,6 +67,17 @@ public final class OkHttp3Interceptor implements Interceptor {
                 HttpTracker.trackConnection(request.url().toString(), callstack);
         tracker.trackRequest(request.method(), toMultimap(request.headers()));
         return tracker;
+    }
+
+    private void trackRequestBody(HttpConnectionTracker tracker, Request request) throws Exception {
+        if (request.body() != null) {
+            Request requestCopy = request.newBuilder().build();
+            OutputStream outputStream =
+                    tracker.trackRequestBody(OkHttpUtils.createNullOutputStream());
+            BufferedSink bufferedSink = Okio.buffer(Okio.sink(outputStream));
+            requestCopy.body().writeTo(bufferedSink);
+            bufferedSink.close();
+        }
     }
 
     private Response track(HttpConnectionTracker tracker, Response response) {

@@ -15,6 +15,8 @@
  */
 package com.android.tools.profiler.agent.okhttp;
 
+import java.io.OutputStream;
+
 /**
  * Util methods to share among okhttp interceptors. Methods need be public, otherwise, invoking by
  * Java reflection does not have legal access.
@@ -38,5 +40,19 @@ public final class OkHttpUtils {
         } else {
             return new StackTraceElement[] {};
         }
+    }
+
+    /** Returns an {@link OutputStream} that simply discards written bytes. */
+    public static OutputStream createNullOutputStream() {
+        return new OutputStream() {
+            @Override
+            public void write(int b) {}
+
+            @Override
+            public void write(byte[] b) {}
+
+            @Override
+            public void write(byte[] b, int off, int len) {}
+        };
     }
 }

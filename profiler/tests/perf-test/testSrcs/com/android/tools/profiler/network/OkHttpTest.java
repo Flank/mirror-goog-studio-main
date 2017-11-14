@@ -109,7 +109,13 @@ public class OkHttpTest {
                 stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
         String responseFields = responseDetails.getResponse().getFields();
         assertThat(responseFields.contains("response-status-code = 200")).isTrue();
-        // TODO: Assert request body when it is supported.
+
+        String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
+        assertThat(payloadId.isEmpty()).isFalse();
+        Profiler.BytesResponse bytesResponse =
+                myGrpc.getProfilerStub()
+                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
+        assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("OkHttp3 request body");
     }
 
     @Test
@@ -160,7 +166,13 @@ public class OkHttpTest {
                 stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
         String responseFields = responseDetails.getResponse().getFields();
         assertThat(responseFields.contains("response-status-code = 200")).isTrue();
-        // TODO: Assert request body when it is supported.
+
+        String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
+        assertThat(payloadId.isEmpty()).isFalse();
+        Profiler.BytesResponse bytesResponse =
+                myGrpc.getProfilerStub()
+                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
+        assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("OkHttp2 request body");
     }
 
     @Test

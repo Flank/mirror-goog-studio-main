@@ -18,17 +18,14 @@ package com.android.tools.profiler.agent.okhttp;
 import com.android.tools.profiler.support.network.HttpConnectionTracker;
 import com.android.tools.profiler.support.network.HttpTracker;
 import com.android.tools.profiler.support.util.StudioLog;
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.Interceptor;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
+import com.squareup.okhttp.*;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import okio.BufferedSink;
 import okio.BufferedSource;
 import okio.Okio;
 
@@ -51,6 +48,11 @@ public final class OkHttp2Interceptor implements Interceptor {
         }
         Response response = chain.proceed(request);
         try {
+            trackRequestBody(tracker, request);
+        } catch (Exception ex) {
+            StudioLog.e("Could not track an OkHttp2 request body", ex);
+        }
+        try {
             response = track(tracker, response);
         } catch (Exception ex) {
             StudioLog.e("Could not track an OkHttp2 response", ex);
@@ -64,6 +66,17 @@ public final class OkHttp2Interceptor implements Interceptor {
         HttpConnectionTracker tracker = HttpTracker.trackConnection(request.urlString(), callstack);
         tracker.trackRequest(request.method(), toMultimap(request.headers()));
         return tracker;
+    }
+
+    private void trackRequestBody(HttpConnectionTracker tracker, Request request) throws Exception {
+        if (request.body() != null) {
+            Request requestCopy = request.newBuilder().build();
+            OutputStream outputStream =
+                    tracker.trackRequestBody(OkHttpUtils.createNullOutputStream());
+            BufferedSink bufferedSink = Okio.buffer(Okio.sink(outputStream));
+            requestCopy.body().writeTo(bufferedSink);
+            bufferedSink.close();
+        }
     }
 
     private Response track(HttpConnectionTracker tracker, Response response) throws IOException {
