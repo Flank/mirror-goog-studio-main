@@ -141,6 +141,13 @@ public class DexSubject extends Subject<DexSubject, Dex> {
         }
     }
 
+    public void hasClassesCount(int expected) throws IOException {
+        if (expected != getSubject().getClasses().size()) {
+            failWithBadResults(
+                    "does not have size", expected, "has", getSubject().getClasses().size());
+        }
+    }
+
     @Override
     protected String getDisplaySubject() {
         return "dex file";

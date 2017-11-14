@@ -129,6 +129,7 @@ import com.android.build.gradle.internal.transforms.BuiltInShrinkerTransform;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
 import com.android.build.gradle.internal.transforms.DesugarTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
+import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransformBuilder;
 import com.android.build.gradle.internal.transforms.DexMergerTransform;
 import com.android.build.gradle.internal.transforms.DexMergerTransformCallable;
 import com.android.build.gradle.internal.transforms.DexTransform;
@@ -2349,10 +2350,6 @@ public abstract class TaskManager {
                             userCache);
             transformManager.addTransform(tasks, variantScope, fixFrames);
 
-            String projectVariant =
-                    variantScope.getGlobalScope().getProject().getName()
-                            + ":"
-                            + variantScope.getFullVariantName();
             DesugarTransform desugarTransform =
                     new DesugarTransform(
                             () -> androidBuilder.getBootClasspath(true),
@@ -2363,7 +2360,7 @@ public abstract class TaskManager {
                             project.getLogger().isEnabled(LogLevel.INFO),
                             projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS),
                             variantScope.getGlobalScope().getTmpFolder().toPath(),
-                            projectVariant,
+                            getProjectVariantId(variantScope),
                             projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING));
             transformManager.addTransform(tasks, variantScope, desugarTransform);
 
@@ -2417,22 +2414,33 @@ public abstract class TaskManager {
         boolean minified = runJavaCodeShrinker(variantScope);
         FileCache userLevelCache = getUserDexCache(minified, dexOptions.getPreDexLibraries());
         DexArchiveBuilderTransform preDexTransform =
-                new DexArchiveBuilderTransform(
-                        () ->
+                new DexArchiveBuilderTransformBuilder()
+                        .setAndroidJarClasspath(
+                                () ->
+                                        variantScope
+                                                .getGlobalScope()
+                                                .getAndroidBuilder()
+                                                .getBootClasspath(false))
+                        .setDexOptions(dexOptions)
+                        .setMessageReceiver(variantScope.getGlobalScope().getMessageReceiver())
+                        .setUserLevelCache(userLevelCache)
+                        .setMinSdkVersion(variantScope.getMinSdkVersion().getFeatureLevel())
+                        .setDexer(variantScope.getDexer())
+                        .setUseGradleWorkers(
+                                projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS))
+                        .setInBufferSize(projectOptions.get(IntegerOption.DEXING_READ_BUFFER_SIZE))
+                        .setOutBufferSize(
+                                projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE))
+                        .setIsDebuggable(
                                 variantScope
-                                        .getGlobalScope()
-                                        .getAndroidBuilder()
-                                        .getBootClasspath(false),
-                        dexOptions,
-                        variantScope.getGlobalScope().getMessageReceiver(),
-                        userLevelCache,
-                        variantScope.getMinSdkVersion().getFeatureLevel(),
-                        variantScope.getDexer(),
-                        projectOptions.get(BooleanOption.ENABLE_GRADLE_WORKERS),
-                        projectOptions.get(IntegerOption.DEXING_READ_BUFFER_SIZE),
-                        projectOptions.get(IntegerOption.DEXING_WRITE_BUFFER_SIZE),
-                        variantScope.getVariantConfiguration().getBuildType().isDebuggable(),
-                        variantScope.getJava8LangSupportType());
+                                        .getVariantConfiguration()
+                                        .getBuildType()
+                                        .isDebuggable())
+                        .setJava8LangSupportType(variantScope.getJava8LangSupportType())
+                        .setEnableIncrementalDesugaring(
+                                projectOptions.get(BooleanOption.ENABLE_INCREMENTAL_DESUGARING))
+                        .setProjectVariant(getProjectVariantId(variantScope))
+                        .createDexArchiveBuilderTransform();
         transformManager
                 .addTransform(tasks, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
@@ -2471,6 +2479,13 @@ public abstract class TaskManager {
                     t.optionalDependsOn(tasks, multiDexClassListTask);
                     variantScope.addColdSwapBuildTask(t);
                 });
+    }
+
+    @NonNull
+    private static String getProjectVariantId(@NonNull VariantScope variantScope) {
+        return variantScope.getGlobalScope().getProject().getName()
+                + ":"
+                + variantScope.getFullVariantName();
     }
 
     private boolean usingIncrementalDexing(@NonNull VariantScope variantScope) {

@@ -16,13 +16,14 @@
 
 package com.android.build.gradle.integration.packaging;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.testutils.TestUtils;
-import com.google.common.truth.Truth;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -104,7 +105,6 @@ public class IncrementalLibChangeTest {
                 .with(BooleanOption.ENABLE_D8_DESUGARING, true)
                 .run(":assembleDebug");
 
-        Truth.assertThat(originalTime)
-                .isNoneOf(0l, Files.getLastModifiedTime(helloWorldDex).toMillis());
+        assertThat(originalTime).isEqualTo(Files.getLastModifiedTime(helloWorldDex).toMillis());
     }
 }
