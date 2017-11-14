@@ -286,6 +286,8 @@ res${File.separatorChar}values${File.separatorChar}strings.xml:4: Error: string1
                 arrayOf("--quiet",
                         "--check",
                         "UniquePermission,DuplicateDefinition,SdCardPath",
+                        "--text",
+                        "stdout",
                         "--project",
                         File(root, "project.xml").path),
 

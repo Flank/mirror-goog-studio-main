@@ -20,7 +20,7 @@ import static com.android.SdkConstants.DOT_AIDL;
 import static com.android.SdkConstants.DOT_GRADLE;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_XML;
-import static com.android.tools.lint.MaterialHtmlReporter.CODE_WINDOW_SIZE;
+import static com.android.tools.lint.HtmlReporter.CODE_WINDOW_SIZE;
 import static com.android.tools.lint.detector.api.LintUtils.isJavaKeyword;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 
@@ -943,7 +943,7 @@ public class LintSyntaxHighlighter {
 
     /**
      * Returns a style class for a given style that matches the styles
-     * available in {@link MaterialHtmlReporter#CSS_STYLES}
+     * available in {@link HtmlReporter#CSS_STYLES}
      */
     @Nullable
     private static String getStyleClass(int style) {

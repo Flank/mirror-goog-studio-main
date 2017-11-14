@@ -1006,11 +1006,6 @@ public class JarContentsTest {
                 "com/android/",
                 "com/android/tools/",
                 "com/android/tools/lint/",
-                "com/android/tools/lint/default.css",
-                "com/android/tools/lint/hololike.css",
-                "com/android/tools/lint/lint-error.png",
-                "com/android/tools/lint/lint-run.png",
-                "com/android/tools/lint/lint-warning.png",
                 "NOTICE",
                 "META-INF/MANIFEST.MF",
                 "META-INF/");

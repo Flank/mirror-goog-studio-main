@@ -17,11 +17,8 @@
 package com.android.tools.lint;
 
 import static com.android.SdkConstants.CURRENT_PLATFORM;
-import static com.android.SdkConstants.DOT_9PNG;
-import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.PLATFORM_LINUX;
 import static com.android.SdkConstants.UTF_8;
-import static com.android.tools.lint.detector.api.LintUtils.endsWith;
 import static java.io.File.separatorChar;
 
 import com.android.annotations.NonNull;
@@ -74,18 +71,12 @@ import com.android.tools.lint.detector.api.Issue;
 import com.android.utils.SdkUtils;
 import com.google.common.annotations.Beta;
 import com.google.common.collect.Sets;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.net.URLEncoder;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -98,19 +89,10 @@ import java.util.Set;
  */
 @Beta
 public abstract class Reporter {
-
-    public static final String NEW_FORMAT_PROPERTY = "lint.old-html-style";
-    public static final boolean USE_MATERIAL_HTML_STYLE = !Boolean.getBoolean(NEW_FORMAT_PROPERTY);
-
     protected final LintCliClient client;
     protected final File output;
     protected String title = "Lint Report";
-    protected boolean simpleFormat;
-    protected boolean bundleResources;
     protected Map<String, String> urlMap;
-    protected File resources;
-    protected final Map<File, String> resourceUrl = new HashMap<>();
-    protected final Map<String, File> nameToFile = new HashMap<>();
     protected boolean displayEmpty = true;
 
     /**
@@ -119,23 +101,14 @@ public abstract class Reporter {
      * @param client       the associated client
      * @param output       the output file
      * @param flags        the command line flags
-     * @param simpleFormat if true, use simple HTML format
      * @throws IOException if an error occurs
      */
     @NonNull
     public static Reporter createHtmlReporter(
             @NonNull LintCliClient client,
             @NonNull File output,
-            @NonNull LintCliFlags flags,
-            boolean simpleFormat) throws IOException {
-        if (USE_MATERIAL_HTML_STYLE) {
-            return new MaterialHtmlReporter(client, output, flags);
-        }
-        HtmlReporter reporter = new HtmlReporter(client, output, flags);
-        if (simpleFormat) {
-            reporter.setSimpleFormat(true);
-        }
-        return reporter;
+            @NonNull LintCliFlags flags) throws IOException {
+        return new HtmlReporter(client, output, flags);
     }
 
     /**
@@ -210,47 +183,7 @@ public abstract class Reporter {
         return title;
     }
 
-    /**
-     * Sets whether the report should bundle up resources along with the HTML report.
-     * This implies a non-simple format (see {@link #setSimpleFormat(boolean)}).
-     *
-     * @param bundleResources if true, copy images into a directory relative to
-     *            the report
-     */
-    public void setBundleResources(boolean bundleResources) {
-        this.bundleResources = bundleResources;
-        simpleFormat = false;
-    }
-
-    /**
-     * Sets whether the report should use simple formatting (meaning no JavaScript,
-     * embedded images, etc).
-     *
-     * @param simpleFormat whether the formatting should be simple
-     */
-    public void setSimpleFormat(boolean simpleFormat) {
-        this.simpleFormat = simpleFormat;
-    }
-
-    /**
-     * Returns whether the report should use simple formatting (meaning no JavaScript,
-     * embedded images, etc).
-     *
-     * @return whether the report should use simple formatting
-     */
-    public boolean isSimpleFormat() {
-        return simpleFormat;
-    }
-
-
     String getUrl(File file) {
-        if (bundleResources && !simpleFormat) {
-            String url = getRelativeResourceUrl(file);
-            if (url != null) {
-                return url;
-            }
-        }
-
         if (urlMap != null) {
             String path = file.getAbsolutePath();
             // Perform the comparison using URLs such that we properly escape spaces etc.
@@ -295,95 +228,6 @@ public abstract class Reporter {
     /** Set mapping of path prefixes to corresponding URLs in the HTML report */
     public void setUrlMap(@Nullable Map<String, String> urlMap) {
         this.urlMap = urlMap;
-    }
-
-    /** Gets a pointer to the local resource directory, if any */
-    File getResourceDir() {
-        if (resources == null && bundleResources) {
-            resources = computeResourceDir();
-            if (resources == null) {
-                bundleResources = false;
-            }
-        }
-
-        return resources;
-    }
-
-    /** Finds/creates the local resource directory, if possible */
-    File computeResourceDir() {
-        String fileName = output.getName();
-        int dot = fileName.indexOf('.');
-        if (dot != -1) {
-            fileName = fileName.substring(0, dot);
-        }
-
-        File resources = new File(output.getParentFile(), fileName + "_files");
-        if (!resources.exists() && !resources.mkdir()) {
-            resources = null;
-        }
-
-        return resources;
-    }
-
-    /** Returns a URL to a local copy of the given file, or null */
-    protected String getRelativeResourceUrl(File file) {
-        String resource = resourceUrl.get(file);
-        if (resource != null) {
-            return resource;
-        }
-
-        String name = file.getName();
-        if (!endsWith(name, DOT_PNG) || endsWith(name, DOT_9PNG)) {
-            return null;
-        }
-
-        // Attempt to make local copy
-        File resourceDir = getResourceDir();
-        if (resourceDir != null) {
-            String base = file.getName();
-
-            File path = nameToFile.get(base);
-            if (path != null && !path.equals(file)) {
-                // That filename already exists and is associated with a different path:
-                // make a new unique version
-                for (int i = 0; i < 100; i++) {
-                    base = '_' + base;
-                    path = nameToFile.get(base);
-                    if (path == null || path.equals(file)) {
-                        break;
-                    }
-                }
-            }
-
-            File target = new File(resourceDir, base);
-            try {
-                Files.copy(file, target);
-            } catch (IOException e) {
-                return null;
-            }
-            return resourceDir.getName() + '/' + encodeUrl(base);
-        }
-        return null;
-    }
-
-    /** Returns a URL to a local copy of the given resource, or null. There is
-     * no filename conflict resolution. */
-    protected String addLocalResources(URL url) throws IOException {
-        // Attempt to make local copy
-        File resourceDir = computeResourceDir();
-        if (resourceDir != null) {
-            String base = url.getFile();
-            base = base.substring(base.lastIndexOf('/') + 1);
-            nameToFile.put(base, new File(url.toExternalForm()));
-
-            File target = new File(resourceDir, base);
-            try (FileOutputStream output = new FileOutputStream(target);
-                 InputStream input = url.openStream()) {
-                ByteStreams.copy(input, output);
-            }
-            return resourceDir.getName() + '/' + encodeUrl(base);
-        }
-        return null;
     }
 
     // Based on similar code in com.intellij.openapi.util.io.FileUtilRt

@@ -476,17 +476,12 @@ public class Main {
                             exit(ERRNO_EXISTS);
                         }
                     }
-                    try {
-                        MultiProjectHtmlReporter reporter =
-                                new MultiProjectHtmlReporter(client, output, flags);
-                        if (arg.equals(ARG_SIMPLE_HTML)) {
-                            reporter.setSimpleFormat(true);
-                        }
-                        flags.getReporters().add(reporter);
-                    } catch (IOException e) {
-                        log(e, null);
-                        exit(ERRNO_INVALID_ARGS);
+                    MultiProjectHtmlReporter reporter =
+                            new MultiProjectHtmlReporter(client, output, flags);
+                    if (arg.equals(ARG_SIMPLE_HTML)) {
+                        System.err.println(ARG_SIMPLE_HTML + " ignored: no longer supported");
                     }
+                    flags.getReporters().add(reporter);
                     continue;
                 }
                 if (output.exists()) {
@@ -501,9 +496,7 @@ public class Main {
                     exit(ERRNO_EXISTS);
                 }
                 try {
-                    boolean simpleFormat = arg.equals(ARG_SIMPLE_HTML);
-                    Reporter reporter = Reporter.createHtmlReporter(client, output, flags,
-                            simpleFormat);
+                    Reporter reporter = Reporter.createHtmlReporter(client, output, flags);
                     flags.getReporters().add(reporter);
                 } catch (IOException e) {
                     log(e, null);
@@ -834,12 +827,6 @@ public class Main {
         } else {
             //noinspection VariableNotUsedInsideIf
             if (urlMap != null) {
-                for (Reporter reporter : reporters) {
-                    if (!reporter.isSimpleFormat()) {
-                        reporter.setBundleResources(true);
-                    }
-                }
-
                 if (!urlMap.equals(VALUE_NONE)) {
                     Map<String, String> map = new HashMap<>();
                     String[] replace = urlMap.split(",");
@@ -1204,7 +1191,6 @@ public class Main {
                 "path prefixes to corresponding URL prefixes, such as " +
                 "C:\\temp\\Proj1=http://buildserver/sources/temp/Proj1.  To turn off linking " +
                 "to files, use " + ARG_URL + " " + VALUE_NONE,
-            ARG_SIMPLE_HTML + " <filename>", "Create a simple HTML report",
             ARG_XML + " <filename>", "Create an XML report instead.",
 
             "", "\nProject Options:",

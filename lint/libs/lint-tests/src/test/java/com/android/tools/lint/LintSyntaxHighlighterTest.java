@@ -44,7 +44,7 @@ public class LintSyntaxHighlighterTest extends TestCase {
                 Files.write((""
                                 + "<html><head>\n"
                                 + "<style>\n"
-                                + MaterialHtmlReporter.CSS_STYLES
+                                + HtmlReporter.CSS_STYLES
                                 + "</style>\n"
                                 + "</head>\n<body>\n") + builder.getHtml()
                                 + "</body></html>\n",

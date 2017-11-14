@@ -87,7 +87,7 @@ public class TextReporter extends Reporter {
 
         StringBuilder output = new StringBuilder(issues.size() * 200);
         if (issues.isEmpty()) {
-            if (displayEmpty && writeStats) {
+            if (isDisplayEmpty() && writeStats) {
                 writer.write("No issues found");
                 if (stats.baselineErrorCount > 0 || stats.baselineWarningCount > 0) {
                     File baselineFile = flags.getBaselineFile();
@@ -266,7 +266,7 @@ public class TextReporter extends Reporter {
 
     @NonNull
     private String convertPath(@NonNull String path) {
-        if (forwardSlashPaths) {
+        if (isForwardSlashPaths()) {
             if (File.separatorChar == '/') {
                 return path;
             }

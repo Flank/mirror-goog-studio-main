@@ -241,7 +241,7 @@ public class LintGradleExecution {
             File xml = validateOutputFile(createOutputPath(descriptor.getProject(), null, DOT_XML,
                     null, flags.isFatalOnly()));
             try {
-                flags.getReporters().add(Reporter.createHtmlReporter(client, html, flags, false));
+                flags.getReporters().add(Reporter.createHtmlReporter(client, html, flags));
                 flags.getReporters().add(Reporter.createXmlReporter(client, xml, false));
             } catch (IOException e) {
                 throw new GradleException(e.getMessage(), e);
