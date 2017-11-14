@@ -397,12 +397,6 @@ public class PerformanceTestProjects {
                 "<action android:name=\"com\\.google\\.android\\.c2dm\\.intent\\.REGISTRATION\" />",
                 "");
 
-        // Replace files direct access to file collection lazy access, since variants resolved
-        // dependencies cannot be accessed in configuration time
-        TestFileUtils.searchAndReplace(
-                project.file("libs/utils/WordPressUtils/build.gradle"),
-                "files\\(variant\\.javaCompile\\.classpath\\.files, android\\.getBootClasspath\\(\\)\\)",
-                "files{[variant.javaCompile.classpath.files, android.getBootClasspath()]}");
     }
 
 
