@@ -1215,6 +1215,8 @@ public class LintCliClient extends LintClient {
                     resolveMergeManifestSources(document, mergeReport.getActions());
                     return document;
                 }
+            } else {
+                log(Severity.WARNING, null, mergeReport.getReportString());
             }
         }
         catch (ManifestMerger2.MergeFailureException e) {

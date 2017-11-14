@@ -1712,9 +1712,6 @@ class LintDriver
                 } else if (file.name == RES_FOLDER) { // Is it the res folder?
                     // Yes
                     checkResFolder(project, main, file, xmlDetectors, dirChecks, binaryChecks)
-                } else {
-                    client.log(null, "Unexpected folder %1\$s; should be project, " +
-                            "\"res\" folder or resource folder", file.path)
                 }
             } else if (file.isFile && LintUtils.isXmlFile(file)) {
                 // Yes, find out its resource type
