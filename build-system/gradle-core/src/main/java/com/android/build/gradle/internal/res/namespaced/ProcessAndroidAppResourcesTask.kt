@@ -37,6 +37,8 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 
@@ -51,10 +53,10 @@ import java.io.File
 @CacheableTask
 open class ProcessAndroidAppResourcesTask : AndroidBuilderTask() {
 
-    @get:InputFiles lateinit var manifestFileDirectory: FileCollection private set
-    @get:InputFiles lateinit var thisSubProjectStaticLibrary: FileCollection private set
-    @get:InputFiles lateinit var libraryDependencies: FileCollection private set
-    @get:InputFiles lateinit var sharedLibraryDependencies: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var manifestFileDirectory: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) lateinit var thisSubProjectStaticLibrary: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var libraryDependencies: FileCollection private set
+    @get:InputFiles @get:PathSensitive(PathSensitivity.NONE) lateinit var sharedLibraryDependencies: FileCollection private set
 
     @get:OutputDirectory lateinit var aaptIntermediateDir: File private set
     @get:OutputDirectory lateinit var rClassSource: File private set
