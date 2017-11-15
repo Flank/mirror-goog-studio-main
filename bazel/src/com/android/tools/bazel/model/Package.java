@@ -113,7 +113,7 @@ public class Package {
 
     public void addRule(BazelRule rule) {
         if (rules.get(rule.getName().toLowerCase()) != null) {
-            throw new IllegalStateException("Duplicated rule " + rule.getName());
+            throw new IllegalStateException("Duplicated rule " + rule.getLabel());
         }
         rules.put(rule.getName().toLowerCase(), rule);
     }
