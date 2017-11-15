@@ -24,6 +24,7 @@ import com.google.api.client.http.HttpTransport;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.Preconditions;
 import com.google.api.services.storage.Storage;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -55,10 +56,9 @@ public class GoogleStorageProfileUploader implements ProfileUploader {
     @Override
     public void uploadData(@NonNull List<Logging.GradleBenchmarkResult> benchmarkResults)
             throws IOException {
+        Preconditions.checkNotNull(benchmarkResults);
+        Preconditions.checkArgument(!benchmarkResults.isEmpty(), "got an empty list of results");
 
-        if (benchmarkResults.isEmpty()) {
-            return;
-        }
         GoogleCredential credential;
         try {
             credential =

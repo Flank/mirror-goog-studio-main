@@ -107,6 +107,12 @@ public final class BenchmarkRecorder {
 
     private List<ProfileUploader> defaultUploaders() {
         List<ProfileUploader> uploaders = Lists.newLinkedList();
+
+        if (LocalUploader.INSTANCE.getOutputFolder() != null) {
+            uploaders.add(LocalUploader.INSTANCE);
+            return uploaders;
+        }
+
         uploaders.add(GoogleStorageProfileUploader.INSTANCE);
 
         // TODO(samwho): disabled this to check if it's the cause of http://b/69351230

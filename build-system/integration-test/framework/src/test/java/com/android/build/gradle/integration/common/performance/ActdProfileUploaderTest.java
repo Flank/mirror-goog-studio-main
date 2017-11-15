@@ -20,34 +20,20 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.*;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.integration.common.fixture.RandomGradleBenchmark;
 import com.android.build.gradle.integration.performance.ActdProfileUploader;
 import com.android.build.gradle.integration.performance.ActdProfileUploader.BuildbotResponse;
 import com.android.build.gradle.integration.performance.ActdProfileUploader.Infos;
 import com.android.build.gradle.integration.performance.ActdProfileUploader.SampleRequest;
 import com.android.build.gradle.integration.performance.ActdProfileUploader.SerieRequest;
-import com.android.tools.build.gradle.internal.profile.GradleTaskExecutionType;
-import com.android.tools.build.gradle.internal.profile.GradleTransformExecutionType;
-import com.google.common.collect.Lists;
-import com.google.protobuf.ProtocolMessageEnum;
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging.Benchmark;
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult.Flags;
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult.ScheduledBuild;
-import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan;
-import com.google.wireless.android.sdk.stats.GradleTaskExecution;
-import com.google.wireless.android.sdk.stats.GradleTransformExecution;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -80,110 +66,6 @@ public class ActdProfileUploaderTest {
                                 ActdProfileUploader.Mode.NORMAL));
 
         doReturn(buildInfo).when(uploader).jsonGet(anyString(), eq(BuildbotResponse.class));
-    }
-
-    /**
-     * Gets a random enum value for a given array of proto enums.
-     *
-     * <p>Example:
-     *
-     * <pre>
-     *     BenchmarkMode bm = random(BenchmarkMode.values());
-     * </pre>
-     */
-    @NonNull
-    private static <T extends ProtocolMessageEnum> T random(@NonNull T[] array) {
-        T t;
-        while (true) {
-            t = array[new Random().nextInt(array.length)];
-            try {
-                t.getNumber();
-                return t;
-            } catch (IllegalArgumentException e) {
-                // it's not possible to call .getNumber() on the UNRECOGNIZED enum element, doing so
-                // causes an IllegalArgumentException. We do nothing in this catch block in order
-                // to loop again and grab a different random enum element.
-            }
-        }
-    }
-
-    private static long randomDuration() {
-        long value = Math.abs(new Random().nextLong());
-        if (value == Long.MIN_VALUE) {
-            return Long.MAX_VALUE;
-        }
-
-        // to make sure samples aren't filtered out, we add the threshold if it's below it
-        if (value < ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS) {
-            value += ActdProfileUploader.BENCHMARK_VALUE_THRESHOLD_MILLIS;
-        }
-
-        return value;
-    }
-
-    private static long randomNonzeroLong() {
-        long value = Math.abs(new Random().nextLong());
-        if (value == Long.MIN_VALUE) {
-            return Long.MAX_VALUE;
-        }
-        return value + 1;
-    }
-
-    private static GradleBenchmarkResult randomBenchmarkResult() {
-        return randomBenchmarkResult(randomNonzeroLong());
-    }
-
-    private static GradleBenchmarkResult randomBenchmarkResult(long buildId) {
-        Flags flags =
-                Flags.newBuilder()
-                        .setAapt(random(Flags.Aapt.values()))
-                        .setBranch(random(Flags.Branch.values()))
-                        .setCompiler(random(Flags.Compiler.values()))
-                        .setJacoco(random(Flags.Jacoco.values()))
-                        .setMinification(random(Flags.Minification.values()))
-                        .build();
-
-        GradleTaskExecution.Builder task =
-                GradleTaskExecution.newBuilder()
-                        .setType(random(GradleTaskExecutionType.values()).getNumber());
-
-        GradleBuildProfileSpan.Builder span =
-                GradleBuildProfileSpan.newBuilder().setDurationInMs(randomDuration()).setTask(task);
-
-        if (span.getTask().getType() == GradleTaskExecutionType.TRANSFORM_VALUE) {
-            GradleTransformExecution.Builder transform =
-                    GradleTransformExecution.newBuilder()
-                            .setType(random(GradleTransformExecutionType.values()).getNumber());
-
-            span.setTransform(transform);
-        }
-
-        ScheduledBuild.Builder scheduledBuild =
-                ScheduledBuild.newBuilder().setBuildbotBuildNumber(buildId);
-
-        GradleBuildProfile.Builder profile =
-                GradleBuildProfile.newBuilder().setBuildTime(randomDuration()).addSpan(span);
-
-        return Logging.GradleBenchmarkResult.newBuilder()
-                .setBenchmarkMode(random(BenchmarkMode.values()))
-                .setBenchmark(random(Benchmark.values()))
-                .setFlags(flags)
-                .setProfile(profile)
-                .setScheduledBuild(scheduledBuild)
-                .build();
-    }
-
-    private static List<GradleBenchmarkResult> randomBenchmarkResults() {
-        return randomBenchmarkResults(randomNonzeroLong());
-    }
-
-    private static List<GradleBenchmarkResult> randomBenchmarkResults(long buildId) {
-        int count = new Random().nextInt(10) + 5; // must always be greater than 0
-        List<GradleBenchmarkResult> results = Lists.newArrayListWithCapacity(count);
-        for (int i = 0; i < count; i++) {
-            results.add(randomBenchmarkResult(buildId));
-        }
-        return results;
     }
 
     private static void assertValidInfos(@Nullable Infos infos) {
@@ -251,7 +133,7 @@ public class ActdProfileUploaderTest {
 
     @Test
     public void flags() {
-        GradleBenchmarkResult gbr = randomBenchmarkResult();
+        GradleBenchmarkResult gbr = RandomGradleBenchmark.randomBenchmarkResult();
         assertThat(ActdProfileUploader.flags(gbr)).isNotEmpty();
 
         // Make sure that we get the same result for the same object passed in multiple times.
@@ -260,7 +142,7 @@ public class ActdProfileUploaderTest {
 
     @Test
     public void seriesId() {
-        GradleBenchmarkResult gbr = randomBenchmarkResult();
+        GradleBenchmarkResult gbr = RandomGradleBenchmark.randomBenchmarkResult();
 
         assertThat(gbr.getProfile()).isNotNull();
         assertThat(gbr.getProfile().getSpanList()).isNotEmpty();
@@ -275,7 +157,7 @@ public class ActdProfileUploaderTest {
 
     @Test
     public void description() {
-        GradleBenchmarkResult gbr = randomBenchmarkResult();
+        GradleBenchmarkResult gbr = RandomGradleBenchmark.randomBenchmarkResult();
 
         assertThat(gbr.getProfile()).isNotNull();
         assertThat(gbr.getProfile().getSpanList()).isNotEmpty();
@@ -287,7 +169,8 @@ public class ActdProfileUploaderTest {
 
     @Test
     public void sampleRequests() {
-        Collection<SampleRequest> reqs = uploader.sampleRequests(randomBenchmarkResults());
+        Collection<SampleRequest> reqs =
+                uploader.sampleRequests(RandomGradleBenchmark.randomBenchmarkResults());
         assertThat(reqs).isNotEmpty();
 
         for (ActdProfileUploader.SampleRequest req : reqs) {
@@ -324,7 +207,7 @@ public class ActdProfileUploaderTest {
     @Test
     public void serieRequests() throws IOException {
         Collection<SampleRequest> sampleRequests =
-                uploader.sampleRequests(randomBenchmarkResults());
+                uploader.sampleRequests(RandomGradleBenchmark.randomBenchmarkResults());
         assertThat(sampleRequests).isNotEmpty();
 
         Collection<SerieRequest> serieRequests = uploader.serieRequests(sampleRequests);
