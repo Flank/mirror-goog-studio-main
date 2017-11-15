@@ -109,6 +109,8 @@ public final class BenchmarkRecorder {
         List<ProfileUploader> uploaders = Lists.newLinkedList();
         uploaders.add(GoogleStorageProfileUploader.INSTANCE);
 
+        // TODO(samwho): disabled this to check if it's the cause of http://b/69351230
+        /*
         try {
             uploaders.add(ActdProfileUploader.fromEnvironment());
         } catch (IllegalStateException e) {
@@ -119,6 +121,7 @@ public final class BenchmarkRecorder {
                             + "Error: "
                             + e);
         }
+        */
 
         return uploaders;
     }
