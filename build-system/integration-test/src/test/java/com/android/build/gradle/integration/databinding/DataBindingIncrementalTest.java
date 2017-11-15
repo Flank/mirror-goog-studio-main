@@ -231,23 +231,32 @@ public class DataBindingIncrementalTest {
         Files.copy(mainActivity, activity2);
         GradleBuildResult result = project.executor().run("assembleDebug");
 
-        File activity2DataBindinInfo =
+        File activity2DataBindingInfo =
                 project.getIntermediateFile("data-binding-info", "debug", "activity2-layout.xml");
-        assertThat(activity2DataBindinInfo).exists();
-        long lastModified = activity2DataBindinInfo.lastModified();
-
+        assertThat(activity2DataBindingInfo).exists();
+        long dataBindingInfoLastModified = activity2DataBindingInfo.lastModified();
         TestUtils.waitForFileSystemTick();
 
         assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
-
         assertThat(project.getApk(DEBUG)).containsClass(activity2ClassName);
+
+        // Modify the file.
+        File activity2Layout = project.file("src/main/res/layout/activity2.xml");
+        long activity2LayoutLastModified = activity2Layout.lastModified();
+        TestUtils.waitForFileSystemTick();
         TestFileUtils.replaceLine(project.file("src/main/res/layout/activity2.xml"), 19,
                 "<data class=\"MyCustomName\">");
+
+        // Make sure that the file was actually modified.
+        assertThat(activity2Layout.lastModified()).isNotEqualTo(activity2LayoutLastModified);
+
         result = project.executor().run("assembleDebug");
 
+        // Make sure merge resources task and export info tasks were re-run.
         assertThat(result.getTask(MERGE_RESOURCES_TASK)).wasNotUpToDate();
-        assertThat(activity2DataBindinInfo).exists();
-        assertThat(activity2DataBindinInfo.lastModified()).isNotEqualTo(lastModified);
+        assertThat(activity2DataBindingInfo).exists();
+        assertThat(activity2DataBindingInfo.lastModified())
+                .isNotEqualTo(dataBindingInfoLastModified);
 
         assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
 
