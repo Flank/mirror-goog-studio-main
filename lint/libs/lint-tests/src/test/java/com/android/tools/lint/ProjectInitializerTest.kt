@@ -547,7 +547,7 @@ C.java:6: Warning: Do not hardcode "/sdcard/"; use Environment.getExternalStorag
         MainTest.checkDriver("" +
                 // We only find this error if we correctly include the jar dependency
                 // which provides the parent class which implements Parcelable.
-                "src/test/pkg/Child.java:5: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n" +
+                "src/test/pkg/Child.java:5: Error: This class implements Parcelable but does not provide a CREATOR field [ParcelCreator]\n".replace('/', File.separatorChar) +
                 "public class Child extends Parent {\n" +
                 "             ~~~~~\n" +
                 "1 errors, 0 warnings\n",
