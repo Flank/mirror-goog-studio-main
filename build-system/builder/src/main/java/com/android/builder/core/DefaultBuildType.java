@@ -128,10 +128,37 @@ public class DefaultBuildType extends BaseConfigImpl implements BuildType {
     }
 
     /**
-     * Whether to generate pseudo locale in the APK.
+     * Specifies whether the plugin should generate resources for pseudolocales.
      *
-     * <p>If enabled, 2 fake pseudo locales (en-XA and ar-XB) will be added to the APK to help
-     * test internationalization support in the app.
+     * <p>A pseudolocale is a locale that simulates characteristics of languages that cause UI,
+     * layout, and other translation-related problems when an app is localized. Pseudolocales can
+     * aid your development workflow because you can test and make adjustments to your UI before you
+     * finalize text for translation.
+     *
+     * <p>When you set this property to <code>true</code> as shown below, the plugin generates
+     * resources for the following pseudo locales and makes them available in your connected
+     * device's language preferences: <code>en-XA</code> and <code>ar-XB</code>.
+     *
+     * <pre>
+     * android {
+     *     buildTypes {
+     *         debug {
+     *             pseudoLocalesEnabled true
+     *         }
+     *     }
+     * }
+     * </pre>
+     *
+     * <p>When you build your app, the plugin includes the pseudolocale resources in your APK. If
+     * you notice that your APK does not include those locale resources, make sure your build
+     * configuration isn't limiting which locale resources are packaged with your APK, such as using
+     * the <code>resConfigs</code> property to <a
+     * href="https://d.android.com/studio/build/shrink-code.html#unused-alt-resources">remove unused
+     * locale resources</a>.
+     *
+     * <p>To learn more, read <a
+     * href="https://d.android.com/guide/topics/resources/pseudolocales.html">Test Your App with
+     * Pseudolocales</a>.
      */
     @Override
     public boolean isPseudoLocalesEnabled() {
