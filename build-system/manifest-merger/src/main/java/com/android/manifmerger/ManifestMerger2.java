@@ -88,6 +88,7 @@ public class ManifestMerger2 {
     private final Optional<File> mReportFile;
     @NonNull private final String mFeatureName;
     @NonNull private final FileStreamProvider mFileStreamProvider;
+    @NonNull private final ImmutableList<File> mNavigationFiles;
 
     private ManifestMerger2(
             @NonNull ILogger logger,
@@ -101,7 +102,8 @@ public class ManifestMerger2 {
             @NonNull XmlDocument.Type documentType,
             @NonNull Optional<File> reportFile,
             @NonNull String featureName,
-            @NonNull FileStreamProvider fileStreamProvider) {
+            @NonNull FileStreamProvider fileStreamProvider,
+            @NonNull ImmutableList<File> navigationFiles) {
         this.mSystemPropertyResolver = systemPropertiesResolver;
         this.mPlaceHolderValues = placeHolderValues;
         this.mManifestFile = mainManifestFile;
@@ -114,6 +116,7 @@ public class ManifestMerger2 {
         this.mReportFile = reportFile;
         this.mFeatureName = featureName;
         this.mFileStreamProvider = fileStreamProvider;
+        this.mNavigationFiles = navigationFiles;
     }
 
     /**
@@ -1107,6 +1110,10 @@ public class ManifestMerger2 {
 
         @NonNull private String mFeatureName;
 
+        @NonNull
+        private final ImmutableList.Builder<File> mNavigationFilesBuilder =
+                new ImmutableList.Builder<>();
+
         /**
          * Sets a value for a {@link ManifestSystemProperty}
          * @param override the property to set
@@ -1412,6 +1419,32 @@ public class ManifestMerger2 {
         }
 
         /**
+         * Add one navigation file. It will be added last in the list of navigation files which will
+         * make it the lowest priority navigation file.
+         *
+         * @param file the navigation file to add.
+         * @return itself.
+         */
+        @NonNull
+        public Invoker addNavigationFile(@NonNull File file) {
+            this.mNavigationFilesBuilder.add(file);
+            return thisAsT();
+        }
+
+        /**
+         * Add several navigation files last in the list. Relative priorities between the passed
+         * files as parameters will be respected.
+         *
+         * @param files the navigation files to add.
+         * @return itself.
+         */
+        @NonNull
+        public Invoker addNavigationFiles(@NonNull File... files) {
+            this.mNavigationFilesBuilder.add(files);
+            return thisAsT();
+        }
+
+        /**
          * Specify if the file being merged is an overlay (flavor). If not called, the merging
          * process will assume a master manifest merge. The master manifest needs to have a package
          * and some other mandatory fields like "uses-sdk", etc.
@@ -1467,7 +1500,8 @@ public class ManifestMerger2 {
                             mDocumentType,
                             Optional.fromNullable(mReportFile),
                             mFeatureName,
-                            fileStreamProvider);
+                            fileStreamProvider,
+                            mNavigationFilesBuilder.build());
             return manifestMerger.merge();
         }
 
