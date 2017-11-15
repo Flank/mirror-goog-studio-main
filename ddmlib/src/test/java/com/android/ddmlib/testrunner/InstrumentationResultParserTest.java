@@ -84,6 +84,24 @@ public class InstrumentationResultParserTest extends TestCase {
     }
 
     /**
+     * Tests parsing output for a successful test run with no tests with a test time over 1000 secs
+     * in that case the format of the number contains comma.
+     */
+    public void testParse_timeLongFormat() {
+        StringBuilder output = new StringBuilder();
+        addLine(output, "INSTRUMENTATION_RESULT: stream=");
+        addLine(output, "Test results for InstrumentationTestRunner=");
+        addLine(output, "Time: 1,745.755");
+        addLine(output, "OK (0 tests)");
+        addLine(output, "INSTRUMENTATION_CODE: -1");
+
+        mMockListener.testRunStarted(RUN_NAME, 0);
+        mMockListener.testRunEnded(1745755L, Collections.EMPTY_MAP);
+
+        injectAndVerifyTestString(output.toString());
+    }
+
+    /**
      * Tests parsing output for a missing time stamp, meaning an invalid output from the runner.
      */
     public void testParse_missingTimeStamp() {

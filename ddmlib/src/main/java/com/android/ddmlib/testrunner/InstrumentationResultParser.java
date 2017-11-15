@@ -19,6 +19,8 @@ package com.android.ddmlib.testrunner;
 import com.android.ddmlib.IShellOutputReceiver;
 import com.android.ddmlib.Log;
 import com.android.ddmlib.MultiLineReceiver;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -560,18 +562,20 @@ public class InstrumentationResultParser extends MultiLineReceiver {
     }
 
     /**
-     * Parses out and store the elapsed time.
+     * Parses out and store the elapsed time. Elapsed time format use comma separation above 1000.
+     * For example: "Time: 1,745.755" which should be handled.
      */
     private void parseTime(String line) {
-        final Pattern timePattern = Pattern.compile(String.format("%s\\s*([\\d\\.]+)",
-                Prefixes.TIME_REPORT));
+        final Pattern timePattern =
+                Pattern.compile(String.format("%s\\s*([\\d\\,]*[\\d\\.]+)", Prefixes.TIME_REPORT));
         Matcher timeMatcher = timePattern.matcher(line);
         if (timeMatcher.find()) {
             String timeString = timeMatcher.group(1);
             try {
-                float timeSeconds = Float.parseFloat(timeString);
+                Number n = NumberFormat.getInstance().parse(timeString);
+                float timeSeconds = n.floatValue();
                 mTestTime = (long) (timeSeconds * 1000);
-            } catch (NumberFormatException e) {
+            } catch (ParseException e) {
                 Log.w(LOG_TAG, String.format("Unexpected time format %1$s", line));
             }
         } else {
