@@ -91,9 +91,10 @@ def testEnvironment =
                     key.startsWith("BUILDBOT_")
         }
 
+File outDir = rootProject.file(System.env.OUT_DIR != null ? System.env.OUT_DIR : "../out")
 testEnvironment << [
         TEST_TMPDIR: project.buildDir, // Use the same environment variable as Bazel for now.
-        CUSTOM_REPO: rootProject.file("../out/repo").toString()
+        CUSTOM_REPO: new File(outDir, "repo").toString()
                 + File.pathSeparator
                 + rootProject.file("../prebuilts/tools/common/m2/repository/").toString(),
         CUSTOM_IMPROVED_DEPENDENCY_RESOLUTION : "true"

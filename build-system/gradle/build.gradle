@@ -38,9 +38,10 @@ apply from: "$rootDir/buildSrc/base/bintray.gradle"
 jar.manifest.attributes("Plugin-Version": version)
 jar.manifest.attributes("Inception-Date": DateTimeFormatter.ISO_LOCAL_DATE.format(LocalDate.now()));
 
+File outDir = rootProject.file(System.env.OUT_DIR != null ? System.env.OUT_DIR : "../out")
 test {
     environment("CUSTOM_REPO",
-            rootProject.file("../out/repo").toString()
+            new File(outDir, "repo").toString()
                     + File.pathSeparator
                     + rootProject.file("../prebuilts/tools/common/m2/repository/").toString())
 
