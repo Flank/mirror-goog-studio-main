@@ -56,20 +56,14 @@ data class Benchmark(
                          */
                         project = postApplyProject(project)
 
-                        /*
-                         * Any common configuration for the executor should happen here. The
-                         * philosophy is that the benchmark creator should not have to configure
-                         * the executor, it should be possible for us to do that based on what
-                         * scenario has been passed in.
-                         */
+                        val model = project.model().ignoreSyncIssues().withoutOfflineFlag()
+                        PerformanceTestProjects.assertNoSyncErrors(model.multi.modelMap)
+
                         val executor = project.executor()
                                 .withEnableInfoLogging(false)
                                 .with(BooleanOption.ENABLE_INTERMEDIATE_ARTIFACTS_CACHE, false)
                                 .with(BooleanOption.ENABLE_D8, scenario.useD8())
                                 .withUseDexArchive(scenario.useDexArchive())
-
-                        val model = project.model().ignoreSyncIssues().withoutOfflineFlag()
-                        PerformanceTestProjects.assertNoSyncErrors(model.multi.modelMap)
 
                         setup(project, executor, model)
 
