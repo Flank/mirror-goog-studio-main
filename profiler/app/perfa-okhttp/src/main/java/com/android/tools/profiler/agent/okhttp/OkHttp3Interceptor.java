@@ -46,7 +46,15 @@ public final class OkHttp3Interceptor implements Interceptor {
         } catch (Exception ex) {
             StudioLog.e("Could not track an OkHttp3 request", ex);
         }
-        Response response = chain.proceed(request);
+
+        Response response;
+        try {
+            response = chain.proceed(request);
+        } catch (IOException ex) {
+            tracker.error(ex.toString());
+            throw ex;
+        }
+
         try {
             trackRequestBody(tracker, request);
         } catch (Exception ex) {

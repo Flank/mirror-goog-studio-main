@@ -20,9 +20,12 @@ import android.app.Activity;
 import android.tools.SimpleWebServer;
 import android.tools.SimpleWebServer.QueryParam;
 import android.tools.SimpleWebServer.RequestHandler;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Interceptor;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Request.Builder;
 import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import java.io.IOException;
@@ -40,7 +43,9 @@ public final class OkHttpActivity extends Activity {
         OKHTTP2_GET("OKHTTP2GET"),
         OKHTTP2_POST("OKHTTP2POST"),
         OKHTTP2_AND_OKHTTP3_GET("OKHTTP2ANDOKHTTP3GET"),
-        NULL_THREAD_CLASS_LOADER("NULLTHREADCLASSLOADER");
+        NULL_THREAD_CLASS_LOADER("NULLTHREADCLASSLOADER"),
+        OKHTTP2_ERROR("OKHTTP2ERROR"),
+        OKHTTP3_ERROR("OKHTTP3ERROR");
         private final String myMethodName;
 
         Method(String name) {
@@ -216,6 +221,96 @@ public final class OkHttpActivity extends Activity {
         } catch (IOException e) {
             System.out.println("Error in connection " + e.toString());
         }
+        System.out.println(Utils.readResponse(inputStream));
+        server.stop();
+    }
+
+    public void runOkHttp2GetAbortedByError() throws IOException {
+        SimpleWebServer server = new SimpleWebServer(Utils.getAvailablePort(), HANDLER);
+        server.start();
+
+        String url = Utils.getUrl(server.getPort(), "method", Method.OKHTTP2_ERROR.myMethodName);
+
+        // Interceptor which dies only the first time it runs, so we can fake a failed request
+        Interceptor explodingInterceptor =
+                new Interceptor() {
+                    boolean shouldExplode = true;
+
+                    @Override
+                    public Response intercept(Chain chain) throws IOException {
+                        if (shouldExplode) {
+                            shouldExplode = false;
+                            throw new IOException("Fake test exception");
+                        }
+                        return chain.proceed(chain.request());
+                    }
+                };
+
+        OkHttpClient client = new OkHttpClient();
+        client.setRetryOnConnectionFailure(false);
+        client.networkInterceptors().add(explodingInterceptor);
+
+        Request request = new Builder().url(url).build();
+        Call call = client.newCall(request);
+        try {
+            call.execute();
+        } catch (IOException e) {
+            // This exception comes from our explodingInterceptor and is expected.
+            //
+            // Note: In later versions of OkHttp, a connection is automatically cancelled whenever a
+            // request is interrupted by an IOException. However, we need to test against OkHttp2.2
+            // here (as it is the oldest version we support), so we just manually close the call
+            // here (even if most users won't need to do this). If we didn't close this call, the
+            // next call to client.newCall below would also fail.
+            //
+            // We don't do this in a finally block because we're trying to stick as close to how
+            // OkHttp fixes this in later versions (IOException -> cancelled call).
+            call.cancel();
+        }
+
+        Response response = client.newCall(request).execute();
+        InputStream inputStream = response.body().byteStream();
+
+        System.out.println(Utils.readResponse(inputStream));
+        server.stop();
+    }
+
+    public void runOkHttp3GetAbortedByError() throws IOException {
+        SimpleWebServer server = new SimpleWebServer(Utils.getAvailablePort(), HANDLER);
+        server.start();
+
+        // Interceptor which dies only the first time it runs, so we can fake a failed request
+        okhttp3.Interceptor explodingInterceptor =
+                new okhttp3.Interceptor() {
+                    boolean shouldExplode = true;
+
+                    @Override
+                    public okhttp3.Response intercept(Chain chain) throws IOException {
+                        if (shouldExplode) {
+                            shouldExplode = false;
+                            throw new IOException("Fake test exception");
+                        }
+                        return chain.proceed(chain.request());
+                    }
+                };
+        okhttp3.OkHttpClient client =
+                new okhttp3.OkHttpClient.Builder()
+                        .retryOnConnectionFailure(false)
+                        .addNetworkInterceptor(explodingInterceptor)
+                        .build();
+
+        String url = Utils.getUrl(server.getPort(), "method", Method.OKHTTP3_ERROR.myMethodName);
+        okhttp3.Request request = new okhttp3.Request.Builder().url(url).build();
+
+        try {
+            client.newCall(request).execute();
+        } catch (IOException e) {
+            // This exception comes from our explodingInterceptor and is expected.
+        }
+
+        okhttp3.Response response = client.newCall(request).execute();
+        InputStream inputStream = response.body().byteStream();
+
         System.out.println(Utils.readResponse(inputStream));
         server.stop();
     }

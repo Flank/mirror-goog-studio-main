@@ -145,13 +145,11 @@ grpc::Status NetworkServiceImpl::GetHttpDetails(
       } break;
 
       case HttpDetailsRequest::ACCESSING_THREADS: {
-        if (conn->response.payload_id != "") {
-          auto accessing_threads = response->mutable_accessing_threads();
-          for (auto thread: conn->threads) {
-            auto t = accessing_threads->add_thread();
-            t->set_id(thread.id);
-            t->set_name(thread.name);
-          }
+        auto accessing_threads = response->mutable_accessing_threads();
+        for (auto thread: conn->threads) {
+          auto t = accessing_threads->add_thread();
+          t->set_id(thread.id);
+          t->set_name(thread.name);
         }
       } break;
 
