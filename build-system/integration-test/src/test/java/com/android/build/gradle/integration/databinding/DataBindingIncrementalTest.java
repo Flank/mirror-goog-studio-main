@@ -172,6 +172,7 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
+    @Ignore("b/68252584")
     public void addNewLayout() throws Exception {
         project.execute(EXPORT_INFO_TASK);
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
@@ -225,44 +226,44 @@ public class DataBindingIncrementalTest {
 
     @Test
     public void renameLayout() throws Exception {
-        String activity2ClassName = "Landroid/databinding/testapp/databinding/Activity2Binding;";
+        String activity3ClassName = "Landroid/databinding/testapp/databinding/Activity3Binding;";
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
-        File activity2 = new File(mainActivity.getParentFile(), "activity2.xml");
-        Files.copy(mainActivity, activity2);
+        File activity3 = new File(mainActivity.getParentFile(), "activity3.xml");
+        Files.copy(mainActivity, activity3);
         GradleBuildResult result = project.executor().run("assembleDebug");
 
-        File activity2DataBindingInfo =
-                project.getIntermediateFile("data-binding-info", "debug", "activity2-layout.xml");
-        assertThat(activity2DataBindingInfo).exists();
-        long dataBindingInfoLastModified = activity2DataBindingInfo.lastModified();
+        File activity3DataBindingInfo =
+                project.getIntermediateFile("data-binding-info", "debug", "activity3-layout.xml");
+        assertThat(activity3DataBindingInfo).exists();
+        long dataBindingInfoLastModified = activity3DataBindingInfo.lastModified();
         TestUtils.waitForFileSystemTick();
 
         assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
-        assertThat(project.getApk(DEBUG)).containsClass(activity2ClassName);
+        assertThat(project.getApk(DEBUG)).containsClass(activity3ClassName);
 
         // Modify the file.
-        File activity2Layout = project.file("src/main/res/layout/activity2.xml");
-        long activity2LayoutLastModified = activity2Layout.lastModified();
+        long activity2LayoutLastModified = activity3.lastModified();
         TestUtils.waitForFileSystemTick();
-        TestFileUtils.replaceLine(project.file("src/main/res/layout/activity2.xml"), 19,
-                "<data class=\"MyCustomName\">");
+        TestFileUtils.replaceLine(activity3, 19, "<data class=\"MyCustomName\">");
 
         // Make sure that the file was actually modified.
-        assertThat(activity2Layout.lastModified()).isNotEqualTo(activity2LayoutLastModified);
+        assertThat(activity3.lastModified()).isNotEqualTo(activity2LayoutLastModified);
 
         result = project.executor().run("assembleDebug");
 
-        // Make sure merge resources task and export info tasks were re-run.
-        assertThat(result.getTask(MERGE_RESOURCES_TASK)).wasNotUpToDate();
-        assertThat(activity2DataBindingInfo).exists();
-        assertThat(activity2DataBindingInfo.lastModified())
+
+        assertThat(activity3DataBindingInfo).exists();
+        assertThat(activity3DataBindingInfo.lastModified())
                 .isNotEqualTo(dataBindingInfoLastModified);
 
-        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
-
-        assertThat(project.getApk(DEBUG)).doesNotContainClass(activity2ClassName);
+        assertThat(project.getApk(DEBUG)).doesNotContainClass(activity3ClassName);
         assertThat(project.getApk(DEBUG))
                 .containsClass("Landroid/databinding/testapp/databinding/MyCustomName;");
+
+        // Make sure merge resources task and export info tasks were re-run.
+        assertThat(result.getTask(MERGE_RESOURCES_TASK)).wasNotUpToDate();
+        assertThat(result.getTask(EXPORT_INFO_TASK)).wasNotUpToDate();
+
         assertRecompile();
     }
 
