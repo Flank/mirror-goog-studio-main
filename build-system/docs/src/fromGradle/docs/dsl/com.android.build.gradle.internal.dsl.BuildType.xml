@@ -21,7 +21,6 @@
             <tr><td>shrinkResources</td></tr>
             <tr><td>signingConfig</td></tr>
             <tr><td>testCoverageEnabled</td></tr>
-            <tr><td>useJack</td></tr>
             <tr><td>useProguard</td></tr>
             <tr><td>versionNameSuffix</td></tr>
             <tr><td>zipAlignEnabled</td></tr>

@@ -1,1 +1,0 @@
-rule com.google.gson.** com.google.repacked.gson.@1

@@ -72,7 +72,6 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @NonNull private final Project project;
     @NonNull private final NdkOptions ndkConfig;
     @NonNull private final ExternalNativeBuildOptions externalNativeBuildOptions;
-    @NonNull private final JackOptions jackOptions;
     @NonNull
     private final com.android.build.gradle.internal.dsl.JavaCompileOptions javaCompileOptions;
     @NonNull private final ShaderOptions shaderOptions;
@@ -100,7 +99,6 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         this.issueReporter = issueReporter;
         this.deprecationReporter = deprecationReporter;
 
-        jackOptions = objectFactory.newInstance(JackOptions.class, deprecationReporter);
         javaCompileOptions =
                 objectFactory.newInstance(
                         com.android.build.gradle.internal.dsl.JavaCompileOptions.class,
@@ -123,7 +121,6 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         this.project = project;
         this.issueReporter = issueReporter;
         this.deprecationReporter = deprecationReporter;
-        jackOptions = new JackOptions(deprecationReporter);
         javaCompileOptions = new com.android.build.gradle.internal.dsl.JavaCompileOptions();
         shaderOptions = new ShaderOptions();
         ndkConfig = new NdkOptions();
@@ -214,13 +211,6 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         return externalNativeBuildOptions;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    @NonNull
-    public JackOptions getJackOptions() {
-        return jackOptions;
-    }
-
     /** Options for configuration Java compilation. */
     @Override
     @NonNull
@@ -260,7 +250,6 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         super._initWith(that);
         BuildType thatBuildType = (BuildType) that;
         ndkConfig._initWith(thatBuildType.getNdkConfig());
-        jackOptions._initWith(thatBuildType.getJackOptions());
         javaCompileOptions.getAnnotationProcessorOptions()._initWith(
                 thatBuildType.getJavaCompileOptions().getAnnotationProcessorOptions());
         shrinkResources = thatBuildType.isShrinkResources();
@@ -509,54 +498,6 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     public ExternalNativeBuildOptions externalNativeBuild(@NonNull Action<ExternalNativeBuildOptions> action) {
         action.execute(externalNativeBuildOptions);
         return externalNativeBuildOptions;
-    }
-
-    /**
-     * The Jack toolchain is deprecated.
-     *
-     * <p>If you want to use Java 8 language features, use the improved support included in the
-     * default toolchain. To learn more, read <a
-     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
-     * features</a>.
-     *
-     * @deprecated For more information, read <a
-     *     href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
-     *     features</a>
-     */
-    @Deprecated
-    public void jackOptions(@NonNull Action<JackOptions> action) {
-        action.execute(jackOptions);
-    }
-
-    /**
-     * The Jack toolchain is deprecated.
-     *
-     * <p>If you want to use Java 8 language features, use the improved support included in the
-     * default toolchain. To learn more, read <a
-     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
-     * features</a>.
-     *
-     * @deprecated For more information, read <a
-     *     href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
-     *     features</a>
-     */
-    @Deprecated
-    @Nullable
-    public Boolean getUseJack() {
-        deprecationReporter.reportObsoleteUsage(
-                "BuildType.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.EOY2018);
-        return null;
-    }
-
-    /**
-     * Whether the experimental Jack toolchain should be used.
-     *
-     * @deprecated use jack.setEnabled instead.
-     */
-    @Deprecated
-    public void setUseJack(@Nullable Boolean useJack) {
-        deprecationReporter.reportObsoleteUsage(
-                "BuildType.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.EOY2018);
     }
 
     /**

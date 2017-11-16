@@ -1,1 +1,0 @@
--keep public class com.android.tests.basic.IndirectlyReferencedClass

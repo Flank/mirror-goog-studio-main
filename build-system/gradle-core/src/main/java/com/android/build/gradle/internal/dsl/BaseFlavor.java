@@ -49,8 +49,6 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
 
     @NonNull private final DeprecationReporter deprecationReporter;
 
-    @NonNull private final JackOptions jackOptions;
-
     @NonNull private final JavaCompileOptions javaCompileOptions;
 
     @NonNull private final ShaderOptions shaderOptions;
@@ -68,7 +66,6 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
         ndkConfig = objectFactory.newInstance(NdkOptions.class);
         externalNativeBuildOptions =
                 objectFactory.newInstance(ExternalNativeBuildOptions.class, objectFactory);
-        jackOptions = objectFactory.newInstance(JackOptions.class, deprecationReporter);
         javaCompileOptions = objectFactory.newInstance(JavaCompileOptions.class, objectFactory);
         shaderOptions = objectFactory.newInstance(ShaderOptions.class);
     }
@@ -512,71 +509,6 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
      */
     public void resConfigs(@NonNull Collection<String> config) {
         addResourceConfigurations(config);
-    }
-
-    /** {@inheritDoc} */
-    @Deprecated
-    @Override
-    @NonNull
-    public JackOptions getJackOptions() {
-        return jackOptions;
-    }
-
-    /**
-     * The Jack toolchain is deprecated.
-     *
-     * <p>If you want to use Java 8 language features, use the improved support included in the
-     * default toolchain. To learn more, read <a
-     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
-     * features</a>.
-     */
-    @Deprecated
-    public void jackOptions(@NonNull Action<JackOptions> action) {
-        action.execute(jackOptions);
-    }
-
-    /**
-     * The Jack toolchain is deprecated.
-     *
-     * <p>If you want to use Java 8 language features, use the improved support included in the
-     * default toolchain. To learn more, read <a
-     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
-     * features</a>.
-     */
-    @Deprecated
-    @Nullable
-    public Boolean getUseJack() {
-        deprecationReporter.reportObsoleteUsage(
-                "ProductFlavor.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.EOY2018);
-        return null;
-    }
-
-    /**
-     * The Jack toolchain is deprecated.
-     *
-     * <p>If you want to use Java 8 language features, use the improved support included in the
-     * default toolchain. To learn more, read <a
-     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
-     * features</a>.
-     */
-    @Deprecated
-    public void setUseJack(Boolean useJack) {
-        deprecationReporter.reportObsoleteUsage(
-                "ProductFlavor.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.EOY2018);
-    }
-
-    /**
-     * The Jack toolchain is deprecated.
-     *
-     * <p>If you want to use Java 8 language features, use the improved support included in the
-     * default toolchain. To learn more, read <a
-     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
-     * features</a>.
-     */
-    @Deprecated
-    public void useJack(Boolean useJack) {
-        deprecationReporter.reportObsoleteUsage(
-                "ProductFlavor.useJack", JackOptions.DEPRECATION_URL, DeprecationTarget.EOY2018);
     }
 
     /** Options for configuration Java compilation. */

@@ -639,8 +639,6 @@ public class PluginDslTest {
         BuildType debug = android.getBuildTypes().getByName("debug");
         assertThat(debug.isUseProguard()).isFalse();
         assertThat(debug.isShrinkResources()).isTrue();
-        //noinspection deprecation
-        assertThat(debug.getUseJack()).isNull();
     }
 
     @Test
