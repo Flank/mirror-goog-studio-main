@@ -18,6 +18,7 @@ package com.android.ide.common.res2;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.annotations.VisibleForTesting;
 import com.android.ide.common.blame.Message;
 import com.android.utils.ILogger;
 import com.google.common.base.MoreObjects;
@@ -302,6 +303,10 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
 
             for (F dataFile : dataFiles) {
                 if (!dataFile.hasNotRemovedItems()) {
+                    // We have either removed the file (and all its inputs), or the file is empty.
+                    if (dataFile.mFile.exists()) {
+                        createFileElement(document, sourceNode, dataFile, includeTimestamps);
+                    }
                     continue;
                 }
 
@@ -566,7 +571,8 @@ abstract class DataSet<I extends DataItem<F>, F extends DataFile<I>> implements 
      * @param sourceFile the parent source file.
      * @param dataFile the DataFile
      */
-    private void addDataFile(@NonNull File sourceFile, @NonNull F dataFile) {
+    @VisibleForTesting
+    void addDataFile(@NonNull File sourceFile, @NonNull F dataFile) {
         mSourceFileToDataFilesMap.put(sourceFile, dataFile);
         mDataFileMap.put(dataFile.getFile(), dataFile);
     }
