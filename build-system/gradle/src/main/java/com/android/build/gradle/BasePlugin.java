@@ -254,7 +254,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
         ProcessProfileWriter.getProject(project.getPath())
                 .setAndroidPluginVersion(Version.ANDROID_GRADLE_PLUGIN_VERSION)
                 .setAndroidPlugin(getAnalyticsPluginType())
-                .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST);
+                .setPluginGeneration(GradleBuildProject.PluginGeneration.FIRST)
+                .setOptions(AnalyticsUtil.toProto(projectOptions));
 
         if (!projectOptions.get(BooleanOption.ENABLE_NEW_DSL_AND_API)) {
             TaskInputHelper.enableBypass();

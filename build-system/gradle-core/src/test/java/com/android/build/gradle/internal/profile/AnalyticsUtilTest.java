@@ -26,7 +26,9 @@ import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.IntegerOption;
 import com.android.build.gradle.options.LongOption;
 import com.android.build.gradle.options.OptionalBooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import com.google.common.reflect.ClassPath;
 import com.google.common.reflect.TypeToken;
@@ -34,6 +36,7 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.ProtocolMessageEnum;
 import com.google.wireless.android.sdk.stats.DeviceInfo;
 import com.google.wireless.android.sdk.stats.GradleBuildSplits;
+import com.google.wireless.android.sdk.stats.GradleProjectOptionsSettings;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -280,5 +283,64 @@ public class AnalyticsUtilTest {
             }
             throw new AssertionError(errorMessage.toString());
         }
+    }
+
+    @Test
+    public void checkEmptyProjectOptions() {
+        ProjectOptions options = new ProjectOptions(ImmutableMap.of());
+        GradleProjectOptionsSettings gradleProjectOptionsSettings = AnalyticsUtil.toProto(options);
+        assertThat(gradleProjectOptionsSettings.getTrueBooleanOptionsList()).isEmpty();
+        assertThat(gradleProjectOptionsSettings.getFalseBooleanOptionsList()).isEmpty();
+        assertThat(gradleProjectOptionsSettings.getTrueOptionalBooleanOptionsList()).isEmpty();
+        assertThat(gradleProjectOptionsSettings.getFalseOptionalBooleanOptionsList()).isEmpty();
+        assertThat(gradleProjectOptionsSettings.getIntegerOptionValuesList()).isEmpty();
+        assertThat(gradleProjectOptionsSettings.getLongOptionsList()).isEmpty();
+        assertThat(gradleProjectOptionsSettings.getStringOptionsList()).isEmpty();
+    }
+
+    @Test
+    public void checkSomeEmptyProjectOptions() {
+        ImmutableMap.Builder<String, Object> properties = ImmutableMap.builder();
+        properties.put(BooleanOption.IDE_BUILD_MODEL_ONLY.getPropertyName(), true);
+        properties.put(BooleanOption.IDE_BUILD_MODEL_ONLY_ADVANCED.getPropertyName(), false);
+        properties.put(OptionalBooleanOption.SIGNING_V1_ENABLED.getPropertyName(), true);
+        properties.put(OptionalBooleanOption.SIGNING_V2_ENABLED.getPropertyName(), false);
+        properties.put(IntegerOption.IDE_BUILD_MODEL_ONLY_VERSION.getPropertyName(), 17);
+        properties.put(LongOption.DEPRECATED_NDK_COMPILE_LEASE.getPropertyName(), Long.MAX_VALUE);
+        properties.put(StringOption.IDE_BUILD_TARGET_ABI.getPropertyName(), "x86");
+        ProjectOptions options = new ProjectOptions(properties.build());
+
+        GradleProjectOptionsSettings gradleProjectOptionsSettings = AnalyticsUtil.toProto(options);
+        assertThat(gradleProjectOptionsSettings.getTrueBooleanOptionsList())
+                .containsExactly(
+                        com.android.tools.build.gradle.internal.profile.BooleanOption
+                                .IDE_BUILD_MODEL_ONLY_VALUE);
+        assertThat(gradleProjectOptionsSettings.getFalseBooleanOptionsList())
+                .containsExactly(
+                        com.android.tools.build.gradle.internal.profile.BooleanOption
+                                .IDE_BUILD_MODEL_ONLY_ADVANCED_VALUE);
+        assertThat(gradleProjectOptionsSettings.getTrueOptionalBooleanOptionsList())
+                .containsExactly(
+                        com.android.tools.build.gradle.internal.profile.OptionalBooleanOption
+                                .SIGNING_V1_ENABLED_VALUE);
+        assertThat(gradleProjectOptionsSettings.getFalseOptionalBooleanOptionsList())
+                .containsExactly(
+                        com.android.tools.build.gradle.internal.profile.OptionalBooleanOption
+                                .SIGNING_V2_ENABLED_VALUE);
+        assertThat(gradleProjectOptionsSettings.getIntegerOptionValuesList()).hasSize(1);
+        assertThat(gradleProjectOptionsSettings.getIntegerOptionValues(0).getIntegerOption())
+                .isEqualTo(
+                        com.android.tools.build.gradle.internal.profile.IntegerOption
+                                .IDE_BUILD_MODEL_ONLY_VERSION_VALUE);
+        assertThat(gradleProjectOptionsSettings.getIntegerOptionValues(0).getIntegerOptionValue())
+                .isEqualTo(17);
+        assertThat(gradleProjectOptionsSettings.getLongOptionsList())
+                .containsExactly(
+                        com.android.tools.build.gradle.internal.profile.LongOption
+                                .DEPRECATED_NDK_COMPILE_LEASE_VALUE);
+        assertThat(gradleProjectOptionsSettings.getStringOptionsList())
+                .containsExactly(
+                        com.android.tools.build.gradle.internal.profile.StringOption
+                                .IDE_BUILD_TARGET_ABI_VALUE);
     }
 }
