@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
+import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.BuilderConstants;
@@ -42,14 +43,12 @@ import com.android.sdklib.AndroidVersion;
 import com.android.utils.StringHelper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -1112,6 +1111,41 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
         }
 
         return inputs;
+    }
+
+    /**
+     * Returns a list of sorted navigation files, with files toward the start of the list taking
+     * precedence over those toward the end of the list.
+     *
+     * @return a list of navigation files
+     */
+    @NonNull
+    public List<File> getNavigationFiles() {
+        List<File> navigationFiles = Lists.newArrayList();
+
+        List<SourceProvider> sourceProviders = getSortedSourceProviders();
+        // iterate over sourceProviders in reverse order to match order of getManifestOverlays()
+        for (int n = sourceProviders.size() - 1; n >= 0; n--) {
+            Collection<File> resDirs = sourceProviders.get(n).getResDirectories();
+            for (File resDir : resDirs) {
+                if (resDir == null
+                        || !SdkConstants.FD_RES_NAVIGATION.equals(resDir.getName())
+                        || !resDir.isDirectory()) {
+                    continue;
+                }
+                File[] resDirFiles = resDir.listFiles();
+                if (resDirFiles == null) {
+                    continue;
+                }
+                for (File resDirFile : resDirFiles) {
+                    if (resDirFile.isFile()) {
+                        navigationFiles.add(resDirFile);
+                    }
+                }
+            }
+        }
+
+        return navigationFiles;
     }
 
     @NonNull

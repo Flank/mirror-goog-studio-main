@@ -437,6 +437,7 @@ public class AndroidBuilder {
             @NonNull File mainManifest,
             @NonNull List<File> manifestOverlays,
             @NonNull List<? extends ManifestProvider> dependencies,
+            @NonNull List<File> navigationFiles,
             @Nullable String featureName,
             String packageOverride,
             int versionCode,
@@ -460,6 +461,7 @@ public class AndroidBuilder {
                             .addFlavorAndBuildTypeManifests(
                                     manifestOverlays.toArray(new File[manifestOverlays.size()]))
                             .addManifestProviders(dependencies)
+                            .addNavigationFiles(navigationFiles)
                             .withFeatures(
                                     optionalFeatures.toArray(
                                             new Invoker.Feature[optionalFeatures.size()]))

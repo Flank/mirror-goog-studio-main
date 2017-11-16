@@ -75,6 +75,7 @@ public class ProcessManifest extends ManifestProcessorTask {
                                 getMainManifest(),
                                 getManifestOverlays(),
                                 Collections.emptyList(),
+                                getNavigationFiles(),
                                 null,
                                 getPackageOverride(),
                                 getVersionCode(),
@@ -188,6 +189,12 @@ public class ProcessManifest extends ManifestProcessorTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     public List<File> getManifestOverlays() {
         return variantConfiguration.getManifestOverlays();
+    }
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public List<File> getNavigationFiles() {
+        return variantConfiguration.getNavigationFiles();
     }
 
     /**

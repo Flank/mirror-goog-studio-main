@@ -152,6 +152,7 @@ public class MergeManifests extends ManifestProcessorTask {
                                     getMainManifest(),
                                     getManifestOverlays(),
                                     computeFullProviderList(compatibleScreenManifestForSplit),
+                                    getNavigationFiles(),
                                     getFeatureName(),
                                     packageOverride,
                                     apkData.getVersionCode(),
@@ -383,6 +384,12 @@ public class MergeManifests extends ManifestProcessorTask {
     @PathSensitive(PathSensitivity.RELATIVE)
     public FileCollection getManifests() {
         return manifests.getArtifactFiles();
+    }
+
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public List<File> getNavigationFiles() {
+        return variantConfiguration.getNavigationFiles();
     }
 
     @InputFiles

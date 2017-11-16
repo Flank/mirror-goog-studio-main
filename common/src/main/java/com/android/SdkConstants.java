@@ -908,8 +908,10 @@ public final class SdkConstants {
     public static final String FD_RES_LAYOUT = "layout"; //$NON-NLS-1$
     /** Default menu resource folder name, i.e. "menu" */
     public static final String FD_RES_MENU = "menu"; //$NON-NLS-1$
-    /** Default menu resource folder name, i.e. "mipmap" */
+    /** Default mipmap resource folder name, i.e. "mipmap" */
     public static final String FD_RES_MIPMAP = "mipmap"; //$NON-NLS-1$
+    /** Default navigation resource folder name, i.e. "navigation" */
+    public static final String FD_RES_NAVIGATION = "navigation"; //$NON-NLS-1$
     /** Default values resource folder name, i.e. "values" */
     public static final String FD_RES_VALUES = "values"; //$NON-NLS-1$
     /** Default xml resource folder name, i.e. "xml" */

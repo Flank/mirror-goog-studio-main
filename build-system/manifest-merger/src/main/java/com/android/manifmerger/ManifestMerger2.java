@@ -1439,8 +1439,8 @@ public class ManifestMerger2 {
          * @return itself.
          */
         @NonNull
-        public Invoker addNavigationFiles(@NonNull File... files) {
-            this.mNavigationFilesBuilder.add(files);
+        public Invoker addNavigationFiles(@NonNull Iterable<File> files) {
+            this.mNavigationFilesBuilder.addAll(files);
             return thisAsT();
         }
 
