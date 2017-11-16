@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
 import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValue
 import com.intellij.psi.PsiMethod
 import org.jetbrains.uast.UAnnotation
@@ -54,16 +55,40 @@ class CheckResultDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             allMemberAnnotations: List<UAnnotation>,
             allClassAnnotations: List<UAnnotation>,
             allPackageAnnotations: List<UAnnotation>) {
-        if (method != null) {
-            checkResult(context, argument, method, annotation)
+        method ?: return
+
+        // Don't inherit CheckResult from packages for now; see
+        //  https://issuetracker.google.com/69344103
+        // for a common (dagger) package declaration that doesn't have
+        // a @CanIgnoreReturnValue exclusion on inject.
+        if (allPackageAnnotations.contains(annotation)) {
+            return
         }
+
+        if (qualifiedName == ERRORPRONE_CAN_IGNORE_RETURN_VALUE) {
+            return
+        }
+
+        checkResult(context, argument, method, annotation,
+                allMemberAnnotations, allClassAnnotations)
     }
 
     private fun checkResult(context: JavaContext, element: UElement,
-            method: PsiMethod, annotation: UAnnotation) {
+            method: PsiMethod, annotation: UAnnotation,
+            allMemberAnnotations: List<UAnnotation>,
+            allClassAnnotations: List<UAnnotation>) {
         val expression = element.getParentOfType<UExpression>(
                 UExpression::class.java, false) ?: return
         if (isExpressionValueUnused(expression)) {
+
+            // If this CheckResult annotation is from a class, check to see
+            // if it's been reversed with @CanIgnoreReturnValue
+            if (containsAnnotation(allMemberAnnotations, ERRORPRONE_CAN_IGNORE_RETURN_VALUE)
+                    || containsAnnotation(allClassAnnotations,
+                    ERRORPRONE_CAN_IGNORE_RETURN_VALUE)) {
+                return
+            }
+
             val methodName = JavaContext.getMethodName(expression)
             val suggested = getAnnotationStringValue(annotation,
                     AnnotationDetector.ATTR_SUGGEST)
@@ -101,12 +126,6 @@ class CheckResultDetector : AbstractAnnotationDetector(), Detector.UastScanner {
 
             val location = context.getLocation(expression)
             report(context, issue, expression, location, message, fix)
-        }
-    }
-
-    private fun foo(any: Any) {
-        if (any.toString() != null) {
-
         }
     }
 

@@ -16,9 +16,12 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.detector.api.Detector
+import junit.framework.TestCase
+import java.io.File
 
-class CheckResultDetectorTest : AbstractCheckTest() {
+class aCheckResultDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = CheckResultDetector()
 
     fun testCheckResult() {
@@ -92,5 +95,108 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
                 .run()
                 .expect(expected)
+    }
+
+    fun testSubtract() {
+        // Regression test for https://issuetracker.google.com/69344103:
+        // @CanIgnoreReturnValue should let you *undo* a @CheckReturnValue on a class/package
+        lint().files(
+                java("""
+                    package test.pkg;
+                    import com.google.errorprone.annotations.CanIgnoreReturnValue;
+                    import javax.annotation.CheckReturnValue;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    @CheckReturnValue
+                    public class IgnoreTest {
+                        public String method1() {
+                            return "";
+                        }
+
+                        public void method2() {
+                        }
+
+                        @CanIgnoreReturnValue
+                        public String method3() {
+                            return "";
+                        }
+
+                        public void test() {
+                            method1(); // ERROR: should check
+                            method2(); // OK: void return value
+                            method3(); // OK: Specifically allowed
+                        }
+                    }
+                """).indented(),
+                java("""
+                    package com.google.errorprone.annotations;
+                    import java.lang.annotation.Retention;
+                    import static java.lang.annotation.RetentionPolicy.CLASS;
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    @Retention(CLASS)
+                    public @interface CanIgnoreReturnValue {}""").indented(),
+                java("""
+                    package javax.annotation;
+                    import static java.lang.annotation.RetentionPolicy.CLASS;
+                    import java.lang.annotation.Retention;
+                    import javax.annotation.meta.When;
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    @Retention(CLASS)
+                    public @interface CheckReturnValue {
+                    }
+                    """).indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+                .run()
+                .expect("src/test/pkg/IgnoreTest.java:21: Warning: The result of method1 is not used [CheckResult]\n" +
+                        "        method1(); // ERROR: should check\n" +
+                        "        ~~~~~~~~~\n" +
+                        "src/test/pkg/IgnoreTest.java:22: Warning: The result of method2 is not used [CheckResult]\n" +
+                        "        method2(); // OK: void return value\n" +
+                        "        ~~~~~~~~~\n" +
+                        "0 errors, 2 warnings")
+    }
+
+    fun testSubtract2() {
+        // Regression test for https://issuetracker.google.com/69344103
+        // Make sure we don't inherit @CheckReturn value from packages
+        lint().files(
+                java("""
+                    package test.pkg;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class IgnoreTest {
+                        public String method() {
+                            return "";
+                        }
+
+                        public void test() {
+                            method(); // OK: not inheriting from packages
+                        }
+                    }
+                """).indented(),
+                java("" +
+                        "@CheckReturnValue\n" +
+                        "package test.pkg;\n" +
+                        "import javax.annotation.CheckReturnValue;\n"),
+                // Also register the compiled version of the above package-info jar file;
+                // without this we don't resolve package annotations
+                base64gzip("libs/packageinfoclass.jar", "" +
+                        "H4sIAAAAAAAAAAvwZmYRYeDg4GDInpfvzYAEOBlYGHxdQxx1Pf3c9P+dYmBg" +
+                        "ZgjwZucASTFBlQTg1CwCxHDNvo5+nm6uwSF6vm6ffc+c9vHW1bvI662rde7M" +
+                        "+c1BBleMHzwt0vPy1fH0vVi6ioUz4oXkEelZUi/Flj5boia2XCujYuk0C1HV" +
+                        "tGei2iKvRV8+zf5U9LGIEeyWtpXBql5Am7xQ3GKK5hZpIC5JLS7RL8hO1y9I" +
+                        "TM5OTE/VzcxLy9dLzkksLvb12ct1yEBiT0juVU921vT0sw9eqDRNVgh5Ma/t" +
+                        "/CwztaW+R9KLPzDWaGwMFcjf0fy7et87fgZtHiUXwV88hxd/nbpk7qUjBnqt" +
+                        "Oi5u3Kl+ZTO7VyfMOHrPonShy1Wtq1sMj1k9nGJqerjmfllezB+ffbaTdZKK" +
+                        "9hl1Xph3jUfYfevj1Ikf/1e3BVo/i5rRI39pzpLZTDyM+zgu/CwQ3+t2WI2z" +
+                        "0Rzky33aDlPmAv1wAOxLRiYRBtQwh8UGKMJQAUr0oWtFDjwRFG22OCIP2QRQ" +
+                        "ICM7TBrFhJP4gzzAm5UNpIwZCI8B6fWMIB4A/Y4BiosCAAA="),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+                .run()
+                .expectClean()
     }
 }

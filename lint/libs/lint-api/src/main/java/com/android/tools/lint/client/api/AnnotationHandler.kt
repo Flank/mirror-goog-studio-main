@@ -143,13 +143,13 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
             method: PsiMethod?,
             annotations: List<UAnnotation>,
             allMethodAnnotations: List<UAnnotation>,
-            allClassAnnotations: List<UAnnotation>) {
+            allClassAnnotations: List<UAnnotation>,
+            packageAnnotations: List<UAnnotation> = emptyList()) {
 
         for (annotation in annotations) {
             val signature = annotation.qualifiedName ?: continue
             val uastScanners = scanners.get(signature)
             if (uastScanners != null) {
-                val packageAnnotations = emptyList<UAnnotation>()
                 for (scanner in uastScanners) {
                     scanner.visitAnnotationUsage(context, argument, annotation, signature,
                             method, annotations, allMethodAnnotations, allClassAnnotations,
@@ -291,19 +291,19 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
 
         if (!methodAnnotations.isEmpty()) {
             checkAnnotations(context, call, method, methodAnnotations,
-                    methodAnnotations, classAnnotations)
+                    methodAnnotations, classAnnotations, pkgAnnotations)
 
             checkContextAnnotations(context, method, call, methodAnnotations)
         }
 
         if (!classAnnotations.isEmpty()) {
             checkAnnotations(context, call, method, classAnnotations,
-                    methodAnnotations, classAnnotations)
+                    methodAnnotations, classAnnotations, pkgAnnotations)
         }
 
         if (!pkgAnnotations.isEmpty()) {
             checkAnnotations(context, call, method, pkgAnnotations,
-                    methodAnnotations, classAnnotations)
+                    methodAnnotations, classAnnotations, pkgAnnotations)
         }
 
         val mapping = evaluator.computeArgumentMapping(call, method)
@@ -315,7 +315,7 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
             }
             val annotations = JavaUAnnotation.wrap(filtered)
             checkAnnotations(context, argument, method, annotations,
-                    methodAnnotations, classAnnotations)
+                    methodAnnotations, classAnnotations, pkgAnnotations)
 
         }
     }
