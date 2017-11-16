@@ -63,6 +63,7 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_SEPARATE_APK_RESOURCES("android.enableSeparateApkRes", true),
     ENABLE_BUILDSCRIPT_CLASSPATH_CHECK("android.enableBuildScriptClasspathCheck", true),
     ENABLE_EXPERIMENTAL_FEATURE_DATABINDING("android.enableExperimentalFeatureDatabinding", false),
+    ENABLE_SEPARATE_R_CLASS_COMPILATION("android.enableSeparateRClassCompilation"),
     ;
 
     @NonNull private final String propertyName;
