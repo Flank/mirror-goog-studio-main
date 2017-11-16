@@ -13,17 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.projectmodel
 
 /**
- * Entry point for the Android model. It contains a collection of libraries, applications, instant apps, etc.
+ * This type represents an entry in the [ConfigTable]. It associates a [Config] with one or more
+ * [Artifact] instances.
  *
  * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
  * to stay source compatible.
  */
-data class AndroidModel(
+data class ConfigAssociation(
         /**
-         * List of [AndroidProject] that are present in this module.
+         * Filter that matches all [Artifact] instances this [Config] is associated with.
          */
-        val projects: List<AndroidProject> = emptyList()
-)
+        val path: ConfigPath,
+        /**
+         * Holds the [Config] being associated.
+         */
+        val config: Config
+) {
+    override fun toString(): String = path.toString()
+}

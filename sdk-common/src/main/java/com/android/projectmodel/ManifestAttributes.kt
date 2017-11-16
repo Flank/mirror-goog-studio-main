@@ -25,6 +25,9 @@ import com.android.sdklib.AndroidVersion
  *
  * This is not a container for all things related to the manifest. New properties should be added
  * here if and only if they could be obtained directly from a manifest and overridden in a [Config].
+ *
+ * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
+ * to stay source compatible.
  */
 data class ManifestAttributes(
         /**

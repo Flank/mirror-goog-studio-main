@@ -21,16 +21,10 @@ package com.android.projectmodel
  * more than just a list of path names - it also contains all of the metadata supplied by the flavor or build type. There is also no
  * distinction between flavors and build types. They only differ in terms of which attributes are set in the project metadata.
  *
- * API consumers that care about the distinction between a build type, flavor, and any other sort of source provider can use
- * [Config.name] to look it up in the [AndroidProject].
+ * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
+ * to stay source compatible.
  */
 data class Config(
-        /**
-         * Name of the [Config], unique within a given [AndroidProject]. If the build system can
-         * provide some way of reliably identifying the same [Config] across resyncs and restarts,
-         * it should attach the identifier here.
-         */
-        val name: String? = null,
         /**
          * Returns the application ID suffix for this [Config] or null if none.
          */

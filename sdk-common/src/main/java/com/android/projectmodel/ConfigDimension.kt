@@ -13,17 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.android.projectmodel
 
 /**
- * Entry point for the Android model. It contains a collection of libraries, applications, instant apps, etc.
+ * Describes one dimension of the [ConfigTable].
  *
  * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
  * to stay source compatible.
  */
-data class AndroidModel(
+data class ConfigDimension(
         /**
-         * List of [AndroidProject] that are present in this module.
+         * Name of the dimension. This is the name that the build system knows the dimension as.
          */
-        val projects: List<AndroidProject> = emptyList()
+        val dimensionName: String,
+        /**
+         * Possible values for this dimension. For example, if this dimension describes the set of
+         * build types, the possible values might be "debug" and "release". Build dimension values
+         * must be unique within a given [ConfigTable].
+         */
+        val values: List<String>
 )

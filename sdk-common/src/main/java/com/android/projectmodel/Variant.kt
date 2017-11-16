@@ -17,11 +17,15 @@ package com.android.projectmodel
 
 /**
  * Variant of an [AndroidProject].
+ *
+ * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
+ * to stay source compatible.
  */
 data class Variant(
         /**
-         * Identifier of the [Variant]. Meant to be unique within a given [AndroidProject] and stable across syncs. This will
-         * be used for cross-referencing the [Variant] from other projects in [ProjectLibrary.variant].
+         * Identifier of the [Variant]. Meant to be unique within a given [AndroidProject] and
+         * stable across syncs. This will be used for cross-referencing the [Variant] from other
+         * projects in [ProjectLibrary.variant].
          */
         val name: String,
         /**
@@ -47,5 +51,14 @@ data class Variant(
         /**
          * Extra user-defined java artifacts.
          */
-        val extraJavaArtifacts: List<Artifact> = emptyList()
-)
+        val extraJavaArtifacts: List<Artifact> = emptyList(),
+        /**
+         * Holds the path to the [Config] instances for this [Variant] within its [ConfigTable].
+         */
+        val configPath: ConfigPath
+) {
+    /**
+     * Returns the [ConfigPath] for the main artifact in this [Variant].
+     */
+    val mainArtifactConfigPath: ConfigPath get() = ConfigPath(configPath.segments?.plus(mainArtifact.name))
+}

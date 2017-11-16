@@ -454,9 +454,8 @@ class PathString private constructor(
         return driveName(root1.rawPath) == driveName(root2.rawPath)
     }
 
-    private fun driveName(rawPath: String): String {
-        return rawPath.substring(0, rawPath.countUntil(':')).toUpperCase()
-    }
+    private fun driveName(rawPath: String): String =
+            rawPath.substring(0, rawPath.countUntil(':')).toUpperCase()
 
     private fun subRangeOrNull(index: Int,
             length: Int = 1): PathString? {
@@ -617,6 +616,4 @@ private fun detectSeparator(path: String): Char {
     return '/'
 }
 
-private fun String.withSeparator(sep: Char): String {
-    return replace('/', sep).replace('\\', sep)
-}
+private fun String.withSeparator(sep: Char): String = replace('/', sep).replace('\\', sep)

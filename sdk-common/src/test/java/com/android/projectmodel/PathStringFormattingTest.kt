@@ -23,7 +23,7 @@ import java.io.File
  * Tests that verify the treatment of non-semantic information in [PathString]
  */
 class PathStringFormattingTest {
-    fun verifyEquals(obj1: Any, obj2: Any) {
+    private fun verifyEquals(obj1: Any, obj2: Any) {
         Truth.assertThat(obj1).isEqualTo(obj2)
         Truth.assertThat(obj1.hashCode()).isEqualTo(obj2.hashCode())
     }
