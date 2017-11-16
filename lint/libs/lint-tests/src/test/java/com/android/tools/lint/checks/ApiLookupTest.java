@@ -141,7 +141,7 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertEquals(15, mDb.getFieldVersion("android/Manifest$permission", "READ_SOCIAL_STREAM"));
     }
 
-    public void testDeprecatedCalls() {
+    public void testDeprecatedMethods() {
         // Not deprecated:
         //assertEquals(12, mDb.getMethodVersion("android/app/Fragment", "onInflate",
         //        "(Landroid/app/Activity;Landroid/util/AttributeSet;Landroid/os/Bundle;)V"));
@@ -175,7 +175,7 @@ public class ApiLookupTest extends AbstractCheckTest {
                 23, mDb.getFieldRemovedIn("android/Manifest$permission", "AUTHENTICATE_ACCOUNTS"));
     }
 
-    public void testRemovedCalls() {
+    public void testRemovedMethods() {
         // Not removed
         assertEquals(-1, mDb.getMethodRemovedIn("android/app/Activity", "enterPictureInPictureMode",
                 "(Landroid/app/PictureInPictureArgs;)Z"));
@@ -194,14 +194,14 @@ public class ApiLookupTest extends AbstractCheckTest {
         assertTrue(removedFields.stream().noneMatch(member -> member.getSignature().equals("NFC")));
     }
 
-    public void testGetRemovedCalls() {
-        Collection<ApiMember> removedMethods = mDb.getRemovedCalls("android/app/Activity");
+    public void testGetRemovedMethods() {
+        Collection<ApiMember> removedMethods = mDb.getRemovedMethods("android/app/Activity");
         assertTrue(removedMethods.contains(new ApiMember("getInstanceCount()", 1, 0, 11)));
         assertTrue(removedMethods.contains(new ApiMember("setPersistent(Z)", 1, 0, 11)));
         assertTrue(
                 removedMethods.stream().noneMatch(member -> member.getSignature().equals("NFC")));
 
-        removedMethods = mDb.getRemovedCalls("android/database/sqlite/SQLiteProgram");
+        removedMethods = mDb.getRemovedMethods("android/database/sqlite/SQLiteProgram");
         assertTrue(
                 removedMethods.contains(new ApiMember("compile(Ljava/lang/String;Z)", 1, 0, 16)));
         // Method moved to a super class

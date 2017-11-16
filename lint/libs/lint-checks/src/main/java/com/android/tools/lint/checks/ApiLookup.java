@@ -1083,7 +1083,7 @@ public class ApiLookup {
      * @return the removed methods, or null if the owner class was not found
      */
     @Nullable
-    public Collection<ApiMember> getRemovedCalls(@NonNull String owner) {
+    public Collection<ApiMember> getRemovedMethods(@NonNull String owner) {
         if (mData != null) {
             int classNumber = findClass(owner);
             if (classNumber >= 0) {
