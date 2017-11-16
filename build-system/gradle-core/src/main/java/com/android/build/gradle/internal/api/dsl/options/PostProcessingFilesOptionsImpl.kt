@@ -16,13 +16,13 @@
 
 package com.android.build.gradle.internal.api.dsl.options
 
-import com.android.build.api.dsl.options.PostprocessingOptions
+import com.android.build.api.dsl.options.PostProcessingFilesOptions
 import com.android.build.gradle.internal.api.dsl.sealing.InitializableSealable
 import com.android.build.gradle.internal.api.dsl.sealing.SealableList
 import com.android.builder.errors.EvalIssueReporter
 
-class PostprocessingOptionsImpl(issueReporter: EvalIssueReporter)
-        : InitializableSealable<PostprocessingOptions>(issueReporter), PostprocessingOptions {
+class PostProcessingFilesOptionsImpl(issueReporter: EvalIssueReporter)
+        : InitializableSealable<PostProcessingFilesOptions>(issueReporter), PostProcessingFilesOptions {
 
     // the actual backing data for the exposed properties.
     private val _proguardFiles: SealableList<Any> = SealableList.new(issueReporter)
@@ -47,52 +47,10 @@ class PostprocessingOptionsImpl(issueReporter: EvalIssueReporter)
             _consumerProguardFiles.reset(value)
         }
 
-    override var isRemoveUnusedCode: Boolean = false
-        set(value) {
-            if (checkSeal()) {
-                field = value
-            }
-        }
-
-    override var isRemoveUnusedResources: Boolean = false
-        set(value) {
-            if (checkSeal()) {
-                field = value
-            }
-        }
-
-    override var isObfuscate: Boolean = false
-        set(value) {
-            if (checkSeal()) {
-                field = value
-            }
-        }
-
-    override var isOptimizeCode: Boolean = false
-        set(value) {
-            if (checkSeal()) {
-                field = value
-            }
-        }
-
-    override var codeShrinker: String = "auto"
-        set(value) {
-            if (checkSeal()) {
-                field = value
-            }
-        }
-
-    override fun initWith(that: PostprocessingOptions) {
-        if (checkSeal()) {
-            _proguardFiles.reset(that.proguardFiles)
-            _testProguardFiles.reset(that.testProguardFiles)
-            _consumerProguardFiles.reset(that.consumerProguardFiles)
-            isRemoveUnusedCode = that.isRemoveUnusedCode
-            isRemoveUnusedResources = that.isRemoveUnusedResources
-            isObfuscate = that.isObfuscate
-            isOptimizeCode = that.isOptimizeCode
-            codeShrinker = that.codeShrinker
-        }
+    override fun initWith(that: PostProcessingFilesOptions) {
+        _proguardFiles.reset(that.proguardFiles)
+        _testProguardFiles.reset(that.testProguardFiles)
+        _consumerProguardFiles.reset(that.consumerProguardFiles)
     }
 
     override fun seal() {
@@ -102,5 +60,4 @@ class PostprocessingOptionsImpl(issueReporter: EvalIssueReporter)
         _testProguardFiles.seal()
         _consumerProguardFiles.seal()
     }
-
 }

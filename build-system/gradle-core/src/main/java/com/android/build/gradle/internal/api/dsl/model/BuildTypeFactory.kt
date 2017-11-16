@@ -36,7 +36,7 @@ class BuildTypeFactory(
         return objectFactory.newInstance(BuildTypeImpl::class.java,
                 name,
                 VariantPropertiesImpl(issueReporter),
-                BuildTypeOrProductFlavorImpl(deprecationReporter, issueReporter, { buildTypeOrVariant.postprocessing }),
+                BuildTypeOrProductFlavorImpl(deprecationReporter, issueReporter, { buildTypeOrVariant.postProcessing }),
                 buildTypeOrVariant,
                 FallbackStrategyImpl(deprecationReporter, issueReporter),
                 deprecationReporter,

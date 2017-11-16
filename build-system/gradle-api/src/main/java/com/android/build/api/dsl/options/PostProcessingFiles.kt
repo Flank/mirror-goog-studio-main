@@ -18,9 +18,9 @@ package com.android.build.api.dsl.options
 
 import org.gradle.api.Incubating
 
-/** DSL object for configuring postprocessing: removing dead code, obfuscating etc.  */
+/** DSL object for configuring postProcessing: removing dead code, obfuscating etc.  */
 @Incubating
-interface PostprocessingFiles {
+interface PostProcessingFiles {
 
     /**
      * Specifies the ProGuard configuration files that the plugin should use.

@@ -17,7 +17,7 @@
 package com.android.build.gradle.internal.api.dsl.model
 
 import com.android.build.api.dsl.model.BaseFlavor
-import com.android.build.api.dsl.options.PostprocessingFilesOptions
+import com.android.build.api.dsl.options.PostProcessingFilesOptions
 import com.android.build.gradle.internal.api.dsl.sealing.SealableObject
 import com.android.build.gradle.internal.errors.DeprecationReporter
 import com.android.builder.errors.EvalIssueReporter
@@ -47,11 +47,11 @@ class BaseFlavorImpl(
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override fun postprocessing(action: Action<PostprocessingFilesOptions>) {
+    override fun postProcessing(action: Action<PostProcessingFilesOptions>) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
-    override val postprocessing: PostprocessingFilesOptions
+    override val postProcessing: PostProcessingFilesOptions
         get() = TODO("not implemented") //To change initializer of created properties use File | Settings | File Templates.
 
     fun initWith(that: BaseFlavorImpl) {

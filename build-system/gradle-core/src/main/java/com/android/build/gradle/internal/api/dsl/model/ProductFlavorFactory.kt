@@ -34,7 +34,7 @@ class ProductFlavorFactory(
         return objectFactory.newInstance(ProductFlavorImpl::class.java,
                 name,
                 VariantPropertiesImpl(issueReporter),
-                BuildTypeOrProductFlavorImpl(deprecationReporter, issueReporter, { baseFlavor.postprocessing }),
+                BuildTypeOrProductFlavorImpl(deprecationReporter, issueReporter, { baseFlavor.postProcessing }),
                 ProductFlavorOrVariantImpl(issueReporter),
                 FallbackStrategyImpl(deprecationReporter, issueReporter),
                 baseFlavor,

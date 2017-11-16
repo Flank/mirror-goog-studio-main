@@ -39,7 +39,7 @@ import org.gradle.api.Project;
 public class ProguardFiles {
 
     public enum ProguardFile {
-        /** Default when not using the "postprocessing" DSL block. */
+        /** Default when not using the "postProcessing" DSL block. */
         DONT_OPTIMIZE("proguard-android.txt"),
 
         /** Variant of the above which does not disable optimizations. */
@@ -47,7 +47,7 @@ public class ProguardFiles {
 
         /**
          * Does not disable any actions, includes optimizations config. To be used with the new
-         * "postprocessing" DSL block.
+         * "postProcessing" DSL block.
          */
         NO_ACTIONS("proguard-defaults.txt"),
         ;
@@ -132,7 +132,7 @@ public class ProguardFiles {
                 break;
             case NO_ACTIONS:
                 sb.append(
-                        "# Optimizations can be turned on and off in the 'postprocessing' DSL block.\n"
+                        "# Optimizations can be turned on and off in the 'postProcessing' DSL block.\n"
                                 + "# The configuration below is applied if optimizations are enabled.\n");
                 append(sb, "proguard-optimizations.txt");
                 break;

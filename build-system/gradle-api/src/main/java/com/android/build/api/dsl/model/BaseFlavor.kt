@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl.model
 
-import com.android.build.api.dsl.options.PostprocessingFilesOptions
+import com.android.build.api.dsl.options.PostProcessingFilesOptions
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
@@ -139,10 +139,10 @@ interface BaseFlavor {
     fun missingDimensionStrategy(dimension: String, requestedValues: List<String>)
 
     /** Configures the post-processing options with the given action.  */
-    fun postprocessing(action: Action<PostprocessingFilesOptions>)
+    fun postProcessing(action: Action<PostProcessingFilesOptions>)
 
     /** Returns the post-processing option  */
-    val postprocessing: PostprocessingFilesOptions
+    val postProcessing: PostProcessingFilesOptions
 
     // --- DEPRECATED
 

@@ -19,7 +19,19 @@ package com.android.build.api.dsl.options
 import com.android.build.api.dsl.Initializable
 import org.gradle.api.Incubating
 
-/** DSL object for configuring postprocessing: removing dead code, obfuscating etc.  */
+/** DSL object for configuring postProcessing: removing dead code, obfuscating etc.  */
 @Incubating
-interface PostprocessingFilesOptions
-    : PostprocessingFiles, Initializable<PostprocessingFilesOptions>
+interface PostProcessingOptions : PostProcessingFiles, Initializable<PostProcessingOptions> {
+
+    // FIXME fix isXXX properties
+
+    var isRemoveUnusedCode: Boolean
+
+    var isRemoveUnusedResources: Boolean
+
+    var isObfuscate: Boolean
+
+    var isOptimizeCode: Boolean
+
+    var codeShrinker: String
+}

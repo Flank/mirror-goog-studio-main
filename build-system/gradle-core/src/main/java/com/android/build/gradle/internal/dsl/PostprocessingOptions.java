@@ -32,7 +32,7 @@ import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 
-/** DSL object for configuring postprocessing: removing dead code, obfuscating etc. */
+/** DSL object for configuring postProcessing: removing dead code, obfuscating etc. */
 public class PostprocessingOptions {
     private static final String AUTO = "auto";
     private static final HelpfulEnumConverter<CodeShrinker> SHRINKER_CONVERTER =

@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
 import com.android.build.gradle.api.JavaCompileOptions;
 import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
@@ -48,7 +47,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
 
     /**
      * Whether the current thread should check that the both the old and new way of configuring
-     * bytecode postprocessing are not used at the same time.
+     * bytecode postProcessing are not used at the same time.
      *
      * <p>The checks are disabled during {@link #initWith(com.android.builder.model.BuildType)}.
      */
@@ -62,7 +61,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                     });
 
     /**
-     * Describes how code postprocessing is configured. We don't allow mixing the old and new DSLs.
+     * Describes how code postProcessing is configured. We don't allow mixing the old and new DSLs.
      */
     public enum PostprocessingConfiguration {
         POSTPROCESSING_BLOCK,
@@ -608,17 +607,17 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
     @NonNull
     public PostprocessingOptions getPostprocessing() {
         checkPostprocessingConfiguration(
-                PostprocessingConfiguration.POSTPROCESSING_BLOCK, "getPostprocessing");
+                PostprocessingConfiguration.POSTPROCESSING_BLOCK, "getPostProcessing");
         return postprocessingOptions;
     }
 
     public void postprocessing(@NonNull Action<PostprocessingOptions> action) {
         checkPostprocessingConfiguration(
-                PostprocessingConfiguration.POSTPROCESSING_BLOCK, "postprocessing");
+                PostprocessingConfiguration.POSTPROCESSING_BLOCK, "postProcessing");
         action.execute(postprocessingOptions);
     }
 
-    /** Describes how postprocessing was configured. Not to be used from the DSL. */
+    /** Describes how postProcessing was configured. Not to be used from the DSL. */
     @NonNull
     public PostprocessingConfiguration getPostprocessingConfiguration() {
         // If the user didn't configure anything, stick to the old DSL.
@@ -629,7 +628,7 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
 
     /**
      * Checks that the user is consistently using either the new or old DSL for configuring bytecode
-     * postprocessing.
+     * postProcessing.
      */
     private void checkPostprocessingConfiguration(
             @NonNull PostprocessingConfiguration used, @NonNull String methodName) {
@@ -648,14 +647,14 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
                     // TODO: URL with more details.
                     message =
                             String.format(
-                                    "The `postprocessing` block cannot be used with together with the `%s` method.",
+                                    "The `postProcessing` block cannot be used with together with the `%s` method.",
                                     postprocessingDslMethodUsed);
                     break;
                 case OLD_DSL:
                     // TODO: URL with more details.
                     message =
                             String.format(
-                                    "The `%s` method cannot be used with together with the `postprocessing` block.",
+                                    "The `%s` method cannot be used with together with the `postProcessing` block.",
                                     methodName);
                     break;
                 default:

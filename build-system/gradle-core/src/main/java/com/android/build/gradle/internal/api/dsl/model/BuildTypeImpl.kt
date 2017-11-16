@@ -96,18 +96,18 @@ class BuildTypeImpl(
     override var minifyEnabled: Boolean
         get() {
             deprecationReporter.reportDeprecatedUsage(
-                    "PostprocessingOptions",
+                    "PostProcessingOptions",
                     "BuildType.minifyEnabled",
                     DeprecationReporter.DeprecationTarget.EOY2018)
-            return postprocessing.isObfuscate || postprocessing.isRemoveUnusedCode
+            return postProcessing.isObfuscate || postProcessing.isRemoveUnusedCode
         }
         set(value) {
             deprecationReporter.reportDeprecatedUsage(
-                    "PostprocessingOptions",
+                    "PostProcessingOptions",
                     "BuildType.minifyEnabled",
                     DeprecationReporter.DeprecationTarget.EOY2018)
-            postprocessing.isObfuscate = true
-            postprocessing.isRemoveUnusedCode = true
+            postProcessing.isObfuscate = true
+            postProcessing.isRemoveUnusedCode = true
         }
 
     @Suppress("OverridingDeprecatedMember")

@@ -16,7 +16,7 @@
 
 package com.android.build.api.dsl.model
 
-import com.android.build.api.dsl.options.PostprocessingOptions
+import com.android.build.api.dsl.options.PostProcessingOptions
 import org.gradle.api.Action
 import org.gradle.api.Incubating
 
@@ -102,9 +102,9 @@ interface BuildTypeOrVariant {
     var crunchPngs: Boolean
 
     /** Configures the post-processing options with the given action.  */
-    fun postprocessing(action: Action<PostprocessingOptions>)
+    fun postProcessing(action: Action<PostProcessingOptions>)
 
-    val postprocessing: PostprocessingOptions
+    val postProcessing: PostProcessingOptions
 
     // DEPRECATED
 
