@@ -737,7 +737,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     import java.lang.annotation.Retention;
                     import java.lang.annotation.RetentionPolicy;
 
-                    @SuppressWarnings({"ClassNameDiffersFromFileName", "ConstantConditions", "RedundantIfStatement"})
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "ConstantConditions", "RedundantIfStatement", "ConstantIfStatement"})
                     public class GravityTest {
                         @IntDef(value = {Gravity.LEFT, Gravity.RIGHT}, flag = true)
                         @Retention(RetentionPolicy.SOURCE)
@@ -872,5 +872,77 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 .expectClean()
     }
 
+    fun testEnforceMethodReturnValueConstraints() {
+        // Regression test for 69321287
+        lint().files(
+                java("""
+                    package test.pkg;
 
+                    import android.support.annotation.IntDef;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class IntDefTest {
+                        public void test() {
+                            wantInt(100); // ERROR
+                            wantInt(WrongType.NO); // ERROR
+                            wantInt(giveRandomInt()); // ERROR
+                            wantInt(giveWrongInt()); //ERROR
+                            wantInt(giveWrongIntAnnotated()); //ERROR
+                            wantInt(giveUnknownInt()); // OK (unknown)
+                            wantInt(giveRightInt()); //OK
+                        }
+
+                        @IntDef({TestType.LOL})
+                        public @interface TestType {
+                            int LOL = 1;
+                        }
+
+                        @IntDef({WrongType.NO})
+                        public @interface WrongType {
+                            int NO = 2;
+                        }
+
+                        public void wantInt(@TestType int input) {}
+
+                        public int giveRandomInt() {
+                            return 100;
+                        }
+
+                        public int giveUnknownInt() {
+                            return (int) (giveRandomInt() * System.currentTimeMillis());
+                        }
+
+                        public int giveWrongInt() {
+                            return WrongType.NO;
+                        }
+
+                        public int giveRightInt() {
+                            return TestType.LOL;
+                        }
+
+                        @WrongType public int giveWrongIntAnnotated() {
+                            return WrongType.NO;
+                        }
+                    }
+                    """).indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect("src/test/pkg/IntDefTest.java:8: Error: Must be one of: TestType.LOL [WrongConstant]\n" +
+                        "        wantInt(100); // ERROR\n" +
+                        "                ~~~\n" +
+                        "src/test/pkg/IntDefTest.java:9: Error: Must be one of: TestType.LOL [WrongConstant]\n" +
+                        "        wantInt(WrongType.NO); // ERROR\n" +
+                        "                ~~~~~~~~~~~~\n" +
+                        "src/test/pkg/IntDefTest.java:10: Error: Must be one of: TestType.LOL [WrongConstant]\n" +
+                        "        wantInt(giveRandomInt()); // ERROR\n" +
+                        "                ~~~~~~~~~~~~~~~\n" +
+                        "src/test/pkg/IntDefTest.java:11: Error: Must be one of: TestType.LOL [WrongConstant]\n" +
+                        "        wantInt(giveWrongInt()); //ERROR\n" +
+                        "                ~~~~~~~~~~~~~~\n" +
+                        "src/test/pkg/IntDefTest.java:12: Error: Must be one of: TestType.LOL [WrongConstant]\n" +
+                        "        wantInt(giveWrongIntAnnotated()); //ERROR\n" +
+                        "                ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "5 errors, 0 warnings")
+    }
 }

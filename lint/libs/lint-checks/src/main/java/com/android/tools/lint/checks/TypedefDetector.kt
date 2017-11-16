@@ -44,20 +44,24 @@ import com.intellij.psi.PsiModifierListOwner
 import com.intellij.psi.PsiType
 import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.ULiteralExpression
+import org.jetbrains.uast.UMethod
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UPolyadicExpression
 import org.jetbrains.uast.UPrefixExpression
 import org.jetbrains.uast.UReferenceExpression
+import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.UVariable
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.UastPrefixOperator
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUAnnotation
+import org.jetbrains.uast.toUElement
 import org.jetbrains.uast.util.isArrayInitializer
 import org.jetbrains.uast.util.isNewArrayWithInitializer
 
@@ -202,8 +206,7 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
         } else if (argument is UReferenceExpression) {
             val resolved = argument.resolve()
             if (resolved is PsiVariable) {
-                val variable = resolved as PsiVariable?
-                if (variable!!.type is PsiArrayType) {
+                if (resolved.type is PsiArrayType) {
                     // Allow checking the initializer here even if the field itself
                     // isn't final or static; check that the individual values are okay
                     checkTypeDefConstant(context, annotation, argument,
@@ -213,13 +216,13 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
                 }
 
                 // If it's a constant (static/final) check that it's one of the allowed ones
-                if (variable.hasModifierProperty(PsiModifier.STATIC) && variable.hasModifierProperty(
+                if (resolved.hasModifierProperty(PsiModifier.STATIC) && resolved.hasModifierProperty(
                         PsiModifier.FINAL)) {
                     checkTypeDefConstant(context, annotation, argument,
                             errorNode ?: argument,
                             flag, resolved, allAnnotations)
                 } else {
-                    val lastAssignment = UastLintUtils.findLastAssignment(variable, argument)
+                    val lastAssignment = UastLintUtils.findLastAssignment(resolved, argument)
 
                     if (lastAssignment != null) {
                         checkTypeDefConstant(context, annotation,
@@ -229,16 +232,24 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
                     }
                 }
             }
-        } else if (argument.isNewArrayWithInitializer() || argument.isArrayInitializer()) {
-            val arrayInitializer = argument as UCallExpression?
-            var type = arrayInitializer!!.getExpressionType()
-            if (type != null) {
-                type = type.deepComponentType
-            }
-            if (PsiType.INT == type || PsiType.LONG == type) {
-                for (expression in arrayInitializer.valueArguments) {
-                    checkTypeDefConstant(context, annotation, expression, errorNode, flag,
-                            allAnnotations)
+        } else if (argument is UCallExpression) {
+            if (argument.isNewArrayWithInitializer() || argument.isArrayInitializer()) {
+                val arrayInitializer = argument as UCallExpression?
+                var type = arrayInitializer!!.getExpressionType()
+                if (type != null) {
+                    type = type.deepComponentType
+                }
+                if (PsiType.INT == type || PsiType.LONG == type) {
+                    for (expression in arrayInitializer.valueArguments) {
+                        checkTypeDefConstant(context, annotation, expression, errorNode, flag,
+                                allAnnotations)
+                    }
+                }
+            } else {
+                val resolved = argument.resolve()
+                if (resolved is PsiMethod) {
+                    checkTypeDefConstant(context, annotation, argument,
+                            errorNode ?: argument, flag, resolved, allAnnotations)
                 }
             }
         }
@@ -263,28 +274,66 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             // See if we're passing in a variable which itself has been annotated with
             // a typedef annotation; if so, make sure that the typedef constants are the
             // same, or a subset of the allowed constants
-            if (argument is UReferenceExpression) {
-                val resolvedArgument = argument.resolve()
-                if (resolvedArgument is PsiModifierListOwner) {
-                    val evaluator = context.evaluator
-                    val annotations = evaluator.getAllAnnotations(resolvedArgument, true)
-                    for (a in evaluator.filterRelevantAnnotations(annotations)) {
-                        val qualifiedName = a.qualifiedName
-                        if (INT_DEF_ANNOTATION == qualifiedName ||
-                                STRING_DEF_ANNOTATION == qualifiedName) {
-                            val paramValues = getAnnotationValue(JavaUAnnotation.wrap(a))
-                            if (paramValues != null) {
-                                if (paramValues == allowed) {
-                                    return
-                                }
-
-                                // Superset?
-                                val param = getResolvedValues(paramValues, argument)
-                                val all = getResolvedValues(allowed, argument)
-                                if (all.containsAll(param)) {
-                                    return
-                                }
+            val resolvedArgument = when (argument) {
+                is UReferenceExpression -> argument.resolve()
+                is UCallExpression -> argument.resolve()
+                else -> null
+            }
+            if (resolvedArgument is PsiModifierListOwner) {
+                val evaluator = context.evaluator
+                val annotations = evaluator.getAllAnnotations(resolvedArgument, true)
+                var hadTypeDef = false
+                for (a in evaluator.filterRelevantAnnotations(annotations)) {
+                    val qualifiedName = a.qualifiedName
+                    if (INT_DEF_ANNOTATION == qualifiedName ||
+                            STRING_DEF_ANNOTATION == qualifiedName) {
+                        hadTypeDef = true
+                        val paramValues = getAnnotationValue(JavaUAnnotation.wrap(a))
+                        if (paramValues != null) {
+                            if (paramValues == allowed) {
+                                return
                             }
+
+                            // Superset?
+                            val param = getResolvedValues(paramValues, argument)
+                            val all = getResolvedValues(allowed, argument)
+                            if (all.containsAll(param)) {
+                                return
+                            }
+                        }
+                    }
+                }
+
+                if (!hadTypeDef && resolvedArgument is PsiMethod) {
+                    // Called some random method which has not been annotated.
+                    // Let's peek inside to see if we can figure out more about it; if not,
+                    // we don't want to flag it since it could get noisy with false
+                    // positives.
+                    val uMethod = resolvedArgument.toUElement()
+                    if (uMethod is UMethod) {
+                        val body = uMethod.uastBody
+                        val retValue = if (body is UBlockExpression) {
+                            if (body.expressions.size == 1 && body.expressions[0] is UReturnExpression) {
+                                val ret = body.expressions[0] as UReturnExpression
+                                ret.returnExpression
+                            } else {
+                                null
+                            }
+                        } else {
+                            body
+                        }
+                        if (retValue is UReferenceExpression) {
+                            // Constant reference
+                            val const = retValue.resolve() ?: return
+                            if (const is PsiField) {
+                                checkTypeDefConstant(context, annotation, retValue, errorNode,
+                                        flag, const, allAnnotations)
+                            }
+                            return
+                        } else if (retValue !is ULiteralExpression) {
+                            // Not a reference and not a constant literal: some more complicated
+                            // logic; don't try to flag this for fear of false positives
+                            return
                         }
                     }
                 }
