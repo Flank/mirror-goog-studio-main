@@ -84,7 +84,11 @@ public class AndroidApplicationInfo {
                     int endParenthesis = line.indexOf(')', eqIndex + 2);
                     if (endParenthesis > 0) {
                         String versionCodeStr = line.substring(endParenthesis + 1);
-                        versionCode = Long.decode(versionCodeStr);
+                        try {
+                            versionCode = Long.decode(versionCodeStr);
+                        } catch (NumberFormatException e) {
+                            versionCode = 0;
+                        }
                     }
                 }
             } else if (line.startsWith("A: android:versionName")) {
@@ -128,7 +132,11 @@ public class AndroidApplicationInfo {
                 Matcher matcher = packagePattern.matcher(line);
                 if (matcher.matches()) {
                     builder.setPackageId(matcher.group(1));
-                    builder.setVersionCode(Long.parseLong(matcher.group(2)));
+                    try {
+                        builder.setVersionCode(Long.decode(matcher.group(2)));
+                    } catch (NumberFormatException e) {
+                        builder.setVersionCode(0);
+                    }
                     builder.setVersionName(matcher.group(3));
                 }
             } else if (line.startsWith("uses-feature:")) {
