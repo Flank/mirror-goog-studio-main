@@ -568,8 +568,8 @@ public class LibraryTaskManager extends TaskManager {
                 variantScope.getOutput(TaskOutputType.RENDERSCRIPT_HEADERS),
                 prependToCopyPath(SdkConstants.FD_RENDERSCRIPT));
         bundle.from(variantScope.getOutput(TaskOutputType.PUBLIC_RES));
-        if (variantScope.hasOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_JAR)) {
-            bundle.from(variantScope.getOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_JAR));
+        if (variantScope.hasOutput(TaskOutputType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
+            bundle.from(variantScope.getOutput(TaskOutputType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
         }
         if (variantScope.hasOutput(TaskOutputType.RES_STATIC_LIBRARY)) {
             bundle.from(variantScope.getOutput(TaskOutputType.RES_STATIC_LIBRARY));

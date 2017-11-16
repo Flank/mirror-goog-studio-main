@@ -24,7 +24,7 @@ import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutpu
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APK_MAPPING;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.APP_CLASSES;
-import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.COMPILE_ONLY_R_CLASS_JAR;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.CONSUMER_PROGUARD_FILE;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_APPLICATION_ID_DECLARATION;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.FEATURE_CLASSES;
@@ -158,8 +158,8 @@ public class VariantPublishingSpec {
                                 ArtifactType.RES_STATIC_LIBRARY,
                                 API_AND_RUNTIME_ELEMENTS),
                         outputSpec(
-                                COMPILE_ONLY_R_CLASS_JAR,
-                                ArtifactType.COMPILE_ONLY_R_CLASS_JAR,
+                                COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
+                                ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                                 API_ELEMENTS_ONLY),
                         outputSpec(PUBLIC_RES, ArtifactType.PUBLIC_RES, RUNTIME_ELEMENTS_ONLY),
                         outputSpec(SYMBOL_LIST, ArtifactType.SYMBOL_LIST, RUNTIME_ELEMENTS_ONLY),

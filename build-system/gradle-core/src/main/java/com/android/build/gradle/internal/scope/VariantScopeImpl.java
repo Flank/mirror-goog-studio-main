@@ -25,7 +25,7 @@ import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConf
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_R_CLASS_JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SHARED_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -859,10 +859,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (Boolean.TRUE.equals(globalScope.getExtension().getAaptOptions().getNamespaced())) {
             mainCollection =
                     mainCollection.plus(
-                            getOutput(VariantScope.TaskOutputType.COMPILE_ONLY_R_CLASS_JAR));
+                            getOutput(
+                                    VariantScope.TaskOutputType
+                                            .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             mainCollection =
                     mainCollection.plus(
-                            getArtifactFileCollection(configType, ALL, COMPILE_ONLY_R_CLASS_JAR));
+                            getArtifactFileCollection(
+                                    configType, ALL, COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             mainCollection =
                     mainCollection.plus(getArtifactFileCollection(configType, ALL, SHARED_CLASSES));
             BaseVariantData tested = getTestedVariantData();
@@ -872,7 +875,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                 tested.getScope()
                                         .getOutput(
                                                 VariantScope.TaskOutputType
-                                                        .COMPILE_ONLY_R_CLASS_JAR));
+                                                        .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             }
         }
 

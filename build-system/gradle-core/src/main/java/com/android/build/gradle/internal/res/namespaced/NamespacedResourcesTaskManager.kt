@@ -114,7 +114,7 @@ class NamespacedResourcesTaskManager(
                                 variantScope.getOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_CLASSES),
                                 rClassJarFile))
         variantScope.addTaskOutput(
-                TaskOutputType.COMPILE_ONLY_R_CLASS_JAR,
+                TaskOutputType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
                 rClassJarFile,
                 task.name)
     }

@@ -1837,7 +1837,9 @@ public abstract class TaskManager {
 
         // Empty R class jar. TODO: Resources support for unit tests?
         variantScope.addTaskOutput(
-                TaskOutputHolder.TaskOutputType.COMPILE_ONLY_R_CLASS_JAR, project.files(), null);
+                TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
+                project.files(),
+                null);
 
         AndroidTask<? extends JavaCompile> javacTask = createJavacTask(tasks, variantScope);
         addJavacClassesStream(variantScope);
