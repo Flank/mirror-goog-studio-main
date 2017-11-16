@@ -52,46 +52,35 @@ class BytecodeRClassWriterTest {
                 .add(Symbol.createSymbol(ResourceType.ID,
                         "foo",
                         SymbolJavaType.INT,
-                        "0"))
+                        "0x0"))
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.DRAWABLE,
                                 "bar",
                                 SymbolJavaType.INT,
-                                "1"))
-                .add(
-                        Symbol.createSymbol(
-                                ResourceType.STYLEABLE,
-                                "styles_beep",
-                                SymbolJavaType.INT,
-                                "2"))
+                                "0x1"))
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.ATTR,
                                 "beep",
                                 SymbolJavaType.INT,
-                                "3"))
-                .add(
-                        Symbol.createSymbol(
-                                ResourceType.STYLEABLE,
-                                "styles_boop",
-                                SymbolJavaType.INT,
-                                "4"))
+                                "0x3"))
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.ATTR,
                                 "boop",
                                 SymbolJavaType.INT,
-                                "5"))
+                                "0x5"))
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.STYLEABLE,
                                 "styles",
                                 SymbolJavaType.INT_LIST,
-                                "{ 2, 4 }"))
+                                "{ 0x2, 0x4 }",
+                                listOf("style1", "style2")))
                 .build()
 
-        exportToCompiledJava(symbols, rJar.toPath())
+        exportToCompiledJava(listOf(symbols), rJar.toPath())
 
         Zip(rJar).use {
             assertThat(it.entries).hasSize(5)
@@ -111,44 +100,51 @@ class BytecodeRClassWriterTest {
         val generatedRJar = mTemporaryFolder.newFile("R.jar")
         val rDotJavaDir = mTemporaryFolder.newFolder("source")
 
-        val symbols = SymbolTable.builder()
-                .tablePackage("com.example.foo")
+        val appSymbols = SymbolTable.builder()
+                .tablePackage("com.example.foo.app")
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.ATTR,
                                 "beep",
                                 SymbolJavaType.INT,
-                                "1"))
+                                "0x1"))
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.ATTR,
                                 "boop",
                                 SymbolJavaType.INT,
-                                "3"))
+                                "0x3"))
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.STYLEABLE,
                                 "styles",
                                 SymbolJavaType.INT_LIST,
-                                "{ 1004, 1002 }",
+                                "{ 0x1004, 0x1002 }",
                                 listOf("styles_boop", "styles_beep")))
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.STYLEABLE,
                                 "other_style",
                                 SymbolJavaType.INT_LIST,
-                                "{ 1004, 1002 }",
+                                "{ 0x1004, 0x1002 }",
                                 listOf("foo", "bar.two")))
+                .add(Symbol.createSymbol(ResourceType.STRING, "libstring", SymbolJavaType.INT, "0x4"))
                 .build()
 
-        // The existing path: Symbol table --exportToJava--> R.java --javac--> R classes
+        val librarySymbols = SymbolTable.builder()
+                .tablePackage("com.example.foo.lib")
+                .add(Symbol.createSymbol(ResourceType.STRING, "libstring", SymbolJavaType.INT, "0x4"))
+                .build()
+
+        // The existing path: Symbol table --com.android.builder.symbols.exportToJava--> R.java --javac--> R classes
         // Generate the R.java file.
-        val rDotJava = SymbolIo.exportToJava(symbols, rDotJavaDir, true)
+        val appRDotJava = SymbolIo.exportToJava(appSymbols, rDotJavaDir, false)
+        val libRDotJava = SymbolIo.exportToJava(librarySymbols, rDotJavaDir, false)
         val javac = ToolProvider.getSystemJavaCompiler()
         val manager = javac.getStandardFileManager(
                 null, null, null)
-        // Use javac to compile R.java into R.class and R$id.class
-        val source = manager.getJavaFileObjectsFromFiles(ImmutableList.of(rDotJava)) as Iterable<JavaFileObject>
+        // Use javac to compile R.java into R.class, R$id.class. etc.
+        val source = manager.getJavaFileObjectsFromFiles(ImmutableList.of(libRDotJava, appRDotJava)) as Iterable<JavaFileObject>
         javac.getTask(null,
                 manager, null,
                 ImmutableList.of("-d", javacCompiledDir.absolutePath), null,
@@ -156,15 +152,18 @@ class BytecodeRClassWriterTest {
                 .call()
 
         val expectedClasses = listOf(
-                "com.example.foo.R",
-                "com.example.foo.R\$styleable",
-                "com.example.foo.R\$attr")
+                "com.example.foo.lib.R",
+                "com.example.foo.lib.R\$string",
+                "com.example.foo.app.R",
+                "com.example.foo.app.R\$string",
+                "com.example.foo.app.R\$styleable",
+                "com.example.foo.app.R\$attr")
 
         // Sanity check
         assertThat(files(javacCompiledDir.toPath())).containsExactlyElementsIn(expectedClasses)
 
         // And the method under test.
-        exportToCompiledJava(symbols, generatedRJar.toPath())
+        exportToCompiledJava(listOf(appSymbols, librarySymbols), generatedRJar.toPath())
 
         Zip(generatedRJar).use {
             assertThat(it.entries.map { className(it.root.relativize(it)) })
@@ -184,29 +183,34 @@ class BytecodeRClassWriterTest {
     @Test
     fun testParseArrayLiteral() {
         assertThat(parseArrayLiteral(0, "{}").asList()).isEmpty()
-        assertThat(parseArrayLiteral(1, "{70}").asList())
-                .containsExactly(70)
-        assertThat(parseArrayLiteral(2, "{ 71, 72 }").asList())
-                .containsExactly(71, 72)
-        assertThat(parseArrayLiteral(5, "{ 72, 73, 74, 71, 70 }").asList())
-                .containsExactly(72, 73, 74, 71, 70)
-        assertThat(parseArrayLiteral(2, "{     71    ,    72   }").asList())
-                .containsExactly(71, 72)
+        assertThat(parseArrayLiteral(1, "{0x7f04002c}").asList())
+                .containsExactly(0x7f04002c)
+        assertThat(parseArrayLiteral(1, "{0x70}").asList())
+                .containsExactly(0x70)
+        assertThat(parseArrayLiteral(5, "{ 0x72, 0x73, 0x74, 0x71, 0x70 }").asList())
+                .containsExactly(0x72, 0x73, 0x74, 0x71, 0x70)
+        assertThat(parseArrayLiteral(2, "{     0x71    ,    0x72   }").asList())
+                .containsExactly(0x71, 0x72)
 
         try {
-            parseArrayLiteral(3, "{1,2}")
-            fail("Expected failure")
-        } catch (e: IllegalStateException) {
+            parseArrayLiteral(3, "{0x1,0x2}")
+            fail("Expected failure - too few listed values")
+        } catch (e: IllegalArgumentException) {
             // Expected.
         }
 
         try {
-            parseArrayLiteral(1, "{1,2,3}")
-            fail("Expected failure")
-        } catch (e: IllegalStateException) {
+            parseArrayLiteral(1, "{0x1,0x2}")
+            fail("Expected failure - too many listed values")
+        } catch (e: IllegalArgumentException) {
             // Expected.
         }
 
+    }
+
+    @Test
+    fun testValueToInt() {
+        assertThat(valueStringToInt("0x7f04002c")).isEqualTo(0x7f04002c)
     }
 
     private fun loadFields(classLoader: ClassLoader, name: String) =

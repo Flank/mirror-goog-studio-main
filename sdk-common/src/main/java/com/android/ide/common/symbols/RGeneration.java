@@ -18,10 +18,15 @@ package com.android.ide.common.symbols;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,6 +56,31 @@ public class RGeneration {
             boolean finalIds) {
         Preconditions.checkArgument(out.isDirectory(), "!out.iDirectory");
 
+        for (SymbolTable symbolTable : generateLibrarySymbolTablesToWrite(main, libraries)) {
+            SymbolIo.exportToJava(symbolTable, out, finalIds);
+        }
+    }
+
+    /**
+     * Given a symbol table for the main program (that could be an application, a library or
+     * anything that actually generates symbols), and given the symbol tables for all libraries it
+     * depends on, generates the {@code R.java} files for each individual library.
+     *
+     * <p>The {@code R.java} file for the main symbol table is assumed to be generated already.
+     *
+     * @param main the main symbol file
+     * @param dependencies the symbol tables from the dependencies
+     */
+    public static List<SymbolTable> generateAllSymbolTablesToWrite(
+            @NonNull SymbolTable main, @NonNull Collection<SymbolTable> dependencies) {
+        return ImmutableList.<SymbolTable>builder()
+                .add(main)
+                .addAll(generateLibrarySymbolTablesToWrite(main, dependencies))
+                .build();
+    }
+
+    private static List<SymbolTable> generateLibrarySymbolTablesToWrite(
+            @NonNull SymbolTable main, @NonNull Collection<SymbolTable> dependencies) {
         /*
          * First we need to make a few changes to the actual symbol tables we are going to write.
          *
@@ -61,7 +91,7 @@ public class RGeneration {
          * both are read from the same base files.
          */
         Map<String, SymbolTable> toWrite = new HashMap<>();
-        for (SymbolTable st : libraries) {
+        for (SymbolTable st : dependencies) {
             if (st.getTablePackage().equals(main.getTablePackage())) {
                 continue;
             }
@@ -107,10 +137,10 @@ public class RGeneration {
              */
         }
 
-        /*
-         * Now write everything.
-         */
-        toWrite.values().forEach(st -> SymbolIo.exportToJava(st, out, finalIds));
+        // Sort the output to make the build output deterministic.
+        List<SymbolTable> toWriteList = new ArrayList<>(toWrite.values());
+        toWriteList.sort(Comparator.comparing(SymbolTable::getTablePackage));
+        return Collections.unmodifiableList(toWriteList);
     }
 
 }

@@ -31,6 +31,7 @@ import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.build.gradle.internal.variant.TestVariantData;
 import com.google.common.base.Preconditions;
 import java.io.File;
+import java.util.Objects;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
@@ -180,6 +181,15 @@ public class AndroidUnitTest extends Test {
                             RUNTIME_CLASSPATH,
                             ALL,
                             ArtifactType.JAVA_RES));
+
+            // The separately compile R class, if applicable.
+            VariantScope testedScope =
+                    Objects.requireNonNull(scope.getTestedVariantData()).getScope();
+            if (testedScope.hasOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+                collection.from(
+                        testedScope.getOutput(
+                                TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR));
+            }
 
             // Mockable JAR is last, to make sure you can shadow the classes with
             // dependencies.

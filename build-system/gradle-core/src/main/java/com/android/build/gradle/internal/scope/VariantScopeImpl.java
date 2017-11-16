@@ -877,6 +877,22 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                                 VariantScope.TaskOutputType
                                                         .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             }
+        } else {
+            if (hasOutput(
+                    TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+                FileCollection rJar =
+                        getOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                mainCollection = mainCollection.plus(rJar);
+            }
+            BaseVariantData tested = getTestedVariantData();
+            if (tested != null
+                    && tested.getScope()
+                            .hasOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+                FileCollection rJar =
+                        tested.getScope()
+                                .getOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                mainCollection = mainCollection.plus(rJar);
+            }
         }
 
         return mainCollection;

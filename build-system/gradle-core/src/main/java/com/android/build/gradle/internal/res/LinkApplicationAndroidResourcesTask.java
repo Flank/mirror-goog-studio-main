@@ -777,7 +777,13 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                             AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME);
 
             // TODO: unify with generateBuilderConfig, compileAidl, and library packaging somehow?
-            processResources.setSourceOutputDir(variantScope.getRClassSourceOutputDir());
+            File sourceOut = variantScope.getRClassSourceOutputDir();
+            processResources.setSourceOutputDir(sourceOut);
+            variantScope.addTaskOutput(
+                    VariantScope.TaskOutputType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                    sourceOut,
+                    getName());
+
             processResources.textSymbolOutputDir = symbolLocation;
             processResources.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile;
 

@@ -1213,7 +1213,6 @@ public abstract class TaskManager {
             @NonNull MergeType mergeType,
             @NonNull String baseName,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
-        File sourcesOut = scope.getRClassSourceOutputDir();
         File symbolTableWithPackageName =
                 FileUtils.join(
                         globalScope.getIntermediatesDir(),
@@ -1230,7 +1229,7 @@ public abstract class TaskManager {
             GenerateLibraryRFileTask task =
                     taskFactory.create(
                             new GenerateLibraryRFileTask.ConfigAction(
-                                    scope, symbolFile, symbolTableWithPackageName, sourcesOut));
+                                    scope, symbolFile, symbolTableWithPackageName));
             taskName = task.getName();
             scope.setProcessResourcesTask(task);
 
@@ -1260,6 +1259,9 @@ public abstract class TaskManager {
         }
         scope.addTaskOutput(VariantScope.TaskOutputType.SYMBOL_LIST, symbolFile, taskName);
 
+        // Needed for the IDE
+        scope.getSourceGenTask().dependsOn(taskName);
+
         // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
         // process resources for local subprojects.
         scope.addTaskOutput(
@@ -1267,8 +1269,6 @@ public abstract class TaskManager {
                 symbolTableWithPackageName,
                 taskName);
 
-        scope.addTaskOutput(
-                VariantScope.TaskOutputType.NOT_NAMESPACED_R_CLASS_SOURCES, sourcesOut, taskName);
         // Needed for the IDE
         Task t = project.getTasks().findByName(taskName);
         if (t != null) {
