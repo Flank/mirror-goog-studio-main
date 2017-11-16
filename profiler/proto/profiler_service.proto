@@ -104,11 +104,10 @@ message AgentAttachResponse {
 }
 
 message TimeRequest {
-  Session session = 1;
+  Device device = 1;
 }
 
 message TimeResponse {
-
   // What's used as timestamps in all profiler data (unless otherwise specified).
   // (a.k.a: Timestamp from clock_gettime(CLOCK_MONOTONIC, ...), ns precision.)
   int64 timestamp_ns = 1;
@@ -119,7 +118,7 @@ message TimeResponse {
 }
 
 message VersionRequest {
-  Session session = 1;
+  Device device = 1;
 }
 
 message VersionResponse {
@@ -134,7 +133,7 @@ message GetDevicesResponse {
 }
 
 message GetProcessesRequest {
-  Session session = 1;
+  Device device = 1;
 }
 
 message GetProcessesResponse {
@@ -142,7 +141,8 @@ message GetProcessesResponse {
 }
 
 message BeginSessionRequest {
-  int32 pid = 1;
+  Device device = 1;
+  Process process = 2;
 }
 
 message BeginSessionResponse {
@@ -216,40 +216,4 @@ message AgentStatusResponse {
 message DeviceProcesses {
   Device device = 1;
   repeated Process process = 2;
-}
-
-message Device {
-  enum State {
-    UNSPECIFIED = 0;
-    ONLINE = 1;
-    OFFLINE = 2; // e.g. emulator that is turned off
-    DISCONNECTED = 3; // e.g. unplugged
-  }
-  string manufacturer = 1; // e.g. 'Google', 'Motorola'
-  string model = 2; // e.g. 'Nexus 5', 'Pixel XL'
-  string serial = 3; // unique ID for this device
-  string version = 4; // e.g. '5.1.1', '8.0.0'
-  int32 api_level = 5; // e.g. 19, 25
-  string codename = 10; // Identifies preview versions by API letter (e.g. 'O'), or '' for release
-  // |feature_level| will either be the same as |api_level| or |api_level + 1| if the current
-  // device is a preview version. Code should check against |feature_level|, not |api_level|, to
-  // see if a feature is available in the framework or not. If |feature_level != api_level|, then
-  // |codename| will also be set.
-  int32 feature_level = 6;
-  string boot_id = 7; // unique ID regenerated each boot time
-  bool is_emulator = 8;
-  State state = 9;
-}
-
-message Process {
-  enum State {
-    UNSPECIFIED = 0;
-    ALIVE = 1;
-    DEAD = 2;
-  }
-  string name = 1;
-  int32 pid = 2;
-  State state = 3;
-  int64 start_timestamp_ns = 4;
-  string abi_cpu_arch = 5;
 }

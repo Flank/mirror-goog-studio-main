@@ -291,11 +291,8 @@ Status ProfilerServiceImpl::AttachAgent(
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
-  string device_serial = DeviceInfo::serial();
-  string boot_id;
-  FileReader::Read("/proc/sys/kernel/random/boot_id", &boot_id);
-
-  sessions_.BeginSession(device_serial, boot_id, request->pid());
+  sessions_.BeginSession(request->device().serial(),
+                         request->device().boot_id(), request->process().pid());
   return Status::OK;
 }
 
