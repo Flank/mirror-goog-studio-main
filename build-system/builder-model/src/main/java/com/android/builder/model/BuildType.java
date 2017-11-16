@@ -85,12 +85,12 @@ public interface BuildType extends BaseConfig {
     /**
      * Returns whether minification is enabled for this build type.
      *
+     * <p>Remember that this flag means that some "ProGuard-like" tool has run, it does not say if
+     * the tool was used to obfuscate and/or minify. In build system code this information is
+     * available elsewhere and should be used instead of this method.
+     *
      * @return true if minification is enabled.
-     * @deprecated remember that this flag means that some "ProGuard-like" tool has run, it does not
-     *     say if the tool was used to obfuscate and/or minify. In build system code this
-     *     information is available elsewhere and should be used instead of this method.
      */
-    @Deprecated
     boolean isMinifyEnabled();
 
     /**
