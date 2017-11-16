@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.utils.FileUtils;
+import com.android.utils.PathUtils;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
@@ -110,7 +111,7 @@ public class TestUtils {
 
     public static File createTempDirDeletedOnExit() {
         final File tempDir = Files.createTempDir();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> deleteFile(tempDir)));
+        PathUtils.addRemovePathHook(tempDir.toPath());
         return tempDir;
     }
 

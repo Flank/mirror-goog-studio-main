@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.utils.FileUtils;
+import com.android.utils.PathUtils;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -156,18 +157,7 @@ public class ManifestMergerTestUtil {
             reader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
 
             final File tempDir = Files.createTempDir();
-            tempDir.deleteOnExit();
-            Runtime.getRuntime().addShutdownHook(new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        FileUtils.deletePath(tempDir);
-                    } catch (IOException e) {
-                        throw new AssertionError(e);
-                    }
-                }
-            });
-            tempDir.deleteOnExit();
+            PathUtils.addRemovePathHook(tempDir.toPath());
 
             String line = null;
             String delimiter = null;
