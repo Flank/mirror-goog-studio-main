@@ -36,6 +36,7 @@ import com.android.tools.ir.client.InstantRunArtifact;
 import com.android.tools.ir.client.InstantRunArtifactType;
 import com.android.tools.ir.client.InstantRunBuildInfo;
 import com.google.common.collect.Iterables;
+import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Rule;
@@ -102,7 +103,7 @@ public class ResourcesPackagingTest {
                         buildInfo, InstantRunArtifactType.SPLIT_MAIN);
         assertThat(splitMain.file).exists();
 
-        Apk containsResources;
+        File resourcesApkFile;
         if (separateResourcesApk) {
             List<InstantRunArtifact> resourceApk =
                     InstantRunTestUtils.getArtifactsOfType(buildInfo, InstantRunArtifactType.SPLIT)
@@ -115,15 +116,19 @@ public class ResourcesPackagingTest {
                                                             InstantRunResourcesApkBuilder
                                                                     .APK_FILE_NAME))
                             .collect(Collectors.toList());
-            containsResources = new Apk(Iterables.getOnlyElement(resourceApk).file);
-            assertThat(new Apk(splitMain.file)).doesNotContainResource("layout/main.xml");
+            resourcesApkFile = Iterables.getOnlyElement(resourceApk).file;
+            try (Apk mainApk = new Apk(splitMain.file)) {
+                assertThat(mainApk).doesNotContainResource("layout/main.xml");
+            }
         } else {
-            containsResources = new Apk(splitMain.file);
+            resourcesApkFile = splitMain.file;
         }
 
-        assertThat(containsResources).exists();
-        assertThat(containsResources).containsResource("layout/main.xml");
-        assertThat(containsResources).doesNotContainResource("layout-v1/main.xml");
+        assertThat(resourcesApkFile).exists();
+        try (Apk resourcesApk = new Apk(resourcesApkFile)) {
+            assertThat(resourcesApk).containsResource("layout/main.xml");
+            assertThat(resourcesApk).doesNotContainResource("layout-v1/main.xml");
+        }
 
         // now modify a resource.
         TemporaryProjectModification.doTest(
@@ -145,13 +150,13 @@ public class ResourcesPackagingTest {
                             InstantRunTestUtils.loadContext(instantRunModel);
 
                     assertThat(modifiedBuildInfo.getArtifacts()).hasSize(1);
-                    InstantRunArtifact resourcesApk = modifiedBuildInfo.getArtifacts().get(0);
-                    assertThat(resourcesApk.type)
+                    InstantRunArtifact resourcesArtifact = modifiedBuildInfo.getArtifacts().get(0);
+                    assertThat(resourcesArtifact.type)
                             .isEqualTo(
                                     separateResourcesApk
                                             ? InstantRunArtifactType.SPLIT
                                             : InstantRunArtifactType.RESOURCES);
-                    assertThat(resourcesApk.file.getName())
+                    assertThat(resourcesArtifact.file.getName())
                             .endsWith(
                                     separateResourcesApk
                                             ? SdkConstants.DOT_ANDROID_PACKAGE
