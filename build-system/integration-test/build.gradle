@@ -91,10 +91,12 @@ def testEnvironment =
                     key.startsWith("BUILDBOT_")
         }
 
-File outDir = rootProject.file(System.env.OUT_DIR != null ? System.env.OUT_DIR : "../out")
 testEnvironment << [
-        TEST_TMPDIR: project.buildDir, // Use the same environment variable as Bazel for now.
-        CUSTOM_REPO: new File(outDir, "repo").toString()
+        TEST_TMPDIR:
+                System.env.TEST_TMPDIR != null
+                        ? new File(System.env.TEST_TMPDIR)
+                        : project.buildDir, // Use the same environment variable as Bazel for now.
+        CUSTOM_REPO: new File(rootProject.ext.androidHostOut, "repo").toString()
                 + File.pathSeparator
                 + rootProject.file("../prebuilts/tools/common/m2/repository/").toString(),
         CUSTOM_IMPROVED_DEPENDENCY_RESOLUTION : "true"
