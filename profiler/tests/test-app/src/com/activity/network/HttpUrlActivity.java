@@ -20,7 +20,7 @@ import android.app.Activity;
 import android.tools.SimpleWebServer;
 import android.tools.SimpleWebServer.QueryParam;
 import android.tools.SimpleWebServer.RequestHandler;
-import java.io.IOException;
+import com.activity.network.NetworkUtils.ServerTest;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
@@ -52,42 +52,39 @@ public final class HttpUrlActivity extends Activity {
                 }
             };
 
-    public void runGet() {
-        SimpleWebServer server = startServer();
-        InputStream inputStream = null;
-        try {
-            URL url = new URL(Utils.getUrl(server.getPort(), "activity", GET));
-            URLConnection connection = url.openConnection();
-            inputStream = connection.getInputStream();
-        } catch (IOException e) {
-            System.out.println("Error in connection " + e.toString());
-        }
-        System.out.println(Utils.readResponse(inputStream));
-        server.stop();
+    public void runGet() throws Exception {
+        NetworkUtils.runWithServer(
+                HANDLER,
+                new ServerTest() {
+                    @Override
+                    public void runWith(SimpleWebServer server) throws Exception {
+                        URL url = new URL(NetworkUtils.getUrl(server.getPort(), "activity", GET));
+                        URLConnection connection = url.openConnection();
+                        InputStream inputStream = connection.getInputStream();
+
+                        NetworkUtils.printAndCloseResponse(inputStream);
+                    }
+                });
     }
 
-    public void runPost() {
-        SimpleWebServer server = startServer();
-        InputStream inputStream = null;
-        try {
-            URL url = new URL(Utils.getUrl(server.getPort(), "activity", POST));
-            URLConnection connection = url.openConnection();
-            connection.setDoOutput(true);
-            String requestBody = "TestRequestBody";
-            OutputStream outputStream = connection.getOutputStream();
-            outputStream.write(requestBody.getBytes());
-            outputStream.close();
-            inputStream = connection.getInputStream();
-        } catch (IOException e) {
-            System.out.println("Error in connection " + e.toString());
-        }
-        System.out.println(Utils.readResponse(inputStream));
-        server.stop();
-    }
+    public void runPost() throws Exception {
+        NetworkUtils.runWithServer(
+                HANDLER,
+                new ServerTest() {
+                    @Override
+                    public void runWith(SimpleWebServer server) throws Exception {
+                        URL url = new URL(NetworkUtils.getUrl(server.getPort(), "activity", POST));
+                        URLConnection connection = url.openConnection();
+                        connection.setDoOutput(true);
 
-    private static SimpleWebServer startServer() {
-        SimpleWebServer server = new SimpleWebServer(Utils.getAvailablePort(), HANDLER);
-        server.start();
-        return server;
+                        String requestBody = "TestRequestBody";
+                        OutputStream outputStream = connection.getOutputStream();
+                        outputStream.write(requestBody.getBytes());
+                        outputStream.close();
+                        InputStream inputStream = connection.getInputStream();
+
+                        NetworkUtils.printAndCloseResponse(inputStream);
+                    }
+                });
     }
 }
