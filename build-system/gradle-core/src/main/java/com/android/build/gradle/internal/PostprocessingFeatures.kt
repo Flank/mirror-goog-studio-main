@@ -14,22 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.internal;
+package com.android.build.gradle.internal
 
-import com.google.auto.value.AutoValue;
-
-/** Describes actions that we should do at bytecode postprocessing time. */
-@AutoValue
-public abstract class PostprocessingFeatures {
-
-    public static PostprocessingFeatures create(
-            boolean removeUnusedCode, boolean obfuscate, boolean optimize) {
-        return new AutoValue_PostprocessingFeatures(removeUnusedCode, obfuscate, optimize);
-    }
-
-    public abstract boolean isRemoveUnusedCode();
-
-    public abstract boolean isObfuscate();
-
-    public abstract boolean isOptimize();
-}
+/** Describes actions that we should do at bytecode postprocessing time.  */
+data class PostprocessingFeatures(
+        val isRemoveUnusedCode: Boolean,
+        val isObfuscate: Boolean,
+        val isOptimize: Boolean)

@@ -37,9 +37,6 @@ kotlin_library(
         "//prebuilts/r8:d8-master",
     ],
     javacopts = ["-Xep:MissingCasesInEnumSwitch:WARN"],
-    plugins = [
-        "//tools/base:auto-value-plugin",
-    ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/builder",
     resources = [":resources"],
@@ -48,7 +45,6 @@ kotlin_library(
         "//tools/analytics-library/protos/src/main/proto",
         "//tools/analytics-library/shared:tools.analytics-shared",
         "//tools/analytics-library/tracker:tools.analytics-tracker",
-        "//tools/base:com.google.auto.value_auto-value_neverlink",
         "//tools/base/annotations",
         "//tools/base/build-system:tools.apksig",
         "//tools/base/build-system:tools.manifest-merger",

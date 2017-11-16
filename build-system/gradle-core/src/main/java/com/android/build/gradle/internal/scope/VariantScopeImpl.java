@@ -601,7 +601,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // If the new DSL block is not used, all these flags need to be in the config files.
         PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
         if (postprocessingOptions != null) {
-            return PostprocessingFeatures.create(
+            return new PostprocessingFeatures(
                     postprocessingOptions.isRemoveUnusedCode(),
                     postprocessingOptions.isObfuscate(),
                     postprocessingOptions.isOptimizeCode());

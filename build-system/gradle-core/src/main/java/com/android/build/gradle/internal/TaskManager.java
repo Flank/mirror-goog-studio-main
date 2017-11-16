@@ -3176,7 +3176,7 @@ public abstract class TaskManager {
 
     private static void applyProguardDefaultsForTest(ProGuardTransform transform) {
         // Don't remove any code in tested app.
-        transform.setActions(PostprocessingFeatures.create(false, true, false));
+        transform.setActions(new PostprocessingFeatures(false, true, false));
 
         // We can't call dontobfuscate, since that would make ProGuard ignore the mapping file.
         transform.keep("class * {*;}");

@@ -4,8 +4,6 @@ apply plugin: 'clone-artifacts'
 apply plugin: 'jacoco-tools-base'
 
 dependencies {
-    compileOnly libs.auto_value
-
     compile project(':base:builder-model')
     compile project(':base:builder-test-api')
 
