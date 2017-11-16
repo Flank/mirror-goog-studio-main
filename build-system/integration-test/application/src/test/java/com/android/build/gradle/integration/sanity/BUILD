@@ -4,7 +4,7 @@ java_library(
     deps = [
         "//tools/base/annotations",
         "//tools/base/build-system/builder-model",
-        "//tools/base/build-system/integration-test",
+        "//tools/base/build-system/integration-test/framework",
         "//tools/base/common:tools.common",
         "//tools/base/testutils:tools.testutils",
         "//tools/base/third_party:com.google.guava_guava",

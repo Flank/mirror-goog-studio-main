@@ -1,0 +1,10 @@
+filegroup(
+    name = "test-projects",
+    srcs = glob(["test-projects/**"]),
+    visibility = [
+        ":__subpackages__",
+    ],
+)
+
+# Used for bazel packages below this one that use GradleTestProject.
+exports_files(["test-projects/commonBuildScript.gradle"])

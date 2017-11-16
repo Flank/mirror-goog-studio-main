@@ -67,7 +67,9 @@ public class BazelIntegrationTestsSuite {
     @BeforeClass
     public static void unzipOfflineRepo() throws Exception {
         unzip(OFFLINE_REPO, "tools/base/bazel/offline_repo_repo.zip");
-        unzip(PREBUILTS_REPO, "tools/base/build-system/integration-test/prebuilts_repo_repo.zip");
+        unzip(
+                PREBUILTS_REPO,
+                "tools/base/build-system/integration-test/application/prebuilts_repo_repo.zip");
         unzip(DATA_BINDING_RUNTIME_REPO, "tools/data-binding/data_binding_runtime_repo.zip");
     }
 

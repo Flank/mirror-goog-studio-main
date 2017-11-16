@@ -1,60 +1,8 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "kotlin_jar")
 
-java_library(
-    name = "protos",
-    srcs = ["//tools/base/build-system/integration-test/src/main/proto:proto_srcs"],
-    deps = [
-        "//tools/analytics-library/protos/src/main/proto",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-    ],
-)
-
-kotlin_library(
-    name = "integration-test",
-    srcs = ["src/main/java"],
-    visibility = ["__subpackages__"],
-    deps = [
-        ":protos",
-        "//tools/analytics-library/protos/src/main/proto",
-        "//tools/apksig",
-        "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api",
-        "//tools/base/build-system/builder",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
-        "//tools/base/build-system/gradle",
-        "//tools/base/build-system/gradle-api",
-        "//tools/base/build-system/gradle-core",
-        "//tools/base/build-system/java-lib-plugin/java-lib-model",
-        "//tools/base/build-system/java-lib-plugin/java-lib-model-builder",
-        "//tools/base/common:tools.common",
-        "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/instant-run:instant-run-client",
-        "//tools/base/instant-run:instant-run-common",
-        "//tools/base/layoutlib-api:tools.layoutlib-api",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/testing-infrastructure/device-pool/device-provider",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.apis_google-api-services-storage",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java",
-        "//tools/base/third_party:com.google.protobuf_protobuf-java-util",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:commons-io_commons-io",  # TODO: remove?
-        "//tools/base/third_party:commons-lang_commons-lang",  # TODO: remove?
-        "//tools/base/third_party:org.jacoco_org.jacoco.agent",
-        "//tools/base/third_party:org.jacoco_org.jacoco.core",
-        "//tools/base/third_party:org.jacoco_org.jacoco.report",
-        "//tools/base/third_party:org.ow2.asm_asm",
-        "//tools/base/third_party:org.ow2.asm_asm-tree",
-        "//tools/base/third_party:org.smali_dexlib2",
-    ],
-)
-
 TEST_DEPS = [
-    ":integration-test",
+    "//tools/base/build-system/integration-test/framework",
     "//tools/apksig",
     "//tools/base/annotations",
     "//tools/base/build-system:gradle-api",
@@ -89,7 +37,7 @@ TEST_DATA = [
     ":prebuilts_repo_repo.zip",
     "//tools/data-binding:data_binding_runtime_repo.zip",
     "//tools/data-binding:integration-test-projects",
-    ":test-projects",
+    "//tools/base/build-system/integration-test:test-projects",
     "@AntennaPod//:all_files",
     "@gradle_perf_android_medium//:all_files",
     "@android_studio_gradle_test//:all_files",
@@ -194,14 +142,6 @@ java_test(
     ],
     deps = TEST_DEPS,
 )
-
-filegroup(
-    name = "test-projects",
-    srcs = glob(["test-projects/**"]),
-)
-
-# Used for bazel packages below this one that use GradleTestProject.
-exports_files(["test-projects/commonBuildScript.gradle"])
 
 # Maven repo with all the dependencies required by test projects.
 #

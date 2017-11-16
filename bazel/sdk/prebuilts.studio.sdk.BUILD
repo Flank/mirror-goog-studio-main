@@ -214,24 +214,24 @@ platform_filegroup(
     name = "platforms/android-24",
     visibility = [
         "//tools/base/build-system/gradle:__pkg__",
-        "//tools/base/build-system/integration-test:__pkg__",
+        "//tools/base/build-system/integration-test:__subpackages__",
         "//tools/data-binding:__pkg__",
     ],
 )
 
 platform_filegroup(
     name = "platforms/android-23",
-    visibility = ["//tools/base/build-system/integration-test:__pkg__"],
+    visibility = ["//tools/base/build-system/integration-test:__subpackages__"],
 )
 
 platform_filegroup(
     name = "platforms/android-21",
-    visibility = ["//tools/base/build-system/integration-test:__pkg__"],
+    visibility = ["//tools/base/build-system/integration-test:__subpackages__"],
 )
 
 platform_filegroup(
     name = "platforms/android-19",
-    visibility = ["//tools/base/build-system/integration-test:__pkg__"],
+    visibility = ["//tools/base/build-system/integration-test:__subpackages__"],
 )
 
 filegroup(
