@@ -42,7 +42,6 @@ import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
-import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -278,9 +277,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
                     null,
                     this::createTasks);
         } else {
-            // Apply the Java and Jacoco plugins.
+            // Apply the Java plugin
             project.getPlugins().apply(JavaBasePlugin.class);
-            project.getPlugins().apply(JacocoPlugin.class);
 
             // create the delegate
             ProjectWrapper projectWrapper = new ProjectWrapper(project);
@@ -349,9 +347,8 @@ public abstract class BasePlugin<E extends BaseExtension2>
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
-        // Apply the Java and Jacoco plugins.
+        // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
-        project.getPlugins().apply(JacocoPlugin.class);
 
         project.getTasks()
                 .getByName("assemble")

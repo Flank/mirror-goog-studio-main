@@ -43,8 +43,6 @@ import org.gradle.api.tasks.TaskAction;
 @CacheableTask
 public class ZipMergingTask extends AndroidVariantTask {
 
-    private final byte[] buffer = new byte[8192];
-
     private FileCollection inputFiles;
 
     private File outputFile;
@@ -63,6 +61,7 @@ public class ZipMergingTask extends AndroidVariantTask {
 
     @TaskAction
     public void merge() throws IOException {
+        byte[] buffer = new byte[8192];
         try (FileOutputStream fos = new FileOutputStream(outputFile);
                 BufferedOutputStream bos = new BufferedOutputStream(fos);
                 ZipOutputStream zos = new ZipOutputStream(bos)) {

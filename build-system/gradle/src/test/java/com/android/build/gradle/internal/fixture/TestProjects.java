@@ -170,7 +170,7 @@ public class TestProjects {
             Project project = projectBuilder.build();
 
             for (Map.Entry<String, String> entry : this.properties.entrySet()) {
-                project.getExtensions().add(entry.getKey(), entry.getValue());
+                project.getExtensions().getExtraProperties().set(entry.getKey(), entry.getValue());
             }
 
             project.apply(ImmutableMap.of("plugin", plugin.getPluginName()));

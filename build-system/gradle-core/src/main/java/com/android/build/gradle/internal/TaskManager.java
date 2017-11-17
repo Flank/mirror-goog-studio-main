@@ -505,6 +505,11 @@ public abstract class TaskManager {
         // publish the local lint.jar to all the variants. This is not for the task output itself
         // but for the artifact publishing.
         FileCollection lintJarCollection = globalScope.getOutput(LINT_JAR);
+
+        // FIXME we don't to do this during config, but there's no way right now as we want to publish it.
+        // A work around would be to keep hold of the file in the global scope as well as the
+        // file collection in TaskOutput but then this is dangerous as one could use it without
+        // the task dependency.
         File lintJar = lintJarCollection.getSingleFile();
         for (VariantScope scope : variants) {
             scope.addTaskOutput(LINT_JAR, lintJar, PrepareLintJar.NAME);
@@ -2139,6 +2144,8 @@ public abstract class TaskManager {
                 connectedAndroidTest -> connectedAndroidTest.dependsOn(connectedTask.getName()));
 
         if (baseVariantData.getVariantConfiguration().getBuildType().isTestCoverageEnabled()) {
+            applyJacocoPlugin();
+
             final AndroidTask reportTask =
                     androidTasks.create(tasks, new JacocoReportTask.ConfigAction(variantScope));
             reportTask.dependsOn(
@@ -2673,6 +2680,9 @@ public abstract class TaskManager {
                                         && config.getTestedConfig().getType()
                                                 == VariantType.LIBRARY));
         if (isTestCoverageEnabled) {
+            // if not applied, apply the jacoco plugin
+            JacocoPlugin jacocoPlugin = applyJacocoPlugin();
+
             final Configuration agentConfiguration =
                     project.getConfigurations().getByName(AGENT_CONFIGURATION_NAME);
 
@@ -2681,14 +2691,23 @@ public abstract class TaskManager {
                     .getRuntimeClasspath()
                     .extendsFrom(agentConfiguration);
 
-            String jacocoAgentRuntimeDependency =
-                    project.getPlugins().getPlugin(JacocoPlugin.class).getAgentRuntimeDependency();
+
+            String jacocoAgentRuntimeDependency = jacocoPlugin.getAgentRuntimeDependency();
             // we need to force the same version of Jacoco we use for instrumentation
             variantScope
                     .getVariantDependencies()
                     .getRuntimeClasspath()
                     .resolutionStrategy(r -> r.force(jacocoAgentRuntimeDependency));
         }
+    }
+
+    @NonNull
+    private JacocoPlugin applyJacocoPlugin() {
+        JacocoPlugin jacocoPlugin = project.getPlugins().findPlugin(JacocoPlugin.class);
+        if (jacocoPlugin == null) {
+            jacocoPlugin = project.getPlugins().apply(JacocoPlugin.class);
+        }
+        return jacocoPlugin;
     }
 
     public void createJacocoTransform(
