@@ -21,6 +21,7 @@ import com.android.SdkConstants.ANDROID_SUPPORT_PKG_PREFIX
 import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_CLASS
 import com.android.SdkConstants.ATTR_CORE_APP
+import com.android.SdkConstants.ATTR_FONT_FAMILY
 import com.android.SdkConstants.ATTR_LAYOUT
 import com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX
 import com.android.SdkConstants.ATTR_PACKAGE
@@ -160,7 +161,9 @@ Similarly, in manifest files, nearly all attributes should be in the `android:` 
 
                 // Appcompat now encourages decorating standard views (like ImageView and
                 // ImageButton) with srcCompat in the app namespace
-                if (attribute.localName == ATTR_SRC_COMPAT) {
+                if (attribute.localName == ATTR_SRC_COMPAT ||
+                        // Now handled by appcompat
+                        attribute.localName == ATTR_FONT_FAMILY) {
                     return
                 }
 

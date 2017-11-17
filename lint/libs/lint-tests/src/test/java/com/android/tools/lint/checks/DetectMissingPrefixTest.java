@@ -426,6 +426,26 @@ public class DetectMissingPrefixTest extends AbstractCheckTest {
         );
     }
 
+    public void testFontFamilyWithAppCompat() {
+        lint().files(
+                manifest().minSdk(1),
+                xml("res/layout/foo.xml", "" +
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n" +
+                        "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
+                        "    android:id=\"@+id/LinearLayout1\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\"\n" +
+                        "    android:orientation=\"vertical\" >\n" +
+                        "    <TextView\n" +
+                        "        app:fontFamily=\"@font/my_font\"\n" +
+                        "        android:layout_width=\"wrap_content\"\n" +
+                        "        android:layout_height=\"wrap_content\"/>\n" +
+                        "</LinearLayout>\n"))
+                .run()
+                .expectClean();
+    }
+
     @Override
     protected List<Issue> getIssues() {
         List<Issue> combined = Lists.newArrayList(super.getIssues());

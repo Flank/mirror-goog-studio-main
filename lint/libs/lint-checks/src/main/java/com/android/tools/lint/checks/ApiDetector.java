@@ -35,6 +35,7 @@ import static com.android.SdkConstants.ATTR_TEXT_IS_SELECTABLE;
 import static com.android.SdkConstants.ATTR_THEME;
 import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.SdkConstants.ATTR_WIDTH;
+import static com.android.SdkConstants.AUTO_URI;
 import static com.android.SdkConstants.BUTTON;
 import static com.android.SdkConstants.CHECK_BOX;
 import static com.android.SdkConstants.CONSTRUCTOR_NAME;
@@ -97,12 +98,14 @@ import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Position;
+import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.ResourceContext;
 import com.android.tools.lint.detector.api.ResourceXmlDetector;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.tools.lint.detector.api.UastLintUtils;
 import com.android.tools.lint.detector.api.XmlContext;
+import com.android.utils.XmlUtils;
 import com.intellij.psi.CommonClassNames;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
@@ -488,10 +491,22 @@ public class ApiDetector extends ResourceXmlDetector
                         }
                     } else {
                         Location location = context.getLocation(attribute);
+                        String localName = attribute.getLocalName();
                         String message = String.format(
                                 "Attribute `%1$s` is only used in API level %2$d and higher "
                                         + "(current min is %3$d)",
-                                attribute.getLocalName(), attributeApiLevel, minSdk);
+                                localName, attributeApiLevel, minSdk);
+
+                        // Supported by appcompat
+                        if ("fontFamily".equals(localName)) {
+                            Project mainProject = context.getMainProject();
+                            Boolean appCompat = mainProject.dependsOn(APPCOMPAT_LIB_ARTIFACT);
+                            if (appCompat != null && appCompat) {
+                                String prefix = XmlUtils.lookupNamespacePrefix(attribute,
+                                        AUTO_URI, "app", false);
+                                message += " Did you mean `" + prefix + ":fontFamily` ?";
+                            }
+                        }
                         context.report(UNUSED, attribute, location, message,
                                 apiLevelFix(attributeApiLevel));
                     }

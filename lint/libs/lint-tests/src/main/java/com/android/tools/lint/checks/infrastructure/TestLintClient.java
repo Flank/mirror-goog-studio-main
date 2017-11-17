@@ -28,9 +28,14 @@ import static org.junit.Assert.fail;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidArtifact;
+import com.android.builder.model.AndroidLibrary;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.BuildTypeContainer;
+import com.android.builder.model.Dependencies;
+import com.android.builder.model.JavaLibrary;
+import com.android.builder.model.Library;
 import com.android.builder.model.LintOptions;
+import com.android.builder.model.MavenCoordinates;
 import com.android.builder.model.ProductFlavorContainer;
 import com.android.builder.model.SourceProvider;
 import com.android.builder.model.Variant;
@@ -1043,6 +1048,33 @@ public class TestLintClient extends LintCliClient {
 
             return projectDescription == null ||
                     projectDescription.getType() != ProjectDescription.Type.JAVA;
+        }
+
+        @Nullable
+        @Override
+        public Boolean dependsOn(@NonNull String artifact) {
+            if (mocker != null) {
+                Dependencies deps = mocker.getVariant().getMainArtifact().getDependencies();
+                for (AndroidLibrary lib : deps.getLibraries()) {
+                    if (libraryMatches(artifact, lib)) {
+                        return true;
+                    }
+                }
+                for (JavaLibrary lib : deps.getJavaLibraries()) {
+                    if (libraryMatches(artifact, lib)) {
+                        return true;
+                    }
+                }
+            }
+
+            return super.dependsOn(artifact);
+        }
+
+        private boolean libraryMatches(@NonNull String artifact, Library lib) {
+            MavenCoordinates coordinates = lib.getResolvedCoordinates();
+            return artifact.startsWith(coordinates.getGroupId()) &&
+                    artifact.equals(coordinates.getGroupId() + ':'
+                            + coordinates.getArtifactId());
         }
 
         @Override
