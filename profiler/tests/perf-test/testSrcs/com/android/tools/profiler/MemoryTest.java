@@ -1,0 +1,148 @@
+/*
+ * Copyright (C) 2017 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.android.tools.profiler.memory;
+
+import static com.google.common.truth.Truth.assertThat;
+
+import com.android.tools.profiler.*;
+import com.android.tools.profiler.proto.MemoryProfiler.*;
+import java.util.HashSet;
+import java.util.List;
+import org.junit.Test;
+
+public class MemoryTest {
+
+    private boolean myIsOPlusDevice = true;
+    private static final String ACTIVITY_CLASS = "com.activity.MemoryActivity";
+
+    public MemoryTest() {}
+
+    private int findClassTag(List<BatchAllocationSample> samples, String className) {
+        for (BatchAllocationSample sample : samples) {
+            for (AllocationEvent event : sample.getEventsList()) {
+                if (event.getEventCase() == AllocationEvent.EventCase.CLASS_DATA) {
+                    AllocatedClass classAlloc = event.getClassData();
+                    if (classAlloc.getClassName().contains(className)) {
+                        return classAlloc.getClassId();
+                    }
+                }
+            }
+        }
+        return 0;
+    }
+
+    @Test
+    public void countAllocationsAndDeallocation() throws Exception {
+        PerfDriver driver = new PerfDriver(myIsOPlusDevice);
+        driver.start(ACTIVITY_CLASS);
+        GrpcUtils grpc = driver.getGrpc();
+        MemoryStubWrapper stubWrapper = new MemoryStubWrapper(grpc.getMemoryStub());
+
+        // Start memory tracking.
+        TrackAllocationsResponse trackResponse =
+                stubWrapper.startAllocationTracking(grpc.getProcessId());
+        assertThat(trackResponse.getStatus()).isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
+        MemoryData jvmtiData = stubWrapper.getJvmtiData(grpc.getProcessId(), 0, Long.MAX_VALUE);
+
+        // Wait before we start getting actual data.
+        while (jvmtiData.getAllocationSamplesList().size() == 0) {
+            jvmtiData = stubWrapper.getJvmtiData(grpc.getProcessId(), 0, Long.MAX_VALUE);
+        }
+
+        // Find MemTestEntity class tag
+        int memTestEntityId = findClassTag(jvmtiData.getAllocationSamplesList(), "MemTestEntity");
+        assertThat(memTestEntityId).isNotEqualTo(0);
+        long startTime = jvmtiData.getEndTimestamp();
+
+        FakeAndroidDriver androidDriver = driver.getFakeAndroidDriver();
+        final int allocationCount = 10;
+        int allocationsDone = 0;
+        int allocationsReported = 0;
+        int deallocationsReported = 0;
+        int maxLoopCount = allocationCount * 100;
+        HashSet<Integer> tags = new HashSet<Integer>();
+
+        // Temporary workaround for allocation bookkeeping gap during
+        // initialization (b/69639236). We want to make sure that allocation
+        // tracking fully works by the time we start testing.
+        androidDriver.triggerMethod(ACTIVITY_CLASS, "makeAllocationNoise");
+        assertThat(androidDriver.waitForInput("makeAllocationNoise")).isTrue();
+        java.lang.Thread.sleep(500);
+
+        // Aborts if we loop too many times and somehow didn't get
+        // back the alloc/dealloc data in time. This way the test won't timeout
+        // even when fails.
+        while (deallocationsReported < allocationCount && maxLoopCount-- > 0) {
+            // Create several instances of MemTestEntity and when
+            // done free and collect them.
+            if (allocationsDone < allocationCount) {
+                androidDriver.triggerMethod(ACTIVITY_CLASS, "allocate");
+                allocationsDone++;
+                androidDriver.triggerMethod(ACTIVITY_CLASS, "size");
+                String size_response = String.format("size %d", allocationsDone);
+                assertThat(androidDriver.waitForInput(size_response)).isTrue();
+            } else {
+                androidDriver.triggerMethod(ACTIVITY_CLASS, "free");
+                androidDriver.triggerMethod(ACTIVITY_CLASS, "gc");
+                androidDriver.triggerMethod(ACTIVITY_CLASS, "size");
+                assertThat(androidDriver.waitForInput("size 0")).isTrue();
+            }
+            // Make some allocation noise here to emulate how real apps work.
+            androidDriver.triggerMethod(ACTIVITY_CLASS, "makeAllocationNoise");
+
+            jvmtiData = stubWrapper.getJvmtiData(grpc.getProcessId(), startTime, Long.MAX_VALUE);
+            long endTime = jvmtiData.getEndTimestamp();
+            System.out.printf("getJvmtiData called. endTime=%d, alloc samples=%d\n",
+                            endTime, jvmtiData.getAllocationSamplesList().size());
+
+            // Read alloc/dealloc reports and count how many instances of
+            // MemTestEntity were created. At the same time keeping track of
+            // tags.
+            for (BatchAllocationSample sample : jvmtiData.getAllocationSamplesList()) {
+                assertThat(sample.getTimestamp()).isGreaterThan(startTime);
+                for (AllocationEvent event : sample.getEventsList()) {
+                    if (event.getEventCase() == AllocationEvent.EventCase.ALLOC_DATA) {
+                        AllocationEvent.Allocation alloc = event.getAllocData();
+                        if (alloc.getClassTag() == memTestEntityId) {
+                            allocationsReported++;
+                            System.out.printf("Alloc recorded: tag=%d\n", alloc.getTag());
+                            assertThat(tags.add(alloc.getTag())).isTrue();
+                        }
+                    } else if (event.getEventCase() == AllocationEvent.EventCase.FREE_DATA) {
+                        AllocationEvent.Deallocation dealloc = event.getFreeData();
+                        if (tags.contains(dealloc.getTag())) {
+                            deallocationsReported++;
+                            System.out.printf("Free recorded: tag=%d\n", dealloc.getTag());
+                            tags.remove(dealloc.getTag());
+                        }
+                    }
+                }
+            }
+
+            if (jvmtiData.getAllocationSamplesList().size() > 0) {
+                assertThat(endTime).isGreaterThan(startTime);
+                startTime = endTime;
+            }
+        }
+
+        // allocationCount of instances should have been
+        // created/deleted and all tags must be acounted for.
+        assertThat(allocationsReported).isEqualTo(allocationCount);
+        assertThat(deallocationsReported).isEqualTo(allocationCount);
+        assertThat(tags.isEmpty()).isTrue();
+    }
+}
