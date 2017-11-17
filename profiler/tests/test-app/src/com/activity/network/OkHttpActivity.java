@@ -123,8 +123,7 @@ public final class OkHttpActivity extends Activity {
                                         Method.OKHTTP2_POST.myMethodName);
 
                         OkHttpClient client = new OkHttpClient();
-                        Request request =
-                                new Request.Builder().url(url).method("POST", requestBody).build();
+                        Request request = new Request.Builder().url(url).post(requestBody).build();
                         Response response = client.newCall(request).execute();
                         InputStream inputStream = response.body().byteStream();
 
@@ -258,10 +257,7 @@ public final class OkHttpActivity extends Activity {
                                     }
                                 };
                         okhttp3.Request request =
-                                new okhttp3.Request.Builder()
-                                        .url(url)
-                                        .method("POST", requestBody)
-                                        .build();
+                                new okhttp3.Request.Builder().url(url).post(requestBody).build();
 
                         okhttp3.Response response = client.newCall(request).execute();
                         InputStream inputStream = response.body().byteStream();
