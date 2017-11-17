@@ -50,9 +50,6 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
     @Nullable
     private File mMultiDexKeepFile;
 
-    @NonNull
-    private List<File> mJarJarRuleFiles = Lists.newArrayList();
-
     /**
      * @see #getApplicationIdSuffix()
      */
@@ -230,8 +227,6 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
 
         mMultiDexKeepFile = that.getMultiDexKeepFile();
         mMultiDexKeepProguard = that.getMultiDexKeepProguard();
-
-        mJarJarRuleFiles = that.getJarJarRuleFiles();
     }
 
     private void setBuildConfigFields(@NonNull Map<String, ClassField> fields) {
@@ -293,16 +288,6 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
         mMultiDexKeepProguard = file;
     }
 
-    public void setJarJarRuleFiles(@NonNull List<File> files) {
-        mJarJarRuleFiles = files;
-    }
-
-    @NonNull
-    @Override
-    public List<File> getJarJarRuleFiles() {
-        return mJarJarRuleFiles;
-    }
-
     @Override
     public String toString() {
         return "BaseConfigImpl{" +
@@ -316,7 +301,6 @@ public abstract class BaseConfigImpl implements Serializable, BaseConfig {
                 ", mMultiDexEnabled=" + mMultiDexEnabled +
                 ", mMultiDexKeepFile=" + mMultiDexKeepFile +
                 ", mMultiDexKeepProguard=" + mMultiDexKeepProguard +
-                ", mJarJarRuleFiles=" + mJarJarRuleFiles +
                 '}';
     }
 }

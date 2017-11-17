@@ -605,17 +605,6 @@ public class BuildType extends DefaultBuildType implements CoreBuildType, Serial
         return isCrunchPngsDefault;
     }
 
-    public void jarJarRuleFile(@NonNull Object file) {
-        getJarJarRuleFiles().add(project.file(file));
-    }
-
-    public void jarJarRuleFiles(@NonNull Object... files) {
-        getJarJarRuleFiles().clear();
-        for (Object file : files) {
-            getJarJarRuleFiles().add(project.file(file));
-        }
-    }
-
     @NonNull
     public PostprocessingOptions getPostprocessing() {
         checkPostprocessingConfiguration(

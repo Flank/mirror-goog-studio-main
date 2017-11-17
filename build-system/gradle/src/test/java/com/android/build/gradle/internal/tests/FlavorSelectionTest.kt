@@ -52,7 +52,7 @@ class FlavorSelectionTest {
         project = TestProjects.builder(projectDirectory.newFolder("project").toPath())
                 .withPlugin(TestProjects.Plugin.APP)
                 .build()
-        android = project.extensions?.getByType(TestProjects.Plugin.APP.extensionClass) as AppExtension
+        android = project.extensions.getByType(TestProjects.Plugin.APP.extensionClass) as AppExtension
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
         android.buildToolsVersion = TestConstants.BUILD_TOOL_VERSION
         plugin = project.plugins.getPlugin(TestProjects.Plugin.APP.pluginClass) as AppPlugin
@@ -87,7 +87,7 @@ class FlavorSelectionTest {
                 .map { it.compileConfiguration}
                 .findAny()?.get() ?: throw RuntimeException("can't find flavorDebug")
 
-        attributeKeys = variantConfiguration.attributes!!.keySet()
+        attributeKeys = variantConfiguration.attributes.keySet()
 
     }
 

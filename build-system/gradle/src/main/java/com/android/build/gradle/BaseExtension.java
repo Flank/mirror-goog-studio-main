@@ -212,8 +212,7 @@ public abstract class BaseExtension implements AndroidConfig {
                         BuilderConstants.MAIN,
                         project,
                         objectFactory,
-                        project.getLogger(),
-                        extraModelInfo.getDeprecationReporter());
+                        project.getLogger());
 
         aaptOptions = objectFactory.newInstance(AaptOptions.class);
         dexOptions =

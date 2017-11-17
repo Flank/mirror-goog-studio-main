@@ -1644,14 +1644,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
     }
 
     @NonNull
-    public Collection<File> getJarJarRuleFiles() {
-        ImmutableList.Builder<File> jarjarRuleFiles = ImmutableList.builder();
-        jarjarRuleFiles.addAll(getMergedFlavor().getJarJarRuleFiles());
-        jarjarRuleFiles.addAll(mBuildType.getJarJarRuleFiles());
-        return jarjarRuleFiles.build();
-    }
-
-    @NonNull
     private ManifestAttributeSupplier getManifestAttributeSupplier(){
         return mManifestAttributeSupplier;
     }

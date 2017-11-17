@@ -108,10 +108,4 @@ public class ReadOnlyBuildType extends ReadOnlyBaseConfig implements BuildType {
     public SigningConfig getSigningConfig() {
         return readOnlyObjectProvider.getSigningConfig(buildType.getSigningConfig());
     }
-
-    @NonNull
-    @Override
-    public List<File> getJarJarRuleFiles() {
-        return buildType.getJarJarRuleFiles();
-    }
 }

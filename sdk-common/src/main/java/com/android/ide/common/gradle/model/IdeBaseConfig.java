@@ -103,12 +103,6 @@ public abstract class IdeBaseConfig extends IdeModel implements BaseConfig {
     }
 
     @Override
-    @NonNull
-    public List<File> getJarJarRuleFiles() {
-        throw new UnusedModelMethodException("getJarJarRuleFiles");
-    }
-
-    @Override
     @Nullable
     public String getApplicationIdSuffix() {
         return myApplicationIdSuffix;

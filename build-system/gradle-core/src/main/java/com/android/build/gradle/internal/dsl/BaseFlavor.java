@@ -18,8 +18,6 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
-import com.android.build.gradle.internal.errors.DeprecationReporter.DeprecationTarget;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultApiVersion;
 import com.android.builder.core.DefaultProductFlavor;
@@ -47,8 +45,6 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
 
     @NonNull private final ExternalNativeBuildOptions externalNativeBuildOptions;
 
-    @NonNull private final DeprecationReporter deprecationReporter;
-
     @NonNull private final JavaCompileOptions javaCompileOptions;
 
     @NonNull private final ShaderOptions shaderOptions;
@@ -57,12 +53,10 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
             @NonNull String name,
             @NonNull Project project,
             @NonNull ObjectFactory objectFactory,
-            @NonNull Logger logger,
-            @NonNull DeprecationReporter deprecationReporter) {
+            @NonNull Logger logger) {
         super(name, objectFactory.newInstance(VectorDrawablesOptions.class));
         this.project = project;
         this.logger = logger;
-        this.deprecationReporter = deprecationReporter;
         ndkConfig = objectFactory.newInstance(NdkOptions.class);
         externalNativeBuildOptions =
                 objectFactory.newInstance(ExternalNativeBuildOptions.class, objectFactory);
@@ -532,17 +526,6 @@ public abstract class BaseFlavor extends DefaultProductFlavor implements CorePro
     /** Configure the shader compiler options for this product flavor. */
     public void shaders(@NonNull Action<ShaderOptions> action) {
         action.execute(shaderOptions);
-    }
-
-    public void jarJarRuleFile(Object file) {
-        getJarJarRuleFiles().add(project.file(file));
-    }
-
-    public void jarJarRuleFiles(Object... files) {
-        getJarJarRuleFiles().clear();
-        for (Object file : files) {
-            getJarJarRuleFiles().add(project.file(file));
-        }
     }
 
     /**

@@ -34,7 +34,6 @@ public class BaseConfigStub extends BaseStub implements BaseConfig {
     @NonNull private final Collection<File> myConsumerProguardFiles;
     @NonNull private final Collection<File> myTestProguardFiles;
     @NonNull private final Map<String, Object> myManifestPlaceholders;
-    @NonNull private final List<File> myJarJarRuleFiles;
     @Nullable private final String myApplicationIdSuffix;
     @Nullable private final String myVersionNameSuffix;
     @Nullable private final Boolean myMultiDexEnabled;
@@ -51,7 +50,6 @@ public class BaseConfigStub extends BaseStub implements BaseConfig {
                 Lists.newArrayList(new File("consumerProguardFile")),
                 Lists.newArrayList(new File("testProguardFile")),
                 ImmutableMap.of("key", "value"),
-                Lists.newArrayList(new File("jarJarRuleFile")),
                 "one",
                 "two",
                 true,
@@ -68,7 +66,6 @@ public class BaseConfigStub extends BaseStub implements BaseConfig {
             @NonNull Collection<File> consumerProguardFiles,
             @NonNull Collection<File> testProguardFiles,
             @NonNull Map<String, Object> manifestPlaceholders,
-            @NonNull List<File> jarJarRuleFiles,
             @Nullable String applicationIdSuffix,
             @Nullable String versionNameSuffix,
             @Nullable Boolean multiDexEnabled,
@@ -81,7 +78,6 @@ public class BaseConfigStub extends BaseStub implements BaseConfig {
         myConsumerProguardFiles = consumerProguardFiles;
         myTestProguardFiles = testProguardFiles;
         myManifestPlaceholders = manifestPlaceholders;
-        myJarJarRuleFiles = jarJarRuleFiles;
         myApplicationIdSuffix = applicationIdSuffix;
         myVersionNameSuffix = versionNameSuffix;
         myMultiDexEnabled = multiDexEnabled;
@@ -129,12 +125,6 @@ public class BaseConfigStub extends BaseStub implements BaseConfig {
     @NonNull
     public Map<String, Object> getManifestPlaceholders() {
         return myManifestPlaceholders;
-    }
-
-    @Override
-    @NonNull
-    public List<File> getJarJarRuleFiles() {
-        return myJarJarRuleFiles;
     }
 
     @Override
