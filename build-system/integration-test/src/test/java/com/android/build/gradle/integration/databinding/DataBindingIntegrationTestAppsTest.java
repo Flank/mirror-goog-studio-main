@@ -22,6 +22,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,6 +58,15 @@ public class DataBindingIntegrationTestAppsTest {
     @Test
     @Category(DeviceTests.class)
     public void connectedCheck() throws Exception {
+        String projectName = project.getName();
+        if (projectName.equals("TestApp") || projectName.equals("ProguardedAppWithTest")) {
+            // Disabled due to b/69446221
+            throw new AssumptionViolatedException(
+                    String.format(
+                            "Project %s disabled for connected tests due to missing prebuilts.",
+                            projectName));
+        }
+
         project.executeConnectedCheck();
     }
 
