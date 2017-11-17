@@ -398,7 +398,8 @@ public abstract class BaseVariantData implements TaskContainer {
 
     @Deprecated
     public void registerResGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedResFolders) {
-        System.out.println("registerResGeneratingTask is deprecated, use registerGeneratedFolders(FileCollection)");
+        System.out.println(
+                "registerResGeneratingTask is deprecated, use registerGeneratedResFolders(FileCollection)");
 
         final Project project = scope.getGlobalScope().getProject();
         registerGeneratedResFolders(project.files(generatedResFolders).builtBy(task));
