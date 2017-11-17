@@ -29,7 +29,7 @@ class CircularBuffer {
       : capacity_(capacity), values_(new T[capacity_]) {}
 
   // Add a copy of |value| and return a pointer to our copy.
-  T* Add(T value) {
+  T* Add(const T& value) {
     size_t index = size_ < capacity_ ? size_ : start_;
     values_[index] = value;
     if (size_ < capacity_) {

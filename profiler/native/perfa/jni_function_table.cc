@@ -83,7 +83,12 @@ bool RegisterJniTableListener(jvmtiEnv *jvmti_env,
     }
   }
   // Copy an old table into a new one.
-  jniNativeInterface new_native_table = *g_original_native_table;
+  // Even though JVM TI spec says that SetJNIFunctionTable copies JNI table
+  // rather than just save a pointer. ART's implementation just stores
+  // a pointer given to it. (bug 69483740)
+  // That's why new_native_table needs to be static.
+  static jniNativeInterface new_native_table;
+  new_native_table = *g_original_native_table;
 
   // If needed amend the new table with our wrappers around
   // global reference related functions.
@@ -94,12 +99,13 @@ bool RegisterJniTableListener(jvmtiEnv *jvmti_env,
     new_native_table.DeleteWeakGlobalRef = jni_wrappers::DeleteWeakGlobalRef;
   }
 
+  g_gref_listener = gref_listener;
   error = jvmti_env->SetJNIFunctionTable(&new_native_table);
   if (error != JVMTI_ERROR_NONE) {
     Log::E("Failed to set new JNI table");
     return false;
   }
-  g_gref_listener = gref_listener;
+  Log::V("New JNI table set");
 
   return true;
 }

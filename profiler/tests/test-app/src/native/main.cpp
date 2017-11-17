@@ -17,29 +17,22 @@
 #include <unordered_map>
 #include <jni.h>
 
-static JNICALL jstring NativeToString(JNIEnv* env, jclass clazz, jobject o) {
+static JNICALL jstring NativeToString(JNIEnv* env, jclass clazz, jlong ref) {
   jclass obj_class = env->FindClass("java/lang/Object");
   jmethodID to_str_id = env->GetMethodID(obj_class, "toString",
                                          "()Ljava/lang/String;");
-  jobject result = env->CallObjectMethod(o, to_str_id);
+  jobject obj = reinterpret_cast<jobject>(ref);
+  jobject result = env->CallObjectMethod(obj, to_str_id);
   return reinterpret_cast<jstring>(result);
 }
 
-static std::unordered_map<int, jobject> g_id_to_gref;
-static JNICALL jint AllocateGlobalRef(JNIEnv* env, jclass clazz, jobject o) {
-  static int last_id = 0;
-  auto gref = env->NewGlobalRef(o);
-  int new_id = ++last_id;
-  g_id_to_gref[new_id] = gref;
-  return new_id;
+static JNICALL jlong AllocateGlobalRef(JNIEnv* env, jclass clazz, jobject o) {
+  jobject gref = env->NewGlobalRef(o);
+  return reinterpret_cast<jlong>(gref);
 }
 
-static JNICALL bool FreeGlobalRef(JNIEnv* env, jclass clazz, jint id) {
-  auto it = g_id_to_gref.find(id);
-  if (it == g_id_to_gref.end()) return false;
-  env->DeleteGlobalRef(it->second);
-  g_id_to_gref.erase(it);
-  return true;
+static JNICALL void FreeGlobalRef(JNIEnv* env, jclass clazz, jlong ref) {
+  env->DeleteGlobalRef(reinterpret_cast<jobject>(ref));
 }
 
 JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
@@ -49,16 +42,12 @@ JNIEXPORT jint JNI_OnLoad(JavaVM* vm, void* reserved)
         return -1;
     }
 
-    std::vector<JNINativeMethod> methods {
-      {(char*)"NativeToString",
-       (char*)"(Ljava/lang/Object;)Ljava/lang/String;",
-       (void *)NativeToString},
-      {(char*)"AllocateGlobalRef",
-       (char*)"(Ljava/lang/Object;)I",
-       (void *)AllocateGlobalRef},
-      {(char*)"FreeGlobalRef",
-       (char*)"(I)Z",
-       (void *)FreeGlobalRef},
+    std::vector<JNINativeMethod> methods{
+        {(char*)"NativeToString", (char*)"(J)Ljava/lang/String;",
+         (void*)NativeToString},
+        {(char*)"AllocateGlobalRef", (char*)"(Ljava/lang/Object;)J",
+         (void*)AllocateGlobalRef},
+        {(char*)"FreeGlobalRef", (char*)"(J)V", (void*)FreeGlobalRef},
     };
 
     jclass cls = env->FindClass((char*)"com/activity/NativeCodeActivity");

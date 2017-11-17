@@ -24,64 +24,34 @@ public class NativeCodeActivity extends Activity {
         System.loadLibrary("nativetest");
     }
 
-    public void CallNativeToString() {
-        if (!NativeToString(new Integer(1)).equals("1")) {
-            throw new RuntimeException ("CallNativeToString FAIL: ToString(1)");
+    public static class JNITestEntity {};
+
+    List<Long> refs = new ArrayList<Long>();
+
+    public void createRefs() {
+        final int refCount = Integer.parseInt(System.getProperty("jni.refcount"));
+        assert (refCount > 0);
+        for (int i = 0; i < refCount; i++) {
+            Object o = new JNITestEntity();
+            Long ref = AllocateGlobalRef(o);
+            System.out.printf("JNI ref created %d\n", ref);
+            refs.add(ref);
         }
-        if (!NativeToString("str").equals("str")) {
-            throw new RuntimeException ("CallNativeToString FAIL: ToString(str)");
-        }
-        if (!NativeToString(new Object()).startsWith("java.lang.Object")) {
-            throw new RuntimeException ("CallNativeToString FAIL: ToString(object)");
-        }
-        System.out.println("CallNativeToString - ok");
+        System.out.println("createRefs");
     }
 
-    public void CreateSomeGlobalRefs() {
-      CreateAndFreeGlobalRefs(1000, 1000);
-      CreateAndFreeGlobalRefs(100, 80);
-      System.out.println("CreateSomeGlobalRefs - ok");
+    public void deleteRefs() {
+        for (Long ref : refs) {
+            System.out.printf("JNI ref deleted %d\n", ref);
+            FreeGlobalRef(ref);
+        }
+        refs.clear();
+        System.out.println("deleteRefs");
     }
 
-    private Object CreateObject(int seed) {
-        switch (seed % 10) {
-          case 0:
-            return new Object();
-          case 1:
-            return "text #" + seed;
-          case 2:
-            return new Integer(seed);
-          case 3:
-            return new Boolean(true);
-          case 4:
-            return new int[100];
-          case 5:
-            return getClass();
-          default:
-            return this;
-        }
-    }
+    private static native String NativeToString(long ref);
 
-    private void CreateAndFreeGlobalRefs(int refsToCreate, int refsToFree) {
-        if (refsToFree > refsToCreate) {
-            throw new RuntimeException("refsToFree > refsToCreate");
-        }
-        List<Integer> ids = new ArrayList<Integer>();
-        for (int i = 0; i < Math.max(refsToCreate, refsToFree); ++i) {
-            if (i < refsToCreate) {
-                Object o = CreateObject(i);
-                Integer id = AllocateGlobalRef(o);
-                ids.add(id);
-            }
-            if (i < refsToFree) {
-                if (!FreeGlobalRef(ids.get(i))) {
-                  throw new RuntimeException ("FreeGlobalRef failed.");
-                }
-            }
-        }
-    }
+    private static native long AllocateGlobalRef(Object o);
 
-    private static native String NativeToString(Object o);
-    private static native int AllocateGlobalRef(Object o);
-    private static native boolean FreeGlobalRef(int id);
+    private static native void FreeGlobalRef(long ref);
 }

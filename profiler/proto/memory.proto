@@ -201,7 +201,7 @@ message MemoryData {
   repeated HeapDumpInfo heap_dump_infos = 5;
   repeated AllocationsInfo allocations_info = 6;
   repeated BatchAllocationSample allocation_samples = 7;
-  repeated JNIGlobalReferenceEvent jni_reference_events = 8;
+  repeated BatchJNIGlobalRefEvent jni_reference_event_batches = 8;
 }
 
 // Proto for describing a heap dump record.
@@ -532,12 +532,13 @@ message JNIGlobalReferenceEvent {
   int64 timestamp = 2;
   NativeBacktrace backtrace = 3;
   int32 object_tag = 4;
+  int64 ref_value = 5;
 
   // Same as in AllocationEvent.
-  int32 thread_id = 5;
+  int32 thread_id = 6;
 
   // Same as in AllocationEvent.
-  string thread_name = 10;
+  string thread_name = 7;
 }
 
 message JNIGlobalRefsEventsRequest {
@@ -549,7 +550,8 @@ message JNIGlobalRefsEventsRequest {
 
 message BatchJNIGlobalRefEvent {
   int32 process_id = 1;
-  repeated JNIGlobalReferenceEvent events = 2;
+  int64 timestamp = 2;
+  repeated JNIGlobalReferenceEvent events = 3;
 }
 
 // Proto format for handling O+ allocation data.

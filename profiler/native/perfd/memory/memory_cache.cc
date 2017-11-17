@@ -20,14 +20,15 @@
 
 #include "utils/log.h"
 
-using ::profiler::proto::TrackAllocationsResponse;
+using ::profiler::proto::AllocationEvent;
+using ::profiler::proto::AllocationsInfo;
+using ::profiler::proto::BatchAllocationSample;
+using ::profiler::proto::BatchJNIGlobalRefEvent;
 using ::profiler::proto::DumpDataResponse;
 using ::profiler::proto::HeapDumpInfo;
 using ::profiler::proto::MemoryData;
-using ::profiler::proto::AllocationsInfo;
+using ::profiler::proto::TrackAllocationsResponse;
 using ::profiler::proto::TriggerHeapDumpResponse;
-using ::profiler::proto::AllocationEvent;
-using ::profiler::proto::BatchAllocationSample;
 
 namespace profiler {
 
@@ -48,6 +49,7 @@ MemoryCache::MemoryCache(const Clock& clock, FileCache* file_cache,
       heap_dump_infos_(samples_capacity),
       allocations_info_(samples_capacity),
       allocations_samples_(kAllocSampleCapcity),
+      jni_refs_event_batches_(kAllocSampleCapcity),
       has_unfinished_heap_dump_(false),
       is_allocation_tracking_enabled_(false) {}
 
@@ -69,10 +71,14 @@ void MemoryCache::SaveGcStatsSample(const MemoryData::GcStatsSample& sample) {
 
 void MemoryCache::SaveAllocationEvents(const BatchAllocationSample* request) {
   std::lock_guard<std::mutex> lock(allocations_samples_mutex_);
-  BatchAllocationSample sample;
-  BatchAllocationSample* cache_sample = allocations_samples_.Add(sample);
-  cache_sample->CopyFrom(*request);
+  BatchAllocationSample* cache_sample = allocations_samples_.Add(*request);
   cache_sample->set_timestamp(clock_.GetCurrentTime());
+}
+
+void MemoryCache::SaveJNIRefEvents(const BatchJNIGlobalRefEvent* request) {
+  std::lock_guard<std::mutex> lock(jni_ref_batches_mutex_);
+  BatchJNIGlobalRefEvent* cache_batch = jni_refs_event_batches_.Add(*request);
+  cache_batch->set_timestamp(clock_.GetCurrentTime());
 }
 
 bool MemoryCache::StartHeapDump(const std::string& dump_file_name,
@@ -225,16 +231,25 @@ void MemoryCache::LoadMemoryData(int64_t start_time_exl, int64_t end_time_inc,
 
 void MemoryCache::LoadMemoryJvmtiData(int64_t start_time_exl, int64_t end_time_inc,
                                  MemoryData* response) {
-  std::lock_guard<std::mutex> allocations_data_lock(allocations_samples_mutex_);
+  std::lock_guard<std::mutex> alloc_lock(allocations_samples_mutex_);
+  std::lock_guard<std::mutex> jni_lock(jni_ref_batches_mutex_);
 
-  int64_t end_timestamp = -1;
   // O+ data only.
+  int64_t end_timestamp = -1;
   for (size_t i = 0; i < allocations_samples_.size(); ++i) {
     const BatchAllocationSample& sample = allocations_samples_.Get(i);
     int64_t timestamp = sample.timestamp();
     if (timestamp > start_time_exl && timestamp <= end_time_inc) {
       response->add_allocation_samples()->CopyFrom(sample);
       end_timestamp = std::max(timestamp, end_timestamp);
+    }
+  }
+
+  for (size_t i = 0; i < jni_refs_event_batches_.size(); ++i) {
+    const BatchJNIGlobalRefEvent& batch = jni_refs_event_batches_.Get(i);
+    int64_t timestamp = batch.timestamp();
+    if (timestamp > start_time_exl && timestamp <= end_time_inc) {
+      response->add_jni_reference_event_batches()->CopyFrom(batch);
     }
   }
 

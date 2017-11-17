@@ -101,7 +101,20 @@ grpc::Status InternalMemoryServiceImpl::RecordAllocationEvents(
   }
 
   result->second.memory_cache()->SaveAllocationEvents(request);
+  return Status::OK;
+}
 
+grpc::Status InternalMemoryServiceImpl::RecordJNIRefEvents(
+    grpc::ServerContext *context, const proto::BatchJNIGlobalRefEvent *request,
+    proto::EmptyMemoryReply *reply) {
+  auto result = collectors_.find(request->process_id());
+  if (result == collectors_.end()) {
+    return ::grpc::Status(
+        ::grpc::StatusCode::NOT_FOUND,
+        "The memory collector for the specified pid has not been started yet.");
+  }
+
+  result->second.memory_cache()->SaveJNIRefEvents(request);
   return Status::OK;
 }
 

@@ -227,6 +227,7 @@ void MemoryTrackingEnv::PublishJNIGlobalRefEvent(
   JNIGlobalReferenceEvent event;
   event.set_event_type(type);
   event.set_timestamp(clock_.GetCurrentTime());
+  event.set_ref_value(reinterpret_cast<int64_t>(obj));
 
   Stopwatch stopwatch;
   const int kMaxFrames = 30;
@@ -246,8 +247,7 @@ void MemoryTrackingEnv::PublishJNIGlobalRefEvent(
 }
 
 void MemoryTrackingEnv::AfterGlobalRefCreated(jobject prototype, jobject gref) {
-  PublishJNIGlobalRefEvent(prototype,
-                           JNIGlobalReferenceEvent::CREATE_GLOBAL_REF);
+  PublishJNIGlobalRefEvent(gref, JNIGlobalReferenceEvent::CREATE_GLOBAL_REF);
 }
 
 void MemoryTrackingEnv::BeforeGlobalRefDeleted(jobject gref) {
@@ -437,8 +437,8 @@ void MemoryTrackingEnv::SetAllocationCallbacksStatus(bool enabled) {
 }
 
 void MemoryTrackingEnv::SetJNIRefCallbacksStatus(bool enabled) {
-  GlobalRefListener *ref_listenere = enabled ? this : nullptr;
-  if (!RegisterJniTableListener(jvmti_, ref_listenere)) {
+  GlobalRefListener* ref_listener = enabled ? this : nullptr;
+  if (!RegisterJniTableListener(jvmti_, ref_listener)) {
     Log::E("Error while registering new JNI table.");
   }
 }

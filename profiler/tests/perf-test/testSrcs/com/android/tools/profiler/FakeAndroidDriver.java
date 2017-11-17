@@ -83,6 +83,7 @@ public class FakeAndroidDriver extends ProcessRunner {
 
     public void setProperty(String propertyKey, String propertyValue) {
         sendRequest("set-property", String.format("%s,%s", propertyKey, propertyValue));
+        waitForInput(String.format("%s=%s", propertyKey, propertyValue));
     }
 
     private static String getNativeLibLocation() {
