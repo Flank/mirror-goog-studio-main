@@ -16,10 +16,7 @@
 
 package com.android.tools.lint.checks
 
-import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.detector.api.Detector
-import junit.framework.TestCase
-import java.io.File
 
 class aCheckResultDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = CheckResultDetector()
@@ -44,12 +41,12 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
         lint().files(
                 java("""
                 package test.pkg;
-
                 import android.Manifest;
                 import android.content.Context;
                 import android.content.pm.PackageManager;
                 import android.graphics.Bitmap;
 
+                @SuppressWarnings("ClassNameDiffersFromFileName")
                 public class CheckPermissions {
                     private void foo(Context context) {
                         context.checkCallingOrSelfPermission(Manifest.permission.INTERNET); // WRONG
@@ -82,9 +79,9 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                 java("src/test/pkg/Intersect.java",
                         """
                 package test.pkg;
-
                 import android.graphics.Rect;
 
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class Intersect {
                   void check(Rect rect, int aLeft, int aTop, int aRight, int aBottom) {
                     rect.intersect(aLeft, aTop, aRight, aBottom);

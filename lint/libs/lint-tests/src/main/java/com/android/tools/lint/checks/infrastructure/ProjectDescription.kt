@@ -30,8 +30,7 @@ class ProjectDescription {
     /**
      * Creates a new project description
      */
-    constructor() {
-    }
+    constructor()
 
     /**
      * Creates a new project with the given set of files

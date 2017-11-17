@@ -106,9 +106,8 @@ open class JavaContext
             from: PsiElement,
             fromDelta: Int,
             to: PsiElement,
-            toDelta: Int): Location {
-        return uastParser.getRangeLocation(this, from, fromDelta, to, toDelta)
-    }
+            toDelta: Int): Location =
+            uastParser.getRangeLocation(this, from, fromDelta, to, toDelta)
 
     fun getRangeLocation(
             from: UElement,
@@ -141,9 +140,8 @@ open class JavaContext
     fun getRangeLocation(
             from: PsiElement,
             fromDelta: Int,
-            length: Int): Location {
-        return uastParser.getRangeLocation(this, from, fromDelta, fromDelta + length)
-    }
+            length: Int): Location =
+            uastParser.getRangeLocation(this, from, fromDelta, fromDelta + length)
 
     fun getRangeLocation(
             from: UElement,
@@ -225,9 +223,7 @@ open class JavaContext
      */
     fun getNameLocation(cls: UMethod): Location = getNameLocation(cls as UElement)
 
-    fun getLocation(node: PsiElement): Location {
-        return uastParser.getLocation(this, node)
-    }
+    fun getLocation(node: PsiElement): Location = uastParser.getLocation(this, node)
 
     fun getLocation(element: UElement): Location {
         if (element is UCallExpression) {

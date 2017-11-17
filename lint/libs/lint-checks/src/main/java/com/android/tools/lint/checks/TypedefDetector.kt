@@ -20,6 +20,7 @@ import com.android.SdkConstants.INT_DEF_ANNOTATION
 import com.android.SdkConstants.STRING_DEF_ANNOTATION
 import com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE
 import com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.ExternalReferenceExpression
@@ -70,9 +71,14 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             INT_RANGE_ANNOTATION
     )
 
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
+        return type != AnnotationUsageType.BINARY
+    }
+
     override fun visitAnnotationUsage(
             context: JavaContext,
-            argument: UElement,
+            usage: UElement,
+            type: AnnotationUsageType,
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
@@ -84,11 +90,11 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             INT_DEF_ANNOTATION -> {
                 val flagAttribute = getAnnotationBooleanValue(annotation, TYPE_DEF_FLAG_ATTRIBUTE)
                 val flag = flagAttribute != null && flagAttribute
-                checkTypeDefConstant(context, annotation, argument, null, flag,
+                checkTypeDefConstant(context, annotation, usage, null, flag,
                         annotations)
             }
             STRING_DEF_ANNOTATION -> {
-                checkTypeDefConstant(context, annotation, argument, null, false,
+                checkTypeDefConstant(context, annotation, usage, null, false,
                         annotations)
             }
             INT_RANGE_ANNOTATION -> {} // deliberate no-op

@@ -20,6 +20,7 @@ import com.android.SdkConstants.INT_DEF_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.FLOAT_RANGE_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.SIZE_ANNOTATION
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Detector
@@ -51,7 +52,8 @@ class RangeDetector : AbstractAnnotationDetector(), Detector.UastScanner {
 
     override fun visitAnnotationUsage(
             context: JavaContext,
-            argument: UElement,
+            usage: UElement,
+            type: AnnotationUsageType,
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
@@ -61,14 +63,14 @@ class RangeDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             allPackageAnnotations: List<UAnnotation>) {
         when (qualifiedName) {
             INT_RANGE_ANNOTATION -> {
-                checkIntRange(context, annotation, argument, annotations)
+                checkIntRange(context, annotation, usage, annotations)
             }
 
             FLOAT_RANGE_ANNOTATION -> {
-                checkFloatRange(context, annotation, argument)
+                checkFloatRange(context, annotation, usage)
             }
             SIZE_ANNOTATION -> {
-                checkSize(context, annotation, argument)
+                checkSize(context, annotation, usage)
             }
 
             INT_DEF_ANNOTATION -> {}

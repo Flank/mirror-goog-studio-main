@@ -53,7 +53,7 @@ src/test/pkg/WrongColor.java:20: Error: Expected resource of type color [Resourc
                 import android.app.Activity;
                 import android.graphics.Paint;
                 import android.widget.TextView;
-
+                @SuppressWarnings("ClassNameDiffersFromFileName")
                 public class WrongColor extends Activity {
                     public void foo(TextView textView, int foo) {
                         Paint paint2 = new Paint();
@@ -112,10 +112,10 @@ src/test/pkg/ColorTest.java:17: Error: Expected a color resource id (R.color.) b
         lint().files(
                 java("src/test/pkg/ColorTest.java", """
                 package test.pkg;
-
                 import android.support.annotation.ColorInt;
                 import android.support.annotation.ColorRes;
 
+                @SuppressWarnings("ClassNameDiffersFromFileName")
                 public abstract class ColorTest {
                     @ColorRes
                     public abstract int getColor1();
@@ -158,7 +158,7 @@ src/test/pkg/ColorTest.java:11: Error: Expected a color resource id (R.color.) b
                 import android.content.Context;
                 import android.content.res.Resources;
                 import android.support.annotation.ColorRes;
-
+                @SuppressWarnings("ClassNameDiffersFromFileName")
                 public abstract class ColorTest {
                     public abstract void setColor(@ColorRes int color);
 
@@ -193,10 +193,10 @@ src/test/pkg/PxTest.java:17: Error: Expected a dimension resource id (R.color.) 
         lint().files(
                 java("src/test/pkg/PxTest.java", """
                 package test.pkg;
-
                 import android.support.annotation.Px;
                 import android.support.annotation.DimenRes;
 
+                @SuppressWarnings("ClassNameDiffersFromFileName")
                 public abstract class PxTest {
                     @DimenRes
                     public abstract int getDimension1();
@@ -313,7 +313,7 @@ src/p1/p2/Flow.java:120: Error: Expected resource of type font [ResourceType]
                 import android.support.annotation.StyleRes;
                 import java.util.Random;
 
-                @SuppressWarnings({"UnusedDeclaration", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                @SuppressWarnings({"UnusedDeclaration", "ClassNameDiffersFromFileName", "MethodMayBeStatic", "UnnecessaryLocalVariable"})
                 public class Flow {
                     public void testLiterals(Resources resources) {
                         resources.getDrawable(0); // OK
@@ -459,7 +459,7 @@ src/test/pkg/ActivityType.java:6: Error: Expected resource of type drawable [Res
                 java("src/test/pkg/ActivityType.java",
                         """
                 import android.support.annotation.DrawableRes;
-
+                @SuppressWarnings({"ClassNameDiffersFromFileName","FieldCanBeLocal"})
                 enum ActivityType {
 
                     SKI(1),
@@ -487,12 +487,12 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
         lint().files(
                 java("src/test/pkg/ConstructorTest.java", """
                 package test.pkg;
-
                 import android.support.annotation.DrawableRes;
                 import android.support.annotation.IntRange;
                 import android.support.annotation.UiThread;
                 import android.support.annotation.WorkerThread;
 
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic", "ResultOfObjectAllocationIgnored"})
                 public class ConstructorTest {
                     @UiThread
                     ConstructorTest(@DrawableRes int iconResId, @IntRange(from = 5) int start) {
@@ -519,10 +519,10 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
         lint().files(
                 java("""
                 package p1.p2;
-
                 import android.content.Context;
                 import android.view.View;
 
+                @SuppressWarnings("ClassNameDiffersFromFileName")
                 public class ColorAsDrawable {
                     static void test(Context context) {
                         View separator = new View(context);
@@ -540,10 +540,10 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 java("src/com./example/myapplication/Test1.java",
                         """
                 package com.example.myapplication;
-
                 import android.support.annotation.IdRes;
                 import android.support.annotation.LayoutRes;
 
+                @SuppressWarnings({"ClassNameDiffersFromFileName","FieldCanBeLocal"})
                 public class Test1 {
 
                     private final int layout;
@@ -559,10 +559,10 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 java("src/com/example/myapplication/Test2.java",
                         """
                 package com.example.myapplication;
-
                 import android.support.annotation.IdRes;
                 import android.support.annotation.StringRes;
 
+                @SuppressWarnings("ClassNameDiffersFromFileName")
                 public class Test2 extends Test1 {
 
                     public Test2(@IdRes int id, @StringRes int titleResId) {
@@ -1510,5 +1510,82 @@ src/test/pkg/ConstructorTest.java:14: Error: Expected resource of type drawable 
                 SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expect(expected)
+    }
+
+    fun testKotlinImplicitReturn() {
+        lint().files(
+                kotlin("""
+                    package test.pkg
+
+                    import android.support.annotation.StringRes
+
+                    @StringRes
+                    fun getResource(): Int = android.R.drawable.ic_delete
+                    """).indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect("src/test/pkg/test.kt:6: Error: Expected resource of type string [ResourceType]\n" +
+                        "fun getResource(): Int = android.R.drawable.ic_delete\n" +
+                        "                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "1 errors, 0 warnings")
+    }
+
+    fun testStyleable() {
+        // R.styleable is not like the other resource types
+        lint().files(
+                java("""
+                    package test.pkg;
+
+                    import android.support.annotation.StyleableRes;
+
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    public class TestStyleable {
+                        @StyleableRes
+                        public static final int MY_STYLE = 1;
+
+                        public void process(@StyleableRes int arg) {
+                        }
+
+                        public void process(@StyleableRes int[] arg) {
+                        }
+
+                        public void test() {
+                            process(R.string.my_string); // ERROR
+                            process(R.styleable.MyStyleable); // OK
+                            process(R.styleable.MyStyleable_fontProviderCerts); // OK
+                        }
+                    }
+                """).indented(),
+
+                java("""
+                    package test.pkg;
+
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    public final class R {
+                        public static final class string {
+                            public static final int my_string = 0x7f0b0021;
+                        }
+                        public static final class style {
+                            public static final int MyStyle = 0x7f0c00fa;
+                            public static final int MyStyle_Info = 0x7f0c00fb;
+                        }
+                        public static final class styleable {
+                            public static final int[] MyStyleable = { 0x7f020072, 0x7f020073, 0x7f020074, 0x7f020075, 0x7f020076, 0x7f020077 };
+                            public static final int MyStyleable_fontProviderAuthority = 0;
+                            public static final int MyStyleable_fontProviderCerts = 1;
+                            public static final int MyStyleable_fontProviderFetchStrategy = 2;
+                            public static final int MyStyleable_fontProviderFetchTimeout = 3;
+                        }
+                    }
+
+                """).indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect("src/test/pkg/TestStyleable.java:17: Error: Expected resource of type styleable [ResourceType]\n" +
+                        "        process(R.string.my_string); // ERROR\n" +
+                        "                ~~~~~~~~~~~~~~~~~~\n" +
+                        "1 errors, 0 warnings")
     }
 }

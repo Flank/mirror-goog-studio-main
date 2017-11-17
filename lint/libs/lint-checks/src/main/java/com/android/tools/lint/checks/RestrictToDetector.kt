@@ -21,6 +21,7 @@ import com.android.tools.lint.checks.AnnotationDetector.GMS_HIDE_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.GUAVA_VISIBLE_FOR_TESTING
 import com.android.tools.lint.checks.AnnotationDetector.RESTRICT_TO_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.VISIBLE_FOR_TESTING_ANNOTATION
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -56,7 +57,8 @@ class RestrictToDetector : AbstractAnnotationDetector(), Detector.UastScanner {
 
     override fun visitAnnotationUsage(
             context: JavaContext,
-            argument: UElement,
+            usage: UElement,
+            type: AnnotationUsageType,
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
@@ -69,7 +71,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             RESTRICT_TO_ANNOTATION,
             GMS_HIDE_ANNOTATION -> {
                 if (method != null) {
-                    checkRestrictTo(context, argument, method, annotation, allMemberAnnotations,
+                    checkRestrictTo(context, usage, method, annotation, allMemberAnnotations,
                             allClassAnnotations)
                 }
             }
@@ -77,7 +79,7 @@ class RestrictToDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             GUAVA_VISIBLE_FOR_TESTING -> {
                 if (method != null) {
                     checkVisibleForTesting(context,
-                            argument,
+                            usage,
                             method,
                             annotation,
                             allMemberAnnotations,

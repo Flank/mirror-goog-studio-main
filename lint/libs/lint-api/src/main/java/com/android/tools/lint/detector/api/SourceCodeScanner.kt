@@ -60,7 +60,7 @@ import org.jetbrains.uast.UReferenceExpression
  * tree traversal on its own.</li>
  * </ul>
  * <p>
- * {@linkplain UastScanner} exposes the UAST API to lint checks.
+ * {@linkplain SourceCodeScanner} exposes the UAST API to lint checks.
  * UAST is short for "Universal AST" and is an abstract syntax tree library
  * which abstracts away details about Java versus Kotlin versus other similar languages
  * and lets the client of the library access the AST in a unified way.
@@ -71,14 +71,14 @@ import org.jetbrains.uast.UReferenceExpression
  * level: for packages, classes, and methods (declarations and signatures).
  * There are also wrappers around some of these for convenience.
  * <p>
- * The {@linkplain UastScanner} interface reflects this fact. For example,
+ * The {@linkplain SourceCodeScanner} interface reflects this fact. For example,
  * when you indicate that you want to check calls to a method named {@code foo},
  * the call site node is a UAST node (in this case, {@link UCallExpression},
  * but the called method itself is a {@link PsiMethod}, since that method
  * might be anywhere (including in a library that we don't have source for,
  * so UAST doesn't make sense.)
  * <p>
- * <h2>Migrating JavaPsiScanner to UastScanner</h2>
+ * <h2>Migrating JavaPsiScanner to SourceCodeScanner</h2>
  * As described above, PSI is still used, so a lot of code will remain the
  * same. For example, all resolve methods, including those in UAST, will
  * continue to return PsiElement, not necessarily a UElement. For example,
@@ -88,10 +88,10 @@ import org.jetbrains.uast.UReferenceExpression
  * However, the visitor methods have all changed, generally to change
  * to UAST types. For example, the signature
  * {@link JavaPsiScanner#visitMethod(JavaContext, JavaElementVisitor, PsiMethodCallExpression, PsiMethod)}
- * should be changed to {@link UastScanner#visitMethod(JavaContext, UCallExpression, PsiMethod)}.
+ * should be changed to {@link SourceCodeScanner#visitMethod(JavaContext, UCallExpression, PsiMethod)}.
  * <p>
- * Similarly, replace {@link JavaPsiScanner#createPsiVisitor} with {@link UastScanner#createUastHandler},
- * {@link JavaPsiScanner#getApplicablePsiTypes()} with {@link UastScanner#getApplicableUastTypes()}, etc.
+ * Similarly, replace {@link JavaPsiScanner#createPsiVisitor} with {@link SourceCodeScanner#createUastHandler},
+ * {@link JavaPsiScanner#getApplicablePsiTypes()} with {@link SourceCodeScanner#getApplicableUastTypes()}, etc.
  * <p>
  * There are a bunch of new methods on classes like {@link JavaContext} which lets
  * you pass in a {@link UElement} to match the existing {@link PsiElement} methods.
@@ -273,10 +273,10 @@ import org.jetbrains.uast.UReferenceExpression
  * in {@linkplain #getApplicableUastTypes()} that you don't override.
  *
  * <p>
- * <h3>Migrating JavaScanner to UastScanner</h3>
+ * <h3>Migrating JavaScanner to SourceCodeScanner</h3>
  * First read the javadoc on how to convert from the older {@linkplain JavaScanner}
  * interface over to {@linkplain JavaPsiScanner}. While {@linkplain JavaPsiScanner} is itself
- * deprecated, it's a lot closer to {@link UastScanner} so a lot of the same concepts
+ * deprecated, it's a lot closer to {@link SourceCodeScanner} so a lot of the same concepts
  * apply; then follow the above section.
  * <p>
  */
@@ -477,6 +477,15 @@ interface SourceCodeScanner : FileScanner {
     fun applicableAnnotations(): List<String>?
 
     /**
+     * Returns whether this detector cares about an annotation usage of the given type.
+     * Most detectors are interested in all types except for
+     * [AnnotationUsageType.BINARY] and [AnnotationUsageType.EQUALITY], which only
+     * apply for annotations that are expressing a "type", e.g. it would be suspicious
+     * to combine (compare, add, etc) resources of different type.
+     */
+    fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean
+
+    /**
      * Called whenever the given element references an element that has been annotated with one
      * of the annotations returned from [.applicableAnnotations].
      *
@@ -487,7 +496,8 @@ interface SourceCodeScanner : FileScanner {
      * it can decide how to handle them.
      *
      * @param context               the lint scanning context
-     * @param argument              the element to be checked
+     * @param usage                 the element to be checked
+     * @param type                  the type of annotation usage lint has found
      * @param annotation            the annotation this detector is interested in
      * @param qualifiedName         the annotation's qualified name
      * @param method                the method, if any
@@ -512,7 +522,8 @@ interface SourceCodeScanner : FileScanner {
      */
     fun visitAnnotationUsage(
             context: JavaContext,
-            argument: UElement,
+            usage: UElement,
+            type: AnnotationUsageType,
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,

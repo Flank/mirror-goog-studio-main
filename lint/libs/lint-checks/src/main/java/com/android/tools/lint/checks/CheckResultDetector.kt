@@ -27,6 +27,7 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
 import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValue
 import com.intellij.psi.PsiMethod
@@ -47,7 +48,8 @@ class CheckResultDetector : AbstractAnnotationDetector(), Detector.UastScanner {
 
     override fun visitAnnotationUsage(
             context: JavaContext,
-            argument: UElement,
+            usage: UElement,
+            type: AnnotationUsageType,
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
@@ -69,7 +71,7 @@ class CheckResultDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             return
         }
 
-        checkResult(context, argument, method, annotation,
+        checkResult(context, usage, method, annotation,
                 allMemberAnnotations, allClassAnnotations)
     }
 

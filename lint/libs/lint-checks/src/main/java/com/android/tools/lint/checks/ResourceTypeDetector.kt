@@ -80,6 +80,7 @@ import org.jetbrains.uast.util.isNewArrayWithInitializer
 import org.jetbrains.uast.util.isTypeCast
 import java.util.EnumSet
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.UBinaryExpression
 import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_MARKER_TYPE
@@ -119,9 +120,13 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
             XML_RES_ANNOTATION
     )
 
+    // Include all types, including equality and comparisons
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean = true
+
     override fun visitAnnotationUsage(
             context: JavaContext,
-            argument: UElement,
+            usage: UElement,
+            type: AnnotationUsageType,
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
@@ -130,9 +135,9 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
             allClassAnnotations: List<UAnnotation>,
             allPackageAnnotations: List<UAnnotation>) {
         when (qualifiedName) {
-            COLOR_INT_ANNOTATION -> checkColor(context, argument)
-            HALF_FLOAT_ANNOTATION -> checkHalfFloat(context, argument)
-            DIMENSION_ANNOTATION, PX_ANNOTATION ->  checkPx(context, argument)
+            COLOR_INT_ANNOTATION -> checkColor(context, usage)
+            HALF_FLOAT_ANNOTATION -> checkHalfFloat(context, usage)
+            DIMENSION_ANNOTATION, PX_ANNOTATION ->  checkPx(context, usage)
             else -> {
                 if (isResourceAnnotation(qualifiedName)) {
                     // Make sure it's the first one to avoid duplicate warnings since we check all
@@ -141,8 +146,8 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
                         return
                     }
 
-                    val expression = argument.getParentOfType<UExpression>(
-                            UExpression::class.java, true) ?: return
+                    val expression = usage.getParentOfType<UExpression>(
+                            UExpression::class.java, true)
                     // Crap - how do we avoid double-checking here, we can't limit ourselves
                     // to just left or right because what if the other one doesn't have
                     // data?
@@ -168,7 +173,14 @@ class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner 
 
                     val types = ResourceEvaluator.getTypesFromAnnotations(annotations)
                     if (types != null) {
-                        checkResourceType(context, argument, types, method)
+                        if (types.contains(ResourceType.STYLEABLE)
+                                && type == AnnotationUsageType.ASSIGNMENT) {
+                            // Allow assigning constants to R.styleable; this is done
+                            // for example in the support library
+                            return
+                        }
+
+                        checkResourceType(context, usage, types, method)
                     }
                 }
             }

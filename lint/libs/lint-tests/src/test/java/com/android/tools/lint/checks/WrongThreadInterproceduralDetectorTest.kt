@@ -69,7 +69,7 @@ class WrongThreadInterproceduralDetectorTest : AbstractCheckTest() {
                       public abstract void run();
                     }
 
-                    @SuppressWarnings({"Convert2MethodRef", "MethodMayBeStatic", "override", "ClassNameDiffersFromFileName"})
+                    @SuppressWarnings({"Convert2MethodRef", "MethodMayBeStatic", "override", "ClassNameDiffersFromFileName", "InnerClassMayBeStatic"})
                     class Test {
                       @UiThread static void uiThreadStatic() { unannotatedStatic(); }
                       static void unannotatedStatic() { workerThreadStatic(); }

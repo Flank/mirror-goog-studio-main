@@ -30,7 +30,7 @@ class RangeDetectorTest : AbstractCheckTest() {
                 import android.support.annotation.IntRange;
                 import android.support.annotation.Size;
 
-                @SuppressWarnings("UnusedDeclaration")
+                @SuppressWarnings({"UnusedDeclaration", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
                 public class RangeTest {
                     public void printExact(@Size(5) String arg) { System.out.println(arg); }
                     public void printMin(@Size(min=5) String arg) { }
@@ -325,7 +325,7 @@ src/test/pkg/RangeTest.java:158: Error: Expected length 5 (was 7) [Range]
                 package test.pkg;
                 import android.support.annotation.FloatRange;
                 import android.support.annotation.IntRange;
-
+                @SuppressWarnings("ClassNameDiffersFromFileName")
                 public class RangesMultiple {
                     private static final float[] VALID_FLOAT_ARRAY = new float[] {10.0f, 12.0f, 15.0f};
                     private static final float[] INVALID_FLOAT_ARRAY = new float[] {10.0f, 12.0f, 5.0f};
@@ -415,7 +415,7 @@ src/test/pkg/RangesMultiple.java:36: Error: Value must be ≥ 10 (was 0) [Range]
 
                 import android.support.annotation.FloatRange;
 
-                @SuppressWarnings("unused")
+                @SuppressWarnings({"unused", "ClassNameDiffersFromFileName"})
                 public class FloatRangeTest {
                     public void test() {
                         call(-150.0); // ERROR
@@ -613,12 +613,12 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
         lint().files(
                 java("src/test/pkg/ConstructorTest.java", """
                 package test.pkg;
-
                 import android.support.annotation.DrawableRes;
                 import android.support.annotation.IntRange;
                 import android.support.annotation.UiThread;
                 import android.support.annotation.WorkerThread;
 
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic", "ResultOfObjectAllocationIgnored"})
                 public class ConstructorTest {
                     @UiThread
                     ConstructorTest(@DrawableRes int iconResId, @IntRange(from = 5) int start) {
@@ -765,4 +765,33 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                 .run()
                 .expectClean()
     }
+
+    fun test69366129() {
+        // Regression test for
+        // 69366129: Range bug after upgrading Android Studio - Value must be ≤ 1.0 (was 100) less
+
+        lint().files(
+                java("""
+                    package test.pkg;
+                    import android.support.annotation.FloatRange;
+                    import java.util.Random;
+
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "MethodMayBeStatic"})
+                    public class RangeTest {
+                        void test(int luminance) {
+                            double lum = random(luminance) * 100;
+                        }
+
+                        @FloatRange(from = 0.0, to = 1.0)
+                        private static double random(int seed) {
+                            return new Random(seed).nextDouble();
+                        }
+                    }
+                    """).indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expectClean()
+    }
+
 }

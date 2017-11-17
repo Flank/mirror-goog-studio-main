@@ -69,18 +69,17 @@ class DefaultJavaEvaluatorTest {
 
         class AnnotationOrderVisitor(private val context: JavaContext) : UElementHandler() {
             override fun visitVariable(node: UVariable) {
-                processAnnotations(node, node)
+                processAnnotations(node)
             }
 
             override fun visitMethod(node: UMethod) {
-                processAnnotations(node, node)
+                processAnnotations(node)
             }
 
-            private fun processAnnotations(element: UElement,
-                    modifierListOwner: PsiModifierListOwner) {
+            private fun processAnnotations(modifierListOwner: PsiModifierListOwner) {
                 context.evaluator.findAnnotationInHierarchy(modifierListOwner, "org.foo.bar")
                 context.evaluator.findAnnotation(modifierListOwner, "org.foo.bar")
-                val annotations = context.evaluator.getAllAnnotations(modifierListOwner,
+                context.evaluator.getAllAnnotations(modifierListOwner,
                         true).mapNotNull { it.qualifiedName?.split(".")?.lastOrNull() }
                 // This detector doesn't actually report anything; the regression test
                 // ensures that the above calls don't crash

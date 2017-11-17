@@ -24,7 +24,6 @@ import com.android.SdkConstants.ATTR_MESSAGE
 import com.android.SdkConstants.TAG_ISSUE
 import com.android.SdkConstants.TAG_ISSUES
 import com.android.SdkConstants.TAG_LOCATION
-import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Location

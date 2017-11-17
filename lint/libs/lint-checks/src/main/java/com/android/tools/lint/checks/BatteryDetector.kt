@@ -106,9 +106,9 @@ For more details on how to update your code, please seehttp://developer.android.
             listOf("ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS")
 
     override fun visitReference(context: JavaContext,
-                                reference: UReferenceExpression, resolved: PsiElement) {
-        if (resolved is PsiField &&
-                context.evaluator.isMemberInSubClassOf(resolved,
+                                reference: UReferenceExpression, referenced: PsiElement) {
+        if (referenced is PsiField &&
+                context.evaluator.isMemberInSubClassOf(referenced,
                         "android.provider.Settings", false)
                 && context.mainProject.targetSdkVersion.featureLevel >= 23) {
             context.report(ISSUE, reference, context.getNameLocation(reference),

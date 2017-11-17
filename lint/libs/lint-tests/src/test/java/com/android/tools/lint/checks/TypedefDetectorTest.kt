@@ -477,7 +477,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
 
                     import android.support.annotation.NonNull;
 
-                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    @SuppressWarnings({"ClassNameDiffersFromFileName","FieldCanBeLocal"})
                     public class ViewableDayInterval {
                         @CalendarDay
                         private int mDayCreatedFor;
@@ -737,7 +737,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                     import java.lang.annotation.Retention;
                     import java.lang.annotation.RetentionPolicy;
 
-                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    @SuppressWarnings({"ClassNameDiffersFromFileName", "ConstantConditions", "RedundantIfStatement"})
                     public class GravityTest {
                         @IntDef(value = {Gravity.LEFT, Gravity.RIGHT}, flag = true)
                         @Retention(RetentionPolicy.SOURCE)
@@ -785,7 +785,7 @@ class TypedefDetectorTest : AbstractCheckTest() {
                 import java.lang.annotation.Retention;
                 import java.lang.annotation.RetentionPolicy;
 
-                @SuppressWarnings({"ClassNameDiffersFromFileName", "UnusedAssignment"})
+                @SuppressWarnings({"ClassNameDiffersFromFileName", "UnusedAssignment", "FieldCanBeLocal"})
                 public class IntDefVarTest {
                     private static final int TREE_PATH_ONE = 1;
                     private static final int TREE_PATH_TWO = 2;

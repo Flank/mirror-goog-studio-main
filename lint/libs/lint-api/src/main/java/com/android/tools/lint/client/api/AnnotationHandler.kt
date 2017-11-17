@@ -18,6 +18,7 @@ package com.android.tools.lint.client.api
 
 import com.android.SdkConstants.ATTR_VALUE
 import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Detector.UastScanner
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.LintUtils.skipParentheses
@@ -29,6 +30,7 @@ import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UArrayAccessExpression
 import org.jetbrains.uast.UBinaryExpression
+import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UEnumConstant
@@ -39,6 +41,7 @@ import org.jetbrains.uast.UReferenceExpression
 import org.jetbrains.uast.UReturnExpression
 import org.jetbrains.uast.USimpleNameReferenceExpression
 import org.jetbrains.uast.UVariable
+import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getContainingUMethod
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.java.JavaUAnnotation
@@ -76,8 +79,19 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
                 check = binary.leftOperand
             }
             if (check != null) {
-                checkAnnotations(context, check, method, allMethodAnnotations,
-                        emptyList(), emptyList())
+                checkAnnotations(
+                        context = context,
+                        argument = check,
+                        type = when (p.operator) {
+                            UastBinaryOperator.ASSIGN  -> AnnotationUsageType.ASSIGNMENT
+                            UastBinaryOperator.EQUALS,
+                            UastBinaryOperator.NOT_EQUALS,
+                            UastBinaryOperator.IDENTITY_EQUALS,
+                            UastBinaryOperator.IDENTITY_NOT_EQUALS -> AnnotationUsageType.EQUALITY
+                            else -> AnnotationUsageType.BINARY
+                        },
+                        method = method,
+                        annotations = allMethodAnnotations)
             }
         } else if (p is UQualifiedReferenceExpression) {
             // Handle equals() as a special case: if you're invoking
@@ -90,17 +104,24 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
                 if (selector is UCallExpression) {
                     val arguments = selector.valueArguments
                     if (arguments.size == 1) {
-                        checkAnnotations(context, arguments[0], method,
-                                allMethodAnnotations,
-                                emptyList(), emptyList())
+                        checkAnnotations(
+                                context = context,
+                                argument = arguments[0],
+                                type = AnnotationUsageType.EQUALITY,
+                                method = method,
+                                annotations = allMethodAnnotations)
                     }
                 }
             }
         } else if (p.isAssignment()) {
             val assignment = p as UBinaryExpression
             val rExpression = assignment.rightOperand
-            checkAnnotations(context, rExpression, method,
-                    allMethodAnnotations, emptyList(), emptyList())
+            checkAnnotations(
+                    context = context,
+                    argument = rExpression,
+                    type = AnnotationUsageType.ASSIGNMENT,
+                    method = method,
+                    annotations = allMethodAnnotations)
         } else if (call is UVariable) {
             val variable = call
             val variablePsi = call.psi
@@ -115,9 +136,12 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
                         if (expression != null) {
                             val inner = node.getParentOfType<UExpression>(UExpression::class.java,
                                     false) ?: return false
-                            checkAnnotations(context, inner, method,
-                                    allMethodAnnotations, emptyList(),
-                                    emptyList())
+                            checkAnnotations(
+                                    context = context,
+                                    argument = inner,
+                                    type = AnnotationUsageType.VARIABLE_REFERENCE,
+                                    method = method,
+                                    annotations = allMethodAnnotations)
                             return false
                         }
 
@@ -131,8 +155,11 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
 
             val initializer = variable.uastInitializer
             if (initializer != null) {
-                checkAnnotations(context, initializer, null, allMethodAnnotations, emptyList(),
-                        emptyList())
+                checkAnnotations(context,
+                        initializer,
+                        type = AnnotationUsageType.ASSIGNMENT,
+                        method = null,
+                        annotations = allMethodAnnotations)
             }
         }
     }
@@ -140,10 +167,11 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
     private fun checkAnnotations(
             context: JavaContext,
             argument: UElement,
+            type: AnnotationUsageType,
             method: PsiMethod?,
             annotations: List<UAnnotation>,
-            allMethodAnnotations: List<UAnnotation>,
-            allClassAnnotations: List<UAnnotation>,
+            allMethodAnnotations: List<UAnnotation> = emptyList(),
+            allClassAnnotations: List<UAnnotation> = emptyList(),
             packageAnnotations: List<UAnnotation> = emptyList()) {
 
         for (annotation in annotations) {
@@ -151,9 +179,11 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
             val uastScanners = scanners.get(signature)
             if (uastScanners != null) {
                 for (scanner in uastScanners) {
-                    scanner.visitAnnotationUsage(context, argument, annotation, signature,
-                            method, annotations, allMethodAnnotations, allClassAnnotations,
-                            packageAnnotations)
+                    if (scanner.isApplicableAnnotationUsage(type)) {
+                        scanner.visitAnnotationUsage(context, argument, type, annotation,
+                                signature, method, annotations, allMethodAnnotations,
+                                allClassAnnotations, packageAnnotations)
+                    }
                 }
             }
         }
@@ -170,16 +200,35 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
             val annotations = JavaUAnnotation.wrap(methodAnnotations)
 
             // Check return values
-            method.accept(object : AbstractUastVisitor() {
-                override fun visitReturnExpression(node: UReturnExpression): Boolean {
-                    val returnValue = node.returnExpression
-                    if (returnValue != null) {
-                        checkAnnotations(context, returnValue, method,
-                                annotations, annotations, emptyList())
+
+            // Kotlin implicit method?
+            val body = method.uastBody
+            if (body != null && body !is UBlockExpression && body !is UReturnExpression) {
+                checkAnnotations(
+                        context = context,
+                        argument = body,
+                        type = AnnotationUsageType.METHOD_RETURN,
+                        method = method,
+                        annotations = annotations,
+                        allMethodAnnotations = annotations)
+
+            } else {
+                method.accept(object : AbstractUastVisitor() {
+                    override fun visitReturnExpression(node: UReturnExpression): Boolean {
+                        val returnValue = node.returnExpression
+                        if (returnValue != null) {
+                            checkAnnotations(
+                                    context = context,
+                                    argument = returnValue,
+                                    type = AnnotationUsageType.METHOD_RETURN,
+                                    method = method,
+                                    annotations = annotations,
+                                    allMethodAnnotations = annotations)
+                        }
+                        return super.visitReturnExpression(node)
                     }
-                    return super.visitReturnExpression(node)
-                }
-            })
+                })
+            }
         }
     }
 
@@ -216,8 +265,13 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
                 if (methodAnnotations.isNotEmpty()) {
                     val value = expression.expression
                     val annotations = JavaUAnnotation.wrap(methodAnnotations)
-                    checkAnnotations(context, value, method,
-                            annotations, annotations, emptyList())
+                    checkAnnotations(
+                            context = context,
+                            argument = value,
+                            type = AnnotationUsageType.ANNOTATION_REFERENCE,
+                            method = method,
+                            annotations = annotations,
+                            allMethodAnnotations = annotations)
                 }
             }
         }
@@ -290,20 +344,20 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
         }
 
         if (!methodAnnotations.isEmpty()) {
-            checkAnnotations(context, call, method, methodAnnotations,
-                    methodAnnotations, classAnnotations, pkgAnnotations)
+            checkAnnotations(context, call, AnnotationUsageType.METHOD_CALL, method,
+                    methodAnnotations, methodAnnotations, classAnnotations, pkgAnnotations)
 
             checkContextAnnotations(context, method, call, methodAnnotations)
         }
 
         if (!classAnnotations.isEmpty()) {
-            checkAnnotations(context, call, method, classAnnotations,
-                    methodAnnotations, classAnnotations, pkgAnnotations)
+            checkAnnotations(context, call, AnnotationUsageType.METHOD_CALL_CLASS, method,
+                    classAnnotations, methodAnnotations, classAnnotations, pkgAnnotations)
         }
 
         if (!pkgAnnotations.isEmpty()) {
-            checkAnnotations(context, call, method, pkgAnnotations,
-                    methodAnnotations, classAnnotations, pkgAnnotations)
+            checkAnnotations(context, call, AnnotationUsageType.METHOD_CALL_PACKAGE, method,
+                    pkgAnnotations, methodAnnotations, classAnnotations, pkgAnnotations)
         }
 
         val mapping = evaluator.computeArgumentMapping(call, method)
@@ -314,8 +368,8 @@ internal class AnnotationHandler(private val scanners: Multimap<String, UastScan
                 continue
             }
             val annotations = JavaUAnnotation.wrap(filtered)
-            checkAnnotations(context, argument, method, annotations,
-                    methodAnnotations, classAnnotations, pkgAnnotations)
+            checkAnnotations(context, argument, AnnotationUsageType.METHOD_CALL_PARAMETER, method,
+                    annotations, methodAnnotations, classAnnotations, pkgAnnotations)
 
         }
     }

@@ -130,10 +130,9 @@ abstract class Detector {
      * @param file the file in the context to check
      * @return true if this detector applies to the given context and file
      */
+    @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("Slated for removal") // Slated for removal in lint 2.0 - this method isn't used
-    fun appliesTo(context: Context, file: File): Boolean {
-        return false
-    }
+    fun appliesTo(context: Context, file: File): Boolean = false
 
     /**
      * Analysis is about to begin, perform any setup steps.
@@ -209,6 +208,7 @@ abstract class Detector {
      * @param issue the issue to look up the analysis speed for
      * @return the expected speed of this detector
      */
+    @Suppress("DeprecatedCallableAddReplaceWith")
     @Deprecated("Slated for removal") // Slated for removal in Lint 2.0
     open fun getSpeed(issue: Issue): Speed = Speed.NORMAL
 
@@ -259,17 +259,11 @@ abstract class Detector {
 
     open fun checkBinaryResource(context: ResourceContext) {}
 
-    open fun appliesTo(folderType: ResourceFolderType): Boolean {
-        return true
-    }
+    open fun appliesTo(folderType: ResourceFolderType): Boolean = true
 
-    open fun appliesToResourceRefs(): Boolean {
-        return false
-    }
+    open fun appliesToResourceRefs(): Boolean = false
 
-    open fun applicableSuperClasses(): List<String>? {
-        return null
-    }
+    open fun applicableSuperClasses(): List<String>? = null
 
     open fun visitMethod(context: JavaContext, visitor: JavaElementVisitor?,
             call: PsiMethodCallExpression, method: PsiMethod) {
@@ -289,9 +283,7 @@ abstract class Detector {
 
     open fun checkClass(context: JavaContext, declaration: PsiClass) {}
 
-    open fun createPsiVisitor(context: JavaContext): JavaElementVisitor? {
-        return null
-    }
+    open fun createPsiVisitor(context: JavaContext): JavaElementVisitor? = null
 
     open fun visitReference(
             context: JavaContext,
@@ -324,9 +316,7 @@ abstract class Detector {
             method: PsiMethod) {
     }
 
-    open fun createUastHandler(context: JavaContext): UElementHandler? {
-        return null
-    }
+    open fun createUastHandler(context: JavaContext): UElementHandler? = null
 
     open fun visitResourceReference(
             context: JavaContext,
@@ -338,7 +328,8 @@ abstract class Detector {
 
     open fun visitAnnotationUsage(
             context: JavaContext,
-            argument: UElement,
+            usage: UElement,
+            type: AnnotationUsageType,
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
@@ -348,8 +339,14 @@ abstract class Detector {
             allPackageAnnotations: List<UAnnotation>) {
     }
 
-    open fun applicableAnnotations(): List<String>? {
-        return null
+    open fun applicableAnnotations(): List<String>? = null
+
+    open fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
+        // Only some annotations apply to [AnnotationUsage.COMBINED] so default to
+        // turning this off to avoid false positives when this has not been explicitly
+        // requested
+        @Suppress("UseExpressionBody")
+        return type != AnnotationUsageType.BINARY && type != AnnotationUsageType.EQUALITY
     }
 
     open fun getApplicableElements(): Collection<String>? = null
@@ -379,7 +376,5 @@ abstract class Detector {
     open fun analyzeCallGraph(context: Context, callGraph: CallGraphResult) {}
 
     /** Creates a lint fix builder. Just a convenience wrapper around [LintFix.create].  */
-    protected open fun fix(): LintFix.Builder {
-        return LintFix.create()
-    }
+    protected open fun fix(): LintFix.Builder = LintFix.create()
 }

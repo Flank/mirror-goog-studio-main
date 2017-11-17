@@ -126,7 +126,7 @@ class WrongThreadInterproceduralDetector : Detector(), Detector.UastScanner {
             }
             val (_, second) = searchNodes
             val pathBeginning = second.cause
-            val parser = context.client.getUastParser(context.project) ?: continue
+            val parser = context.client.getUastParser(context.project)
             val location = parser.createLocation(pathBeginning)
             val pathStr = searchNodes.joinToString(separator = " -> ") {
                 it.contextualNode.node.shortName

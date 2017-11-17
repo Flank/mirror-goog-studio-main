@@ -21,7 +21,6 @@ import com.android.SdkConstants.ANDROID_URI
 import com.android.SdkConstants.ATTR_COLOR
 import com.android.SdkConstants.ATTR_DRAWABLE
 import com.android.SdkConstants.ATTR_FONT
-import com.android.SdkConstants.ATTR_ID
 import com.android.SdkConstants.ATTR_LAYOUT
 import com.android.SdkConstants.ATTR_NAME
 import com.android.SdkConstants.ATTR_PARENT

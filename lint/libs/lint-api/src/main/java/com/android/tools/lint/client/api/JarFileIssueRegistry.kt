@@ -52,9 +52,7 @@ private constructor(
     private var timestamp: Long = jarFile.lastModified()
 
     override val isUpToDate: Boolean
-        get() {
-            return timestamp == jarFile.lastModified()
-        }
+        get() = timestamp == jarFile.lastModified()
 
     init {
         val loader = registry.javaClass.classLoader
