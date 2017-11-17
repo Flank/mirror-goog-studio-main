@@ -49,13 +49,16 @@ import com.intellij.psi.PsiVariable;
 import com.intellij.psi.util.PsiTreeUtil;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.jetbrains.uast.UBinaryExpression;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UDoWhileExpression;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UField;
+import org.jetbrains.uast.UIdentifier;
 import org.jetbrains.uast.UIfExpression;
+import org.jetbrains.uast.ULambdaExpression;
 import org.jetbrains.uast.ULocalVariable;
 import org.jetbrains.uast.UMethod;
 import org.jetbrains.uast.UPolyadicExpression;
@@ -492,6 +495,45 @@ public class CleanupDetector extends Detector implements Detector.UastScanner {
                 if (isTransactionCommitMethodCall(context, methodInvocation)
                         || isShowFragmentMethodCall(context, methodInvocation)) {
                     return true;
+                }
+            }
+        }
+
+        UCallExpression parentCall = UastUtils.getParentOfType(node, UCallExpression.class, true);
+        if (parentCall != null) {
+            String methodName = parentCall.getMethodName();
+            if (methodName == null) {
+                UIdentifier methodIdentifier = parentCall.getMethodIdentifier();
+                if (methodIdentifier != null && "with".equals(methodIdentifier.getName())) {
+                    List<UExpression> args = parentCall.getValueArguments();
+                    if (args.size() == 2 && args.get(1) instanceof ULambdaExpression) {
+                        UExpression body = ((ULambdaExpression) args.get(1)).getBody();
+                        // Can't use FinishVisitor since inside a with-block we don't have
+                        // a variable binding
+                        AtomicBoolean ref = new AtomicBoolean(false);
+                        body.accept(new AbstractUastVisitor() {
+                            @Override
+                            public boolean visitCallExpression(UCallExpression node) {
+                                /* There's a bug in UAST where none of these lambda nodes
+                                   are valid, so for now, treat all "with" statements
+                                   as implicitly clearing; this isn't right, but avoids
+                                   likely false positives. Tracked in issue 69407565.
+
+                                if (isTransactionCommitMethodCall(context, node)) {
+                                    ref.set(true);
+                                }
+                                */
+                                ref.set(true);
+
+                                return super.visitCallExpression(node);
+
+                            }
+                        });
+                        //noinspection RedundantIfStatement
+                        if (ref.get()) {
+                            return true;
+                        }
+                    }
                 }
             }
         }

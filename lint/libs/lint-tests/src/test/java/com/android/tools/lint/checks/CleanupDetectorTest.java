@@ -1469,6 +1469,23 @@ public class CleanupDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testKotlinCommitViaLambda() {
+        // Regression test for 69407565: commit/apply warnings when using with, apply, let etc
+        lint().files(
+                kotlin("package test.pkg\n" +
+                        "\n" +
+                        "import android.app.Activity\n" +
+                        "\n" +
+                        "fun test(activity: Activity) {\n" +
+                        "    with(activity.fragmentManager.beginTransaction()) {\n" +
+                        "        addToBackStack(null)\n" +
+                        "        commit()\n" +
+                        "    }\n" +
+                        "}"))
+                .run()
+                .expectClean();
+    }
+
     @SuppressWarnings("all") // Sample code
     private TestFile mDialogFragment = java(""
             + "package android.support.v4.app;\n"
