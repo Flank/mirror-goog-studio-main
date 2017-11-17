@@ -56,38 +56,32 @@ public final class OkHttp2Interceptor implements Interceptor {
         }
 
         try {
-            trackRequestBody(tracker, request);
-        } catch (Exception ex) {
-            StudioLog.e("Could not track an OkHttp2 request body", ex);
-        }
-        try {
-            response = track(tracker, response);
+            response = trackResponse(tracker, response);
         } catch (Exception ex) {
             StudioLog.e("Could not track an OkHttp2 response", ex);
         }
         return response;
     }
 
-    private HttpConnectionTracker trackRequest(Request request) {
+    private HttpConnectionTracker trackRequest(Request request) throws IOException {
         StackTraceElement[] callstack =
                 OkHttpUtils.getCallstack(request.getClass().getPackage().getName());
         HttpConnectionTracker tracker = HttpTracker.trackConnection(request.urlString(), callstack);
         tracker.trackRequest(request.method(), toMultimap(request.headers()));
-        return tracker;
-    }
 
-    private void trackRequestBody(HttpConnectionTracker tracker, Request request) throws Exception {
         if (request.body() != null) {
-            Request requestCopy = request.newBuilder().build();
             OutputStream outputStream =
                     tracker.trackRequestBody(OkHttpUtils.createNullOutputStream());
             BufferedSink bufferedSink = Okio.buffer(Okio.sink(outputStream));
-            requestCopy.body().writeTo(bufferedSink);
+            request.body().writeTo(bufferedSink);
             bufferedSink.close();
         }
+
+        return tracker;
     }
 
-    private Response track(HttpConnectionTracker tracker, Response response) throws IOException {
+    private Response trackResponse(HttpConnectionTracker tracker, Response response)
+            throws IOException {
         Map<String, List<String>> fields = toMultimap(response.headers());
         fields.put(
                 "response-status-code",
