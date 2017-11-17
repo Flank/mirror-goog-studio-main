@@ -252,14 +252,14 @@ public class MergingReport {
     }
 
     /**
-     * This builder is used to accumulate logging, action recording and intermediary results as
-     * well as final result of the merging activity.
+     * This builder is used to accumulate logging, action recording and intermediary results as well
+     * as final result of the merging activity.
      *
-     * Once the merging is finished, the {@link #build()} is called to return an immutable version
-     * of itself with all the logging, action recordings and xml files obtainable.
-     *
+     * <p>Once the merging is finished, the {@link #build()} is called to return an immutable
+     * version of itself with all the logging, action recordings and xml files obtainable.
      */
-    static class Builder {
+    @VisibleForTesting
+    public static class Builder {
 
         private Map<MergedManifestKind, String> mergedDocuments =
                 new EnumMap<MergedManifestKind, String>(MergedManifestKind.class);

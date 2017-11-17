@@ -16,6 +16,7 @@
 
 package com.android.manifmerger
 
+import com.android.annotations.VisibleForTesting
 import com.android.ide.common.blame.SourceFile
 import com.android.utils.PositionXmlParser
 import java.io.File
@@ -25,6 +26,7 @@ import javax.xml.parsers.ParserConfigurationException
 import org.xml.sax.SAXException
 
 /** Responsible for loading navigation XML files.  */
+@VisibleForTesting
 object NavigationXmlLoader {
 
     /**

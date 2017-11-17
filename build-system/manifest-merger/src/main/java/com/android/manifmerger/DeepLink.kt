@@ -29,6 +29,7 @@ import java.util.regex.Pattern
 /** Represents a loaded <deepLink></deepLink> element from a navigation xml file.
  * Has getters for the [SourceFilePosition] and the parsed input uri information.
  */
+@VisibleForTesting
 class DeepLink
 constructor(
         val sourceFilePosition: SourceFilePosition, uri: String, val isAutoVerify: Boolean) {
@@ -105,15 +106,15 @@ constructor(
 
             // assign schemes
             val compliantScheme = compliantUri.scheme
-            if (compliantScheme == null) {
-                schemes = DEFAULT_SCHEMES
+            schemes = if (compliantScheme == null) {
+                DEFAULT_SCHEMES
             } else if (compliantScheme.contains(applicationIdEncoder)
                     || compliantScheme.contains(pathWildcardEncoder)
                     || compliantScheme.contains(wildcardEncoder)) {
                 throw DeepLinkException(
                         "Improper use of wildcards and/or placeholders in deeplink URI scheme")
             } else {
-                schemes = ImmutableList.of(compliantScheme)
+                ImmutableList.of(compliantScheme)
             }
 
             // assign host

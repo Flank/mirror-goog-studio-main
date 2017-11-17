@@ -181,6 +181,11 @@ public class Actions {
          * element to be present by default while targeted SDK requires its declaration.
          */
         IMPLIED,
+        /**
+         * The element was converted into a different type of element in the resulting merged
+         * manifest.
+         */
+        CONVERTED,
     }
 
     /**

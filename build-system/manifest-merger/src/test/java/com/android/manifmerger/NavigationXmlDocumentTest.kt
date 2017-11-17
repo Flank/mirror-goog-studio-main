@@ -31,13 +31,12 @@ class NavigationXmlDocumentTest {
         val input =
                 """"|<navigation
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
-                    |    xmlns:app="http://schemas.android.com/apk/res-auto"
-                    |    android:id="@+id/test">
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
                     |    <include app:graph="@navigation/foo" />
                     |    <include app:graph="@navigation/bar" />
                     |    <deeplink app:uri="www.example1.com"
                     |            android:autoVerify="true" />
-                    |    <navigation android:id="@+id/subnav">
+                    |    <navigation>
                     |        <include app:graph="@navigation/bar" />
                     |        <deeplink app:uri="www.example2.com" />
                     |    </navigation>
@@ -53,13 +52,12 @@ class NavigationXmlDocumentTest {
         val input =
                 """"|<navigation
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
-                    |    xmlns:app="http://schemas.android.com/apk/res-auto"
-                    |    android:id="@+id/test">
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
                     |    <include app:graph="@navigation/foo" />
                     |    <include app:graph="@navigation/bar" />
                     |    <deeplink app:uri="www.example1.com"
                     |            android:autoVerify="true" />
-                    |    <navigation android:id="@+id/subnav">
+                    |    <navigation>
                     |        <include app:graph="@navigation/bar" />
                     |        <deeplink app:uri="www.example2.com" />
                     |    </navigation>
@@ -76,14 +74,14 @@ class NavigationXmlDocumentTest {
                 assertThat(deepLink.isAutoVerify).isTrue()
                 assertThat(deepLink.sourceFilePosition.file).isEqualTo(UNKNOWN)
                 assertThat(deepLink.sourceFilePosition.position.toString())
-                        .isEqualTo("7:5-8:41")
+                        .isEqualTo("6:5-7:41")
             }
             if (deepLink.host == "www.example2.com") {
                 foundExample2 = true
                 assertThat(deepLink.isAutoVerify).isFalse()
                 assertThat(deepLink.sourceFilePosition.file).isEqualTo(UNKNOWN)
                 assertThat(deepLink.sourceFilePosition.position.toString())
-                        .isEqualTo("11:9-48")
+                        .isEqualTo("10:9-48")
             }
         }
         assertThat(foundExample1).isTrue()
@@ -96,8 +94,7 @@ class NavigationXmlDocumentTest {
         val input =
                 """"|<navigation
                     |    xmlns:custom1="http://schemas.android.com/apk/res/android"
-                    |    xmlns:custom2="http://schemas.android.com/apk/res-auto"
-                    |    custom1:id="@+id/test">
+                    |    xmlns:custom2="http://schemas.android.com/apk/res-auto">
                     |    <include custom2:graph="@navigation/foo" />
                     |    <deeplink custom2:uri="www.example1.com"
                     |            custom1:autoVerify="true" />
@@ -111,7 +108,7 @@ class NavigationXmlDocumentTest {
         assertThat(deepLink.host).isEqualTo("www.example1.com")
         assertThat(deepLink.isAutoVerify).isTrue()
         assertThat(deepLink.sourceFilePosition.file).isEqualTo(UNKNOWN)
-        assertThat(deepLink.sourceFilePosition.position.toString()).isEqualTo("6:5-7:41")
+        assertThat(deepLink.sourceFilePosition.position.toString()).isEqualTo("5:5-6:41")
     }
 
     @Test
@@ -120,8 +117,7 @@ class NavigationXmlDocumentTest {
         val input =
                 """"|<navigation
                     |    xmlns:android="http://schemas.android.com/apk/res/android"
-                    |    xmlns:app="http://schemas.android.com/apk/res-auto"
-                    |    android:id="@+id/test">
+                    |    xmlns:app="http://schemas.android.com/apk/res-auto">
                     |    <include />
                     |    <deeplink />
                     |</navigation>""".trimMargin()
