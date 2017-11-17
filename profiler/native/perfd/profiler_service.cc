@@ -291,8 +291,7 @@ Status ProfilerServiceImpl::AttachAgent(
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
-  sessions_.BeginSession(request->device().serial(),
-                         request->device().boot_id(), request->process().pid());
+  sessions_.BeginSession(request->device_id(), request->process_id());
   return Status::OK;
 }
 

@@ -104,7 +104,7 @@ message AgentAttachResponse {
 }
 
 message TimeRequest {
-  Device device = 1;
+  int64 device_id = 1;
 }
 
 message TimeResponse {
@@ -118,7 +118,7 @@ message TimeResponse {
 }
 
 message VersionRequest {
-  Device device = 1;
+  int64 device_id = 1;
 }
 
 message VersionResponse {
@@ -133,7 +133,7 @@ message GetDevicesResponse {
 }
 
 message GetProcessesRequest {
-  Device device = 1;
+  int64 device_id = 1;
 }
 
 message GetProcessesResponse {
@@ -141,8 +141,8 @@ message GetProcessesResponse {
 }
 
 message BeginSessionRequest {
-  Device device = 1;
-  Process process = 2;
+  int64 device_id = 1;
+  int32 process_id = 2;
 }
 
 message BeginSessionResponse {
@@ -197,8 +197,8 @@ message BytesResponse {
 }
 
 message AgentStatusRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  int64 device_id = 1;
+  int32 process_id = 2;
 }
 
 message AgentStatusResponse {
@@ -211,9 +211,4 @@ message AgentStatusResponse {
   // The last time a heartbeat was received from the requested agent.
   // If no heartbeat was ever detected, this returns INT64_MIN.
   int64 last_timestamp = 2;
-}
-
-message DeviceProcesses {
-  Device device = 1;
-  repeated Process process = 2;
 }

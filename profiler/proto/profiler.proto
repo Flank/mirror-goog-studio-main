@@ -33,6 +33,9 @@ message CommonData {
   int64 end_timestamp = 3;
 }
 
+// Note that |Device| instance refers to a device (physical/emulator) associated
+// with a particular boot. e.g. if the same device is started twice, they are
+// considered two separate |Device| instances.
 message Device {
   enum State {
     UNSPECIFIED = 0;
@@ -40,20 +43,23 @@ message Device {
     OFFLINE = 2; // e.g. emulator that is turned off
     DISCONNECTED = 3; // e.g. unplugged
   }
-  string manufacturer = 1; // e.g. 'Google', 'Motorola'
-  string model = 2; // e.g. 'Nexus 5', 'Pixel XL'
-  string serial = 3; // unique ID for this device
-  string version = 4; // e.g. '5.1.1', '8.0.0'
-  int32 api_level = 5; // e.g. 19, 25
-  string codename = 10; // Identifies preview versions by API letter (e.g. 'O'), or '' for release
+  // Numeric representation of the device's |serial| and |boot_id| properties.
+  // Used for quickly indexing the device instead of having to perform string comparisons.
+  int64 device_id = 1;
+  string manufacturer = 2; // e.g. 'Google', 'Motorola'
+  string model = 3; // e.g. 'Nexus 5', 'Pixel XL'
+  string serial = 4; // unique ID for this device
+  string version = 5; // e.g. '5.1.1', '8.0.0'
+  int32 api_level = 6; // e.g. 19, 25
   // |feature_level| will either be the same as |api_level| or |api_level + 1| if the current
   // device is a preview version. Code should check against |feature_level|, not |api_level|, to
   // see if a feature is available in the framework or not. If |feature_level != api_level|, then
   // |codename| will also be set.
-  int32 feature_level = 6;
-  string boot_id = 7; // unique ID regenerated each boot time
-  bool is_emulator = 8;
-  State state = 9;
+  int32 feature_level = 7;
+  string codename = 8; // Identifies preview versions by API letter (e.g. 'O'), or '' for release
+  string boot_id = 9; // unique ID regenerated each boot time
+  bool is_emulator = 10;
+  State state = 11;
 }
 
 message Process {
@@ -81,15 +87,12 @@ message Process {
 message Session {
   // ID uniquely identifying this session. This will be unique across devices.
   int64 session_id = 1;
-  // A string which uniquely identifies this device.
-  string device_serial = 2;
-  // A string which uniquely identifies this particular device run. Restarting
-  // the device will generate a new |boot_id|.
-  string boot_id = 3;
+  // A device's unique identifier, references Device's |device_id| property.
+  int64 device_id = 2;
   // The PID of the app. Note that this is actually an int16, but gRPC only
   // provides int32.
-  int32 pid = 4;
-  int64 start_timestamp = 5;
+  int32 pid = 3;
+  int64 start_timestamp = 4;
   // If LLONG_MAX, the session is ongoing and hasn't ended yet.
-  int64 end_timestamp = 6;
+  int64 end_timestamp = 5;
 }

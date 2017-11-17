@@ -57,10 +57,8 @@ void IoServiceImpl::AddSpeedData(const proto::SpeedDataRequest *request,
     new_speed_data.set_type(type);
     new_speed_data.set_speed(speed_data.speed);
     new_speed_data.mutable_basic_info()->set_process_id(request->process_id());
-    new_speed_data.mutable_basic_info()->mutable_session()->set_device_serial(
-        request->session().device_serial());
-    new_speed_data.mutable_basic_info()->mutable_session()->set_boot_id(
-        request->session().boot_id());
+    new_speed_data.mutable_basic_info()->mutable_session()->set_device_id(
+        request->session().device_id());
     new_speed_data.mutable_basic_info()->set_end_timestamp(
         speed_data.timestamp);
     *(response->add_io_speed_data()) = new_speed_data;

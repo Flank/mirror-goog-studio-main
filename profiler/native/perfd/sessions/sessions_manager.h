@@ -34,8 +34,7 @@ class SessionsManager final {
  public:
   SessionsManager(const Clock &clock) : clock_(clock) {}
 
-  proto::Session *BeginSession(const std::string &device_serial,
-                               const std::string &boot_id, int32_t pid);
+  proto::Session *BeginSession(int64_t device_id, int32_t pid);
   void EndSession(int64_t session_id);
 
   // Return the session matching the |session_id|, or |nullptr| if not found.

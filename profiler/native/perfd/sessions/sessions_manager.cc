@@ -27,19 +27,17 @@ using std::mutex;
 using std::vector;
 using proto::Session;
 
-Session* SessionsManager::BeginSession(const std::string& device_serial,
-                                       const std::string& boot_id,
-                                       int32_t pid) {
+Session* SessionsManager::BeginSession(int64_t device_id, int32_t pid) {
   lock_guard<mutex> lock(sessions_mutex_);
   auto it =
       std::find_if(sessions_.begin(), sessions_.end(), [&](const Session& s) {
-        return s.device_serial() == device_serial && s.boot_id() == boot_id &&
-               s.pid() == pid && SessionUtils::IsActive(s);
+        return s.device_id() == device_id && s.pid() == pid &&
+               SessionUtils::IsActive(s);
       });
 
   if (it == sessions_.end()) {
-    sessions_.push_front(SessionUtils::CreateSession(
-        device_serial, boot_id, pid, clock_.GetCurrentTime()));
+    sessions_.push_front(
+        SessionUtils::CreateSession(device_id, pid, clock_.GetCurrentTime()));
   } else {
     // If a matching session was already running, move it to the front of the
     // list (since it now should be the most recent), unless it's already in

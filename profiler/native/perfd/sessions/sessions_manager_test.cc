@@ -15,6 +15,7 @@
  */
 #include <gtest/gtest.h>
 #include <climits>
+#include <unordered_set>
 
 #include "perfd/sessions/session_utils.h"
 #include "perfd/sessions/sessions_manager.h"
@@ -30,13 +31,12 @@ TEST(SessionsManager, CanBeginAndEndASession) {
   FakeClock clock(1234);
   SessionsManager sessions(clock);
 
-  auto *session1 = sessions.BeginSession("FakeSerial1", "FakeBoot1", 1);
+  auto *session1 = sessions.BeginSession(-1, 1);
   clock.Elapse(10);
 
   EXPECT_EQ(session1->start_timestamp(), 1234);
   EXPECT_EQ(session1->end_timestamp(), LONG_MAX);
-  EXPECT_EQ(session1->device_serial(), "FakeSerial1");
-  EXPECT_EQ(session1->boot_id(), "FakeBoot1");
+  EXPECT_EQ(session1->device_id(), -1);
   EXPECT_EQ(session1->pid(), 1);
   EXPECT_TRUE(SessionUtils::IsActive(*session1));
 
@@ -49,18 +49,18 @@ TEST(SessionsManager, CanBeginMultipleSessions_AllRemainActiveUntilEnded) {
   FakeClock clock(1234);
   SessionsManager sessions(clock);
 
-  auto *session1 = sessions.BeginSession("FakeSerial1", "FakeBoot1", 1);
+  auto *session1 = sessions.BeginSession(-1, 1);
   clock.Elapse(10);
   EXPECT_TRUE(SessionUtils::IsActive(*session1));
   EXPECT_EQ(1, session1->pid());
 
-  auto *session2 = sessions.BeginSession("FakeSerial2", "FakeBoot2", 2);
+  auto *session2 = sessions.BeginSession(-2, 2);
   clock.Elapse(10);
   EXPECT_TRUE(SessionUtils::IsActive(*session1));
   EXPECT_TRUE(SessionUtils::IsActive(*session2));
   EXPECT_EQ(2, session2->pid());
 
-  auto *session3 = sessions.BeginSession("FakeSerial3", "FakeBoot3", 3);
+  auto *session3 = sessions.BeginSession(-3, 3);
   clock.Elapse(10);
   EXPECT_TRUE(SessionUtils::IsActive(*session1));
   EXPECT_TRUE(SessionUtils::IsActive(*session2));
@@ -69,9 +69,9 @@ TEST(SessionsManager, CanBeginMultipleSessions_AllRemainActiveUntilEnded) {
 
   // Make sure there aren't any stale pointer issues
   EXPECT_EQ(1, session1->pid());
-  EXPECT_EQ("FakeSerial1", session1->device_serial());
+  EXPECT_EQ(-1, session1->device_id());
   EXPECT_EQ(2, session2->pid());
-  EXPECT_EQ("FakeSerial2", session2->device_serial());
+  EXPECT_EQ(-2, session2->device_id());
 
   // End sessions out of order
 
@@ -95,13 +95,13 @@ TEST(SessionsManager, CanDeleteSessions) {
   FakeClock clock(1234);
   SessionsManager sessions(clock);
 
-  auto *session1 = sessions.BeginSession("FakeSerial1", "FakeBoot1", 1);
+  auto *session1 = sessions.BeginSession(-1, 1);
   clock.Elapse(10);
-  auto *session2 = sessions.BeginSession("FakeSerial2", "FakeBoot2", 2);
+  auto *session2 = sessions.BeginSession(-2, 2);
   clock.Elapse(10);
-  auto *session3 = sessions.BeginSession("FakeSerial3", "FakeBoot3", 3);
+  auto *session3 = sessions.BeginSession(-3, 3);
   clock.Elapse(10);
-  auto *session4 = sessions.BeginSession("FakeSerial4", "FakeBoot4", 3);
+  auto *session4 = sessions.BeginSession(-4, 3);
   clock.Elapse(10);
 
   // Can delete most recent. (This deactivates the session, if active)
@@ -115,16 +115,16 @@ TEST(SessionsManager, CanDeleteSessions) {
 
   // Make sure there aren't any stale pointer issues
   EXPECT_EQ(1, session1->pid());
-  EXPECT_EQ("FakeSerial1", session1->device_serial());
+  EXPECT_EQ(-1, session1->device_id());
   EXPECT_EQ(3, session3->pid());
-  EXPECT_EQ("FakeSerial3", session3->device_serial());
+  EXPECT_EQ(-3, session3->device_id());
 }
 
 TEST(SessionsManager, GetSessionWorks) {
   FakeClock clock(1000);
   SessionsManager sessions(clock);
 
-  auto *session = sessions.BeginSession("FakeSerial1", "FakeBoot1", 1);
+  auto *session = sessions.BeginSession(-1, 1);
   clock.Elapse(500);
   sessions.EndSession(session->session_id());
 
@@ -136,28 +136,32 @@ TEST(SessionsManager, GetSessionsByTimeRangeWorks) {
   FakeClock clock(1000);
   SessionsManager sessions(clock);
 
-  auto *session =
-      sessions.BeginSession("FakeSerial1000to1500", "FakeBoot1", 10);
+  // Session from 1000 to 1500.
+  auto *session = sessions.BeginSession(-10, 10);
   clock.Elapse(500);
   sessions.EndSession(session->session_id());
 
+  // Session from 2000 to 2500.
   clock.Elapse(500);
-  session = sessions.BeginSession("FakeSerial2000to2500", "FakeBoot2", 20);
-  clock.Elapse(500);
-  sessions.EndSession(session->session_id());
-
-  clock.Elapse(500);
-  session = sessions.BeginSession("FakeSerial3000to3500", "FakeBoot3", 30);
+  session = sessions.BeginSession(-20, 20);
   clock.Elapse(500);
   sessions.EndSession(session->session_id());
 
+  // Session from 3000 to 3500.
   clock.Elapse(500);
-  session = sessions.BeginSession("FakeSerial4000to4500", "FakeBoot4", 40);
+  session = sessions.BeginSession(-30, 30);
   clock.Elapse(500);
   sessions.EndSession(session->session_id());
 
+  // Session from 4000 to 4500.
   clock.Elapse(500);
-  session = sessions.BeginSession("FakeSerial5000active", "FakeBoot5", 50);
+  session = sessions.BeginSession(-40, 40);
+  clock.Elapse(500);
+  sessions.EndSession(session->session_id());
+
+  // Session from 5000 to present.
+  clock.Elapse(500);
+  session = sessions.BeginSession(-50, 50);
   EXPECT_TRUE(SessionUtils::IsActive(*session));
 
   {
@@ -210,7 +214,6 @@ TEST(SessionsManager, GetSessionsByTimeRangeWorks) {
     // extend forever.
     auto session_range = sessions.GetSessions(clock.GetCurrentTime() + 1000);
     EXPECT_EQ(1, session_range.size());
-
     EXPECT_EQ(50, session_range[0].pid());
   }
 
@@ -228,10 +231,10 @@ TEST(SessionsManager, CallingBeginSessionOnActiveSessionSortsItToFront) {
   FakeClock clock(1000);
   SessionsManager sessions(clock);
 
-  sessions.BeginSession("FakeSerial1", "FakeBoot1", 10);
-  auto *session2 = sessions.BeginSession("FakeSerial2", "FakeBoot2", 20);
-  sessions.BeginSession("FakeSerial3", "FakeBoot3", 30);
-  sessions.BeginSession("FakeSerial4", "FakeBoot4", 40);
+  sessions.BeginSession(-10, 10);
+  auto *session2 = sessions.BeginSession(-20, 20);
+  sessions.BeginSession(-30, 30);
+  sessions.BeginSession(-40, 40);
 
   {
     // Sanity check
@@ -245,7 +248,7 @@ TEST(SessionsManager, CallingBeginSessionOnActiveSessionSortsItToFront) {
     EXPECT_EQ(10, session_range[3].pid());
   }
 
-  auto *session2_copy = sessions.BeginSession("FakeSerial2", "FakeBoot2", 20);
+  auto *session2_copy = sessions.BeginSession(-20, 20);
   EXPECT_EQ(session2, session2_copy);
 
   {
@@ -262,7 +265,7 @@ TEST(SessionsManager, CallingBeginSessionOnActiveSessionSortsItToFront) {
 
   // Session #2 is already the most recent. Calling |BeginSession| again is a
   // no-op.
-  sessions.BeginSession("FakeSerial2", "FakeBoot2", 20);
+  sessions.BeginSession(-20, 20);
   {
     auto session_range = sessions.GetSessions();
     EXPECT_EQ(20, session_range[0].pid());
@@ -275,12 +278,12 @@ TEST(SessionsManager,
   SessionsManager sessions(clock);
 
   EXPECT_EQ(0, sessions.GetSessions().size());
-  auto session1 = sessions.BeginSession("FakeSerial1", "FakeBoot1", 10);
+  auto session1 = sessions.BeginSession(-10, 10);
   EXPECT_EQ(1, sessions.GetSessions().size());
-  sessions.BeginSession("FakeSerial1", "FakeBoot1", 10);
+  sessions.BeginSession(-10, 10);
   EXPECT_EQ(1, sessions.GetSessions().size());
   sessions.EndSession(session1->session_id());
-  sessions.BeginSession("FakeSerial1", "FakeBoot1", 10);
+  sessions.BeginSession(-10, 10);
 
   {
     auto session_range = sessions.GetSessions();
@@ -290,5 +293,20 @@ TEST(SessionsManager,
     // Same PID, etc., but this session is dead
     EXPECT_EQ(10, session_range[1].pid());
     EXPECT_FALSE(SessionUtils::IsActive(session_range[1]));
+  }
+}
+
+TEST(SessionsManager, UniqueSessionIds) {
+  FakeClock clock(1234);
+  SessionsManager sessions(clock);
+
+  std::unordered_set<int64_t> session_ids;
+  for (int32_t device_id = 0; device_id < 100; device_id++) {
+    for (int64_t start_time = 0; start_time < 10000; start_time += 100) {
+      clock.SetCurrentTime(start_time);
+      auto *session = sessions.BeginSession(device_id, start_time);
+      EXPECT_EQ(session_ids.end(), session_ids.find(session->session_id()));
+      session_ids.insert(session->session_id());
+    }
   }
 }

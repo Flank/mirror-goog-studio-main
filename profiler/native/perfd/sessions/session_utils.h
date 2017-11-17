@@ -25,17 +25,12 @@ namespace profiler {
 // Various static utility methods that work with the |Session| proto object
 class SessionUtils final {
  public:
-  static proto::Session CreateSession(const std::string& device_serial,
-                                      const std::string& boot_id, int32_t pid,
+  static proto::Session CreateSession(int64_t device_id, int32_t pid,
                                       int64_t start_timestamp) {
     proto::Session session;
-    // TODO(b/67508221): Generate a better session ID, something that is hashed
-    // so that each ID looks very different from other IDs
-    int64_t session_id = start_timestamp;
+    int64_t session_id = device_id ^ (start_timestamp << 1);
     session.set_session_id(session_id);
-
-    session.set_device_serial(device_serial);
-    session.set_boot_id(boot_id);
+    session.set_device_id(device_id);
     session.set_pid(pid);
     session.set_start_timestamp(start_timestamp);
     session.set_end_timestamp(LLONG_MAX);
