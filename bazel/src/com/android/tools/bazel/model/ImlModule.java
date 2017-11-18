@@ -19,6 +19,7 @@ package com.android.tools.bazel.model;
 import com.android.tools.bazel.parser.ast.CallExpression;
 import com.android.tools.bazel.parser.ast.CallStatement;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,6 +29,7 @@ public class ImlModule extends BazelRule {
     public enum Tag {
         MODULE,
         TEST,
+        RUNTIME,
     }
 
     private List<String> sources = new LinkedList<>();
@@ -38,6 +40,8 @@ public class ImlModule extends BazelRule {
     private List<String> imlFiles = new LinkedList<>();
     private Map<String, String> prefixes = new LinkedHashMap<>();
     private Map<BazelRule, List<Tag>> dependencyTags = new HashMap<>();
+    private Set<BazelRule> runtimeDeps = Sets.newLinkedHashSet();
+    private Set<BazelRule> testRuntimeDeps = Sets.newLinkedHashSet();
 
     public ImlModule(Package pkg, String name) {
         super(pkg, name);
@@ -60,6 +64,8 @@ public class ImlModule extends BazelRule {
         call.setArgument("exports", exported);
         call.setArgument("iml_files", imlFiles);
         call.setArgument("package_prefixes", prefixes);
+        call.setArgument("runtime_deps", runtimeDeps);
+        call.setArgument("test_runtime_deps", testRuntimeDeps);
 
         if (!statement.isFromFile()) {
             call.setArgument("visibility", ImmutableList.of("//visibility:public"));
@@ -69,6 +75,8 @@ public class ImlModule extends BazelRule {
         call.setDoNotSort("resources", reason);
         call.setDoNotSort("exports", reason);
         call.setDoNotSort("deps", reason);
+        call.setDoNotSort("runtime_deps", reason);
+        call.setDoNotSort("test_runtime_deps", reason);
 
         call.addElementToList("tags", "managed");
     }
@@ -90,10 +98,20 @@ public class ImlModule extends BazelRule {
     }
 
     public void addDependency(BazelRule rule, boolean isExported, List<Tag> tags) {
+        if (tags.contains(Tag.RUNTIME)) {
+            // Export is ignored it doesn't make sense for runtime deps
+            if (tags.contains(Tag.TEST)) {
+                testRuntimeDeps.add(rule);
+            } else {
+                runtimeDeps.add(rule);
+            }
+            return;
+        }
         super.addDependency(rule, isExported);
         List<Tag> oldTags = dependencyTags.get(rule);
         // Don't override with test if the dependency was not test already.
         if (oldTags != null && !oldTags.contains(Tag.TEST) && tags.contains(Tag.TEST)) {
+            tags = new ArrayList<>(tags);
             tags.remove(Tag.TEST);
         }
         dependencyTags.put(rule, tags);

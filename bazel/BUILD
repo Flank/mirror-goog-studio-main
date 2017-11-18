@@ -320,3 +320,15 @@ maven_repo(
     include_sources = True,
     visibility = ["//visibility:public"],
 )
+
+java_test(
+    name = "iml_to_build_tests",
+    srcs = ["testSrc/com/android/tools/binaries/ImlToBazelTest.java"],
+    data = ["//tools/base/bazel/test:iml_to_bazel"],
+    test_class = "com.android.tools.binaries.ImlToBazelTest",
+    deps = [
+        ":bazel_generator",
+        ":iml_to_build",
+        ":utils",
+    ],
+)

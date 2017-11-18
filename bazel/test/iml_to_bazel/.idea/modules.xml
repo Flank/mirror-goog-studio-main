@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/compile_after_runtime/compile_after_runtime.iml" filepath="$PROJECT_DIR$/compile_after_runtime/compile_after_runtime.iml" />
+      <module fileurl="file://$PROJECT_DIR$/compile_after_test/compile_after_test.iml" filepath="$PROJECT_DIR$/compile_after_test/compile_after_test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/compile_runtime_cycle_end/compile_runtime_cycle_end.iml" filepath="$PROJECT_DIR$/compile_runtime_cycle_end/compile_runtime_cycle_end.iml" />
+      <module fileurl="file://$PROJECT_DIR$/compile_runtime_cycle_start/compile_runtime_cycle_start.iml" filepath="$PROJECT_DIR$/compile_runtime_cycle_start/compile_runtime_cycle_start.iml" />
+      <module fileurl="file://$PROJECT_DIR$/compile_test_cycle_end/compile_test_cycle_end.iml" filepath="$PROJECT_DIR$/compile_test_cycle_end/compile_test_cycle_end.iml" />
+      <module fileurl="file://$PROJECT_DIR$/compile_test_cycle_start/compile_test_cycle_start.iml" filepath="$PROJECT_DIR$/compile_test_cycle_start/compile_test_cycle_start.iml" />
+      <module fileurl="file://$PROJECT_DIR$/depend_on_cycle/depend_on_cycle.iml" filepath="$PROJECT_DIR$/depend_on_cycle/depend_on_cycle.iml" />
+      <module fileurl="file://$PROJECT_DIR$/root/root.iml" filepath="$PROJECT_DIR$/root/root.iml" />
+      <module fileurl="file://$PROJECT_DIR$/runtime/runtime.iml" filepath="$PROJECT_DIR$/runtime/runtime.iml" />
+      <module fileurl="file://$PROJECT_DIR$/runtime_after_test/runtime_after_test.iml" filepath="$PROJECT_DIR$/runtime_after_test/runtime_after_test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/runtime_compile_cycle_end/runtime_compile_cycle_end.iml" filepath="$PROJECT_DIR$/runtime_compile_cycle_end/runtime_compile_cycle_end.iml" />
+      <module fileurl="file://$PROJECT_DIR$/runtime_compile_cycle_start/runtime_compile_cycle_start.iml" filepath="$PROJECT_DIR$/runtime_compile_cycle_start/runtime_compile_cycle_start.iml" />
+      <module fileurl="file://$PROJECT_DIR$/runtime_test_cycle_end/runtime_test_cycle_end.iml" filepath="$PROJECT_DIR$/runtime_test_cycle_end/runtime_test_cycle_end.iml" />
+      <module fileurl="file://$PROJECT_DIR$/runtime_test_cycle_start/runtime_test_cycle_start.iml" filepath="$PROJECT_DIR$/runtime_test_cycle_start/runtime_test_cycle_start.iml" />
+      <module fileurl="file://$PROJECT_DIR$/test/test.iml" filepath="$PROJECT_DIR$/test/test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/test_runtime_cycle_end/test_runtime_cycle_end.iml" filepath="$PROJECT_DIR$/test_runtime_cycle_end/test_runtime_cycle_end.iml" />
+      <module fileurl="file://$PROJECT_DIR$/test_runtime_cycle_start/test_runtime_cycle_start.iml" filepath="$PROJECT_DIR$/test_runtime_cycle_start/test_runtime_cycle_start.iml" />
+    </modules>
+  </component>
+</project>

@@ -1,0 +1,191 @@
+load("//tools/base/bazel:bazel.bzl", "iml_module")
+
+iml_module(
+    name = "runtime_compile_cycle_start",
+    srcs = ["runtime_compile_cycle_start/src"],
+    iml_files = ["runtime_compile_cycle_start/runtime_compile_cycle_start.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    runtime_deps = ["//:runtime_compile_cycle_end"],
+)
+
+iml_module(
+    name = "runtime_compile_cycle_end",
+    srcs = ["runtime_compile_cycle_end/src"],
+    iml_files = ["runtime_compile_cycle_end/runtime_compile_cycle_end.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    deps = ["//:runtime_compile_cycle_start[module]"],
+)
+
+iml_module(
+    name = "runtime_after_test",
+    srcs = ["runtime_after_test/src"],
+    iml_files = ["runtime_after_test/runtime_after_test.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+iml_module(
+    name = "compile_test_cycle_end_and_others",
+    # do not sort: must match IML order
+    srcs = [
+        "compile_test_cycle_end/src",
+        "compile_test_cycle_start/src",
+    ],
+    iml_files = [
+        "compile_test_cycle_end/compile_test_cycle_end.iml",
+        "compile_test_cycle_start/compile_test_cycle_start.iml",
+    ],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+iml_module(
+    name = "depend_on_cycle",
+    srcs = ["depend_on_cycle/src"],
+    iml_files = ["depend_on_cycle/depend_on_cycle.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    deps = ["//:compile_test_cycle_end_and_others[module]"],
+)
+
+iml_module(
+    name = "compile_runtime_cycle_end",
+    srcs = ["compile_runtime_cycle_end/src"],
+    iml_files = ["compile_runtime_cycle_end/compile_runtime_cycle_end.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    runtime_deps = ["//:compile_runtime_cycle_start"],
+)
+
+iml_module(
+    name = "compile_runtime_cycle_start",
+    srcs = ["compile_runtime_cycle_start/src"],
+    iml_files = ["compile_runtime_cycle_start/compile_runtime_cycle_start.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    deps = ["//:compile_runtime_cycle_end[module]"],
+)
+
+iml_module(
+    name = "compile_after_test",
+    srcs = ["compile_after_test/src"],
+    iml_files = ["compile_after_test/compile_after_test.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+iml_module(
+    name = "test",
+    srcs = ["test/src"],
+    iml_files = ["test/test.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    runtime_deps = ["//:runtime_after_test"],
+    deps = ["//:compile_after_test[module]"],
+)
+
+iml_module(
+    name = "root",
+    srcs = ["root/src"],
+    iml_files = ["root/root.iml"],
+    tags = ["managed"],
+    # do not sort: must match IML order
+    test_runtime_deps = [
+        "//:runtime_after_test",
+        "//:runtime_test_cycle_end",
+    ],
+    visibility = ["//visibility:public"],
+    # do not sort: must match IML order
+    runtime_deps = [
+        "//:runtime",
+        "//:runtime_compile_cycle_end",
+    ],
+    # do not sort: must match IML order
+    deps = [
+        "//:test[module, test]",
+        "//:compile_runtime_cycle_start[module]",
+        "//:runtime_compile_cycle_start[module]",
+        "//:test_runtime_cycle_start[module, test]",
+        "//:runtime_test_cycle_start[module, test]",
+    ],
+)
+
+iml_module(
+    name = "compile_after_runtime",
+    srcs = ["compile_after_runtime/src"],
+    iml_files = ["compile_after_runtime/compile_after_runtime.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+)
+
+iml_module(
+    name = "runtime",
+    srcs = ["runtime/src"],
+    iml_files = ["runtime/runtime.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    deps = ["//:compile_after_runtime[module]"],
+)
+
+load("//tools/base/bazel:bazel.bzl", "iml_project")
+
+iml_project(
+    name = "android-studio",
+    modules = [
+        "//:compile_after_runtime",
+        "//:compile_after_test",
+        "//:compile_runtime_cycle_end",
+        "//:compile_runtime_cycle_start",
+        "//:compile_test_cycle_end_and_others",
+        "//:depend_on_cycle",
+        "//:root",
+        "//:runtime",
+        "//:runtime_after_test",
+        "//:runtime_compile_cycle_end",
+        "//:runtime_compile_cycle_start",
+        "//:runtime_test_cycle_end",
+        "//:runtime_test_cycle_start",
+        "//:test",
+        "//:test_runtime_cycle_end",
+        "//:test_runtime_cycle_start",
+    ],
+    tags = ["managed"],
+)
+
+iml_module(
+    name = "test_runtime_cycle_end",
+    srcs = ["test_runtime_cycle_end/src"],
+    iml_files = ["test_runtime_cycle_end/test_runtime_cycle_end.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    runtime_deps = ["//:test_runtime_cycle_start"],
+)
+
+iml_module(
+    name = "test_runtime_cycle_start",
+    srcs = ["test_runtime_cycle_start/src"],
+    iml_files = ["test_runtime_cycle_start/test_runtime_cycle_start.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    deps = ["//:test_runtime_cycle_end[module, test]"],
+)
+
+iml_module(
+    name = "runtime_test_cycle_start",
+    srcs = ["runtime_test_cycle_start/src"],
+    iml_files = ["runtime_test_cycle_start/runtime_test_cycle_start.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    runtime_deps = ["//:runtime_test_cycle_end"],
+)
+
+iml_module(
+    name = "runtime_test_cycle_end",
+    srcs = ["runtime_test_cycle_end/src"],
+    iml_files = ["runtime_test_cycle_end/runtime_test_cycle_end.iml"],
+    tags = ["managed"],
+    visibility = ["//visibility:public"],
+    deps = ["//:runtime_test_cycle_start[module, test]"],
+)

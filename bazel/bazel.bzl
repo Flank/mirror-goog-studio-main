@@ -246,12 +246,13 @@ def _iml_module_impl(ctx):
     module = struct(
       module_jars = module_jars,
       module_runtime = module_runtime,
-       transitive_data = transitive_data,
+      transitive_data = transitive_data,
       forms = main_forms,
       test_forms = test_forms,
       java_deps = java_deps,
       test_provider = test_provider,
       main_provider = main_provider,
+      names = names,
     ),
     providers = [main_provider],
   )
@@ -297,14 +298,60 @@ _iml_module_ = rule(
     implementation = _iml_module_impl,
 )
 
-def _iml_test_module_impl(ctx):
+def _iml_runtime_impl(ctx):
+  providers = [ctx.attr.iml_module.module.main_provider]
+  module_runtime = dict()
+  module_jars = dict()
+  transitive_data = depset()
+
+  for dep in ctx.attr.runtime_deps:
+    if java_common.provider in dep:
+      providers += [dep[java_common.provider]]
+    if hasattr(dep, "runtime_info"):
+      fail("runtime should not depend on runtime")
+    if hasattr(dep, "module"):
+      module_runtime.update(dep.module.module_runtime)
+      module_jars.update(dep.module.module_jars)
+      transitive_data += dep.module.transitive_data
+
+  combined_provider = java_common.merge(providers)
+  for name in ctx.attr.iml_module.module.names:
+    module_runtime[name] = combined_provider.transitive_runtime_jars
+
   return struct(
-    providers = [ctx.attr.iml_module.module.test_provider],
+    providers = [combined_provider],
+    runtime_info = struct(
+      module_runtime = module_runtime,
+      module_jars = module_jars,
+      transitive_data = transitive_data,
+    )
+  )
+
+_iml_runtime = rule(
+    attrs = {
+      "iml_module": attr.label(),
+      "runtime_deps": attr.label_list(),
+    },
+    fragments = ["java"],
+    implementation = _iml_runtime_impl,
+)
+
+def _iml_test_module_impl(ctx):
+  providers = [ctx.attr.iml_module.module.test_provider]
+  for dep in ctx.attr.runtime_deps:
+    if java_common.provider in dep:
+      providers += [dep[java_common.provider]]
+    if hasattr(dep, "module"):
+      providers += [dep.module.test_provider]
+  combined = java_common.merge(providers)
+  return struct(
+    providers = [combined],
   )
 
 _iml_test_module_ = rule(
     attrs = {
       "iml_module": attr.label(),
+      "runtime_deps": attr.label_list(),
     },
     fragments = ["java"],
     implementation = _iml_test_module_impl,
@@ -354,6 +401,7 @@ def iml_module(name,
     deps=[],
     runtime_deps=[],
     test_runtime_deps=[],
+    manual_test_runtime_deps=[],
     visibility=[],
     exports=[],
     plugins=[],
@@ -407,23 +455,34 @@ def iml_module(name,
     test_class = test_class,
   )
 
+  _iml_runtime(
+    name = name + "_runtime",
+    tags = tags,
+    iml_module = ":" + name,
+    runtime_deps = runtime_deps + [":" + name],
+    visibility = visibility,
+  )
+
+  # Only add test utils to other than itself.
+  test_utils = [] if name == "studio.testutils" else ["//tools/base/testutils:studio.testutils"]
   _iml_test_module_(
     name = name + "_testlib",
     tags = tags,
     iml_module = ":" + name,
     visibility = visibility,
+    runtime_deps = runtime_deps + test_runtime_deps + [
+      ":" + name + "_runtime",
+      "//tools/base/bazel:langtools",
+    ] + test_utils,
   )
+
 
   test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
   if test_srcs:
-    test_utils = [] if name == "studio.testutils" else ["//tools/base/testutils:studio.testutils"]
     native.java_test(
         name = name + "_tests",
         tags = test_tags,
-        runtime_deps = test_runtime_deps + [
-          ":" + name + "_testlib",
-          "//tools/base/bazel:langtools",
-        ] + test_utils,
+        runtime_deps = manual_test_runtime_deps + [":" + name + "_testlib"],
         timeout = test_timeout,
         shard_count = test_shard_count,
         data = test_data,
@@ -465,11 +524,14 @@ def _iml_project_impl(ctx):
   module_jars = dict()
   module_runtime = dict()
   transitive_data = depset()
+
   for dep in ctx.attr.modules:
+    if hasattr(dep, "runtime_info"):
+      module_runtime.update(dep.runtime_info.module_runtime)
+      module_jars.update(dep.runtime_info.module_jars)
+      transitive_data += dep.runtime_info.transitive_data
     if hasattr(dep, "module"):
-      module_jars.update(dep.module.module_jars)
-      module_runtime.update(dep.module.module_runtime)
-      transitive_data += dep.module.transitive_data
+      fail("Don't depend on modules directly: " + str(dep.label))
 
   text = ""
   transitive_data += module_jars.values()
@@ -536,16 +598,17 @@ _iml_project = rule(
     implementation = _iml_project_impl,
 )
 
-def iml_project(name,modules=[], **kwargs):
-  # TODO Once iml_modules can be more than just java_imports we can make this part of the rule
-  normalized_modules = []
-  for module in modules:
-    if ':' not in module:
-      module = module + ":" + module[module.rfind('/') + 1:]
-    normalized_modules += [module]
 
+def normalize_label(label):
+  if ':' not in label:
+    label = label + ":" + label[label.rfind('/') + 1:]
+  return label
+
+
+def iml_project(name,modules=[], **kwargs):
+  normalized_modules = [normalize_label(module) for module in modules]
   _iml_project(
     name = name,
-    modules = normalized_modules,
+    modules = [n + "_runtime" for n in normalized_modules],
     **kwargs
   )

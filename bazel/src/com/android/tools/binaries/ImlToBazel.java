@@ -16,9 +16,12 @@
 
 package com.android.tools.binaries;
 
-import com.android.tools.bazel.GenerateBazelAction;
+import com.android.tools.bazel.ImlToIr;
+import com.android.tools.bazel.IrToBazel;
 import com.android.tools.bazel.StudioConfiguration;
+import com.android.tools.bazel.ir.IrProject;
 import com.android.tools.utils.WorkspaceUtils;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,23 +32,33 @@ public class ImlToBazel {
     public static void main(String[] strings) throws Exception {
 
         Path workspace = null;
+        boolean dryRun = false;
+        String project = "tools/idea";
+        String imlGraph = null;
+
         Iterator<String> args = Arrays.asList(strings).iterator();
         while (args.hasNext()) {
             String arg = args.next();
             if (arg.equals("--workspace") && args.hasNext()) {
                 workspace = Paths.get(args.next());
+            } else if (arg.equals("--project_path") && args.hasNext()) {
+                project = args.next();
+            } else if (arg.equals("--iml_graph") && args.hasNext()) {
+                imlGraph = args.next();
+            } else if (arg.equals("--dry_run")){
+                dryRun = true;
+            } else {
+                System.err.println("Unknown argument: " + arg);
+                System.exit(1);
             }
         }
-
         if (workspace == null) {
             workspace = WorkspaceUtils.findWorkspace();
         }
 
         long now = System.nanoTime();
         try {
-            GenerateBazelAction generator = new GenerateBazelAction();
-            generator.generate(
-                    workspace, new PrintWriter(System.err, true), new StudioConfiguration());
+            run(workspace, dryRun, project, imlGraph);
         } catch (Throwable e) {
             e.printStackTrace();
             System.exit(1);
@@ -53,7 +66,19 @@ public class ImlToBazel {
         long milli = (System.nanoTime() - now) / 1000000L;
         System.err.println(String.format("Total time: %d.%03ds", milli / 1000, milli % 1000));
 
-        // JPS creates a shared thread executor that creates non-damon threads. There is no way to access that to shut it down, so we exit
+        // JPS creates a shared thread executor that creates non-daemon threads. There is no way to access that to shut it down, so we exit
         System.exit(0);
+    }
+
+    public static int run(Path workspace, boolean dryRun, String project, String imlGraph)
+            throws IOException {
+        PrintWriter writer = new PrintWriter(System.err, true);
+        StudioConfiguration configuration = new StudioConfiguration();
+
+        ImlToIr imlToIr = new ImlToIr();
+        IrToBazel irToBazel = new IrToBazel(dryRun);
+
+        IrProject irProject = imlToIr.convert(workspace, project, imlGraph, writer);
+        return irToBazel.convert(irProject, writer, configuration);
     }
 }

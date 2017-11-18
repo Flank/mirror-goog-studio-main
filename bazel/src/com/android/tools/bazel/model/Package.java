@@ -55,8 +55,14 @@ public class Package {
 
     @NotNull
     private File buildFile(@NotNull File dir) {
-        File buildDotBazelFile = new File(dir, "BUILD.bazel");
-        return buildDotBazelFile.isFile() ? buildDotBazelFile : new File(dir, "BUILD");
+        // Use test files if found.
+        for (int i = 0; i < Workspace.BUILD_FILES.length; i++) {
+            File file = new File(dir, Workspace.BUILD_FILES[i]);
+            if (i == Workspace.BUILD_FILES.length - 1 || file.exists()) {
+                return file;
+            }
+        }
+        throw new IllegalStateException("BUILD_FILES must not be empty.");
     }
 
     public void generate(Workspace.GenerationListener listener) throws IOException {
@@ -88,8 +94,12 @@ public class Package {
             String before = Files.toString(build, StandardCharsets.UTF_8);
             String after = Files.toString(tmp, StandardCharsets.UTF_8);
             if (!before.equals(after)) {
-                listener.packageUpdated(name);
-                Files.copy(tmp, build);
+
+                if (listener.packageUpdated(name)) {
+                    Files.copy(tmp, build);
+                } else {
+                    System.err.println("idea diff " + build.getAbsolutePath() + " " + tmp.getAbsolutePath());
+                }
             }
         }
     }
@@ -105,6 +115,10 @@ public class Package {
     @NotNull
     public File getPackageDir() {
         return new File(workspace.getDirectory(), name);
+    }
+
+    public String getRelativePath(File file) {
+        return getPackageDir().toPath().relativize(file.toPath()).toString();
     }
 
     public String getName() {
