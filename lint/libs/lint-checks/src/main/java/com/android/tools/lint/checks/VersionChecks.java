@@ -32,6 +32,7 @@ import org.jetbrains.uast.UClass;
 import org.jetbrains.uast.UElement;
 import org.jetbrains.uast.UExpression;
 import org.jetbrains.uast.UIfExpression;
+import org.jetbrains.uast.ULambdaExpression;
 import org.jetbrains.uast.ULiteralExpression;
 import org.jetbrains.uast.ULocalVariable;
 import org.jetbrains.uast.UMethod;
@@ -320,6 +321,11 @@ public class VersionChecks {
                         return true;
                     }
                 }
+            } else if (current instanceof UCallExpression && prev instanceof ULambdaExpression) {
+                Boolean ok = isValidVersionCall(api, true, (UCallExpression) current);
+                if (ok != null) {
+                    return ok;
+                }
             } else if (current instanceof UMethod || current instanceof PsiFile) {
                 return false;
             }
@@ -498,6 +504,34 @@ public class VersionChecks {
                                 and, null, lookup);
                         if (ok != null) {
                             return ok;
+                        }
+                    } else if (arguments.size() == 2 && statement instanceof UIfExpression &&
+                            // Version lookup utility method where the first argument is
+                            // the API level and the second argument is the lambda to check
+                            arguments.get(1) instanceof ULambdaExpression) {
+                        UIfExpression ifExpression = (UIfExpression) statement;
+                        UExpression thenExpression = ifExpression.getThenExpression();
+                        UExpression condition = ifExpression.getCondition();
+
+                        UExpression c = null;
+                        if (thenExpression instanceof UBlockExpression) {
+                            List<UExpression> list = ((UBlockExpression) thenExpression)
+                                    .getExpressions();
+                            if (list.size() == 1) {
+                                c = list.get(0);
+                            }
+                        } else {
+                            c = thenExpression;
+                        }
+                        if (c instanceof UCallExpression) {
+                            UCallExpression callExpression = (UCallExpression) c;
+                            if ("invoke".equals(callExpression.getMethodName()) &&
+                                    callExpression.getValueArgumentCount() == 0) {
+                                final UExpression arg = ((UCallExpression) call)
+                                        .getValueArguments().get(0);
+                                return isVersionCheckConditional(api, condition, true, null,
+                                        element -> getApiLevel(arg, null));
+                            }
                         }
                     }
                 }

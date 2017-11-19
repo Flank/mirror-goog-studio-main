@@ -2139,6 +2139,59 @@ public class VersionChecksTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testKotlinHelper() {
+        // Regression test for issue 64550633
+        lint().files(
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.os.Build\n" +
+                        "import android.os.Build.VERSION_CODES.KITKAT\n" +
+                        "\n" +
+                        "inline fun fromApi(value: Int, action: () -> Unit) {\n" +
+                        "    if (Build.VERSION.SDK_INT >= value) {\n" +
+                        "        action()\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "fun fromApiNonInline(value: Int, action: () -> Unit) {\n" +
+                        "    if (Build.VERSION.SDK_INT >= value) {\n" +
+                        "        action()\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "inline fun notFromApi(value: Int, action: () -> Unit) {\n" +
+                        "    if (Build.VERSION.SDK_INT < value) {\n" +
+                        "        action()\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "fun test1() {\n" +
+                        "    fromApi(KITKAT) {\n" +
+                        "        // Example of a Java 7+ field\n" +
+                        "        val cjkExtensionC = Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C // OK\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "fun test2() {\n" +
+                        "    fromApiNonInline(KITKAT) {\n" +
+                        "        val cjkExtensionC = Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C // OK\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "fun test3() {\n" +
+                        "    notFromApi(KITKAT) {\n" +
+                        "        val cjkExtensionC = Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C // ERROR\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n"))
+                .run()
+                .expect("src/test/pkg/test.kt:39: Error: Field requires API level 19 (current min is 1): java.lang.Character.UnicodeBlock#CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C [NewApi]\n" +
+                        "        val cjkExtensionC = Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C // ERROR\n" +
+                        "                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "1 errors, 0 warnings");
+    }
+
     @Override
     protected Detector getDetector() {
         return new ApiDetector();
