@@ -72,12 +72,14 @@ message Process {
   string name = 1;
   // App's PID. Note that this is actually an int16, but gRPC only provides int32.
   int32 pid = 2;
-  State state = 3;
+  // References Device's |device_id| property.
+  int64 device_id = 3;
+  State state = 4;
   // The device time when this Process was first detected by the profiler.
-  int64 start_timestamp_ns = 4;
+  int64 start_timestamp_ns = 5;
   // e.g. 'arm', 'arm86', 'x86', 'x86_64'
   // Also see SdkConstans.CPU_ARCH_*
-  string abi_cpu_arch = 5;
+  string abi_cpu_arch = 6;
 }
 
 // A Session represents a range of profiling data for an app running on a

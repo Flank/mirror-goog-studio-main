@@ -27,7 +27,8 @@ using std::mutex;
 using std::vector;
 using proto::Session;
 
-Session* SessionsManager::BeginSession(int64_t device_id, int32_t pid) {
+bool SessionsManager::BeginSession(int64_t device_id, int32_t pid,
+                                   proto::Session* session) {
   lock_guard<mutex> lock(sessions_mutex_);
   auto it =
       std::find_if(sessions_.begin(), sessions_.end(), [&](const Session& s) {
@@ -35,9 +36,11 @@ Session* SessionsManager::BeginSession(int64_t device_id, int32_t pid) {
                SessionUtils::IsActive(s);
       });
 
+  bool new_session = false;
   if (it == sessions_.end()) {
     sessions_.push_front(
         SessionUtils::CreateSession(device_id, pid, clock_.GetCurrentTime()));
+    new_session = true;
   } else {
     // If a matching session was already running, move it to the front of the
     // list (since it now should be the most recent), unless it's already in
@@ -46,24 +49,32 @@ Session* SessionsManager::BeginSession(int64_t device_id, int32_t pid) {
       sessions_.splice(sessions_.begin(), sessions_, it, std::next(it));
     }
   }
-  return &sessions_.front();
+
+  session->CopyFrom(sessions_.front());
+  return new_session;
 }
 
-void SessionsManager::EndSession(int64_t session_id) {
+bool SessionsManager::EndSession(int64_t session_id, proto::Session* session) {
   lock_guard<mutex> lock(sessions_mutex_);
   auto it = GetSessionIter(session_id);
   if (it != sessions_.end()) {
     DoEndSession(&(*it));
+    session->CopyFrom(*it);
+    return true;
+  } else {
+    return false;
   }
 }
 
-const Session* SessionsManager::GetSession(int64_t session_id) const {
+bool SessionsManager::GetSession(int64_t session_id,
+                                 proto::Session* session) const {
   lock_guard<mutex> lock(sessions_mutex_);
   auto it = GetSessionIter(session_id);
   if (it != sessions_.end()) {
-    return &(*it);
+    session->CopyFrom(*it);
+    return true;
   } else {
-    return nullptr;
+    return false;
   }
 }
 

@@ -34,11 +34,16 @@ class SessionsManager final {
  public:
   SessionsManager(const Clock &clock) : clock_(clock) {}
 
-  proto::Session *BeginSession(int64_t device_id, int32_t pid);
-  void EndSession(int64_t session_id);
+  // Return true if a new session has been created, otherwise returns false
+  // (session already exists). Note that in both cases, |session| is always
+  // populated, either with the newly created or pre-existing session.
+  bool BeginSession(int64_t device_id, int32_t pid, proto::Session *session);
+  // Return true if a session has been ended, otherwise returns false (session
+  // does not exist).
+  bool EndSession(int64_t session_id, proto::Session *session);
 
-  // Return the session matching the |session_id|, or |nullptr| if not found.
-  const proto::Session *GetSession(int64_t session_id) const;
+  // Return true if a matching session is found, false otherwise.
+  bool GetSession(int64_t session_id, proto::Session *session) const;
 
   // Return all sessions between two timestamps. Default values are provided so
   // if you exclude a timestamp, then the search will not be bounded by it.

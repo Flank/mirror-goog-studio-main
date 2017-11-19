@@ -151,9 +151,13 @@ message BeginSessionResponse {
 
 message EndSessionRequest {
   int64 session_id = 1;
+  // TODO remove when device_id can be queried from
+  // session_id on Studio-side.
+  int64 device_id = 2;
 }
 
 message EndSessionResponse {
+  Session session = 1;
 }
 
 message GetSessionRequest {
