@@ -47,21 +47,11 @@ import org.junit.experimental.categories.Category;
 /** Test for changing resources with Instant Run. */
 public class ResourcesSwapTest {
 
-    private static final String LOG_TAG = "ResourcesSwapTest.sha";
-    private static final String BLACK_PNG_SHA = "256111655c33c5b5c095f6287abe6db307eab27a";
-    private static final String WHITE_PNG_SHA = "bdd80c122f819fd58ee0603530d27f591a9cc46c";
-
     @Rule
     public GradleTestProject mProject =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .create();
-
-    @Rule
-    public Logcat logcat = Logcat.create();
-
-    @Rule
-    public final Adb adb = new Adb();
 
     @Test
     public void artifactContents() throws Exception {
@@ -88,111 +78,5 @@ public class ResourcesSwapTest {
         assertThat(artifact.file.getName()).endsWith(".ir.ap_");
         assertThatZip(artifact.file).contains("assets/movie.mp4");
         assertThatZip(artifact.file).doesNotContain("classes.dex");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void swapResourcesDeviceTest_art() throws Exception {
-        doDeviceTest(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
-    }
-
-    private void doDeviceTest(IDevice device) throws Exception {
-        TestFileUtils.appendToFile(
-                mProject.getBuildFile(),
-                // Use Guava for hashing:
-                "dependencies { compile 'com.google.guava:guava:19.0'}\n"
-                        // Don't mess with the PNGs, to keep hashes stable:
-                        + "android.aaptOptions.cruncherEnabled = false\n");
-
-        copyTestResourceToProjectFile("images/black.png");
-
-        File activity = mProject.file("src/main/java/com/example/helloworld/HelloWorld.java");
-
-        TestFileUtils.addMethod(
-                activity,
-                "private void logChecksum() {\n"
-                        + "    java.io.InputStream stream = \n"
-                        + "            getResources().openRawResource(com.example.helloworld.R.drawable.image);\n"
-                        + "        \n"
-                        + "    try {\n"
-                        + "        byte [] bytes = com.google.common.io.ByteStreams.toByteArray(stream);\n"
-                        + "        android.util.Log.d(\n"
-                        + "            \""
-                        + LOG_TAG
-                        + "\", com.google.common.hash.Hashing.sha1().hashBytes(bytes).toString());\n"
-                        + "    } catch (java.io.IOException e) {\n"
-                        + "        throw new RuntimeException(e);\n"
-                        + "    }\n"
-                        + "}");
-
-        TestFileUtils.searchAndReplace(activity, "// onCreate", "logChecksum();");
-
-        HotSwapTester tester =
-                new HotSwapTester(
-                        mProject,
-                        HelloWorldApp.APP_ID,
-                        "HelloWorld",
-                        LOG_TAG,
-                        device,
-                        logcat,
-                        PORTS.get(ResourcesSwapTest.class.getSimpleName()));
-
-        tester.run(
-                () -> {
-                    List<LogCatMessage> allMessages = logcat.getFilteredLogCatMessages();
-                    String sha = allMessages.get(0).getMessage();
-                    assertThat(sha).named("SHA on first run").isEqualTo(BLACK_PNG_SHA);
-                },
-                new HotSwapTester.Change() {
-                    @Override
-                    public void makeChange() throws Exception {
-                        copyTestResourceToProjectFile("images/white.png");
-                    }
-
-                    @Override
-                    public void verifyChange(
-                            @NonNull InstantRunClient client,
-                            @NonNull Logcat logcat,
-                            @NonNull IDevice device)
-                            throws Exception {
-                        String sha = logcat.getFilteredLogCatMessages().get(0).getMessage();
-
-                        assertThat(sha).named("SHA after first change").isEqualTo(WHITE_PNG_SHA);
-                    }
-
-                    @Override
-                    public InstantRunArtifactType getExpectedArtifactType() {
-                        return InstantRunArtifactType.RESOURCES;
-                    }
-                },
-                new HotSwapTester.Change() {
-                    @Override
-                    public void makeChange() throws Exception {
-                        copyTestResourceToProjectFile("images/black.png");
-                    }
-
-                    @Override
-                    public void verifyChange(
-                            @NonNull InstantRunClient client,
-                            @NonNull Logcat logcat,
-                            @NonNull IDevice device)
-                            throws Exception {
-                        String sha = logcat.getFilteredLogCatMessages().get(0).getMessage();
-
-                        assertThat(sha).named("SHA after second change").isEqualTo(BLACK_PNG_SHA);
-                    }
-
-                    @Override
-                    public InstantRunArtifactType getExpectedArtifactType() {
-                        return InstantRunArtifactType.RESOURCES;
-                    }
-                });
-    }
-
-    private void copyTestResourceToProjectFile(String resourceName) throws Exception {
-        File file = mProject.file("src/main/res/drawable/image.png");
-        Files.createParentDirs(file);
-
-        Resources.asByteSource(Resources.getResource(resourceName)).copyTo(Files.asByteSink(file));
     }
 }
