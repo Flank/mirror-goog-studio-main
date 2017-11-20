@@ -225,6 +225,7 @@ public class DataBindingIncrementalTest {
     }
 
     @Test
+    @Ignore("b/68252584")
     public void renameLayout() throws Exception {
         String activity3ClassName = "Landroid/databinding/testapp/databinding/Activity3Binding;";
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
