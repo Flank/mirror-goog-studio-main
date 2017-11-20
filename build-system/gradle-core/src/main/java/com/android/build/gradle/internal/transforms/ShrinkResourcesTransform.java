@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.scope.BuildOutput;
 import com.android.build.gradle.internal.scope.BuildOutputs;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.OutputScope;
-import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
@@ -95,7 +94,6 @@ public class ShrinkResourcesTransform extends Transform {
     @Nullable private final FileCollection mappingFileSrc;
     @NonNull private final FileCollection mergedManifests;
     @NonNull private final FileCollection uncompressedResources;
-    @NonNull private final FileCollection splitListInput;
 
     @NonNull private final AaptGeneration aaptGeneration;
     @NonNull private final AaptOptions aaptOptions;
@@ -110,7 +108,6 @@ public class ShrinkResourcesTransform extends Transform {
             @NonNull FileCollection uncompressedResources,
             @NonNull File compressedResources,
             @NonNull AaptGeneration aaptGeneration,
-            @NonNull FileCollection splitListInput,
             @NonNull Logger logger) {
         VariantScope variantScope = variantData.getScope();
         GlobalScope globalScope = variantScope.getGlobalScope();
@@ -127,7 +124,6 @@ public class ShrinkResourcesTransform extends Transform {
                         : null;
         this.mergedManifests = variantScope.getOutput(TaskOutputType.MERGED_MANIFESTS);
         this.uncompressedResources = uncompressedResources;
-        this.splitListInput = splitListInput;
 
         this.aaptGeneration = aaptGeneration;
         this.aaptOptions = globalScope.getExtension().getAaptOptions();
@@ -183,7 +179,6 @@ public class ShrinkResourcesTransform extends Transform {
 
         secondaryFiles.add(SecondaryFile.nonIncremental(mergedManifests));
         secondaryFiles.add(SecondaryFile.nonIncremental(uncompressedResources));
-        secondaryFiles.add(SecondaryFile.nonIncremental(splitListInput));
 
         return secondaryFiles;
     }
@@ -235,7 +230,6 @@ public class ShrinkResourcesTransform extends Transform {
     public void transform(@NonNull TransformInvocation invocation)
             throws IOException, TransformException, InterruptedException {
 
-        SplitList splitList = SplitList.load(splitListInput);
         Collection<BuildOutput> uncompressedBuildOutputs = BuildOutputs.load(uncompressedResources);
         OutputScope outputScope = variantData.getScope().getOutputScope();
         outputScope.parallelForEachOutput(
@@ -243,8 +237,7 @@ public class ShrinkResourcesTransform extends Transform {
                 TaskOutputType.PROCESSED_RES,
                 TaskOutputType.SHRUNK_PROCESSED_RES,
                 this::splitAction,
-                invocation,
-                splitList);
+                invocation);
         outputScope.save(TaskOutputType.SHRUNK_PROCESSED_RES, compressedResources);
     }
 
@@ -252,8 +245,7 @@ public class ShrinkResourcesTransform extends Transform {
     public File splitAction(
             @NonNull ApkData apkData,
             @Nullable File uncompressedResourceFile,
-            TransformInvocation invocation,
-            SplitList splitList) {
+            TransformInvocation invocation) {
 
         if (uncompressedResourceFile == null) {
             return null;

@@ -3296,7 +3296,6 @@ public abstract class TaskManager {
                         scope.getOutput(TaskOutputHolder.TaskOutputType.PROCESSED_RES),
                         shrinkerOutput,
                         AaptGeneration.fromProjectOptions(projectOptions),
-                        scope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST),
                         logger);
 
         Optional<TransformTask> shrinkTask =
