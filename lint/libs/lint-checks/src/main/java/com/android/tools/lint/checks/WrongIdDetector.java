@@ -22,6 +22,7 @@ import static com.android.SdkConstants.ATTR_LAYOUT_RESOURCE_PREFIX;
 import static com.android.SdkConstants.ATTR_NAME;
 import static com.android.SdkConstants.ATTR_TYPE;
 import static com.android.SdkConstants.AUTO_URI;
+import static com.android.SdkConstants.CONSTRAINT_REFERENCED_IDS;
 import static com.android.SdkConstants.FD_RES_VALUES;
 import static com.android.SdkConstants.ID_PREFIX;
 import static com.android.SdkConstants.NEW_ID_PREFIX;
@@ -55,6 +56,7 @@ import com.android.tools.lint.detector.api.XmlContext;
 import com.android.utils.Pair;
 import com.android.utils.XmlUtils;
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Sets;
@@ -204,89 +206,7 @@ public class WrongIdDetector extends LayoutDetector {
             }
 
             for (Element layout : mRelativeLayouts) {
-                Set<String> ids = Sets.newHashSetWithExpectedSize(20);
-                for (Element child : XmlUtils.getSubTags(layout)) {
-                    String id = child.getAttributeNS(ANDROID_URI, ATTR_ID);
-                    if (id != null && !id.isEmpty()) {
-                        ids.add(id);
-                    }
-                }
-
-                boolean isConstraintLayout = layout.getTagName().equals(SdkConstants.CLASS_CONSTRAINT_LAYOUT);
-
-                for (Element element : XmlUtils.getSubTags(layout)) {
-                    String selfId = stripIdPrefix(element.getAttributeNS(ANDROID_URI, ATTR_ID));
-
-                    NamedNodeMap attributes = element.getAttributes();
-                    for (int i = 0, n = attributes.getLength(); i < n; i++) {
-                        Attr attr = (Attr) attributes.item(i);
-                        String value = attr.getValue();
-                        if ((value.startsWith(NEW_ID_PREFIX) ||
-                                value.startsWith(ID_PREFIX))
-                                && attr.getLocalName() != null
-                                && attr.getLocalName().startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
-                                && (ANDROID_URI.equals(attr.getNamespaceURI()) ||
-                                   AUTO_URI.equals(attr.getNamespaceURI()))) {
-                            if (!idDefined(mFileIds, value)) {
-                                // Stash a reference to this id and location such that
-                                // we can check after the *whole* layout has been processed,
-                                // since it's too early to conclude here that the id does
-                                // not exist (you are allowed to have forward references)
-                                XmlContext xmlContext = (XmlContext) context;
-                                Handle handle = xmlContext.createLocationHandle(attr);
-                                handle.setClientData(attr);
-
-                                if (mHandles == null) {
-                                    mHandles = new ArrayList<>();
-                                }
-                                mHandles.add(Pair.of(value, handle));
-                            } else {
-                                // Check siblings. TODO: Look for cycles!
-                                if (ids.contains(value)) {
-                                    // Make sure it's not pointing to self
-                                    if (!ATTR_ID.equals(attr.getLocalName())
-                                            && !selfId.isEmpty()
-                                            && value.endsWith(selfId)
-                                            && stripIdPrefix(value).equals(selfId)) {
-                                        XmlContext xmlContext = (XmlContext) context;
-                                        String message = String.format(
-                                                "Cannot be relative to self: id=%1$s, %2$s=%3$s",
-                                                selfId, attr.getLocalName(), selfId);
-                                        Location location = xmlContext.getLocation(attr);
-                                        xmlContext.report(NOT_SIBLING, attr, location, message);
-                                    }
-
-                                    continue;
-                                }
-                                if (value.startsWith(NEW_ID_PREFIX)) {
-                                    if (ids.contains(ID_PREFIX + stripIdPrefix(value))) {
-                                        continue;
-                                    }
-                                } else {
-                                    assert value.startsWith(ID_PREFIX) : value;
-                                    if (ids.contains(NEW_ID_PREFIX + stripIdPrefix(value))) {
-                                        continue;
-                                    }
-                                }
-                                if (isConstraintLayout) {
-                                    // A reference to the ConstraintLayout from a child is valid
-                                    String parentId = stripIdPrefix(layout.getAttributeNS(ANDROID_URI, ATTR_ID));
-                                    if (parentId.equals(stripIdPrefix(value))) {
-                                        continue;
-                                    }
-                                }
-                                if (context.isEnabled(NOT_SIBLING)) {
-                                    XmlContext xmlContext = (XmlContext) context;
-                                    String message = String.format(
-                                            "`%1$s` is not a sibling in the same `RelativeLayout`",
-                                            value);
-                                    Location location = xmlContext.getLocation(attr);
-                                    xmlContext.report(NOT_SIBLING, attr, location, message);
-                                }
-                            }
-                        }
-                    }
-                }
+                checkLayout(context, layout);
             }
         }
 
@@ -294,6 +214,107 @@ public class WrongIdDetector extends LayoutDetector {
 
         if (!context.getScope().contains(Scope.ALL_RESOURCE_FILES)) {
             checkHandles(context);
+        }
+    }
+
+    private void checkLayout(@NonNull Context context, Element layout) {
+        Set<String> ids = Sets.newHashSetWithExpectedSize(20);
+        for (Element child : XmlUtils.getSubTags(layout)) {
+            String id = child.getAttributeNS(ANDROID_URI, ATTR_ID);
+            if (id != null && !id.isEmpty()) {
+                ids.add(id);
+            }
+        }
+
+        boolean isConstraintLayout = layout.getTagName().equals(SdkConstants.CLASS_CONSTRAINT_LAYOUT);
+
+        for (Element element : XmlUtils.getSubTags(layout)) {
+            String selfId = stripIdPrefix(element.getAttributeNS(ANDROID_URI, ATTR_ID));
+
+            NamedNodeMap attributes = element.getAttributes();
+            for (int i = 0, n = attributes.getLength(); i < n; i++) {
+                Attr attr = (Attr) attributes.item(i);
+                String value = attr.getValue();
+                if (value.startsWith(NEW_ID_PREFIX) ||
+                        value.startsWith(ID_PREFIX)) {
+                    String localName = attr.getLocalName();
+                    if (localName != null
+                            && localName.startsWith(ATTR_LAYOUT_RESOURCE_PREFIX)
+                            && (ANDROID_URI.equals(attr.getNamespaceURI()) ||
+                            AUTO_URI.equals(attr.getNamespaceURI()))) {
+                        checkIdReference(context, layout, ids, isConstraintLayout, selfId, attr,
+                                value);
+                    }
+                } else if (isConstraintLayout
+                        && CONSTRAINT_REFERENCED_IDS.equals(attr.getLocalName())) {
+                    Splitter splitter = Splitter.on(',').trimResults().omitEmptyStrings();
+                    for (String id : splitter.split(value)) {
+                        checkIdReference(context, layout, ids, true, selfId, attr, id);
+                    }
+                }
+            }
+        }
+    }
+
+    private void checkIdReference(@NonNull Context context, Element layout, Set<String> ids,
+            boolean isConstraintLayout, String selfId, Attr attr, String id) {
+        if (!idDefined(mFileIds, id)) {
+            // Stash a reference to this id and location such that
+            // we can check after the *whole* layout has been processed,
+            // since it's too early to conclude here that the id does
+            // not exist (you are allowed to have forward references)
+            XmlContext xmlContext = (XmlContext) context;
+            Handle handle = xmlContext.createLocationHandle(attr);
+            handle.setClientData(attr);
+
+            if (mHandles == null) {
+                mHandles = new ArrayList<>();
+            }
+            mHandles.add(Pair.of(id, handle));
+        } else {
+            // Check siblings. TODO: Look for cycles!
+            if (ids.contains(id)) {
+                // Make sure it's not pointing to self
+                if (!ATTR_ID.equals(attr.getLocalName())
+                        && !selfId.isEmpty()
+                        && id.endsWith(selfId)
+                        && stripIdPrefix(id).equals(selfId)) {
+                    XmlContext xmlContext = (XmlContext) context;
+                    String message = String.format(
+                            "Cannot be relative to self: id=%1$s, %2$s=%3$s",
+                            selfId, attr.getLocalName(), selfId);
+                    Location location = xmlContext.getLocation(attr);
+                    xmlContext.report(NOT_SIBLING, attr, location, message);
+                }
+
+                return;
+            }
+            if (id.startsWith(NEW_ID_PREFIX)) {
+                if (ids.contains(ID_PREFIX + stripIdPrefix(id))) {
+                    return;
+                }
+            } else if (id.startsWith(ID_PREFIX)) {
+                if (ids.contains(NEW_ID_PREFIX + stripIdPrefix(id))) {
+                    return;
+                }
+            } else if (ids.contains(NEW_ID_PREFIX + id)) {
+                return;
+            }
+            if (isConstraintLayout) {
+                // A reference to the ConstraintLayout from a child is valid
+                String parentId = stripIdPrefix(layout.getAttributeNS(ANDROID_URI, ATTR_ID));
+                if (parentId.equals(stripIdPrefix(id))) {
+                    return;
+                }
+            }
+            if (context.isEnabled(NOT_SIBLING)) {
+                XmlContext xmlContext = (XmlContext) context;
+                String message = String.format(
+                        "`%1$s` is not a sibling in the same `RelativeLayout`",
+                        id);
+                Location location = xmlContext.getLocation(attr);
+                xmlContext.report(NOT_SIBLING, attr, location, message);
+            }
         }
     }
 
@@ -433,15 +454,18 @@ public class WrongIdDetector extends LayoutDetector {
         boolean definedLocally = ids.contains(id);
         if (!definedLocally) {
             if (id.startsWith(NEW_ID_PREFIX)) {
-                definedLocally = ids.contains(ID_PREFIX +
+                return ids.contains(ID_PREFIX +
                         id.substring(NEW_ID_PREFIX.length()));
             } else if (id.startsWith(ID_PREFIX)) {
-                definedLocally = ids.contains(NEW_ID_PREFIX +
+                return ids.contains(NEW_ID_PREFIX +
                         id.substring(ID_PREFIX.length()));
+            } else {
+                return ids.contains(NEW_ID_PREFIX + id) ||
+                        ids.contains(ID_PREFIX + id);
             }
         }
 
-        return definedLocally;
+        return true;
     }
 
     private boolean idDefined(@NonNull Context context, @NonNull String id,
