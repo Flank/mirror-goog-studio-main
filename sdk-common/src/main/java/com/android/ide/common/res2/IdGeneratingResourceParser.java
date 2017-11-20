@@ -26,6 +26,7 @@ import static com.android.SdkConstants.TAG_LAYOUT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.symbols.ResourceExtraXmlParser;
 import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
@@ -43,7 +44,7 @@ import org.xml.sax.SAXException;
 
 /**
  * This class is deprecated and it's usages will soon move to a new parser in the Symbols package
- * {@link com.android.builder.symbols.ResourceExtraXmlParser}.
+ * {@link ResourceExtraXmlParser}.
  *
  * <p>Parser for scanning id-generating XML files (layout or menu).
  *

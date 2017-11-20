@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.builder.symbols;
+package com.android.ide.common.symbols;
 
 import com.android.utils.XmlUtils;
 import com.google.common.truth.Truth;

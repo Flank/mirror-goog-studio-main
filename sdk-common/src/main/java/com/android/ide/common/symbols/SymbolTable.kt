@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2016 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.builder.symbols
+package com.android.ide.common.symbols
 
 import com.android.annotations.concurrency.Immutable
 import com.android.resources.ResourceType
@@ -72,7 +72,8 @@ abstract class SymbolTable protected constructor() {
             }
         }
 
-        return SymbolTableImpl(tablePackage, builder.build())
+        return SymbolTableImpl(tablePackage,
+                builder.build())
     }
 
     /**
@@ -213,7 +214,8 @@ abstract class SymbolTable protected constructor() {
          * @return the symbol table
          */
         fun build(): SymbolTable {
-            return SymbolTableImpl(tablePackage, ImmutableTable.copyOf(symbols))
+            return SymbolTableImpl(tablePackage,
+                    ImmutableTable.copyOf(symbols))
         }
     }
 
@@ -251,7 +253,8 @@ abstract class SymbolTable protected constructor() {
 
             val packageName = if (tables.isEmpty()) "" else tables[0].tablePackage
 
-            return SymbolTableImpl(packageName, builder.build())
+            return SymbolTableImpl(packageName,
+                    builder.build())
         }
 
         /**

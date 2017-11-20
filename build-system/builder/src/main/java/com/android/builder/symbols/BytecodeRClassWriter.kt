@@ -18,8 +18,10 @@ package com.android.builder.symbols
 
 import com.android.SdkConstants
 import com.android.annotations.VisibleForTesting
-import com.android.builder.symbols.SymbolJavaType.INT
-import com.android.builder.symbols.SymbolJavaType.INT_LIST
+import com.android.ide.common.symbols.SymbolJavaType.INT
+import com.android.ide.common.symbols.SymbolJavaType.INT_LIST
+import com.android.ide.common.symbols.SymbolTable
+import com.android.ide.common.symbols.SymbolUtils
 import com.android.resources.ResourceType
 import com.google.common.base.Splitter
 import org.objectweb.asm.ClassWriter
@@ -65,7 +67,8 @@ fun exportToCompiledJava(table: SymbolTable, outJar: Path) {
         // Generate and write the main R class file.
         val packageR = internalName(table, null)
         jarOutputStream.putNextEntry(ZipEntry(packageR + SdkConstants.DOT_CLASS))
-        jarOutputStream.write(generateOuterRClass(resourceTypes, packageR))
+        jarOutputStream.write(generateOuterRClass(resourceTypes,
+                packageR))
     }
 }
 

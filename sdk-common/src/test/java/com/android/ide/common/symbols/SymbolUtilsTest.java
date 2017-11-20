@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.builder.symbols;
+package com.android.ide.common.symbols;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;

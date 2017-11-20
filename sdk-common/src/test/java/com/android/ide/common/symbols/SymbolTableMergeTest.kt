@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.android.builder.symbols
+package com.android.ide.common.symbols
 
 
 import com.google.common.collect.ImmutableSet
 import com.google.common.truth.Truth
 import org.junit.Test
-import com.android.builder.symbols.SymbolTestUtils.createSymbol as symbol
+import com.android.ide.common.symbols.SymbolTestUtils.createSymbol as symbol
 
 
 /**

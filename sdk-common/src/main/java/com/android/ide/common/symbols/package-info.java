@@ -18,9 +18,9 @@
  * The {@code Symbols} package contains classes used for parsing and processing android resources
  * and generating the R.java file.
  *
- * <p>The {@link com.android.builder.symbols.Symbol} class is used to represent a single android
+ * <p>The {@link com.android.ide.common.symbols.Symbol} class is used to represent a single android
  * resource by a resource type, a name, a java type and a value. A set of Symbols with unique
- * type/name pairs can be represented by a {@link com.android.builder.symbols.SymbolTable}.
+ * type/name pairs can be represented by a {@link com.android.ide.common.symbols.SymbolTable}.
  *
  * <p>Various parsers in this package were introduced to enable resource parsing without the use of
  * AAPT for libraries. They provide means to scan through the resource directory, parse XML files in
@@ -28,7 +28,7 @@
  *
  * <p>The parsers' flow is as follows:
  *
- * <p>Library resources are passed to a {@link com.android.builder.symbols.ResourceDirectoryParser}.
+ * <p>Library resources are passed to a {@link com.android.ide.common.symbols.ResourceDirectoryParser}.
  * There the parser goes through each of the directories and takes different paths depending on the
  * directories' names and their files' types:
  *
@@ -36,7 +36,7 @@
  *   <li> If we are in a {@code values} directory (directory name starts with a "values" prefix and
  *       is followed by optional qualifiers, like "-v21" or "-w820dp"), all files inside are XML
  *       files with declared values inside of them (for example {@code values/strings.xml}). Parse
- *       each file with a {@link com.android.builder.symbols.ResourceValuesXmlParser}.
+ *       each file with a {@link com.android.ide.common.symbols.ResourceValuesXmlParser}.
  *   <li> If we are in a non-values directory, create a Symbol for each file inside the directory,
  *       with the Symbol's name as the filename without the optional extension and the Symbol's type
  *       as the directory's name without extra qualifiers. For example for file {@code
@@ -49,10 +49,10 @@
  *       should be created with a name {@code "activity_main"} and type {@code "id"}. Such inline
  *       declarations are identified by the "@+" prefix and follow a "@+type/name" pattern. This is
  *       done by calling the {@code parse} method in {@link
- *       com.android.builder.symbols.ResourceExtraXmlParser}
+ *       com.android.ide.common.symbols.ResourceExtraXmlParser}
  * </ol>
  *
- * <p>The {@link com.android.builder.symbols.ResourceDirectoryParser} collects all {@code Symbols}
+ * <p>The {@link com.android.ide.common.symbols.ResourceDirectoryParser} collects all {@code Symbols}
  * from aforementioned cases and collects them in a {@code SymbolTable} which is later used to
  * create the R.txt and R.java files for the library as well as R.java files for all the libraries
  * it depends on.
@@ -60,9 +60,9 @@
  * <p>It is worth mentioning that with this new flow, the new pipeline needs to also create minify
  * rules in the {@code aapt_rules.txt} file since we are not calling AAPT anymore. It is done by
  * parsing the library's android manifest, creating keep rules and writing the file in method {@link
- * com.android.builder.symbols.SymbolUtils#generateMinifyKeepRules}.
+ * com.android.ide.common.symbols.SymbolUtils#generateMinifyKeepRules}.
  *
- * <p>{@link com.android.builder.symbols.SymbolUtils#generateMainDexKeepRules method is used when
+ * <p>{@link com.android.ide.common.symbols.SymbolUtils#generateMainDexKeepRules method is used when
  * AAPT2 is enabled and we need to create the {@code manifest_keep.txt} file with keep rules for
  * Dex. In this case, we keep only nodes with shared processes and filter out remaining ones: if
  * their {@code process} is null, empty or starts with a colon symbol (private process).
@@ -137,4 +137,4 @@
  * <p>See {@code ResourceValuesXmlParserTest} and {@code ResourceDirectoryParserTest} for more
  * examples of the parsers' behaviour.
  */
-package com.android.builder.symbols;
+package com.android.ide.common.symbols;

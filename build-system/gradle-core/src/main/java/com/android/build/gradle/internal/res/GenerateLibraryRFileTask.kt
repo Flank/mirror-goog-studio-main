@@ -24,11 +24,11 @@ import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.TaskContainer
 import com.android.build.gradle.tasks.ProcessAndroidResources
-import com.android.builder.symbols.IdProvider
-import com.android.builder.symbols.ResourceDirectoryParser
-import com.android.builder.symbols.SymbolIo
-import com.android.builder.symbols.SymbolTable
-import com.android.builder.symbols.SymbolUtils
+import com.android.ide.common.symbols.IdProvider
+import com.android.ide.common.symbols.ResourceDirectoryParser
+import com.android.ide.common.symbols.SymbolIo
+import com.android.ide.common.symbols.SymbolTable
+import com.android.ide.common.symbols.SymbolUtils
 import com.google.common.base.Strings
 import com.google.common.collect.Iterables
 import org.gradle.api.file.FileCollection

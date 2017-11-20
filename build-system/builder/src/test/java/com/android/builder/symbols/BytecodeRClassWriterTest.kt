@@ -17,6 +17,10 @@
 package com.android.builder.symbols
 
 import com.android.SdkConstants
+import com.android.ide.common.symbols.Symbol
+import com.android.ide.common.symbols.SymbolIo
+import com.android.ide.common.symbols.SymbolJavaType
+import com.android.ide.common.symbols.SymbolTable
 import com.android.resources.ResourceType
 import com.android.testutils.apk.Zip
 import com.android.utils.PathUtils
@@ -45,10 +49,16 @@ class BytecodeRClassWriterTest {
 
         val symbols = SymbolTable.builder()
                 .tablePackage("com.example.foo")
-                .add(Symbol.createSymbol(ResourceType.ID, "foo", SymbolJavaType.INT, "0"))
+                .add(Symbol.createSymbol(ResourceType.ID,
+                        "foo",
+                        SymbolJavaType.INT,
+                        "0"))
                 .add(
                         Symbol.createSymbol(
-                                ResourceType.DRAWABLE, "bar", SymbolJavaType.INT, "1"))
+                                ResourceType.DRAWABLE,
+                                "bar",
+                                SymbolJavaType.INT,
+                                "1"))
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.STYLEABLE,
@@ -57,7 +67,10 @@ class BytecodeRClassWriterTest {
                                 "2"))
                 .add(
                         Symbol.createSymbol(
-                                ResourceType.ATTR, "beep", SymbolJavaType.INT, "3"))
+                                ResourceType.ATTR,
+                                "beep",
+                                SymbolJavaType.INT,
+                                "3"))
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.STYLEABLE,
@@ -66,7 +79,10 @@ class BytecodeRClassWriterTest {
                                 "4"))
                 .add(
                         Symbol.createSymbol(
-                                ResourceType.ATTR, "boop", SymbolJavaType.INT, "5"))
+                                ResourceType.ATTR,
+                                "boop",
+                                SymbolJavaType.INT,
+                                "5"))
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.STYLEABLE,
@@ -99,10 +115,16 @@ class BytecodeRClassWriterTest {
                 .tablePackage("com.example.foo")
                 .add(
                         Symbol.createSymbol(
-                                ResourceType.ATTR, "beep", SymbolJavaType.INT, "1"))
+                                ResourceType.ATTR,
+                                "beep",
+                                SymbolJavaType.INT,
+                                "1"))
                 .add(
                         Symbol.createSymbol(
-                                ResourceType.ATTR, "boop", SymbolJavaType.INT, "3"))
+                                ResourceType.ATTR,
+                                "boop",
+                                SymbolJavaType.INT,
+                                "3"))
                 .add(
                         Symbol.createSymbol(
                                 ResourceType.STYLEABLE,
