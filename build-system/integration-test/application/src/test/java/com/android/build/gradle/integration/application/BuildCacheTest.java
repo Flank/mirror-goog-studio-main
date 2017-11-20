@@ -27,6 +27,7 @@ import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.pipeline.SubStream;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.StringOption;
+import com.android.builder.model.Version;
 import com.android.utils.FileUtils;
 import com.google.common.truth.Truth;
 import java.io.File;
@@ -56,14 +57,15 @@ public class BuildCacheTest {
 
     @Test
     public void testBuildCacheEnabled() throws Exception {
-        File buildCacheDir = new File(project.getTestDir(), "build-cache");
-        FileUtils.deletePath(buildCacheDir);
+        File sharedBuildCacheDir = new File(project.getTestDir(), "build-cache");
+        File privateBuildCacheDir =
+                new File(sharedBuildCacheDir, Version.ANDROID_GRADLE_PLUGIN_VERSION);
 
         GradleTaskExecutor executor =
                 project.executor()
                         .withUseDexArchive(false)
                         .with(BooleanOption.ENABLE_BUILD_CACHE, true)
-                        .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.getAbsolutePath());
+                        .with(StringOption.BUILD_CACHE_DIR, sharedBuildCacheDir.getAbsolutePath());
         executor.run("clean", "assembleDebug");
 
         File preDexDir =
@@ -71,7 +73,7 @@ public class BuildCacheTest {
         TransformOutputContent preDexContent = new TransformOutputContent(preDexDir);
 
         List<File> cachedEntryDirs =
-                Arrays.stream(verifyNotNull(buildCacheDir.listFiles()))
+                Arrays.stream(verifyNotNull(privateBuildCacheDir.listFiles()))
                         .filter(File::isDirectory) // Remove the lock files
                         .filter(f -> !containsAapt(f)) // Remove aapt2 cache
                         .collect(Collectors.toList());
@@ -104,7 +106,7 @@ public class BuildCacheTest {
         executor.run("clean", "assembleDebug");
 
         cachedEntryDirs =
-                Arrays.stream(verifyNotNull(buildCacheDir.listFiles()))
+                Arrays.stream(verifyNotNull(privateBuildCacheDir.listFiles()))
                         .filter(File::isDirectory) // Remove the lock files
                         .filter(f -> !containsAapt(f)) // Remove aapt2 cache
                         .collect(Collectors.toList());
@@ -120,7 +122,8 @@ public class BuildCacheTest {
         assertThat(projectDexFile).isNewerThan(projectTimestamp);
 
         executor.run("cleanBuildCache");
-        assertThat(buildCacheDir).doesNotExist();
+        assertThat(sharedBuildCacheDir).exists();
+        assertThat(privateBuildCacheDir).doesNotExist();
     }
 
     @Test
@@ -131,15 +134,18 @@ public class BuildCacheTest {
                         + "dependencies {\n"
                         + "    compile \"com.android.support:support-v13:${rootProject.supportLibVersion}\"\n"
                         + "}\n");
-        File buildCacheDir = new File(project.getTestDir(), "build-cache");
-        FileUtils.deletePath(buildCacheDir);
+
+        File sharedBuildCacheDir = new File(project.getTestDir(), "build-cache");
+        File privateBuildCacheDir =
+                new File(sharedBuildCacheDir, Version.ANDROID_GRADLE_PLUGIN_VERSION);
 
         project.executor()
                 .with(BooleanOption.ENABLE_BUILD_CACHE, false)
-                .with(StringOption.BUILD_CACHE_DIR, buildCacheDir.getAbsolutePath())
+                .with(StringOption.BUILD_CACHE_DIR, sharedBuildCacheDir.getAbsolutePath())
                 .run("clean", "assembleDebug");
 
-        assertThat(buildCacheDir).doesNotExist();
+        assertThat(sharedBuildCacheDir).doesNotExist();
+        assertThat(privateBuildCacheDir).doesNotExist();
     }
 
     private static boolean containsAapt(File dir) {

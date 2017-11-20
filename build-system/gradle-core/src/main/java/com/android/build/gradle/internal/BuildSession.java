@@ -35,13 +35,23 @@ interface BuildSession {
     void initialize(@NonNull Gradle gradle);
 
     /**
-     * Registers an action to be executed at the end of the current build.
+     * Executes the given action immediately, if it has not yet been executed.
      *
-     * <p>The actions are executed in the order that they are registered.
+     * <p>If an action with the same group and name has already been executed in the current build,
+     * this method simply ignores the request.
+     */
+    void executeOnce(
+            @NonNull String actionGroup, @NonNull String actionName, @NonNull Runnable action);
+
+    /**
+     * Registers the given action to be executed at the end of the current build, if it has not yet
+     * been registered.
      *
      * <p>If an action with the same group and name has already been registered in the current
-     * build, this method simply ignores the request. The registered action takes effect in the
-     * current build only, it will not be carried over into the next build.
+     * build, this method simply ignores the request.
+     *
+     * <p>The actions are executed in the order that they are registered. Registration takes effect
+     * in the current build only, it will not be carried over into the next build.
      *
      * <p>REQUIREMENT: The registered action should be small and exception-free; it should not
      * modify objects that may still be in use (e.g., by some unfinished worker threads).

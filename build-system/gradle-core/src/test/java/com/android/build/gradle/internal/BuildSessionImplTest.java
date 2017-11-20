@@ -29,20 +29,20 @@ import java.lang.reflect.Proxy;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.gradle.BuildListener;
+import org.gradle.BuildResult;
 import org.gradle.api.invocation.Gradle;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 /** Test cases for {@link BuildSessionImpl}. */
+@SuppressWarnings("FieldCanBeLocal")
 public class BuildSessionImplTest {
 
-    // NOTE: These fake plugin versions must be different from the actual plugin versions which may
-    // currently be used by running integration tests
+    // Note: Since the tested class uses a global object (BuildSession), we need to use fake plugin
+    // versions to avoid potential conflicts with integration tests which could be running in
+    // parallel.
     @NonNull private final String fakePluginVersion = "1.2.3";
-
-    @SuppressWarnings("FieldCanBeLocal")
-    @NonNull
-    private final String fakePluginVersion2 = "a.b.c";
+    @NonNull private final String fakePluginVersion2 = "a.b.c";
 
     @Test
     public void testCreateBuildSessionSingleton() throws Exception {
@@ -86,10 +86,68 @@ public class BuildSessionImplTest {
         assertThat(proxyToSingleton).isNotSameAs(singleton);
 
         Object delegateInvocationHandler = Proxy.getInvocationHandler(proxyToSingleton);
+        //noinspection JavaReflectionMemberAccess
         Method getDelegateMethod = delegateInvocationHandler.getClass().getMethod("getDelegate");
         getDelegateMethod.setAccessible(true);
         Object anotherSameSingleton = getDelegateMethod.invoke(delegateInvocationHandler);
         assertThat(anotherSameSingleton).isSameAs(singleton);
+    }
+
+    @Test
+    public void testExecuteOnce() {
+        // Create the BuildSessionImpl singleton object
+        BuildSession singleton = BuildSessionImpl.createBuildSessionSingleton(fakePluginVersion);
+
+        // Simulate starting a build
+        Gradle gradle = mock(Gradle.class);
+        singleton.initialize(gradle);
+        ArgumentCaptor<BuildListener> captor = ArgumentCaptor.forClass(BuildListener.class);
+        verify(gradle).addBuildListener(captor.capture());
+        BuildListener buildListener = captor.getValue();
+
+        // Execute an action immediately
+        AtomicInteger counter = new AtomicInteger(0);
+        Runnable increaseCounter = counter::incrementAndGet;
+        singleton.executeOnce(
+                BuildSessionImplTest.class.getName(), "increaseCounter", increaseCounter);
+        assertThat(counter.get()).isEqualTo(1);
+
+        // Execute the same action but with the same action name, it should not be executed
+        singleton.executeOnce(
+                BuildSessionImplTest.class.getName(), "increaseCounter", increaseCounter);
+        assertThat(counter.get()).isEqualTo(1);
+
+        // Execute the same action but with a different action name, it should be executed
+        singleton.executeOnce(
+                BuildSessionImplTest.class.getName(), "alsoIncreaseCounter", increaseCounter);
+        assertThat(counter.get()).isEqualTo(2);
+
+        // Execute a different action but with the same action name, it should not be executed
+        singleton.executeOnce(
+                BuildSessionImplTest.class.getName(),
+                "increaseCounter",
+                () -> counter.getAndAdd(4));
+        assertThat(counter.get()).isEqualTo(2);
+
+        // Execute a different action with a different action name, it should be executed
+        singleton.executeOnce(
+                BuildSessionImplTest.class.getName(),
+                "increaseCounterBy4",
+                () -> counter.getAndAdd(8));
+        assertThat(counter.get()).isEqualTo(10);
+
+        // Let the build finish
+        buildListener.buildFinished(new BuildResult(null, null));
+        assertThat(counter.get()).isEqualTo(10);
+
+        // Check that the same action and action name can be executed again in the next build (i.e.,
+        // the builds should be independent)
+        singleton.initialize(gradle);
+        singleton.executeOnce(
+                BuildSessionImplTest.class.getName(), "increaseCounter", increaseCounter);
+        assertThat(counter.get()).isEqualTo(11);
+        buildListener.buildFinished(new BuildResult(null, null));
+        assertThat(counter.get()).isEqualTo(11);
     }
 
     @Test
@@ -104,32 +162,51 @@ public class BuildSessionImplTest {
         verify(gradle).addBuildListener(captor.capture());
         BuildListener buildListener = captor.getValue();
 
-        // Register the actions to be executed when the build is finished, they should not be
-        // executed yet
+        // Register an action to be executed at the end of the build, it should be executed later
         AtomicInteger counter = new AtomicInteger(0);
         Runnable increaseCounter = counter::incrementAndGet;
         singleton.executeOnceWhenBuildFinished(
                 BuildSessionImplTest.class.getName(), "increaseCounter", increaseCounter);
+        assertThat(counter.get()).isEqualTo(0);
+
+        // Register the same action but with the same action name, it should not be executed later
+        singleton.executeOnceWhenBuildFinished(
+                BuildSessionImplTest.class.getName(), "increaseCounter", increaseCounter);
+        assertThat(counter.get()).isEqualTo(0);
+
+        // Register the same action but with a different action name, it should be executed later
         singleton.executeOnceWhenBuildFinished(
                 BuildSessionImplTest.class.getName(), "alsoIncreaseCounter", increaseCounter);
+        assertThat(counter.get()).isEqualTo(0);
+
+        // Register a different action but with the same action name, it should not be executed
+        // later
         singleton.executeOnceWhenBuildFinished(
                 BuildSessionImplTest.class.getName(),
                 "increaseCounter",
                 () -> counter.getAndAdd(4));
+        assertThat(counter.get()).isEqualTo(0);
+
+        // Register a different action with a different action name, it should be executed later
         singleton.executeOnceWhenBuildFinished(
                 BuildSessionImplTest.class.getName(),
                 "increaseCounterBy4",
                 () -> counter.getAndAdd(8));
+        assertThat(counter.get()).isEqualTo(0);
 
         // Let the build finish, now the actions should be executed
-        buildListener.buildFinished(null);
+        buildListener.buildFinished(new BuildResult(null, null));
         assertThat(counter.get()).isEqualTo(10);
 
-        // Check that the actions will not be re-executed in the next build (they are executed only
-        // in the build that they are registered fpr)
+        // Check that the same action and action name can be executed again in the next build, and
+        // the actions registered in the previous build are not re-executed in the next build (i.e.,
+        // the builds should be independent)
         singleton.initialize(gradle);
-        buildListener.buildFinished(null);
+        singleton.executeOnceWhenBuildFinished(
+                BuildSessionImplTest.class.getName(), "increaseCounter", increaseCounter);
         assertThat(counter.get()).isEqualTo(10);
+        buildListener.buildFinished(new BuildResult(null, null));
+        assertThat(counter.get()).isEqualTo(11);
     }
 
     @Test
@@ -155,7 +232,7 @@ public class BuildSessionImplTest {
 
         // Let the build finish, an exception should be thrown and build state should be corrupted
         try {
-            buildListener.buildFinished(null);
+            buildListener.buildFinished(new BuildResult(null, null));
             fail("Expected RuntimeException");
         } catch (RuntimeException e) {
             assertThat(e).hasMessage("Some error");
@@ -163,6 +240,6 @@ public class BuildSessionImplTest {
 
         // Check that the next build ignores this corrupted state
         singleton.initialize(gradle);
-        buildListener.buildFinished(null);
+        buildListener.buildFinished(new BuildResult(null, null));
     }
 }
