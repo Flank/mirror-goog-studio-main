@@ -383,6 +383,24 @@ public class DesugarIncrementalTransformHelperTest {
                 .containsExactly(sndJar, trdJar);
     }
 
+    @Test
+    public void test_incrementalDeletedNonInitialized() throws IOException, InterruptedException {
+        Path fstJar = tmpDir.getRoot().toPath().resolve("input1.jar");
+
+        TransformInput transformFst =
+                TransformTestHelper.singleJarBuilder(fstJar.toFile())
+                        .setStatus(Status.REMOVED)
+                        .build();
+
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(transformFst)
+                        .setIncremental(true)
+                        .build();
+        assertThat(helper.getAdditionalPaths(invocation, WaitableExecutor.useDirectExecutor()))
+                .isEmpty();
+    }
+
     private void initializeGraph(@NonNull Path input) throws IOException, InterruptedException {
         TestInputsGenerator.pathWithClasses(
                 input,

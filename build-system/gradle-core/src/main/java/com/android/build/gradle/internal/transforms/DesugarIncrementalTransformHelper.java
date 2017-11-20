@@ -130,14 +130,14 @@ class DesugarIncrementalTransformHelper {
                     Iterables.concat(input.getDirectoryInputs(), input.getJarInputs())) {
                 executor.execute(
                         () -> {
+                            Path toProcess = qualifiedContent.getFile().toPath();
                             try {
-                                data.addAll(analyze(qualifiedContent.getFile().toPath()));
+                                if (Files.exists(toProcess)) {
+                                    data.addAll(analyze(toProcess));
+                                }
                                 return null;
                             } catch (Throwable t) {
-                                logger.error(
-                                        t,
-                                        "error processing %s",
-                                        qualifiedContent.getFile().toPath());
+                                logger.error(t, "error processing %s", toProcess);
                                 throw t;
                             }
                         });
