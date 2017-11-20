@@ -17,14 +17,12 @@
 package com.android.build.gradle.tasks;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.CombinedInput;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidVariantTask;
 import java.io.File;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
@@ -96,12 +94,5 @@ public class CheckTestedAppObfuscation extends AndroidVariantTask {
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.APK_MAPPING);
         }
-    }
-
-    // Workaround for https://issuetracker.google.com/67418335
-    @Input
-    @NonNull
-    public String getCombinedInput() {
-        return new CombinedInput().add("dummyOutput", getDummyOutput()).toString();
     }
 }

@@ -18,7 +18,6 @@ package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.CombinedInput;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import java.io.File;
@@ -677,15 +676,5 @@ public class LintOptions implements com.android.builder.model.LintOptions, Seria
         for (String id : ids) {
             informational(id);
         }
-    }
-
-    // Workaround for https://issuetracker.google.com/67418335
-    @Input
-    @NonNull
-    public String getCombinedInput() {
-        return new CombinedInput()
-                .add("htmlOutput", getHtmlOutput())
-                .add("xmlOutput", getXmlOutput())
-                .toString();
     }
 }
