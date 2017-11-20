@@ -182,6 +182,8 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "\n"
                         + "\t\t//noinspection AndroidLintSdCardPath\n"
                         + "\t\tString string4 = \"/sdcard/mypath9\";\n"
+                        + "\t\t/** @noinspection SdCardPath*/\n"
+                        + "\t\tString string5 = \"/sdcard/mypath10\";\n"
                         + "\n"
                         + "\t\treturn string;\n"
                         + "\t}\n"
@@ -361,6 +363,21 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "0 errors, 1 warnings\n");
     }
 
+    public void testSuppressFileAnnotation() {
+        //noinspection all // Sample code
+        lint().files(
+                kotlin(""
+                        + "@file:Suppress(\"unused\", \"SdCardPath\")\n"
+                        + "package test.pkg\n"
+                        + "\n"
+                        + "class MyTest {\n"
+                        + "    val s: String = \"/sdcard/mydir\"\n"
+                        + "}\n"),
+                gradle(""))
+                .run()
+                .expectClean();
+    }
+
     public void testGenericsInSignatures() {
         //noinspection all // Sample code
         lint().files(
@@ -382,6 +399,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         "0 errors, 1 warnings\n");
     }
 
+    // We've recently removed the large file limit (look for PersistentFSConstants)
     public void testLargeFiles() {
         int max = 2600 * 1024;
         StringBuilder large = new StringBuilder(max + 100); // default is 2500
@@ -401,11 +419,15 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                 .allowSystemErrors(true)
                 .allowCompilationErrors()
                 .run()
+                /* We've recently removed the large file limit (look for PersistentFSConstants
+                   references)
                 .expect("src/test/pkg/VeryLarge.java: Error: Source file too large for lint to " +
                         "process (2600KB); the current max size is 2560000KB. You can increase " +
                         "the limit by setting this system property: " +
                         "idea.max.intellisense.filesize=4096 (or even higher) [LintError]\n" +
                         "1 errors, 0 warnings\n");
+                        */
+                .expectClean();
 
         // Bump up the file limit and make sure it no longer complains!
         String prev = System.getProperty("idea.max.intellisense.filesize");

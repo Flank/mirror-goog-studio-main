@@ -2866,7 +2866,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(1),
-                kotlin("", "" +
+                kotlin("" +
                         "package test.pkg\n" +
                         "\n" +
                         "import android.os.Bundle\n" +
@@ -4677,6 +4677,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
     }
 
     public void testKotlinPropertySyntax() {
+        //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(1),
                 kotlin("package test.pkg\n" +
@@ -4695,8 +4696,130 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         "2 errors, 0 warnings\n");
     }
 
+    // This is still broken! It works in the IDE, but from the command line, the resolve()
+    // method returns the wrong method! Try to reproduce in KotlinUAST.
+    public void ignore_test69534659() {
+        // Regression test for issue 69534659
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(15),
+                kotlin("package test.pkg\n" +
+                        "\n" +
+                        "import android.view.View\n" +
+                        "\n" +
+                        "class Foo {\n" +
+                        "    var <T : View> Iterable<T>.visibility: Int\n" +
+                        "    set(value) = forEach { it.visibility = value }\n" +
+                        "    get() = throw RuntimeException(\"Not supported\")\n" +
+                        "\n" +
+                        "}\n" +
+                        "\n" +
+                        "abstract class MyIterable : Iterable<String> {\n" +
+                        "    fun test() {\n" +
+                        "        forEach { println(it[0]) }\n" +
+                        "    }\n" +
+                        "}"))
+                .run()
+                .expectClean();
+    }
+
+    public void testCastsToSelf() {
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(15),
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import java.util.List;\n" +
+                        "import java.util.function.Function;\n" +
+                        "import java.util.stream.Collectors;\n" +
+                        "\n" +
+                        "public class Used {\n" +
+                        "    List<Object> test(List<String> list) {\n" +
+                        "        return list.stream().map((Function<String, Object>) s -> \n" +
+                        "                fromNullable(s)).collect(Collectors.toList());\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    void tes2t(List<String> list) {\n" +
+                        "        list.stream().map(new Function<String, Object>() {\n" +
+                        "            @Override\n" +
+                        "            public Object apply(String s) {\n" +
+                        "                return fromNullable(s);\n" +
+                        "            }\n" +
+                        "        });\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    private static String fromNullable(String o) {\n" +
+                        "        return o;\n" +
+                        "    }\n" +
+                        "}\n"))
+                .run()
+                .expect("src/test/pkg/Used.java:9: Error: Call requires API level 24 (current min is 15): java.util.Collection#stream [NewApi]\n" +
+                        "        return list.stream().map((Function<String, Object>) s -> \n" +
+                        "                    ~~~~~~\n" +
+                        "src/test/pkg/Used.java:9: Error: Call requires API level 24 (current min is 15): java.util.stream.Stream#map [NewApi]\n" +
+                        "        return list.stream().map((Function<String, Object>) s -> \n" +
+                        "                             ~~~\n" +
+                        "src/test/pkg/Used.java:9: Error: Cast to Function requires API level 24 (current min is 15) [NewApi]\n" +
+                        "        return list.stream().map((Function<String, Object>) s -> \n" +
+                        "                                 ^\n" +
+                        "src/test/pkg/Used.java:10: Error: Call requires API level 24 (current min is 15): java.util.stream.Collectors#toList [NewApi]\n" +
+                        "                fromNullable(s)).collect(Collectors.toList());\n" +
+                        "                                                    ~~~~~~\n" +
+                        "src/test/pkg/Used.java:10: Error: Call requires API level 24 (current min is 15): java.util.stream.Stream#collect [NewApi]\n" +
+                        "                fromNullable(s)).collect(Collectors.toList());\n" +
+                        "                                 ~~~~~~~\n" +
+                        "src/test/pkg/Used.java:10: Error: Cast to Collector requires API level 24 (current min is 15) [NewApi]\n" +
+                        "                fromNullable(s)).collect(Collectors.toList());\n" +
+                        "                                         ~~~~~~~~~~~~~~~~~~~\n" +
+                        "src/test/pkg/Used.java:14: Error: Call requires API level 24 (current min is 15): java.util.Collection#stream [NewApi]\n" +
+                        "        list.stream().map(new Function<String, Object>() {\n" +
+                        "             ~~~~~~\n" +
+                        "src/test/pkg/Used.java:14: Error: Call requires API level 24 (current min is 15): java.util.stream.Stream#map [NewApi]\n" +
+                        "        list.stream().map(new Function<String, Object>() {\n" +
+                        "                      ~~~\n" +
+                        "8 errors, 0 warnings");
+    }
+
+    public void testInstanceOf() {
+        // 69736645: "NewApi" not detected in instanceof
+        lint().files(
+                manifest().minSdk(15),
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.security.keystore.KeyPermanentlyInvalidatedException;\n" +
+                        "\n" +
+                        "/** @noinspection ConstantConditions*/ public class ApiTest {\n" +
+                        "    public static void test(Throwable throwable) {\n" +
+                        "        if (throwable instanceof KeyPermanentlyInvalidatedException) {\n" +
+                        "            return;\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "}\n"),
+                kotlin("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.security.keystore.KeyPermanentlyInvalidatedException\n" +
+                        "\n" +
+                        "fun test(throwable: Throwable) {\n" +
+                        "    if (throwable is KeyPermanentlyInvalidatedException) {\n" +
+                        "        return\n" +
+                        "    }\n" +
+                        "}\n"))
+                .run()
+                .expect("src/test/pkg/ApiTest.java:7: Error: Class requires API level 23 (current min is 15): android.security.keystore.KeyPermanentlyInvalidatedException [NewApi]\n" +
+                        "        if (throwable instanceof KeyPermanentlyInvalidatedException) {\n" +
+                        "                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "src/test/pkg/test.kt:6: Error: Class requires API level 23 (current min is 15): android.security.keystore.KeyPermanentlyInvalidatedException [NewApi]\n" +
+                        "    if (throwable is KeyPermanentlyInvalidatedException) {\n" +
+                        "                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "2 errors, 0 warnings");
+    }
+
     public void testLazyProperties() {
         // Regression test for https://issuetracker.google.com/65728903
+        //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(1),
                 kotlin("" +

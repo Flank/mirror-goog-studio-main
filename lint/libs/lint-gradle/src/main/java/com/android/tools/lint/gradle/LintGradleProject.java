@@ -408,16 +408,28 @@ public class LintGradleProject extends Project {
         public List<File> getJavaClassFolders() {
             if (javaClassFolders == null) {
                 javaClassFolders = new ArrayList<>(1);
-                File outputClassFolder = mVariant.getMainArtifact().getClassesFolder();
+                AndroidArtifact mainArtifact = mVariant.getMainArtifact();
+                File outputClassFolder = mainArtifact.getClassesFolder();
                 if (outputClassFolder.exists()) {
                     javaClassFolders.add(outputClassFolder);
+                    for (File file : mainArtifact.getAdditionalClassesFolders()) {
+                        if (file.isDirectory()) {
+                            javaClassFolders.add(file);
+                        }
+                    }
                 } else if (isLibrary()) {
                     // For libraries we build the release variant instead
                     for (Variant variant : mProject.getVariants()) {
                         if (variant != mVariant) {
-                            outputClassFolder = variant.getMainArtifact().getClassesFolder();
+                            mainArtifact = variant.getMainArtifact();
+                            outputClassFolder = mainArtifact.getClassesFolder();
                             if (outputClassFolder.exists()) {
                                 javaClassFolders.add(outputClassFolder);
+                                for (File file : mainArtifact.getAdditionalClassesFolders()) {
+                                    if (file.isDirectory()) {
+                                        javaClassFolders.add(file);
+                                    }
+                                }
                                 break;
                             }
                         }

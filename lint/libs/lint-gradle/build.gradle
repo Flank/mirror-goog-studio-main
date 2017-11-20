@@ -30,6 +30,7 @@ dependencies {
     testCompile libs.truth
     testCompile libs.mockito_core
     testCompile project(':base:testutils')
+    testCompile project(':base:lint-tests')
 }
 
 sourceSets {

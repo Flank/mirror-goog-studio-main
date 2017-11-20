@@ -16,11 +16,13 @@
 
 package com.android.tools.lint.annotations;
 
+import static com.android.SdkConstants.DOT_KT;
 import static java.io.File.pathSeparator;
 import static java.io.File.pathSeparatorChar;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.android.tools.lint.KotlinLintAnalyzerFacade;
 import com.android.tools.lint.LintCoreApplicationEnvironment;
 import com.android.tools.lint.LintCoreProjectEnvironment;
 import com.android.utils.SdkUtils;
@@ -32,19 +34,19 @@ import com.google.common.io.Files;
 import com.intellij.mock.MockProject;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
-import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiClassOwner;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * The extract annotations driver is a command line interface to extracting annotations
- * from a source tree. It's similar to the gradle
- * {@link com.android.build.gradle.tasks.ExtractAnnotations} task,
+ * from a source tree. It's similar to the gradle ExtractAnnotations task,
  * but usable from the command line and outside Gradle, for example
  * to extract annotations from the Android framework itself (which is not built with
  * Gradle). It also allows other options only interesting for extracting
@@ -234,11 +236,24 @@ public class ExtractAnnotationsDriver {
         List<File> sourceRoots = findSourceRoots(sources);
         List<File> joined = Lists.newArrayList(sourceRoots);
         joined.addAll(classpath);
+
         projectEnvironment.registerPaths(joined);
 
         MockProject project = projectEnvironment.getProject();
-        List<PsiJavaFile> units = Extractor.createUnitsInDirectories(project, sources);
+        List<File> paths = projectEnvironment.getPaths();
 
+        List<File> allSourceFiles = Extractor.gatherSources(sources);
+        List<? extends PsiClassOwner> units = Extractor.createUnitsForFiles(project,
+                allSourceFiles);
+
+        List<File> ktFiles = new ArrayList<>();
+        for (File file : allSourceFiles) {
+            if (file.getPath().endsWith(DOT_KT)) {
+                ktFiles.add(file);
+            }
+        }
+
+        KotlinLintAnalyzerFacade.analyze(ktFiles, paths, project);
         extractor.extractFromProjectSource(units);
 
         if (mergePaths != null) {
@@ -281,7 +296,7 @@ public class ExtractAnnotationsDriver {
             }
 
             String path = sourceFile.getPath();
-            if (!(path.endsWith(SdkConstants.DOT_JAVA) || path.endsWith(SdkConstants.DOT_KT))) {
+            if (!(path.endsWith(SdkConstants.DOT_JAVA) || path.endsWith(DOT_KT))) {
                 continue;
             }
 

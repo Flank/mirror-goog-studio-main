@@ -23,10 +23,12 @@ import com.android.SdkConstants.DOT_CLASS
 import com.android.SdkConstants.DOT_JAR
 import com.android.SdkConstants.DOT_JAVA
 import com.android.SdkConstants.DOT_KT
+import com.android.SdkConstants.DOT_KTS
 import com.android.SdkConstants.FD_GRADLE_WRAPPER
 import com.android.SdkConstants.FN_GRADLE_WRAPPER_PROPERTIES
 import com.android.SdkConstants.FN_LOCAL_PROPERTIES
 import com.android.SdkConstants.FQCN_SUPPRESS_LINT
+import com.android.SdkConstants.KOTLIN_SUPPRESS
 import com.android.SdkConstants.RES_FOLDER
 import com.android.SdkConstants.SUPPRESS_ALL
 import com.android.SdkConstants.SUPPRESS_LINT
@@ -80,7 +82,11 @@ import com.intellij.psi.PsiLiteral
 import com.intellij.psi.PsiModifierList
 import com.intellij.psi.PsiModifierListOwner
 import org.jetbrains.annotations.Contract
+import org.jetbrains.uast.UAnnotated
+import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
+import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.ULiteralExpression
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.AbstractInsnNode
@@ -1004,12 +1010,37 @@ class LintDriver
         if (detectors != null) {
             val files = project.subset ?: project.gradleBuildScripts
             for (file in files) {
-                val context = Context(this, project, main, file)
-                fireEvent(EventType.SCANNING_FILE, context)
-                for (detector in detectors) {
-                    detector.beforeCheckFile(context)
-                    detector.visitBuildScript(context)
-                    detector.afterCheckFile(context)
+                // Gradle Kotlin Script? Use Java parsing mechanism instead
+                if (file.path.endsWith(DOT_KTS)) {
+                    val context = JavaContext(this, project, main, file)
+                    val uastParser = client.getUastParser(currentProject)
+                    context.uastParser = uastParser
+
+                    uastParser.prepare(listOf(context), emptyList())
+                    client.runReadAction(Runnable {
+                        val uFile = uastParser.parse(context)
+                        if (uFile != null) {
+                            context.setJavaFile(uFile.psi) // needed for getLocation
+                            context.uastFile = uFile
+                            fireEvent(EventType.SCANNING_FILE, context)
+                            for (detector in detectors) {
+                                detector.beforeCheckFile(context)
+                                detector.visitBuildScript(context)
+                                detector.afterCheckFile(context)
+                            }
+                            context.setJavaFile(null)
+                            context.uastFile = null
+                        }
+                    })
+                    uastParser.dispose()
+                } else {
+                    val context = Context(this, project, main, file)
+                    fireEvent(EventType.SCANNING_FILE, context)
+                    for (detector in detectors) {
+                        detector.beforeCheckFile(context)
+                        detector.visitBuildScript(context)
+                        detector.afterCheckFile(context)
+                    }
                 }
             }
         }
@@ -2237,13 +2268,14 @@ class LintDriver
         val checkComments = client.checkForSuppressComments() &&
                 context != null && context.containsCommentSuppress()
         while (currentScope != null) {
-            if (currentScope is PsiModifierListOwner) {
-                if (isSuppressed(issue, currentScope.modifierList)) {
+            if (currentScope is UAnnotated) {
+                if (isSuppressed(issue, currentScope)) {
                     return true
                 }
             }
 
-            if (checkComments && context != null && context.isSuppressedWithComment(currentScope, issue)) {
+            if (checkComments && context != null &&
+                    context.isSuppressedWithComment(currentScope, issue)) {
                 return true
             }
 
@@ -2602,10 +2634,47 @@ class LintDriver
                 val fqcn = annotation.qualifiedName
                 if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT
                         || fqcn == SUPPRESS_WARNINGS_FQCN
+                        || fqcn == KOTLIN_SUPPRESS
                         || fqcn == SUPPRESS_LINT)) { // when missing imports
                     val parameterList = annotation.parameterList
                     for (pair in parameterList.attributes) {
                         if (isSuppressed(issue, pair.value)) {
+                            return true
+                        }
+                    }
+                }
+            }
+
+            return false
+        }
+
+        /**
+         * Returns true if the given AST modifier has a suppress annotation for the
+         * given issue (which can be null to check for the "all" annotation)
+         *
+         * @param issue the issue to be checked
+         *
+         * @param annotated the annotated element
+         *
+         * @return true if the issue or all issues should be suppressed for this
+         *         modifier
+         */
+        @JvmStatic
+        fun isSuppressed(issue: Issue, annotated: UAnnotated): Boolean {
+            val annotations = annotated.annotations;
+            if (annotations.isEmpty()) {
+                return false
+            }
+
+            for (annotation in annotations) {
+                val fqcn = annotation.qualifiedName
+                if (fqcn != null && (fqcn == FQCN_SUPPRESS_LINT
+                        || fqcn == SUPPRESS_WARNINGS_FQCN
+                        || fqcn == KOTLIN_SUPPRESS
+                        || fqcn == SUPPRESS_LINT)) { // when missing imports
+                    val attributeList = annotation.attributeValues
+                    for (attribute in attributeList) {
+                        if (isSuppressedExpression(issue, attribute.expression)) {
                             return true
                         }
                     }
@@ -2645,6 +2714,36 @@ class LintDriver
                 val initializers = value.initializers
                 for (e in initializers) {
                     if (isSuppressed(issue, e)) {
+                        return true
+                    }
+                }
+            }
+
+            return false
+        }
+
+        /**
+         * Returns true if the annotation member value, assumed to be specified on a a S
+         * uppressWarnings or SuppressLint annotation, specifies the given id (or "all").
+         *
+         * @param issue the issue to be checked
+         *
+         * @param value     the member value to check
+         *
+         * @return true if the issue or all issues should be suppressed for this modifier
+         */
+        @JvmStatic
+        fun isSuppressedExpression(issue: Issue, value: UExpression?): Boolean {
+            if (value is ULiteralExpression) {
+                val literalValue = value.value
+                if (literalValue is String) {
+                    if (isSuppressed(issue, literalValue)) {
+                        return true
+                    }
+                }
+            } else if (value is UCallExpression) {
+                for (mmv in value.valueArguments) {
+                    if (isSuppressedExpression(issue, mmv)) {
                         return true
                     }
                 }

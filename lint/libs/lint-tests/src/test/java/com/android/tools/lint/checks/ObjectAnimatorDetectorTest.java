@@ -24,7 +24,7 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
         return new ObjectAnimatorDetector();
     }
 
-    public void test() {
+    public void testBasic() {
         String expected = ""
                 + "src/main/java/test/pkg/AnimatorTest.java:21: Error: The setter for this property does not match the expected signature (public void setProp2(int arg) [ObjectAnimatorBinding]\n"
                 + "        ObjectAnimator.ofInt(myObject, \"prop2\", 0, 1, 2, 5).start();\n"
@@ -475,7 +475,8 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                         + "import android.app.Activity;\n"
                         + "import android.view.View;\n"
                         + "\n"
-                        + "public class TestObjAnimator extends Activity {\n"
+                        + "/** @noinspection ClassNameDiffersFromFileName*/ " +
+                        "  public class TestObjAnimator extends Activity {\n"
                         + "    public void animate(View target) {\n"
                         + "        Keyframe kf0 = Keyframe.ofFloat(0f, 0f);\n"
                         + "        Keyframe kf1 = Keyframe.ofFloat(.5f, 360f);\n"

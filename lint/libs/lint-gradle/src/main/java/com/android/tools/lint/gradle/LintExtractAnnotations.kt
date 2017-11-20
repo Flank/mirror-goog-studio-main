@@ -16,14 +16,18 @@
 
 package com.android.tools.lint.gradle
 
+import com.android.SdkConstants.DOT_KT
+import com.android.tools.lint.KotlinLintAnalyzerFacade
 import com.android.tools.lint.LintCoreApplicationEnvironment
 import com.android.tools.lint.LintCoreProjectEnvironment
 import com.android.tools.lint.annotations.Extractor
 import com.android.tools.lint.gradle.api.ExtractAnnotationRequest
 import com.intellij.openapi.util.Disposer
 import org.gradle.api.logging.LogLevel
+import java.io.File
 import java.io.IOException
 import java.io.UncheckedIOException
+import java.util.ArrayList
 
 @Suppress("unused") // Accessed via reflection
 class LintExtractAnnotations {
@@ -43,6 +47,15 @@ class LintExtractAnnotations {
             projectEnvironment.registerPaths(roots)
             val parsedUnits = Extractor.createUnitsForFiles(projectEnvironment.project,
                     sourceFiles)
+
+            val ktFiles = ArrayList<File>()
+            for (file in sourceFiles) {
+                if (file.path.endsWith(DOT_KT)) {
+                    ktFiles.add(file)
+                }
+            }
+            KotlinLintAnalyzerFacade.analyze(ktFiles, roots, projectEnvironment.project)
+
             val displayInfo = logger.isEnabled(LogLevel.INFO)
             val extractor = Extractor(null, classDir.singleFile, displayInfo, false, false)
 

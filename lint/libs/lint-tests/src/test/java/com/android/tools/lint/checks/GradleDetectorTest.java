@@ -56,6 +56,7 @@ import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -2094,6 +2095,62 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         "-         version: '4.5.3'\n");
     }
 
+    public void testKtsSupport() {
+        lint().files(
+                // https://github.com/gradle/kotlin-dsl/blob/master/samples/hello-android/build.gradle.kts
+                kts("" +
+                        "plugins {\n" +
+                        "    id(\"com.android.application\") version \"2.3.3\"\n" +
+                        "    kotlin(\"android\") version \"1.1.51\"\n" +
+                        "}\n" +
+                        "\n" +
+                        "android {\n" +
+                        "    buildToolsVersion(\"25.0.0\")\n" +
+                        "    compileSdkVersion(23)\n" +
+                        "\n" +
+                        "    defaultConfig {\n" +
+                        "        minSdkVersion(7)\n" +
+                        "        targetSdkVersion(23)\n" +
+                        "\n" +
+                        "        applicationId = \"com.example.kotlingradle\"\n" +
+                        "        versionCode = 1\n" +
+                        "        versionName = \"1.0\"\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    buildTypes {\n" +
+                        "        getByName(\"release\") {\n" +
+                        "            isMinifyEnabled = false\n" +
+                        "            proguardFiles(\"proguard-rules.pro\")\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "dependencies {\n" +
+                        "    compile(\"com.android.support:appcompat-v7:23.4.0\")\n" +
+                        "    compile(\"com.android.support.constraint:constraint-layout:1.0.0-alpha8\")\n" +
+                        "    compile(kotlin(\"stdlib\", \"1.1.51\"))\n" +
+                        "}\n" +
+                        "\n" +
+                        "repositories {\n" +
+                        "    jcenter()\n" +
+                        "}"))
+                .sdkHome(getMockSupportLibraryInstallation())
+                .issues(DEPENDENCY,
+                        MIN_SDK_TOO_LOW)
+                .run()
+                .expect("build.gradle.kts:7: Warning: Old buildToolsVersion 25.0.0; recommended version is 25.0.2 or later [GradleDependency]\n" +
+                        "    buildToolsVersion(\"25.0.0\")\n" +
+                        "                       ~~~~~~\n" +
+                        "build.gradle.kts:29: Warning: A newer version of com.android.support.constraint:constraint-layout than 1.0.0-alpha8 is available: 1.0.3-alpha8 [GradleDependency]\n" +
+                        "    compile(\"com.android.support.constraint:constraint-layout:1.0.0-alpha8\")\n" +
+                        "             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "build.gradle.kts:11: Warning: The value of minSdkVersion is too low. It can be incremented\n" +
+                        "without noticeably reducing the number of supported devices. [MinSdkTooLow]\n" +
+                        "        minSdkVersion(7)\n" +
+                        "                      ~\n" +
+                        "0 errors, 3 warnings");
+    }
+
     // -------------------------------------------------------------------------------------------
     // Test infrastructure below here
     // -------------------------------------------------------------------------------------------
@@ -2151,6 +2208,11 @@ public class GradleDetectorTest extends AbstractCheckTest {
         @Override
         public void visitBuildScript(@NonNull final Context context) {
             try {
+                if (context instanceof JavaContext) {
+                    handleGradleKotlinScript((JavaContext)context);
+                    return;
+                }
+
                 visitQuietly(context);
             } catch (Throwable t) {
                 // ignore
@@ -2338,6 +2400,11 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
         @Override
         protected int getStartOffset(@NonNull Context context, @NonNull Object cookie) {
+            int startOffset = super.getStartOffset(context, cookie);
+            if (startOffset != -1) {
+                return startOffset;
+            }
+
             ASTNode node = (ASTNode) cookie;
             Pair<Integer, Integer> offsets = getOffsets(node, context);
             return offsets.getFirst();
@@ -2345,6 +2412,11 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
         @Override
         protected Location createLocation(@NonNull Context context, @NonNull Object cookie) {
+            Location location = super.createLocation(context, cookie);
+            if (location != null) {
+                return location;
+            }
+
             ASTNode node = (ASTNode) cookie;
             Pair<Integer, Integer> offsets = getOffsets(node, context);
             int fromLine = node.getLineNumber() - 1;

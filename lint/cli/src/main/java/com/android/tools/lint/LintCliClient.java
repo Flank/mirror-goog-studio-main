@@ -18,6 +18,7 @@ package com.android.tools.lint;
 
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_KT;
+import static com.android.SdkConstants.DOT_KTS;
 import static com.android.SdkConstants.FD_TOOLS;
 import static com.android.SdkConstants.FN_SOURCE_PROP;
 import static com.android.manifmerger.MergingReport.MergedManifestKind.MERGED;
@@ -26,7 +27,6 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_ERRORS;
 import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 import static com.android.utils.CharSequences.indexOf;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.annotations.VisibleForTesting;
@@ -81,6 +81,7 @@ import com.google.common.collect.Sets;
 import com.intellij.codeInsight.ExternalAnnotationsManager;
 import com.intellij.mock.MockProject;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.roots.LanguageLevelProjectExtension;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.StandardFileSystems;
@@ -90,6 +91,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiParameter;
+import com.intellij.psi.impl.file.impl.JavaFileManager;
 import com.intellij.util.lang.UrlClassLoader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -107,6 +109,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.xml.parsers.ParserConfigurationException;
+import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCliJavaFileManagerImpl;
+import org.jetbrains.kotlin.cli.jvm.index.JavaRoot;
+import org.jetbrains.kotlin.cli.jvm.index.JvmDependenciesIndexImpl;
+import org.jetbrains.kotlin.cli.jvm.index.SingleJavaFileRootsIndex;
 import org.jetbrains.uast.UCallExpression;
 import org.jetbrains.uast.UExpression;
 import org.w3c.dom.Document;
@@ -495,13 +501,14 @@ public class LintCliClient extends LintClient {
             contents = "";
         }
 
-        if ((file.getPath().endsWith(DOT_JAVA) || file.getPath().endsWith(DOT_KT)) &&
+        String path = file.getPath();
+        if ((path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT) || path.endsWith(DOT_KTS)) &&
                 CharSequences.indexOf(contents, '\r') != -1) {
             // Offsets in these files will be relative to PSI's text offsets (which may
             // have converted line offsets); make sure we use the same offsets.
             // (Can't just do this on Windows; what matters is whether the file contains
             // CRLF's.)
-            VirtualFile vFile = StandardFileSystems.local().findFileByPath(file.getPath());
+            VirtualFile vFile = StandardFileSystems.local().findFileByPath(path);
             if (vFile != null) {
                 com.intellij.openapi.project.Project project = getIdeaProject();
                 if (project != null) {
@@ -968,7 +975,8 @@ public class LintCliClient extends LintClient {
         LintCoreProjectEnvironment projectEnvironment = LintCoreProjectEnvironment.create(
                 parentDisposable, appEnv);
         this.projectEnvironment = projectEnvironment;
-        ideaProject = projectEnvironment.getProject();
+        MockProject mockProject = projectEnvironment.getProject();
+        ideaProject = mockProject;
 
         // knownProject only lists root projects, not dependencies
         Set<Project> allProjects = Sets.newIdentityHashSet();
@@ -1022,6 +1030,22 @@ public class LintCliClient extends LintClient {
                 languageLevelProjectExtension.setLanguageLevel(maxLevel);
             }
         }
+
+        KotlinCliJavaFileManagerImpl manager =
+                (KotlinCliJavaFileManagerImpl) ServiceManager.getService(mockProject, JavaFileManager.class);
+        List<JavaRoot> roots = new ArrayList<>();
+        for (File file : files) {
+            if (file.isDirectory()) {
+                VirtualFile vFile = StandardFileSystems.local().findFileByPath(file.getPath());
+                if (vFile != null) {
+                    roots.add(new JavaRoot(vFile, JavaRoot.RootType.SOURCE, null));
+                }
+            }
+        }
+
+        JvmDependenciesIndexImpl index = new JvmDependenciesIndexImpl(roots);
+        manager.initialize(index, Collections.emptyList(),
+                new SingleJavaFileRootsIndex(Collections.emptyList()), false);
 
         super.initializeProjects(knownProjects);
     }
@@ -1238,8 +1262,6 @@ public class LintCliClient extends LintClient {
         return super.getMergedManifest(project);
     }
 
-    private boolean initializedKotlin;
-
     protected class LintCliUastParser extends DefaultUastParser {
 
         private final Project project;
@@ -1284,26 +1306,27 @@ public class LintCliClient extends LintClient {
             // If we're using Kotlin, ensure we initialize the bridge
             List<File> kotlinFiles = new ArrayList<>();
             for (JavaContext context : contexts) {
-                if (context.file.getPath().endsWith(SdkConstants.DOT_KT)) {
+                String path = context.file.getPath();
+                if (path.endsWith(DOT_KT) || path.endsWith(DOT_KTS)) {
                     kotlinFiles.add(context.file);
                 }
             }
             for (JavaContext context : testContexts) {
-                if (context.file.getPath().endsWith(SdkConstants.DOT_KT)) {
+                String path = context.file.getPath();
+                if (path.endsWith(DOT_KT) || path.endsWith(DOT_KTS)) {
                     kotlinFiles.add(context.file);
                 }
             }
-            if (!kotlinFiles.isEmpty()) {
-                MockProject project = (MockProject) ideaProject;
-                if (project != null && projectEnvironment != null) {
-                    if (!initializedKotlin) {
-                        initializedKotlin = true;
-                        KotlinLintAnalyzerFacade.registerProjectComponents(project);
-                    }
 
-                    List<File> paths = projectEnvironment.getPaths();
-                    KotlinLintAnalyzerFacade.analyze(kotlinFiles, paths, project);
-                }
+            // We unconditionally invoke the KotlinLintAnalyzerFacade, even
+            // if kotlinFiles is empty -- without this, the machinery in
+            // the project (such as the CliLightClassGenerationSupport and
+            // the CoreFileManager) will throw exceptions at runtime even
+            // for plain class lookup
+            MockProject project = (MockProject) ideaProject;
+            if (project != null && projectEnvironment != null) {
+                List<File> paths = projectEnvironment.getPaths();
+                KotlinLintAnalyzerFacade.analyze(kotlinFiles, paths, project);
             }
 
             boolean ok = super.prepare(contexts, testContexts);

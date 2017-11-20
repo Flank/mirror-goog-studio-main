@@ -16,6 +16,8 @@
 
 package com.android.tools.lint.checks
 
+import com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP
+import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.detector.api.Detector
 
 class RangeDetectorTest : AbstractCheckTest() {
@@ -747,6 +749,7 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
         // Regression test for https://issuetracker.google.com/66892728
 
         lint().files(
+                // TODO: Test @IntRange to make sure UAST doesn't replace it with @kotlin.IntRange
                 kotlin("" +
                         "package test.pkg\n" +
                         "\n" +
@@ -764,6 +767,38 @@ src/test/pkg/ConstructorTest.java:14: Error: Value must be ≥ 5 (was 3) [Range]
                 SUPPORT_ANNOTATIONS_JAR)
                 .run()
                 .expectClean()
+    }
+
+    fun testRangesFromKotlin() {
+        lint().files(
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.support.annotation.FloatRange\n" +
+                        "import android.support.annotation.IntRange\n" +
+                        "\n" +
+                        "fun check(@FloatRange(from = 0.0, to = 25.0) radius: Float) {\n" +
+                        "}\n" +
+                        "\n" +
+                        "fun check(@IntRange(from = 0, to = 25) radius: Int) {\n" +
+                        "}\n" +
+                        "\n" +
+                        "fun wrong() {\n" +
+                        "    check(10) // OK\n" +
+                        "    check(10.0f) // OK\n" +
+                        "    check(100) // ERROR\n" +
+                        "    check(100.0f) // ERROR\n" +
+                        "}"),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect("src/test/pkg/test.kt:15: Error: Value must be ≤ 25 (was 100) [Range]\n" +
+                        "    check(100) // ERROR\n" +
+                        "          ~~~\n" +
+                        "src/test/pkg/test.kt:16: Error: Value must be ≤ 25.0 (was 100.0) [Range]\n" +
+                        "    check(100.0f) // ERROR\n" +
+                        "          ~~~~~~\n" +
+                        "2 errors, 0 warnings")
     }
 
     fun test69366129() {

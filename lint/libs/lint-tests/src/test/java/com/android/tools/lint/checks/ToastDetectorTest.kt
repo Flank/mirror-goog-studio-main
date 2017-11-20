@@ -19,9 +19,7 @@ package com.android.tools.lint.checks
 import com.android.tools.lint.detector.api.Detector
 
 class ToastDetectorTest : AbstractCheckTest() {
-    override fun getDetector(): Detector {
-        return ToastDetector()
-    }
+    override fun getDetector(): Detector = ToastDetector()
 
     fun testJava() {
         val expected = """
@@ -118,10 +116,7 @@ class ToastDetectorTest : AbstractCheckTest() {
         src/test/pkg/ToastTest.kt:40: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
                 Toast.makeText(context, "foo", Toast.LENGTH_LONG)
                 ~~~~~~~~~~~~~~
-        src/test/pkg/ToastTest.kt:50: Warning: Toast created but not shown: did you forget to call show() ? [ShowToast]
-                val toast = Toast.makeText(this, "MyToast", Toast.LENGTH_LONG)
-                            ~~~~~~~~~~~~~~
-        0 errors, 5 warnings
+        0 errors, 4 warnings
         """
 
         lint().files(

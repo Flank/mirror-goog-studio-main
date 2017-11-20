@@ -55,9 +55,11 @@ import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintFix;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
+import com.android.tools.lint.detector.api.Position;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.tools.lint.detector.api.Severity;
@@ -80,6 +82,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import org.jetbrains.uast.UBlockExpression;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UFile;
+import org.jetbrains.uast.UIdentifier;
+import org.jetbrains.uast.ULambdaExpression;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 
 /**
  * Checks Gradle files for potential errors
@@ -389,6 +399,78 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     @Override
     public void visitBuildScript(@NonNull Context context) {
+    }
+
+    protected void handleGradleKotlinScript(@NonNull JavaContext context) {
+        UFile uastFile = context.getUastFile();
+        if (uastFile == null) {
+            return;
+        }
+        uastFile.accept(new AbstractUastVisitor() {
+            @Override
+            public boolean visitCallExpression(UCallExpression node) {
+                List<UExpression> valueArguments = node.getValueArguments();
+                // BUG: This returns <ERROR_FUNCTION> !
+                // String methodName = node.getMethodName();
+                // but we have a workaround
+                String propertyName = getKtsCallName(node);
+                if (propertyName != null && valueArguments.size() == 1) {
+                    UExpression arg = valueArguments.get(0);
+                    if (!(arg instanceof ULambdaExpression)) {
+                        // Some sort of DSL property?
+                        // Parent should be block, its parent lambda, its parent a call -
+                        // the name is the parent
+                        UCallExpression parentCall = getSurroundingNamedBlock(node);
+                        if (parentCall != null) {
+                            UCallExpression parentParentCall = getSurroundingNamedBlock(parentCall);
+                            String parentName = getKtsCallName(parentCall);
+                            String parentParentName = parentParentCall != null ?
+                              getKtsCallName(parentParentCall) : null;
+                            if (parentName != null) {
+                                if (isInterestingBlock(parentName, parentParentName)) {
+                                    String value = arg.asSourceString();
+                                    checkDslPropertyAssignment(context, propertyName, value,
+                                      parentName, parentParentName, arg, node);
+                                } else {
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return super.visitCallExpression(node);
+            }
+        });
+    }
+
+    @Nullable
+    private static UCallExpression getSurroundingNamedBlock(@NonNull UElement node) {
+        UElement parent = node.getUastParent();
+        if (parent instanceof UBlockExpression) {
+            UElement parentParent = parent.getUastParent();
+            if (parentParent instanceof ULambdaExpression) {
+                UElement parentCall = parentParent.getUastParent();
+                if (parentCall instanceof UCallExpression) {
+                    return (UCallExpression) parentCall;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private static String getKtsCallName(@NonNull UCallExpression call) {
+        // Normally can just call call.getMethodName but due to a (KTS?) bug this
+        // returns <ERROR_FUNCTION>; luckily however the method identifiers are set
+        // correctly
+        UIdentifier identifier = call.getMethodIdentifier();
+        if (identifier != null) {
+            return identifier.getName();
+        }
+
+        return null;
     }
 
     @SuppressWarnings("UnusedDeclaration")
@@ -2140,11 +2222,22 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
 
     @SuppressWarnings({"MethodMayBeStatic", "UnusedParameters"})
     protected int getStartOffset(@NonNull Context context, @NonNull Object cookie) {
+        if (context instanceof JavaContext) {
+            // Kotlin script
+            Position start = ((JavaContext) context).getLocation((UElement) cookie).getStart();
+            if (start != null) {
+                return start.getOffset();
+            }
+        }
         return -1;
     }
 
     @SuppressWarnings({"MethodMayBeStatic", "UnusedParameters"})
     protected Location createLocation(@NonNull Context context, @NonNull Object cookie) {
+        if (context instanceof JavaContext) {
+            // Kotlin script
+            return ((JavaContext)context).getLocation((UElement)cookie);
+        }
         return null;
     }
 

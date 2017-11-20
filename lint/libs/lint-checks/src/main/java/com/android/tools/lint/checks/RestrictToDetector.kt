@@ -98,7 +98,13 @@ class RestrictToDetector : AbstractAnnotationDetector(), Detector.UastScanner {
         val pkg = evaluator.getPackage(element) ?: return false
 
         val qualifiedName = pkg.qualifiedName
-        return qualifiedName.startsWith("com.google.firebase") || qualifiedName.startsWith("com.google.android.gms")
+        if (!qualifiedName.startsWith("com.google.")) {
+            return false
+        }
+
+        return qualifiedName.startsWith("com.google.firebase") ||
+                qualifiedName.startsWith("com.google.android.gms") ||
+                qualifiedName.startsWith("com.google.ads")
     }
 
     private fun isTestContext(

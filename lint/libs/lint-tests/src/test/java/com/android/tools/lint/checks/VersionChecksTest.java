@@ -2139,6 +2139,35 @@ public class VersionChecksTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testKotlinWhenStatement2() {
+        // Regression test for issue 69661204
+        lint().files(
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.os.Build\n" +
+                        "import android.support.annotation.RequiresApi\n" +
+                        "\n" +
+                        "@RequiresApi(21)\n" +
+                        "fun requires21() { }\n" +
+                        "\n" +
+                        "@RequiresApi(23)\n" +
+                        "fun requires23() { }\n" +
+                        "\n" +
+                        "fun requiresNothing() { }\n" +
+                        "\n" +
+                        "fun test() {\n" +
+                        "    when {\n" +
+                        "        Build.VERSION.SDK_INT >= 21 -> requires21()\n" +
+                        "        Build.VERSION.SDK_INT >= 23 -> requires23()\n" +
+                        "        else -> requiresNothing()\n" +
+                        "    }\n" +
+                        "}\n"),
+                mSupportJar)
+                .run()
+                .expectClean();
+    }
+
     public void testKotlinHelper() {
         // Regression test for issue 64550633
         lint().files(

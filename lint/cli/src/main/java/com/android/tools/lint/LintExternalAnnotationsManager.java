@@ -28,6 +28,7 @@ import com.android.tools.lint.detector.api.Project;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.intellij.codeInsight.BaseExternalAnnotationsManager;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.vfs.StandardFileSystems;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileSystem;
@@ -137,7 +138,10 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
 
         roots.addAll(newRoots);
         dropCache(); // TODO: Find out if I need to drop cache for pure additions
-        ((PsiModificationTrackerImpl)myPsiManager.getModificationTracker()).incCounter();
+
+        // TODO
+        //ApplicationManager.getApplication().runWriteAction(
+        //    () -> ((PsiModificationTrackerImpl)myPsiManager.getModificationTracker()).incCounter());
     }
 
     private static void addLibraries(

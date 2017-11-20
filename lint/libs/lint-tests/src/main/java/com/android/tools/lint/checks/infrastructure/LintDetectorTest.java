@@ -416,6 +416,12 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
     }
 
     @NonNull
+    public static TestFile kts(@NonNull @Language("kotlin-script") String source) {
+        //noinspection LanguageMismatch
+        return TestFiles.kotlin("build.gradle.kts", source);
+    }
+
+    @NonNull
     public static TestFile xml(@NonNull String to, @NonNull @Language("XML") String source) {
         return TestFiles.xml(to, source);
     }

@@ -348,6 +348,33 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void ignore_testKotlin2() {
+        // Regression test for issue 63150366, comment #17 - reference in class declaration
+        // Blocked on https://youtrack.jetbrains.com/issue/KT-21409
+        //
+        //noinspection all // Sample code
+        lint().files(
+                mLayout1,
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "open class Parent(val number: Int) {\n" +
+                        "}\n" +
+                        "\n" +
+                        "class Five : Parent(R.layout.main)"),
+                java("src/test/pkg/R.java", "" +
+                        "package test.pkg;\n" +
+                        "public class R {\n" +
+                        "    public static class layout {\n" +
+                        "        public static final int main = 1;\n" +
+                        "    }\n" +
+                        "}"),
+                manifest().minSdk(14))
+                .issues(UnusedResourceDetector.ISSUE) // Not id's
+                .run()
+                .expectClean();
+    }
+
     /* Not sure about this -- why would we ignore drawable XML?
     public void testIgnoreXmlDrawable() throws Exception {
         assertEquals(
