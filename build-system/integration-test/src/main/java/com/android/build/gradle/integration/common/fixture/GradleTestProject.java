@@ -1120,7 +1120,11 @@ public final class GradleTestProject implements TestRule {
 
     /** Fluent method to run a build. */
     public RunGradleTasks executor() {
-        return new RunGradleTasks(this, getProjectConnection());
+        return new RunGradleTasks(this, getProjectConnection(), false);
+    }
+
+    public RunGradleTasks nonRetryingExecutor() {
+        return new RunGradleTasks(this, getProjectConnection(), true);
     }
 
     /** Fluent method to get the model. */

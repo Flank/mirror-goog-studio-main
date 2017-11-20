@@ -60,7 +60,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
     RunGradleTasks(
             @NonNull GradleTestProject gradleTestProject,
-            @NonNull ProjectConnection projectConnection) {
+            @NonNull ProjectConnection projectConnection,
+            boolean disableRetryLogic) {
         super(
                 projectConnection,
                 gradleTestProject::setLastBuildResult,
@@ -68,7 +69,8 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 gradleTestProject.getBuildFile().toPath(),
                 gradleTestProject.getBenchmarkRecorder(),
                 gradleTestProject.getProfileDirectory(),
-                gradleTestProject.getHeapSize());
+                gradleTestProject.getHeapSize(),
+                disableRetryLogic);
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
     }
 

@@ -230,7 +230,7 @@ public class DataBindingIncrementalTest {
         File mainActivity = new File(project.getTestDir(), ACTIVITY_MAIN_XML);
         File activity3 = new File(mainActivity.getParentFile(), "activity3.xml");
         Files.copy(mainActivity, activity3);
-        GradleBuildResult result = project.executor().run("assembleDebug");
+        GradleBuildResult result = project.nonRetryingExecutor().run("assembleDebug");
 
         File activity3DataBindingInfo =
                 project.getIntermediateFile("data-binding-info", "debug", "activity3-layout.xml");
@@ -249,7 +249,7 @@ public class DataBindingIncrementalTest {
         // Make sure that the file was actually modified.
         assertThat(activity3.lastModified()).isNotEqualTo(activity2LayoutLastModified);
 
-        result = project.executor().run("assembleDebug");
+        result = project.nonRetryingExecutor().run("assembleDebug");
 
 
         assertThat(activity3DataBindingInfo).exists();

@@ -71,6 +71,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
     @NonNull private LoggingLevel loggingLevel = LoggingLevel.INFO;
     private boolean offline = true;
     private boolean localAndroidSdkHome = false;
+    private boolean disableRetryLogic;
 
     /** @see #RETRY_COUNT */
     private int failedAttempts = 0;
@@ -84,6 +85,26 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
             @Nullable BenchmarkRecorder benchmarkRecorder,
             @NonNull Path profilesDirectory,
             @Nullable String heapSize) {
+        this(
+                projectConnection,
+                lastBuildResultConsumer,
+                projectDirectory,
+                buildDotGradleFile,
+                benchmarkRecorder,
+                profilesDirectory,
+                heapSize,
+                false);
+    }
+
+    BaseGradleExecutor(
+            @NonNull ProjectConnection projectConnection,
+            @NonNull Consumer<GradleBuildResult> lastBuildResultConsumer,
+            @NonNull Path projectDirectory,
+            @NonNull Path buildDotGradleFile,
+            @Nullable BenchmarkRecorder benchmarkRecorder,
+            @NonNull Path profilesDirectory,
+            @Nullable String heapSize,
+            boolean disableRetryLogic) {
         this.lastBuildResultConsumer = lastBuildResultConsumer;
         this.projectDirectory = projectDirectory;
         this.benchmarkRecorder = benchmarkRecorder;
@@ -97,6 +118,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
         this.profilesDirectory = profilesDirectory;
         this.heapSize = heapSize;
         with(StringOption.BUILD_CACHE_DIR, getBuildCacheDir().getAbsolutePath());
+        this.disableRetryLogic = disableRetryLogic;
     }
 
     /** Return the default build cache location for a project. */
@@ -308,7 +330,7 @@ public abstract class BaseGradleExecutor<T extends BaseGradleExecutor> {
 
     protected RetryAction chooseRetryAction(GradleConnectionException failure) throws IOException {
         Throwable cause = failure.getCause();
-        if (cause != null) {
+        if (cause != null && !disableRetryLogic) {
             if (cause.getClass()
                     .getName()
                     .equals("org.gradle.launcher.daemon.client.DaemonDisappearedException")) {
