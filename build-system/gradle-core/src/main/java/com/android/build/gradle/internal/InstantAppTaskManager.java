@@ -21,7 +21,6 @@ import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -64,8 +63,7 @@ public class InstantAppTaskManager extends TaskManager {
     }
 
     @Override
-    public void createTasksForVariantScope(
-            @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
+    public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
         // Create the bundling task.
         recorder.record(
                 GradleBuildProfileSpan.ExecutionType.INSTANTAPP_TASK_MANAGER_CREATE_PACKAGING_TASK,
@@ -73,32 +71,28 @@ public class InstantAppTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> {
                     File bundleDir = variantScope.getApkLocation();
-                    AndroidTask<BundleInstantApp> bundleTask =
-                            getAndroidTasks()
-                                    .create(
-                                            tasks,
-                                            new BundleInstantApp.ConfigAction(
-                                                    variantScope, bundleDir));
-                    variantScope.getAssembleTask().dependsOn(tasks, bundleTask);
+                    BundleInstantApp bundleTask =
+                            taskFactory.create(
+                                    new BundleInstantApp.ConfigAction(variantScope, bundleDir));
+                    variantScope.getAssembleTask().dependsOn(bundleTask);
 
                     variantScope.addTaskOutput(
                             TaskOutputHolder.TaskOutputType.INSTANTAPP_BUNDLE,
                             bundleDir,
                             bundleTask.getName());
 
-                    getAndroidTasks()
-                            .create(tasks, new InstantAppSideLoadTask.ConfigAction(variantScope));
+                    taskFactory.create(new InstantAppSideLoadTask.ConfigAction(variantScope));
                 });
 
         // FIXME: Stop creating a dummy task just to make the IDE sync shut up.
-        tasks.create(variantScope.getTaskName("dummy"));
+        taskFactory.create(variantScope.getTaskName("dummy"));
     }
 
     @Override
-    public void createTasksBeforeEvaluate(@NonNull TaskFactory tasks) {
-        super.createTasksBeforeEvaluate(tasks);
+    public void createTasksBeforeEvaluate() {
+        super.createTasksBeforeEvaluate();
 
-        getAndroidTasks().create(tasks, new InstantAppProvisionTask.ConfigAction(globalScope));
+        taskFactory.create(new InstantAppProvisionTask.ConfigAction(globalScope));
     }
 
     @NonNull
@@ -108,12 +102,12 @@ public class InstantAppTaskManager extends TaskManager {
     }
 
     @Override
-    protected void postJavacCreation(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+    protected void postJavacCreation(@NonNull VariantScope scope) {
         // do nothing.
     }
 
     @Override
-    public void createGlobalLintTask(@NonNull TaskFactory tasks) {
+    public void createGlobalLintTask() {
         // do nothing.
     }
 

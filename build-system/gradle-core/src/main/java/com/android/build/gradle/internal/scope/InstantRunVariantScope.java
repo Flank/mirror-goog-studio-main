@@ -78,9 +78,11 @@ public interface InstantRunVariantScope {
     @NonNull
     ImmutableList<File> getInstantRunBootClasspath();
 
-    List<AndroidTask<? extends DefaultTask>> getColdSwapBuildTasks();
-    void addColdSwapBuildTask(@NonNull AndroidTask<? extends DefaultTask> task);
+    List<DefaultTask> getColdSwapBuildTasks();
 
-    AndroidTask<PackageApplication> getPackageApplicationTask();
-    void setPackageApplicationTask(AndroidTask<PackageApplication> packageApplicationTask);
+    void addColdSwapBuildTask(@NonNull DefaultTask task);
+
+    PackageApplication getPackageApplicationTask();
+
+    void setPackageApplicationTask(PackageApplication packageApplicationTask);
 }

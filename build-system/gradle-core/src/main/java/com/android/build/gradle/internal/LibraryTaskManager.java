@@ -35,7 +35,6 @@ import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.pipeline.TransformTask;
-import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType;
@@ -112,8 +111,7 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     @Override
-    public void createTasksForVariantScope(
-            @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
+    public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
         final LibraryVariantData libVariantData =
                 (LibraryVariantData) variantScope.getVariantData();
         final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
@@ -126,39 +124,39 @@ public class LibraryTaskManager extends TaskManager {
         final String projectPath = project.getPath();
         final String variantName = variantScope.getFullVariantName();
 
-        createAnchorTasks(tasks, variantScope);
+        createAnchorTasks(variantScope);
 
         // Create all current streams (dependencies mostly at this point)
-        createDependencyStreams(tasks, variantScope);
+        createDependencyStreams(variantScope);
 
-        createCheckManifestTask(tasks, variantScope);
+        createCheckManifestTask(variantScope);
 
         // Add a task to create the res values
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
                 projectPath,
                 variantName,
-                () -> createGenerateResValuesTask(tasks, variantScope));
+                () -> createGenerateResValuesTask(variantScope));
 
         // Add a task to process the manifest(s)
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
                 projectPath,
                 variantName,
-                () -> createMergeLibManifestsTask(tasks, variantScope));
+                () -> createMergeLibManifestsTask(variantScope));
 
         // Add a task to compile renderscript files.
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
                 projectPath,
                 variantName,
-                () -> createRenderscriptTask(tasks, variantScope));
+                () -> createRenderscriptTask(variantScope));
 
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
                 projectPath,
                 variantName,
-                () -> createMergeResourcesTask(tasks, variantScope));
+                () -> createMergeResourcesTask(variantScope));
 
         // Add a task to merge the assets folders
         recorder.record(
@@ -166,8 +164,8 @@ public class LibraryTaskManager extends TaskManager {
                 projectPath,
                 variantName,
                 () -> {
-                    createMergeAssetsTask(tasks, variantScope);
-                    createLibraryAssetsTask(tasks, variantScope);
+                    createMergeAssetsTask(variantScope);
+                    createLibraryAssetsTask(variantScope);
                 });
 
         // Add a task to create the BuildConfig class
@@ -175,7 +173,7 @@ public class LibraryTaskManager extends TaskManager {
                 ExecutionType.LIB_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
                 projectPath,
                 variantName,
-                () -> createBuildConfigTask(tasks, variantScope));
+                () -> createBuildConfigTask(variantScope));
 
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_PROCESS_RES_TASK,
@@ -185,7 +183,6 @@ public class LibraryTaskManager extends TaskManager {
                     // Add a task to generate resource source files, directing the location
                     // of the r.txt file to be directly in the bundle.
                     createProcessResTask(
-                            tasks,
                             variantScope,
                             new File(
                                     globalScope.getIntermediatesDir(),
@@ -209,25 +206,25 @@ public class LibraryTaskManager extends TaskManager {
                                             .getExtension()
                                             .getAaptOptions()
                                             .getNamespaced())) {
-                        createVerifyLibraryResTask(tasks, variantScope, MergeType.MERGE);
+                        createVerifyLibraryResTask(variantScope, MergeType.MERGE);
                     }
 
                     // process java resources only, the merge is setup after
                     // the task to generate intermediate jars for project to project publishing.
-                    createProcessJavaResTask(tasks, variantScope);
+                    createProcessJavaResTask(variantScope);
                 });
 
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_AIDL_TASK,
                 projectPath,
                 variantName,
-                () -> createAidlTask(tasks, variantScope));
+                () -> createAidlTask(variantScope));
 
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_SHADER_TASK,
                 projectPath,
                 variantName,
-                () -> createShaderTask(tasks, variantScope));
+                () -> createShaderTask(variantScope));
 
         // Add a compile task
         recorder.record(
@@ -237,15 +234,14 @@ public class LibraryTaskManager extends TaskManager {
                 () -> {
                     // create data binding merge task before the javac task so that it can
                     // parse jars before any consumer
-                    createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
+                    createDataBindingMergeArtifactsTaskIfNecessary(variantScope);
 
                     // Add data binding tasks if enabled
-                    createDataBindingTasksIfNecessary(tasks, variantScope, MergeType.PACKAGE);
+                    createDataBindingTasksIfNecessary(variantScope, MergeType.PACKAGE);
 
-                    AndroidTask<? extends JavaCompile> javacTask =
-                            createJavacTask(tasks, variantScope);
+                    JavaCompile javacTask = createJavacTask(variantScope);
                     addJavacClassesStream(variantScope);
-                    TaskManager.setJavaCompilerTask(javacTask, tasks, variantScope);
+                    TaskManager.setJavaCompilerTask(javacTask, variantScope);
                 });
 
         // Add dependencies on NDK tasks if NDK plugin is applied.
@@ -255,7 +251,7 @@ public class LibraryTaskManager extends TaskManager {
                     ExecutionType.LIB_TASK_MANAGER_CREATE_NDK_TASK,
                     projectPath,
                     variantName,
-                    () -> createNdkTasks(tasks, variantScope));
+                    () -> createNdkTasks(variantScope));
         }
         variantScope.setNdkBuildable(getNdkBuildable(variantScope.getVariantData()));
 
@@ -266,12 +262,12 @@ public class LibraryTaskManager extends TaskManager {
                 variantName,
                 () -> {
                     createExternalNativeBuildJsonGenerators(variantScope);
-                    createExternalNativeBuildTasks(tasks, variantScope);
+                    createExternalNativeBuildTasks(variantScope);
                 });
 
         // TODO not sure what to do about this...
-        createMergeJniLibFoldersTasks(tasks, variantScope);
-        createStripNativeLibraryTask(tasks, variantScope);
+        createMergeJniLibFoldersTasks(variantScope);
+        createStripNativeLibraryTask(taskFactory, variantScope);
 
         recorder.record(
                 ExecutionType.LIB_TASK_MANAGER_CREATE_PACKAGING_TASK,
@@ -280,12 +276,9 @@ public class LibraryTaskManager extends TaskManager {
                 () -> {
                     File rsFolder =
                             variantScope.getIntermediateDir(TaskOutputType.RENDERSCRIPT_HEADERS);
-                    AndroidTask<Sync> task =
-                            getAndroidTasks()
-                                    .create(
-                                            tasks,
-                                            new PackageRenderscriptConfigAction(
-                                                    variantScope, rsFolder));
+                    Sync task =
+                            taskFactory.create(
+                                    new PackageRenderscriptConfigAction(variantScope, rsFolder));
 
                     // publish the renderscript intermediate files
                     variantScope.addTaskOutput(
@@ -293,19 +286,18 @@ public class LibraryTaskManager extends TaskManager {
                 });
 
         // merge consumer proguard files from different build types and flavors
-        AndroidTask<MergeFileTask> mergeProguardFilesTask =
+        MergeFileTask mergeProguardFilesTask =
                 recorder.record(
                         ExecutionType.LIB_TASK_MANAGER_CREATE_MERGE_PROGUARD_FILE_TASK,
                         projectPath,
                         variantName,
-                        () -> createMergeFileTask(tasks, variantScope));
+                        () -> createMergeFileTask(variantScope));
 
         // Some versions of retrolambda remove the actions from the extract annotations task.
         // TODO: remove this hack once tests are moved to a version that doesn't do this
         // b/37564303
         if (projectOptions.get(BooleanOption.ENABLE_EXTRACT_ANNOTATIONS)) {
-            getAndroidTasks()
-                    .create(tasks, new ExtractAnnotations.ConfigAction(extension, variantScope));
+            taskFactory.create(new ExtractAnnotations.ConfigAction(extension, variantScope));
         }
 
         final boolean instrumented =
@@ -323,7 +315,7 @@ public class LibraryTaskManager extends TaskManager {
 
                         // ----- Code Coverage first -----
                         if (instrumented) {
-                            createJacocoTransform(tasks, variantScope);
+                            createJacocoTransform(variantScope);
                         }
 
                         // ----- External Transforms -----
@@ -354,19 +346,17 @@ public class LibraryTaskManager extends TaskManager {
 
                             List<Object> deps = customTransformsDependencies.get(i);
                             transformManager
-                                    .addTransform(tasks, variantScope, transform)
+                                    .addTransform(taskFactory, variantScope, transform)
                                     .ifPresent(
                                             t -> {
                                                 if (!deps.isEmpty()) {
-                                                    t.dependsOn(tasks, deps);
+                                                    t.dependsOn(deps);
                                                 }
 
                                                 // if the task is a no-op then we make assemble task
                                                 // depend on it.
                                                 if (transform.getScopes().isEmpty()) {
-                                                    variantScope
-                                                            .getAssembleTask()
-                                                            .dependsOn(tasks, t);
+                                                    variantScope.getAssembleTask().dependsOn(t);
                                                 }
                                             });
                         }
@@ -389,9 +379,9 @@ public class LibraryTaskManager extends TaskManager {
                                         extension.getPackageBuildConfig());
                         excludeDataBindingClassesIfNecessary(variantScope, intermediateTransform);
 
-                        Optional<AndroidTask<TransformTask>> intermediateTransformTask =
+                        Optional<TransformTask> intermediateTransformTask =
                                 transformManager.addTransform(
-                                        tasks, variantScope, intermediateTransform);
+                                        taskFactory, variantScope, intermediateTransform);
 
                         intermediateTransformTask.ifPresent(
                                 t -> {
@@ -412,9 +402,8 @@ public class LibraryTaskManager extends TaskManager {
                         // be executed.  The artifact is useful for other Gradle users who needs the
                         // 'jar' artifact as API dependency.
                         File mainFullJar = new File(jarOutputFolder, FN_INTERMEDIATE_FULL_JAR);
-                        AndroidTask<ZipMergingTask> zipMerger =
-                                androidTasks.create(
-                                        tasks,
+                        ZipMergingTask zipMerger =
+                                taskFactory.create(
                                         new ZipMergingTask.ConfigAction(variantScope, mainFullJar));
 
                         variantScope.addTaskOutput(
@@ -430,9 +419,9 @@ public class LibraryTaskManager extends TaskManager {
                                         "intermediateJniLibs",
                                         intermediateJniLibsFolder,
                                         TransformManager.PROJECT_ONLY);
-                        Optional<AndroidTask<TransformTask>> task =
+                        Optional<TransformTask> task =
                                 transformManager.addTransform(
-                                        tasks, variantScope, intermediateJniTransform);
+                                        taskFactory, variantScope, intermediateJniTransform);
                         task.ifPresent(
                                 t -> {
                                     // publish the jni folder as intermediate
@@ -447,11 +436,11 @@ public class LibraryTaskManager extends TaskManager {
 
                         // first merge the resources. This takes the PROJECT and LOCAL_DEPS
                         // and merges them together.
-                        createMergeJavaResTransform(tasks, variantScope);
+                        createMergeJavaResTransform(variantScope);
 
                         // ----- Minify next -----
-                        maybeCreateJavaCodeShrinkerTransform(tasks, variantScope);
-                        maybeCreateResourcesShrinkerTransform(tasks, variantScope);
+                        maybeCreateJavaCodeShrinkerTransform(variantScope);
+                        maybeCreateResourcesShrinkerTransform(variantScope);
 
                         // now add a transform that will take all the class/res and package them
                         // into the main and secondary jar files that goes in the AAR.
@@ -477,8 +466,8 @@ public class LibraryTaskManager extends TaskManager {
 
                         excludeDataBindingClassesIfNecessary(variantScope, transform);
 
-                        Optional<AndroidTask<TransformTask>> libraryJarTransformTask =
-                                transformManager.addTransform(tasks, variantScope, transform);
+                        Optional<TransformTask> libraryJarTransformTask =
+                                transformManager.addTransform(taskFactory, variantScope, transform);
                         libraryJarTransformTask.ifPresent(
                                 t -> {
                                     variantScope.addTaskOutput(
@@ -500,8 +489,9 @@ public class LibraryTaskManager extends TaskManager {
                                         "syncJniLibs",
                                         jniLibsFolder,
                                         TransformManager.SCOPE_FULL_LIBRARY_WITH_LOCAL_JARS);
-                        Optional<AndroidTask<TransformTask>> jniPackagingTask =
-                                transformManager.addTransform(tasks, variantScope, jniTransform);
+                        Optional<TransformTask> jniPackagingTask =
+                                transformManager.addTransform(
+                                        taskFactory, variantScope, jniTransform);
                         jniPackagingTask.ifPresent(
                                 t ->
                                         variantScope.addTaskOutput(
@@ -515,11 +505,11 @@ public class LibraryTaskManager extends TaskManager {
                 ExecutionType.LIB_TASK_MANAGER_CREATE_LINT_TASK,
                 projectPath,
                 variantName,
-                () -> createLintTasks(tasks, variantScope));
-        createBundleTask(tasks, variantScope);
+                () -> createLintTasks(variantScope));
+        createBundleTask(variantScope);
     }
 
-    private void createBundleTask(@NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+    private void createBundleTask(@NonNull VariantScope variantScope) {
         LibraryVariantData libVariantData = (LibraryVariantData) variantScope.getVariantData();
         GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
         final AndroidZip bundle =
@@ -603,7 +593,7 @@ public class LibraryTaskManager extends TaskManager {
 
         libVariantData.packageLibTask = bundle;
 
-        variantScope.getAssembleTask().dependsOn(tasks, bundle);
+        variantScope.getAssembleTask().dependsOn(bundle);
 
         // if the variant is the default published, then publish the aar
         // FIXME: only generate the tasks if this is the default published variant?
@@ -629,9 +619,8 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     @Override
-    protected void createDependencyStreams(
-            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
-        super.createDependencyStreams(tasks, variantScope);
+    protected void createDependencyStreams(@NonNull VariantScope variantScope) {
+        super.createDependencyStreams(variantScope);
 
         // add the same jars twice in the same stream as the EXTERNAL_LIB in the task manager
         // so that filtering of duplicates in proguard can work.
@@ -657,16 +646,13 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     @NonNull
-    private AndroidTask<MergeFileTask> createMergeFileTask(
-            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+    private MergeFileTask createMergeFileTask(@NonNull VariantScope variantScope) {
         File outputFile = variantScope.getConsumerProguardFile();
 
-        final AndroidTask<MergeFileTask> task =
-                getAndroidTasks()
-                        .create(
-                                tasks,
-                                new MergeConsumerProguardFilesConfigAction(
-                                        project, variantScope, outputFile));
+        final MergeFileTask task =
+                taskFactory.create(
+                        new MergeConsumerProguardFilesConfigAction(
+                                project, variantScope, outputFile));
 
         variantScope.addTaskOutput(
                 TaskOutputType.CONSUMER_PROGUARD_FILE, outputFile, task.getName());
@@ -674,8 +660,7 @@ public class LibraryTaskManager extends TaskManager {
         return task;
     }
 
-    private void createMergeResourcesTask(
-            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+    private void createMergeResourcesTask(@NonNull VariantScope variantScope) {
         ImmutableSet<MergeResources.Flag> flags;
         if (Boolean.TRUE.equals(
                 variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
@@ -686,9 +671,8 @@ public class LibraryTaskManager extends TaskManager {
 
         // Create a merge task to only merge the resources from this library and not
         // the dependencies. This is what gets packaged in the aar.
-        AndroidTask<MergeResources> mergeResourceTask =
+        MergeResources mergeResourceTask =
                 basicCreateMergeResourcesTask(
-                        tasks,
                         variantScope,
                         MergeType.PACKAGE,
                         variantScope.getIntermediateDir(TaskOutputType.PACKAGED_RES),
@@ -700,18 +684,17 @@ public class LibraryTaskManager extends TaskManager {
         // Add a task to merge the resource folders, including the libraries, in order to
         // generate the R.txt file with all the symbols, including the ones from
         // the dependencies.
-        createMergeResourcesTask(tasks, variantScope, false /*processResources*/);
+        createMergeResourcesTask(variantScope, false /*processResources*/);
 
         File publicTxt =
                 new File(variantScope.getIntermediateDir(TaskOutputType.PUBLIC_RES), FN_PUBLIC_TXT);
-        mergeResourceTask.configure(tasks, task -> task.setPublicFile(publicTxt));
+        mergeResourceTask.setPublicFile(publicTxt);
         variantScope.addTaskOutput(
                 TaskOutputType.PUBLIC_RES, publicTxt, mergeResourceTask.getName());
     }
 
     @Override
-    protected void postJavacCreation(
-            @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
+    protected void postJavacCreation(@NonNull VariantScope scope) {
         // create an anchor collection for usage inside the same module (unit tests basically)
         ConfigurableFileCollection fileCollection =
                 scope.createAnchorOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES);
@@ -739,8 +722,7 @@ public class LibraryTaskManager extends TaskManager {
                 });
     }
 
-    public AndroidTask<MergeSourceSetFolders> createLibraryAssetsTask(
-            @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+    public MergeSourceSetFolders createLibraryAssetsTask(@NonNull VariantScope scope) {
         final GradleVariantConfiguration variantConfiguration = scope.getVariantConfiguration();
         File outputDir =
                 FileUtils.join(
@@ -748,15 +730,14 @@ public class LibraryTaskManager extends TaskManager {
                         "packagedAssets",
                         variantConfiguration.getDirName());
 
-        AndroidTask<MergeSourceSetFolders> mergeAssetsTask =
-                androidTasks.create(
-                        tasks,
+        MergeSourceSetFolders mergeAssetsTask =
+                taskFactory.create(
                         new MergeSourceSetFolders.LibraryAssetConfigAction(scope, outputDir));
 
         // register the output
         scope.addTaskOutput(TaskOutputType.LIBRARY_ASSETS, outputDir, mergeAssetsTask.getName());
 
-        mergeAssetsTask.dependsOn(tasks, scope.getAssetGenTask());
+        mergeAssetsTask.dependsOn(scope.getAssetGenTask());
         scope.setMergeAssetsTask(mergeAssetsTask);
 
         return mergeAssetsTask;
@@ -784,11 +765,10 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     public void createVerifyLibraryResTask(
-            @NonNull TaskFactory tasks, @NonNull VariantScope scope, @NonNull MergeType mergeType) {
-        AndroidTask<VerifyLibraryResourcesTask> verifyLibraryResources =
-                androidTasks.create(
-                        tasks, new VerifyLibraryResourcesTask.ConfigAction(scope, mergeType));
+            @NonNull VariantScope scope, @NonNull MergeType mergeType) {
+        VerifyLibraryResourcesTask verifyLibraryResources =
+                taskFactory.create(new VerifyLibraryResourcesTask.ConfigAction(scope, mergeType));
 
-        scope.getAssembleTask().dependsOn(tasks, verifyLibraryResources);
+        scope.getAssembleTask().dependsOn(verifyLibraryResources);
     }
 }

@@ -31,8 +31,6 @@ import com.android.build.api.transform.QualifiedContent.ScopeType;
 import com.android.build.api.transform.Transform;
 import com.android.build.gradle.internal.InternalScope;
 import com.android.build.gradle.internal.TaskFactory;
-import com.android.build.gradle.internal.scope.AndroidTask;
-import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.errors.EvalIssueReporter.Type;
@@ -94,8 +92,6 @@ public class TransformManager extends FilterableStreamCollection {
 
     @NonNull
     private final Project project;
-    @NonNull
-    private final AndroidTaskRegistry taskRegistry;
     @NonNull private final EvalIssueReporter issueReporter;
     @NonNull private final Logger logger;
     @NonNull
@@ -118,19 +114,12 @@ public class TransformManager extends FilterableStreamCollection {
 
     public TransformManager(
             @NonNull Project project,
-            @NonNull AndroidTaskRegistry taskRegistry,
             @NonNull EvalIssueReporter issueReporter,
             @NonNull Recorder recorder) {
         this.project = project;
-        this.taskRegistry = taskRegistry;
         this.issueReporter = issueReporter;
         this.recorder = recorder;
         this.logger = Logging.getLogger(TransformManager.class);
-    }
-
-    @NonNull
-    public AndroidTaskRegistry getTaskRegistry() {
-        return taskRegistry;
     }
 
     @Override
@@ -159,7 +148,7 @@ public class TransformManager extends FilterableStreamCollection {
      *     create it
      */
     @NonNull
-    public <T extends Transform> Optional<AndroidTask<TransformTask>> addTransform(
+    public <T extends Transform> Optional<TransformTask> addTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull TransformVariantScope scope,
             @NonNull T transform) {
@@ -184,7 +173,7 @@ public class TransformManager extends FilterableStreamCollection {
      *     transform task if it was able to create it
      */
     @NonNull
-    public <T extends Transform> Optional<AndroidTask<TransformTask>> addTransform(
+    public <T extends Transform> Optional<TransformTask> addTransform(
             @NonNull TaskFactory taskFactory,
             @NonNull TransformVariantScope scope,
             @NonNull T transform,
@@ -243,9 +232,8 @@ public class TransformManager extends FilterableStreamCollection {
         transforms.add(transform);
 
         // create the task...
-        AndroidTask<TransformTask> task =
-                taskRegistry.create(
-                        taskFactory,
+        TransformTask task =
+                taskFactory.create(
                         new TransformTask.ConfigAction<>(
                                 scope.getFullVariantName(),
                                 taskName,

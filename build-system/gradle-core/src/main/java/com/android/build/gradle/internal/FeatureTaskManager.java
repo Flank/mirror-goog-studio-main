@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.feature.BundleFeatureClasses;
 import com.android.build.gradle.internal.incremental.BuildInfoWriterTask;
 import com.android.build.gradle.internal.pipeline.TransformManager;
 import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask;
-import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TaskOutputHolder;
@@ -88,8 +87,7 @@ public class FeatureTaskManager extends TaskManager {
     }
 
     @Override
-    public void createTasksForVariantScope(
-            @NonNull final TaskFactory tasks, @NonNull final VariantScope variantScope) {
+    public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
         // Ensure the compile SDK is at least 26 (O).
         final AndroidVersion androidVersion =
                 AndroidTargetHash.getVersionFromHash(
@@ -137,11 +135,11 @@ public class FeatureTaskManager extends TaskManager {
             }
         }
 
-        createAnchorTasks(tasks, variantScope);
-        createCheckManifestTask(tasks, variantScope);
+        createAnchorTasks(variantScope);
+        createCheckManifestTask(variantScope);
 
         // Create all current streams (dependencies mostly at this point)
-        createDependencyStreams(tasks, variantScope);
+        createDependencyStreams(variantScope);
 
         if (variantScope.isBaseFeature()) {
             // Base feature specific tasks.
@@ -150,8 +148,8 @@ public class FeatureTaskManager extends TaskManager {
                     project.getPath(),
                     variantScope.getFullVariantName(),
                     () -> {
-                        createFeatureApplicationIdWriterTask(tasks, variantScope);
-                        createFeatureIdsWriterTask(tasks, variantScope);
+                        createFeatureApplicationIdWriterTask(variantScope);
+                        createFeatureIdsWriterTask(variantScope);
                     });
         } else {
             // Non-base feature specific task.
@@ -159,52 +157,52 @@ public class FeatureTaskManager extends TaskManager {
                     ExecutionType.FEATURE_TASK_MANAGER_CREATE_NON_BASE_TASKS,
                     project.getPath(),
                     variantScope.getFullVariantName(),
-                    () -> createFeatureDeclarationTasks(tasks, variantScope));
+                    () -> createFeatureDeclarationTasks(variantScope));
         }
 
-        createFeatureTransitiveDepsTask(tasks, variantScope);
+        createFeatureTransitiveDepsTask(variantScope);
 
         // Add a task to process the manifest(s)
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_MERGE_MANIFEST_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createMergeApkManifestsTask(tasks, variantScope));
+                () -> createMergeApkManifestsTask(variantScope));
 
         // Add a task to create the res values
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_GENERATE_RES_VALUES_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createGenerateResValuesTask(tasks, variantScope));
+                () -> createGenerateResValuesTask(variantScope));
 
         // Add a task to compile renderscript files.
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_CREATE_RENDERSCRIPT_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createRenderscriptTask(tasks, variantScope));
+                () -> createRenderscriptTask(variantScope));
 
         // Add a task to merge the resource folders
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_MERGE_RESOURCES_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createMergeResourcesTask(tasks, variantScope, true));
+                () -> createMergeResourcesTask(variantScope, true));
 
         // Add a task to merge the asset folders
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_MERGE_ASSETS_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createMergeAssetsTask(tasks, variantScope));
+                () -> createMergeAssetsTask(variantScope));
 
         // Add a task to create the BuildConfig class
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_BUILD_CONFIG_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createBuildConfigTask(tasks, variantScope));
+                () -> createBuildConfigTask(variantScope));
 
         // Add a task to process the Android Resources and generate source files
         recorder.record(
@@ -213,35 +211,34 @@ public class FeatureTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> {
                     createProcessResTask(
-                            tasks,
                             variantScope,
-                                    FileUtils.join(
-                                            globalScope.getIntermediatesDir(),
-                                            "symbols",
-                                            variantScope
-                                                    .getVariantData()
-                                                    .getVariantConfiguration()
-                                                    .getDirName()),
+                            FileUtils.join(
+                                    globalScope.getIntermediatesDir(),
+                                    "symbols",
+                                    variantScope
+                                            .getVariantData()
+                                            .getVariantConfiguration()
+                                            .getDirName()),
                             variantScope.getProcessResourcePackageOutputDirectory(),
                             TaskOutputHolder.TaskOutputType.FEATURE_RESOURCE_PKG,
                             MergeType.MERGE,
                             variantScope.getGlobalScope().getProjectBaseName());
 
                     // Add a task to process the java resources
-                    createProcessJavaResTask(tasks, variantScope);
+                    createProcessJavaResTask(variantScope);
                 });
 
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_AIDL_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createAidlTask(tasks, variantScope));
+                () -> createAidlTask(variantScope));
 
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_SHADER_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createShaderTask(tasks, variantScope));
+                () -> createShaderTask(variantScope));
 
         // Add NDK tasks
         if (!isComponentModelPlugin()) {
@@ -249,12 +246,12 @@ public class FeatureTaskManager extends TaskManager {
                     ExecutionType.FEATURE_TASK_MANAGER_CREATE_NDK_TASK,
                     project.getPath(),
                     variantScope.getFullVariantName(),
-                    () -> createNdkTasks(tasks, variantScope));
+                    () -> createNdkTasks(variantScope));
         } else {
             if (variantData.compileTask != null) {
                 variantData.compileTask.dependsOn(getNdkBuildable(variantData));
             } else {
-                variantScope.getCompileTask().dependsOn(tasks, getNdkBuildable(variantData));
+                variantScope.getCompileTask().dependsOn(getNdkBuildable(variantData));
             }
         }
         variantScope.setNdkBuildable(getNdkBuildable(variantData));
@@ -266,7 +263,7 @@ public class FeatureTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> {
                     createExternalNativeBuildJsonGenerators(variantScope);
-                    createExternalNativeBuildTasks(tasks, variantScope);
+                    createExternalNativeBuildTasks(variantScope);
                 });
 
         // Add a task to merge the jni libs folders
@@ -274,23 +271,23 @@ public class FeatureTaskManager extends TaskManager {
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_MERGE_JNILIBS_FOLDERS_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createMergeJniLibFoldersTasks(tasks, variantScope));
+                () -> createMergeJniLibFoldersTasks(variantScope));
 
         // Add data binding tasks if enabled
-        createDataBindingTasksIfNecessary(tasks, variantScope, MergeType.MERGE);
+        createDataBindingTasksIfNecessary(variantScope, MergeType.MERGE);
 
         // Add a compile task
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_COMPILE_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> addCompileTask(tasks, variantScope));
+                () -> addCompileTask(variantScope));
 
         recorder.record(
                 ExecutionType.FEATURE_TASK_MANAGER_CREATE_STRIP_NATIVE_LIBRARY_TASK,
                 project.getPath(),
                 variantScope.getFullVariantName(),
-                () -> createStripNativeLibraryTask(tasks, variantScope));
+                () -> createStripNativeLibraryTask(taskFactory, variantScope));
 
         if (variantScope.getOutputScope().getMultiOutputPolicy().equals(MultiOutputPolicy.SPLITS)) {
             if (extension.getBuildToolsRevision().getMajor() < 21) {
@@ -302,7 +299,7 @@ public class FeatureTaskManager extends TaskManager {
                     ExecutionType.FEATURE_TASK_MANAGER_CREATE_SPLIT_TASK,
                     project.getPath(),
                     variantScope.getFullVariantName(),
-                    () -> createSplitTasks(tasks, variantScope));
+                    () -> createSplitTasks(variantScope));
         }
 
         recorder.record(
@@ -311,24 +308,21 @@ public class FeatureTaskManager extends TaskManager {
                 variantScope.getFullVariantName(),
                 () -> {
                     @NonNull
-                    AndroidTask<BuildInfoWriterTask> buildInfoWriterTask =
-                            getAndroidTasks()
-                                    .create(
-                                            tasks,
-                                            new BuildInfoWriterTask.ConfigAction(
-                                                    variantScope, getLogger()));
+                    BuildInfoWriterTask buildInfoWriterTask =
+                            taskFactory.create(
+                                    new BuildInfoWriterTask.ConfigAction(
+                                            variantScope, getLogger()));
 
                     // FIXME: Re-enable when we support instant run with feature splits.
                     //createInstantRunPackagingTasks(tasks, buildInfoWriterTask, variantScope);
-                    createPackagingTask(tasks, variantScope, buildInfoWriterTask);
+                    createPackagingTask(variantScope, buildInfoWriterTask);
                 });
     }
 
     /**
      * Creates feature declaration task. Task will produce artifacts consumed by the base feature.
      */
-    private void createFeatureDeclarationTasks(
-            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+    private void createFeatureDeclarationTasks(@NonNull VariantScope variantScope) {
 
         File featureSplitDeclarationOutputDirectory =
                 FileUtils.join(
@@ -337,9 +331,8 @@ public class FeatureTaskManager extends TaskManager {
                         "declaration",
                         variantScope.getVariantConfiguration().getDirName());
 
-        AndroidTask<FeatureSplitDeclarationWriterTask> featureSplitWriterTaskAndroidTask =
-                androidTasks.create(
-                        tasks,
+        FeatureSplitDeclarationWriterTask featureSplitWriterTaskAndroidTask =
+                taskFactory.create(
                         new FeatureSplitDeclarationWriterTask.ConfigAction(
                                 variantScope, featureSplitDeclarationOutputDirectory));
 
@@ -349,8 +342,7 @@ public class FeatureTaskManager extends TaskManager {
                 featureSplitWriterTaskAndroidTask.getName());
     }
 
-    private void createFeatureApplicationIdWriterTask(
-            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+    private void createFeatureApplicationIdWriterTask(@NonNull VariantScope variantScope) {
 
         File applicationIdOutputDirectory =
                 FileUtils.join(
@@ -359,9 +351,8 @@ public class FeatureTaskManager extends TaskManager {
                         "applicationId",
                         variantScope.getVariantConfiguration().getDirName());
 
-        AndroidTask<ApplicationIdWriterTask> writeTask =
-                androidTasks.create(
-                        tasks,
+        ApplicationIdWriterTask writeTask =
+                taskFactory.create(
                         new ApplicationIdWriterTask.BaseFeatureConfigAction(
                                 variantScope, applicationIdOutputDirectory));
 
@@ -371,8 +362,7 @@ public class FeatureTaskManager extends TaskManager {
                 writeTask.getName());
     }
 
-    private void createFeatureIdsWriterTask(
-            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+    private void createFeatureIdsWriterTask(@NonNull VariantScope variantScope) {
         File featureIdsOutputDirectory =
                 FileUtils.join(
                         globalScope.getIntermediatesDir(),
@@ -380,9 +370,8 @@ public class FeatureTaskManager extends TaskManager {
                         "ids",
                         variantScope.getVariantConfiguration().getDirName());
 
-        AndroidTask<FeatureSplitPackageIdsWriterTask> writeTask =
-                androidTasks.create(
-                        tasks,
+        FeatureSplitPackageIdsWriterTask writeTask =
+                taskFactory.create(
                         new FeatureSplitPackageIdsWriterTask.ConfigAction(
                                 variantScope, featureIdsOutputDirectory));
 
@@ -392,8 +381,7 @@ public class FeatureTaskManager extends TaskManager {
                 writeTask.getName());
     }
 
-    private void createFeatureTransitiveDepsTask(
-            @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+    private void createFeatureTransitiveDepsTask(@NonNull VariantScope scope) {
         File textFile =
                 new File(
                         FileUtils.join(
@@ -403,9 +391,8 @@ public class FeatureTaskManager extends TaskManager {
                                 scope.getVariantConfiguration().getDirName()),
                         "deps.txt");
 
-        AndroidTask<FeatureSplitTransitiveDepsWriterTask> task =
-                androidTasks.create(
-                        tasks,
+        FeatureSplitTransitiveDepsWriterTask task =
+                taskFactory.create(
                         new FeatureSplitTransitiveDepsWriterTask.ConfigAction(scope, textFile));
 
         scope.addTaskOutput(
@@ -415,8 +402,7 @@ public class FeatureTaskManager extends TaskManager {
     /** Creates the merge manifests task. */
     @Override
     @NonNull
-    protected AndroidTask<? extends ManifestProcessorTask> createMergeManifestTask(
-            @NonNull TaskFactory tasks,
+    protected ManifestProcessorTask createMergeManifestTask(
             @NonNull VariantScope variantScope,
             @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
         if (variantScope.getVariantConfiguration().isInstantRunBuild(globalScope)) {
@@ -425,12 +411,11 @@ public class FeatureTaskManager extends TaskManager {
 
         optionalFeatures.add(ManifestMerger2.Invoker.Feature.TARGET_SANDBOX_VERSION);
 
-        AndroidTask<? extends ManifestProcessorTask> mergeManifestsAndroidTask;
+        ManifestProcessorTask mergeManifestsAndroidTask;
         if (variantScope.isBaseFeature()) {
             // Base split. Merge all the dependent libraries and the other splits.
             mergeManifestsAndroidTask =
-                    androidTasks.create(
-                            tasks,
+                    taskFactory.create(
                             new MergeManifests.BaseFeatureConfigAction(
                                     variantScope, optionalFeatures.build()));
         } else {
@@ -438,8 +423,7 @@ public class FeatureTaskManager extends TaskManager {
             optionalFeatures.add(ManifestMerger2.Invoker.Feature.ADD_FEATURE_SPLIT_INFO);
 
             mergeManifestsAndroidTask =
-                    androidTasks.create(
-                            tasks,
+                    taskFactory.create(
                             new MergeManifests.FeatureConfigAction(
                                     variantScope, optionalFeatures.build()));
 
@@ -457,11 +441,11 @@ public class FeatureTaskManager extends TaskManager {
         return mergeManifestsAndroidTask;
     }
 
-    private void addCompileTask(@NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+    private void addCompileTask(@NonNull VariantScope variantScope) {
         // create data binding merge task before the javac task so that it can
         // parse jars before any consumer
-        createDataBindingMergeArtifactsTaskIfNecessary(tasks, variantScope);
-        AndroidTask<? extends JavaCompile> javacTask = createJavacTask(tasks, variantScope);
+        createDataBindingMergeArtifactsTaskIfNecessary(variantScope);
+        JavaCompile javacTask = createJavacTask(variantScope);
         VariantScope.Java8LangSupport java8LangSupport = variantScope.getJava8LangSupportType();
         if (java8LangSupport == VariantScope.Java8LangSupport.INVALID) {
             return;
@@ -488,13 +472,12 @@ public class FeatureTaskManager extends TaskManager {
         }
 
         addJavacClassesStream(variantScope);
-        setJavaCompilerTask(javacTask, tasks, variantScope);
-        createPostCompilationTasks(tasks, variantScope);
+        setJavaCompilerTask(javacTask, variantScope);
+        createPostCompilationTasks(variantScope);
     }
 
     @Override
-    protected void postJavacCreation(
-            @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
+    protected void postJavacCreation(@NonNull VariantScope scope) {
         // Create the classes artifact for use by dependent features.
         File classesJar =
                 new File(
@@ -505,9 +488,8 @@ public class FeatureTaskManager extends TaskManager {
                                 scope.getVariantConfiguration().getDirName(),
                                 "classes.jar"));
 
-        AndroidTask<BundleFeatureClasses> task =
-                androidTasks.create(
-                        tasks, new BundleFeatureClasses.ConfigAction(scope, classesJar));
+        BundleFeatureClasses task =
+                taskFactory.create(new BundleFeatureClasses.ConfigAction(scope, classesJar));
 
         scope.addTaskOutput(
                 TaskOutputHolder.TaskOutputType.FEATURE_CLASSES, classesJar, task.getName());

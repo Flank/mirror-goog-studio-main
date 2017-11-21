@@ -19,13 +19,12 @@ package com.android.build.gradle.internal.res.namespaced
 import com.android.SdkConstants
 import com.android.build.gradle.internal.TaskFactory
 import com.android.build.gradle.internal.aapt.AaptGeneration
-import com.android.build.gradle.internal.scope.AndroidTaskRegistry
+import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.build.gradle.internal.scope.GlobalScope
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.tasks.MergeResources
-import com.android.build.gradle.internal.res.LinkApplicationAndroidResourcesTask
 import com.android.builder.core.VariantType
 import com.android.utils.FileUtils
 import com.google.common.base.Preconditions
@@ -36,10 +35,9 @@ import java.io.File
  * Responsible for the creation of tasks to build namespaced resources.
  */
 class NamespacedResourcesTaskManager(
-        val globalScope: GlobalScope,
-        val androidTasks: AndroidTaskRegistry,
-        val tasks: TaskFactory,
-        val variantScope: VariantScope) {
+        private val globalScope: GlobalScope,
+        private val taskFactory: TaskFactory,
+        private val variantScope: VariantScope) {
 
     /**
      * Creates the tasks for dealing with resources in a namespaced way.
@@ -89,8 +87,7 @@ class NamespacedResourcesTaskManager(
                 variantScope.globalScope.intermediatesDir,
                 "res-r/" + variantScope.variantConfiguration.dirName)
 
-        val task = androidTasks.create(
-                tasks,
+        val task = taskFactory.create(
                 CompileRClassTask.ConfigAction(
                         variantScope.getTaskName("compile", "RClass"),
                         variantScope.getOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_SOURCES),
@@ -107,8 +104,7 @@ class NamespacedResourcesTaskManager(
                 variantScope.globalScope.intermediatesDir,
                 "res-rJar/" + variantScope.variantConfiguration.dirName + "/R.jar")
         val task =
-                androidTasks.create(
-                        tasks,
+                taskFactory.create(
                         JarRClassTask.ConfigAction(
                                 variantScope.getTaskName("jar", "RClass"),
                                 variantScope.getOutput(TaskOutputType.COMPILE_ONLY_R_CLASS_CLASSES),
@@ -123,8 +119,7 @@ class NamespacedResourcesTaskManager(
         val rClassCompiledOutputDir = File(
                 variantScope.globalScope.intermediatesDir,
                 "res-final-r-classes/" + variantScope.variantConfiguration.dirName)
-        val task = androidTasks.create(
-                tasks,
+        val task = taskFactory.create(
                 CompileRClassTask.ConfigAction(
                         variantScope.getTaskName("compile", "FinalRClass"),
                         variantScope.getOutput(TaskOutputType.RUNTIME_R_CLASS_SOURCES),
@@ -143,8 +138,7 @@ class NamespacedResourcesTaskManager(
             useAaptToGenerateLegacyMultidexMainDexProguardRules: Boolean) {
         val runtimeRClassSources = File(globalScope.generatedDir,
                 "source/final-r/" + variantScope.variantConfiguration.dirName)
-        val process = androidTasks.create(
-                tasks,
+        val process = taskFactory.create(
                 LinkApplicationAndroidResourcesTask.NamespacedConfigAction(
                         variantScope,
                         runtimeRClassSources,
@@ -173,8 +167,7 @@ class NamespacedResourcesTaskManager(
             packageOutputType: TaskOutputType?) {
         val runtimeRClassSources = File(globalScope.generatedDir,
                 "source/final-r/" + variantScope.variantConfiguration.dirName)
-        val process = androidTasks.create(
-                tasks,
+        val process = taskFactory.create(
                 ProcessAndroidAppResourcesTask.ConfigAction(
                         variantScope,
                         runtimeRClassSources,
@@ -203,8 +196,7 @@ class NamespacedResourcesTaskManager(
                         SdkConstants.FD_RES,
                         SdkConstants.FD_COMPILED,
                         variantScope.variantConfiguration.dirName)
-        val compile = androidTasks.create(
-                tasks,
+        val compile = taskFactory.create(
                 MergeResources.ConfigAction(
                         variantScope,
                         "compile",
@@ -214,7 +206,7 @@ class NamespacedResourcesTaskManager(
                         true,
                         false,
                         ImmutableSet.of()))
-        compile.dependsOn(tasks, variantScope.resourceGenTask)
+        compile.dependsOn(variantScope.resourceGenTask)
         variantScope.addTaskOutput(
                 TaskOutputHolder.TaskOutputType.RES_COMPILED_FLAT_FILES, compiled, compile.name)
     }
@@ -227,8 +219,7 @@ class NamespacedResourcesTaskManager(
                         "res.apk")
         val compileOnlyRClassSourceDir = File(globalScope.generatedDir,
                 "source/r/" + variantScope.variantConfiguration.dirName)
-        val link = androidTasks.create(
-                tasks,
+        val link = taskFactory.create(
                 LinkLibraryAndroidResourcesTask.ConfigAction(
                         variantScope, compileOnlyRClassSourceDir, resourceStaticLibrary))
         variantScope.addTaskOutput(

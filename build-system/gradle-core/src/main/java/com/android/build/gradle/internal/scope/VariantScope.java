@@ -359,83 +359,85 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getApkLocation();
 
-    AndroidTask<? extends ManifestProcessorTask> getManifestProcessorTask();
+    ManifestProcessorTask getManifestProcessorTask();
 
-    void setManifestProcessorTask(
-            AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask);
+    void setManifestProcessorTask(ManifestProcessorTask manifestProcessorTask);
 
-    AndroidTask<DefaultTask> getAssembleTask();
+    DefaultTask getAssembleTask();
 
-    void setAssembleTask(@NonNull AndroidTask<DefaultTask> assembleTask);
+    void setAssembleTask(@NonNull DefaultTask assembleTask);
 
-    AndroidTask<? extends DefaultTask> getPreBuildTask();
+    DefaultTask getPreBuildTask();
 
-    void setPreBuildTask(AndroidTask<? extends DefaultTask> preBuildTask);
+    void setPreBuildTask(DefaultTask preBuildTask);
 
-    AndroidTask<Task> getSourceGenTask();
+    Task getSourceGenTask();
 
-    void setSourceGenTask(AndroidTask<Task> sourceGenTask);
+    void setSourceGenTask(Task sourceGenTask);
 
-    AndroidTask<Task> getResourceGenTask();
+    Task getResourceGenTask();
 
-    void setResourceGenTask(AndroidTask<Task> resourceGenTask);
+    void setResourceGenTask(Task resourceGenTask);
 
-    AndroidTask<Task> getAssetGenTask();
+    Task getAssetGenTask();
 
-    void setAssetGenTask(AndroidTask<Task> assetGenTask);
+    void setAssetGenTask(Task assetGenTask);
 
-    AndroidTask<CheckManifest> getCheckManifestTask();
+    CheckManifest getCheckManifestTask();
 
-    void setCheckManifestTask(AndroidTask<CheckManifest> checkManifestTask);
+    void setCheckManifestTask(CheckManifest checkManifestTask);
 
-    AndroidTask<RenderscriptCompile> getRenderscriptCompileTask();
+    RenderscriptCompile getRenderscriptCompileTask();
 
-    void setRenderscriptCompileTask(AndroidTask<RenderscriptCompile> renderscriptCompileTask);
+    void setRenderscriptCompileTask(RenderscriptCompile renderscriptCompileTask);
 
-    AndroidTask<AidlCompile> getAidlCompileTask();
+    AidlCompile getAidlCompileTask();
 
-    void setAidlCompileTask(AndroidTask<AidlCompile> aidlCompileTask);
-
-    @Nullable
-    AndroidTask<MergeSourceSetFolders> getMergeAssetsTask();
-
-    void setMergeAssetsTask(@Nullable AndroidTask<MergeSourceSetFolders> mergeAssetsTask);
-
-    AndroidTask<GenerateBuildConfig> getGenerateBuildConfigTask();
-
-    void setGenerateBuildConfigTask(AndroidTask<GenerateBuildConfig> generateBuildConfigTask);
-
-    AndroidTask<Sync> getProcessJavaResourcesTask();
-
-    void setProcessJavaResourcesTask(AndroidTask<Sync> processJavaResourcesTask);
-
-    void setMergeJavaResourcesTask(AndroidTask<TransformTask> mergeJavaResourcesTask);
-
-    AndroidTask<TransformTask> getMergeJavaResourcesTask();
+    void setAidlCompileTask(AidlCompile aidlCompileTask);
 
     @Nullable
-    AndroidTask<? extends JavaCompile> getJavacTask();
+    MergeSourceSetFolders getMergeAssetsTask();
 
-    void setJavacTask(@Nullable AndroidTask<? extends JavaCompile> javacTask);
+    void setMergeAssetsTask(@Nullable MergeSourceSetFolders mergeAssetsTask);
 
-    AndroidTask<Task> getCompileTask();
-    void setCompileTask(AndroidTask<Task> compileTask);
+    GenerateBuildConfig getGenerateBuildConfigTask();
 
-    @Nullable
-    AndroidTask<? extends DefaultTask> getConnectedTask();
+    void setGenerateBuildConfigTask(GenerateBuildConfig generateBuildConfigTask);
 
-    void setConnectedTask(AndroidTask<? extends DefaultTask> compileTask);
+    Sync getProcessJavaResourcesTask();
 
-    AndroidTask<GenerateApkDataTask> getMicroApkTask();
-    void setMicroApkTask(AndroidTask<GenerateApkDataTask> microApkTask);
+    void setProcessJavaResourcesTask(Sync processJavaResourcesTask);
 
-    AndroidTask<?> getCoverageReportTask();
+    void setMergeJavaResourcesTask(TransformTask mergeJavaResourcesTask);
 
-    void setCoverageReportTask(AndroidTask<?> coverageReportTask);
+    TransformTask getMergeJavaResourcesTask();
 
     @Nullable
-    AndroidTask<ExternalNativeBuildTask> getExternalNativeBuildTask();
-    void setExternalNativeBuildTask(@NonNull AndroidTask<ExternalNativeBuildTask> task);
+    JavaCompile getJavacTask();
+
+    void setJavacTask(@Nullable JavaCompile javacTask);
+
+    Task getCompileTask();
+
+    void setCompileTask(Task compileTask);
+
+    @Nullable
+    DefaultTask getConnectedTask();
+
+    void setConnectedTask(DefaultTask compileTask);
+
+    GenerateApkDataTask getMicroApkTask();
+
+    void setMicroApkTask(GenerateApkDataTask microApkTask);
+
+    Task getCoverageReportTask();
+
+    void setCoverageReportTask(Task coverageReportTask);
+
+    @Nullable
+    ExternalNativeBuildTask getExternalNativeBuildTask();
+
+    void setExternalNativeBuildTask(@NonNull ExternalNativeBuildTask task);
 
     @Nullable
     ExternalNativeJsonGenerator getExternalNativeJsonGenerator();
@@ -448,14 +450,13 @@ public interface VariantScope extends TransformVariantScope, InstantRunVariantSc
     @NonNull
     File getProcessResourcePackageOutputDirectory();
 
-    void setProcessResourcesTask(
-            AndroidTask<? extends ProcessAndroidResources> processAndroidResourcesAndroidTask);
+    void setProcessResourcesTask(ProcessAndroidResources processAndroidResourcesAndroidTask);
 
-    AndroidTask<? extends ProcessAndroidResources> getProcessResourcesTask();
+    ProcessAndroidResources getProcessResourcesTask();
 
-    void setDataBindingExportBuildInfoTask(AndroidTask<DataBindingExportBuildInfoTask> task);
+    void setDataBindingExportBuildInfoTask(DataBindingExportBuildInfoTask task);
 
-    AndroidTask<DataBindingExportBuildInfoTask> getDataBindingExportBuildInfoTask();
+    DataBindingExportBuildInfoTask getDataBindingExportBuildInfoTask();
 
     @NonNull
     VariantDependencies getVariantDependencies();

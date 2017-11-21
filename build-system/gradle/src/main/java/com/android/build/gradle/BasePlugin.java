@@ -38,7 +38,6 @@ import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
 import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkHandler;
-import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
@@ -594,9 +593,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
                 ExecutionType.TASK_MANAGER_CREATE_TASKS,
                 project.getPath(),
                 null,
-                () ->
-                        taskManager.createTasksBeforeEvaluate(
-                                new TaskContainerAdaptor(project.getTasks())));
+                () -> taskManager.createTasksBeforeEvaluate());
 
         project.afterEvaluate(
                 project ->
@@ -669,7 +666,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
 
         extension.disableWrite();
 
-        taskManager.configureCustomLintChecks(new TaskContainerAdaptor(project.getTasks()));
+        taskManager.configureCustomLintChecks();
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setCompileSdk(extension.getCompileSdkVersion())

@@ -25,11 +25,10 @@ import static org.mockito.Mockito.when;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.api.transform.QualifiedContent;
-import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskFactory;
+import com.android.build.gradle.internal.TaskFactoryImpl;
 import com.android.build.gradle.internal.errors.SyncIssueHandler;
 import com.android.build.gradle.internal.ide.SyncIssueImpl;
-import com.android.build.gradle.internal.scope.AndroidTaskRegistry;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
 import com.android.builder.model.SyncIssue;
@@ -207,9 +206,8 @@ public class TaskTestUtils {
         project = ProjectBuilder.builder().withProjectDir(projectDirectory).build();
         scope = getScope();
         errorReporter = new FakeConfigurableErrorReporter();
-        transformManager = new TransformManager(
-                project, new AndroidTaskRegistry(), errorReporter, new FakeRecorder());
-        taskFactory = new TaskContainerAdaptor(project.getTasks());
+        transformManager = new TransformManager(project, errorReporter, new FakeRecorder());
+        taskFactory = new TaskFactoryImpl(project.getTasks());
         mTransformTaskFailed = () -> new RuntimeException(
                 String.format("Transform task creation failed.  Sync issue:\n %s",
                         errorReporter.getSyncIssue().toString()));

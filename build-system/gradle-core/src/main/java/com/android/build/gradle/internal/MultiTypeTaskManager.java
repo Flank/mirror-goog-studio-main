@@ -88,11 +88,10 @@ public class MultiTypeTaskManager extends TaskManager {
     }
 
     @Override
-    public void createTasksForVariantScope(
-            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+    public void createTasksForVariantScope(@NonNull VariantScope variantScope) {
         delegates
                 .get(variantScope.getVariantData().getType())
-                .createTasksForVariantScope(tasks, variantScope);
+                .createTasksForVariantScope(variantScope);
     }
 
     @NonNull
@@ -107,7 +106,7 @@ public class MultiTypeTaskManager extends TaskManager {
     }
 
     @Override
-    protected void postJavacCreation(@NonNull TaskFactory tasks, @NonNull VariantScope scope) {
+    protected void postJavacCreation(@NonNull VariantScope scope) {
         // This task manager is used when creating the unit tests of a variant so we need to do this.
         // FIXME remove when we remove the unit test of a feature (Since the aar variant is already tested with unit tests).
         // create an anchor collection for usage inside the same module (unit tests basically)
