@@ -24,7 +24,7 @@ import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.TaskContainer
 import com.android.build.gradle.tasks.ProcessAndroidResources
-import com.android.builder.symbols.SymbolExportUtils
+import com.android.builder.symbols.processLibraryMainSymbolTable
 import com.android.ide.common.symbols.IdProvider
 import com.android.ide.common.symbols.ResourceDirectoryParser
 import com.android.ide.common.symbols.SymbolIo
@@ -102,7 +102,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 IdProvider.sequential(),
                 androidAttrSymbol)
 
-        SymbolExportUtils.processLibraryMainSymbolTable(
+        processLibraryMainSymbolTable(
                 symbolTable,
                 this.dependencies.files,
                 packageForR,
