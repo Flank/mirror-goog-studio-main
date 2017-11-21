@@ -27,14 +27,12 @@ import com.android.xml.AndroidManifest;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,81 +54,8 @@ public final class SymbolUtils {
     private static final CharMatcher NORMALIZED_VALUE_NAME_CHARS =
             CharMatcher.anyOf(".:").precomputed();
 
-    /**
-     * Processes the symbol table and generates necessary files: R.txt, R.java and proguard rules
-     * ({@code aapt_rules.txt}). Afterwards generates {@code R.java} for all libraries the main
-     * library depends on.
-     *
-     * @param librarySymbols table with symbols of resources for the library.
-     * @param libraries libraries which this library depends on
-     * @param mainPackageName package name of this library
-     * @param manifestFile manifest file
-     * @param sourceOut directory to contain R.java
-     * @param symbolFileOut R.txt file location
-     * @param proguardOut directory to contain proguard rules
-     * @param mergedResources directory containing merged resources
-     */
-    public static void processLibraryMainSymbolTable(
-            @NonNull final SymbolTable librarySymbols,
-            @NonNull Set<File> libraries,
-            @Nullable String mainPackageName,
-            @NonNull File manifestFile,
-            @NonNull File sourceOut,
-            @NonNull File symbolFileOut,
-            @Nullable File proguardOut,
-            @Nullable File mergedResources,
-            @NonNull SymbolTable platformSymbols,
-            boolean disableMergeInLib)
-            throws IOException {
-
-        Preconditions.checkNotNull(sourceOut, "Source output directory should not be null");
-        Preconditions.checkNotNull(symbolFileOut, "Symbols output directory should not be null");
-
-        // Parse the manifest only when necessary.
-        if (mainPackageName == null || proguardOut != null) {
-            ManifestData manifestData = SymbolUtils.parseManifest(manifestFile);
-
-            if (mainPackageName == null) {
-                mainPackageName = getPackageNameFromManifest(manifestData);
-            }
-            // Generate aapt_rules.txt containing keep rules if minify is enabled.
-            if (proguardOut != null) {
-                Files.write(
-                        proguardOut.toPath(),
-                        generateMinifyKeepRules(manifestData, mergedResources));
-            }
-        }
-
-        // Get symbol tables of the libraries we depend on.
-        Set<SymbolTable> depSymbolTables = loadDependenciesSymbolTables(libraries);
-
-        SymbolTable mainSymbolTable;
-        if (disableMergeInLib) {
-            // Merge all the symbols together.
-            // We have to rewrite the IDs because some published R.txt inside AARs are using the
-            // wrong value for some types, and we need to ensure there is no collision in the
-            // file we are creating.
-            mainSymbolTable =
-                    mergeAndRenumberSymbols(
-                            mainPackageName, librarySymbols, depSymbolTables, platformSymbols);
-        } else {
-            mainSymbolTable = librarySymbols.rename(mainPackageName);
-        }
-
-        // Generate R.txt file.
-        Files.createDirectories(symbolFileOut.toPath().getParent());
-        SymbolIo.write(mainSymbolTable, symbolFileOut);
-
-        // Generate R.java file.
-        SymbolIo.exportToJava(mainSymbolTable, sourceOut, false);
-
-        // Generate the R.java files for each individual library.
-        RGeneration.generateRForLibraries(mainSymbolTable, depSymbolTables, sourceOut, false);
-    }
-
     @NonNull
-    @VisibleForTesting
-    static SymbolTable mergeAndRenumberSymbols(
+    public static SymbolTable mergeAndRenumberSymbols(
             @NonNull String mainPackageName,
             @NonNull SymbolTable librarySymbols,
             @NonNull Set<SymbolTable> dependencySymbols,
