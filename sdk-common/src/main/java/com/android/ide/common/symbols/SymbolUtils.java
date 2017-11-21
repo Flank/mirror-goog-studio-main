@@ -350,10 +350,10 @@ public final class SymbolUtils {
                 // case meaning private process), we do not need to keep that class.
                 String type = keepClass.getType();
                 String process = keepClass.getProcess();
-                if ((type == AndroidManifest.NODE_ACTIVITY
-                                || type == AndroidManifest.NODE_SERVICE
-                                || type == AndroidManifest.NODE_PROVIDER
-                                || type == AndroidManifest.NODE_RECEIVER)
+                if ((type.equals(AndroidManifest.NODE_ACTIVITY)
+                                || type.equals(AndroidManifest.NODE_SERVICE)
+                                || type.equals(AndroidManifest.NODE_PROVIDER)
+                                || type.equals(AndroidManifest.NODE_RECEIVER))
                         && (process == null || process.isEmpty() || process.startsWith(":"))) {
                     continue;
                 }
