@@ -320,7 +320,7 @@ _maven_repo = rule(
             allow_files = True),
    },
    outputs = {
-     "repo": "%{name}_repo.zip",
+     "repo": "%{name}.zip",
    },
 )
 

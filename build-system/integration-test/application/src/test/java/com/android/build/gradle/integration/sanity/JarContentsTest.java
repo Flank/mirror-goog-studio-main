@@ -79,9 +79,8 @@ public class JarContentsTest {
 
     private static final String EXTERNAL_DEPS = "/com/android/tools/external/";
 
-    private static final String GMAVEN_ZIP = "tools/base/gmaven_repo.zip";
-    private static final String JAVALIBMODELBUILDER_ZIP =
-            "tools/base/java-lib-model-builder_repo.zip";
+    private static final String GMAVEN_ZIP = "tools/base/gmaven.zip";
+    private static final String JAVALIBMODELBUILDER_ZIP = "tools/base/java-lib-model-builder.zip";
 
     private static final SetMultimap<String, String> EXPECTED;
 

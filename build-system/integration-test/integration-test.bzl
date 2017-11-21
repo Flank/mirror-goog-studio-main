@@ -51,8 +51,8 @@ def gradle_integration_test(
   if not all([maven_repo.startswith('//') for maven_repo in maven_repos]):
     fail('All maven repos should be absolute targets.')
 
-  zip_targets = [maven_repo + '_repo.zip' for maven_repo in maven_repos]
-  zip_file_names = ','.join([maven_repo[2:].replace(':','/') + '_repo.zip' for maven_repo in maven_repos])
+  zip_targets = [maven_repo + '.zip' for maven_repo in maven_repos]
+  zip_file_names = ','.join([maven_repo[2:].replace(':','/') + '.zip' for maven_repo in maven_repos])
 
   native.java_test(
       name = name,

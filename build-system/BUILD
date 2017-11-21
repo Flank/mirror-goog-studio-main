@@ -4,6 +4,7 @@ load(
     "//tools/base/bazel:maven.bzl",
     "maven_java_import",
     "maven_pom",
+    "maven_repo",
 )
 
 iml_module(
@@ -114,4 +115,47 @@ maven_pom(
     artifact = "apksig",
     group = "com.android.tools.build",
     source = "//tools/buildSrc/base:build_version",
+)
+
+# repos for the gradle plugin and the offline repo packaged inside Studio
+
+# m2 repository to run the Gradle plugin minus the data-binding dependency.
+# When running the gradle plugin, prefer this one to gradle_plugin_repo if you don't
+# need data-binding. Data-binding requires much more work/dependencies, as it builds
+# the data-binding runtime library with the Gradle plugin.
+
+GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS = [
+    "//tools/base/build-system/gradle",
+    "//tools/base/lint:tools.lint-gradle",
+]
+
+maven_repo(
+    name = "gradle_plugin_no_databinding_repo",
+    artifacts = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS,
+    include_sources = True,
+    visibility = ["//visibility:public"],
+)
+
+# Full m2 repository to run the Gradle plugin.
+# Only use if you need data-binding, otherwise use gradle_plugin_no_databinding_repo
+GRADLE_PLUGIN_ARTIFACTS = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS + [
+    "//tools/data-binding:tools.compiler",
+    "//prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.1.1:jar",
+]
+
+maven_repo(
+    name = "gradle_plugin_repo",
+    artifacts = GRADLE_PLUGIN_ARTIFACTS,
+    include_sources = True,
+    visibility = ["//visibility:public"],
+)
+
+# m2 repository packaged inside studio.
+maven_repo(
+    name = "studio_repo",
+    artifacts = GRADLE_PLUGIN_ARTIFACTS + [
+        "//tools/base/build-system/java-lib-plugin/java-lib-model-builder",
+    ],
+    include_sources = True,
+    visibility = ["//visibility:public"],
 )

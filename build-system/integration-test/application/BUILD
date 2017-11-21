@@ -34,16 +34,6 @@ TEST_DEPS = [
     "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
 ]
 
-maven_repo(
-    name = "gradle_plugin",
-    artifacts = [
-        "//tools/base/build-system/gradle",
-        "//tools/base/build-system/java-lib-plugin/java-lib-model-builder",  #TODO: remove.
-        "//tools/base/lint:tools.lint-gradle",
-    ],
-    visibility = ["__subpackages__"],
-)
-
 TEST_DATA = [
     "//tools/base/build-system/integration-test:test-projects",
     "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
@@ -86,7 +76,7 @@ gradle_integration_test(
         "@android_studio_gradle_test//:all_files",
     ],
     maven_repos = [
-        "//tools/base/build-system/integration-test/application:gradle_plugin",
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     resources = glob(["src/test/resources/**"]),
@@ -100,7 +90,7 @@ gradle_integration_test(
     srcs = glob(["src/test/java/**/CheckAll.java"]),
     data = TEST_DATA,
     maven_repos = [
-        "//tools/base/build-system/integration-test/application:gradle_plugin",
+        "//tools/base/build-system:gradle_plugin_no_databinding_repo",
         "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.

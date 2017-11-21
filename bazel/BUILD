@@ -309,18 +309,6 @@ config_setting(
     visibility = ["//visibility:public"],
 )
 
-maven_repo(
-    name = "offline_repo",
-    artifacts = [
-        "//tools/data-binding:tools.compiler",
-        "//tools/base/build-system/gradle",
-        "//tools/base/build-system/java-lib-plugin/java-lib-model-builder",
-        "//tools/base/lint:tools.lint-gradle",
-    ],
-    include_sources = True,
-    visibility = ["//visibility:public"],
-)
-
 java_test(
     name = "iml_to_build_tests",
     srcs = ["testSrc/com/android/tools/binaries/ImlToBazelTest.java"],
