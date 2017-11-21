@@ -59,7 +59,7 @@ public class DesugarProcessBuilderTest {
         assertThat(windowsProc.getArgs()).hasSize(1);
 
         JavaProcessInfo nonWinProc = builder.build(false);
-        assertThat(nonWinProc.getArgs()).hasSize(INPUTS * 8 + 4);
+        assertThat(nonWinProc.getArgs()).hasSize(INPUTS * 8 + 5);
     }
 
     @Test
@@ -84,6 +84,6 @@ public class DesugarProcessBuilderTest {
                         10,
                         tmp.getRoot().toPath());
         JavaProcessInfo info = builder.build(true);
-        assertThat(info.getArgs()).hasSize(INPUTS * 8 + 4);
+        assertThat(info.getArgs()).hasSize(INPUTS * 8 + 5);
     }
 }

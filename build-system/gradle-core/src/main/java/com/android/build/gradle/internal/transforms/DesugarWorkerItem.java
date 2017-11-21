@@ -155,6 +155,8 @@ public class DesugarWorkerItem {
                     builder.add("--nodesugar_try_with_resources_if_needed");
                 }
                 builder.add("--desugar_try_with_resources_omit_runtime_classes");
+                // fix for b/62623509
+                builder.add("--legacy_jacoco_fix");
                 ImmutableList<String> parameters = builder.build();
                 mainMethod.invoke(null, (Object) parameters.toArray(new String[parameters.size()]));
 

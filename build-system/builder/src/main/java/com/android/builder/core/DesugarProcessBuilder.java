@@ -109,6 +109,8 @@ public final class DesugarProcessBuilder extends ProcessEnvBuilder<DesugarProces
             args.add("--nodesugar_try_with_resources_if_needed");
         }
         args.add("--desugar_try_with_resources_omit_runtime_classes");
+        // fix for b/62623509
+        args.add("--legacy_jacoco_fix");
 
         if (isWindows && pathArgs > MAX_PATH_ARGS_FOR_WINDOWS) {
             if (!Files.exists(tmpDir)) {
