@@ -53,6 +53,9 @@
 -dontnote android.support.**
 -dontwarn android.support.**
 
+# This class is deprecated, but remains for backward compatibility.
+-dontwarn android.util.FloatMath
+
 # Understand the @Keep support annotation.
 -keep class android.support.annotation.Keep
 
