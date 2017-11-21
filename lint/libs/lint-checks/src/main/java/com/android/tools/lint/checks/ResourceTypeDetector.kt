@@ -16,12 +16,14 @@
 
 package com.android.tools.lint.checks
 
+import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
 import com.android.resources.ResourceType
 import com.android.resources.ResourceType.COLOR
 import com.android.resources.ResourceType.DRAWABLE
 import com.android.resources.ResourceType.MIPMAP
 import com.android.resources.ResourceType.STYLEABLE
 import com.android.tools.lint.checks.AnnotationDetector.HALF_FLOAT_ANNOTATION
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.ConstantEvaluator
 import com.android.tools.lint.detector.api.Detector
@@ -36,8 +38,10 @@ import com.android.tools.lint.detector.api.ResourceEvaluator.ARRAY_RES_ANNOTATIO
 import com.android.tools.lint.detector.api.ResourceEvaluator.ATTR_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.BOOL_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_MARKER_TYPE
 import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_ANNOTATION
+import com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_MARKER_TYPE
 import com.android.tools.lint.detector.api.ResourceEvaluator.DIMEN_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.DRAWABLE_RES_ANNOTATION
 import com.android.tools.lint.detector.api.ResourceEvaluator.FONT_RES_ANNOTATION
@@ -63,8 +67,10 @@ import com.google.common.base.Joiner
 import com.google.common.collect.Sets
 import com.intellij.psi.PsiArrayType
 import com.intellij.psi.PsiMethod
+import com.intellij.psi.PsiType
 import com.intellij.psi.PsiVariable
 import org.jetbrains.uast.UAnnotation
+import org.jetbrains.uast.UBinaryExpression
 import org.jetbrains.uast.UBinaryExpressionWithType
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
@@ -73,19 +79,13 @@ import org.jetbrains.uast.UIfExpression
 import org.jetbrains.uast.UParenthesizedExpression
 import org.jetbrains.uast.UQualifiedReferenceExpression
 import org.jetbrains.uast.UReferenceExpression
+import org.jetbrains.uast.UastBinaryOperator
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.util.isMethodCall
 import org.jetbrains.uast.util.isNewArrayWithDimensions
 import org.jetbrains.uast.util.isNewArrayWithInitializer
 import org.jetbrains.uast.util.isTypeCast
 import java.util.EnumSet
-import com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX
-import com.android.tools.lint.detector.api.AnnotationUsageType
-import org.jetbrains.uast.UastBinaryOperator
-import org.jetbrains.uast.UBinaryExpression
-import com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_MARKER_TYPE
-import com.android.tools.lint.detector.api.ResourceEvaluator.DIMENSION_MARKER_TYPE
-import com.intellij.psi.PsiType
 
 class ResourceTypeDetector : AbstractAnnotationDetector(), Detector.UastScanner {
     override fun applicableAnnotations(): List<String> = listOf(
