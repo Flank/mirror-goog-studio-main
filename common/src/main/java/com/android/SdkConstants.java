@@ -2060,6 +2060,8 @@ public final class SdkConstants {
     /** The top level android package as a prefix, "android.". */
     public static final String ANDROID_SUPPORT_PKG_PREFIX =
             ANDROID_PKG_PREFIX + "support."; //$NON-NLS-1$
+    /** Architecture component package prefix */
+    public static final String ANDROID_ARCH_PKG_PREFIX = ANDROID_PKG_PREFIX + "arch.";
 
     /** The android.view. package prefix */
     public static final String ANDROID_VIEW_PKG = ANDROID_PKG_PREFIX + "view."; //$NON-NLS-1$
