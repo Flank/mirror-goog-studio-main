@@ -6,6 +6,7 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.ANNOTATION_PROCESSOR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.ANNOTATION_PROCESSOR_LIST;
+import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_BASE_CLASS_LOG_ARTIFACT;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.DATA_BINDING_DEPENDENCY_ARTIFACTS;
 
 import com.android.annotations.NonNull;
@@ -163,6 +164,10 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 // could not have the artifacts)
                 javacTask.dataBindingDependencyArtifacts =
                         scope.getOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS);
+            }
+            if (scope.hasOutput(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)) {
+                javacTask.dataBindingClassLogDir =
+                        scope.getOutput(DATA_BINDING_BASE_CLASS_LOG_ARTIFACT);
             }
             // the data binding artifact is created by the annotation processor, so we register this
             // task output (which also publishes it) with javac as the generating task.

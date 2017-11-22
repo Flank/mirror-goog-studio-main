@@ -85,11 +85,12 @@ public class DataBindingTest {
         String bindingClass = "Landroid/databinding/testapp/databinding/ActivityMainBinding;";
         // only in v2
         String implClass = "Landroid/databinding/testapp/databinding/ActivityMainBindingImpl;";
+        final Apk apk;
         if (myLibrary) {
             Aar aar = project.getAar("debug");
             if (myUseV2) {
                 assertThat(aar).containsClass(bindingClass);
-                assertThat(aar).doesNotContainClass(implClass);
+                assertThat(aar).containsClass(implClass);
             } else {
                 assertThat(aar).doesNotContainClass(bindingClass);
                 assertThat(aar).doesNotContainClass(implClass);
@@ -109,18 +110,19 @@ public class DataBindingTest {
             if (myUseV2) {
                 MoreTruth.assertThat(dexOptional.get()).containsClass(implClass);
             }
+            apk = testApk;
         } else {
-            Apk apk = project.getApk("debug");
-            assertThat(apk).containsClass(bindingClass);
-            if (myUseV2) {
-                assertThat(apk).containsClass(implClass);
-            }
-            assertThat(apk).containsClass("Landroid/databinding/DataBindingComponent;");
-            if (myWithoutAdapters) {
-                assertThat(apk).doesNotContainClass("Landroid/databinding/adapters/Converters;");
-            } else {
-                assertThat(apk).containsClass("Landroid/databinding/adapters/Converters;");
-            }
+            apk = project.getApk("debug");
+        }
+        assertThat(apk).containsClass(bindingClass);
+        if (myUseV2) {
+            assertThat(apk).containsClass(implClass);
+        }
+        assertThat(apk).containsClass("Landroid/databinding/DataBindingComponent;");
+        if (myWithoutAdapters) {
+            assertThat(apk).doesNotContainClass("Landroid/databinding/adapters/Converters;");
+        } else {
+            assertThat(apk).containsClass("Landroid/databinding/adapters/Converters;");
         }
     }
 }

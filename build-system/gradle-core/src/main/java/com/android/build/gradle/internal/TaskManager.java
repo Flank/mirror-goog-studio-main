@@ -2722,8 +2722,6 @@ public abstract class TaskManager {
                 return;
             }
         }
-        setDataBindingAnnotationProcessorParams(variantScope);
-
         File outFolder =
                 new File(
                         variantScope.getBuildFolderForDataBindingCompiler(),
@@ -2782,8 +2780,9 @@ public abstract class TaskManager {
         if (!extension.getDataBinding().isEnabled()) {
             return;
         }
-        createDataBindingMergeArtifactsTask(scope);
         createDataBindingMergeBaseClassesTask(scope);
+        createDataBindingMergeArtifactsTask(scope);
+
 
         VariantType type = scope.getVariantData().getType();
         boolean isTest = type == VariantType.ANDROID_TEST || type == VariantType.UNIT_TEST;
@@ -2829,6 +2828,8 @@ public abstract class TaskManager {
                 baseClassLogFolder,
                 generateBaseClasses.getName());
         generateBaseClasses.dependsOn(scope.getVariantData().mergeResourcesTask);
+
+        setDataBindingAnnotationProcessorParams(scope);
     }
 
     private void setDataBindingAnnotationProcessorParams(@NonNull VariantScope scope) {
@@ -2867,6 +2868,11 @@ public abstract class TaskManager {
                 type = DataBindingCompilerArgs.Type.APPLICATION;
             }
             int minApi = variantConfiguration.getMinSdkVersion().getApiLevel();
+            File classLogDir =
+                    scope.getOutput(
+                                    TaskOutputHolder.TaskOutputType
+                                            .DATA_BINDING_BASE_CLASS_LOG_ARTIFACT)
+                            .getSingleFile();
             DataBindingCompilerArgs args =
                     DataBindingCompilerArgs.builder()
                             .bundleFolder(scope.getBundleArtifactFolderForDataBinding())
@@ -2875,6 +2881,7 @@ public abstract class TaskManager {
                             .buildFolder(scope.getBuildFolderForDataBindingCompiler())
                             .sdkDir(scope.getGlobalScope().getSdkHandler().getSdkFolder())
                             .xmlOutDir(scope.getLayoutInfoOutputForDataBinding())
+                            .classLogDir(classLogDir)
                             .exportClassListTo(
                                     variantData.getType().isExportDataBindingClassList()
                                             ? scope.getGeneratedClassListOutputFileForDataBinding()
