@@ -33,7 +33,7 @@ Status InternalNetworkServiceImpl::RegisterHttpData(
   auto details = network_cache_.AddConnection(
       httpData->conn_id(), httpData->process_id(), httpData->start_timestamp());
   details->request.url = httpData->url();
-  details->request.trace = httpData->trace();
+  details->request.trace_id = file_cache_.AddString(httpData->trace());
   return Status::OK;
 }
 

@@ -121,7 +121,7 @@ grpc::Status NetworkServiceImpl::GetHttpDetails(
         request_details->set_url(conn->request.url);
         request_details->set_method(conn->request.method);
         request_details->set_fields(conn->request.fields);
-        request_details->set_trace(conn->request.trace);
+        request_details->set_trace_id(conn->request.trace_id);
       } break;
 
       case HttpDetailsRequest::RESPONSE: {
