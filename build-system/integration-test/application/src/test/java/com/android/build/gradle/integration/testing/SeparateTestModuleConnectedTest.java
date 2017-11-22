@@ -27,7 +27,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 public class SeparateTestModuleConnectedTest {
-    @Rule public Adb adb;
+    @Rule public Adb adb = new Adb();
 
     @Rule
     public GradleTestProject project =
