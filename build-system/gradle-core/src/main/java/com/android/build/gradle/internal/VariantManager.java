@@ -177,8 +177,7 @@ public class VariantManager implements VariantModel {
                         extension.getDefaultConfig(),
                         mainSourceSet,
                         androidTestSourceSet,
-                        unitTestSourceSet,
-                        project);
+                        unitTestSourceSet);
     }
 
     /**
@@ -255,7 +254,7 @@ public class VariantManager implements VariantModel {
 
         BuildTypeData buildTypeData =
                 new BuildTypeData(
-                        buildType, project, mainSourceSet, androidTestSourceSet, unitTestSourceSet);
+                        buildType, mainSourceSet, androidTestSourceSet, unitTestSourceSet);
 
         buildTypes.put(name, buildTypeData);
     }
@@ -290,11 +289,7 @@ public class VariantManager implements VariantModel {
 
         ProductFlavorData<CoreProductFlavor> productFlavorData =
                 new ProductFlavorData<>(
-                        productFlavor,
-                        mainSourceSet,
-                        androidTestSourceSet,
-                        unitTestSourceSet,
-                        project);
+                        productFlavor, mainSourceSet, androidTestSourceSet, unitTestSourceSet);
 
         productFlavors.put(productFlavor.getName(), productFlavorData);
     }
@@ -495,6 +490,7 @@ public class VariantManager implements VariantModel {
                                             testedVariantData.getVariantConfiguration().getType()))
                             .addSourceSets(testVariantSourceSets)
                             .setFlavorSelection(getFlavorSelection(variantConfig))
+                            .setTestedVariantDependencies(testedVariantData.getVariantDependency())
                             .setBaseSplit(
                                     variantType == VariantType.FEATURE
                                             && extension.getBaseFeature());
@@ -903,7 +899,7 @@ public class VariantManager implements VariantModel {
                     dimensionName);
         }
 
-        createCompoundSourceSets(productFlavorList, variantConfig, sourceSetsContainer, null);
+        createCompoundSourceSets(productFlavorList, variantConfig, sourceSetsContainer);
 
         // Add the container of dependencies.
         // The order of the libraries is important, in descending order:
@@ -978,11 +974,10 @@ public class VariantManager implements VariantModel {
         return variantData;
     }
 
-    private void createCompoundSourceSets(
+    private static void createCompoundSourceSets(
             @NonNull List<? extends ProductFlavor> productFlavorList,
             @NonNull GradleVariantConfiguration variantConfig,
-            @NonNull NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer,
-            @Nullable BaseVariantData testedVariantData) {
+            @NonNull NamedDomainObjectContainer<AndroidSourceSet> sourceSetsContainer) {
         if (!productFlavorList.isEmpty() /* && !variantConfig.getType().isSingleBuildType()*/) {
             DefaultAndroidSourceSet variantSourceSet =
                     (DefaultAndroidSourceSet) sourceSetsContainer.maybeCreate(
@@ -990,17 +985,6 @@ public class VariantManager implements VariantModel {
                                     variantConfig.getFullName(),
                                     variantConfig.getType()));
             variantConfig.setVariantSourceProvider(variantSourceSet);
-
-            if (testedVariantData != null) {
-                DefaultAndroidSourceSet testedSourceProvider =
-                        (DefaultAndroidSourceSet)
-                                testedVariantData
-                                        .getVariantConfiguration()
-                                        .getVariantSourceProvider();
-
-                VariantDimensionData.makeTestExtendMain(
-                        testedSourceProvider, variantSourceSet, project.getConfigurations());
-            }
         }
 
         if (productFlavorList.size() > 1) {
@@ -1010,17 +994,6 @@ public class VariantManager implements VariantModel {
                                     variantConfig.getFlavorName(),
                                     variantConfig.getType()));
             variantConfig.setMultiFlavorSourceProvider(multiFlavorSourceSet);
-
-            if (testedVariantData != null) {
-                DefaultAndroidSourceSet testedSourceProvider =
-                        (DefaultAndroidSourceSet)
-                                testedVariantData
-                                        .getVariantConfiguration()
-                                        .getMultiFlavorSourceProvider();
-
-                VariantDimensionData.makeTestExtendMain(
-                        testedSourceProvider, multiFlavorSourceSet, project.getConfigurations());
-            }
         }
     }
 
@@ -1086,8 +1059,7 @@ public class VariantManager implements VariantModel {
                     dimensionName);
         }
 
-        createCompoundSourceSets(
-                productFlavorList, testVariantConfig, extension.getSourceSets(), testedVariantData);
+        createCompoundSourceSets(productFlavorList, testVariantConfig, extension.getSourceSets());
 
         // create the internal storage for this variant.
         TestVariantData testVariantData =

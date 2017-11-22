@@ -20,7 +20,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.dsl.CoreProductFlavor;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.Project;
 
 /**
  * Class containing a ProductFlavor and associated data (sourcesets)
@@ -33,9 +32,8 @@ public class ProductFlavorData<T extends CoreProductFlavor> extends VariantDimen
             @NonNull T productFlavor,
             @NonNull DefaultAndroidSourceSet sourceSet,
             @Nullable DefaultAndroidSourceSet androidTestSourceSet,
-            @Nullable DefaultAndroidSourceSet unitTestSourceSet,
-            @NonNull Project project) {
-        super(sourceSet, androidTestSourceSet, unitTestSourceSet, project);
+            @Nullable DefaultAndroidSourceSet unitTestSourceSet) {
+        super(sourceSet, androidTestSourceSet, unitTestSourceSet);
 
         this.productFlavor = productFlavor;
     }

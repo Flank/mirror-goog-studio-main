@@ -121,6 +121,7 @@ public class VariantDependencies {
         private final Set<Configuration> runtimeClasspaths = Sets.newLinkedHashSet();
         private final Set<Configuration> annotationConfigs = Sets.newLinkedHashSet();
         private final Set<Configuration> wearAppConfigs = Sets.newLinkedHashSet();
+        private VariantDependencies testedVariantDependencies;
 
         protected Builder(
                 @NonNull Project project,
@@ -152,6 +153,11 @@ public class VariantDependencies {
             for (DefaultAndroidSourceSet sourceSet : sourceSets) {
                 addSourceSet(sourceSet);
             }
+            return this;
+        }
+
+        public Builder setTestedVariantDependencies(VariantDependencies testedVariantDependencies) {
+            this.testedVariantDependencies = testedVariantDependencies;
             return this;
         }
 
@@ -211,6 +217,9 @@ public class VariantDependencies {
             compileClasspath.setVisible(false);
             compileClasspath.setDescription("Resolved configuration for compilation for variant: " + variantName);
             compileClasspath.setExtendsFrom(compileClasspaths);
+            if (testedVariantDependencies != null) {
+                compileClasspath.extendsFrom(testedVariantDependencies.getCompileClasspath());
+            }
             compileClasspath.setCanBeConsumed(false);
             compileClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
             final AttributeContainer compileAttributes = compileClasspath.getAttributes();
@@ -235,6 +244,9 @@ public class VariantDependencies {
             runtimeClasspath.setVisible(false);
             runtimeClasspath.setDescription("Resolved configuration for runtime for variant: " + variantName);
             runtimeClasspath.setExtendsFrom(runtimeClasspaths);
+            if (testedVariantDependencies != null) {
+                runtimeClasspath.extendsFrom(testedVariantDependencies.getRuntimeClasspath());
+            }
             runtimeClasspath.setCanBeConsumed(false);
             runtimeClasspath.getResolutionStrategy().sortArtifacts(ResolutionStrategy.SortOrder.CONSUMER_FIRST);
             final AttributeContainer runtimeAttributes = runtimeClasspath.getAttributes();
