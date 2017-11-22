@@ -31,6 +31,7 @@ import static com.android.build.gradle.internal.incremental.InstantRunVerifierSt
 import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.REFLECTION_USED;
 import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.R_CLASS_CHANGE;
 import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.STATIC_INITIALIZER_CHANGE;
+import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.SYNTHETIC_CONSTRUCTOR_CHANGE;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -352,22 +353,29 @@ public class InstantRunVerifier {
             }
         }
 
-        boolean usingBlackListedAPIs =
-                InstantRunMethodVerifier.verifyMethod(updatedMethod) != COMPATIBLE;
-
-        // either disabled or using blacklisted APIs, let it through only if the method
-        // implementation is unchanged.
-        if ((disabledMethod || usingBlackListedAPIs) &&
-                !METHOD_COMPARATOR.areEqual(methodNode, updatedMethod)) {
-
-            if (disabledMethod) {
-                logger.info("Instant Run disabled for method %s.", updatedMethod.name);
-                return INSTANT_RUN_DISABLED;
-            } else {
-                return REFLECTION_USED;
-            }
-
+        // since we are about to replace the entire class, it does not matter if this implementation
+        // method has changed or not, we must do a cold swap as reflection code would start running
+        // in the $override class which would fail due to lack of setAccessible flags.
+        if (InstantRunMethodVerifier.verifyMethod(updatedMethod) != COMPATIBLE) {
+            return REFLECTION_USED;
         }
+
+        // if the method implementation is unchanged, it's fine to let it through.
+        if (METHOD_COMPARATOR.areEqual(methodNode, updatedMethod)) {
+            return COMPATIBLE;
+        }
+
+        // the method implementation has changed, check that IR is enabled or dealing with
+        // synthetic constructors.
+        if (disabledMethod) {
+            return INSTANT_RUN_DISABLED;
+        }
+
+        // finally check if this is a generated constructor as we don't support hotswapping those.
+        if ((updatedMethod.access & Opcodes.ACC_SYNTHETIC) != 0) {
+            return SYNTHETIC_CONSTRUCTOR_CHANGE;
+        }
+
         return COMPATIBLE;
     }
 

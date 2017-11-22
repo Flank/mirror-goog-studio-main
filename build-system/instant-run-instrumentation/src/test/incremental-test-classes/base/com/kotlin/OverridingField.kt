@@ -16,8 +16,13 @@
 
 package com.kotlin
 
-data class MyDataClass(
-        val user:String,
-        val age:Int,
-        val someFilters: List<EnumType> = EnumType.values().filter { it.someField != null }
-)
+fun String.extensionFunction():String = this.toUpperCase()
+
+class OverridingField (
+        val title: String?,
+        override val analyticsName: String? = if (title.isNullOrBlank()) {
+            "DefaultText"
+        } else {
+            title
+        }!!.extensionFunction()
+) : SuperInterface

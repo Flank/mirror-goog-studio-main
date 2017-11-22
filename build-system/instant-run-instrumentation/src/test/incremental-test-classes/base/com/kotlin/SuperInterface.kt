@@ -16,8 +16,6 @@
 
 package com.kotlin
 
-data class MyDataClass(
-        val user:String,
-        val age:Int,
-        val someFilters: List<EnumType> = EnumType.values().filter { it.someField != null }
-)
+interface SuperInterface {
+    val analyticsName: String?
+}
