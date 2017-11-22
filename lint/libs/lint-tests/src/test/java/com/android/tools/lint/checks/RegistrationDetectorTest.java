@@ -24,7 +24,7 @@ import com.android.tools.lint.detector.api.Detector;
 @SuppressWarnings({"javadoc", "ClassNameDiffersFromFileName", "MethodMayBeStatic"})
 public class RegistrationDetectorTest extends AbstractCheckTest {
 
-    public void testRegistered() throws Exception {
+    public void testRegistered() {
         lint().files(
                 xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -49,7 +49,7 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNotRegistered() throws Exception {
+    public void testNotRegistered() {
         String expected = ""
                 + "src/test/pkg/MyApplication.java:5: Warning: The <application> test.pkg.MyApplication is not registered in the manifest [Registered]\n"
                 + "public class MyApplication extends Application {\n"
@@ -80,7 +80,7 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoDot() throws Exception {
+    public void testNoDot() {
         lint().files(
                 xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -95,7 +95,7 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWrongRegistrations() throws Exception {
+    public void testWrongRegistrations() {
         String expected = ""
                 + "src/test/pkg/MyApplication.java:5: Warning: test.pkg.MyApplication is an <application> but is registered in the manifest as a <service> [Registered]\n"
                 + "public class MyApplication extends Application {\n"
@@ -142,7 +142,7 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testLibraryProjects() throws Exception {
+    public void testLibraryProjects() {
         // If a library project provides additional activities, it is not an error to
         // not register all of those here
         ProjectDescription library = project(
@@ -172,7 +172,7 @@ public class RegistrationDetectorTest extends AbstractCheckTest {
         lint().projects(main, library).run().expectClean();
     }
 
-    public void testSkipReceivers() throws Exception {
+    public void testSkipReceivers() {
         lint().files(
                 java("src/test/pkg/MyReceiver.java", ""
                         + "package test.pkg;\n"

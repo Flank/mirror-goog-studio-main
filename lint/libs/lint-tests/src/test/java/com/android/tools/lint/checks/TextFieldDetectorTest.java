@@ -25,7 +25,7 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
         return new TextFieldDetector();
     }
 
-    public void testField() throws Exception {
+    public void testField() {
         String expected =
                         "res/layout/note_edit.xml:43: Warning: This text field does not specify an inputType [TextFields]\n"
                         + "        <EditText\n"
@@ -153,7 +153,7 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
                                 + "              <requestFocus />\n");
     }
 
-    public void testTypeFromName() throws Exception {
+    public void testTypeFromName() {
         String expected =
                 ""
                         +
@@ -348,7 +348,7 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
         return TextFieldDetector.containsWord(name, word);
     }
 
-    public void testIncremental1() throws Exception {
+    public void testIncremental1() {
         String expected =
                 ""
                         +
@@ -366,7 +366,7 @@ public class TextFieldDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testIncremental2() throws Exception {
+    public void testIncremental2() {
 
         String expected =
                 "res/layout/note_edit2.xml:7: Warning: This text field does not specify an inputType [TextFields]\n"

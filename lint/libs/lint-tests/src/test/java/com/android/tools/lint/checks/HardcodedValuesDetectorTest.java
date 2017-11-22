@@ -335,7 +335,7 @@ public class HardcodedValuesDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testToggleButtonLabels() throws Exception {
+    public void testToggleButtonLabels() {
         // Regression test for
         // https://code.google.com/p/android/issues/detail?id=206106
         // Ensure that the toggle button text label attributes are internationalized

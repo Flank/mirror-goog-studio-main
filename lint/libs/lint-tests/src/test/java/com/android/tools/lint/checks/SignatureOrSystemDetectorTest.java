@@ -26,7 +26,7 @@ public class SignatureOrSystemDetectorTest extends AbstractCheckTest {
         return new SignatureOrSystemDetector();
     }
 
-    public void testNoWarningOnProtectionLevelsOtherThanSignatureOrSystem() throws Exception {
+    public void testNoWarningOnProtectionLevelsOtherThanSignatureOrSystem() {
         //noinspection all // Sample code
         lint().files(
                 xml("AndroidManifest.xml", ""
@@ -61,7 +61,7 @@ public class SignatureOrSystemDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWarningOnSignatureOrSystemProtectionLevel() throws Exception {
+    public void testWarningOnSignatureOrSystemProtectionLevel() {
         //noinspection all // Sample code
         String expected = ""
                 + "AndroidManifest.xml:13: Warning: protectionLevel should probably not be set to signatureOrSystem [SignatureOrSystemPermissions]\n"

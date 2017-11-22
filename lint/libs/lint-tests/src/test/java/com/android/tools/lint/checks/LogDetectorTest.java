@@ -25,7 +25,7 @@ public class LogDetectorTest extends AbstractCheckTest {
         return new LogDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/LogTest.java:33: Error: Mismatched tags: the d() and isLoggable() calls typically should pass the same tag: TAG1 versus TAG2 [LogTagMismatch]\n"
                 + "            Log.d(TAG2, \"message\"); // warn: mismatched tags!\n"
@@ -187,7 +187,7 @@ public class LogDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoMaxLength() throws Exception {
+    public void testNoMaxLength() {
         // As of API level 24 there's no limit of 23 chars anymore
         //noinspection all // sample code
         lint().files(

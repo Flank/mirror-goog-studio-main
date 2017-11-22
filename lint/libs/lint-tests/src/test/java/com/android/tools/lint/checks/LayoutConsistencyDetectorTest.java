@@ -25,7 +25,7 @@ public class LayoutConsistencyDetectorTest extends AbstractCheckTest {
         return new LayoutConsistencyDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "res/layout/layout1.xml:11: Warning: The id \"button1\" in layout \"layout1\" is missing from the following layout configurations: layout-xlarge (present in layout) [InconsistentLayout]\n"
                 + "        android:id=\"@+id/button1\"\n"
@@ -44,7 +44,7 @@ public class LayoutConsistencyDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSuppress() throws Exception {
+    public void testSuppress() {
         // Same as unit test above, but button1 is suppressed with tools:ignore; button4 is not
         String expected = ""
                 + "res/layout/layout1.xml:56: Warning: The id \"button4\" in layout \"layout1\" is missing from the following layout configurations: layout-xlarge (present in layout) [InconsistentLayout]\n"
@@ -125,7 +125,7 @@ public class LayoutConsistencyDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test2() throws Exception {
+    public void test2() {
         String expected = ""
                 + "res/layout/layout1.xml:11: Warning: The id \"button1\" in layout \"layout1\" is missing from the following layout configurations: layout-xlarge (present in layout, layout-sw600dp, layout-sw600dp-land) [InconsistentLayout]\n"
                 + "        android:id=\"@+id/button1\"\n"
@@ -149,7 +149,7 @@ public class LayoutConsistencyDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test3() throws Exception {
+    public void test3() {
         String expected = ""
                 + "res/layout/layout1.xml:11: Warning: The id \"button1\" in layout \"layout1\" is only present in the following layout configurations: layout (missing from layout-sw600dp, layout-sw600dp-land, layout-xlarge) [InconsistentLayout]\n"
                 + "        android:id=\"@+id/button1\"\n"
@@ -169,7 +169,7 @@ public class LayoutConsistencyDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoJavaRefs() throws Exception {
+    public void testNoJavaRefs() {
         lint().files(
                 mLayout1,
                 mLayout2)
@@ -178,7 +178,7 @@ public class LayoutConsistencyDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testSkipIgnoredProjects() throws Exception {
+    public void testSkipIgnoredProjects() {
         // https://code.google.com/p/android/issues/detail?id=227098
         // We shouldn't flag issues in non-reporting projects
         lint().projects(project(

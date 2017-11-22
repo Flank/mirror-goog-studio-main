@@ -24,7 +24,7 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
         return new ObjectAnimatorDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/main/java/test/pkg/AnimatorTest.java:21: Error: The setter for this property does not match the expected signature (public void setProp2(int arg) [ObjectAnimatorBinding]\n"
                 + "        ObjectAnimator.ofInt(myObject, \"prop2\", 0, 1, 2, 5).start();\n"
@@ -163,7 +163,7 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNotMinifying() throws Exception {
+    public void testNotMinifying() {
         //noinspection all // Sample code
         lint().files(
                 java(""
@@ -215,7 +215,7 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testFlow() throws Exception {
+    public void testFlow() {
         String expected = ""
                 + "src/test/pkg/AnimatorFlowTest.java:10: Error: The setter for this property does not match the expected signature (public void setProp1(int arg) [ObjectAnimatorBinding]\n"
                 + "        PropertyValuesHolder p1 = PropertyValuesHolder.ofInt(\"prop1\", 50); // ERROR\n"
@@ -286,7 +286,7 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test229545() throws Exception {
+    public void test229545() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=229545
 
         //noinspection all // Sample code
@@ -348,7 +348,7 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void test230387() throws Exception {
+    public void test230387() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=230387
 
         //noinspection all // Sample code
@@ -382,7 +382,7 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testCreateValueAnimator() throws Exception {
+    public void testCreateValueAnimator() {
         // Regression test which makes sure that when we use ValueAnimator.ofPropertyValuesHolder
         // to create a property holder and we don't know the associated object, we don't falsely
         // report broken properties
@@ -408,7 +408,7 @@ public class ObjectAnimatorDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testSuppress() throws Exception {
+    public void testSuppress() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=232405
         // Ensure that we can suppress both types of issues by annotating either the
         // property binding site *or* the property declaration site

@@ -61,7 +61,7 @@ public class IconDetectorTest extends AbstractCheckTest {
             WEBP_UNSUPPORTED
     };
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "res/drawable-mdpi/sample_icon.gif: Warning: Using the .gif format for bitmaps is discouraged [GifUsage]\n"
                 + "res/drawable/ic_launcher.png: Warning: The ic_launcher.png icon has identical contents in the following configuration folders: drawable-mdpi, drawable [IconDuplicatesConfig]\n"
@@ -86,7 +86,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMixed() throws Exception {
+    public void testMixed() {
         String expected = ""
                 + "res/drawable/background.xml: Warning: The following images appear both as density independent .xml files and as bitmap files: res/drawable-mdpi/background.png, res/drawable/background.xml [IconXmlAndPng]\n"
                 + "    res/drawable-mdpi/background.png: <No location-specific message\n"
@@ -101,7 +101,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMixedVectors() throws Exception {
+    public void testMixedVectors() {
         lint().files(
                 manifest().minSdk(4),
                 xml("res/drawable-v21/vector.xml", ""
@@ -113,7 +113,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testApi1() throws Exception {
+    public void testApi1() {
         lint().files(
                 // manifest file which specifies uses sdk = 2
                 manifest().minSdk(2),
@@ -123,7 +123,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void test2() throws Exception {
+    public void test2() {
         String expected = ""
                 + "res/drawable-hdpi/other.9.png: Warning: The following unrelated icon files have identical contents: appwidget_bg.9.png, other.9.png [IconDuplicates]\n"
                 + "    res/drawable-hdpi/appwidget_bg.9.png: <No location-specific message\n"
@@ -142,7 +142,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoDpi() throws Exception {
+    public void testNoDpi() {
         String expected = ""
                 + "res/drawable-mdpi/frame.png: Warning: The following images appear in both -nodpi and in a density folder: frame.png [IconNoDpi]\n"
                 + "res/drawable-xlarge-nodpi-v11/frame.png: Warning: The frame.png icon has identical contents in the following configuration folders: drawable-mdpi, drawable-nodpi, drawable-xlarge-nodpi-v11 [IconDuplicatesConfig]\n"
@@ -159,7 +159,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoDpi2() throws Exception {
+    public void testNoDpi2() {
         // Having additional icon names in the no-dpi folder should not cause any complaints
         String expected = "" +
                 "res/drawable-xxxhdpi/frame.png: Warning: The image frame.png varies significantly in its density-independent (dip) size across the various density versions: drawable-hdpi/frame.png: 315x193 dp (472x290 px), drawable-ldpi/frame.png: 629x387 dp (472x290 px), drawable-mdpi/frame.png: 472x290 dp (472x290 px), drawable-xhdpi/frame.png: 236x145 dp (472x290 px), drawable-xxhdpi/frame.png: 157x97 dp (472x290 px), drawable-xxxhdpi/frame.png: 118x73 dp (472x290 px) [IconDipSize]\n" +
@@ -191,7 +191,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoDpiMix() throws Exception {
+    public void testNoDpiMix() {
         String expected = ""
                 + "res/drawable-mdpi/frame.xml: Warning: The following images appear in both -nodpi and in a density folder: frame.png, frame.xml [IconNoDpi]\n"
                 + "    res/drawable-mdpi/frame.png: <No location-specific message\n"
@@ -214,7 +214,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoWarningForMipmapsOnly() throws Exception {
+    public void testNoWarningForMipmapsOnly() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=162958
         lint().files(
                 xml("res/drawable/foo.xml", "<bitmap/>"),
@@ -226,7 +226,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testMixedFormat() throws Exception {
+    public void testMixedFormat() {
         // Test having a mixture of .xml and .png resources for the same name
         // Make sure we don't get:
         // drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: f.png (found in drawable-mdpi)
@@ -278,7 +278,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMisleadingFileName() throws Exception {
+    public void testMisleadingFileName() {
         if (!imageFormatSupported("JPG")) {
             return;
         }
@@ -305,7 +305,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMisleadingWebpFileName() throws Exception {
+    public void testMisleadingWebpFileName() {
         String expected = ""
                 + "res/drawable-mdpi/foo.png: Warning: Misleading file extension; named .png but the file format is webp [IconExtension]\n"
                 + "0 errors, 1 warnings\n";
@@ -321,7 +321,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testColors() throws Exception {
+    public void testColors() {
         String expected = ""
                 + "res/drawable-mdpi/ic_menu_my_action.png: Warning: Action Bar icons should use a single gray color (#333333 for light themes (with 60%/30% opacity for enabled/disabled), and #FFFFFF with opacity 80%/30% for dark themes [IconColors]\n"
                 + "res/drawable-mdpi-v11/ic_stat_my_notification.png: Warning: Notification icons must be entirely white [IconColors]\n"
@@ -338,7 +338,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNotActionBarIcons() throws Exception {
+    public void testNotActionBarIcons() {
         lint().files(
             // No Java code designates the menu as an action bar menu
                 manifest().minSdk(14),
@@ -352,7 +352,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testActionBarIcons() throws Exception {
+    public void testActionBarIcons() {
         String expected = ""
                 + "res/drawable-mdpi/icon1.png: Warning: Action Bar icons should use a single gray color (#333333 for light themes (with 60%/30% opacity for enabled/disabled), and #FFFFFF with opacity 80%/30% for dark themes [IconColors]\n"
                 + "res/drawable-mdpi/icon2.png: Warning: Action Bar icons should use a single gray color (#333333 for light themes (with 60%/30% opacity for enabled/disabled), and #FFFFFF with opacity 80%/30% for dark themes [IconColors]\n"
@@ -370,7 +370,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testOkActionBarIcons() throws Exception {
+    public void testOkActionBarIcons() {
         lint().files(
                 manifest().minSdk(14),
                 mMenu,
@@ -381,7 +381,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNotificationIcons() throws Exception {
+    public void testNotificationIcons() {
         String expected = ""
                 + "res/drawable-mdpi/icon1.png: Warning: Notification icons must be entirely white [IconColors]\n"
                 + "    src/test/pkg/NotificationTest.java:11: Icon used in notification here\n"
@@ -410,7 +410,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testOkNotificationIcons() throws Exception {
+    public void testOkNotificationIcons() {
         lint().files(
                 manifest().minSdk(14),
                 mNotificationTest,
@@ -424,7 +424,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testExpectedSize() throws Exception {
+    public void testExpectedSize() {
         String expected = ""
                 + "res/drawable-mdpi/ic_launcher.png: Warning: Incorrect icon size for drawable-mdpi/ic_launcher.png: expected 48x48, but was 24x24 [IconExpectedSize]\n"
                 + "res/drawable-mdpi/icon1.png: Warning: Incorrect icon size for drawable-mdpi/icon1.png: expected 32x32, but was 48x48 [IconExpectedSize]\n"
@@ -450,7 +450,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testExpectedSizeMipmap() throws Exception {
+    public void testExpectedSizeMipmap() {
         String expected = ""
                 + "res/mipmap-mdpi/ic_launcher.png: Warning: Incorrect icon size for mipmap-mdpi/ic_launcher.png: expected 48x48, but was 24x24 [IconExpectedSize]\n"
                 + "0 errors, 1 warnings\n";
@@ -466,7 +466,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testCheckNullDensity() throws Exception {
+    public void testCheckNullDensity() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=230324
         // Make sure we gracefully handle a null density qualifier
         lint().files(
@@ -477,7 +477,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testAbbreviate() throws Exception {
+    public void testAbbreviate() {
         String expected = ""
                 + "res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: ic_launcher10.png, ic_launcher11.png, ic_launcher12.png, ic_launcher2.png, ic_launcher3.png... (6 more) [IconDensities]\n"
                 + "res/drawable-xhdpi: Warning: Missing the following drawables in drawable-xhdpi: ic_launcher10.png, ic_launcher11.png, ic_launcher12.png, ic_launcher2.png, ic_launcher3.png... (6 more) [IconDensities]\n"
@@ -504,7 +504,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSourceFolders() throws Exception {
+    public void testSourceFolders() {
         // Regression test for https://issuetracker.google.com/37684894
         String expected = ""
                 + "res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: ic_launcher2.png (found in drawable-mdpi) [IconDensities]\n" +
@@ -523,7 +523,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testShowAll() throws Exception {
+    public void testShowAll() {
         String expected = ""
                 + "res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: ic_launcher10.png, ic_launcher11.png, ic_launcher12.png, ic_launcher2.png, ic_launcher3.png, ic_launcher4.png, ic_launcher5.png, ic_launcher6.png, ic_launcher7.png, ic_launcher8.png, ic_launcher9.png [IconDensities]\n"
                 + "res/drawable-xhdpi: Warning: Missing the following drawables in drawable-xhdpi: ic_launcher10.png, ic_launcher11.png, ic_launcher12.png, ic_launcher2.png, ic_launcher3.png, ic_launcher4.png, ic_launcher5.png, ic_launcher6.png, ic_launcher7.png, ic_launcher8.png, ic_launcher9.png [IconDensities]\n"
@@ -551,7 +551,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testIgnoreMissingFolders() throws Exception {
+    public void testIgnoreMissingFolders() {
         lint().files(
                 // Use minSDK4 to ensure that we get warnings about missing drawables
                 manifest().minSdk(4),
@@ -571,7 +571,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testSquareLauncher() throws Exception {
+    public void testSquareLauncher() {
         String expected = ""
                 + "res/drawable-hdpi/ic_launcher_filled.png: Warning: Launcher icons should not fill every pixel of their square region; see the design guide for details [IconLauncherShape]\n"
                 + "0 errors, 1 warnings\n";
@@ -584,7 +584,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSquareLauncherFromNonStandardMipmapName() throws Exception {
+    public void testSquareLauncherFromNonStandardMipmapName() {
         // Checks both launcher icons not named ic_launcher and roundIcon attributes
         String expected = ""
                 + "res/mipmap-mdpi/my_launcher.png: Warning: Launcher icons should not fill every pixel of their square region; see the design guide for details [IconLauncherShape]\n"
@@ -611,7 +611,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testShadow() throws Exception {
+    public void testShadow() {
         lint().files(
                 base64gzip("res/mipmap-mdpi/ic_launcher_round.png", ""
                         + "H4sIAAAAAAAAAAH7CQT2iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABX"
@@ -677,7 +677,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testMixNinePatch() throws Exception {
+    public void testMixNinePatch() {
         // https://code.google.com/p/android/issues/detail?id=43075
         String expected = ""
                 + "res/drawable-mdpi/ic_launcher_filled.png: Warning: The files ic_launcher_filled.png and ic_launcher_filled.9.png clash; both will map to @drawable/ic_launcher_filled [IconMixedNinePatch]\n"
@@ -695,7 +695,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test67486() throws Exception {
+    public void test67486() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=67486
         lint().files(
                 manifest().minSdk(14),
@@ -716,7 +716,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testDuplicatesWithDpNames() throws Exception {
+    public void testDuplicatesWithDpNames() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=74584
         lint().files(
                 image("res/drawable-mdpi/foo_72dp.png", 72, 72).fill(10, 10, 20, 20, 0x00000000),
@@ -726,7 +726,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testClaimedSize() throws Exception {
+    public void testClaimedSize() {
         // Check that icons which declare a dp size actually correspond to that dp size
         String expected = ""
                 + "res/drawable-xhdpi/foo_30dp.png: Warning: Suspicious file name foo_30dp.png: The implied 30 dp size does not match the actual dp size (pixel size 72×72 in a drawable-xhdpi folder computes to 36×36 dp) [IconDipSize]\n"
@@ -743,7 +743,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testClaimedSizeWebp() throws Exception {
+    public void testClaimedSizeWebp() {
         // Check size decoding of webp headers
         String expected = ""
                 + "res/drawable-mdpi/my_lossless_72dp.webp: Warning: Suspicious file name my_lossless_72dp.webp: The implied 72 dp size does not match the actual dp size (pixel size 58×56 in a drawable-mdpi folder computes to 58×56 dp) [IconDipSize]\n"
@@ -772,7 +772,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testResConfigs1() throws Exception {
+    public void testResConfigs1() {
         // resConfigs in the Gradle model sets up the specific set of resource configs
         // that are included in the packaging: we use this to limit the set of required
         // densities
@@ -808,7 +808,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testResConfigs2() throws Exception {
+    public void testResConfigs2() {
         String expected = ""
                 + "res/drawable-hdpi: Warning: Missing the following drawables in drawable-hdpi: sample_icon.gif (found in drawable-mdpi) [IconDensities]\n"
                 + "0 errors, 1 warnings\n";
@@ -844,7 +844,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSplits1() throws Exception {
+    public void testSplits1() {
         // splits in the Gradle model sets up the specific set of resource configs
         // that are included in the packaging: we use this to limit the set of required
         // densities
@@ -873,7 +873,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testWebpEligible() throws Exception {
+    public void testWebpEligible() {
         String expected = ""
                 + "res/drawable-mdpi/random.png: Warning: One or more images in this project can be converted to the WebP format which typically results in smaller file sizes, even for lossless conversion (but launcher icons should use PNG). [ConvertToWebp]\n"
                 + "0 errors, 1 warnings\n";
@@ -886,7 +886,7 @@ public class IconDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testWebpNotEligibleForLauncherIcons() throws Exception {
+    public void testWebpNotEligibleForLauncherIcons() {
         lint().files(
                 manifest().minSdk(18),
                 image("res/drawable-mdpi/ic_launcher.png", 48, 48).fill(10, 10, 20, 20, 0xFF00FFFF))
@@ -895,7 +895,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWebpUnsupported() throws Exception {
+    public void testWebpUnsupported() {
         String expected = ""
                 + "res/drawable-mdpi/ic_launcher.webp: Error: Launcher icons must be in PNG format [WebpUnsupported]\n"
                 + "res/mipmap-mdpi/my_lossless.webp: Error: WebP extended or lossless format requires Android 4.2.1 (API 18); current minSdkVersion is 10 [WebpUnsupported]\n"
@@ -952,7 +952,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testXmlLauncherIconsAllowed() throws Exception {
+    public void testXmlLauncherIconsAllowed() {
         lint().files(
                 manifest().minSdk(24),
                 // Now vectors are allowed
@@ -962,7 +962,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void test118398_a() throws Exception {
+    public void test118398_a() {
         // Regression test for http://b.android.com/118398
         lint().files(
                 // Use minSDK4 to ensure that we get warnings about missing drawables
@@ -998,7 +998,7 @@ public class IconDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void test118398_b() throws Exception {
+    public void test118398_b() {
         // Regression test for http://b.android.com/118398
         lint().files(
                 // Use minSDK4 to ensure that we get warnings about missing drawables

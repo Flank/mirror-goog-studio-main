@@ -21,7 +21,7 @@ import com.android.tools.lint.detector.api.Detector;
 
 @SuppressWarnings("SpellCheckingInspection")
 public class AppCompatResourceDetectorTest extends AbstractCheckTest {
-    public void testNotGradleProject() throws Exception {
+    public void testNotGradleProject() {
         // dependsOn('appcompat') should reliably work even for
         // non gradle projects.
         String expected = ""
@@ -41,7 +41,7 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
                         + "+         android:title=\"@string/action_settings\"/>\n");
     }
 
-    public void testNoAppCompat() throws Exception {
+    public void testNoAppCompat() {
         lint().files(
                 mShowAction1,
                 mLibrary) // dummy; only name counts
@@ -53,13 +53,13 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings\n");
     }
 
-    public void testCorrectAppCompat() throws Exception {
+    public void testCorrectAppCompat() {
         lint().files(mShowAction1, mAppCompatJar)
                 .run()
                 .expectClean();
     }
 
-    public void testWrongAppCompat() throws Exception {
+    public void testWrongAppCompat() {
         lint().files(
                 mShowAction2,
                 mAppCompatJar,
@@ -72,7 +72,7 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings\n");
     }
 
-    public void testAppCompatV14() throws Exception {
+    public void testAppCompatV14() {
         lint().files(
                 mShowAction2_class,
                 mAppCompatJar,
@@ -81,7 +81,7 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testActionProviderClass() throws Exception {
+    public void testActionProviderClass() {
         lint().files(mShowAction3_class, mAppCompatJar)
                 .run()
                 .expect("res/menu/showAction3.xml:5: Error: Should use app:showAsAction with the appcompat library with xmlns:app=\"http://schemas.android.com/apk/res-auto\" [AppCompatResource]\n"
@@ -118,7 +118,7 @@ public class AppCompatResourceDetectorTest extends AbstractCheckTest {
                         "+         app:actionProviderClass=\"android.widget.ShareActionProvider\"/>\n");
     }
 
-    public void testActionViewClass() throws Exception {
+    public void testActionViewClass() {
         String expected = ""
                 + "res/menu/showAction3.xml:5: Error: Should use app:showAsAction with the appcompat library with xmlns:app=\"http://schemas.android.com/apk/res-auto\" [AppCompatResource]\n"
                 + "     android:showAsAction=\"ifRoom\"\n"

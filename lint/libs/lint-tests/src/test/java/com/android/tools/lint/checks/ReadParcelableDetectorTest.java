@@ -25,7 +25,7 @@ public class ReadParcelableDetectorTest extends AbstractCheckTest {
     }
 
     @SuppressWarnings("ClassNameDiffersFromFileName")
-    public void test() throws Exception {
+    public void test() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=196457
         String expected = ""
                 + "src/test/pkg/ParcelableDemo.java:10: Warning: Passing null here (to use the default class loader) will not work if you are restoring your own classes. Consider using for example getClass().getClassLoader() instead. [ParcelClassLoader]\n"

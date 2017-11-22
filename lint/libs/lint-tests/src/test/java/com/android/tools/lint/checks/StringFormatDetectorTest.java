@@ -30,7 +30,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
         return new StringFormatDetector();
     }
 
-    public void testAll() throws Exception {
+    public void testAll() {
         String expected = ""
                 + "src/test/pkg/StringFormatActivity.java:13: Error: Wrong argument type for formatting argument '#1' in hello: conversion is 'd', received String (argument #2 in method call) [StringFormatMatches]\n"
                 + "        String output1 = String.format(hello, target);\n"
@@ -119,7 +119,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 "First: %1$s, Skip \\%2$s, Value=%2$d", 2));
     }
 
-    public void testWrongSyntax() throws Exception {
+    public void testWrongSyntax() {
         //noinspection all // Sample code
         lint().files(
                 xml("res/values/formatstrings2.xml", ""
@@ -133,7 +133,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testDateStrings() throws Exception {
+    public void testDateStrings() {
         //noinspection all // Sample code
         lint().files(
                 mFormatstrings_version1,
@@ -148,7 +148,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testUa() throws Exception {
+    public void testUa() {
         //noinspection all // Sample code
         lint().files(
                 mFormatstrings_version1,
@@ -177,7 +177,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testSuppressed() throws Exception {
+    public void testSuppressed() {
         //noinspection ClassNameDiffersFromFileName,ConstantConditions
         lint().files(
                 xml("res/values/formatstrings.xml", ""
@@ -237,11 +237,11 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testIssue27108() throws Exception {
+    public void testIssue27108() {
         lint().files(mFormatstrings3).run().expectClean();
     }
 
-    public void testIssue39758() throws Exception {
+    public void testIssue39758() {
         //noinspection all // Sample code
         lint().files(
                 xml("res/values/formatstrings4.xml", ""
@@ -292,7 +292,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testIssue42798() throws Exception {
+    public void testIssue42798() {
         // http://code.google.com/p/android/issues/detail?id=42798
         // String playsCount = String.format(Locale.FRANCE, this.context.getString(R.string.gridview_views_count), article.playsCount);
         String expected = ""
@@ -362,7 +362,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testIsLocaleSpecific() throws Exception {
+    public void testIsLocaleSpecific() {
         assertFalse(isLocaleSpecific(""));
         assertFalse(isLocaleSpecific("Hello World!"));
         assertFalse(isLocaleSpecific("%% %n"));
@@ -376,7 +376,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
         assertTrue(isLocaleSpecific(" %1$tm %1$te,%1$tY "));
     }
 
-    public void testGetStringAsParameter() throws Exception {
+    public void testGetStringAsParameter() {
         String expected = ""
                 + "src/test/pkg/StringFormat4.java:11: Error: Wrong argument count, format string error_and_source requires 2 but format call supplies 1 [StringFormatMatches]\n"
                 + "        getString(R.string.error_and_source, getString(R.string.data_source)); // ERROR\n"
@@ -448,7 +448,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNotLocaleMethod() throws Exception {
+    public void testNotLocaleMethod() {
         // https://code.google.com/p/android/issues/detail?id=53238
         //noinspection all // Sample code
         lint().files(
@@ -486,7 +486,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNewlineChar() throws Exception {
+    public void testNewlineChar() {
         // https://code.google.com/p/android/issues/detail?id=65692
         String expected = ""
                 + "src/test/pkg/StringFormat8.java:12: Error: Wrong argument count, format string amount_string requires 1 but format call supplies 0 [StringFormatMatches]\n"
@@ -534,7 +534,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testIncremental() throws Exception {
+    public void testIncremental() {
         String expected = ""
                 + "src/test/pkg/StringFormatActivity.java:13: Error: Wrong argument type for formatting argument '#1' in hello: conversion is 'd', received String (argument #2 in method call) [StringFormatMatches]\n"
                 + "        String output1 = String.format(hello, target);\n"
@@ -582,7 +582,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNotStringFormat() throws Exception {
+    public void testNotStringFormat() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=67597
         lint().files(
                 mFormatstrings3,//"res/values/formatstrings.xml",
@@ -592,7 +592,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNotStringFormatIncrementally() throws Exception {
+    public void testNotStringFormatIncrementally() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=67597
         lint().files(
                 mFormatstrings3,//"res/values/formatstrings.xml",
@@ -603,7 +603,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testIncrementalNonMatch() throws Exception {
+    public void testIncrementalNonMatch() {
         // Regression test for scenario where the below source files would crash during
         // a string format check with
         //   java.lang.IllegalStateException: No match found
@@ -656,7 +656,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testXliff() throws Exception {
+    public void testXliff() {
         lint().files(
                 mFormatstrings9,
                 mStringFormat9)
@@ -664,7 +664,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testXliffIncremental() throws Exception {
+    public void testXliffIncremental() {
         lint().files(
                 mFormatstrings9,
                 mStringFormat9)
@@ -673,7 +673,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testBigDecimal() throws Exception {
+    public void testBigDecimal() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=69527
         //noinspection all // Sample code
         lint().files(
@@ -733,7 +733,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWrapperClasses() throws Exception {
+    public void testWrapperClasses() {
         //noinspection all // Sample code
         lint().files(
                 mFormatstrings10,
@@ -851,7 +851,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testPluralsCandidates() throws Exception {
+    public void testPluralsCandidates() {
         String expected = ""
                 + "res/values/plurals_candidates.xml:4: Warning: Formatting %d followed by words (\"times\"): This should probably be a plural rather than a string [PluralsCandidate]\n"
                 + "    <string name=\"lockscreen_too_many_failed_attempts_dialog_message1\">\n"
@@ -946,7 +946,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testAdditionalGetStringMethods() throws Exception {
+    public void testAdditionalGetStringMethods() {
         // Regression test for
         //   https://code.google.com/p/android/issues/detail?id=183643
         //   183643: Lint format detector should apply to Context#getString
@@ -1065,7 +1065,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
      * This test checks the same behaviour as {@link #testAdditionalGetStringMethods()} when lint
      * is running incrementally.
      */
-    public void testAdditionalGetStringMethodsIncrementally() throws Exception {
+    public void testAdditionalGetStringMethodsIncrementally() {
         String expected = ""
                 + "src/test/pkg/FormatCheck.java:11: Error: Format string 'zero_args' is not a valid format string so it should not be passed to String.format [StringFormatInvalid]\n"
                 + "        context.getString(R.string.zero_args, \"first\"); // ERROR\n"
@@ -1177,7 +1177,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testIssue197940() throws Exception {
+    public void testIssue197940() {
         // Regression test for
         //   https://code.google.com/p/android/issues/detail?id=197940
         //    197940: The linter alerts about a wrong String.format format, but it's ok
@@ -1223,7 +1223,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
         assertEquals("This'll also work", StringFormatDetector.stripQuotes("\"This'll also work\""));
     }
 
-    public void testIssue196494() throws Exception {
+    public void testIssue196494() {
         // Regression test for
         //   http://b.android.com/196494
         //    196494: StringFormatCount false positive with nested/escaped quotes and xliff tags
@@ -1245,7 +1245,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testIssue202241() throws Exception {
+    public void testIssue202241() {
         // Regression test for
         //   http://b.android.com/202241
         // We need to handle string references.
@@ -1268,7 +1268,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testIssue228570() throws Exception {
+    public void testIssue228570() {
         // Regression test for
         //   http://b.android.com/228570
         // We need to handle string references.
@@ -1307,7 +1307,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings\n");
     }
 
-    public void testFormattingCharSuggestions() throws Exception {
+    public void testFormattingCharSuggestions() {
         String expected = ""
                 + "src/test/pkg/FormatSuggestions.java:7: Error: Wrong argument type for formatting argument '#1' in key1: conversion is 's', received boolean (argument #2 in method call) (Did you mean formatting character b?) [StringFormatMatches]\n"
                 + "        resources.getString(R.string.key1, true);\n"
@@ -1418,7 +1418,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testStringIndirection() throws Exception {
+    public void testStringIndirection() {
         // Regression test for
         // https://code.google.com/p/android/issues/detail?id=201812
         // Make sure that we can handle string format with indirect resources.
@@ -1462,7 +1462,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testPercentS() throws Exception {
+    public void testPercentS() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=219153
         // %s can be passed anything.
         String expected = ""
@@ -1501,7 +1501,7 @@ public class StringFormatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testVarArgs() throws Exception {
+    public void testVarArgs() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=219152
         // Varargs wasn't handled correctly in some scenarios.
         //noinspection all // Sample code

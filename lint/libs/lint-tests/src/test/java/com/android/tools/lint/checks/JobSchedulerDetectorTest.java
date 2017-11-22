@@ -24,7 +24,7 @@ public class JobSchedulerDetectorTest extends AbstractCheckTest {
         return new JobSchedulerDetector();
     }
 
-    public void testOk() throws Exception {
+    public void testOk() {
         lint().files(
                 VALID_SERVICE_REFERENCE,
                 MY_JOB_SERVICE,
@@ -34,7 +34,7 @@ public class JobSchedulerDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testFlagWrongClass() throws Exception {
+    public void testFlagWrongClass() {
         String expected = ""
                 + "src/test/pkg/JobSchedulerTest.java:21: Warning: Scheduled job class NotAJobService must extend android.app.job.JobService [JobSchedulerService]\n"
                 + "                new ComponentName(this, NotAJobService.class));\n"
@@ -88,7 +88,7 @@ public class JobSchedulerDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMissingManifestRegistration() throws Exception {
+    public void testMissingManifestRegistration() {
         String expected = ""
                 + "src/test/pkg/JobSchedulerTest.java:10: Warning: Did not find a manifest registration for this service [JobSchedulerService]\n"
                 + "        ComponentName componentName = new ComponentName(this, MyJobService.class);\n"
@@ -111,7 +111,7 @@ public class JobSchedulerDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMissingPermission() throws Exception {
+    public void testMissingPermission() {
         String expected = ""
                 + "src/test/pkg/JobSchedulerTest.java:10: Warning: The manifest registration for this service does not declare android:permission=\"android.permission.BIND_JOB_SERVICE\" [JobSchedulerService]\n"
                 + "        ComponentName componentName = new ComponentName(this, MyJobService.class);\n"

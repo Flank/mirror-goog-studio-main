@@ -26,7 +26,7 @@ public class AddJavascriptInterfaceDetectorTest extends AbstractCheckTest {
         return new AddJavascriptInterfaceDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/AddJavascriptInterfaceTest.java:16: Warning: WebView.addJavascriptInterface should not be called with minSdkVersion < 17 for security reasons: JavaScript can use reflection to manipulate application [AddJavascriptInterface]\n"
                 + "            webView.addJavascriptInterface(object, string);\n"
@@ -43,7 +43,7 @@ public class AddJavascriptInterfaceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoWarningWhenMinSdkAt17() throws Exception {
+    public void testNoWarningWhenMinSdkAt17() {
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(17),

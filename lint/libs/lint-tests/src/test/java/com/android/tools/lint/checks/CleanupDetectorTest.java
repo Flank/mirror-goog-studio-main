@@ -1159,7 +1159,7 @@ public class CleanupDetectorTest extends AbstractCheckTest {
                 lintProject(mSharedPrefsTest8));
     }
 
-    public void test8() throws Exception {
+    public void test8() {
         String expected = ""
                 + "src/test/pkg/SharedPrefsTest8.java:11: Warning: Consider using apply() instead; commit writes its data to persistent storage immediately, whereas apply will handle it in the background [ApplySharedPref]\n"
                 + "        editor.commit();\n"

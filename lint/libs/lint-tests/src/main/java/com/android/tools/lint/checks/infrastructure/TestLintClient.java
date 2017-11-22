@@ -826,7 +826,7 @@ public class TestLintClient extends LintCliClient {
         ResourceSet resourceSet =
                 new ResourceSet(project.getName(), null, getProjectResourceLibraryName(), true) {
                     @Override
-                    protected void checkItems() throws DuplicateDataException {
+                    protected void checkItems() {
                         // No checking in ProjectResources; duplicates can happen, but
                         // the project resources shouldn't abort initialization
                     }
@@ -977,11 +977,11 @@ public class TestLintClient extends LintCliClient {
             if (bytes != null) {
                 return new URLConnection(url) {
                     @Override
-                    public void connect() throws IOException {
+                    public void connect() {
                     }
 
                     @Override
-                    public InputStream getInputStream() throws IOException {
+                    public InputStream getInputStream() {
                         return new ByteArrayInputStream(bytes);
                     }
                 };

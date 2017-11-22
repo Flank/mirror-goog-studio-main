@@ -983,7 +983,7 @@ public abstract class LintDetectorTest extends BaseLintDetectorTest {
                     new ResourceSet(
                             project.getName(), null, getProjectResourceLibraryName(), true) {
                         @Override
-                        protected void checkItems() throws DuplicateDataException {
+                        protected void checkItems() {
                             // No checking in ProjectResources; duplicates can happen, but
                             // the project resources shouldn't abort initialization
                         }

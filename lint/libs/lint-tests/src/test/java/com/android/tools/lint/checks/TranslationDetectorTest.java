@@ -524,7 +524,7 @@ public class TranslationDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testResConfigs() throws Exception {
+    public void testResConfigs() {
         TranslationDetector.sCompleteRegions = false;
         String expected = ""
                 + "res/values/strings.xml:25: Error: \"menu_settings\" is not translated in \"cs\" (Czech), \"de-DE\" (German: Germany) [MissingTranslation]\n"

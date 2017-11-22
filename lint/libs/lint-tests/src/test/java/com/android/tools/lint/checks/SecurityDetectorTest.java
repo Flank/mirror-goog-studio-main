@@ -256,7 +256,7 @@ public class SecurityDetectorTest extends AbstractCheckTest {
     }
 
     // exportprovider1.xml has two exported content providers with no permissions
-    public void testContentProvider1() throws Exception {
+    public void testContentProvider1() {
         String expected = ""
                 + "AndroidManifest.xml:14: Warning: Exported content providers can provide access to potentially sensitive data [ExportedContentProvider]\n"
                 + "        <provider\n"
@@ -489,7 +489,7 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                 mStrings));
     }
 
-    public void testReceiver1() throws Exception {
+    public void testReceiver1() {
         String expected = ""
                 + "AndroidManifest.xml:12: Warning: Exported receiver does not require permission [ExportedReceiver]\n"
                 + "        <receiver\n"
@@ -602,7 +602,7 @@ public class SecurityDetectorTest extends AbstractCheckTest {
                 mStrings));
     }
 
-    public void testReceiver4() throws Exception {
+    public void testReceiver4() {
         // Not defining exported, but have intent-filters
         String expected = ""
                 + "AndroidManifest.xml:12: Warning: Exported receiver does not require permission [ExportedReceiver]\n"

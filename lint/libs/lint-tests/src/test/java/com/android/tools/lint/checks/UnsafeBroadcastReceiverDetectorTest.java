@@ -78,7 +78,7 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
             ));
     }
 
-    public void testBroken2() throws Exception {
+    public void testBroken2() {
         String expected = ""
                 + "AndroidManifest.xml:12: Warning: BroadcastReceivers that declare an intent-filter for SMS_DELIVER or SMS_RECEIVED must ensure that the caller has the BROADCAST_SMS permission, otherwise it is possible for malicious actors to spoof intents. [UnprotectedSMSBroadcastReceiver]\n"
                 + "        <receiver\n"
@@ -227,7 +227,7 @@ public class UnsafeBroadcastReceiverDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testBrokenIncremental() throws Exception {
+    public void testBrokenIncremental() {
         String expected = ""
                 + "src/test/pkg/TestReceiver.java:10: Warning: This broadcast receiver declares an intent-filter for a protected broadcast action string, which can only be sent by the system, not third-party applications. However, the receiver's onReceive method does not appear to call getAction to ensure that the received Intent's action string matches the expected value, potentially making it possible for another actor to send a spoofed intent with no action string or a different action string and cause undesired behavior. [UnsafeProtectedBroadcastReceiver]\n"
                 + "    public void onReceive(Context context, Intent intent) {\n"

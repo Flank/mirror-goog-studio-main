@@ -25,7 +25,7 @@ public class WearStandaloneAppDetectorTest extends AbstractCheckTest {
         return new WearStandaloneAppDetector();
     }
 
-    public void testInvalidAttributeValueForUsesFeature() throws Exception {
+    public void testInvalidAttributeValueForUsesFeature() {
         String expected = ""
                 + "AndroidManifest.xml:4: Error: android:required=\"false\" is not supported for this feature [InvalidWearFeatureAttribute]\n"
                 + "    <uses-feature android:name=\"android.hardware.type.watch\" android:required=\"false\"/>\n"
@@ -48,7 +48,7 @@ public class WearStandaloneAppDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMissingMetadata() throws Exception {
+    public void testMissingMetadata() {
         String expected = ""
                 + "AndroidManifest.xml:5: Warning: Missing <meta-data android:name=\"com.google.android.wearable.standalone\" ../> element [WearStandaloneAppFlag]\n"
                 + "    <application>\n"
@@ -69,7 +69,7 @@ public class WearStandaloneAppDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testInvalidAttributeValueForStandaloneMetadata() throws Exception {
+    public void testInvalidAttributeValueForStandaloneMetadata() {
         String expected = ""
                 + "AndroidManifest.xml:7: Warning: Expecting a boolean value for attribute android:value [WearStandaloneAppFlag]\n"
                 + "            android:value=\"@string/foo\" />\n"
@@ -100,7 +100,7 @@ public class WearStandaloneAppDetectorTest extends AbstractCheckTest {
                         + "+             android:value=\"false\" />\n");
     }
 
-    public void testValidUsesFeatureAndMetadata() throws Exception {
+    public void testValidUsesFeatureAndMetadata() {
         //noinspection all // Sample code
         lint().files(
                 manifest(""

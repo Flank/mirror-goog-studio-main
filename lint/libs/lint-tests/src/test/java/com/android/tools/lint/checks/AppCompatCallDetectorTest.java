@@ -20,7 +20,7 @@ import com.android.tools.lint.checks.infrastructure.TestFile.JarTestFile;
 import com.android.tools.lint.detector.api.Detector;
 
 public class AppCompatCallDetectorTest extends AbstractCheckTest {
-    public void testArguments() throws Exception {
+    public void testArguments() {
         String expected = ""
                 + "src/test/pkg/AppCompatTest.java:5: Warning: Should use getSupportActionBar instead of getActionBar name [AppCompatMethod]\n"
                 + "        getActionBar();                                     // ERROR\n"
@@ -77,7 +77,7 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                         + "+         setSupportProgressBarIndeterminateVisibility(true);        // ERROR\n");
     }
 
-    public void testNoWarningsWithoutAppCompat() throws Exception {
+    public void testNoWarningsWithoutAppCompat() {
         lint().files(
                 mAppCompatTest,
                 mIntermediateActivity,
@@ -87,7 +87,7 @@ public class AppCompatCallDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoCallWarningsInPreferenceActivitySubclass() throws Exception {
+    public void testNoCallWarningsInPreferenceActivitySubclass() {
         // https://code.google.com/p/android/issues/detail?id=75700
         //noinspection all // Sample code
         lint().files(

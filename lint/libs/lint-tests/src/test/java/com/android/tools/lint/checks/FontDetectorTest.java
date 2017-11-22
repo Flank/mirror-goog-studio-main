@@ -52,7 +52,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         return new FontDetector();
     }
 
-    public void testBothDownloadableAndFontFamilyPresent() throws Exception {
+    public void testBothDownloadableAndFontFamilyPresent() {
         String expected =
                 ""
                         + "res/font/font1.xml:4: Error: A downloadable font cannot have a <font> sub tag [FontValidationError]\n"
@@ -87,7 +87,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .expectFixDiffs(expectedFix);
     }
 
-    public void testAppCompatVersion() throws Exception {
+    public void testAppCompatVersion() {
         String expected =
                 ""
                         + "res/font/font1.xml:2: Error: Using version 26.0.0-alpha7' of the appcompat-v7 library. Required version for using downloadable fonts: 26.0.0 or higher. [FontValidationError]\n"
@@ -128,7 +128,7 @@ public class FontDetectorTest extends AbstractCheckTest {
         assertEquals(map.get(String.class), APPCOMPAT_LIB_ARTIFACT_ID);
     }
 
-    public void testAppAttributesPresentOnApi28() throws Exception {
+    public void testAppAttributesPresentOnApi28() {
         String expected =
                 ""
                         + "res/font/font1.xml:8: Warning: For minSdkVersion=28 only android: attributes should be used [FontValidationWarning]\n"
@@ -163,7 +163,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .expectFixDiffs(expectedFix);
     }
 
-    public void testAndroidAttributesPresentOnApi27() throws Exception {
+    public void testAndroidAttributesPresentOnApi27() {
         //noinspection all // Sample code
         String expected =
                 ""
@@ -196,7 +196,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .expectFixDiffs(expectedFix);
     }
 
-    public void testMissingAttributesOnApi28() throws Exception {
+    public void testMissingAttributesOnApi28() {
         //noinspection all // Sample code
         String expected =
                 ""
@@ -257,7 +257,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .expectFixDiffs(expectedFix);
     }
 
-    public void testMissingAttributesOnApi25() throws Exception {
+    public void testMissingAttributesOnApi25() {
         //noinspection all // Sample code
         String expected =
                 ""
@@ -287,7 +287,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .expectFixDiffs(expectedFix);
     }
 
-    public void testUnknownAuthorityOnApi25() throws Exception {
+    public void testUnknownAuthorityOnApi25() {
         //noinspection all // Sample code
         String expected =
                 ""
@@ -319,7 +319,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .expectFixDiffs(expectedFix);
     }
 
-    public void testUnknownAuthorityOnApi28() throws Exception {
+    public void testUnknownAuthorityOnApi28() {
         //noinspection all // Sample code
         String expected =
                 ""
@@ -351,7 +351,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .expectFixDiffs(expectedFix);
     }
 
-    public void testPackageMismatchOnApi25() throws Exception {
+    public void testPackageMismatchOnApi25() {
         //noinspection all // Sample code
         String expected =
                 ""
@@ -383,7 +383,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .expectFixDiffs(expectedFix);
     }
 
-    public void testPackageMismatchOnApi28() throws Exception {
+    public void testPackageMismatchOnApi28() {
         //noinspection all // Sample code
         String expected =
                 ""
@@ -415,7 +415,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .expectFixDiffs(expectedFix);
     }
 
-    public void testMissingQuery() throws Exception {
+    public void testMissingQuery() {
         //noinspection all // Sample code
         String expected =
                 ""
@@ -447,7 +447,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .expectFixDiffs(expectedFix);
     }
 
-    public void testQueryErrorV11() throws Exception {
+    public void testQueryErrorV11() {
         //noinspection all // Sample code
         String expected =
                 ""
@@ -472,7 +472,7 @@ public class FontDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testQueryErrorV12() throws Exception {
+    public void testQueryErrorV12() {
         //noinspection all // Sample code
         String expected =
                 ""

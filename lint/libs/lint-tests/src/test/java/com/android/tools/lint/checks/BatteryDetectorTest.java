@@ -25,7 +25,7 @@ public class BatteryDetectorTest extends AbstractCheckTest {
         return new BatteryDetector();
     }
 
-    public void testConnectivityChange() throws Exception {
+    public void testConnectivityChange() {
         String expected = ""
                 + "AndroidManifest.xml:9: Warning: Declaring a broadcastreceiver for android.net.conn.CONNECTIVITY_CHANGE is deprecated for apps targeting N and higher. In general, apps should not rely on this broadcast and instead use JobScheduler or GCMNetworkManager. [BatteryLife]\n"
                 + "            <action android:name=\"android.net.conn.CONNECTIVITY_CHANGE\" />\n"

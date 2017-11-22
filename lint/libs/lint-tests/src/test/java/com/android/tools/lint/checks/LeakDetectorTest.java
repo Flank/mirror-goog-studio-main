@@ -25,7 +25,7 @@ public class LeakDetectorTest extends AbstractCheckTest {
         return new LeakDetector();
     }
 
-    public void testStaticFields() throws Exception {
+    public void testStaticFields() {
         String expected = ""
                 + "src/test/pkg/LeakTest.java:18: Warning: Do not place Android context classes in static fields; this is a memory leak (and also breaks Instant Run) [StaticFieldLeak]\n"
                 + "    private static Activity sField7; // LEAK!\n"

@@ -311,7 +311,7 @@ public class MissingClassDetectorTest extends AbstractCheckTest {
         );
     }
 
-    public void testLibraryWithMissingClassInApp() throws Exception {
+    public void testLibraryWithMissingClassInApp() {
         mScopes = null;
 
         //noinspection all // Sample code

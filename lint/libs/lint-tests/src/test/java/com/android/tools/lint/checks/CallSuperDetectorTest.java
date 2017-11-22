@@ -16,7 +16,6 @@
 package com.android.tools.lint.checks;
 
 import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_ANNOTATIONS_JAR_BASE64_GZIP;
-import static com.android.tools.lint.checks.AnnotationDetectorTest.SUPPORT_JAR_PATH;
 
 import com.android.tools.lint.detector.api.Detector;
 
@@ -26,7 +25,7 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
         return new CallSuperDetector();
     }
 
-    public void testCallSuper() throws Exception {
+    public void testCallSuper() {
         String expected = ""
                 + "src/test/pkg/CallSuperTest.java:11: Error: Overriding method should call super.test1 [MissingSuperCall]\n"
                 + "        protected void test1() { // ERROR\n"
@@ -158,7 +157,7 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testForeignSuperAnnotations() throws Exception {
+    public void testForeignSuperAnnotations() {
         String expected = ""
                 + "src/test/pkg/OverrideTest.java:9: Error: Overriding method should call super.test [MissingSuperCall]\n"
                 + "        protected void test() { // ERROR\n"
@@ -243,7 +242,7 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testCallSuperIndirect() throws Exception {
+    public void testCallSuperIndirect() {
         // Ensure that when the @CallSuper is on an indirect super method,
         // we correctly check that you call the direct super method, not the ancestor.
         //
@@ -291,7 +290,7 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testDetachFromWindow() throws Exception {
+    public void testDetachFromWindow() {
         String expected = ""
                 + "src/test/pkg/DetachedFromWindow.java:7: Error: Overriding method should call super.onDetachedFromWindow [MissingSuperCall]\n"
                 + "        protected void onDetachedFromWindow() {\n"
@@ -353,7 +352,7 @@ public class CallSuperDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testWatchFaceVisibility() throws Exception {
+    public void testWatchFaceVisibility() {
         String expected = ""
                 + "src/test/pkg/WatchFaceTest.java:9: Error: Overriding method should call super.onVisibilityChanged [MissingSuperCall]\n"
                 + "        public void onVisibilityChanged(boolean visible) { // ERROR: Missing super call\n"

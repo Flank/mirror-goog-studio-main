@@ -25,7 +25,7 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
         return new ViewTypeDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/WrongCastActivity.java:13: Error: Unexpected cast to ToggleButton: layout tag was Button [WrongViewCast]\n"
                 + "        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);\n"
@@ -40,7 +40,7 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test2() throws Exception {
+    public void test2() {
         String expected = ""
                 + "src/test/pkg/WrongCastActivity.java:13: Error: Unexpected cast to ToggleButton: layout tag was Button|RadioButton [WrongViewCast]\n"
                 + "        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);\n"
@@ -75,7 +75,7 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test3() throws Exception {
+    public void test3() {
         //noinspection all // Sample code
         lint().files(
                 casts,
@@ -105,7 +105,7 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void test27441() throws Exception {
+    public void test27441() {
         //noinspection all // Sample code
         lint().files(
                 casts2,
@@ -137,7 +137,7 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testCheckable() throws Exception {
+    public void testCheckable() {
         //noinspection all // Sample code
         lint().files(
                 casts2,
@@ -164,7 +164,7 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testIncremental() throws Exception {
+    public void testIncremental() {
         String expected = ""
                 + "src/test/pkg/WrongCastActivity.java:13: Error: Unexpected cast to ToggleButton: layout tag was Button [WrongViewCast]\n"
                 + "        ToggleButton toggleButton = (ToggleButton) findViewById(R.id.button);\n"
@@ -181,7 +181,7 @@ public class ViewTypeDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test34968488() throws Exception {
+    public void test34968488() {
         // Regression test for 34968488:
         // Casting to ProgressBar is valid for a SeekBar: it's an ancestor class
         //noinspection all // Sample code

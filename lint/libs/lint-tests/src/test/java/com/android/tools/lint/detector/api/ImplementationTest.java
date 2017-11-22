@@ -55,7 +55,7 @@ public class ImplementationTest extends TestCase {
 
 
     @SuppressWarnings("unchecked")
-    public void testIsAdequate() throws Exception {
+    public void testIsAdequate() {
         Implementation implementation = new Implementation(Detector.class, ALL_RESOURCES_SCOPE);
         assertTrue(implementation.isAdequate(ALL_RESOURCES_SCOPE));
         assertTrue(implementation.isAdequate(ALL));

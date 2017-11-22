@@ -68,7 +68,7 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
         return new AndroidAutoDetector();
     }
 
-    public void testMissingIntentFilter() throws Exception {
+    public void testMissingIntentFilter() {
         String expected = "AndroidManifest.xml:6: Error: Missing intent-filter for action android.media.browse.MediaBrowserService that is required for android auto support [MissingMediaBrowserServiceIntentFilter]\n"
                 + "    <application\n"
                 + "    ^\n"
@@ -106,7 +106,7 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testInvalidUsesTagInMetadataFile() throws Exception {
+    public void testInvalidUsesTagInMetadataFile() {
         String expected = "" +
                 "res/xml/automotive_app_desc.xml:3: Error: Expecting one of media or notification for the name attribute in uses tag. [InvalidUsesTagAttribute]\n"
                 + "    <uses name=\"medias\"/>\n"
@@ -126,7 +126,7 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMissingMediaSearchIntent() throws Exception {
+    public void testMissingMediaSearchIntent() {
         String expected = "AndroidManifest.xml:6: Error: Missing intent-filter for action android.media.action.MEDIA_PLAY_FROM_SEARCH. [MissingIntentFilterForMediaSearch]\n"
                 + "    <application\n"
                 + "    ^\n"
@@ -168,7 +168,7 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMissingOnPlayFromSearch() throws Exception {
+    public void testMissingOnPlayFromSearch() {
         String expected = "src/com/example/android/uamp/MSessionCallback.java:5: Error: This class does not override onPlayFromSearch from MediaSession.Callback The method should be overridden and implemented to support Voice search on Android Auto. [MissingOnPlayFromSearch]\n"
                 + "public class MSessionCallback extends Callback {\n"
                 + "             ~~~~~~~~~~~~~~~~\n"
@@ -194,7 +194,7 @@ public class AndroidAutoDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testValidOnPlayFromSearch() throws Exception {
+    public void testValidOnPlayFromSearch() {
         //noinspection all // Sample code
         lint().files(
                 mValidAutoAndroidXml,

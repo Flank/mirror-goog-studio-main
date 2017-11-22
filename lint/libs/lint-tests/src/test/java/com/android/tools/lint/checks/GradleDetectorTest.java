@@ -258,7 +258,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
         }
     }
 
-    public void testBasic() throws Exception {
+    public void testBasic() {
         String expected = ""
                 + "build.gradle:25: Error: This support library should not use a different version (13) than the compileSdkVersion (19) [GradleCompatible]\n"
                 + "    compile 'com.android.support:appcompat-v7:13.0.0'\n"
@@ -411,7 +411,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testCompatibility() throws Exception {
+    public void testCompatibility() {
         String expected = ""
                 + "build.gradle:4: Error: The compileSdkVersion (18) should not be lower than the targetSdkVersion (19) [GradleCompatible]\n"
                 + "    compileSdkVersion 18\n"
@@ -458,7 +458,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "+     compileSdkVersion 19\n");
     }
 
-    public void testMinSdkVersion() throws Exception {
+    public void testMinSdkVersion() {
         String expectedNewVersion = String.valueOf(LOWEST_ACTIVE_API);
         String expected = ""
                 + "build.gradle:8: Warning: The value of minSdkVersion is too low. It can be incremented\n"
@@ -493,7 +493,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "+         minSdkVersion " + expectedNewVersion + "\n");
     }
 
-    public void testIncompatiblePlugin() throws Exception {
+    public void testIncompatiblePlugin() {
         String expected = ""
                 + "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is "
                 + GRADLE_PLUGIN_MINIMUM_VERSION + " and the recommended version is 2.3.3 [GradlePluginVersion]\n"
@@ -524,7 +524,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testSetter() throws Exception {
+    public void testSetter() {
         String expected = ""
                 + "build.gradle:18: Error: Bad method name: pick a unique method name which does not conflict with the implicit getters for the defaultConfig properties. For example, try using the prefix compute- instead of get-. [GradleGetter]\n"
                 + "        versionCode getVersionCode\n"
@@ -565,7 +565,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testDependencies() throws Exception {
+    public void testDependencies() {
         String expected = ""
                 + "build.gradle:5: Warning: Old buildToolsVersion 19.0.0; recommended version is 19.1 or later [GradleDependency]\n"
                 + "    buildToolsVersion \"19.0.0\"\n"
@@ -595,7 +595,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testLongHandDependencies() throws Exception {
+    public void testLongHandDependencies() {
         String expected = ""
                 + "build.gradle:9: Warning: A newer version of com.android.support:support-v4 than 19.0 is available: 21.0.2 [GradleDependency]\n"
                 + "    compile group: 'com.android.support', name: 'support-v4', version: '19.0'\n"
@@ -622,7 +622,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testDependenciesMinSdkVersion() throws Exception {
+    public void testDependenciesMinSdkVersion() {
         String expected = ""
                 + "build.gradle:13: Warning: Using the appcompat library when minSdkVersion >= 14 and compileSdkVersion < 21 is not necessary [GradleDependency]\n"
                 + "    compile 'com.android.support:appcompat-v7:+'\n"
@@ -652,7 +652,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoWarningFromUnknownSupportLibrary() throws Exception {
+    public void testNoWarningFromUnknownSupportLibrary() {
         //noinspection all // Sample code
         lint().files(
                 gradle(""
@@ -677,7 +677,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testDependenciesMinSdkVersionLollipop() throws Exception {
+    public void testDependenciesMinSdkVersionLollipop() {
         //noinspection all // Sample code
         lint().files(
                 gradle(""
@@ -701,7 +701,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testDependenciesNoMicroVersion() throws Exception {
+    public void testDependenciesNoMicroVersion() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=77594
         String expected = ""
                 + "build.gradle:13: Warning: A newer version of com.google.code.gson:gson than 2.2 is available: 2.8.0 [GradleDependency]\n"
@@ -732,7 +732,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testPaths() throws Exception {
+    public void testPaths() {
         String expected = ""
                 + "build.gradle:4: Warning: Do not use Windows file separators in .gradle files; use / instead [GradlePath]\n"
                 + "    compile files('my\\\\libs\\\\http.jar')\n"
@@ -758,7 +758,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testIdSuffix() throws Exception {
+    public void testIdSuffix() {
         String expected = ""
                 + "build.gradle:6: Warning: Application ID suffix should probably start with a \".\" [GradlePath]\n"
                 + "            applicationIdSuffix \"debug\"\n"
@@ -783,7 +783,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testPackage() throws Exception {
+    public void testPackage() {
         String expected = ""
                 + "build.gradle:5: Warning: Deprecated: Replace 'packageName' with 'applicationId' [GradleDeprecated]\n"
                 + "        packageName 'my.pkg'\n"
@@ -823,7 +823,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "+             applicationIdSuffix \".debug\"\n");
     }
 
-    public void testPlus() throws Exception {
+    public void testPlus() {
         String expected = ""
                 + "build.gradle:9: Warning: Avoid using + in version numbers; can lead to unpredictable and unrepeatable builds (com.android.support:appcompat-v7:+) [GradleDynamicVersion]\n"
                 + "    compile 'com.android.support:appcompat-v7:+'\n"
@@ -858,7 +858,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testStringInt() throws Exception {
+    public void testStringInt() {
         String expected = ""
                 + "build.gradle:4: Error: Use an integer rather than a string here (replace '19' with just 19) [StringShouldBeInt]\n"
                 + "    compileSdkVersion '19'\n"
@@ -903,7 +903,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "+         targetSdkVersion 16\n");
     }
 
-    public void testSuppressLine2() throws Exception {
+    public void testSuppressLine2() {
         //noinspection all // Sample code
         lint().files(
                 gradle(""
@@ -917,7 +917,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testDeprecatedPluginId() throws Exception {
+    public void testDeprecatedPluginId() {
         String expected = ""
                 + "build.gradle:4: Warning: 'android' is deprecated; use 'com.android.application' instead [GradleDeprecated]\n"
                 + "apply plugin: 'android'\n"
@@ -954,7 +954,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "+ apply plugin: 'com.android.library'\n");
     }
 
-    public void testIgnoresGStringsInDependencies() throws Exception {
+    public void testIgnoresGStringsInDependencies() {
         //noinspection all // Sample code
         lint().files(
                 gradle(""
@@ -970,7 +970,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testAccidentalOctal() throws Exception {
+    public void testAccidentalOctal() {
         String expected = ""
                 + "build.gradle:13: Error: The leading 0 turns this number into octal which is probably not what was intended (interpreted as 8) [AccidentalOctal]\n"
                 + "        versionCode 010\n"
@@ -1004,7 +1004,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testBadPlayServicesVersion() throws Exception {
+    public void testBadPlayServicesVersion() {
         String expected = ""
                 + "build.gradle:5: Error: Version 5.2.08 should not be used; the app can not be published with this version. Use version 6.1.71 instead. [GradleCompatible]\n"
                 + "    compile 'com.google.android.gms:play-services:5.2.08'\n"
@@ -1031,7 +1031,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "+     compile 'com.google.android.gms:play-services:6.1.71'\n");
     }
 
-    public void testRemoteVersions() throws Exception {
+    public void testRemoteVersions() {
         String expected = ""
                 + "build.gradle:9: Warning: A newer version of joda-time:joda-time than 2.1 is available: 2.9.9 [NewerVersionAvailable]\n"
                 + "    compile 'joda-time:joda-time:2.1'\n"
@@ -1093,7 +1093,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testRemoteVersionsWithPreviews() throws Exception {
+    public void testRemoteVersionsWithPreviews() {
         // If the most recent version is a rc version, query for all versions
         //noinspection all // Sample code
         String expected = ""
@@ -1127,7 +1127,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testPreviewVersions() throws Exception {
+    public void testPreviewVersions() {
         String expected = ""
                 + "build.gradle:6: Error: You must use a newer version of the Android Gradle plugin. The minimum supported version is 1.0.0 and the recommended version is 2.3.3 [GradlePluginVersion]\n"
                 + "        classpath 'com.android.tools.build:gradle:1.0.0-rc8'\n"
@@ -1240,7 +1240,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSupportLibraryConsistencyWithDataBinding() throws Exception {
+    public void testSupportLibraryConsistencyWithDataBinding() {
         String expected = ""
                 + "build.gradle:3: Error: All com.android.support libraries must use the exact "
                 + "same version specification (mixing versions can lead to runtime crashes). "
@@ -1374,7 +1374,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSupportLibraryConsistencyNonIncremental() throws Exception {
+    public void testSupportLibraryConsistencyNonIncremental() {
         String expected = ""
                 + "build.gradle:6: Error: All com.android.support libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 25.0-SNAPSHOT, 24.2, 24.1. Examples include com.android.support:preference-v7:25.0-SNAPSHOT and com.android.support:animated-vector-drawable:24.2 [GradleCompatible]\n"
                 + "    compile \"com.android.support:preference-v7:25.0-SNAPSHOT\"\n"
@@ -1398,7 +1398,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSupportLibraryNotFatal() throws Exception {
+    public void testSupportLibraryNotFatal() {
         // In fatal-only issue mode should not be reporting these
         lint().files(
                 gradle(""
@@ -1484,7 +1484,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "+     compile \"com.android.support:design:${supportLibVersion}\"\n");
     }
 
-    public void testOldFabric() throws Exception {
+    public void testOldFabric() {
         // This version of Fabric created a unique string for every build which results in
         // Hotswaps getting disabled due to resource changes
         String expected = ""
@@ -1528,7 +1528,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "+     classpath 'io.fabric.tools:gradle:1.22.1'\n");
     }
 
-    public void testOldBugSnag() throws Exception {
+    public void testOldBugSnag() {
         // This version of BugSnag triggered instant run full rebuilds
         String expected = ""
                 + "build.gradle:3: Warning: Use BugSnag Gradle plugin version 2.1.2 or later to improve Instant Run performance (was 2.1.0) [GradleDependency]\n"
@@ -1579,7 +1579,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "+     classpath 'com.bugsnag:bugsnag-android-gradle-plugin:2.4.1'\n");
     }
 
-    public void testDeprecatedAppIndexingDependency() throws Exception {
+    public void testDeprecatedAppIndexingDependency() {
         String expected = ""
                 + "build.gradle:9: Warning: Deprecated: Replace 'com.google.android.gms:play-services-appindexing:9.8.0' with 'com.google.firebase:firebase-appindexing:10.0.0' or above. More info: http://firebase.google.com/docs/app-indexing/android/migrate [GradleDeprecated]\n"
                 + "compile 'com.google.android.gms:play-services-appindexing:9.8.0'\n"
@@ -1609,7 +1609,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "+ compile 'com.google.firebase:firebase-appindexing:10.2.1'\n");
     }
 
-    public void testBadBuildTools() throws Exception {
+    public void testBadBuildTools() {
         // Warn about build tools 23.0.0 which is known to be a bad version
         String expected = ""
                 + "build.gradle:7: Error: Build Tools 23.0.0 should not be used; it has some known serious bugs. Use version 23.0.3 instead. [GradleCompatible]\n"
@@ -1661,7 +1661,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
         ));
     }
 
-    public void testSupportAnnotations() throws Exception {
+    public void testSupportAnnotations() {
         lint().files(
                 gradle(""
                         + "apply plugin: 'com.android.application'\n"
@@ -1680,7 +1680,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testBundledGmsDependency() throws Exception {
+    public void testBundledGmsDependency() {
         lint().files(
                 gradle(""
                         + "dependencies {\n"
@@ -1696,7 +1696,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                         + "0 errors, 1 warnings\n");
     }
 
-    public void testUnbundledGmsDependency() throws Exception {
+    public void testUnbundledGmsDependency() {
         lint().files(
                 gradle(""
                         + "dependencies {\n"
@@ -1708,7 +1708,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testHighAppVersionCode() throws Exception {
+    public void testHighAppVersionCode() {
         String expected = ""
                 + "build.gradle:5: Error: The 'versionCode' is very high and close to the max allowed value [HighAppVersionCode]\n"
                 + "        versionCode 2146435071\n"

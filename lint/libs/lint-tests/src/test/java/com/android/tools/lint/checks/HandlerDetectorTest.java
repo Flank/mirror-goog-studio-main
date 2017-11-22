@@ -25,7 +25,7 @@ public class HandlerDetectorTest extends AbstractCheckTest {
         return new HandlerDetector();
     }
 
-    public void testRegistered() throws Exception {
+    public void testRegistered() {
         String expected = ""
                 + "src/test/pkg/HandlerTest.java:12: Warning: This Handler class should be static or leaks might occur (test.pkg.HandlerTest.Inner) [HandlerLeak]\n"
                 + "    public class Inner extends Handler { // ERROR\n"

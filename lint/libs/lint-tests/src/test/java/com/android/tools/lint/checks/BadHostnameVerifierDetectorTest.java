@@ -24,7 +24,7 @@ public class BadHostnameVerifierDetectorTest extends AbstractCheckTest {
         return new BadHostnameVerifierDetector();
     }
 
-    public void testBroken() throws Exception {
+    public void testBroken() {
         String expected = ""
                 + "src/test/pkg/InsecureHostnameVerifier.java:9: Warning: verify always returns true, which could cause insecure network traffic due to trusting TLS/SSL server certificates for wrong hostnames [BadHostnameVerifier]\n"
                 + "        public boolean verify(String hostname, SSLSession session) {\n"
@@ -94,7 +94,7 @@ public class BadHostnameVerifierDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testBrokenWithSuppressLint() throws Exception {
+    public void testBrokenWithSuppressLint() {
         //noinspection all // Sample code
         lint().files(
                 java("src/android/annotation/SuppressLint.java", ""
@@ -133,7 +133,7 @@ public class BadHostnameVerifierDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testCorrect() throws Exception {
+    public void testCorrect() {
         //noinspection all // Sample code
         lint().files(
                 xml("AndroidManifest.xml", ""

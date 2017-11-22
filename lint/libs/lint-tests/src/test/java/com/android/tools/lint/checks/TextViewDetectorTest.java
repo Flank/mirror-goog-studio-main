@@ -25,7 +25,7 @@ public class TextViewDetectorTest extends AbstractCheckTest {
         return new TextViewDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "res/layout/edit_textview.xml:13: Warning: Attribute android:autoText should not be used with <TextView>: Change element type to <EditText> ? [TextViewEdits]\n"
                 + "        android:autoText=\"true\"\n"

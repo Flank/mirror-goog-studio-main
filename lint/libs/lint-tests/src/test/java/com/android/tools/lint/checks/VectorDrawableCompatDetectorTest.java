@@ -60,7 +60,7 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
         return new VectorDrawableCompatDetector();
     }
 
-    public void testSrcCompat() throws Exception {
+    public void testSrcCompat() {
         String expected = ""
                 + "src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true. [VectorDrawableCompat]\n"
                 + "    <ImageView app:srcCompat=\"@drawable/foo\" />\n"
@@ -81,7 +81,7 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSrcCompat_incremental() throws Exception {
+    public void testSrcCompat_incremental() {
         String expected = ""
                 + "src/main/res/layout/main_activity.xml:3: Error: To use VectorDrawableCompat, you need to set android.defaultConfig.vectorDrawables.useSupportLibrary = true. [VectorDrawableCompat]\n"
                 + "    <ImageView app:srcCompat=\"@drawable/foo\" />\n"
@@ -102,7 +102,7 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSrc() throws Exception {
+    public void testSrc() {
         String expected = ""
                 + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat. [VectorDrawableCompat]\n"
                 + "    <ImageView android:src=\"@drawable/foo\" />\n"
@@ -122,7 +122,7 @@ public class VectorDrawableCompatDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSrc_incremental() throws Exception {
+    public void testSrc_incremental() {
         String expected = ""
                 + "src/main/res/layout/main_activity.xml:3: Error: When using VectorDrawableCompat, you need to use app:srcCompat. [VectorDrawableCompat]\n"
                 + "    <ImageView android:src=\"@drawable/foo\" />\n"

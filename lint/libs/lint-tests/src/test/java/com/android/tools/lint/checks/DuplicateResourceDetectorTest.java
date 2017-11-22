@@ -25,7 +25,7 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
         return new DuplicateResourceDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "res/values/customattr2.xml:2: Error: ContentFrame has already been defined in this folder [DuplicateDefinition]\n"
                 + "    <declare-styleable name=\"ContentFrame\">\n"
@@ -46,7 +46,7 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testDotAliases() throws Exception {
+    public void testDotAliases() {
         String expected = ""
                 + "res/values/duplicate-strings2.xml:5: Error: app_name has already been defined in this folder (app_name is equivalent to app.name) [DuplicateDefinition]\n"
                 + "    <string name=\"app.name\">App Name 1</string>\n"
@@ -68,7 +68,7 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSameFile() throws Exception {
+    public void testSameFile() {
         String expected = ""
                 + "res/values/duplicate-strings.xml:6: Error: app_name has already been defined in this folder [DuplicateDefinition]\n"
                 + "    <string name=\"app_name\">App Name 1</string>\n"
@@ -92,7 +92,7 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testStyleItems() throws Exception {
+    public void testStyleItems() {
         String expected = ""
                 + "res/values/duplicate-items.xml:7: Error: android:textColor has already been defined in this <style> [DuplicateDefinition]\n"
                 + "        <item name=\"android:textColor\">#ff0000</item>\n"
@@ -127,7 +127,7 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testOk() throws Exception {
+    public void testOk() {
         //noinspection all // Sample code
         lint().files(
                 strings,
@@ -204,7 +204,7 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testResourceAliases() throws Exception {
+    public void testResourceAliases() {
         String expected = ""
                 + "res/values/refs.xml:3: Error: Unexpected resource reference type; expected value of type @string/ [ReferenceType]\n"
                 + "    <item name=\"invalid1\" type=\"string\">@layout/other</item>\n"
@@ -259,7 +259,7 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                         + "+     <item name=\"drawableAsColor\" type=\"color\">@color/my_drawable</item>\n");
     }
 
-    public void testPublic() throws Exception {
+    public void testPublic() {
         //noinspection all // Sample code
         lint().files(
                 xml("res/values/refs.xml", ""
@@ -276,7 +276,7 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testMipmapDrawable() throws Exception {
+    public void testMipmapDrawable() {
         // https://code.google.com/p/android/issues/detail?id=109892
         //noinspection all // Sample code
         lint().files(
@@ -289,7 +289,7 @@ public class DuplicateResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testInvalidXml() throws Exception {
+    public void testInvalidXml() {
 
         // Regression test for https://code.google.com/p/android/issues/detail?id=224150
         // 224150: Flag apostrophes escaping in XML string resources

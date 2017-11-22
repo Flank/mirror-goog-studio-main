@@ -24,7 +24,7 @@ public class ArraySizeDetectorTest extends AbstractCheckTest {
     protected Detector getDetector() {
         return new ArraySizeDetector();
     }
-    public void testArraySizes() throws Exception {
+    public void testArraySizes() {
         String expected = ""
                 + "res/values/arrays.xml:3: Warning: Array security_questions has an inconsistent number of items (3 in values-nl-rNL/arrays.xml, 4 in values-cs/arrays.xml) [InconsistentArrays]\n"
                 + "    <string-array name=\"security_questions\">\n"

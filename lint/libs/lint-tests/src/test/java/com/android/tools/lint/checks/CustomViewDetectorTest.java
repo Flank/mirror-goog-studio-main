@@ -25,7 +25,7 @@ public class CustomViewDetectorTest extends AbstractCheckTest {
         return new CustomViewDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/CustomView1.java:18: Warning: By convention, the custom view (CustomView1) and the declare-styleable (MyDeclareStyleable) should have the same name (various editor features rely on this convention) [CustomViewStyleable]\n"
                 + "        context.obtainStyledAttributes(R.styleable.MyDeclareStyleable);\n"
@@ -155,7 +155,7 @@ public class CustomViewDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testObtainOnCall() throws Exception {
+    public void testObtainOnCall() {
         // Regression test for case where we're calling obtainStyledAttributes on a context via
         // a call rather than a variable reference
         String expected = ""

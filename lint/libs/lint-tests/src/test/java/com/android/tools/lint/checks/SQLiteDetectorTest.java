@@ -24,7 +24,7 @@ public class SQLiteDetectorTest extends AbstractCheckTest {
         return new SQLiteDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/SQLiteTest.java:25: Warning: Using column type STRING; did you mean to use TEXT? (STRING is a numeric type and its value can be adjusted; for example, strings that look like integers can drop leading zeroes. See issue explanation for details.) [SQLiteString]\n"
                 + "        db.execSQL(\"CREATE TABLE \" + name + \"(\" + Tables.AppKeys.SCHEMA + \");\"); // ERROR\n"

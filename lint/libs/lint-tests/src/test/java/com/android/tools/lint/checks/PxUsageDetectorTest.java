@@ -25,7 +25,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
         return new PxUsageDetector();
     }
 
-    public void testPx() throws Exception {
+    public void testPx() {
         String expected = ""
                 + "res/layout/now_playing_after.xml:49: Warning: Avoid using \"mm\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
                 + "        android:layout_width=\"100mm\"\n"
@@ -98,7 +98,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSp() throws Exception {
+    public void testSp() {
         String expected = ""
                 + "res/layout/textsize.xml:11: Warning: Should use \"sp\" instead of \"dp\" for text sizes [SpUsage]\n"
                 + "        android:textSize=\"14dp\" />\n"
@@ -180,7 +180,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                         + "+         android:textSize=\"14sp\" />\n");
     }
 
-    public void testStyles() throws Exception {
+    public void testStyles() {
         String expected = ""
                 + "res/values/pxsp.xml:23: Warning: Avoid using \"mm\" as units (it does not work accurately on all devices); use \"dp\" instead [InOrMmUsage]\n"
                 + "        <item name=\"android:textSize\">50mm</item>\n"
@@ -255,7 +255,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                 + "+         <item name=\"android:textSize\"> 50sp </item>\n");
     }
 
-    public void testIncrementalDimensions() throws Exception {
+    public void testIncrementalDimensions() {
         String expected = ""
                 + "res/layout/textsize2.xml:9: Warning: Should use \"sp\" instead of \"dp\" for text sizes (@dimen/bottom_bar_portrait_button_font_size is defined as 16dp in values/dimens.xml [SpUsage]\n"
                 + "        android:textSize=\"@dimen/bottom_bar_portrait_button_font_size\"\n"
@@ -268,7 +268,7 @@ public class PxUsageDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testBatchDimensions() throws Exception {
+    public void testBatchDimensions() {
         String expected = ""
                 + "res/values/dimens.xml:2: Warning: This dimension is used as a text size: Should use \"sp\" instead of \"dp\" [SpUsage]\n"
                 + "    <dimen name=\"bottom_bar_portrait_button_font_size\">16dp</dimen>\n"

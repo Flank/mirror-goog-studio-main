@@ -25,7 +25,7 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
         return new OverdrawDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "res/layout/main.xml:5: Warning: Possible overdraw: Root element paints background @drawable/ic_launcher with a theme that also paints a background (inferred theme is @style/MyTheme_First) [Overdraw]\n"
                 + "    android:background=\"@drawable/ic_launcher\"\n"
@@ -143,7 +143,7 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSuppressed() throws Exception {
+    public void testSuppressed() {
         //noinspection all // Sample code
         lint().files(
                 mAndroidManifest,
@@ -179,7 +179,7 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testContextAttribute() throws Exception {
+    public void testContextAttribute() {
         //noinspection all // Sample code
         lint().files(
                 mAndroidManifest,
@@ -207,7 +207,7 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testContextAttribute2() throws Exception {
+    public void testContextAttribute2() {
         //noinspection all // Sample code
         lint().files(
                 mAndroidManifest,
@@ -235,7 +235,7 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNull() throws Exception {
+    public void testNull() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=71197
         // @null as a background should not trigger a warning
         //noinspection all // Sample code
@@ -262,7 +262,7 @@ public class OverdrawDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testToolsBackground() throws Exception {
+    public void testToolsBackground() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=80679
         // tools:background instead of android:background should not trigger a warning
         //noinspection all // Sample code

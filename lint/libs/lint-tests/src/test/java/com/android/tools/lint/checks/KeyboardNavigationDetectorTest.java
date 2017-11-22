@@ -31,7 +31,7 @@ public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
         return new KeyboardNavigationDetector();
     }
 
-    public void testFocusableElement_noIssue() throws Exception {
+    public void testFocusableElement_noIssue() {
         lint().files(xml(DUMMY_FILE_NAME, ""
             + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
             + "    android:clickable=\"true\"\n"
@@ -40,7 +40,7 @@ public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
             .expectClean();
     }
 
-    public void testNonClickableElement_noIssue() throws Exception {
+    public void testNonClickableElement_noIssue() {
         lint().files(xml(DUMMY_FILE_NAME, ""
              + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
              + "    android:clickable=\"false\"\n"
@@ -49,7 +49,7 @@ public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
             .expectClean();
     }
 
-    public void testUnspecifiedFocusableElement_triggersIssue() throws Exception {
+    public void testUnspecifiedFocusableElement_triggersIssue() {
         lint().files(xml(DUMMY_FILE_NAME, ""
             + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
             + "    android:clickable=\"true\" />"))
@@ -67,7 +67,7 @@ public class KeyboardNavigationDetectorTest extends AbstractCheckTest {
             + "+     android:focusable=\"true\" />\n");
     }
 
-    public void testUnfocusableElement_triggersIssue() throws Exception {
+    public void testUnfocusableElement_triggersIssue() {
         lint().files(xml(DUMMY_FILE_NAME, ""
             + "<Button xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
             + "    android:clickable=\"true\"\n"

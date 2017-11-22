@@ -324,7 +324,7 @@ public class SdCardDetectorTest extends AbstractCheckTest {
                         + "0 errors, 1 warnings\n");
     }
 
-    public void testWindowsCRLF() throws Exception {
+    public void testWindowsCRLF() {
         // Ensure that offsets are correct on Windows when using CRLF instead of just LF as
         // line separators.
 

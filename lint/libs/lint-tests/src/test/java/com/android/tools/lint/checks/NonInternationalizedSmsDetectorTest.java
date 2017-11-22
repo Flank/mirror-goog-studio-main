@@ -25,7 +25,7 @@ public class NonInternationalizedSmsDetectorTest extends AbstractCheckTest {
         return new NonInternationalizedSmsDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/NonInternationalizedSmsDetectorTest.java:18: Warning: To make sure the SMS can be sent by all users, please start the SMS number with a + and a country code or restrict the code invocation to people in the country you are targeting. [UnlocalizedSms]\n"
                 + "  sms.sendMultipartTextMessage(\"001234567890\", null, null, null, null);\n"

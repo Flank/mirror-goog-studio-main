@@ -24,7 +24,7 @@ public class CutPasteDetectorTest extends AbstractCheckTest {
         return new CutPasteDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/PasteError.java:22: Warning: The id R.id.duplicated has already been looked up in this method; possible cut & paste error? [CutPasteId]\n"
                 + "        View view2 = findViewById(R.id.duplicated);\n"

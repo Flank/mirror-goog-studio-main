@@ -33,7 +33,7 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
     /**
      * Test that a manifest without extractNativeLibs produces warnings for Runtime.loadLibrary
      */
-    public void testRuntimeLoadLibrary() throws Exception {
+    public void testRuntimeLoadLibrary() {
         String expected = ""
                 + "src/main/AndroidManifest.xml:4: Warning: Missing attribute "
                 + "android:extractNativeLibs=\"false\" on the "
@@ -85,7 +85,7 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
     /**
      * Test that a manifest without extractNativeLibs produces warnings for System.loadLibrary
      */
-    public void testSystemLoadLibrary() throws Exception {
+    public void testSystemLoadLibrary() {
         String expected = ""
                 + "src/main/AndroidManifest.xml:4: Warning: Missing attribute android:extractNativeLibs=\"false\" on the <application> tag. [UnpackedNativeCode]\n"
                 + "    <application>\n"
@@ -133,7 +133,7 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
     /**
      * Test that a manifest with extractNativeLibs has no warnings.
      */
-    public void testHasExtractNativeLibs() throws Exception {
+    public void testHasExtractNativeLibs() {
         //noinspection all // Sample code
         lint().files(
                 manifest(""
@@ -169,7 +169,7 @@ public class UnpackedNativeCodeDetectorTest extends AbstractCheckTest {
     /**
      * Test that suppressing the lint check using tools:ignore works.
      */
-    public void testSuppress() throws Exception {
+    public void testSuppress() {
         //noinspection all // Sample code
         lint().files(
                 manifest(""

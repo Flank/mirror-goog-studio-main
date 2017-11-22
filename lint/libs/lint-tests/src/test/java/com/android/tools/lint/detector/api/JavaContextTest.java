@@ -27,7 +27,7 @@ import junit.framework.TestCase;
 import org.mockito.Mockito;
 
 public class JavaContextTest extends TestCase {
-    public void testSuppressedBytecode() throws Exception {
+    public void testSuppressedBytecode() {
         // Regression test for https://issuetracker.google.com/issues/37335487
         String source = "package test.pkg;\npublic class Test { }\n";
         Pair<JavaContext, Disposable> pair =

@@ -26,7 +26,7 @@ public class CipherGetInstanceDetectorTest extends AbstractCheckTest {
         return new CipherGetInstanceDetector();
     }
 
-    public void testCipherGetInstanceAES() throws Exception {
+    public void testCipherGetInstanceAES() {
         String expected = ""
                 + "src/test/pkg/CipherGetInstanceAES.java:7: Warning: Cipher.getInstance should not be called without setting the encryption mode and padding [GetInstance]\n"
                 + "    Cipher.getInstance(\"AES\");\n"
@@ -48,7 +48,7 @@ public class CipherGetInstanceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testCipherGetInstanceDES() throws Exception {
+    public void testCipherGetInstanceDES() {
         String expected = ""
                 + "src/test/pkg/CipherGetInstanceDES.java:7: Warning: Cipher.getInstance should not be called without setting the encryption mode and padding [GetInstance]\n"
                 + "    Cipher.getInstance(\"DES\");\n"
@@ -70,7 +70,7 @@ public class CipherGetInstanceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testCipherGetInstanceAESECB() throws Exception {
+    public void testCipherGetInstanceAESECB() {
         String expected = ""
                 + "src/test/pkg/CipherGetInstanceAESECB.java:7: Warning: ECB encryption mode should not be used [GetInstance]\n"
                 + "    Cipher.getInstance(\"AES/ECB/NoPadding\");\n"
@@ -92,7 +92,7 @@ public class CipherGetInstanceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testCipherGetInstanceAESCBC() throws Exception {
+    public void testCipherGetInstanceAESCBC() {
         //noinspection all // Sample code
         lint().files(
                 java(""
@@ -111,7 +111,7 @@ public class CipherGetInstanceDetectorTest extends AbstractCheckTest {
 
     // http://b.android.com/204099 Generate a warning only when ECB mode
     // is used with symmetric ciphers such as DES.
-    public void testAsymmetricCipherRSA() throws Exception {
+    public void testAsymmetricCipherRSA() {
         //noinspection all // Sample code
         lint().files(
                 java(""
@@ -128,7 +128,7 @@ public class CipherGetInstanceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testResolveConstants() throws Exception {
+    public void testResolveConstants() {
         String expected = ""
                 + "src/test/pkg/CipherGetInstanceTest.java:10: Warning: ECB encryption mode should not be used (was \"DES/ECB/NoPadding\") [GetInstance]\n"
                 + "        Cipher des = Cipher.getInstance(Constants.DES);\n"

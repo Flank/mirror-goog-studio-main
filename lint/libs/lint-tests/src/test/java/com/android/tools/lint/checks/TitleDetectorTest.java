@@ -25,7 +25,7 @@ public class TitleDetectorTest extends AbstractCheckTest {
         return new TitleDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "res/menu/titles.xml:3: Error: Menu items should specify a title [MenuTitle]\n"
                 + "    <item android:id=\"@+id/action_bar_progress_spinner\"\n"

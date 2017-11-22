@@ -642,7 +642,7 @@ public class AppLinksAutoVerifyDetectorTest extends AbstractCheckTest {
         }
     }
 
-    public void testUnknownHostWithResolvedManifestPlaceholders() throws Exception {
+    public void testUnknownHostWithResolvedManifestPlaceholders() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=205990
         // Skip hosts that use manifest placeholders
         try {
