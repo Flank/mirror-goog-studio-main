@@ -7,10 +7,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
-import com.android.builder.model.AndroidProject;
 import com.android.builder.model.ProjectBuildOutput;
 import com.android.builder.model.VariantBuildOutput;
 import com.android.testutils.apk.Apk;
@@ -22,11 +20,9 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Assemble tests for densitySplit. */
 public class DensitySplitTest {
-    private static AndroidProject model;
     private static ProjectBuildOutput outputModel;
 
     @ClassRule
@@ -35,15 +31,13 @@ public class DensitySplitTest {
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
-        project.executor().withLocalAndroidSdkHome().run("clean", "assembleDebug");
-        model = project.model().getSingle().getOnlyModel();
+        project.executor().run("clean", "assembleDebug");
         outputModel = project.model().getSingle(ProjectBuildOutput.class);
     }
 
     @AfterClass
     public static void cleanUp() {
         project = null;
-        model = null;
         outputModel = null;
     }
 
@@ -83,7 +77,7 @@ public class DensitySplitTest {
     }
 
     @Test
-    public void checkVersionCodeInModel() throws IOException {
+    public void checkVersionCodeInModel() {
         VariantBuildOutput debugOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
 
         Collection<OutputFile> debugOutputs = debugOutput.getOutputs();
@@ -118,11 +112,5 @@ public class DensitySplitTest {
 
         // this checks we didn't miss any expected output.
         assertTrue(expected.isEmpty());
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,34 +18,19 @@ package com.android.build.gradle.integration.application;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import java.io.IOException;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/**
- * Assemble tests for flavored.
- */
-public class FlavoredTest {
+public class DensitySplitConnectedTest {
     @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("flavored")
-            .create();
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        project.execute("clean", "assembleDebug");
-    }
-
-    @AfterClass
-    public static void cleanUp() {
-        project = null;
-    }
+    public static GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("densitySplit").create();
 
     @Test
     @Category(DeviceTests.class)
-    public void connectedCheck() throws Exception {
+    public void connectedCheck() throws IOException, InterruptedException {
         project.executeConnectedCheck();
     }
 }

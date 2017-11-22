@@ -210,7 +210,7 @@ public class AbiPureSplits {
     }
 
     private ProjectBuildOutput assembleAndGetModel() throws IOException, InterruptedException {
-        project.executor().withLocalAndroidSdkHome().run("clean", "assembleDebug");
+        project.executor().run("clean", "assembleDebug");
         return project.model().getSingle(ProjectBuildOutput.class);
     }
 }

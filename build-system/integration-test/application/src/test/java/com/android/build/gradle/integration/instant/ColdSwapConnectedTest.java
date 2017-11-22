@@ -50,11 +50,9 @@ import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-/**
- * Connected smoke test for cold swap.
- */
+/** Connected smoke test for cold swap. */
 @Category(DeviceTests.class)
-public class ConnectedColdSwapTest {
+public class ColdSwapConnectedTest {
     @Rule public MockitoRule rule = MockitoJUnit.rule();
 
     @Rule
@@ -119,7 +117,7 @@ public class ConnectedColdSwapTest {
                             HelloWorldApp.APP_ID,
                             iLogger,
                             token,
-                            PORTS.get(ConnectedColdSwapTest.class.getSimpleName()));
+                            PORTS.get(ColdSwapConnectedTest.class.getSimpleName()));
 
             // Give the app a chance to start
             messageListener.await();

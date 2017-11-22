@@ -124,7 +124,7 @@ public class KotlinHotSwapTest {
                         LOG_TAG,
                         device,
                         logcat,
-                        PORTS.get(HotSwapTest.class.getSimpleName()));
+                        PORTS.get(KotlinHotSwapTest.class.getSimpleName()));
 
         List<HotSwapTester.Change> changes = new ArrayList<>();
 

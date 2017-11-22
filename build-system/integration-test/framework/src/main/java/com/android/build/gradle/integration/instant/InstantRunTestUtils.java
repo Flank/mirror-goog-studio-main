@@ -64,12 +64,13 @@ public final class InstantRunTestUtils {
     // each test class, has a port used for IR to avoid interference
     public static final Map<String, Integer> PORTS =
             ImmutableMap.<String, Integer>builder()
-                    .put("ConnectedColdSwapTest", 8115)
+                    .put("ColdSwapConnectedTest", 8115)
                     .put("NdkBuildInstantRunTest", 8116)
                     .put("HotSwapTest", 8117)
-                    .put("ButterKnifeTest", 8118)
+                    .put("ButterKnifeConnectedTest", 8118)
                     .put("DaggerTest", 8119)
-                    .put("ResourcesSwapTest", 8120)
+                    .put("ResourcesSwapConnectedTest", 8120)
+                    .put("KotlinHotSwapTest", 8121)
                     .build();
     private static final int SLEEP_TIME_MSEC = 200;
 

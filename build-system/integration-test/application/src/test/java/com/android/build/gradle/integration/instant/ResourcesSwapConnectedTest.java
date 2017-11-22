@@ -104,7 +104,7 @@ public class ResourcesSwapConnectedTest {
                         LOG_TAG,
                         device,
                         logcat,
-                        PORTS.get(ResourcesSwapTest.class.getSimpleName()));
+                        PORTS.get(ResourcesSwapConnectedTest.class.getSimpleName()));
 
         tester.run(
                 () -> {

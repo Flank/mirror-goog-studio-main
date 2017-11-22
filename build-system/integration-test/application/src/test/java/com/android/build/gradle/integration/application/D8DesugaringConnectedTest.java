@@ -17,18 +17,15 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static org.junit.Assert.assertTrue;
 
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
-import com.android.builder.model.AndroidProject;
-import com.android.builder.model.SyncIssue;
-import com.android.ide.common.process.ProcessException;
-import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
@@ -36,10 +33,9 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/** Test desugaring using D8. */
-public class D8DesugaringTest {
-
+public class D8DesugaringConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
@@ -177,53 +173,14 @@ public class D8DesugaringTest {
                 debugMainDexList, "com/example/helloworld/InterfaceWithDefault.class");
     }
 
+    @Category(DeviceTests.class)
     @Test
-    public void checkDesugaring() throws IOException, InterruptedException, ProcessException {
-        project.executor()
-                .with(BooleanOption.ENABLE_D8, true)
-                .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-                .run("assembleBaseDebug", "assembleBaseDebugAndroidTest");
-        Apk androidTestApk =
-                project.getSubproject(":app")
-                        .getApk(GradleTestProject.ApkType.ANDROIDTEST_DEBUG, "base");
-        assertThat(androidTestApk).hasClass("Lcom/example/helloworld/ExampleInstrumentedTest;");
-        assertThat(androidTestApk).hasDexVersion(35);
-        Apk androidApk =
-                project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG, "base");
-        assertThat(androidApk).hasClass("Lcom/example/helloworld/InterfaceWithDefault;");
-        assertThat(androidApk).hasDexVersion(35);
-    }
-
-    @Test
-    public void checkMultidex() throws IOException, InterruptedException, ProcessException {
-        project.executor()
-                .with(BooleanOption.ENABLE_D8, true)
-                .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-                .run("assembleMultidexDebug");
-        Apk multidexApk =
-                project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG, "multidex");
-        assertThat(multidexApk).hasMainClass("Lcom/example/helloworld/InterfaceWithDefault;");
-        boolean foundTheSynthetic = false;
-        assertTrue(multidexApk.getMainDexFile().isPresent());
-        for (String clazz : multidexApk.getMainDexFile().get().getClasses().keySet()) {
-            if (clazz.contains("-CC")) {
-                foundTheSynthetic = true;
-                break;
-            }
-        }
-        assertThat(foundTheSynthetic).isTrue();
-    }
-
-    @Test
-    public void checkD8DesugaringWithoutD8Enable() throws IOException {
-        AndroidProject app =
-                project.model()
-                        .ignoreSyncIssues()
-                        .with(BooleanOption.ENABLE_D8, false)
+    public void runAndroidTest() throws IOException, InterruptedException {
+        GradleBuildResult result =
+                project.executor()
+                        .with(BooleanOption.ENABLE_D8, true)
                         .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-                        .getMulti()
-                        .getModelMap()
-                        .get(":app");
-        assertThat(app).hasIssue(SyncIssue.SEVERITY_ERROR, SyncIssue.TYPE_GENERIC);
+                        .run("app:connectedBaseDebugAndroidTest");
+        assertThat(result.getStdout().contains("Starting 2 tests on"));
     }
 }

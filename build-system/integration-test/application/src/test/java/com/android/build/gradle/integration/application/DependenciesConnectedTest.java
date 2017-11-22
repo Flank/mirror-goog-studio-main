@@ -8,7 +8,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /** Assemble tests for dependencies. */
-public class DependenciesTest {
+public class DependenciesConnectedTest {
 
     @Rule
     public GradleTestProject project =
