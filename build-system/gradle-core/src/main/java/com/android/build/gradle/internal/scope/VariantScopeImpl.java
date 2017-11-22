@@ -51,6 +51,7 @@ import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.core.Abi;
 import com.android.build.gradle.internal.core.GradleVariantConfiguration;
 import com.android.build.gradle.internal.coverage.JacocoReportTask;
+import com.android.build.gradle.internal.dependency.AndroidTestResourceArtifactCollection;
 import com.android.build.gradle.internal.dependency.ArtifactCollectionWithExtraArtifact;
 import com.android.build.gradle.internal.dependency.FilteredArtifactCollection;
 import com.android.build.gradle.internal.dependency.SubtractingArtifactCollection;
@@ -1028,7 +1029,11 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                     (mainCollection, testedCollection, unused) ->
                             mainCollection.plus(testedCollection),
                     (collection, artifactCollection) ->
-                            collection.minus(artifactCollection.getArtifactFiles()));
+                            collection.minus(artifactCollection.getArtifactFiles()),
+                    (collection, artifactCollection) -> {
+                        throw new RuntimeException(
+                                "Can't do smart subtraction on a file collection");
+                    });
         }
 
         return fileCollection;
@@ -1068,10 +1073,40 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                     collection,
                                     getProject().getPath(),
                                     variantName),
-                    SubtractingArtifactCollection::new);
+                    SubtractingArtifactCollection::new,
+                    (testArtifact, testedArtifact) -> {
+                        return new AndroidTestResourceArtifactCollection(
+                                testArtifact,
+                                getVariantData()
+                                        .getVariantDependency()
+                                        .getIncomingRuntimeDependencies(),
+                                getVariantData()
+                                        .getVariantDependency()
+                                        .getRuntimeClasspath()
+                                        .getIncoming());
+                    });
         }
 
         return artifacts;
+    }
+
+    @NonNull
+    private Configuration getConfiguration(@NonNull ConsumedConfigType configType) {
+        switch (configType) {
+            case COMPILE_CLASSPATH:
+                return getVariantData().getVariantDependency().getCompileClasspath();
+            case RUNTIME_CLASSPATH:
+                return getVariantData().getVariantDependency().getRuntimeClasspath();
+            case ANNOTATION_PROCESSOR:
+                return getVariantData()
+                        .getVariantDependency()
+                        .getAnnotationProcessorConfiguration();
+            case METADATA_VALUES:
+                return Preconditions.checkNotNull(
+                        getVariantData().getVariantDependency().getMetadataValuesConfiguration());
+            default:
+                throw new RuntimeException("unknown ConfigType value " + configType);
+        }
     }
 
     @NonNull
@@ -1080,26 +1115,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull ArtifactScope scope,
             @NonNull ArtifactType artifactType) {
 
-        Configuration configuration;
-        switch (configType) {
-            case COMPILE_CLASSPATH:
-                configuration = getVariantData().getVariantDependency().getCompileClasspath();
-                break;
-            case RUNTIME_CLASSPATH:
-                configuration = getVariantData().getVariantDependency().getRuntimeClasspath();
-                break;
-            case ANNOTATION_PROCESSOR:
-                configuration = getVariantData()
-                        .getVariantDependency()
-                        .getAnnotationProcessorConfiguration();
-                break;
-            case METADATA_VALUES:
-                configuration =
-                        getVariantData().getVariantDependency().getMetadataValuesConfiguration();
-                break;
-            default:
-                throw new RuntimeException("unknown ConfigType value");
-        }
+        Configuration configuration = getConfiguration(configType);
 
         Action<AttributeContainer> attributes =
                 container -> container.attribute(ARTIFACT_TYPE, artifactType.getType());
@@ -2024,12 +2040,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     /**
      * adds or removes the tested artifact and dependencies to ensure the test build is correct.
      *
+     * @param <T> the type of the collection
      * @param collection the collection to add or remove the artifact and dependencies.
      * @param configType the configuration from which to look at dependencies
      * @param artifactType the type of the artifact to add or remove
      * @param plusFunction a function that adds the tested artifact to the collection
      * @param minusFunction a function that removes the tested dependencies from the collection
-     * @param <T> the type of the collection
+     * @param resourceMinusFunction a function that keeps only the test resources in the collection
      * @return a new collection containing the result
      */
     @NonNull
@@ -2039,7 +2056,8 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             @NonNull final ArtifactScope artifactScope,
             @NonNull final ArtifactType artifactType,
             @NonNull final TriFunction<T, FileCollection, String, T> plusFunction,
-            @NonNull final BiFunction<T, ArtifactCollection, T> minusFunction) {
+            @NonNull final BiFunction<T, ArtifactCollection, T> minusFunction,
+            @NonNull final BiFunction<T, ArtifactCollection, T> resourceMinusFunction) {
         // this only handles Android Test, not unit tests.
         VariantType variantType = getVariantConfiguration().getType();
         if (!variantType.isForTesting()) {
@@ -2089,13 +2107,20 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
             // We do have to however keep the Android resources.
             if (tested instanceof ApplicationVariantData
                     && configType == RUNTIME_CLASSPATH
-                    && variantType == VariantType.ANDROID_TEST
-                    && artifactType != ArtifactType.ANDROID_RES) {
-                result =
-                        minusFunction.apply(
-                                result,
-                                testedScope.getArtifactCollection(
-                                        configType, artifactScope, artifactType));
+                    && variantType == VariantType.ANDROID_TEST) {
+                if (artifactType == ArtifactType.ANDROID_RES) {
+                    result =
+                            resourceMinusFunction.apply(
+                                    result,
+                                    testedScope.getArtifactCollection(
+                                            configType, artifactScope, artifactType));
+                } else {
+                    result =
+                            minusFunction.apply(
+                                    result,
+                                    testedScope.getArtifactCollection(
+                                            configType, artifactScope, artifactType));
+                }
             }
         }
 
