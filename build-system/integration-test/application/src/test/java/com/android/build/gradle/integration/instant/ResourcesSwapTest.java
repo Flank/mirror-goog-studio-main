@@ -17,32 +17,19 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 import static com.android.testutils.truth.MoreTruth.assertThatZip;
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
-import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.InstantRun;
-import com.android.ddmlib.IDevice;
-import com.android.ddmlib.logcat.LogCatMessage;
 import com.android.sdklib.AndroidVersion;
 import com.android.tools.ir.client.InstantRunArtifact;
-import com.android.tools.ir.client.InstantRunArtifactType;
-import com.android.tools.ir.client.InstantRunClient;
 import com.google.common.io.Files;
-import com.google.common.io.Resources;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Test for changing resources with Instant Run. */
 public class ResourcesSwapTest {

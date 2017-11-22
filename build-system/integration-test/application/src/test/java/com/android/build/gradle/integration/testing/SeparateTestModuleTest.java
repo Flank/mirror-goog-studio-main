@@ -2,12 +2,12 @@ package com.android.build.gradle.integration.testing;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.TestedTargetVariant;
 import com.android.builder.model.Variant;
+import com.android.utils.FileUtils;
 import com.google.common.collect.Iterables;
 import com.google.common.truth.Truth;
 import java.io.IOException;
@@ -16,7 +16,6 @@ import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Test for setup with 2 modules: app and test-app Checking the manifest merging for the test
@@ -104,7 +103,7 @@ public class SeparateTestModuleTest {
 
     private void addInstrumentationToManifest() throws IOException {
         GradleTestProject testProject = project.getSubproject("test");
-        testProject.file("src/main/AndroidManifest.xml").delete();
+        FileUtils.deleteIfExists(testProject.file("src/main/AndroidManifest.xml"));
         String manifestContent =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
                         + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
