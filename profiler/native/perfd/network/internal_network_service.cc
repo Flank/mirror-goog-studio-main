@@ -30,9 +30,8 @@ InternalNetworkServiceImpl::InternalNetworkServiceImpl(
 Status InternalNetworkServiceImpl::RegisterHttpData(
     ServerContext *context, const proto::HttpDataRequest *httpData,
     proto::EmptyNetworkReply *reply) {
-  auto details =
-      network_cache_.AddConnection(httpData->conn_id(), httpData->process_id(),
-                                   httpData->start_timestamp());
+  auto details = network_cache_.AddConnection(
+      httpData->conn_id(), httpData->process_id(), httpData->start_timestamp());
   details->request.url = httpData->url();
   details->request.trace = httpData->trace();
   return Status::OK;
@@ -41,7 +40,7 @@ Status InternalNetworkServiceImpl::RegisterHttpData(
 Status InternalNetworkServiceImpl::SendChunk(ServerContext *context,
                                              const proto::ChunkRequest *chunk,
                                              proto::EmptyNetworkReply *reply) {
-  auto& filename = GetPayloadFileName(chunk->conn_id(),
+  auto &filename = GetPayloadFileName(chunk->conn_id(),
                                       chunk->type() == ChunkRequest::REQUEST);
   file_cache_.AddChunk(filename, chunk->content());
   return Status::OK;
@@ -82,7 +81,7 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
     break;
 
     case proto::HttpEventRequest::DOWNLOAD_COMPLETED: {
-      auto& filename = GetPayloadFileName(httpEvent->conn_id(), false);
+      auto &filename = GetPayloadFileName(httpEvent->conn_id(), false);
       auto payload_file = file_cache_.Complete(filename);
 
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
@@ -95,7 +94,7 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
     break;
 
     case proto::HttpEventRequest::UPLOAD_COMPLETED: {
-      auto& filename = GetPayloadFileName(httpEvent->conn_id(), true);
+      auto &filename = GetPayloadFileName(httpEvent->conn_id(), true);
       auto payload_file = file_cache_.Complete(filename);
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
       if (details != nullptr) {
@@ -107,7 +106,7 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
     break;
 
     case proto::HttpEventRequest::ABORTED: {
-      auto& filename = GetPayloadFileName(httpEvent->conn_id(), false);
+      auto &filename = GetPayloadFileName(httpEvent->conn_id(), false);
       file_cache_.Abort(filename);
 
       auto details = network_cache_.GetDetails(httpEvent->conn_id());
@@ -125,16 +124,14 @@ Status InternalNetworkServiceImpl::SendHttpEvent(
 }
 
 Status InternalNetworkServiceImpl::SendHttpRequest(
-    ServerContext *context,
-    const proto::HttpRequestRequest *httpRequest,
+    ServerContext *context, const proto::HttpRequestRequest *httpRequest,
     proto::EmptyNetworkReply *reply) {
-  ConnectionDetails* conn = network_cache_.GetDetails(httpRequest->conn_id());
+  ConnectionDetails *conn = network_cache_.GetDetails(httpRequest->conn_id());
   if (conn != nullptr) {
     conn->request.fields = httpRequest->fields();
     conn->request.method = httpRequest->method();
-  }
-  else {
-    Log::V("Unhandled http request (%lld)", (long long) httpRequest->conn_id());
+  } else {
+    Log::V("Unhandled http request (%lld)", (long long)httpRequest->conn_id());
   }
   return Status::OK;
 }
@@ -146,7 +143,8 @@ Status InternalNetworkServiceImpl::SendHttpResponse(
   if (conn != nullptr) {
     conn->response.fields = httpResponse->fields();
   } else {
-    Log::V("Unhandled http response (%lld)", (long long) httpResponse->conn_id());
+    Log::V("Unhandled http response (%lld)",
+           (long long)httpResponse->conn_id());
   }
   return Status::OK;
 }
@@ -154,17 +152,18 @@ Status InternalNetworkServiceImpl::SendHttpResponse(
 Status InternalNetworkServiceImpl::TrackThread(
     ServerContext *context, const proto::JavaThreadRequest *threadData,
     proto::EmptyNetworkReply *reply) {
-  ConnectionDetails* conn = network_cache_.GetDetails(threadData->conn_id());
+  ConnectionDetails *conn = network_cache_.GetDetails(threadData->conn_id());
   if (conn != nullptr) {
     bool found = false;
-    for (auto thread: conn->threads) {
+    for (auto thread : conn->threads) {
       if (thread.id == threadData->thread().id()) {
         found = true;
         break;
       }
     }
     if (!found) {
-      conn->threads.emplace_back(threadData->thread().id(), threadData->thread().name());
+      conn->threads.emplace_back(threadData->thread().id(),
+                                 threadData->thread().name());
     }
   }
   return Status::OK;

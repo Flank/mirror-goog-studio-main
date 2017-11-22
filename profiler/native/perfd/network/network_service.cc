@@ -56,9 +56,9 @@ grpc::Status NetworkServiceImpl::GetData(
     if (type == NetworkDataRequest::ALL ||
         (type == NetworkDataRequest::SPEED && value.has_speed_data()) ||
         (type == NetworkDataRequest::CONNECTIONS &&
-            value.has_connection_data()) ||
+         value.has_connection_data()) ||
         (type == NetworkDataRequest::CONNECTIVITY &&
-            value.has_connectivity_data())) {
+         value.has_connectivity_data())) {
       *(response->add_data()) = value;
     }
   }
@@ -93,9 +93,9 @@ grpc::Status NetworkServiceImpl::StopMonitoringApp(
 grpc::Status NetworkServiceImpl::GetHttpRange(grpc::ServerContext *context,
                                               const HttpRangeRequest *httpRange,
                                               HttpRangeResponse *response) {
-  auto range =
-      network_cache_.GetRange(httpRange->process_id(), httpRange->start_timestamp(),
-                              httpRange->end_timestamp());
+  auto range = network_cache_.GetRange(httpRange->process_id(),
+                                       httpRange->start_timestamp(),
+                                       httpRange->end_timestamp());
 
   for (const auto &conn : range) {
     HttpConnectionData *data = response->add_data();
@@ -146,7 +146,7 @@ grpc::Status NetworkServiceImpl::GetHttpDetails(
 
       case HttpDetailsRequest::ACCESSING_THREADS: {
         auto accessing_threads = response->mutable_accessing_threads();
-        for (auto thread: conn->threads) {
+        for (auto thread : conn->threads) {
           auto t = accessing_threads->add_thread();
           t->set_id(thread.id);
           t->set_name(thread.name);

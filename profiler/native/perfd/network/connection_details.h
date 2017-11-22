@@ -68,10 +68,12 @@ struct ConnectionDetails final {
     std::string payload_id;
   };
 
-  // Thread information obtained from Java, which is different from the thread data we would obtain from a JNI context.
-  // See also: https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.html
+  // Thread information obtained from Java, which is different from the thread
+  // data we would obtain from a JNI context. See also:
+  // https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.html
   struct JavaThread {
-    // ID of the thread obtained from Java, which is different from the thread ID obtained in a JNI context.
+    // ID of the thread obtained from Java, which is different from the thread
+    // ID obtained in a JNI context.
     int64_t id;
     // Name of the thread.
     // https://docs.oracle.com/javase/7/docs/api/java/lang/Thread.html#getName().
@@ -95,7 +97,8 @@ struct ConnectionDetails final {
   // value will be 0 until then.
   int64_t end_timestamp = 0;
   // The threads where this connection was accessed.
-  // At least one thread will always exist, and the first thread will be the one in which this connection was created.
+  // At least one thread will always exist, and the first thread will be the one
+  // in which this connection was created.
   std::vector<JavaThread> threads;
   Request request;
   Response response;
