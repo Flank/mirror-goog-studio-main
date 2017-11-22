@@ -84,18 +84,6 @@ public class SeparateTestModuleTest {
     }
 
     @Test
-    @Category(DeviceTests.class)
-    public void checkWillRunWithoutInstrumentationInManifest() throws Exception {
-        project.execute(":test:deviceCheck");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void checkConnectedCheckCompletesNormally() throws Exception {
-        project.execute(":test:connectedCheck");
-    }
-
-    @Test
     public void checkModelContainsTestedApksToInstall() throws Exception {
         Variant variant =
                 Iterables.getFirst(
