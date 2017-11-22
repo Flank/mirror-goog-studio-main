@@ -320,24 +320,21 @@ void MemoryTrackingEnv::StartLiveTracking(int64_t timestamp) {
 
   SendBackClassData();
 
-  // Tag all objects already allocated on the heap.
-  BatchAllocationSample snapshot_sample;
-  jvmtiHeapCallbacks heap_callbacks;
-  memset(&heap_callbacks, 0, sizeof(heap_callbacks));
-  heap_callbacks.heap_iteration_callback =
-      reinterpret_cast<decltype(heap_callbacks.heap_iteration_callback)>(
-          HeapIterationCallback);
-  error = g_iterate_heap_ext_func(jvmti_, 0, nullptr, &heap_callbacks,
-                                  &snapshot_sample);
-  CheckJvmtiError(jvmti_, error);
-  if (snapshot_sample.events_size() > 0) {
-    profiler::EnqueueAllocationEvents(snapshot_sample);
-  }
+  // Activate tagging of newly allocated objects.
   SetAllocationCallbacksStatus(true);
   if (track_global_jni_refs_) {
     SetJNIRefCallbacksStatus(true);
   }
 
+  // Tag and send all objects already allocated on the heap unless they are
+  // already tagged.
+  jvmtiHeapCallbacks heap_callbacks;
+  memset(&heap_callbacks, 0, sizeof(heap_callbacks));
+  heap_callbacks.heap_iteration_callback =
+      reinterpret_cast<decltype(heap_callbacks.heap_iteration_callback)>(
+          HeapIterationCallback);
+  error = g_iterate_heap_ext_func(jvmti_, 0, nullptr, &heap_callbacks, nullptr);
+  CheckJvmtiError(jvmti_, error);
   Log::V("Tracking initialization took: %lldns",
          (long long)stopwatch.GetElapsed());
 }
@@ -542,9 +539,6 @@ void MemoryTrackingEnv::HandleControlSignal(
 jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
                                               jlong* tag_ptr, jint length,
                                               void* user_data, jint heap_id) {
-  BatchAllocationSample* sample = (BatchAllocationSample*)user_data;
-
-  assert(sample != nullptr);
   assert(class_tag != 0);  // All classes should be tagged by this point.
   assert(g_env->class_data_.size() >= class_tag);
   if (class_tag == g_env->class_class_tag_) {
@@ -556,25 +550,28 @@ jint MemoryTrackingEnv::HeapIterationCallback(jlong class_tag, jlong size,
       return JVMTI_VISIT_OBJECTS;
     }
   } else {
+    // We set the object allocation callbacks before we walk the heap, so we
+    // might see a race where non-class objects are already tagged before the
+    // heap walk, ignore them here.
+    if (*tag_ptr != 0) {
+      return JVMTI_VISIT_OBJECTS;
+    }
+
     int32_t tag = g_env->GetNextObjectTag();
     *tag_ptr = tag;
   }
 
-  AllocationEvent* event = sample->add_events();
-  event->set_timestamp(g_env->current_capture_time_ns_);
+  AllocationEvent event;
+  event.set_timestamp(g_env->current_capture_time_ns_);
+  AllocationEvent::Allocation* alloc = event.mutable_alloc_data();
 
-  AllocationEvent::Allocation* alloc = event->mutable_alloc_data();
   alloc->set_tag(*tag_ptr);
   alloc->set_class_tag(class_tag);
   alloc->set_size(size);
   alloc->set_length(length);
   alloc->set_heap_id(heap_id);
 
-  if (sample->events_size() >= kDataBatchSize) {
-    profiler::EnqueueAllocationEvents(*sample);
-    sample->clear_events();
-  }
-
+  g_env->allocation_event_queue_.Push(event);
   g_env->total_live_count_++;
 
   return JVMTI_VISIT_OBJECTS;

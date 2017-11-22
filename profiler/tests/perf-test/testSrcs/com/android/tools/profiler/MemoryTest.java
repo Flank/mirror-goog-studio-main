@@ -76,13 +76,6 @@ public class MemoryTest {
         int maxLoopCount = allocationCount * 100;
         HashSet<Integer> tags = new HashSet<Integer>();
 
-        // Temporary workaround for allocation bookkeeping gap during
-        // initialization (b/69639236). We want to make sure that allocation
-        // tracking fully works by the time we start testing.
-        androidDriver.triggerMethod(ACTIVITY_CLASS, "makeAllocationNoise");
-        assertThat(androidDriver.waitForInput("makeAllocationNoise")).isTrue();
-        java.lang.Thread.sleep(500);
-
         // Aborts if we loop too many times and somehow didn't get
         // back the alloc/dealloc data in time. This way the test won't timeout
         // even when fails.
