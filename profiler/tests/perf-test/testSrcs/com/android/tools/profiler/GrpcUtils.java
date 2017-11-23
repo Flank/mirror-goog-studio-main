@@ -3,6 +3,7 @@ package com.android.tools.profiler;
 import com.android.tools.profiler.proto.EventProfiler.ActivityDataResponse;
 import com.android.tools.profiler.proto.EventProfiler.EventDataRequest;
 import com.android.tools.profiler.proto.EventServiceGrpc;
+import com.android.tools.profiler.proto.MemoryServiceGrpc;
 import com.android.tools.profiler.proto.NetworkServiceGrpc;
 import com.android.tools.profiler.proto.Profiler;
 import com.android.tools.profiler.proto.ProfilerServiceGrpc;
@@ -19,6 +20,7 @@ public class GrpcUtils {
     private final ProfilerServiceGrpc.ProfilerServiceBlockingStub myProfilerServiceStub;
     private final EventServiceGrpc.EventServiceBlockingStub myEventServiceStub;
     private final NetworkServiceGrpc.NetworkServiceBlockingStub myNetworkServiceStub;
+    private final MemoryServiceGrpc.MemoryServiceBlockingStub myMemoryServiceStub;
 
     /**
      * Connect to perfd using a socket and port, currently abstract sockets are not supported.
@@ -28,6 +30,7 @@ public class GrpcUtils {
         myProfilerServiceStub = ProfilerServiceGrpc.newBlockingStub(myChannel);
         myEventServiceStub = EventServiceGrpc.newBlockingStub(myChannel);
         myNetworkServiceStub = NetworkServiceGrpc.newBlockingStub(myChannel);
+        myMemoryServiceStub = MemoryServiceGrpc.newBlockingStub(myChannel);
     }
 
     public ProfilerServiceGrpc.ProfilerServiceBlockingStub getProfilerStub() {
@@ -40,6 +43,10 @@ public class GrpcUtils {
 
     public NetworkServiceGrpc.NetworkServiceBlockingStub getNetworkStub() {
         return myNetworkServiceStub;
+    }
+
+    public MemoryServiceGrpc.MemoryServiceBlockingStub getMemoryStub() {
+        return myMemoryServiceStub;
     }
 
     private ManagedChannel connectGrpc(String socket, int port) {

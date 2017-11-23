@@ -21,7 +21,6 @@ import com.android.annotations.Nullable;
 import com.android.annotations.concurrency.Immutable;
 import com.android.builder.model.BaseConfig;
 import com.android.builder.model.ClassField;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.Serializable;
@@ -54,8 +53,6 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
     private final File mMultiDexKeepFile;
     @Nullable
     private final File mMultiDexKeepProguard;
-    @Nullable
-    private final List<File> mJarJarRuleFiles;
 
     protected BaseConfigImpl(@NonNull BaseConfig baseConfig) {
         mApplicationIdSuffix = baseConfig.getApplicationIdSuffix();
@@ -66,7 +63,6 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
         mMultiDexEnabled = baseConfig.getMultiDexEnabled();
         mMultiDexKeepFile = baseConfig.getMultiDexKeepFile();
         mMultiDexKeepProguard = baseConfig.getMultiDexKeepProguard();
-        mJarJarRuleFiles = ImmutableList.copyOf(baseConfig.getJarJarRuleFiles());
     }
 
     @Nullable
@@ -135,15 +131,6 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
         return mMultiDexKeepProguard;
     }
 
-    @NonNull
-    @Override
-    public List<File> getJarJarRuleFiles() {
-        if (mJarJarRuleFiles == null) {
-            return ImmutableList.of();
-        }
-        return mJarJarRuleFiles;
-    }
-
     @Override
     public String toString() {
         return "BaseConfigImpl{"
@@ -161,8 +148,6 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
                 + mResValues
                 + ", mMultiDexEnabled="
                 + mMultiDexEnabled
-                + ", mJarJarRuleFiles="
-                + mJarJarRuleFiles
                 + '}';
     }
 
@@ -182,8 +167,7 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
                 && Objects.equals(mResValues, that.mResValues)
                 && Objects.equals(mMultiDexEnabled, that.mMultiDexEnabled)
                 && Objects.equals(mMultiDexKeepFile, that.mMultiDexKeepFile)
-                && Objects.equals(mMultiDexKeepProguard, that.mMultiDexKeepProguard)
-                && Objects.equals(mJarJarRuleFiles, that.mJarJarRuleFiles);
+                && Objects.equals(mMultiDexKeepProguard, that.mMultiDexKeepProguard);
     }
 
     @Override
@@ -196,7 +180,6 @@ abstract class BaseConfigImpl implements BaseConfig, Serializable {
                 mResValues,
                 mMultiDexEnabled,
                 mMultiDexKeepFile,
-                mMultiDexKeepProguard,
-                mJarJarRuleFiles);
+                mMultiDexKeepProguard);
     }
 }

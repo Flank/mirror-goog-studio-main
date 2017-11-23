@@ -893,11 +893,6 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
         flavor.setMultiDexKeepProguard(chooseNotNull(
                 overlay.getMultiDexKeepProguard(), base.getMultiDexKeepProguard()));
 
-        flavor.setJarJarRuleFiles(ImmutableList.<File>builder()
-                .addAll(overlay.getJarJarRuleFiles())
-                .addAll(base.getJarJarRuleFiles())
-                .build());
-
         flavor.getVectorDrawables().setGeneratedDensities(
                 chooseNotNull(
                         overlay.getVectorDrawables().getGeneratedDensities(),
@@ -971,7 +966,6 @@ public class DefaultProductFlavor extends BaseConfigImpl implements ProductFlavo
 
         flavor.setMultiDexKeepFile(productFlavor.getMultiDexKeepFile());
         flavor.setMultiDexKeepProguard(productFlavor.getMultiDexKeepProguard());
-        flavor.setJarJarRuleFiles(ImmutableList.copyOf(productFlavor.getJarJarRuleFiles()));
 
         if (productFlavor instanceof DefaultProductFlavor) {
             final DefaultProductFlavor defaultProductFlavor = (DefaultProductFlavor) productFlavor;

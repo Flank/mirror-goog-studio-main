@@ -16,61 +16,89 @@
  */
 #include "jni_function_table.h"
 
+#include <atomic>
 #include <cstdarg>
+#include <mutex>
+
+#include "utils/log.h"
 
 namespace profiler {
 
-static jniNativeInterface *g_old_native_table = nullptr;
-static GlobalRefListener *g_gref_listener = nullptr;
+static jniNativeInterface *g_original_native_table = nullptr;
+static std::atomic<GlobalRefListener *>g_gref_listener(nullptr);
 
 namespace jni_wrappers {
 
 static jobject NewGlobalRef(JNIEnv *env, jobject lobj) {
-  auto result = g_old_native_table->NewGlobalRef(env, lobj);
-  g_gref_listener->AfterGlobalRefCreated(lobj, result);
+  auto result = g_original_native_table->NewGlobalRef(env, lobj);
+  GlobalRefListener *gref_listener = g_gref_listener;
+  if (gref_listener != nullptr) {
+    gref_listener->AfterGlobalRefCreated(lobj, result);
+  }
   return result;
 }
 
 static void DeleteGlobalRef(JNIEnv *env, jobject gref) {
-  g_gref_listener->BeforeGlobalRefDeleted(gref);
-  g_old_native_table->DeleteGlobalRef(env, gref);
+  GlobalRefListener *gref_listener = g_gref_listener;
+  if (gref_listener != nullptr) {
+    gref_listener->BeforeGlobalRefDeleted(gref);
+  }
+  g_original_native_table->DeleteGlobalRef(env, gref);
 }
 
 static jweak NewWeakGlobalRef(JNIEnv *env, jobject obj) {
-  auto result = g_old_native_table->NewWeakGlobalRef(env, obj);
-  g_gref_listener->AfterGlobalWeakRefCreated(obj, result);
+  auto result = g_original_native_table->NewWeakGlobalRef(env, obj);
+  GlobalRefListener *gref_listener = g_gref_listener;
+  if (gref_listener != nullptr) {
+    gref_listener->AfterGlobalWeakRefCreated(obj, result);
+  }
   return result;
 }
 
 static void DeleteWeakGlobalRef(JNIEnv *env, jweak ref) {
-  g_gref_listener->BeforeGlobalWeakRefDeleted(ref);
-  g_old_native_table->DeleteWeakGlobalRef(env, ref);
+  GlobalRefListener *gref_listener = g_gref_listener;
+  if (gref_listener != nullptr) {
+    gref_listener->BeforeGlobalWeakRefDeleted(ref);
+  }
+  g_original_native_table->DeleteWeakGlobalRef(env, ref);
 }
 
 }  // namespace jni_wrappers
 
-bool RegisterNewJniTable(jvmtiEnv *jvmti_env,
-                         GlobalRefListener *gref_listener) {
-  // We must have both arguments to successfully register new JNI table.
-  if (jvmti_env == nullptr || gref_listener == nullptr) return false;
+bool RegisterJniTableListener(jvmtiEnv *jvmti_env,
+                              GlobalRefListener *gref_listener) {
+  static std::mutex g_mutex;
+  std::lock_guard<std::mutex> guard(g_mutex);
+  jvmtiError error = JVMTI_ERROR_NONE;
 
-  // We can call RegisterNewJniTable only once.
-  if (g_old_native_table != nullptr || g_gref_listener != nullptr) return false;
+  if (jvmti_env == nullptr) return false;
 
-  jvmtiError error = jvmti_env->GetJNIFunctionTable(&g_old_native_table);
-  if (error != JNI_OK || g_old_native_table == nullptr) return false;
+  // Get original JNI table when RegisterJniTableListener called for the
+  // very first time.
+  if (g_original_native_table == nullptr) {
+    jvmtiError error = jvmti_env->GetJNIFunctionTable(&g_original_native_table);
+    if (error != JVMTI_ERROR_NONE || g_original_native_table == nullptr) {
+      Log::E("Failed obtain original JNI table.");
+      return false;
+    }
+  }
+  // Copy an old table into a new one.
+  jniNativeInterface new_native_table = *g_original_native_table;
 
-  // Copy an old table into a new one and amend it with our wrappers around
+  // If needed amend the new table with our wrappers around
   // global reference related functions.
-  static jniNativeInterface new_native_table = *g_old_native_table;
-  new_native_table.NewGlobalRef = jni_wrappers::NewGlobalRef;
-  new_native_table.DeleteGlobalRef = jni_wrappers::DeleteGlobalRef;
-  new_native_table.NewWeakGlobalRef = jni_wrappers::NewWeakGlobalRef;
-  new_native_table.DeleteWeakGlobalRef = jni_wrappers::DeleteWeakGlobalRef;
+  if (gref_listener != nullptr) {
+    new_native_table.NewGlobalRef = jni_wrappers::NewGlobalRef;
+    new_native_table.DeleteGlobalRef = jni_wrappers::DeleteGlobalRef;
+    new_native_table.NewWeakGlobalRef = jni_wrappers::NewWeakGlobalRef;
+    new_native_table.DeleteWeakGlobalRef = jni_wrappers::DeleteWeakGlobalRef;
+  }
 
   error = jvmti_env->SetJNIFunctionTable(&new_native_table);
-  if (error != JNI_OK) return false;
-
+  if (error != JVMTI_ERROR_NONE) {
+    Log::E("Failed to set new JNI table");
+    return false;
+  }
   g_gref_listener = gref_listener;
 
   return true;

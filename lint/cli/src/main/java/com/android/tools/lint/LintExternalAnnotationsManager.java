@@ -41,6 +41,8 @@ import java.util.List;
 import java.util.Set;
 
 public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManager {
+    public static final String SDK_ANNOTATIONS_PATH = "annotations.zip";
+    public static final String FN_ANNOTATIONS_XML = "annotations.xml";
 
     private final List<VirtualFile> roots = Lists.newArrayList();
 
@@ -85,7 +87,7 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
             }
         }
 
-        File sdkAnnotations = client.findResource(ExternalAnnotationRepository.SDK_ANNOTATIONS_PATH);
+        File sdkAnnotations = client.findResource(SDK_ANNOTATIONS_PATH);
         if (sdkAnnotations == null) {
             // Until the SDK annotations are bundled in platform tools, provide
             // a fallback for Gradle builds to point to a locally installed version
@@ -119,9 +121,6 @@ public class LintExternalAnnotationsManager extends BaseExternalAnnotationsManag
                     virtualFile = jar.findFileByPath(file.getAbsolutePath() + "!/");
                 } else {
                     virtualFile = local.findFileByPath(file.getAbsolutePath());
-                }
-                if (virtualFile == null) {
-                    System.out.println("WTF?");
                 }
             }
             if (virtualFile != null) {

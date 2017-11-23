@@ -89,7 +89,8 @@ public final class ProjectOptions {
     private static ImmutableMap<String, Object> copyAndModifyProperties(
             @NonNull Project project, @NonNull ImmutableMap<String, Object> overwrites) {
         ImmutableMap.Builder<String, Object> optionsBuilder = ImmutableMap.builder();
-        for (Map.Entry<String, ?> entry : project.getProperties().entrySet()) {
+        for (Map.Entry<String, ?> entry :
+                project.getExtensions().getExtraProperties().getProperties().entrySet()) {
             Object value = entry.getValue();
             if (value != null && !overwrites.containsKey(entry.getKey())) {
                 optionsBuilder.put(entry.getKey(), value);

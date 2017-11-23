@@ -29,5 +29,5 @@ android {
 }
 
 dependencies {
-    compile "com.android.support:support-v4:${rootProject.supportLibVersion}"
+    compile "com.android.databinding:library:${rootProject.buildVersion}"
 }

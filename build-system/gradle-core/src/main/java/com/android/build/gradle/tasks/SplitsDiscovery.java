@@ -23,6 +23,8 @@ import com.android.build.gradle.internal.scope.SplitList;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.AndroidBuilderTask;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -33,6 +35,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 import joptsimple.internal.Strings;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.CacheableTask;
@@ -64,6 +68,8 @@ public class SplitsDiscovery extends AndroidBuilderTask {
     Set<String> abiFilters;
     boolean resConfigAuto;
     Collection<String> resourceConfigs;
+
+    boolean aapt2Enabled;
 
     @InputFiles
     @Optional
@@ -112,6 +118,11 @@ public class SplitsDiscovery extends AndroidBuilderTask {
         return resourceConfigs;
     }
 
+    @Input
+    public boolean isAapt2Enabled() {
+        return aapt2Enabled;
+    }
+
     File persistedList;
 
     @OutputFile
@@ -155,6 +166,9 @@ public class SplitsDiscovery extends AndroidBuilderTask {
                     resourceFolders,
                     "Merged resources must be supplied to perform automatic discovery of splits.");
             filtersList.addAll(getAllFilters(resourceFolders, filterType.folderPrefix));
+            if (filterType == DiscoverableFilterType.LANGUAGE && isAapt2Enabled()) {
+                filtersList = mergeFiltersByRootLanguage(filtersList);
+            }
         } else {
             filtersList.addAll(filterType.getConfiguredFilters(this));
         }
@@ -199,6 +213,29 @@ public class SplitsDiscovery extends AndroidBuilderTask {
             }
         }
         return providedResFolders;
+    }
+
+
+    @NonNull
+    private static Set<String> mergeFiltersByRootLanguage(@NonNull Collection<String> filters) {
+        // Group the filters by root language, then sort the resulting groups with TreeSets.
+        // Then, join the resulting sets of strings with commas to get the merged filters
+        Collection<String> combinedFilters =
+                filters.stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        SplitsDiscovery::getRootLanguage,
+                                        Collectors.collectingAndThen(
+                                                Collectors.toCollection(TreeSet::new),
+                                                sortedStrings -> String.join(",", sortedStrings))))
+                        .values();
+
+        return new HashSet<>(combinedFilters);
+    }
+
+    @NonNull
+    private static String getRootLanguage(String fullFilter) {
+        return fullFilter.split("\\P{Alpha}")[0];
     }
 
     private static String getFilter(File file, String prefix) {
@@ -341,6 +378,10 @@ public class SplitsDiscovery extends AndroidBuilderTask {
                 task.mergedResourcesFolders =
                         variantScope.getOutput(VariantScope.TaskOutputType.MERGED_RES);
             }
+
+            final ProjectOptions projectOptions = variantScope.getGlobalScope().getProjectOptions();
+            task.aapt2Enabled = projectOptions.get(BooleanOption.ENABLE_AAPT2);
+
         }
     }
 }

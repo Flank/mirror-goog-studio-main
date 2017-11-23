@@ -68,12 +68,14 @@ public class CmakeExternalNativeJsonGeneratorTest {
         String otherErrorFile = "MissingErrorFile.txt";
         String base =
                 ERROR_STRING
-                        + "\n"
-                        + "This line should not change at all\n "
+                        + System.lineSeparator()
+                        + "This line should not change at all"
+                        + System.lineSeparator()
+                        + " "
                         + ERROR_STRING
-                        + "\n"
-                        + "\n"
-                        + "\n"
+                        + System.lineSeparator()
+                        + System.lineSeparator()
+                        + System.lineSeparator()
                         + "Another string that won't match the RegEx.";
 
         String input =

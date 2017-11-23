@@ -52,6 +52,26 @@ import org.jetbrains.uast.UMethod
 import java.io.File
 import java.util.ArrayList
 
+const val TYPE_OBJECT = "java.lang.Object"
+const val TYPE_STRING = "java.lang.String"
+const val TYPE_INT = "int"
+const val TYPE_LONG = "long"
+const val TYPE_CHAR = "char"
+const val TYPE_FLOAT = "float"
+const val TYPE_DOUBLE = "double"
+const val TYPE_BOOLEAN = "boolean"
+const val TYPE_SHORT = "short"
+const val TYPE_BYTE = "byte"
+const val TYPE_NULL = "null"
+const val TYPE_INTEGER_WRAPPER = "java.lang.Integer"
+const val TYPE_BOOLEAN_WRAPPER = "java.lang.Boolean"
+const val TYPE_BYTE_WRAPPER = "java.lang.Byte"
+const val TYPE_SHORT_WRAPPER = "java.lang.Short"
+const val TYPE_LONG_WRAPPER = "java.lang.Long"
+const val TYPE_DOUBLE_WRAPPER = "java.lang.Double"
+const val TYPE_FLOAT_WRAPPER = "java.lang.Float"
+const val TYPE_CHARACTER_WRAPPER = "java.lang.Character"
+
 abstract// Some of these methods may be overridden by LintClients
 class JavaEvaluator {
     abstract val dependencies: Dependencies?

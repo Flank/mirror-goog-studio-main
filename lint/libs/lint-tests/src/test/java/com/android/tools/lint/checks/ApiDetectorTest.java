@@ -4189,6 +4189,33 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void testFontFamilyWithAppCompat() {
+        lint().files(
+                manifest().minSdk(1),
+                xml("res/layout/foo.xml", "" +
+                        "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
+                        "    android:id=\"@+id/LinearLayout1\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\"\n" +
+                        "    android:orientation=\"vertical\" >\n" +
+                        "    <TextView\n" +
+                        "        android:fontFamily=\"@font/my_font\"\n" +
+                        "        android:layout_width=\"wrap_content\"\n" +
+                        "        android:layout_height=\"wrap_content\"/>\n" +
+                        "</LinearLayout>\n"),
+                gradle("apply plugin: 'com.android.application'\n" +
+                        "dependencies {\n" +
+                        "    compile 'com.android.support:appcompat-v7:+'\n" +
+                        "}\n"))
+                .checkMessage(this::checkReportedError)
+                .run()
+                .expect("res/layout/foo.xml:8: Warning: Attribute fontFamily is only used in API level 16 and higher (current min is 1) Did you mean app:fontFamily ? [UnusedAttribute]\n" +
+                        "        android:fontFamily=\"@font/my_font\"\n" +
+                        "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "0 errors, 1 warnings");
+    }
+
     @SuppressWarnings("all") // sample code
     public void testInlinedConstantConditional() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=205925

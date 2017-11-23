@@ -24,6 +24,7 @@ import com.android.tools.lint.checks.AnnotationDetector.MAIN_THREAD_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.THREAD_SUFFIX
 import com.android.tools.lint.checks.AnnotationDetector.UI_THREAD_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.WORKER_THREAD_ANNOTATION
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -52,7 +53,8 @@ class ThreadDetector : AbstractAnnotationDetector(), Detector.UastScanner {
 
     override fun visitAnnotationUsage(
             context: JavaContext,
-            argument: UElement,
+            usage: UElement,
+            type: AnnotationUsageType,
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
@@ -61,7 +63,7 @@ class ThreadDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             allClassAnnotations: List<UAnnotation>,
             allPackageAnnotations: List<UAnnotation>) {
         if (method != null) {
-            checkThreading(context, argument, method, qualifiedName, annotation,
+            checkThreading(context, usage, method, qualifiedName, annotation,
                     allMemberAnnotations,
                     allClassAnnotations)
         }
@@ -170,15 +172,13 @@ class ThreadDetector : AbstractAnnotationDetector(), Detector.UastScanner {
         return sb.toString()
     }
 
-    private fun describeThread(annotation: String): String {
-        return when (annotation) {
-            UI_THREAD_ANNOTATION -> "UI"
-            MAIN_THREAD_ANNOTATION -> "main"
-            BINDER_THREAD_ANNOTATION -> "binder"
-            WORKER_THREAD_ANNOTATION -> "worker"
-            ANY_THREAD_ANNOTATION -> "any"
-            else -> "other"
-        }
+    private fun describeThread(annotation: String): String = when (annotation) {
+        UI_THREAD_ANNOTATION -> "UI"
+        MAIN_THREAD_ANNOTATION -> "main"
+        BINDER_THREAD_ANNOTATION -> "binder"
+        WORKER_THREAD_ANNOTATION -> "worker"
+        ANY_THREAD_ANNOTATION -> "any"
+        else -> "other"
     }
 
     /** returns true if the two threads are compatible  */

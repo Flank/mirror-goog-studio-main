@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import com.android.SdkConstants;
+import com.android.utils.XmlUtils;
 import com.google.common.collect.ImmutableMap;
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -29,9 +29,7 @@ import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
-import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -96,7 +94,7 @@ class VdPath extends VdElement {
     }
 
     /**
-     * Represent one segment of the path data. Like "l 0,0 1,1"
+     * Represents one segment of the path data. Like "l 0,0 1,1"
      */
     public static class Node {
         private char mType;
@@ -131,7 +129,7 @@ class VdPath extends VdElement {
             return false;
         }
 
-        public static String NodeListToString(Node[] nodes, String decimalPlaceString) {
+        public static String nodeListToString(Node[] nodes, DecimalFormat decimalFormat) {
             StringBuilder stringBuilder = new StringBuilder();
             for (Node n : nodes) {
                 stringBuilder.append(n.mType);
@@ -149,18 +147,8 @@ class VdPath extends VdElement {
                     if (implicitLineTo && j == 2) {
                         stringBuilder.append(lineToType);
                     }
-                    // To avoid trailing zeros like 17.0, use this trick
-                    float value = n.mParams[j];
-                    if (value == (long) value) {
-                        stringBuilder.append(String.valueOf((long) value));
-                    } else {
-                        DecimalFormatSymbols fractionSeparator = new DecimalFormatSymbols();
-                        fractionSeparator.setDecimalSeparator('.');
-                        DecimalFormat df = new DecimalFormat(decimalPlaceString, fractionSeparator);
-                        df.setRoundingMode(RoundingMode.HALF_UP);
-                        stringBuilder.append(df.format(value));
-                    }
-
+                    String str = XmlUtils.trimInsignificantZeros(decimalFormat.format(n.mParams[j]));
+                    stringBuilder.append(str);
                 }
             }
 

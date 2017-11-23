@@ -10,7 +10,6 @@
             <tr><td>dimension</td></tr>
             <tr><td>externalNativeBuild</td></tr>
             <tr><td>generatedDensities</td></tr>
-            <tr><td>jackOptions</td></tr>
             <tr><td>javaCompileOptions</td></tr>
             <tr><td>multiDexEnabled</td></tr>
             <tr><td>ndk</td></tr>
@@ -20,7 +19,6 @@
             <tr><td>testHandleProfiling</td></tr>
             <tr><td>testInstrumentationRunner</td></tr>
             <tr><td>testInstrumentationRunnerArguments</td></tr>
-            <tr><td>useJack</td></tr>
             <tr><td>vectorDrawables</td></tr>
             <tr><td>versionCode</td></tr>
             <tr><td>versionName</td></tr>
@@ -38,7 +36,6 @@
             <tr><td>consumerProguardFile</td></tr>
             <tr><td>consumerProguardFiles</td></tr>
             <tr><td>externalNativeBuild</td></tr>
-            <tr><td>jackOptions</td></tr>
             <tr><td>maxSdkVersion</td></tr>
             <tr><td>maxSdkVersion</td></tr>
             <tr><td>minSdkVersion</td></tr>

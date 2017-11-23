@@ -28,11 +28,10 @@ namespace profiler {
 // Wrap a jbyteArray, exposing it as a std::string of bytes
 class JByteArrayWrapper {
  public:
-  JByteArrayWrapper(JNIEnv *env, const jbyteArray &jbytes) {
-    int len = env->GetArrayLength(jbytes);
-    char bytes[len];
-    env->GetByteArrayRegion(jbytes, 0, len, reinterpret_cast<jbyte *>(bytes));
-    byte_str_.assign(bytes, len);
+  JByteArrayWrapper(JNIEnv *env, const jbyteArray &jbytes, const jint jlen) {
+    char bytes[jlen];
+    env->GetByteArrayRegion(jbytes, 0, jlen, reinterpret_cast<jbyte *>(bytes));
+    byte_str_.assign(bytes, jlen);
   }
 
   // Note: Although this is technically returning a string, this really is more

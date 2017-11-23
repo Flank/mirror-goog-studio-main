@@ -19,7 +19,6 @@ package com.android.tools.profiler.support.network.okhttp;
 import com.android.tools.profiler.support.util.StudioLog;
 import dalvik.system.DexClassLoader;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings("unused") // This class and all methods referenced via instrumentation.
@@ -76,25 +75,48 @@ public final class OkHttp2Wrapper {
     }
 
     /**
-     * Adds an okhttp2 Interceptor to a {@code List<Interceptor>}, returning a copy of the list with
-     * the interceptor added at the beginning of the list.
+     * Modifies a list of okhttp2 {@code List<Interceptor>}s in place, adding our own profiler
+     * interceptor into it if not already present, and then returning the list again (so that this
+     * method can be inserted into the middle of instrumented code).
      *
-     * <p>This is the entry-point for runtime (JVMTI) BCI. It dynamically loads Interceptor class
-     * from dex file which uses compileOnly dependency on OkHttp.
+     * <p>In okhttp2 (unlike okhttp3), {@code networkInterceptors()} returns direct access to an
+     * {@code OkHttpClient}s list of interceptors and uses that as the API for a user to add more,
+     * e.g.
+     *
+     * <pre>
+     *   OkHttpClient client = ...;
+     *   client.networkInterceptors().add(customInterceptor);
+     * </pre>
+     *
+     * Therefore, we have to modify the list in place, whenever it is first accessed (either by the
+     * user to add their own interceptor, or by OkHttp internally to iterate through all
+     * interceptors). If we created a copy of the list and returned that instead (a common
+     * instrumentation pattern), then the user's interceptor would never actually get added into the
+     * underlying list.
+     *
+     * <p>This is the entry-point for runtime (JVMTI) BCI. It dynamically loads the {@code
+     * Interceptor} class from a dex build of OkHttp2.
      */
     @SuppressWarnings("unchecked")
     public static List insertInterceptor(List interceptors) {
-        ArrayList list = new ArrayList(interceptors);
         try {
             if (myOkHttp2ClassLoader.get() != null) {
                 Class<?> interceptorClass =
                         myOkHttp2ClassLoader.get().loadClass(OKHTTP2_INTERCEPTOR_CLASS_NAME);
-                list.add(0, interceptorClass.newInstance());
+
+                for (Object interceptor : interceptors) {
+                    if (interceptor.getClass() == interceptorClass) {
+                        // We can abort early if we're already added
+                        return interceptors;
+                    }
+                }
+
+                interceptors.add(0, interceptorClass.newInstance());
             }
         } catch (Exception ex) {
             StudioLog.e("Could not insert an OkHttp2 profiler interceptor", ex);
         }
-        return list;
+        return interceptors;
     }
 
     private static String getDexPath() {

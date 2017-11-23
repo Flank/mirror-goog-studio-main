@@ -176,9 +176,7 @@ class ReflectiveLintRunner {
                 if (name.startsWith("uast-") ||
                         name.startsWith("intellij-core-") ||
                         name.startsWith("kotlin-compiler-") ||
-                        name.startsWith("lombok-ast-") ||
                         name.startsWith("asm-") ||
-                        name.startsWith("ecj-") ||
                         name.startsWith("kxml2-") ||
                         name.startsWith("trove4j-") ||
                         name.startsWith("groovy-all-") ||

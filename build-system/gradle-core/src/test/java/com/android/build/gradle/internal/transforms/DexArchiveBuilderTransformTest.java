@@ -303,18 +303,19 @@ public class DexArchiveBuilderTransformTest {
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(4);
 
         DexArchiveBuilderTransform useDifferentDexerTransform =
-                new DexArchiveBuilderTransform(
-                        () -> Collections.emptyList(),
-                        new DefaultDexOptions(),
-                        new NoOpMessageReceiver(),
-                        userCache,
-                        20,
-                        dexerTool == DexerTool.DX ? DexerTool.D8 : DexerTool.DX,
-                        true,
-                        10,
-                        10,
-                        false,
-                        VariantScope.Java8LangSupport.UNUSED);
+                new DexArchiveBuilderTransformBuilder()
+                        .setAndroidJarClasspath(() -> Collections.emptyList())
+                        .setDexOptions(new DefaultDexOptions())
+                        .setMessageReceiver(new NoOpMessageReceiver())
+                        .setUserLevelCache(userCache)
+                        .setMinSdkVersion(20)
+                        .setDexer(dexerTool == DexerTool.DX ? DexerTool.D8 : DexerTool.DX)
+                        .setUseGradleWorkers(true)
+                        .setInBufferSize(10)
+                        .setOutBufferSize(10)
+                        .setIsDebuggable(false)
+                        .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
+                        .createDexArchiveBuilderTransform();
         useDifferentDexerTransform.transform(invocation);
         assertThat(cacheEntriesCount(cacheDir)).isEqualTo(5);
     }
@@ -433,18 +434,19 @@ public class DexArchiveBuilderTransformTest {
     private DexArchiveBuilderTransform getTransform(
             @Nullable FileCache userCache, int minSdkVersion, boolean isDebuggable) {
 
-        return new DexArchiveBuilderTransform(
-                () -> Collections.emptyList(),
-                new DefaultDexOptions(),
-                new NoOpMessageReceiver(),
-                userCache,
-                minSdkVersion,
-                dexerTool,
-                true,
-                10,
-                10,
-                isDebuggable,
-                VariantScope.Java8LangSupport.UNUSED);
+        return new DexArchiveBuilderTransformBuilder()
+                .setAndroidJarClasspath(() -> Collections.emptyList())
+                .setDexOptions(new DefaultDexOptions())
+                .setMessageReceiver(new NoOpMessageReceiver())
+                .setUserLevelCache(userCache)
+                .setMinSdkVersion(minSdkVersion)
+                .setDexer(dexerTool)
+                .setUseGradleWorkers(true)
+                .setInBufferSize(10)
+                .setOutBufferSize(10)
+                .setIsDebuggable(isDebuggable)
+                .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
+                .createDexArchiveBuilderTransform();
     }
 
     @NonNull

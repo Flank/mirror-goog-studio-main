@@ -38,11 +38,9 @@ import com.android.build.gradle.internal.NativeLibraryFactoryImpl;
 import com.android.build.gradle.internal.NonFinalPluginExpiry;
 import com.android.build.gradle.internal.PluginInitializer;
 import com.android.build.gradle.internal.SdkHandler;
-import com.android.build.gradle.internal.TaskContainerAdaptor;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.VariantManager;
 import com.android.build.gradle.internal.api.dsl.extensions.BaseExtension2;
-import com.android.build.gradle.internal.coverage.JacocoPlugin;
 import com.android.build.gradle.internal.dsl.BuildType;
 import com.android.build.gradle.internal.dsl.BuildTypeFactory;
 import com.android.build.gradle.internal.dsl.ProductFlavor;
@@ -129,7 +127,8 @@ import org.gradle.api.tasks.StopExecutionException;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** Base class for all Android plugins */
-public abstract class BasePlugin<E extends BaseExtension2> implements ToolingRegistryProvider {
+public abstract class BasePlugin<E extends BaseExtension2>
+        implements Plugin<Project>, ToolingRegistryProvider {
 
     @VisibleForTesting
     public static final GradleVersion GRADLE_MIN_VERSION =
@@ -217,8 +216,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
         return variantManager;
     }
 
-    @VisibleForTesting
-    BaseExtension getExtension() {
+    public BaseExtension getExtension() {
         return extension;
     }
 
@@ -235,7 +233,8 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
         return loggerWrapper;
     }
 
-    protected void apply(@NonNull Project project) {
+    @Override
+    public void apply(@NonNull Project project) {
         // We run by default in headless mode, so the JVM doesn't steal focus.
         System.setProperty("java.awt.headless", "true");
 
@@ -277,9 +276,8 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                     null,
                     this::createTasks);
         } else {
-            // Apply the Java and Jacoco plugins.
+            // Apply the Java plugin
             project.getPlugins().apply(JavaBasePlugin.class);
-            project.getPlugins().apply(JacocoPlugin.class);
 
             // create the delegate
             ProjectWrapper projectWrapper = new ProjectWrapper(project);
@@ -348,9 +346,8 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
         dataBindingBuilder.setPrintMachineReadableOutput(
                 SyncOptions.getErrorFormatMode(projectOptions) == ErrorFormatMode.MACHINE_PARSABLE);
 
-        // Apply the Java and Jacoco plugins.
+        // Apply the Java plugin
         project.getPlugins().apply(JavaBasePlugin.class);
-        project.getPlugins().apply(JacocoPlugin.class);
 
         project.getTasks()
                 .getByName("assemble")
@@ -453,11 +450,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
         final NamedDomainObjectContainer<ProductFlavor> productFlavorContainer =
                 project.container(
                         ProductFlavor.class,
-                        new ProductFlavorFactory(
-                                objectFactory,
-                                project,
-                                project.getLogger(),
-                                extraModelInfo.getDeprecationReporter()));
+                        new ProductFlavorFactory(objectFactory, project, project.getLogger()));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
                 project.container(SigningConfig.class, new SigningConfigFactory(objectFactory));
 
@@ -600,9 +593,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
                 ExecutionType.TASK_MANAGER_CREATE_TASKS,
                 project.getPath(),
                 null,
-                () ->
-                        taskManager.createTasksBeforeEvaluate(
-                                new TaskContainerAdaptor(project.getTasks())));
+                () -> taskManager.createTasksBeforeEvaluate());
 
         project.afterEvaluate(
                 project ->
@@ -675,7 +666,7 @@ public abstract class BasePlugin<E extends BaseExtension2> implements ToolingReg
 
         extension.disableWrite();
 
-        taskManager.configureCustomLintChecks(new TaskContainerAdaptor(project.getTasks()));
+        taskManager.configureCustomLintChecks();
 
         ProcessProfileWriter.getProject(project.getPath())
                 .setCompileSdk(extension.getCompileSdkVersion())

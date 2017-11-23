@@ -46,6 +46,19 @@ abstract class IssueRegistry
 protected constructor() {
 
     /**
+     * The Lint API version this issue registry's checks were compiled.
+     * You should return
+     */
+    open val api: Int = -1
+
+    /**
+     * The minimum API version this issue registry works with. Normally the
+     * same as [api], but if you have tested it with older version and it
+     * works, you can return that level.
+     */
+    open val minApi: Int get() { return api }
+
+    /**
      * The list of issues that can be found by all known detectors (including those that may be
      * disabled!)
      */
@@ -298,11 +311,11 @@ protected constructor() {
                 "LintError",
                 "Lint Failure",
                 "This issue type represents a problem running lint itself. Examples include " +
-                        "failure to find bytecode for source files (which means certain detectors " +
-                        "could not be run), parsing errors in lint configuration files, etc." +
-                        "\n" +
-                        "These errors are not errors in your own code, but they are shown to make " +
-                        "it clear that some checks were not completed.",
+                "failure to find bytecode for source files (which means certain detectors " +
+                "could not be run), parsing errors in lint configuration files, etc." +
+                "\n" +
+                "These errors are not errors in your own code, but they are shown to make " +
+                "it clear that some checks were not completed.",
 
                 Category.LINT,
                 10,
@@ -362,14 +375,18 @@ protected constructor() {
                 "Obsolete custom lint check",
 
                 "Lint can be extended with \"custom checks\": additional checks implemented by " +
-                        "developers and libraries to for example enforce specific API usages required " +
-                        "by a library or a company coding style guideline.\n" +
-                        "\n" +
-                        "The Lint APIs are not yet stable, so these checks may either cause a performance, " +
-                        "degradation, or stop working, or provide wrong results.\n" +
-                        "\n" +
-                        "This warning flags custom lint checks that are found to be using obsolete APIs and " +
-                        "will need to be updated to run in the current lint environment.",
+                "developers and libraries to for example enforce specific API usages required " +
+                "by a library or a company coding style guideline.\n" +
+                "\n" +
+                "The Lint APIs are not yet stable, so these checks may either cause a performance, " +
+                "degradation, or stop working, or provide wrong results.\n" +
+                "\n" +
+                "This warning flags custom lint checks that are found to be using obsolete APIs and " +
+                "will need to be updated to run in the current lint environment." +
+                "\n" +
+                "It may also flag issues found to be using a **newer** version of the API, " +
+                "meaning that you need to use a newer version of lint (or Android Studio " +
+                "or Gradle plugin etc) to work with these checks.",
 
                 Category.LINT,
                 10,

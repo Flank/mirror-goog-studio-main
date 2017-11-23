@@ -171,8 +171,7 @@ public class InstantRunResourcesApkBuilder extends AndroidBuilderTask {
             resourcesApkBuilder.setVariantName(packagingScope.getFullVariantName());
             resourcesApkBuilder.resInputType = resInputType;
             resourcesApkBuilder.outputScope = packagingScope.getOutputScope();
-            resourcesApkBuilder.supportDirectory =
-                    packagingScope.getIncrementalDir("instant-run-resources");
+            resourcesApkBuilder.supportDirectory = packagingScope.getIncrementalDir(getName());
             resourcesApkBuilder.androidBuilder = packagingScope.getAndroidBuilder();
             resourcesApkBuilder.signingConf = packagingScope.getSigningConfig();
             resourcesApkBuilder.instantRunBuildContext = packagingScope.getInstantRunBuildContext();

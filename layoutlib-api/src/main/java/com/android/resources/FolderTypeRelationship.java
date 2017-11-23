@@ -39,40 +39,51 @@ public final class FolderTypeRelationship {
 
     static {
         // generate the relationships in a temporary map
+
+        // Non-id resources which appear in non-value folders.
         add(ResourceType.ANIM, ResourceFolderType.ANIM);
         add(ResourceType.ANIMATOR, ResourceFolderType.ANIMATOR);
+        add(ResourceType.COLOR, ResourceFolderType.COLOR);
+        add(ResourceType.DRAWABLE, ResourceFolderType.DRAWABLE);
+        add(ResourceType.FONT, ResourceFolderType.FONT);
+        add(ResourceType.INTERPOLATOR, ResourceFolderType.INTERPOLATOR);
+        add(ResourceType.LAYOUT, ResourceFolderType.LAYOUT);
+        add(ResourceType.MENU, ResourceFolderType.MENU);
+        add(ResourceType.MIPMAP, ResourceFolderType.MIPMAP);
+        add(ResourceType.RAW, ResourceFolderType.RAW);
+        add(ResourceType.TRANSITION, ResourceFolderType.TRANSITION);
+        add(ResourceType.XML, ResourceFolderType.XML);
+        add(ResourceType.NAVIGATION, ResourceFolderType.NAVIGATION);
+
+
+        // Resource types which can appear in values/
         add(ResourceType.ARRAY, ResourceFolderType.VALUES);
         add(ResourceType.ATTR, ResourceFolderType.VALUES);
         add(ResourceType.BOOL, ResourceFolderType.VALUES);
         add(ResourceType.COLOR, ResourceFolderType.VALUES);
-        add(ResourceType.COLOR, ResourceFolderType.COLOR);
         add(ResourceType.DECLARE_STYLEABLE, ResourceFolderType.VALUES);
         add(ResourceType.DIMEN, ResourceFolderType.VALUES);
         add(ResourceType.DRAWABLE, ResourceFolderType.VALUES);
-        add(ResourceType.DRAWABLE, ResourceFolderType.DRAWABLE);
-        add(ResourceType.FONT, ResourceFolderType.FONT);
-        add(ResourceType.ID, ResourceFolderType.DRAWABLE);
         add(ResourceType.FRACTION, ResourceFolderType.VALUES);
         add(ResourceType.ID, ResourceFolderType.VALUES);
         add(ResourceType.INTEGER, ResourceFolderType.VALUES);
-        add(ResourceType.INTERPOLATOR, ResourceFolderType.INTERPOLATOR);
-        add(ResourceType.LAYOUT, ResourceFolderType.LAYOUT);
-        add(ResourceType.ID, ResourceFolderType.LAYOUT);
-        add(ResourceType.MENU, ResourceFolderType.MENU);
-        add(ResourceType.ID, ResourceFolderType.MENU);
-        add(ResourceType.MIPMAP, ResourceFolderType.MIPMAP);
         add(ResourceType.PLURALS, ResourceFolderType.VALUES);
         add(ResourceType.PUBLIC, ResourceFolderType.VALUES);
-        add(ResourceType.RAW, ResourceFolderType.RAW);
         add(ResourceType.STRING, ResourceFolderType.VALUES);
         add(ResourceType.STYLE, ResourceFolderType.VALUES);
         add(ResourceType.STYLE_ITEM, ResourceFolderType.VALUES);
         add(ResourceType.STYLEABLE, ResourceFolderType.VALUES);
-        add(ResourceType.TRANSITION, ResourceFolderType.TRANSITION);
+
+        // Folders which can contain id declarations
+        // These are added to the map last to ensure that the first
+        // resource type we get out of a folder map is the primary
+        // resource type, not the id.
+        add(ResourceType.ID, ResourceFolderType.DRAWABLE);
+        add(ResourceType.ID, ResourceFolderType.LAYOUT);
+        add(ResourceType.ID, ResourceFolderType.MENU);
+        add(ResourceType.ID, ResourceFolderType.NAVIGATION);
         add(ResourceType.ID, ResourceFolderType.TRANSITION);
-        add(ResourceType.XML, ResourceFolderType.XML);
         add(ResourceType.ID, ResourceFolderType.XML);
-        add(ResourceType.NAVIGATION, ResourceFolderType.NAVIGATION);
 
         makeSafe();
     }
@@ -140,7 +151,8 @@ public final class FolderTypeRelationship {
      * @param resType the type of resource.
      * @return a list of {@link ResourceFolderType}, possibly empty but never null.
      */
-    public static List<ResourceFolderType> getRelatedFolders(ResourceType resType) {
+    @NonNull
+    public static List<ResourceFolderType> getRelatedFolders(@NonNull ResourceType resType) {
         List<ResourceFolderType> list = mTypeToFolderMap.get(resType);
         if (list != null) {
             return list;
@@ -154,10 +166,11 @@ public final class FolderTypeRelationship {
      * @param folderType The folder type.
      * @return true if folder may contain ID generating types.
      */
-    public static boolean isIdGeneratingFolderType(ResourceFolderType folderType) {
+    public static boolean isIdGeneratingFolderType(@NonNull ResourceFolderType folderType) {
         return ID_PROVIDING_RESOURCE_TYPES.contains(folderType);
     }
 
+    @NonNull
     public static Collection<ResourceFolderType> getIdGeneratingFolderTypes() {
         return ID_PROVIDING_RESOURCE_TYPES;
     }
@@ -169,7 +182,7 @@ public final class FolderTypeRelationship {
      * @return true if files inside the folder of the specified {@link ResourceFolderType}
      * could generate a resource of the specified {@link ResourceType}
      */
-    public static boolean match(ResourceType resType, ResourceFolderType folderType) {
+    public static boolean match(@NonNull ResourceType resType, @NonNull ResourceFolderType folderType) {
         List<ResourceFolderType> list = mTypeToFolderMap.get(resType);
 
         if (list != null) {

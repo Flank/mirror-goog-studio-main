@@ -40,7 +40,9 @@ class GlobalRefListener {
 // Java related activities in native code.
 // Currently we only use it for tracking global JNI references, but in the
 // future it can be used for much more.
-bool RegisterNewJniTable(jvmtiEnv *jvmti_env, GlobalRefListener *gref_listener);
+// If gref_listener is nullptr, no global reference callbacks are made.
+bool RegisterJniTableListener(jvmtiEnv *jvmti_env,
+                              GlobalRefListener *gref_listener);
 }  // namespace profiler
 
 #endif  // JVMTI_JNI_FUNCTION_TABLE_H

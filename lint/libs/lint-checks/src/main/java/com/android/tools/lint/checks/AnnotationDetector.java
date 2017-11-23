@@ -22,12 +22,12 @@ import static com.android.SdkConstants.INT_DEF_ANNOTATION;
 import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_DOUBLE;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_FLOAT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_INT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_LONG;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_SHORT;
-import static com.android.tools.lint.client.api.JavaParser.TYPE_STRING;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_DOUBLE;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_FLOAT;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INT;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_LONG;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_SHORT;
+import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_STRING;
 import static com.android.tools.lint.detector.api.LintUtils.getAutoBoxedType;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.COLOR_INT_ANNOTATION;
 import static com.android.tools.lint.detector.api.ResourceEvaluator.PX_ANNOTATION;
@@ -637,7 +637,7 @@ public class AnnotationDetector extends Detector implements UastScanner {
                 ensureUsingFlagStyle(initializers);
             }
 
-            ConstantEvaluator constantEvaluator = new ConstantEvaluator(mContext);
+            ConstantEvaluator constantEvaluator = new ConstantEvaluator();
             for (int index = 0; index < initializers.size(); index++) {
                 UExpression expression = initializers.get(index);
                 Object o = constantEvaluator.evaluate(expression);

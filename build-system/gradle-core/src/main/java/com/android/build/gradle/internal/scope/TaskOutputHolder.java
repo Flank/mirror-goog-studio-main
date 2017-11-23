@@ -102,7 +102,7 @@ public interface TaskOutputHolder {
         // Compiled R class sources (for compilation only)
         COMPILE_ONLY_R_CLASS_CLASSES,
         // Compiled R class jar (for compilation only, packaged in AAR)
-        COMPILE_ONLY_R_CLASS_JAR,
+        COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
         // Final R class sources (to package)
         RUNTIME_R_CLASS_SOURCES,
         // Final R class classes (for packaging)
@@ -150,6 +150,10 @@ public interface TaskOutputHolder {
         ANNOTATIONS_TYPEDEF_FILE,
         // the associated proguard file
         ANNOTATIONS_PROGUARD,
+        // The classes.jar for the AAR
+        AAR_MAIN_JAR,
+        // The libs/ directory for the AAR, containing secondary jars
+        AAR_LIBS_DIRECTORY,
 
         ABI_PACKAGED_SPLIT,
         FULL_APK,

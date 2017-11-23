@@ -25,7 +25,6 @@ import com.android.annotations.Nullable;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Variant;
 import com.android.testutils.TestUtils;
-import com.android.tools.lint.EcjParser;
 import com.android.tools.lint.LintCliFlags;
 import com.android.tools.lint.Warning;
 import com.android.tools.lint.checks.BuiltinIssueRegistry;
@@ -96,14 +95,12 @@ public class TestLintTask {
     EnumSet<Scope> customScope;
     public boolean forceSymbolResolutionErrors;
     TestLintClient client;
-    boolean skipExtraTokenChecks = true;
     Detector detector;
     File[] customRules;
     boolean ignoreUnknownGradleConstructs;
     Boolean supportResourceRepository;
     boolean allowMissingSdk;
     boolean requireCompileSdk;
-    boolean runCompatChecks = true;
     boolean vital;
     Map<String, byte[]> mockNetworkData;
     boolean allowNetworkAccess;
@@ -513,20 +510,6 @@ public class TestLintTask {
     }
 
     /**
-     * Normally lint will run your detectors <b>twice</b>, first on the
-     * plain source code, and then a second time where it has inserted whitespace
-     * and parentheses pretty much everywhere, to help catch bugs where your detector
-     * is only checking direct parents or siblings rather than properly allowing for
-     * whitespace and parenthesis nodes which can be present for example when using
-     * PSI inside the IDE. You can skip these extra checks by calling this method.
-     */
-    public TestLintTask skipExtraTokenChecks() {
-        ensurePreRun();
-        skipExtraTokenChecks = true;
-        return this;
-    }
-
-    /**
      * Tells the lint infrastructure to silently ignore any unknown Gradle constructs
      * it encounters when processing a Gradle file and attempting to build up mocks
      * for the Gradle builder model
@@ -691,10 +674,6 @@ public class TestLintTask {
     public TestLintResult run() {
         alreadyRun = true;
         ensureConfigured();
-
-        if (!allowCompilationErrors) {
-            EcjParser.skipComputingEcjErrors = false;
-        }
 
         File rootDir = Files.createTempDir();
         try {
@@ -885,6 +864,7 @@ public class TestLintTask {
 
             if (customRules != null) {
                 TestLintClient client = createClient();
+                client.task = this;
                 List<JarFileIssueRegistry> registries =
                         JarFileIssueRegistry.Factory.get(client, Arrays.asList(customRules));
                 IssueRegistry[] array = registries.toArray(new IssueRegistry[0]);
@@ -982,18 +962,6 @@ public class TestLintTask {
                 }
             }
         }
-    }
-
-    /**
-     * Whether lint should run compat checks (for PSI and Lombok); for now, defaults
-     * to true.
-     *
-     * @param runCompatChecks whether to run compat checks
-     * @return this, for constructor chaining
-     */
-    public TestLintTask runCompatChecks(boolean runCompatChecks) {
-        this.runCompatChecks = runCompatChecks;
-        return this;
     }
 
     /**

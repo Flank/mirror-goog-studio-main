@@ -246,24 +246,5 @@ class Issue private constructor(
             return Issue(id, briefDescription, explanation, category, priority,
                     severity, implementation)
         }
-
-        /**
-         * For compatibility with older custom rules)
-         *
-         */
-        @JvmStatic
-        @Deprecated("Use {@link #create(String, String, String, Category, int, Severity, Implementation)} instead")
-        fun create(
-                id: String,
-                briefDescription: String,
-                description: String,
-                explanation: String,
-                category: Category,
-                priority: Int,
-                severity: Severity,
-                implementation: Implementation): Issue {
-            return Issue(id, briefDescription, explanation, category, priority,
-                    severity, implementation)
-        }
     }
 }

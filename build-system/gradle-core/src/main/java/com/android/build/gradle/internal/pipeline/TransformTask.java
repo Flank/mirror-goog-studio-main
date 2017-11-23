@@ -62,7 +62,6 @@ import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
-import org.gradle.internal.impldep.org.jetbrains.annotations.NotNull;
 import org.gradle.workers.WorkerExecutor;
 
 /** A task running a transform. */
@@ -73,14 +72,14 @@ public class TransformTask extends StreamBasedTask implements Context {
     private Recorder recorder;
     Collection<SecondaryFile> secondaryFiles = null;
     List<FileCollection> secondaryInputFiles = null;
-    @NotNull private final WorkerExecutor workerExecutor;
+    @NonNull private final WorkerExecutor workerExecutor;
 
     public Transform getTransform() {
         return transform;
     }
 
     @Inject
-    public TransformTask(@NotNull WorkerExecutor workerExecutor) {
+    public TransformTask(@NonNull WorkerExecutor workerExecutor) {
         this.workerExecutor = workerExecutor;
     }
 
@@ -108,8 +107,8 @@ public class TransformTask extends StreamBasedTask implements Context {
 
         ImmutableMap.Builder<String, File> builder = new ImmutableMap.Builder<>();
         int index = 0;
-        for (File outputFolder : transform.getSecondaryFileOutputs()) {
-            builder.put("otherFileOutput" + Integer.toString(++index), outputFolder);
+        for (File outputFile : transform.getSecondaryFileOutputs()) {
+            builder.put("otherFileOutput" + Integer.toString(++index), outputFile);
         }
 
         return builder.build();

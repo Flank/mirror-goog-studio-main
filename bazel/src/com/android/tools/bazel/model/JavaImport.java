@@ -21,11 +21,11 @@ import com.android.tools.bazel.parser.ast.CallStatement;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class JavaImport extends BazelRule {
-    private Set<String> jars = new HashSet<>();
+    private Set<String> jars = new LinkedHashSet<>();
 
     public JavaImport(Package pkg, String name) {
         super(pkg, name);

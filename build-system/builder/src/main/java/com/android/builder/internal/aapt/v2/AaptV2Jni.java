@@ -33,6 +33,7 @@ import com.android.tools.aapt2.Aapt2Jni;
 import com.android.tools.aapt2.Aapt2RenamingConventions;
 import com.android.tools.aapt2.Aapt2Result;
 import com.android.utils.FileUtils;
+import com.android.utils.PathUtils;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.HashCode;
@@ -42,11 +43,8 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -257,33 +255,9 @@ public class AaptV2Jni extends AbstractAapt {
              * Add a hook to delete the directory and all files when the JVM exits. We can't do that
              * before because of the DLL being locked on Windows.
              */
-            Runtime.getRuntime()
-                    .addShutdownHook(
-                            new Thread(
-                                    () -> {
-                                        try {
-                                            Files.walkFileTree(tempDir, new RecursiveDelete());
-                                        } catch (IOException ignored) {
-                                            // well, we tried
-                                        }
-                                    }));
+            PathUtils.addRemovePathHook(tempDir);
+
             return tempDir;
-        }
-
-        private static class RecursiveDelete extends SimpleFileVisitor<Path> {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                    throws IOException {
-                Files.delete(file);
-                return FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                    throws IOException {
-                Files.delete(dir);
-                return FileVisitResult.CONTINUE;
-            }
         }
     }
 }

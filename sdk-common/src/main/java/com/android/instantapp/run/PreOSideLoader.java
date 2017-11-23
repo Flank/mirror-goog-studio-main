@@ -142,7 +142,9 @@ class PreOSideLoader implements InstantAppSideLoader.Installer {
                         if (line.getLogLevel() == Log.LogLevel.ERROR) {
                             String message = line.getMessage();
                             if (message.contains(installTokenIdentifier)) {
-                                error.set(message.replace(installTokenIdentifier, ""));
+                                error.set(
+                                        message.replace(installTokenIdentifier, "")
+                                                + " - Please see the Logcat for more information.");
                                 latch.countDown();
                             }
                         } else if (line.getLogLevel() == Log.LogLevel.INFO) {

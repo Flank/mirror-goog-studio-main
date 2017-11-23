@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 /**
- * Used to represent info to override the VectorDrawble's XML file content.
+ * Represents override information for VectorDrawable's XML file content.
  */
 public class VdOverrideInfo {
     private int mWidth;

@@ -18,7 +18,7 @@ package com.android.build.gradle.internal.feature
 
 import com.android.build.gradle.internal.publishing.AndroidArtifacts
 import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL
-import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_R_CLASS_JAR
+import com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR
 import com.android.build.gradle.internal.res.namespaced.JarRequest
 import com.android.build.gradle.internal.res.namespaced.JarWorkerRunnable
 import com.android.build.gradle.internal.scope.TaskConfigAction
@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.scope.VariantScope
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
 import org.gradle.api.file.FileVisitDetails
-import org.gradle.api.file.FileVisitor
 import org.gradle.api.file.ReproducibleFileVisitor
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
@@ -97,7 +96,7 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
                 task.dependencyRClassClasses = scope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         ALL,
-                        COMPILE_ONLY_R_CLASS_JAR)
+                        COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
             }
         }
     }

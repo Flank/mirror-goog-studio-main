@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import static com.android.ide.common.vectordrawable.Svg2Vector.SVG_STROKE_COLOR;
@@ -45,7 +44,7 @@ abstract class SvgNode {
 
     protected final String mName;
     // Keep a reference to the tree in order to dump the error log.
-    private final SvgTree mSvgTree;
+    protected final SvgTree mSvgTree;
     // Use document node to get the line number for error reporting.
     private final Node mDocumentNode;
 
@@ -174,20 +173,20 @@ abstract class SvgNode {
     }
 
     /**
-     * dump the current node's debug info.
+     * Dumps the current node's debug info.
      */
     public abstract void dumpNode(String indent);
 
-    /** Write the Node content into the VectorDrawable's XML file. */
+    /** Writes the Node content into the VectorDrawable's XML file. */
     public abstract void writeXML(OutputStreamWriter writer, boolean inClipPath) throws IOException;
 
     /**
-     * @return true the node is a group node.
+     * Returns true the node is a group node.
      */
     public abstract boolean isGroupNode();
 
     /**
-     * Transform the current Node with the transformation matrix.
+     * Transforms the current Node with the transformation matrix.
      */
     public abstract void transformIfNeeded(AffineTransform finalTransform);
 
@@ -232,29 +231,9 @@ abstract class SvgNode {
 
     public abstract void flatten(AffineTransform transform);
 
-    protected String getDecimalFormatString() {
-        float viewportWidth = getTree().getViewportWidth();
-        float viewportHeight = getTree().getViewportHeight();
-        float minSize = Math.min(viewportHeight, viewportWidth);
-        float exponent = Math.round(Math.log10(minSize));
-        int decimalPlace = (int) Math.floor(exponent - 4);
-        StringBuilder decimalFormatStringBuilder = new StringBuilder("#");
-        if (decimalPlace < 0) {
-            // Build a string with decimal places for "#.##...", and cap on 6 digits.
-            if (decimalPlace < -6) {
-                decimalPlace = -6;
-            }
-            decimalFormatStringBuilder.append('.');
-            for (int i = 0; i < -decimalPlace; i++) {
-                decimalFormatStringBuilder.append('#');
-            }
-        }
-        return decimalFormatStringBuilder.toString();
-    }
-
     /**
-     * Returns a String containing the value of the given attribute. Returns an empty string if the
-     * attribute does not exist.
+     * Returns a string containing the value of the given attribute. Returns an empty string if
+     * the attribute does not exist.
      */
     public String getAttributeValue(String attribute) {
         NamedNodeMap a = mDocumentNode.getAttributes();
@@ -265,6 +244,7 @@ abstract class SvgNode {
             String name = n.getNodeName();
             if (name.equals(attribute)) {
                 value = n.getNodeValue();
+                break;
             }
         }
         return value;
@@ -276,5 +256,4 @@ abstract class SvgNode {
         newInstance.fillEmptyAttributes(mVdAttributesMap);
         newInstance.mLocalTransform = (AffineTransform) mLocalTransform.clone();
     }
-
 }

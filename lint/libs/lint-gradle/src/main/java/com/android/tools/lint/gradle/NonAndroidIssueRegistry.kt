@@ -19,6 +19,7 @@ package com.android.tools.lint.gradle
 import com.android.tools.lint.checks.ApiDetector
 import com.android.tools.lint.checks.BuiltinIssueRegistry
 import com.android.tools.lint.checks.InvalidPackageDetector
+import com.android.tools.lint.detector.api.CURRENT_API
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.Scope
 import com.google.common.collect.Sets
@@ -42,6 +43,8 @@ class NonAndroidIssueRegistry : BuiltinIssueRegistry() {
             }
             return ourFilteredIssues!!
         }
+
+    override val api: Int = CURRENT_API
 
     companion object {
         private var ourFilteredIssues: List<Issue>? = null

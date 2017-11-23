@@ -24,7 +24,6 @@ import android.databinding.tool.DataBindingBuilder;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.AndroidConfig;
 import com.android.build.gradle.internal.publishing.AndroidArtifacts;
-import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.CodeShrinker;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.VariantScope;
@@ -83,10 +82,9 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    public void createTasksForVariantScope(
-            @NonNull TaskFactory tasks, @NonNull VariantScope variantScope) {
+    public void createTasksForVariantScope(@NonNull VariantScope variantScope) {
 
-        super.createTasksForVariantScope(tasks, variantScope);
+        super.createTasksForVariantScope(variantScope);
 
         final Configuration runtimeClasspath =
                 variantScope.getVariantDependencies().getRuntimeClasspath();
@@ -120,46 +118,43 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
         configureTestData(testData);
 
         // create the test connected check task.
-        AndroidTask<DeviceProviderInstrumentTestTask> instrumentTestTask =
-                getAndroidTasks()
-                        .create(
-                                tasks,
-                                new DeviceProviderInstrumentTestTask.ConfigAction(
-                                        variantScope,
-                                        new ConnectedDeviceProvider(
-                                                sdkHandler.getSdkInfo().getAdb(),
-                                                extension.getAdbOptions().getTimeOutInMs(),
-                                                new LoggerWrapper(getLogger())),
-                                        testData,
-                                        testedManifestMetadata) {
-                                    @NonNull
-                                    @Override
-                                    public String getName() {
-                                        return super.getName()
-                                                + VariantType.ANDROID_TEST.getSuffix();
-                                    }
-                                });
+        DeviceProviderInstrumentTestTask instrumentTestTask =
+                taskFactory.create(
+                        new DeviceProviderInstrumentTestTask.ConfigAction(
+                                variantScope,
+                                new ConnectedDeviceProvider(
+                                        sdkHandler.getSdkInfo().getAdb(),
+                                        extension.getAdbOptions().getTimeOutInMs(),
+                                        new LoggerWrapper(getLogger())),
+                                testData,
+                                testedManifestMetadata) {
+                            @NonNull
+                            @Override
+                            public String getName() {
+                                return super.getName() + VariantType.ANDROID_TEST.getSuffix();
+                            }
+                        });
 
-        Task connectedAndroidTest = tasks.named(BuilderConstants.CONNECTED
-                + VariantType.ANDROID_TEST.getSuffix());
+        Task connectedAndroidTest =
+                taskFactory.findByName(
+                        BuilderConstants.CONNECTED + VariantType.ANDROID_TEST.getSuffix());
         if (connectedAndroidTest != null) {
             connectedAndroidTest.dependsOn(instrumentTestTask.getName());
         }
     }
 
     @Override
-    protected void postJavacCreation(
-            @NonNull final TaskFactory tasks, @NonNull VariantScope scope) {
+    protected void postJavacCreation(@NonNull VariantScope scope) {
         // do nothing.
     }
 
     @Override
-    public void createLintTasks(TaskFactory tasks, VariantScope scope) {
+    public void createLintTasks(VariantScope scope) {
         // do nothing
     }
 
     @Override
-    public void createGlobalLintTask(@NonNull TaskFactory tasks) {
+    public void createGlobalLintTask() {
         // do nothing
     }
 
@@ -174,11 +169,9 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     }
 
     @Override
-    protected void maybeCreateJavaCodeShrinkerTransform(
-            @NonNull TaskFactory taskFactory, @NonNull VariantScope variantScope) {
+    protected void maybeCreateJavaCodeShrinkerTransform(@NonNull VariantScope variantScope) {
         if (isTestedAppObfuscated(variantScope)) {
             doCreateJavaCodeShrinkerTransform(
-                    taskFactory,
                     variantScope,
                     CodeShrinker.PROGUARD,
                     variantScope.getArtifactFileCollection(
@@ -186,11 +179,10 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
                             AndroidArtifacts.ArtifactScope.ALL,
                             AndroidArtifacts.ArtifactType.APK_MAPPING));
         } else {
-            AndroidTask<CheckTestedAppObfuscation> checkObfuscation =
-                    androidTasks.create(
-                            taskFactory, new CheckTestedAppObfuscation.ConfigAction(variantScope));
+            CheckTestedAppObfuscation checkObfuscation =
+                    taskFactory.create(new CheckTestedAppObfuscation.ConfigAction(variantScope));
             Preconditions.checkNotNull(variantScope.getJavacTask());
-            variantScope.getJavacTask().dependsOn(taskFactory, checkObfuscation);
+            variantScope.getJavacTask().dependsOn(checkObfuscation);
         }
     }
 
@@ -219,21 +211,16 @@ public class TestApplicationTaskManager extends ApplicationTaskManager {
     /** Creates the merge manifests task. */
     @Override
     @NonNull
-    protected AndroidTask<? extends ManifestProcessorTask> createMergeManifestTask(
-            @NonNull TaskFactory tasks,
+    protected ManifestProcessorTask createMergeManifestTask(
             @NonNull VariantScope variantScope,
             @NonNull ImmutableList.Builder<ManifestMerger2.Invoker.Feature> optionalFeatures) {
-        return getAndroidTasks()
-                .create(
-                        tasks,
-                        new ProcessTestManifest.ConfigAction(
-                                variantScope,
-                                getTestedManifestMetadata(variantScope.getVariantData())));
+        return taskFactory.create(
+                new ProcessTestManifest.ConfigAction(
+                        variantScope, getTestedManifestMetadata(variantScope.getVariantData())));
     }
 
     @Override
-    protected AndroidTask<? extends DefaultTask> createVariantPreBuildTask(
-            @NonNull TaskFactory tasks, @NonNull VariantScope scope) {
-        return createDefaultPreBuildTask(tasks, scope);
+    protected DefaultTask createVariantPreBuildTask(@NonNull VariantScope scope) {
+        return createDefaultPreBuildTask(scope);
     }
 }

@@ -28,7 +28,9 @@ import java.util.List;
 
 /**
  * Implementation of a very basic HTTP server. The contents are loaded from the assets folder. This
- * server handles one request at a time. It only supports GET method.
+ * server handles one request at a time.
+ *
+ * <p>It currently only supports GET and POST methods.
  */
 //TODO: Convert this to a GRPC
 public class SimpleWebServer implements Runnable {
@@ -74,7 +76,6 @@ public class SimpleWebServer implements Runnable {
     private Thread myThread;
 
     public interface RequestHandler {
-
         String onRequest(List<QueryParam> queryParams);
     }
 
@@ -112,7 +113,7 @@ public class SimpleWebServer implements Runnable {
                 serverSocket = null;
             }
         } catch (IOException e) {
-            System.err.println("Error closing the server socket." + e);
+            System.err.println("Error closing the server socket: " + e);
         }
     }
 
@@ -128,9 +129,9 @@ public class SimpleWebServer implements Runnable {
             }
         } catch (SocketException e) {
             // The server was stopped; ignore.
-            System.err.println("Socket Exception." + e);
+            System.err.println("Socket Exception: " + e);
         } catch (IOException e) {
-            System.err.println("Web server error." + e);
+            System.err.println("Web server error: " + e);
         }
     }
 

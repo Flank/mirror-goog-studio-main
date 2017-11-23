@@ -15,8 +15,8 @@
  */
 package com.android.ide.common.rendering.api;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 
 /**
  * Log interface for actions executed through {@link Bridge} and {@link RenderSession}.
@@ -30,7 +30,7 @@ public interface ILayoutLog {
      * @param viewCookie the view cookie where the error generated, if available
      * @param data an optional data bundle that the client can use to improve the warning display.
      */
-    public default void warning(@Nullable String tag, @NotNull String message, @Nullable Object viewCookie,
+    public default void warning(@Nullable String tag, @NonNull String message, @Nullable Object viewCookie,
             @Nullable Object data) {}
 
     /**
@@ -45,7 +45,7 @@ public interface ILayoutLog {
      * @param viewCookie the view cookie where the error generated, if available
      * @param data an optional data bundle that the client can use to improve the warning display.
      */
-    public default void fidelityWarning(@Nullable String tag, @NotNull String message, @Nullable Throwable throwable,
+    public default void fidelityWarning(@Nullable String tag, @NonNull String message, @Nullable Throwable throwable,
             @Nullable Object viewCookie, @Nullable Object data) {}
 
     /**
@@ -56,7 +56,7 @@ public interface ILayoutLog {
      * @param viewCookie the view cookie where the error generated, if available
      * @param data an optional data bundle that the client can use to improve the error display.
      */
-    public default void error(@Nullable String tag, @NotNull String message, @Nullable Object viewCookie,
+    public default void error(@Nullable String tag, @NonNull String message, @Nullable Object viewCookie,
             @Nullable Object data) {}
 
     /**
@@ -68,6 +68,6 @@ public interface ILayoutLog {
      * @param viewCookie the view cookie where the error generated, if available
      * @param data an optional data bundle that the client can use to improve the error display.
      */
-    public default void error(@Nullable String tag, @NotNull String message, @Nullable Throwable throwable,
+    public default void error(@Nullable String tag, @NonNull String message, @Nullable Throwable throwable,
             @Nullable Object viewCookie, @Nullable Object data) {}
 }

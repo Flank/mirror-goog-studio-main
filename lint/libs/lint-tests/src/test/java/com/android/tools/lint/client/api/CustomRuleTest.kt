@@ -20,12 +20,13 @@ import com.android.tools.lint.checks.infrastructure.TestFiles.classpath
 import com.android.tools.lint.checks.infrastructure.TestFiles.gradle
 import com.android.tools.lint.checks.infrastructure.TestFiles.java
 import com.android.tools.lint.checks.infrastructure.TestFiles.manifest
+import com.android.tools.lint.checks.infrastructure.TestFiles.xml
 import com.android.tools.lint.checks.infrastructure.TestLintClient
 import com.android.tools.lint.checks.infrastructure.TestLintTask.lint
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Project
+import com.google.common.truth.Truth.assertThat
 import org.junit.ClassRule
-import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import org.mockito.Mockito
@@ -157,6 +158,12 @@ class CustomRuleTest {
         // are picked up in a Gradle project
 
         val expected = "" +
+                "lint1.jar: Warning: Lint found an issue registry (android.support.v7.lint.AppCompatIssueRegistry) which did not specify the Lint API version it was compiled with.\n" +
+                "This means that the lint checks are likely not compatible.\n" +
+                "To fix this, make your lint IssueRegistry class contain\n" +
+                "  override val api: Int = com.android.tools.lint.detector.api.CURRENT_API\n" +
+                "or from Java,\n" +
+                "  @Override public int getApi() { return com.android.tools.lint.detector.api.ApiKt.CURRENT_API; } [ObsoleteLintCustomCheck]\n" +
                 "src/main/java/test/pkg/AppCompatTest.java:7: Warning: Should use getSupportActionBar instead of getActionBar name [UnitTestAppCompatMethod]\n" +
                 "        getActionBar();                    // ERROR\n" +
                 "        ~~~~~~~~~~~~\n" +
@@ -175,7 +182,7 @@ class CustomRuleTest {
                 "src/main/java/test/pkg/AppCompatTest.java:18: Warning: Should use setSupportProgressBarIndeterminateVisibility instead of setProgressBarIndeterminateVisibility name [UnitTestAppCompatMethod]\n" +
                 "        setProgressBarIndeterminateVisibility(true);\n" +
                 "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
-                "0 errors, 6 warnings\n"
+                "0 errors, 7 warnings"
 
         // Copy lint.jar into build/intermediates/lint/
         val listener = object : LintListener {
@@ -246,14 +253,6 @@ class CustomRuleTest {
 
     @Test
     fun testLegacyLombokJavaLintRule() {
-        val expected = """
-project0: Warning: Lint found one or more custom checks using its older Java API; these checks are still run in compatibility mode, but this causes duplicated parsing, and in the next version lint will no longer include this legacy mode. Make sure the following lint detectors are upgraded to the new API: googleio.demo.MyDetector [ObsoleteLintCustomCheck]
-src/test/pkg/Test.java:5: Warning: Did you mean bar? [MyId]
-        foo(5);
-        ~~~~~~
-0 errors, 2 warnings
-"""
-
         //noinspection all // Sample code
         lint().files(
                 classpath(),
@@ -276,19 +275,28 @@ src/test/pkg/Test.java:5: Warning: Did you mean bar? [MyId]
                 .allowObsoleteLintChecks(false)
                 .allowCompilationErrors()
                 .run()
-                .expect(expected)
+                .check {
+                    assertThat(it).contains("lint2.jar: Warning: Lint found an issue registry " +
+                            "(googleio.demo.MyIssueRegistry) which did not specify the Lint " +
+                            "API version it was compiled with.\n" +
+                            "This means that the lint checks are likely not compatible.")
+
+                    assertThat(it).contains("lint2.jar: Warning: Lint found one or more custom " +
+                            "checks that could not be loaded.")
+                    assertThat(it).contains("The most likely reason for this is that it is using " +
+                            "an older, incompatible or unsupported API in lint. Make sure these " +
+                            "lint checks are updated to the new APIs.")
+                    assertThat(it).contains("The issue registry class is " +
+                            "googleio.demo.MyIssueRegistry.")
+                    assertThat(it).contains("The class loading issue is " +
+                            "com/android/tools/lint/detector/api/Detector\$JavaScanner:")
+                    assertThat(it).contains("ClassLoader.defineClass1(ClassLoader.java:")
+                    assertThat(it).contains("0 errors, 2 warnings")
+                }
     }
 
     @Test
     fun testLegacyPsiJavaLintRule() {
-        val expected = """
-project0: Warning: Lint found one or more custom checks using its older Java API; these checks are still run in compatibility mode, but this causes duplicated parsing, and in the next version lint will no longer include this legacy mode. Make sure the following lint detectors are upgraded to the new API: com.example.google.lint.MainActivityDetector [ObsoleteLintCustomCheck]
-src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetector]
-        foo(5);
-        ~~~~~~
-1 errors, 1 warnings
-         """
-
         lint().files(
                 classpath(),
                 manifest().minSdk(1),
@@ -310,8 +318,130 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
                 .allowCompilationErrors()
                 .allowObsoleteLintChecks(false)
                 .run()
-                .expect(expected)
+                .check {
+                    assertThat(it).contains("lint3.jar: Warning: Lint found one or more custom " +
+                            "checks that could not be loaded.")
+                    assertThat(it).contains("The most likely reason for this is that it is using " +
+                            "an older, incompatible or unsupported API in lint. Make sure these " +
+                            "lint checks are updated to the new APIs.")
+                    assertThat(it).contains("The issue registry class is " +
+                            "com.example.google.lint.MyIssueRegistry.")
+                    assertThat(it).contains("The class loading issue is " +
+                            "com/android/tools/lint/detector/api/Detector\$JavaPsiScanner:")
+                    assertThat(it).contains("ClassLoader.defineClass1(ClassLoader.java:")
+                    assertThat(it).contains("0 errors, 2 warnings")
+                }
     }
+
+    @Test
+    fun testOlderLintApi() {
+        lint().files(
+                classpath(),
+                manifest().minSdk(1),
+                java("package test.pkg;\n" +
+                        "public class Test {\n" +
+                        "}"))
+                .client(object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel0)
+
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                })
+                .issueIds("MainActivityDetector")
+                .allowMissingSdk()
+                .allowCompilationErrors()
+                .allowObsoleteLintChecks(false)
+                .run()
+                .check {
+                    assertThat(it).contains("lint5.jar: Warning: Lint found an issue registry " +
+                            "(com.example.google.lint.MyIssueRegistry) which is older than the " +
+                            "current API level; these checks may not work correctly.")
+                    assertThat(it).contains("Recompile the checks against the latest version. " +
+                            "Custom check API version is 0 (3.0 and older), current lint API " +
+                            "level is ")
+                    assertThat(it).contains("0 errors, 1 warnings")
+                }
+    }
+
+    @Test
+    fun testNewerLintApi() {
+        lint().files(
+                classpath(),
+                manifest().minSdk(1),
+                java("package test.pkg;\n" +
+                        "public class Test {\n" +
+                        "}"))
+                .client(object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel1000)
+
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                })
+                .issueIds("MainActivityDetector")
+                .allowMissingSdk()
+                .allowCompilationErrors()
+                .allowObsoleteLintChecks(false)
+                .run()
+                .expect("lint6.jar: Warning: Lint found an issue registry " +
+                        "(com.example.google.lint.MyIssueRegistry) which requires a newer API " +
+                        "level. That means that the custom lint checks are intended for a" +
+                        " newer lint version; please upgrade [ObsoleteLintCustomCheck]\n" +
+                        "0 errors, 1 warnings")
+    }
+
+    @Test
+    fun testOlderLintApiWithSupportedMinApi() {
+        // Current API set to 1000, but minApi 1 so should be compatible
+        lint().files(
+                classpath(),
+                manifest().minSdk(1),
+                java("package test.pkg;\n" +
+                        "public class Test {\n" +
+                        "}"))
+                .client(object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = listOf(lintApiLevel1000min1)
+
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                })
+                .issueIds("MainActivityDetector")
+                .allowMissingSdk()
+                .allowCompilationErrors()
+                .allowObsoleteLintChecks(false)
+                .run()
+                .expectClean()
+    }
+
+    @Test
+    fun testLintScannerXmlAll() {
+        // In 3.1 we moved the Detector.XmlScanner.ALL constant up into super interface
+        // XmlScannerConstants (because the whole Detector class was ported to Kotlin), and
+        // in Kotlin you can't specify a constant on the interface like that (the constant super
+        // interface is in Java). This test ensures that this is a backwards compatible
+        // change: this is a custom detector compiled against 3.0 referencing the XmlScanner.ALL
+        // constant.
+        //  public java.util.Collection<java.lang.String> getApplicableElements();
+        //    Code:
+        //       0: getstatic     #6                  // Field ALL:Ljava/util/List;
+        //       3: areturn
+        lint().files(
+                classpath(),
+                manifest().minSdk(1),
+                xml("res/values/strings.xml",
+                        "<resources>\n" +
+                        "<string name='test'>Test</string>\n" +
+                        "</resources>"))
+                .client(object : TestLintClient() {
+                    override fun findGlobalRuleJars(): List<File> = listOf(lintXmlScannerAll30)
+                    override fun findRuleJars(project: Project): List<File> = emptyList()
+                })
+                .issueIds("ShortUniqueId")
+                .allowMissingSdk()
+                .allowCompilationErrors()
+                .allowObsoleteLintChecks(false)
+                .run()
+                .check {
+                    assertThat(it).contains("res/values/strings.xml:2: Warning: All tags are now flagged: string [ShortUniqueId]")
+                }
+    }
+
 
     private // Sample code
     val appCompatTestSource = java("" +
@@ -605,6 +735,222 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
                 "N/ZGVVJZJ6Ar8uPJEFYRtvSvRTu6gcqPDV5YX3hiv+o/l/g/5/cQQkLyM1Vq" +
                 "7dNZk2Ns+nz7B9ep+6YCCgAA"
 
+        // LintStandaloneCustomRuleTest compiled with API_CURRENT == 0:
+        private val LINT5_JAR = "" +
+                "H4sIAAAAAAAAAJVWCTTU+x4fa/JGWUZckot0UUYvublKMpYyY8Y2V7qWMWam" +
+                "aZjFMhhbVGi5cW1jSeiKbCFrE/KmN4kYYxslyhrCM0i6Qtxxbu+USd673//5" +
+                "nt/5n/P5fL/f3+98N1uYiKgkACAhAcDfOQcD8EUY8Jds5yvcAmmqa4Ww1BMB" +
+                "2G4AlocL85T5gO/4CvoSCDdFWFlaOCDBcMt5OLvFGqYL7pCC6epw2G0V9ge5" +
+                "+oOjw6PCAsa+9CrKVwyF9JXDLzHATxgcDU3yJuK2xMoJYPEUCv5/UBQ3pxAJ" +
+                "ZOpXPM9W0br3IgBAHf+1tLbgwYPMcVQchkrxBWOIaD8/umO4Q5+ldJgCszxm" +
+                "UaYrh9S5DwG9sp0ruZdEgFtdPVhc8KhArNIqHBsZapBdztHISJ2VWSIpGZkd" +
+                "mrA2OWFis8qj2lSLJB2mG2MyKiuW+yeneRmrS8sNWQDecN6BfQcTnxB3qWan" +
+                "PtK6foCMAccEVfVbjZCVVHPnfMSz3NUu2cylRSdENwCPN9rv0mCkNCg4OaYs" +
+                "K1lL7Qeaybf06uizkSodh4j/kpG4jz6lVtc+64JSkgI/0LBw7yE9z49EP4YB" +
+                "CyyeB47Ksk6gg9PR7SApzkFH/7B6maoA2j3CDA379OcoTEhfwGDheImPLa9G" +
+                "jYVlN2X1FFc3xtyRhv/i0bxwiQ7WtnOt7CO1+SPz5auC3IMDFH2vtcnfKQp5" +
+                "X08y71y4XqgMfctxInfdx4Gk27jfXW7gVOCX4ayEC1NHYDBQ0qtAs9NPmMAq" +
+                "iLrmM4kmUP1rG2yBzsU7ZY2jCPfa8+fMA7RiihVLcrgdN2NVWS4D7UCWFI8W" +
+                "4A47vQhMGWA2xLlR68jo8uQrwpdLa6BzZRiLX6FCKpQRlWg7fxRyEkQ3Uqrn" +
+                "zsnrGIEHs6MNVFC3m22dZIJQTXVFk9zhenbWjpYjLyNuPRRRmeq5VUO0E08/" +
+                "lsSV6nw5ytGbB463aiVl009XhxKxqQM5x5scguaHSq7UWbLLvWbm13J0PPMn" +
+                "aBGUw1x/p569ceakPtZUIe3j2lEbVnIsKbQoZwnBMlP5bfZhrOqsBosoy9kj" +
+                "zYKY8BKdkXYtZWFZDm9mC354mP3stIj3EOMBfCgIhNA7+T4+TqlvxH4Rqq9U" +
+                "+e+r1aXT/4nHTBjcxrx7kZ7kmggzGFSxe/6P0ulW35NBHtYXBy45hFgz+9S/" +
+                "v4FKhGPxlGBW6LsU5otiSKtvdmd69Wu4zO44yNliN730dGVci4fWvuZbCq7Q" +
+                "prNzYXsYCT3RzQvBxZlJeQonj3VdXVHpcAx52vv2/duRbmjVSs8hr51v3qQa" +
+                "dsBwJp5nXKq6WhNdn+syz5jkEtTfM2q4IATTSjU6JapCDIqdKBKlryZZP8vL" +
+                "+/F2pF/HUdoPEHBLvRFQ+Q9C6dKL2GM34jyG7EwOMiwHdsi5035dnSl8lVmv" +
+                "Jz6RiYjqEVasPPTLZbKxSAj0yLj31ZKCHtq2lInCwN2ze/rz6EOSJQkpkvWv" +
+                "pBCjHONGJmXtmpuhTMak5TgmywtbG7uzRpu7PSTi2VyaGZDDYe9Ba6UYXQy4" +
+                "CU92bL/fqshrSP0QG67g8Ao+bMnWj9V+uXfmsGSpWxlkbjJQI4WD831hBvwt" +
+                "b+fvaxfiLz/oMLtuzFr0u6lqCOEFAo/HoOzix05pS7/UFK67+FN2qvrghGGB" +
+                "s1NMl30z4tbN5hWRjb2DkFv7M0MIALDh9w/dLXuHlZ+fP84ehyf4UX2DPjUQ" +
+                "e5SXnKn0GrzztbU1Sdl5DVn0o25qPkOiPheZoyNqI3Y7bMAleSq5lczok1vO" +
+                "CLVFgVRXAOe1fHi+lZq5tjPos4GLH9MyHpiEh38UnwX1wbk+xRemGB2P4Xe3" +
+                "MeQHAyKkIGEnnacDt3eTKVn37o0/uXYP5FnUfzYxHnq8KX4IepQaf3j5UMeH" +
+                "hwfAiyIZssHo1/sgYcmJBXbqAeAxbOXCcGvH93D9BbcGo4WndlntV+h6nmyv" +
+                "wJCh31f2WoxVyaiZ+TJtGx2XDqA/4vGAo1H0ypHHE2WznDTq2GFHN4t+TQii" +
+                "Sgu4VHvXEV877uB6jHLi3A7XZPNJOqcWlTHF8yF3QyJgQrxKb4U/hInV7Y92" +
+                "mcypVxPf9crxUN5Koj6xntjKYepKkpzleOi0Am5/ZK+74cpiwuysSbSF09G0" +
+                "d5n60UK9Z/o7PQp1+2j4eTHp6tqKDEUCZo5MbWKuphl7yBmsjr8tlWzGN5c9" +
+                "OvIozfD5nhVA2IiZGDx2IZsR27LbWR8wbsGJ3O/kgUSct0+4NJO/Yr4wtTts" +
+                "BGSsNdEidjbKi+SiG0JDNiMLUWMgozyQTqPU3V33q8K/PXZkvxyjfjjfAAIG" +
+                "5/fVwFFTmD+/PmjW1XRTBj+NwGgy1pdCwIKpFArRD7yeRfysIeD4B9qbAN6Q" +
+                "TjBOWzes+BRbt8mqG9bWZrPN/qe0IM3genpmQ0NugWnBRFqDpgXdhR+GkDBI" +
+                "5Nurwl8iDZhej+pzWII0wcXhv5JzQfsba8RWjkU3OA74VERbMYAbGDcEym4r" +
+                "ptwG5pPNC3YrA4obDHzYouIFrQhuGZ8f7Z9C///OIWhVsP98tkoS+5vdaKtr" +
+                "y264tve2zXJWkC+Y5Z9Dy96U/zdz3hYmJr5uTpL/sflxakus//0JPci0DgsL" +
+                "AAA="
+
+        // LintStandaloneCustomRuleTest compiled with api == 1000
+        private val LINT6_JAR = "" +
+                "H4sIAAAAAAAAAJVWCzjTex8fcynvlGukg9elkpMRlY4mMVY2m+uLzqlY246U" +
+                "bRg2FIVczomEGUYiueXyul/bq7MjDruQxQq5pVDuhZDOPKf3Kau87/n+n+/z" +
+                "e/7P8/l8v9/f7/ne7BBAMSkAYMsWQHHheQRAIKKAv2SrQJFWTuZ61iiYPhBg" +
+                "twFYHio6tUsA2ClQhc+BSHOUNczK0QmMhM0jWe02CD1wpzRCT5fD4lY4GPCM" +
+                "BkeHR0WFjH3uVUygGCL+C4efY0AfMTgKGu/thdsUKy+E9SASPf4HRfnrFC9P" +
+                "gt8XvAtsscYFIADQKHgtnU14yEBLnB8O40f0BWO80CQS1TnUsRcmc1mpqTx2" +
+                "SbYrB/9oDwoevZUnpY33RFrHGBQXPCgQr7QOxUZcOpRdztHKSJmRXcarmEAN" +
+                "x23MjpvZrk352VYDkw5STTEZlRUrzyYmpzLWlleaMwFTw3n79xgkPvTaoZ6d" +
+                "8kDn+n4CBhwbWPXMeoSgon531kci010j3HY2NTIhshl0rMVhh1YtrVnJ1Zm2" +
+                "omIj/T0Iqtj+VNeI5aTaaej1H9ktNeiTGo0dM6fdVKTBdVpW7nx8T34E+ncE" +
+                "qMCqhzwqxzyODqKjOxSkOQbO/pcZslUBlH97TlOwf/zrGia4N2Cw8GWJj91U" +
+                "vQYTy2rN5BdXt8TmyiB/PNf2NpwK3md/prIXz/V3ylesCnQPClD2/YWrmHsv" +
+                "eIGBt3z09nrhLvgcx5XQVYNTkOHydkY1cyo8VpDMhKuvjBEIhaR+MtTlYROo" +
+                "ykJzd/eWVgXGc1tsgW5YblnLKMq9IeS8ZYBObLFySQ6vMz1OnXl6oAPElJ6i" +
+                "BLgjXJZAtIGm5vizfo0EdHlytGhUaT18tgxj9StcRJU4ohpp7+/mNKFANVFh" +
+                "8GYVdU3Ag9mRh1Td7rTZucoGurU23pvgDTNYmdvajfuu3L4PVH3Fv13vZS9B" +
+                "hyTxpB/1jXL050Ev2TpJ2VSX6kte2JSBnGOtjoHzQyXRjTBW+cXp+Q85uhfy" +
+                "xylXiAd5/q587XhLfC/zVSHl/YejtszkOPyleznLKCZU9cbM/Tj1GS2mlxxH" +
+                "TYZpYTaV+JOTfXvZ5UzHsZmCvfezu12A3kO1dcihQAWU/omFm/EqvSMOS3Aj" +
+                "lcrfYqpLJ1/fxIwfuoN584SedCYRcWhQ1b7nH6WTbN8TgedswgbCHYNtmno1" +
+                "/5nmlojEehCDmJfe0JqeFFuwfbMf0aufI2W/i7f4ufisPp2+C9d+TmdP222l" +
+                "M/DWn2cvq9Um8CPb3gYV30rKUzoB6YpZVe10Dv7j6dzC3MhjeNUq3/Di9rGx" +
+                "lCOdCJzZhVOnq7rYiWd69JpOmd311FyorecpoJqs1SNp1yrE4djxe2LUtSSb" +
+                "7ry8w3ciSJ1HKXstwO0ME9CuRc/S5SdxkLT4c0P2Zga1sIFt8u6UX9emC/tv" +
+                "MfQlxm+hrvFFlSsNf4wimAKD4cYvvWNKCvgUSdp4Ifm7GbVnedQhqZIEmhSj" +
+                "Xxo1yjFtaSJ++OXsEdmMCdhLTOZFbEPc9vp9vK3BV7pnU6EgDoelhtahmYQF" +
+                "pCOTnTtq2MpTzSnv4kKVHPuRwzCWUdy+Pu3pg1KlZ8ssZifIWjQOzvcJFHQj" +
+                "b3vWh6s3o+o6oddNmUukdPUjFlNk0LFYN/ubL07uk+nbLdoY9kN2iubg+JGC" +
+                "n1xjuxzaULfT21aBG3uHs3GyZYUIAKAp6B96m/YOaxLJH+eA8/Ak+fkGfmwg" +
+                "Dv0oeXOFtUhCQ+WOm1LROnP0Dvhvv0c0yIHMkWlFaa5DIfUZRdBcI/bU/qvk" +
+                "YYu6B95DwCVtyLXZ1wHAnAjLxeF0o70D3FSjlRXuY33AUdd7WdfrdF/MFkWK" +
+                "QxbLxkbEoTiXnaMLynB2t2w42X0lAW1iBwuBS5ruDFU0RWbA3KFZNyyLykmd" +
+                "b/qMqQaVYR3baiGK4VnJkPLD2TlUn9WRU3utHd5ZwXR9Zk/Rs1SsaYvRPeer" +
+                "wzA+mpSJpBci5obHXaxgtQf3vK9ZBDTUUQ3e8wuPkbsnsM95NFQk5+FpkCJX" +
+                "+mlwjrNGw/usttIedL4/XiVqLrwtN1OVTjhaUXhHdKCl3SR5pq3FV/V7Vxx/" +
+                "tWWX4YykBKgqIYnwsAFXZFr0vqRWEVrXNanG8OAv3xA3YPUTppsuIAE4aXyI" +
+                "rn2kV/qhJw47D6fdMb2I1lyrI9s0LdyveaALWY4pLxVLnowZ1s44goPVrS7L" +
+                "vZZUlM93KHrOtuLpdJ8AQLKlnGyHDmQZztHDXru5D++FD7SMIchjIeaZnAO2" +
+                "+cbhsAPMAI0RdlIJt+Vg9/R5irEWhG1fESry7Ykj9/kEJeF8AzwxONIXs0ZD" +
+                "aT5kfcasq/lXGYIMAqMJWF+iJxbsRyR6kcDrCSRIGE+c4EB7e4I3ZBKCw32M" +
+                "KD7J0mu1fozgcm0lHX5IDdwdxKDeam6+W2BeMJ7avNuKeloQhoioAvDbW8Jf" +
+                "IgOYXI/qU1jCNOGd4b+Sc3XfNzaIzRyLbXAc8LF+NmOANjDShCpuM6b8BubD" +
+                "r9fqZgaUNxh4t0mxC1sRXjA+PdoBkf9/3RC2Ktx6PlnFi//NRrTZteU2XPui" +
+                "5NdyVpgvnOWfQsv4Kv9v5rwdQlxi3ZyU4GMJ4tTesv73Jy+EF4AGCwAA"
+
+        // LintStandaloneCustomRuleTest compiled with api == 1000 and minApi=1
+        private val LINT7_JAR = "" +
+                "H4sIAAAAAAAAAJVWCzSU+xYfr5Q7DjLldZBn6BjyiKNwmEyZMRhccfKaZibJ" +
+                "jJHxmPGIKFKRZ6M8Q56hhCQm586V1xivkXFQHkdC3o8UhzvW6a4yyb1nf2uv" +
+                "b31r/X6/vf/f2v+9tzWch1cAANi7F6BSfAEOYBs34C/bx3aEmZ2JurklVIMH" +
+                "YL0NWB7KPSPFBkiwHfQ1EGFiaQ41s7UDI6CLCHqrBVwd3CkIV1dj0Nuf2Ggy" +
+                "tYfGRsa4OcS+jsrLdjQB/03ArzHAzxgsCYX3xmF3xYpyYN0JBPf/QRHfmYLz" +
+                "8PL9hnexjbd2hQcAqGX/LZVdeAjySawvFu1L8AGjcSgiMdk+1LYfKhwiVl8e" +
+                "syrSnYvvUraEXd/HFFDEeyDMozVLCn8r5KswD8VcDdbNLmcopKfMiXzCSxpA" +
+                "tCYsjH8xttqY8bWq4knSSTZEp1c8WXs9OT2TvvFprSETMDOS/5OyZuJL3EHZ" +
+                "7JTfVG795IUGx5ArX5uPeknKPpi/tCfTTS7Cav5uZEJkA9Co0eagQjWlQczB" +
+                "nrImaSF4BAg50Pq7mjbdTrpTC/dCZO9T1Gm52o45J1dJQfAzBTM3Fr634Crq" +
+                "33BgoVlvwNh+2i+owFRUB0iQoWnvF0IVqfQnPfKYJWGa/3kNHdTvP1Q0XnrJ" +
+                "eqZGjoahN2WySqoaY/KEEb+ea1mOSAarIp0r+vHtfnYFByrJboH+4j432g/k" +
+                "FQetUPEnu5ZvFUnBFhgOXt1PsSDhdqZEVAPjifsagpZwZUoPDgclDQZAzrys" +
+                "B1aayiu92tsEov5hhSlUC8973Dhm6fb88oWT/ioxJeKluczOtFhZmtObDiBN" +
+                "cIbk7wY/swqkvKlviHPxrfVCld+5zh1VVgObf4w2uwnjkiaMSkci/VztJkHJ" +
+                "BpJU5vwBNQPwUHakrrRrTou1gwjZtam2eJI5QqVn/tCqNxCWVccjPcXKqsEh" +
+                "96SeSGIKdg2MMTQWgeNtKknZyWeqgnGYlDe5Rk225MXh0uu1UHq55+ziZq7a" +
+                "xYIJUhhBh+nnwFKMO4nvp00Vkf7cPG5FuxOLDy7O/WRJg0jfnquLlZ1ToOH2" +
+                "M2SEaabGM4ln7ZCtj0Mybd/NFR6uy351hsd7uPoZYpgMstQ4tRIfJ9k/arMK" +
+                "05as+Fd0Vdn0+3j0hG4OeqkvNck5Ea47JI3s/UfZdJvPKfI5i/A3EbZBFvX9" +
+                "8ofuuSYiMO6EQFrwEqW+r8S0zSe7K7XqD4TIj3Gm50tcNFJTpbCt51SUW7LE" +
+                "nGFN5+dDZKoTWJEty4ElGUn5YqdOdEevS3faBzX/vrCyMNoDq1xnaXkKvXuX" +
+                "ot8JxxpfdHSq7G5LdO5Vr3c0fuAhv1JdwwRZ1pvLRlKuPeGDYSaKeZM3kixe" +
+                "5ecfy7lK7DxOOmwKbqUaAKU+eJR96os9cS/u3DDSWLMa+uYHUTfSzY3ZosEM" +
+                "qsaeiQzLayxu8QqtX6O8DHmCYHrj3tGlhSwSP2WiKODHOZnX+cnDAqUJFAHq" +
+                "oKDlGMOwsZ6wecNFXyR9EjqOzvTEPI8VqlFl7gsKezV/FwJkMOgyKBWKQbh/" +
+                "GuKOfcfTNvGZhpSPsaFitoOIEShdO1Z1QHFWR6DM5bHp/GSAAoWB9emDAG/n" +
+                "C93fvBIf9awTcsuQtkpMk9U3nQkAGsW4IuPfnlYVHlDirg3/OTtFfmhCv/Cs" +
+                "Q0y3TYtlVlrLOs/23vEwulerkQsAuMDuH+q79g5zItEPa4N19yD6+pA/NxAb" +
+                "ZytRE5Bht9fzKlC8wML9VS7FiospKav23HIF5olmojdrrZ4m+jX55vWl6y5k" +
+                "Blu76hit8qwqrQuMDk7n6Sgp1gh9ODI+QJxNr1tdnNILo7CKcsKDdB+6Vcbq" +
+                "Plyrnh3lgvhZSYytSLSUrKhGBGD4E1By1lAqIipEIvM6NQ+m/eh+R768vaML" +
+                "yPADUgk4fagCAja+OXwaLuMoFd/don85+DUiwY5KiYc5Bb9GFZh1jemO6J6d" +
+                "HrII3n/CD7YYdkgiK19ewUnSdjPCM6zOCZZigusJO+7pp2UvefowxB0Nht4Y" +
+                "504PmbRXekaLb+mdiu25ndx8ZDkDMWpNRfYpw7UTZ86XC9oNr7EuDMnJfCQN" +
+                "1IvitN6vj1YB1yNRkBLFZ80FZ261pQa9UDuGKfANqhMqk8j4s/Go+J0yMBlT" +
+                "qRxWHumCMkJGYtJ0+65IVJ0dTfVEyW+UhkLrGZUB2XDSEgSbyX9nMPq9eos+" +
+                "GUpdWOJn6QnACuJL3jb4MZuPvQTQkbw3xi+lWkt8NDNZeZGzJDpWpr0Uo1rj" +
+                "2iHmQ5cuUs92pD86WzF/sJXiej4Qh1ieU1YYSPfOFBtI0GvFWR2Fi761yVDf" +
+                "5Pv+FNr/9VQlYn38PdBY4jfzR05s8fLW3Nlykx0Z7KoCo7wwPgQPDNiXQMAR" +
+                "wVtFxS4iDyz7hfL2AG+rLjijvQdecpqu3mTeA29vt+K3+fkuWSmQmpzR0PCg" +
+                "0KRw4m6DklmyEzsNLm4Qz/c3h79MGDC9ldWXtDhpnHvEfy33iup3tordAvNu" +
+                "C+z/+U7txgBuY9zjuIW7MUW3MV/ufH93ExDfJvBxlwbAqcK5dHz5aUe5/v8V" +
+                "hFOVsx19UcXz/c3mtNux9287dij/TjXLyees8i+pPd6R/zdr3hrOt2dLToD9" +
+                "0Nl56u/d+voPd/fnrhoLAAA="
+
+        // A lint check compatible with 3.0 which references XmlScanner.ALL
+        // (which moved in 3.1)
+        private val LINT_XML_SCANNER_ALL_30 = "" +
+                "H4sIAAAAAAAAAJ1XeTTUexsfjWjGkt3YkhhZh7FMQsLYxzD2XbbJvhMyqYTs" +
+                "GqRrS2QvO2UsJXtZxpIrYZCism9FmN7Ovb3nlnvznvs+5zz//M7n8/k+5/t7" +
+                "nud8PxgUkBIMABw7BrCR8UQBvsURwJ8B+pZodWMVcW09DQkgAPMTcDvapU3/" +
+                "G8D8W7L8CESr6GlrqBsZw9AaG+jeHl2UOGyQDiUu0t9LrDGUfCk9/W79ea/o" +
+                "IJ0OmigGEy59KS5dbajVTxxBlWn1indrj/RQvPgIdc4XdGZfOHojUjEuDmVk" +
+                "/zGEEEw4UMCPlVJ+S0dvz78V+SOG9jsGG2zv6eOBPRTLeADr4eoVcCgB8k8E" +
+                "Rxeso7v/33jRJQm6FkAA4Do1ACB1CM/oj09IbyesGjYA6xjg7ScAhzl62Pv7" +
+                "3zaZ0ufSZCD3Q/qVEpWz2LSG8gsH2rMSjgvt428JevIMy8kaCDimGitWKklc" +
+                "nMHNL5YxfkXy7qae5zdAPlDcrDP8Wlj8cXEsAXP997R3k81j6d4Xn6RP7m9U" +
+                "PH4KNEfKJoDebla6zDBx04SwGJpXYyIyW6vvmg3VR5rQ5NiLRxK39iJjJNA4" +
+                "rN1e9A6NLUQo7CHtQ+PmyqXqe8LIwQATyBf8QpwyAV1eX6T6oTrRh7eG3/Rj" +
+                "+kMuiNHuKUtzBCY6YQfuHoQjSW98IgRBCHXmxuDMPXtezfFJ5uuYz3SLc1Fw" +
+                "bvnWDk+gNp29XbXIEXL+uJcPoYNTSVtqZMCRjEhRvfo5UjsbT9HIRGmdhmNT" +
+                "z1KKQ6oRKlVBerwxWsWlGGupp7gJvGKsGgTi4zeCeTQBLOdMjjnp1yhm6LUf" +
+                "f5G7oUPfgnRi4NarhFQWFZRzsLJTvRKNpZd42uCyGhq+4pMS+CYePcF3vq5S" +
+                "9NwTPhmgtLORiBskr5I7OAzC2Ctotms/3G7DtVDvPCslhRCEY2fBTxC+U51A" +
+                "HNLJrbD7RoL3Gg/eMuASp2XtsJA8QifY5X48HfPUeHAEeLBJ/a3zufUszw1l" +
+                "A4TBJTOuRVKfPD1rHTT94xcxku+xN/CweySuQsTLeXYZ/DzNOsdjTPOiP08L" +
+                "v+EGQUZyy/tEya0bobI+YylZwrZFyc1dEz10U/3sFtbcCqw4gaJQV3LTcm7u" +
+                "lHIgFOe2mc5mNt67sv7CVmKQjBi8FDb7qdnAZb7WUucCzHKsZWtCOHJIKUWW" +
+                "nNcDTKqQILu0eEirb+JJNwk1ypaOtYYPRnqo1oF405g8WBFggo+jUAF/bOBz" +
+                "eCxxYu4r9Nwx8nmfL046JBCUsONa+ebz+jYREkUzw+33GF9A/ZbpnFBMifCV" +
+                "aIqMD2ruoP2KaSDGxsUkb4Ux43T2HhdEb4aOqb8CEsIqqjcspxHbYtQ7IMfD" +
+                "pe/ANnotuICP7otNl+aVlhw4J7B87irSr2aVOrkCnD7IHN/cbs3nePfkFlNN" +
+                "v4RWk4Z8xfwe6GHvNshjyV/gU0hC0xFZ1deqnIHmwRrbxKrwbLlED2Lbrpyp" +
+                "L/DM869CaavwJUFJzSEZphW79O23bCXELpD4tFFGyuZlUqeJpYWTDCNy2vvn" +
+                "Qd174fwKehQAUKUDACT/1aB+H1NTzyBmdZawtMIxQY8QbdcQA8mTL2uFbcBC" +
+                "Wm6ydBThfB0eVsXF2EaOIfHMyUoFYXWcyj7SkOhqkEgGXE3KOUca83AZjpgV" +
+                "PJuenj0RmqNAvDK2szt1nnzEh+Npuy/TsJRSjCNVzottscRj1fB4O1Naglw5" +
+                "v8SsBjdc9/h04W/eS5oUjzs++q8F+QKCqDCcLda0QWvqtFgXqTmsWHtldKjU" +
+                "clyINu2FTng8tS8usgKL45/NpSywG+/ts2iYh+urXlUZZltnGlJvKylpsPHl" +
+                "qcnz66pSHJHyLDeFOFMFWZtUZLo92+AU4+eT93wtmIMfuMNplcrw/Cyr4Izd" +
+                "YK1FiYGV/XLTE4dBvbz3kIa64sbCYHoEP25E4C2IF+/5vq6hI8O8U0T6RGjp" +
+                "nDcocxToE85dInW3bFR8mMGULSCJeP5BHLOAoWOH7BUbM66J2pd5H3yTE10v" +
+                "jvwe0gZtwt1sCdgYG1oq/SgNz4bJe5nYOOI6RtDjRlxOF2y6rR52etxNz62I" +
+                "aIvqCVhGTp3KE5vTCU4Fd4x7hvecRThzKUp/QtC1SYF673jzUctRwrjQgSCj" +
+                "c/w6EC9+CUm9CR73+4Lz5mwWkjyZxoKk9VGvZZnljEsjpzUtzpxLoU6DToC7" +
+                "evYzRvyGjrcMo6Is+ZrZ1k4RYJtuMd0O4uejGjNuS0qiPc4YyZWfpRu1O6OL" +
+                "z9RU8Pc2zDJ7xtEkMWP9WEw4I4vQcHuquLF3I/oUhyiY1ji6fVU47JKOneTR" +
+                "JIzJrXZXjgdg3Yd4o1COHM/fTNXzp2IeYqEE263khp7kRxsyO91DD0xMCWnG" +
+                "q5C0+IwjXInhDZC71wKo6ky63tE82sl/Bn47e9JEXJ/EZ9sdOMh4EfShilaf" +
+                "QhPZ2RBe9OqWD9z4BkMXE/dCa0bE2ipld3DhtJViker488amyWLXeNFteiIr" +
+                "TiJKelulMwlsO30aZNYqZ3LxLq/DCzxPZQ7Umu7+nqBS3rIskn3SqJX8qGjG" +
+                "K1LVmP4yi1icbxebjWbr2MvyN+lWFvzPdO/MbUmOoNwXmykMDLawceqgm/JV" +
+                "p0NFEQ7hlnHv1/uCiYWvweVqiU+aZ+rGPMYYvNmbbZ0RBXM7xs41HAuvwKXX" +
+                "WW42sCiwyoXIVZihLieA97RKh6+9p55wLQdNYgNFGEASrVuVcwpVG6+asxt6" +
+                "VNhvkNeuIvw2DUvll6Vj1b3Krfvn51Ah6PuYqPV7BdmgmMKqwLmMrIG3oWN+" +
+                "JZgGDraSAm0tx9y3dEUwy/WlRYdLZ60anlj3u/vTvLMO29HI/a0ISM+qwHl0" +
+                "TOl9Dw0eK34m6M4yAukZWzap67YifnK4g3QDFnpKKldvuogKa7zx5uRMDmyH" +
+                "262oSJntcpxGvYD3wgIfqiHQiva2WVlY1HAAnRIIVPQ+yLrp2AcSd4Fs8zVX" +
+                "RZS+SB9T3/7s+C3bIQfe/qOqypz3ZUTQFLhrLH0ssPiUVMwTBiFN5l3b3JXR" +
+                "c68JNq8HlRWWenQHSCG6VLDegbIrvH1ro9FiCUWPB5+ODtlMDWkZiVQKmLpN" +
+                "P2OBUZ1AU51QRzBOumOxd87jEVdhgyQsDrJdo7N+RSap8Ayffv7pR5KrnFUF" +
+                "nu3Mu4/v6e4lqoBqX7VeF+eemBFb3jUr2CpNSvWwDJldEdrZxScpxYrW6wwB" +
+                "t7fRJ8Fy0yg0lB5Kf5opEyLPMtmOH4XY6sR7vHH5miP36OXjmNnXTDzLEY8S" +
+                "gmxnJqdOPt28Ue3fu+G0nbFiTLUymHXPhLKPKCyGTOokA39euSRZJ9k0CgBg" +
+                "4dvDCv4/V662v38g1hDr7Oof4Bfyfecaor2Z4QxXvJTSIvJdgdfD2AXoXQ2q" +
+                "btVDwTcN83UemDq4rvR3vq6Xu1S3UDZ9oc5amXubYk+oPZh5sDRSZ6wteO9T" +
+                "c/pazdV98hpzC5fig/vhmrKKGkWJp4M57aAtIsi6ing/YJRh0HxqbpO3ZnIu" +
+                "qwh/0vpzTCFvB4Z5iN5TbLNE6/YUsaWa60G8vUT8UkQP0cGvHDr6Qu5EEnZP" +
+                "eNaAgueiBex8txoWtj/kWAwdYoW4jk9mr+paH7urUBCixaIfbewQ0WP0ce0T" +
+                "fe6FWuaLqZayb/ots9GZifkpVTXC7POx7HSXgaWmSR53O9eb1/kr9hzzzZ6E" +
+                "AU0oKX7nNO/SuNZH9aiyb9Uv8T589asumzvUdUdhtM7hM/kLWZ7Ul9iBORuf" +
+                "lwLkdKOnhsiPflqyKou595BvITNdKiatn3NFpC1u+aWLuG5r0k1ntcVJArei" +
+                "Zrpt8le2liZnFt6BxOEXLmWLYcBGkbBRIVMaH57A2ARhiuPCwHdoMaaeuAvE" +
+                "9mdmYjjND+tpuIUoxd+eWx11jql8d8r9KwUGRXGEBfhrl/FnMACWVAA/WomD" +
+                "tIOe47+Rf134Fw7ksIMpfzq49Hu3Hcag/YnRf6A/D2My/sT88k+dfRgd8hNd" +
+                "lOLXg3FQ5aDZ+OvKHA9R+bX1OKh/8I30lz7t0X//YjqofnAd/KV+Ffx/LAcM" +
+                "6ijVny0HAtz8Jun0xw/9Dyg43kUBDwAA"
+
         @ClassRule @JvmField var temp = TemporaryFolder()
         init {
             temp.create()
@@ -614,5 +960,9 @@ src/test/pkg/Test.java:5: Error: Did you mean bar instead ? [MainActivityDetecto
         private val psiLintJar: File = base64gzip("lint3.jar", PSI_LINT_JAR_BASE64_GZIP).createFile(temp.root)
         private val lintJarWithServiceRegistry: File = base64gzip("lint4.jar",
                 LINT_JAR_SERVICE_REGISTRY_BASE64_GZIP).createFile(temp.root)
+        private val lintApiLevel0: File = base64gzip("lint5.jar", LINT5_JAR).createFile(temp.root)
+        private val lintApiLevel1000: File = base64gzip("lint6.jar", LINT6_JAR).createFile(temp.root)
+        private val lintApiLevel1000min1: File = base64gzip("lint7.jar", LINT7_JAR).createFile(temp.root)
+        private val lintXmlScannerAll30: File = base64gzip("lint8.jar", LINT_XML_SCANNER_ALL_30).createFile(temp.root)
     }
 }

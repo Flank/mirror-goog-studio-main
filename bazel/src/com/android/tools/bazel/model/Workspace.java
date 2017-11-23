@@ -24,6 +24,13 @@ import java.util.Map;
 import org.jetbrains.annotations.NotNull;
 
 public class Workspace {
+
+    static final String[] BUILD_FILES = {
+            "BUILD.bazel.test",
+            "BUILD.bazel",
+            "BUILD"
+    };
+
     private final File directory;
 
     private final Map<String, Package> packages = Maps.newLinkedHashMap();
@@ -71,14 +78,16 @@ public class Workspace {
 
 
     private File findBuildDirectory(@NotNull File dir) {
-        if (new File(dir, "BUILD.bazel").isFile() || new File(dir, "BUILD").isFile()) {
-            return dir;
+        for (String name : BUILD_FILES) {
+            if (new File(dir, name).isFile()) {
+                return dir;
+            }
         }
         File parent = dir.getParentFile();
         return (parent == null) ? null : findBuildDirectory(parent);
     }
 
     public interface GenerationListener {
-        void packageUpdated(String packageName);
+        boolean packageUpdated(String packageName);
     }
 }

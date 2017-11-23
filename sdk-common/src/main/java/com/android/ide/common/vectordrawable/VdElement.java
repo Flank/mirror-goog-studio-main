@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
-import java.awt.*;
+import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import org.w3c.dom.NamedNodeMap;
 
@@ -24,7 +23,7 @@ import org.w3c.dom.NamedNodeMap;
 abstract class VdElement {
     String mName;
 
-    boolean isClipPath = false;
+    boolean isClipPath;
 
     public String getName() {
         return mName;

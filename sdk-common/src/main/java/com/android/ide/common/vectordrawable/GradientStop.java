@@ -15,9 +15,8 @@
  */
 package com.android.ide.common.vectordrawable;
 
-/** Class to represent SVG gradient stops or Android's GradientColorItem. */
+/** Represents an SVG gradient stop or Android's GradientColorItem. */
 public class GradientStop {
-
     private String color;
     private String offset;
     private String opacity = "";

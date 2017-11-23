@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.scope;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.tasks.PackageApplication;
 import com.google.common.collect.Lists;
 import java.util.List;
@@ -29,53 +28,27 @@ import org.gradle.api.DefaultTask;
  */
 public abstract class GenericVariantScopeImpl extends TaskOutputHolderImpl implements InstantRunVariantScope {
 
-    private AndroidTask<TransformTask> instantRunVerifierTask;
+    private List<DefaultTask> coldSwapBuildTasks = Lists.newArrayList();
 
     @Override
-    public AndroidTask<TransformTask> getInstantRunVerifierTask() {
-        return instantRunVerifierTask;
-    }
-
-    @Override
-    public void setInstantRunVerifierTask(AndroidTask<TransformTask> verifierTask) {
-        instantRunVerifierTask = verifierTask;
-    }
-
-    private AndroidTask<TransformTask> instantRunSlicerTask;
-
-    @Override
-    public AndroidTask<TransformTask> getInstantRunSlicerTask() {
-        return instantRunSlicerTask;
-    }
-
-    @Override
-    public void setInstantRunSlicerTask(
-            AndroidTask<TransformTask> instantRunSlicerTask) {
-        this.instantRunSlicerTask = instantRunSlicerTask;
-    }
-
-    private List<AndroidTask<? extends DefaultTask>> coldSwapBuildTasks = Lists.newArrayList();
-
-    @Override
-    public List<AndroidTask<? extends DefaultTask>> getColdSwapBuildTasks() {
+    public List<DefaultTask> getColdSwapBuildTasks() {
         return coldSwapBuildTasks;
     }
 
     @Override
-    public void addColdSwapBuildTask(@NonNull AndroidTask<? extends DefaultTask> task) {
+    public void addColdSwapBuildTask(@NonNull DefaultTask task) {
         this.coldSwapBuildTasks.add(task);
     }
 
-    private AndroidTask<PackageApplication> packageApplicationTask;
+    private PackageApplication packageApplicationTask;
 
     @Override
-    public AndroidTask<PackageApplication> getPackageApplicationTask() {
+    public PackageApplication getPackageApplicationTask() {
         return packageApplicationTask;
     }
 
     @Override
-    public void setPackageApplicationTask(
-            AndroidTask<PackageApplication> packageApplicationTask) {
+    public void setPackageApplicationTask(PackageApplication packageApplicationTask) {
         this.packageApplicationTask = packageApplicationTask;
     }
 }

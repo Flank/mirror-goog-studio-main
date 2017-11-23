@@ -18,17 +18,17 @@ package com.android.testutils.concurrency;
 
 import com.android.annotations.NonNull;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Queues;
 import java.time.Duration;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -115,9 +115,9 @@ public final class ConcurrencyTester<F, T> {
         MIXED
     }
 
-    @NonNull private List<Consumer<Function<F, T>>> methodInvocationList = Lists.newLinkedList();
+    @NonNull private List<Consumer<Function<F, T>>> methodInvocationList = new LinkedList<>();
 
-    @NonNull private List<Function<F, T>> actionUnderTestList = Lists.newLinkedList();
+    @NonNull private List<Function<F, T>> actionUnderTestList = new LinkedList<>();
 
     /**
      * Adds a new invocation of the method under test to this {@link ConcurrencyTester} instance.
@@ -183,7 +183,7 @@ public final class ConcurrencyTester<F, T> {
                 "There must be at least 2 actions for concurrency checks.");
 
         AtomicInteger executedActions = new AtomicInteger(0);
-        List<Runnable> runnables = Lists.newLinkedList();
+        List<Runnable> runnables = new LinkedList<>();
 
         for (int i = 0; i < methodInvocationList.size(); i++) {
             Consumer<Function<F, T>> methodInvocation = methodInvocationList.get(i);
@@ -220,8 +220,8 @@ public final class ConcurrencyTester<F, T> {
         // main thread. When an action starts, it notifies the main thread that it has started and
         // continues immediately. When an action is going to finish, it creates a CountDownLatch,
         // sends it to the main thread, and waits for the main thread to allow it to finish.
-        BlockingQueue<Thread> startedActionQueue = Queues.newLinkedBlockingQueue();
-        BlockingQueue<CountDownLatch> finishRequestQueue = Queues.newLinkedBlockingQueue();
+        BlockingQueue<Thread> startedActionQueue = new LinkedBlockingQueue<>();
+        BlockingQueue<CountDownLatch> finishRequestQueue = new LinkedBlockingQueue<>();
 
         Runnable actionStartedHandler = () -> startedActionQueue.add(Thread.currentThread());
 
@@ -236,7 +236,7 @@ public final class ConcurrencyTester<F, T> {
         };
 
         // Attach the event handlers to the actions
-        List<Runnable> runnables = Lists.newLinkedList();
+        List<Runnable> runnables = new LinkedList<>();
         for (int i = 0; i < methodInvocationList.size(); i++) {
             Consumer<Function<F, T>> methodInvocation = methodInvocationList.get(i);
             Function<F, T> actionUnderTest = actionUnderTestList.get(i);
@@ -257,7 +257,7 @@ public final class ConcurrencyTester<F, T> {
 
         // Begin to monitor how the actions are executed
         int remainingActions = runnables.size();
-        LinkedList<CountDownLatch> finishRequests = Lists.newLinkedList();
+        Queue<CountDownLatch> finishRequests = new LinkedList<>();
         int maxConcurrentActions = 0;
 
         // To prevent the actions from *accidentally* running sequentially, when an action is going
@@ -307,14 +307,14 @@ public final class ConcurrencyTester<F, T> {
                 // start. Since we cannot distinguish these two cases, we let all the running
                 // actions finish and repeat the loop.
                 while (!finishRequests.isEmpty()) {
-                    finishRequests.removeFirst().countDown();
+                    finishRequests.remove().countDown();
                 }
             }
         }
 
         // Let all the running actions finish
         while (!finishRequests.isEmpty()) {
-            finishRequests.removeFirst().countDown();
+            finishRequests.remove().countDown();
         }
 
         // Wait for all the threads to finish

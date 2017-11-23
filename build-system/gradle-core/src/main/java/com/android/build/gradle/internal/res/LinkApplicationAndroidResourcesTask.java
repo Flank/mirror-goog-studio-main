@@ -31,7 +31,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.OutputFile;
 import com.android.build.VariantOutput;
-import com.android.build.gradle.internal.CombinedInput;
 import com.android.build.gradle.internal.TaskManager;
 import com.android.build.gradle.internal.aapt.AaptGeneration;
 import com.android.build.gradle.internal.aapt.AaptGradleFactory;
@@ -62,7 +61,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.AaptPackageConfig;
-import com.android.builder.symbols.SymbolIo;
 import com.android.builder.utils.FileCache;
 import com.android.ide.common.blame.MergingLog;
 import com.android.ide.common.blame.MergingLogRewriter;
@@ -75,6 +73,7 @@ import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
+import com.android.ide.common.symbols.SymbolIo;
 import com.android.resources.Density;
 import com.android.utils.FileUtils;
 import com.google.common.base.Joiner;
@@ -1262,19 +1261,5 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     @Input
     public boolean isNamespaced() {
         return isNamespaced;
-    }
-
-    // Workaround for https://issuetracker.google.com/67418335
-    @Override
-    @Input
-    @NonNull
-    public String getCombinedInput() {
-        return new CombinedInput(super.getCombinedInput())
-                .add("sourceOutputDir", getSourceOutputDir())
-                .add("textSymbolOutputFile", getTextSymbolOutputFile())
-                .add("symbolslWithPackageNameOutputFile", getSymbolslWithPackageNameOutputFile())
-                .add("proguardOutputFile", getProguardOutputFile())
-                .add("mainDexListProguardOutputFile", getMainDexListProguardOutputFile())
-                .toString();
     }
 }

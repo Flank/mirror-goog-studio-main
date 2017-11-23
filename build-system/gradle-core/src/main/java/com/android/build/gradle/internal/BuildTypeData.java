@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 package com.android.build.gradle.internal;
+
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.internal.api.DefaultAndroidSourceSet;
 import com.android.build.gradle.internal.dsl.CoreBuildType;
-import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.utils.StringHelper;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -28,7 +28,7 @@ import org.gradle.api.Project;
  */
 public class BuildTypeData extends VariantDimensionData {
     private final CoreBuildType buildType;
-    private AndroidTask<DefaultTask> assembleTask;
+    private DefaultTask assembleTask;
 
     BuildTypeData(
             @NonNull CoreBuildType buildType,
@@ -48,11 +48,11 @@ public class BuildTypeData extends VariantDimensionData {
     }
 
     @Nullable
-    public AndroidTask<DefaultTask> getAssembleTask() {
+    public DefaultTask getAssembleTask() {
         return assembleTask;
     }
 
-    public void setAssembleTask(AndroidTask<DefaultTask> assembleTask) {
+    public void setAssembleTask(DefaultTask assembleTask) {
         this.assembleTask = assembleTask;
     }
 }

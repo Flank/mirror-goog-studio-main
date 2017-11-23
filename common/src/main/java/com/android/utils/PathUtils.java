@@ -22,17 +22,16 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.PathMatcher;
 import java.nio.file.Paths;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 /** Utility methods for {@link java.nio.file.Path}. */
 public final class PathUtils {
@@ -40,27 +39,20 @@ public final class PathUtils {
     private PathUtils() {}
 
     public static void deleteIfExists(@NonNull Path path) throws IOException {
-        if (!java.nio.file.Files.exists(path)) {
-            return;
+        if (Files.isDirectory(path)) {
+            try (Stream<Path> pathsInDir = Files.list(path)) {
+                pathsInDir.forEach(
+                        pathInDir -> {
+                            try {
+                                deleteIfExists(pathInDir);
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(e);
+                            }
+                        });
+            }
         }
 
-        java.nio.file.Files.walkFileTree(
-                path,
-                new SimpleFileVisitor<Path>() {
-                    @Override
-                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                            throws IOException {
-                        java.nio.file.Files.deleteIfExists(file);
-                        return super.visitFile(file, attrs);
-                    }
-
-                    @Override
-                    public FileVisitResult postVisitDirectory(Path dir, IOException exc)
-                            throws IOException {
-                        java.nio.file.Files.deleteIfExists(dir);
-                        return super.postVisitDirectory(dir, exc);
-                    }
-                });
+        Files.deleteIfExists(path);
     }
 
     /** Returns a system-independent path. */
@@ -116,7 +108,13 @@ public final class PathUtils {
         return classPathJars;
     }
 
-    private static void addRemovePathHook(@NonNull Path path) {
+    /**
+     * Adds a hook to the shutdown event of the JVM which will delete all files and directories at
+     * the given path (inclusive) when the JVM exits.
+     *
+     * @param path the path to delete
+     */
+    public static void addRemovePathHook(@NonNull Path path) {
         Runtime.getRuntime()
                 .addShutdownHook(
                         new Thread(

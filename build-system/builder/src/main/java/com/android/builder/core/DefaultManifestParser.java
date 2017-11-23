@@ -66,6 +66,13 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class DefaultManifestParser implements ManifestAttributeSupplier {
 
+    private static final SAXParserFactory PARSER_FACTORY = SAXParserFactory.newInstance();
+
+    static {
+        XmlUtils.configureSaxFactory(PARSER_FACTORY, true, false);
+    }
+
+
     @NonNull private final File manifestFile;
 
     @NonNull
@@ -305,10 +312,8 @@ public class DefaultManifestParser implements ManifestAttributeSupplier {
                         }
                     };
 
-            SAXParserFactory factory = SAXParserFactory.newInstance();
             try {
-                XmlUtils.configureSaxFactory(factory, true, false);
-                SAXParser saxParser = XmlUtils.createSaxParser(factory);
+                SAXParser saxParser = XmlUtils.createSaxParser(PARSER_FACTORY);
                 saxParser.parse(manifestFile, handler);
                 initialized = true;
             } catch (Exception e) {

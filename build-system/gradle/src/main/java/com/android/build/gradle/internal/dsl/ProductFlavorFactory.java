@@ -17,7 +17,6 @@
 package com.android.build.gradle.internal.dsl;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.internal.errors.DeprecationReporter;
 import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
@@ -31,23 +30,19 @@ public class ProductFlavorFactory implements NamedDomainObjectFactory<ProductFla
     private final Project project;
     @NonNull
     private final Logger logger;
-    @NonNull private final DeprecationReporter deprecationReporter;
 
     public ProductFlavorFactory(
             @NonNull ObjectFactory objectFactory,
             @NonNull Project project,
-            @NonNull Logger logger,
-            @NonNull DeprecationReporter deprecationReporter) {
+            @NonNull Logger logger) {
         this.objectFactory = objectFactory;
         this.project = project;
         this.logger = logger;
-        this.deprecationReporter = deprecationReporter;
     }
 
     @NonNull
     @Override
     public ProductFlavor create(String name) {
-        return objectFactory.newInstance(
-                ProductFlavor.class, name, project, objectFactory, logger, deprecationReporter);
+        return objectFactory.newInstance(ProductFlavor.class, name, project, objectFactory, logger);
     }
 }

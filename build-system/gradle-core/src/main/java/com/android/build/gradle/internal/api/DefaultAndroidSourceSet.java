@@ -228,13 +228,6 @@ public class DefaultAndroidSourceSet implements AndroidSourceSet, SourceProvider
         }
     }
 
-    @NonNull
-    @Override
-    public String getJackPluginConfigurationName() {
-        throw new RuntimeException(
-                "AndroidSourceSet.getJackPluginConfigurationName() is not supported anymore.");
-    }
-
     @Override
     @NonNull
     public AndroidSourceFile getManifest() {

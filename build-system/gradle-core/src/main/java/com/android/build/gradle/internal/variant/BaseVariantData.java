@@ -27,7 +27,6 @@ import com.android.build.gradle.internal.dependency.VariantDependencies;
 import com.android.build.gradle.internal.dsl.Splits;
 import com.android.build.gradle.internal.dsl.VariantOutputFactory;
 import com.android.build.gradle.internal.pipeline.TransformManager;
-import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
@@ -101,8 +100,8 @@ public abstract class BaseVariantData implements TaskContainer {
     public Task resourceGenTask;
     public Task assetGenTask;
     public CheckManifest checkManifestTask;
-    public AndroidTask<PackageSplitRes> packageSplitResourcesTask;
-    public AndroidTask<PackageSplitAbi> packageSplitAbiTask;
+    public PackageSplitRes packageSplitResourcesTask;
+    public PackageSplitAbi packageSplitAbiTask;
 
     // FIX ME : move all AndroidTask<> above to Scope and use these here.
     private Map<TaskKind, Task> registeredTasks = new ConcurrentHashMap<>();
@@ -194,7 +193,6 @@ public abstract class BaseVariantData implements TaskContainer {
                         globalScope,
                         new TransformManager(
                                 globalScope.getProject(),
-                                taskManager.getAndroidTasks(),
                                 globalScope.getErrorHandler(),
                                 recorder),
                         this);
@@ -384,9 +382,6 @@ public abstract class BaseVariantData implements TaskContainer {
         Preconditions.checkNotNull(javacTask);
 
         javacTask.source(folder);
-        // Disable incremental compilation when annotation processor is present. (b/65519025)
-        // TODO: remove once https://github.com/gradle/gradle/issues/2996 is fixed.
-        javacTask.getOptions().setIncremental(false);
         addJavaSourceFoldersToModel(folder.getDir());
     }
 
@@ -401,7 +396,8 @@ public abstract class BaseVariantData implements TaskContainer {
 
     @Deprecated
     public void registerResGeneratingTask(@NonNull Task task, @NonNull Collection<File> generatedResFolders) {
-        System.out.println("registerResGeneratingTask is deprecated, use registerGeneratedFolders(FileCollection)");
+        System.out.println(
+                "registerResGeneratingTask is deprecated, use registerGeneratedResFolders(FileCollection)");
 
         final Project project = scope.getGlobalScope().getProject();
         registerGeneratedResFolders(project.files(generatedResFolders).builtBy(task));

@@ -291,29 +291,22 @@ Status ProfilerServiceImpl::AttachAgent(
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
-  string device_serial = DeviceInfo::serial();
-  string boot_id;
-  FileReader::Read("/proc/sys/kernel/random/boot_id", &boot_id);
-
-  sessions_.BeginSession(device_serial, boot_id, request->pid());
+  sessions_.BeginSession(request->device_id(), request->process_id(),
+                         response->mutable_session());
   return Status::OK;
 }
 
 Status ProfilerServiceImpl::EndSession(
     ServerContext* context, const profiler::proto::EndSessionRequest* request,
     profiler::proto::EndSessionResponse* response) {
-  sessions_.EndSession(request->session_id());
+  sessions_.EndSession(request->session_id(), response->mutable_session());
   return Status::OK;
 }
 
 Status ProfilerServiceImpl::GetSession(
     ServerContext* context, const profiler::proto::GetSessionRequest* request,
     profiler::proto::GetSessionResponse* response) {
-  auto* session = sessions_.GetSession(request->session_id());
-  if (session != nullptr) {
-    response->mutable_session()->CopyFrom(*session);
-  }
-
+  sessions_.GetSession(request->session_id(), response->mutable_session());
   return Status::OK;
 }
 

@@ -62,6 +62,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -143,6 +144,8 @@ public class DesugarTransform extends Transform {
     @NonNull private final WaitableExecutor waitableExecutor;
     private boolean verbose;
     private final boolean enableGradleWorkers;
+    @NonNull private final String projectVariant;
+    private final boolean enableIncrementalDesugaring;
 
     @NonNull private Set<InputEntry> cacheMisses = Sets.newConcurrentHashSet();
 
@@ -154,7 +157,9 @@ public class DesugarTransform extends Transform {
             @NonNull JavaProcessExecutor executor,
             boolean verbose,
             boolean enableGradleWorkers,
-            @NonNull Path tmpDir) {
+            @NonNull Path tmpDir,
+            @NonNull String projectVariant,
+            boolean enableIncrementalDesugaring) {
         this.androidJarClasspath = androidJarClasspath;
         this.compilationBootclasspath = PathUtils.getClassPathItems(compilationBootclasspath);
         this.userCache = null;
@@ -164,6 +169,8 @@ public class DesugarTransform extends Transform {
         this.verbose = verbose;
         this.enableGradleWorkers = enableGradleWorkers;
         this.tmpDir = tmpDir;
+        this.projectVariant = projectVariant;
+        this.enableIncrementalDesugaring = enableIncrementalDesugaring;
     }
 
     @NonNull
@@ -210,15 +217,17 @@ public class DesugarTransform extends Transform {
 
     @Override
     public boolean isIncremental() {
-        return false;
+        return enableIncrementalDesugaring;
     }
 
     @Override
     public void transform(@NonNull TransformInvocation transformInvocation)
             throws TransformException, InterruptedException, IOException {
         try {
+            Set<QualifiedContent> additionalStreams = incrementalAnalysis(transformInvocation);
+
             initDesugarJar(userCache);
-            processInputs(transformInvocation);
+            processInputs(transformInvocation, additionalStreams);
             waitableExecutor.waitForTasksWithQuickFail(true);
 
             if (enableGradleWorkers) {
@@ -237,7 +246,57 @@ public class DesugarTransform extends Transform {
         }
     }
 
-    private void processInputs(@NonNull TransformInvocation transformInvocation) throws Exception {
+    @NonNull
+    private Set<QualifiedContent> incrementalAnalysis(@NonNull TransformInvocation invocation)
+            throws InterruptedException {
+        if (!enableIncrementalDesugaring) {
+            return ImmutableSet.of();
+        }
+
+        DesugarIncrementalTransformHelper helper =
+                new DesugarIncrementalTransformHelper(projectVariant);
+        Set<Path> additionalPaths = helper.getAdditionalPaths(invocation, waitableExecutor);
+        if (additionalPaths.isEmpty()) {
+            return ImmutableSet.of();
+        }
+
+        // determine which streams  contain these files
+        Map<Path, QualifiedContent> streamPaths = getStreamPaths(invocation);
+        Set<QualifiedContent> impactedStreams = new HashSet<>();
+        for (Path path : additionalPaths) {
+            if (streamPaths.containsKey(path)) {
+                impactedStreams.add(streamPaths.get(path));
+            } else {
+                for (Map.Entry<Path, QualifiedContent> pathContent : streamPaths.entrySet()) {
+                    if (path.startsWith(pathContent.getKey())) {
+                        impactedStreams.add(pathContent.getValue());
+                    }
+                }
+            }
+        }
+
+        return impactedStreams;
+    }
+
+    @NonNull
+    private Map<Path, QualifiedContent> getStreamPaths(@NonNull TransformInvocation invocation) {
+        Map<Path, QualifiedContent> roots = Maps.newHashMap();
+        for (TransformInput input : invocation.getInputs()) {
+            for (DirectoryInput dirInput : input.getDirectoryInputs()) {
+                roots.put(dirInput.getFile().toPath(), dirInput);
+            }
+
+            for (JarInput jarInput : input.getJarInputs()) {
+                roots.put(jarInput.getFile().toPath(), jarInput);
+            }
+        }
+        return roots;
+    }
+
+    private void processInputs(
+            @NonNull TransformInvocation transformInvocation,
+            @NonNull Set<QualifiedContent> additionalStreams)
+            throws Exception {
         TransformOutputProvider outputProvider = transformInvocation.getOutputProvider();
         Preconditions.checkNotNull(outputProvider);
 
@@ -245,6 +304,7 @@ public class DesugarTransform extends Transform {
             outputProvider.deleteAll();
         }
 
+        Set<QualifiedContent> processed = Sets.newHashSet();
         for (TransformInput input : transformInvocation.getInputs()) {
             for (DirectoryInput dirInput : input.getDirectoryInputs()) {
                 Path rootFolder = dirInput.getFile().toPath();
@@ -252,15 +312,22 @@ public class DesugarTransform extends Transform {
                 if (Files.notExists(rootFolder)) {
                     PathUtils.deleteIfExists(output);
                 } else {
-                    Set<Status> statuses = Sets.newHashSet(dirInput.getChangedFiles().values());
-                    boolean reRun =
-                            !transformInvocation.isIncremental()
-                                    || !Objects.equals(
-                                            statuses, Collections.singleton(Status.NOTCHANGED));
+                    boolean reRun;
+                    if (!transformInvocation.isIncremental()) {
+                        reRun = true;
+                    } else {
+                        Set<Status> statuses = Sets.newHashSet(dirInput.getChangedFiles().values());
+                        boolean theSame =
+                                statuses.isEmpty()
+                                        || Objects.equals(
+                                                statuses, Collections.singleton(Status.NOTCHANGED));
+                        reRun = !theSame;
+                    }
 
                     if (reRun) {
                         PathUtils.deleteIfExists(output);
                         processSingle(rootFolder, output, dirInput.getScopes());
+                        processed.add(dirInput);
                     }
                 }
             }
@@ -274,6 +341,15 @@ public class DesugarTransform extends Transform {
                 Path output = getOutputPath(outputProvider, jarInput);
                 PathUtils.deleteIfExists(output);
                 processSingle(jarInput.getFile().toPath(), output, jarInput.getScopes());
+                processed.add(jarInput);
+            }
+        }
+
+        for (QualifiedContent content : additionalStreams) {
+            if (!processed.contains(content)) {
+                Path output = getOutputPath(outputProvider, content);
+                PathUtils.deleteIfExists(output);
+                processSingle(content.getFile().toPath(), output, content.getScopes());
             }
         }
     }

@@ -43,7 +43,6 @@ public class ProguardMapTest extends TestCase {
       + "    64:66:class.with.only.Fields methodWithObfRes() -> n\n"
       + "    80:80:void lineObfuscatedMethod():8:8 -> o\n"
       + "    90:90:void lineObfuscatedMethod2():9 -> p\n"
-      + "    120:121:void method.from.a.Superclass.supermethod() -> q\n"
       ;
 
     public void testProguardMap() throws IOException, ParseException {
@@ -157,12 +156,15 @@ public class ProguardMapTest extends TestCase {
         assertEquals("Methods.java", frame.filename);
         assertEquals(13, frame.line);
 
-        frame = map.getFrame("class.with.Methods", "q", "()V", "SourceFile.java", 120);
-        // TODO: Should this be "supermethod", instead of
-        // "method.from.a.Superclass.supermethod"?
-        assertEquals("method.from.a.Superclass.supermethod", frame.methodName);
-        assertEquals("()V", frame.signature);
-        assertEquals("Superclass.java", frame.filename);
-        assertEquals(120, frame.line);
+        // Some methods may not have been obfuscated. We should still be able
+        // to compute the filename properly.
+        frame =
+                map.getFrame(
+                        "class.with.Methods",
+                        "unObfuscatedMethodName",
+                        "()V",
+                        "SourceFile.java",
+                        0);
+        assertEquals("Methods.java", frame.filename);
     }
 }

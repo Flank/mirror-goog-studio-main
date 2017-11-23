@@ -36,30 +36,28 @@ import java.util.Set;
  * "Multiplexing" reporter which allows output to be split up into a separate
  * report for each separate project. It also adds an overview index.
  */
-public class MultiProjectHtmlReporter extends HtmlReporter {
+public class MultiProjectHtmlReporter extends Reporter {
     private static final String INDEX_NAME = "index.html";
     private final File dir;
+    protected final LintCliFlags flags;
 
     public MultiProjectHtmlReporter(
             @NonNull LintCliClient client,
             @NonNull File dir,
-            @NonNull LintCliFlags flags) throws IOException {
-        super(client, new File(dir, INDEX_NAME), flags);
+            @NonNull LintCliFlags flags) {
+        super(client, new File(dir, INDEX_NAME));
         this.dir = dir;
+        this.flags = flags;
     }
 
     @Override
     public void write(@NonNull Stats stats, List<Warning> allIssues) throws IOException {
         Map<Project, List<Warning>> projectToWarnings = new HashMap<>();
         for (Warning warning : allIssues) {
-            List<Warning> list = projectToWarnings.get(warning.project);
-            if (list == null) {
-                list = new ArrayList<>();
-                projectToWarnings.put(warning.project, list);
-            }
+            List<Warning> list = projectToWarnings
+                    .computeIfAbsent(warning.project, k -> new ArrayList<>());
             list.add(warning);
         }
-
 
         // Set of unique file names: lowercase names to avoid case conflicts in web environment
         Set<String> unique = Sets.newHashSet();
@@ -97,10 +95,7 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
                 continue;
             }
 
-            Reporter reporter = Reporter.createHtmlReporter(client, output, flags, simpleFormat);
-            //HtmlReporter reporter = new HtmlReporter(client, output, flags);
-            reporter.setBundleResources(bundleResources);
-            reporter.setSimpleFormat(simpleFormat);
+            Reporter reporter = Reporter.createHtmlReporter(client, output, flags);
             reporter.setUrlMap(urlMap);
 
             List<Warning> issues = projectToWarnings.get(project);
@@ -134,12 +129,10 @@ public class MultiProjectHtmlReporter extends HtmlReporter {
                     relative));
         }
 
-        // Write overview index?
-        writer.close();
         // Sort project list in decreasing order of errors, warnings and names
         Collections.sort(projects);
 
-        Reporter reporter = Reporter.createHtmlReporter(client, output, flags, simpleFormat);
+        Reporter reporter = Reporter.createHtmlReporter(client, output, flags);
         reporter.writeProjectList(stats, projects);
 
         if (!client.getFlags().isQuiet()

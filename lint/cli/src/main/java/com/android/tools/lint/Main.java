@@ -64,7 +64,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
-import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -166,23 +165,15 @@ public class Main {
                     @NonNull LintRequest request) {
                 LintDriver driver = super.createDriver(registry, request);
 
-                if (unexpectedGradleProject != null) {
-                    Project project = unexpectedGradleProject;
-                    @SuppressWarnings("SpellCheckingInspection")
+                Project project = unexpectedGradleProject;
+                if (project != null) {
                     String message = String.format("\"`%1$s`\" is a Gradle project. To correctly "
-                                    + "analyze Gradle projects, you should run \"`gradlew :lint`\" "
-                                    + "instead.", project.getName());
-                    Location location = Location.create(project.getDir());
-                    Context context = new Context(driver, project, project, project.getDir(), "");
-                    if (context.isEnabled(IssueRegistry.LINT_ERROR) &&
-                            !getConfiguration(project, null).isIgnored(context,
-                                    IssueRegistry.LINT_ERROR, location, message)) {
-                        report(context,
-                                IssueRegistry.LINT_ERROR,
-                                project.getConfiguration(null).getSeverity(
-                                        IssueRegistry.LINT_ERROR), location, message,
-                                TextFormat.RAW, null);
-                    }
+                            + "analyze Gradle projects, you should run \"`gradlew :lint`\" "
+                            + "instead.", project.getName());
+                    Location location =
+                            LintUtils.guessGradleLocation(this, project.getDir(), null);
+                    LintClient.Companion.report(this,IssueRegistry.LINT_ERROR,
+                            message, driver, project, location, null);
                 }
 
                 initializeDriver(driver);
@@ -285,7 +276,7 @@ public class Main {
 
             @NonNull
             @Override
-            public List<File> findRuleJars(@NotNull Project project) {
+            public List<File> findRuleJars(@NonNull Project project) {
                 if (metadata != null) {
                     List<File> jars = metadata.getLintChecks().get(project);
                     if (jars != null) {
@@ -485,17 +476,12 @@ public class Main {
                             exit(ERRNO_EXISTS);
                         }
                     }
-                    try {
-                        MultiProjectHtmlReporter reporter =
-                                new MultiProjectHtmlReporter(client, output, flags);
-                        if (arg.equals(ARG_SIMPLE_HTML)) {
-                            reporter.setSimpleFormat(true);
-                        }
-                        flags.getReporters().add(reporter);
-                    } catch (IOException e) {
-                        log(e, null);
-                        exit(ERRNO_INVALID_ARGS);
+                    MultiProjectHtmlReporter reporter =
+                            new MultiProjectHtmlReporter(client, output, flags);
+                    if (arg.equals(ARG_SIMPLE_HTML)) {
+                        System.err.println(ARG_SIMPLE_HTML + " ignored: no longer supported");
                     }
+                    flags.getReporters().add(reporter);
                     continue;
                 }
                 if (output.exists()) {
@@ -510,9 +496,7 @@ public class Main {
                     exit(ERRNO_EXISTS);
                 }
                 try {
-                    boolean simpleFormat = arg.equals(ARG_SIMPLE_HTML);
-                    Reporter reporter = Reporter.createHtmlReporter(client, output, flags,
-                            simpleFormat);
+                    Reporter reporter = Reporter.createHtmlReporter(client, output, flags);
                     flags.getReporters().add(reporter);
                 } catch (IOException e) {
                     log(e, null);
@@ -843,12 +827,6 @@ public class Main {
         } else {
             //noinspection VariableNotUsedInsideIf
             if (urlMap != null) {
-                for (Reporter reporter : reporters) {
-                    if (!reporter.isSimpleFormat()) {
-                        reporter.setBundleResources(true);
-                    }
-                }
-
                 if (!urlMap.equals(VALUE_NONE)) {
                     Map<String, String> map = new HashMap<>();
                     String[] replace = urlMap.split(",");
@@ -1213,7 +1191,6 @@ public class Main {
                 "path prefixes to corresponding URL prefixes, such as " +
                 "C:\\temp\\Proj1=http://buildserver/sources/temp/Proj1.  To turn off linking " +
                 "to files, use " + ARG_URL + " " + VALUE_NONE,
-            ARG_SIMPLE_HTML + " <filename>", "Create a simple HTML report",
             ARG_XML + " <filename>", "Create an XML report instead.",
 
             "", "\nProject Options:",

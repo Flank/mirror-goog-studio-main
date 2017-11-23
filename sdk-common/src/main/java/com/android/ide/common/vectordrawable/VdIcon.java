@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import static com.android.SdkConstants.DOT_XML;
@@ -23,7 +22,6 @@ import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
 import static java.awt.RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HBGR;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
 import com.android.ide.common.util.AssetUtil;
 
 import java.awt.Color;
@@ -46,11 +44,10 @@ import java.util.Map;
 import javax.swing.Icon;
 
 /**
- * VdIcon wrap every vector drawable from Material Library into an icon. All of them are shown in a
- * table for developer to pick.
+ * VdIcon wraps every vector drawable from Material Library into an icon. All of them are shown in
+ * a table for developer to pick.
  */
 public class VdIcon implements Icon, Comparable<VdIcon> {
-
     /** Common prefix for most of the vector icons */
     private static final String ICON_PREFIX = "ic_";
 
@@ -104,8 +101,8 @@ public class VdIcon implements Icon, Comparable<VdIcon> {
             mHeight = height;
         }
         else {
-            mWidth = (int)(mVdTree != null ? mVdTree.getPortWidth() : 0);
-            mHeight = (int)(mVdTree != null ? mVdTree.getPortHeight() : 0);
+            mWidth = (int)mVdTree.getPortWidth();
+            mHeight = (int)mVdTree.getPortHeight();
         }
         mBackground = null;
     }
@@ -151,10 +148,9 @@ public class VdIcon implements Icon, Comparable<VdIcon> {
         return mUrl;
     }
 
-    @Nullable
+    @NonNull
     private static VdTree parseVdTree(URL url) throws IOException {
-        VdParser p = new VdParser();
-        return p.parse(url.openStream(), null);
+        return VdParser.parse(url.openStream(), null);
     }
 
     /**
@@ -281,8 +277,8 @@ public class VdIcon implements Icon, Comparable<VdIcon> {
     }
 
     /**
-     * Whether we should show the title displayed below the image. When this is on, the icon is made smaller to
-     * fit the font height.
+     * Whether we should show the title displayed below the image. When this is on, the icon is made
+     * smaller to fit the font height.
      */
     public void setShowName(boolean showName) {
         this.mShowName = showName;

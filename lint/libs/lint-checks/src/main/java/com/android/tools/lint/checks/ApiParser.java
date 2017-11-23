@@ -25,7 +25,7 @@ import org.xml.sax.helpers.DefaultHandler;
 /**
  * Parser for the simplified XML API format version 1.
  */
-public class ApiParser extends DefaultHandler {
+class ApiParser extends DefaultHandler {
     private static final String NODE_CLASS = "class";
     private static final String NODE_FIELD = "field";
     private static final String NODE_METHOD = "method";

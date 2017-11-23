@@ -34,8 +34,8 @@ import javax.inject.Inject
  */
 open class JarRClassTask @Inject constructor(private val workerExecutor: WorkerExecutor) : DefaultTask() {
 
-    @get:InputFiles lateinit var rClassClasses: FileCollection
-    @get:OutputFile lateinit var rClassJar: File
+    @get:InputFiles lateinit var rClassClasses: FileCollection private set
+    @get:OutputFile lateinit var rClassJar: File private set
 
     @TaskAction
     fun jar() {

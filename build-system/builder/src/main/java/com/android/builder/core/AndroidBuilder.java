@@ -47,10 +47,6 @@ import com.android.builder.model.SigningConfig;
 import com.android.builder.packaging.PackagerException;
 import com.android.builder.sdk.SdkInfo;
 import com.android.builder.sdk.TargetInfo;
-import com.android.builder.symbols.RGeneration;
-import com.android.builder.symbols.SymbolIo;
-import com.android.builder.symbols.SymbolTable;
-import com.android.builder.symbols.SymbolUtils;
 import com.android.ide.common.blame.MessageReceiver;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.CachedProcessOutputHandler;
@@ -65,6 +61,10 @@ import com.android.ide.common.res2.FileStatus;
 import com.android.ide.common.signing.CertificateInfo;
 import com.android.ide.common.signing.KeystoreHelper;
 import com.android.ide.common.signing.KeytoolException;
+import com.android.ide.common.symbols.RGeneration;
+import com.android.ide.common.symbols.SymbolIo;
+import com.android.ide.common.symbols.SymbolTable;
+import com.android.ide.common.symbols.SymbolUtils;
 import com.android.manifmerger.ManifestMerger2;
 import com.android.manifmerger.ManifestProvider;
 import com.android.manifmerger.ManifestSystemProperty;
@@ -437,6 +437,7 @@ public class AndroidBuilder {
             @NonNull File mainManifest,
             @NonNull List<File> manifestOverlays,
             @NonNull List<? extends ManifestProvider> dependencies,
+            @NonNull List<File> navigationFiles,
             @Nullable String featureName,
             String packageOverride,
             int versionCode,
@@ -460,6 +461,7 @@ public class AndroidBuilder {
                             .addFlavorAndBuildTypeManifests(
                                     manifestOverlays.toArray(new File[manifestOverlays.size()]))
                             .addManifestProviders(dependencies)
+                            .addNavigationFiles(navigationFiles)
                             .withFeatures(
                                     optionalFeatures.toArray(
                                             new Invoker.Feature[optionalFeatures.size()]))

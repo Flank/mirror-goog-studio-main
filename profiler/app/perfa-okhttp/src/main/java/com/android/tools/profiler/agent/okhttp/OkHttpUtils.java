@@ -15,10 +15,13 @@
  */
 package com.android.tools.profiler.agent.okhttp;
 
+import java.io.OutputStream;
+
 /**
  * Util methods to share among okhttp interceptors. Methods need be public, otherwise, invoking by
  * Java reflection does not have legal access.
  */
+@SuppressWarnings("WeakerAccess") // API can be package-private but is public to express intention
 public final class OkHttpUtils {
     public static StackTraceElement[] getCallstack(String okHttpPackage) {
         StackTraceElement[] callstack = new Throwable().getStackTrace();
@@ -38,5 +41,30 @@ public final class OkHttpUtils {
         } else {
             return new StackTraceElement[] {};
         }
+    }
+
+    /**
+     * Returns an {@link OutputStream} that simply discards written bytes.
+     *
+     * <p>Our profiling instrumentation code assumes that a request's body is an {@link
+     * OutputStream} that is written into before the request is sent. However, OkHttp uses {@link
+     * okio.Sink}s instead of {@link OutputStream}s for their request bodies, so we provide a
+     * temporary dummy output stream to use that will be wrapped with a {@link okio.Sink} and can
+     * still be tracked.
+     *
+     * <p>TODO: We may want to clean up this assumption in HttpTracker so these OkHttp gymnastics
+     * are not required.
+     */
+    public static OutputStream createNullOutputStream() {
+        return new OutputStream() {
+            @Override
+            public void write(int b) {}
+
+            @Override
+            public void write(byte[] b) {}
+
+            @Override
+            public void write(byte[] b, int off, int len) {}
+        };
     }
 }

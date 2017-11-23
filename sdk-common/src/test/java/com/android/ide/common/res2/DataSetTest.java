@@ -15,6 +15,10 @@
  */
 package com.android.ide.common.res2;
 
+import static com.android.ide.common.res2.DataFile.FileType.XML_VALUES;
+import static com.android.ide.common.res2.DataMerger.NODE_DATA_SET;
+import static com.android.ide.common.res2.DataMerger.NODE_MERGER;
+import static com.google.common.truth.Truth.assertThat;
 import static java.io.File.separator;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -25,10 +29,14 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.testutils.TestUtils;
 import com.android.utils.ILogger;
+import com.android.utils.XmlUtils;
 import java.io.File;
+import java.io.IOException;
+import javax.xml.parsers.DocumentBuilderFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
 public class DataSetTest {
@@ -38,32 +46,7 @@ public class DataSetTest {
 
     @Test
     public void testIsIgnored() throws Exception {
-        DataSet dataSet = new DataSet("foo", false) {
-
-            @Override
-            protected DataSet createSet(String name) {
-                return null;
-            }
-
-            @Override
-            protected DataFile createFileAndItemsFromXml(@NonNull File file, @NonNull Node fileNode)
-                    throws MergingException {
-                return null;
-            }
-
-            @Override
-            protected void readSourceFolder(File sourceFolder, ILogger logger)
-                    throws MergingException {
-
-            }
-
-            @Nullable
-            @Override
-            protected DataFile createFileAndItems(File sourceFolder, File file, ILogger logger)
-                    throws MergingException {
-                return null;
-            }
-        };
+        DataSet dataSet = getDataSet();
 
         assertFalse(dataSet.isIgnored(new File("a.")));
         assertFalse(dataSet.isIgnored(new File("foo")));
@@ -101,32 +84,7 @@ public class DataSetTest {
 
     @Test
     public void testLongestPath() {
-        DataSet dataSet = new DataSet("foo", false) {
-
-            @Override
-            protected DataSet createSet(String name) {
-                return null;
-            }
-
-            @Override
-            protected DataFile createFileAndItemsFromXml(@NonNull File file, @NonNull Node fileNode)
-                    throws MergingException {
-                return null;
-            }
-
-            @Override
-            protected void readSourceFolder(File sourceFolder, ILogger logger)
-                    throws MergingException {
-
-            }
-
-            @Nullable
-            @Override
-            protected DataFile createFileAndItems(File sourceFolder, File file, ILogger logger)
-                    throws MergingException {
-                return null;
-            }
-        };
+        DataSet dataSet = getDataSet();
 
         File res = new File(mTemporaryFolder.getRoot(), "res");
         assertTrue(res.mkdirs());
@@ -157,5 +115,83 @@ public class DataSetTest {
                         "res/layouts/shared/layout/foo/bar/activity.xml")).getPath());
         assertNull(dataSet.findMatchingSourceFile(
                 new File(mTemporaryFolder.getRoot(), "funky/shared/layout/foo/bar/activity.xml")));
+    }
+
+    @Test
+    public void testWritingXml() throws IOException {
+        DataSet dataSet = getDataSet();
+
+        File notEmpty = mTemporaryFolder.newFile("notEmpty.xml");
+        DataFile notEmptyDataFile = new DataFile(notEmpty, XML_VALUES) {};
+        notEmptyDataFile.addItem(new DataItem("item") {});
+        dataSet.addDataFile(notEmpty, notEmptyDataFile);
+        dataSet.addSource(notEmpty);
+
+        File empty = mTemporaryFolder.newFile("empty.xml");
+        DataFile emptyDataFile = new DataFile(empty, XML_VALUES) {};
+        dataSet.addDataFile(empty, emptyDataFile);
+        dataSet.addSource(empty);
+
+        Document document = XmlUtils.createDocument(false);
+        Node root = document.createElement(NODE_MERGER);
+        document.appendChild(root);
+
+        Node dataSetNode = document.createElement(NODE_DATA_SET);
+        root.appendChild(dataSetNode);
+
+        dataSet.appendToXml(dataSetNode, document, getFakeMergeConsumer(), false);
+        String content = XmlUtils.toXml(document);
+
+        assertThat(content).contains("file path=\"" + notEmpty.getAbsolutePath() + "\"");
+        assertThat(content).contains("file path=\"" + empty.getAbsolutePath() + "\"");
+    }
+
+    private static DataSet getDataSet() {
+        return new DataSet("foo", false) {
+
+            @Override
+            protected DataSet createSet(String name) {
+                return null;
+            }
+
+            @Override
+            protected DataFile createFileAndItemsFromXml(@NonNull File file, @NonNull Node fileNode)
+                    throws MergingException {
+                return null;
+            }
+
+            @Override
+            protected void readSourceFolder(File sourceFolder, ILogger logger)
+                    throws MergingException {}
+
+            @Nullable
+            @Override
+            protected DataFile createFileAndItems(File sourceFolder, File file, ILogger logger)
+                    throws MergingException {
+                return null;
+            }
+        };
+    }
+
+    private static MergeConsumer getFakeMergeConsumer() {
+        return new MergeConsumer() {
+            @Override
+            public void start(@NonNull DocumentBuilderFactory factory) throws ConsumerException {}
+
+            @Override
+            public void end() throws ConsumerException {}
+
+            @Override
+            public void addItem(@NonNull DataItem item) throws ConsumerException {}
+
+            @Override
+            public void removeItem(@NonNull DataItem removedItem, @Nullable DataItem replacedBy)
+                    throws ConsumerException {}
+
+            @Override
+            public boolean ignoreItemInMerge(DataItem item) {
+                return false;
+            }
+        };
     }
 }

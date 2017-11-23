@@ -24,7 +24,7 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_IN_PROCESS_AAPT2("android.enableAapt2jni", false),
     ENABLE_DAEMON_MODE_AAPT2("android.enableAapt2DaemonMode", true),
     ENABLE_BUILD_CACHE("android.enableBuildCache", true),
-    ENABLE_PROFILE_JSON("android.enableProfileJson", true),
+    ENABLE_PROFILE_JSON("android.enableProfileJson", false),
     ENABLE_SDK_DOWNLOAD("android.builder.sdkDownload", true),
     ENABLE_TEST_SHARDING("android.androidTest.shardBetweenDevices"),
     ENABLE_DEX_ARCHIVE("android.useDexArchive", true),
@@ -37,6 +37,7 @@ public enum BooleanOption implements Option<Boolean> {
     OVERRIDE_PATH_CHECK_PROPERTY("android.overridePathCheck"),
     OVERRIDE_PATH_CHECK_PROPERTY_OLD("com.android.build.gradle.overridePathCheck"),
     ENABLE_DESUGAR("android.enableDesugar", true),
+    ENABLE_INCREMENTAL_DESUGARING("android.enableIncrementalDesugaring", true),
     ENABLE_GRADLE_WORKERS("android.enableGradleWorkers", false),
 
     ENABLE_D8("android.enableD8", true),
@@ -62,6 +63,7 @@ public enum BooleanOption implements Option<Boolean> {
     ENABLE_SEPARATE_APK_RESOURCES("android.enableSeparateApkRes", true),
     ENABLE_BUILDSCRIPT_CLASSPATH_CHECK("android.enableBuildScriptClasspathCheck", true),
     ENABLE_EXPERIMENTAL_FEATURE_DATABINDING("android.enableExperimentalFeatureDatabinding", false),
+    ENABLE_SEPARATE_R_CLASS_COMPILATION("android.enableSeparateRClassCompilation"),
     ;
 
     @NonNull private final String propertyName;

@@ -62,6 +62,7 @@ perf_test(
     srcs = [
         "testSrcs/com/android/tools/profiler/BasicPerfTest.java",
         "testSrcs/com/android/tools/profiler/JniTest.java",
+        "testSrcs/com/android/tools/profiler/MemoryTest.java",
         "testSrcs/com/android/tools/profiler/network/HttpUrlTest.java",
         "testSrcs/com/android/tools/profiler/network/OkHttpTest.java",
     ],

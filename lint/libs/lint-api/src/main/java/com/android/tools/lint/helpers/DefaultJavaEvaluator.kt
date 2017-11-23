@@ -44,6 +44,7 @@ import com.intellij.psi.util.InheritanceUtil
 import com.intellij.psi.util.MethodSignatureUtil
 import com.intellij.psi.util.TypeConversionUtil
 import org.jetbrains.uast.UCallExpression
+import org.jetbrains.uast.UDeclaration
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
 import org.jetbrains.uast.getContainingFile
@@ -92,6 +93,12 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
 
     override fun getAllAnnotations(owner: PsiModifierListOwner,
             inHierarchy: Boolean): Array<PsiAnnotation> {
+        if (owner is UDeclaration) {
+            // Work around bug: Passing in a UAST node to this method generates a
+            // "class JavaUParameter not found among parameters: [PsiParameter:something]" error
+            return getAllAnnotations(owner.psi, inHierarchy)
+        }
+
         // withInferred=false when running outside the IDE: we don't have
         // an InferredAnnotationsManager
         return AnnotationUtil.getAllAnnotations(owner, inHierarchy, null, false)
@@ -99,12 +106,20 @@ open class DefaultJavaEvaluator(private val myProject: com.intellij.openapi.proj
 
     override fun findAnnotationInHierarchy(listOwner: PsiModifierListOwner,
             vararg annotationNames: String): PsiAnnotation? {
+        if (listOwner is UDeclaration) {
+            // Work around UAST bug
+            return findAnnotationInHierarchy(listOwner.psi, *annotationNames)
+        }
         return AnnotationUtil.findAnnotationInHierarchy(listOwner,
                 Sets.newHashSet(*annotationNames))
     }
 
     override fun findAnnotation(listOwner: PsiModifierListOwner?,
             vararg annotationNames: String): PsiAnnotation? {
+        if (listOwner is UDeclaration) {
+            // Work around UAST bug
+            return findAnnotation(listOwner.psi, *annotationNames)
+        }
         return AnnotationUtil.findAnnotation(listOwner, false, *annotationNames)
     }
 

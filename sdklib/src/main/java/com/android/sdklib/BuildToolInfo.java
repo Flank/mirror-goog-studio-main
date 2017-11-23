@@ -189,46 +189,6 @@ public class BuildToolInfo {
         }
     }
 
-    /** Jack API versions. */
-    public enum JackVersion {
-        V4(4, "24.0.3");
-
-        private final int version;
-        private Range<Revision> supportedBetween;
-
-        JackVersion(int version, @NonNull String lowerRevision) {
-            this.version = version;
-            this.supportedBetween = Range.atLeast(Revision.parseRevision(lowerRevision));
-        }
-
-        @SuppressWarnings("unused")
-        JackVersion(int version, @NonNull String lowerRevision, @NonNull String upperRevision) {
-            this.version= version;
-            this.supportedBetween =
-                    Range.closedOpen(
-                            Revision.parseRevision(lowerRevision),
-                            Revision.parseRevision(upperRevision));
-
-        }
-
-        /** Api version. */
-        public int getVersion() {
-            return version;
-        }
-
-        /** Minimum build tools version supporting this API. */
-        @NonNull
-        public Revision getMinRevision() {
-            return supportedBetween.lowerEndpoint();
-        }
-
-        /** The range of build tools supporting this as their highest API level. */
-        @NonNull
-        public Range<Revision> getSupportedBetween() {
-            return supportedBetween;
-        }
-    }
-
     /**
      * Creates a {@link BuildToolInfo} from a directory which follows the standard layout
      * convention.
@@ -456,18 +416,6 @@ public class BuildToolInfo {
             }
         }
         return true;
-    }
-
-    /** Gets the supported Jack API version. This throws exception if no API is supported. */
-    @NonNull
-    public JackVersion getSupportedJackApi() {
-        for (JackVersion version : JackVersion.values()) {
-            if (version.getSupportedBetween().contains(getRevision())) {
-                return version;
-            }
-        }
-
-        throw new UnsupportedOperationException("Jack API unsupported; update the build tools.");
     }
 
     @VisibleForTesting(visibility = Visibility.PRIVATE)

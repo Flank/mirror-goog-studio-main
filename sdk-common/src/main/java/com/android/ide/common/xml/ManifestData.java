@@ -16,6 +16,7 @@
 
 package com.android.ide.common.xml;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.resources.Keyboard;
 import com.android.resources.Navigation;
@@ -157,24 +158,27 @@ public final class ManifestData {
     }
 
     public static final class KeepClass {
-        private final String name;
-        private final String process;
-        private final String type;
+        @NonNull private final String name;
+        @Nullable private final String process;
+        @NonNull private final String type;
 
-        public KeepClass(String name, String process, String type) {
+        public KeepClass(@NonNull String name, @Nullable String process, @NonNull String type) {
             this.name = name;
             this.process = process;
             this.type = type;
         }
 
+        @NonNull
         public String getName() {
             return name;
         }
 
+        @Nullable
         public String getProcess() {
             return process;
         }
 
+        @NonNull
         public String getType() {
             return type;
         }

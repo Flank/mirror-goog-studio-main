@@ -63,6 +63,10 @@ public class FolderTypeRelationShipTest extends TestCase {
                     FolderTypeRelationship.getNonIdRelatedResourceType(folderType);
             assertFalse(resourceType == ResourceType.ID);
             assertTrue(FolderTypeRelationship.getRelatedFolders(resourceType).contains(folderType));
+
+            // The id shouldn't be the first thing we return
+            assertNotSame(ResourceType.ID,
+                          FolderTypeRelationship.getRelatedResourceTypes(folderType).iterator().next());
         }
 
         // Sample a few.

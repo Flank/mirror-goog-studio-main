@@ -18,7 +18,6 @@
     <orderEntry type="module" module-name="builder-model" />
     <orderEntry type="module" module-name="sdklib-base" />
     <orderEntry type="module" module-name="repository" />
-    <orderEntry type="library" name="lombok-ast" level="project" />
     <orderEntry type="library" name="intellij-core" level="project" />
     <orderEntry type="library" name="uast" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />

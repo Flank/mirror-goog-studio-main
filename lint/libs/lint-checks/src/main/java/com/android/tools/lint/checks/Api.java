@@ -35,7 +35,7 @@ import org.xml.sax.SAXException;
  *
  * To create the {@code Api}, use {@link #parseApi(File)}.
  */
-public class Api {
+class Api {
     /**
      * Parses simplified API file.
      * @param apiFile the file to read

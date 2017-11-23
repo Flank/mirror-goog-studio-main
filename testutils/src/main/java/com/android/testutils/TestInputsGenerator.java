@@ -18,11 +18,15 @@ package com.android.testutils;
 
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
+import com.google.common.io.ByteStreams;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.objectweb.asm.Type;
 
 /** Utility methods for generating inputs to be used in tests. */
 public final class TestInputsGenerator {
@@ -44,10 +48,7 @@ public final class TestInputsGenerator {
 
                 byte[] byteCode = TestClassesGenerator.emptyClass(pkg, className);
 
-                ZipEntry entry = new ZipEntry(fullName + SdkConstants.DOT_CLASS);
-                outputStream.putNextEntry(entry);
-                outputStream.write(byteCode, 0, byteCode.length);
-                outputStream.closeEntry();
+                writeToJar(outputStream, byteCode, fullName + SdkConstants.DOT_CLASS);
             }
         }
     }
@@ -68,9 +69,7 @@ public final class TestInputsGenerator {
             }
 
             byte[] byteCode = TestClassesGenerator.emptyClass(pkg, className);
-            Path srcFile = path.resolve(fullName + SdkConstants.DOT_CLASS);
-            Files.createDirectories(srcFile.getParent());
-            Files.write(path.resolve(fullName + SdkConstants.DOT_CLASS), byteCode);
+            writeToDir(path, byteCode, fullName + SdkConstants.DOT_CLASS);
         }
     }
 
@@ -81,6 +80,68 @@ public final class TestInputsGenerator {
                 zipOutputStream.putNextEntry(new ZipEntry(name));
                 zipOutputStream.closeEntry();
             }
+        }
+    }
+
+    /**
+     * Generates dir/jar containing the specified classes, depending on if a path ends with .jar or
+     * not.
+     */
+    public static void pathWithClasses(@NonNull Path path, @NonNull Collection<Class<?>> classes)
+            throws IOException {
+        if (path.toString().endsWith(SdkConstants.DOT_JAR)) {
+            jarWithClasses(path, classes);
+        } else {
+            dirWithClasses(path, classes);
+        }
+    }
+
+    /** Generates jar containing the specified classes. */
+    private static void jarWithClasses(@NonNull Path path, @NonNull Collection<Class<?>> classes)
+            throws IOException {
+        try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(path))) {
+            for (Class<?> klass : classes) {
+                byte[] data = getClassInput(klass);
+
+                writeToJar(outputStream, data, getPath(klass));
+            }
+        }
+    }
+
+    /** Generates directory containing the specified classes. */
+    private static void dirWithClasses(@NonNull Path path, @NonNull Collection<Class<?>> classes)
+            throws IOException {
+        Files.createDirectories(path);
+        for (Class<?> klass : classes) {
+            writeToDir(path, getClassInput(klass), getPath(klass));
+        }
+    }
+
+    @NonNull
+    public static String getPath(@NonNull Class<?> klass) {
+        return Type.getInternalName(klass) + SdkConstants.DOT_CLASS;
+    }
+
+    private static void writeToJar(
+            @NonNull ZipOutputStream outputStream, @NonNull byte[] data, @NonNull String name)
+            throws IOException {
+        ZipEntry entry = new ZipEntry(name);
+        outputStream.putNextEntry(entry);
+        outputStream.write(data);
+        outputStream.closeEntry();
+    }
+
+    private static void writeToDir(@NonNull Path path, @NonNull byte[] data, @NonNull String name)
+            throws IOException {
+        Path srcFile = path.resolve(name);
+        Files.createDirectories(srcFile.getParent());
+        Files.write(srcFile, data);
+    }
+
+    @NonNull
+    private static byte[] getClassInput(Class<?> klass) throws IOException {
+        try (InputStream stream = klass.getClassLoader().getResourceAsStream(getPath(klass))) {
+            return ByteStreams.toByteArray(stream);
         }
     }
 }

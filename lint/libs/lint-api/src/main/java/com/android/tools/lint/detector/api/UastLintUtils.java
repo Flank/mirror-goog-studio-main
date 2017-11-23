@@ -491,7 +491,7 @@ public class UastLintUtils {
                 List<UExpression> initializers =
                         ((UCallExpression) attributeValue).getValueArguments();
                 List<String> result = Lists.newArrayListWithCapacity(initializers.size());
-                ConstantEvaluator constantEvaluator = new ConstantEvaluator(null);
+                ConstantEvaluator constantEvaluator = new ConstantEvaluator();
                 for (UExpression element : initializers) {
                     Object o = constantEvaluator.evaluate(element);
                     if (o instanceof String) {

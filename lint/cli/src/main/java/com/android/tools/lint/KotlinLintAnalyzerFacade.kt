@@ -121,7 +121,7 @@ object KotlinLintAnalyzerFacade {
         AnalysisHandlerExtension.registerExtension(project, UastAnalysisHandlerExtension())
     }
 
-    fun registerAnalyzerComponents(
+    private fun registerAnalyzerComponents(
             project: MockProject,
             javaRoots: List<JavaRoot>
     ) {

@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  * you should use one of the specific {@link java.util.Comparator} constants based
  * on what type of ordering you need.
  */
-public class GradleCoordinate {
+public final class GradleCoordinate {
     private static final String NONE = "NONE";
 
     /**

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import com.android.annotations.NonNull;
@@ -45,6 +44,9 @@ import org.w3c.dom.NodeList;
  */
 public class Svg2Vector {
     private static final Logger logger = Logger.getLogger(Svg2Vector.class.getSimpleName());
+    private static final String HEAD =
+            "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"";
+    private static final String AAPT_BOUND = "xmlns:aapt=\"http://schemas.android.com/aapt\"";
 
     public static final String SVG_POLYGON = "polygon";
     public static final String SVG_POLYLINE = "polyline";
@@ -843,7 +845,7 @@ public class Svg2Vector {
         }
     }
 
-    /** Convert circle element into a path. */
+    /** Converts circle element into a path. */
     private static void extractCircleItem(
             SvgTree avg, SvgLeafNode child, Node currentGroupNode, SvgGroupNode currentGroup) {
         logger.log(Level.FINE, "circle found" + currentGroupNode.getTextContent());
@@ -1064,39 +1066,34 @@ public class Svg2Vector {
         }
     }
 
-    private static final String head = "<vector xmlns:android=\"http://schemas.android.com/apk/res/android\"\n";
-
-    private static final String aaptBound = "xmlns:aapt=\"http://schemas.android.com/aapt\"\n";
-
-    private static String getSizeString(float w, float h, float scaleFactor) {
-        return "        android:width=\""
-                + (int) (w * scaleFactor)
-                + "dp\"\n"
-                + "        android:height=\""
-                + (int) (h * scaleFactor)
-                + "dp\"\n";
-
-    }
-
     private static void writeFile(OutputStream outStream, SvgTree svgTree) throws IOException {
-
         OutputStreamWriter fw = new OutputStreamWriter(outStream);
-        fw.write(head);
+        fw.write(HEAD);
+        fw.write(System.lineSeparator());
         if (svgTree.getHasGradient()) {
-            fw.write(aaptBound);
+            fw.write(AAPT_BOUND);
+            fw.write(System.lineSeparator());
         }
         float viewportWidth = svgTree.getViewportWidth();
         float viewportHeight = svgTree.getViewportHeight();
 
-        fw.write(getSizeString(svgTree.getWidth(), svgTree.getHeight(), svgTree.getScaleFactor()));
+        fw.write("        android:width=\"" +
+                Math.round(svgTree.getWidth() * svgTree.getScaleFactor()) + "dp\"");
+        fw.write(System.lineSeparator());
+        fw.write("        android:height=\"" +
+                Math.round(svgTree.getHeight() * svgTree.getScaleFactor()) + "dp\"");
+        fw.write(System.lineSeparator());
 
-        fw.write("        android:viewportWidth=\"" + viewportWidth + "\"\n");
-        fw.write("        android:viewportHeight=\"" + viewportHeight + "\">\n");
+        fw.write("        android:viewportWidth=\"" + viewportWidth + "\"");
+        fw.write(System.lineSeparator());
+        fw.write("        android:viewportHeight=\"" + viewportHeight + "\">");
+        fw.write(System.lineSeparator());
 
         svgTree.normalize();
         // TODO: this has to happen in the tree mode!!!
         writeXML(svgTree, fw);
-        fw.write("</vector>\n");
+        fw.write("</vector>");
+        fw.write(System.lineSeparator());
 
         fw.close();
     }
@@ -1109,7 +1106,7 @@ public class Svg2Vector {
     }
 
     /**
-     * Convert a SVG file into VectorDrawable's XML content, if no error is found.
+     * Converts a SVG file into VectorDrawable's XML content, if no error is found.
      *
      * @param inputSVG the input SVG file
      * @param outStream the converted VectorDrawable's content. This can be empty if there is any

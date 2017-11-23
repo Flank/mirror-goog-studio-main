@@ -82,7 +82,7 @@ public class AarTransform extends ArtifactTransform {
             ArtifactType.PUBLIC_RES,
             ArtifactType.SYMBOL_LIST,
             ArtifactType.DATA_BINDING_ARTIFACT,
-            ArtifactType.COMPILE_ONLY_R_CLASS_JAR,
+            ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
             ArtifactType.RES_STATIC_LIBRARY,
             ArtifactType.RES_SHARED_STATIC_LIBRARY,
         };
@@ -142,7 +142,7 @@ public class AarTransform extends ArtifactTransform {
                         ? listIfExists(
                                 new File(input, SdkConstants.FN_RESOURCE_SHARED_STATIC_LIBRARY))
                         : Collections.emptyList();
-            case COMPILE_ONLY_R_CLASS_JAR:
+            case COMPILE_ONLY_NAMESPACED_R_CLASS_JAR:
                 return listIfExists(new File(input, FN_R_CLASS_JAR));
             case DATA_BINDING_ARTIFACT:
                 return listIfExists(

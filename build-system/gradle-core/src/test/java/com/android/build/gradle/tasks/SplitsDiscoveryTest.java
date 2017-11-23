@@ -61,6 +61,7 @@ public class SplitsDiscoveryTest {
         task = project.getTasks().create("test", SplitsDiscovery.class);
         task.persistedList = outputFile;
         task.resourceConfigs = ImmutableSet.of();
+        task.aapt2Enabled = true;
     }
 
     @After
@@ -152,6 +153,8 @@ public class SplitsDiscoveryTest {
         assertThat(new File(mergedFolder, "values-fr").mkdirs()).isTrue();
         assertThat(new File(mergedFolder, "values-de").mkdirs()).isTrue();
         assertThat(new File(mergedFolder, "values-fr_be").mkdirs()).isTrue();
+        assertThat(new File(mergedFolder, "values-fr_ca").mkdirs()).isTrue();
+        assertThat(new File(mergedFolder, "values-fr_ma").mkdirs()).isTrue();
         // wrong name, should not be picked up
         assertThat(new File(mergedFolder, "en").mkdirs()).isTrue();
 
@@ -162,7 +165,30 @@ public class SplitsDiscoveryTest {
         SplitList splitList = SplitList.load(outputs);
         assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY)).isEmpty();
         assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
-                .containsExactly("fr", "de", "fr_be");
+                .containsExactly("fr,fr_be,fr_ca,fr_ma", "de");
+        assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
+    }
+
+    @Test
+    public void testAutoLanguageFiltersWithAapt2Disabled() throws IOException {
+        File mergedFolder = temporaryFolder.newFolder();
+        assertThat(new File(mergedFolder, "values-fr").mkdirs()).isTrue();
+        assertThat(new File(mergedFolder, "values-de").mkdirs()).isTrue();
+        assertThat(new File(mergedFolder, "values-fr_be").mkdirs()).isTrue();
+        assertThat(new File(mergedFolder, "values-fr_ca").mkdirs()).isTrue();
+        assertThat(new File(mergedFolder, "values-fr_ma").mkdirs()).isTrue();
+        // wrong name, should not be picked up
+        assertThat(new File(mergedFolder, "en").mkdirs()).isTrue();
+
+        task.mergedResourcesFolders = project.files(mergedFolder).builtBy(task);
+
+        task.languageAuto = true;
+        task.aapt2Enabled = false;
+        task.taskAction();
+        SplitList splitList = SplitList.load(outputs);
+        assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY)).isEmpty();
+        assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
+                .containsExactly("fr", "de", "fr_be", "fr_ca", "fr_ma");
         assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
     }
 
@@ -189,7 +215,7 @@ public class SplitsDiscoveryTest {
         assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY))
                 .containsExactly("hdpi", "xhdpi");
         assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
-                .containsExactly("fr", "de", "fr_be");
+                .containsExactly("fr,fr_be", "de");
         assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
     }
 
@@ -224,7 +250,7 @@ public class SplitsDiscoveryTest {
         assertThat(splitList.getFilters(VariantOutput.FilterType.DENSITY))
                 .containsExactly("hdpi", "xhdpi");
         assertThat(splitList.getFilters(VariantOutput.FilterType.LANGUAGE))
-                .containsExactly("fr", "de", "fr-rBE");
+                .containsExactly("fr,fr-rBE", "de");
         assertThat(splitList.getFilters(VariantOutput.FilterType.ABI)).isEmpty();
     }
 

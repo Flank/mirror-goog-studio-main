@@ -130,6 +130,12 @@ public class FixStackFramesTransform extends Transform {
     private static final LoggerWrapper logger =
             LoggerWrapper.getLogger(FixStackFramesTransform.class);
     private static final FileTime ZERO = FileTime.fromMillis(0);
+    /**
+     * Please update this whenever you wish to invalidate all previous cache entries. E.g. if there
+     * is a bug in processing, increasing the cache version will invalidate all invalid cache
+     * entries, and fresh ones will be generated.
+     */
+    private static final long CACHE_VERSION = 1;
 
     @NonNull private final Supplier<List<File>> androidJarClasspath;
     @NonNull private final List<Path> compilationBootclasspath;
@@ -280,6 +286,7 @@ public class FixStackFramesTransform extends Transform {
                                                 "file",
                                                 input,
                                                 FileCache.FileProperties.PATH_SIZE_TIMESTAMP)
+                                        .putLong("version", CACHE_VERSION)
                                         .build();
                         userCache.createFile(output, key, fileCreator);
                     } else {

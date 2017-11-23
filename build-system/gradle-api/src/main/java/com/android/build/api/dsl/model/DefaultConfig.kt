@@ -18,6 +18,14 @@ package com.android.build.api.dsl.model
 
 import org.gradle.api.Incubating
 
-/** DSL object for the defaultConfig object.  */
+/**
+ * Specifies defaults for variant properties that the Android plugin applies to all build
+ * variants.
+ *
+ * You can override any `defaultConfig` property when
+ * [configuring product flavors](https://d.android.com/studio/build/build-variants.html#product-flavors).
+ *
+ * @see [ProductFlavor][com.android.build.api.dsl.model.ProductFlavor]
+ */
 @Incubating
 interface DefaultConfig : BaseFlavor, BuildTypeOrProductFlavor, ProductFlavorOrVariant, VariantProperties

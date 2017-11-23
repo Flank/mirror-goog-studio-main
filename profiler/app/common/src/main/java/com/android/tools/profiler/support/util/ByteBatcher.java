@@ -21,34 +21,41 @@ import java.io.ByteArrayOutputStream;
 /**
  * Utility class for buffering bytes locally before reporting them.
  *
- * Use {@link #addByte(int)} and {@link #addBytes(byte[], int, int)} to add bytes individually to
+ * <p>Use {@link #addByte(int)} and {@link #addBytes(byte[], int, int)} to add bytes individually to
  * this batcher, which will automatically trigger a {@link FlushReceiver} callback any time the
  * number of bytes goes over the batch threshold.
  *
- * When you are done adding bytes to the batcher, call {@link #flush()} to trigger the callback
+ * <p>When you are done adding bytes to the batcher, call {@link #flush()} to trigger the callback
  * with final remaining bytes, if any.
  */
 public final class ByteBatcher {
     public interface FlushReceiver {
-        void receive(byte[] bytes);
+        /**
+         * @param bytes the byte array to send to record. Note that not all contents of the array
+         *     are necessarily valid.
+         * @param validBytesLength the length, from index 0, of the valid values within {@code
+         *     bytes} array.
+         */
+        void receive(byte[] bytes, int validBytesLength);
     }
+
     private static final int DEFAULT_THRESHOLD = 1024;
     private final int myThreshold;
-    private final ByteArrayOutputStream myStream;
+    private final DirectAccessByteArrayOutputStream myStream;
     private final FlushReceiver myReceiver;
 
     public ByteBatcher(FlushReceiver flushReceiver) {
         this(flushReceiver, DEFAULT_THRESHOLD);
     }
 
-    public ByteBatcher(FlushReceiver flushReceiver, int capacity) {
+    ByteBatcher(FlushReceiver flushReceiver, int capacity) {
         myReceiver = flushReceiver;
         myThreshold = capacity;
-        myStream = new ByteArrayOutputStream(capacity);
+        myStream = new DirectAccessByteArrayOutputStream(capacity);
     }
 
     public void addByte(int byteValue) {
-        assert(myStream.size() < myThreshold);
+        assert (myStream.size() < myThreshold);
         myStream.write(byteValue);
 
         if (myStream.size() == myThreshold) {
@@ -68,14 +75,29 @@ public final class ByteBatcher {
         if (length > 0) {
             myStream.write(bytes, offset, length);
         }
-        assert(myStream.size() < myThreshold);
+        assert (myStream.size() < myThreshold);
     }
 
     public void flush() {
         if (myStream.size() == 0) {
             return;
         }
-        myReceiver.receive(myStream.toByteArray());
+        myReceiver.receive(myStream.getBuf(), myStream.size());
         myStream.reset();
+    }
+
+    /**
+     * In order to avoid a copy ({@link ByteArrayOutputStream#toByteArray()}) when fetching the
+     * read-only contents of the buffer within ByteArrayOutputStream, we need to expose the
+     * internal, protected buffer directly.
+     */
+    private static class DirectAccessByteArrayOutputStream extends ByteArrayOutputStream {
+        private DirectAccessByteArrayOutputStream(int capacity) {
+            super(capacity);
+        }
+
+        private byte[] getBuf() {
+            return buf;
+        }
     }
 }

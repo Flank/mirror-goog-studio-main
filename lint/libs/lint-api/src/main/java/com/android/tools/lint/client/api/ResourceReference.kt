@@ -98,7 +98,7 @@ class ResourceReference(
         }
 
         @JvmStatic
-        operator fun get(element: UElement): ResourceReference? {
+        fun get(element: UElement): ResourceReference? {
             // Optimization for Java: instead of resolving the field just peek at the reference
             // and pick out the resource type and name from the context.
             // This also lets us pick up resource references even when the R fields don't
@@ -163,7 +163,7 @@ class ResourceReference(
                 return null
             }
 
-            val resourceType = ResourceType.getEnum(resTypeClass.name) ?: return null
+            val resourceType = ResourceType.getEnum(resTypeClass.name ?: return null) ?: return null
             val resourceName = variable.name ?: return null
             val node: UExpression = when (element) {
                 is UExpression -> element

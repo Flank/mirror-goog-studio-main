@@ -77,12 +77,6 @@ public class DefaultGradlePackagingScope implements PackagingScope {
 
     @NonNull
     @Override
-    public File getInstantRunSupportDir() {
-        return mVariantScope.getInstantRunSupportDir();
-    }
-
-    @NonNull
-    @Override
     public File getIncrementalDir(@NonNull String name) {
         return mVariantScope.getIncrementalDir(name);
     }
@@ -94,7 +88,6 @@ public class DefaultGradlePackagingScope implements PackagingScope {
                 .getTransformManager()
                 .getPipelineOutputAsFileCollection(StreamFilter.DEX);
     }
-
 
     @NonNull
     @Override
@@ -216,8 +209,6 @@ public class DefaultGradlePackagingScope implements PackagingScope {
     public OutputScope getOutputScope() {
         return mVariantScope.getOutputScope();
     }
-
-    // TaskOutputHolder
 
     @NonNull
     @Override

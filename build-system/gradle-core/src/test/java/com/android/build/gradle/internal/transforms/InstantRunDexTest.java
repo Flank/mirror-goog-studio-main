@@ -120,8 +120,6 @@ public class InstantRunDexTest {
                 .thenReturn(Boolean.FALSE);
 
         File tmp = new File(System.getProperty("java.io.tmpdir"));
-        when(variantScope.getInstantRunSupportDir()).thenReturn(tmp);
-
         directoryInput = new File(tmp, "directory");
         changedFile = new File(directoryInput, "path/to/some/file");
         Files.createParentDirs(changedFile);

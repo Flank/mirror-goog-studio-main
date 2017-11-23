@@ -18,17 +18,14 @@ package com.android.tools.profiler.agent.okhttp;
 import com.android.tools.profiler.support.network.HttpConnectionTracker;
 import com.android.tools.profiler.support.network.HttpTracker;
 import com.android.tools.profiler.support.util.StudioLog;
-import com.squareup.okhttp.Headers;
-import com.squareup.okhttp.Interceptor;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
-import com.squareup.okhttp.ResponseBody;
+import com.squareup.okhttp.*;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import okio.BufferedSink;
 import okio.BufferedSource;
 import okio.Okio;
 
@@ -49,24 +46,42 @@ public final class OkHttp2Interceptor implements Interceptor {
         } catch (Exception ex) {
             StudioLog.e("Could not track an OkHttp2 request", ex);
         }
-        Response response = chain.proceed(request);
+
+        Response response;
         try {
-            response = track(tracker, response);
+            response = chain.proceed(request);
+        } catch (IOException ex) {
+            tracker.error(ex.toString());
+            throw ex;
+        }
+
+        try {
+            response = trackResponse(tracker, response);
         } catch (Exception ex) {
             StudioLog.e("Could not track an OkHttp2 response", ex);
         }
         return response;
     }
 
-    private HttpConnectionTracker trackRequest(Request request) {
+    private HttpConnectionTracker trackRequest(Request request) throws IOException {
         StackTraceElement[] callstack =
                 OkHttpUtils.getCallstack(request.getClass().getPackage().getName());
         HttpConnectionTracker tracker = HttpTracker.trackConnection(request.urlString(), callstack);
         tracker.trackRequest(request.method(), toMultimap(request.headers()));
+
+        if (request.body() != null) {
+            OutputStream outputStream =
+                    tracker.trackRequestBody(OkHttpUtils.createNullOutputStream());
+            BufferedSink bufferedSink = Okio.buffer(Okio.sink(outputStream));
+            request.body().writeTo(bufferedSink);
+            bufferedSink.close();
+        }
+
         return tracker;
     }
 
-    private Response track(HttpConnectionTracker tracker, Response response) throws IOException {
+    private Response trackResponse(HttpConnectionTracker tracker, Response response)
+            throws IOException {
         Map<String, List<String>> fields = toMultimap(response.headers());
         fields.put(
                 "response-status-code",

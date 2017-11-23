@@ -14,6 +14,7 @@ import com.android.build.gradle.internal.CompileOptions;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.utils.ILogger;
 import com.google.common.base.Joiner;
@@ -158,13 +159,22 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
                 scope.getAnnotationProcessorOutputDir().getAbsolutePath());
         javacTask.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
 
-        // if data binding is enabled and this variant has merged dependency artifacts, then
-        // make the javac task depend on them. (test variants don't do the merge so they
-        // could not have the artifacts)
-        if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()
-                && scope.hasOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
-            javacTask.dataBindingDependencyArtifacts =
-                    scope.getOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS);
+
+        if (scope.getGlobalScope().getExtension().getDataBinding().isEnabled()) {
+            if (scope.hasOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS)) {
+                // if data binding is enabled and this variant has merged dependency artifacts, then
+                // make the javac task depend on them. (test variants don't do the merge so they
+                // could not have the artifacts)
+                javacTask.dataBindingDependencyArtifacts =
+                        scope.getOutput(DATA_BINDING_DEPENDENCY_ARTIFACTS);
+            }
+            // the data binding artifact is created by the annotation processor, so we register this
+            // task output (which also publishes it) with javac as the generating task.
+            javacTask.dataBindingArtifactOutputDirectory = scope.getBundleFolderForDataBinding();
+            scope.addTaskOutput(
+                    TaskOutputHolder.TaskOutputType.DATA_BINDING_ARTIFACT,
+                    javacTask.dataBindingArtifactOutputDirectory,
+                    javacTask.getName());
         }
 
         javacTask.processorListFile = scope.getOutput(ANNOTATION_PROCESSOR_LIST);

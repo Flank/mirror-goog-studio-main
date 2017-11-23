@@ -17,6 +17,7 @@
 package com.android.resources;
 
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
@@ -109,6 +110,7 @@ public enum ResourceType {
     /**
      * Returns the resource type name, as used by XML files.
      */
+    @NonNull
     public String getName() {
         return mName;
     }
@@ -116,6 +118,7 @@ public enum ResourceType {
     /**
      * Returns a translated display name for the resource type.
      */
+    @NonNull
     public String getDisplayName() {
         return mDisplayName;
     }
@@ -126,13 +129,14 @@ public enum ResourceType {
      * @return the matching {@link ResourceType} or <code>null</code> if no match was found.
      */
     @Nullable
-    public static ResourceType getEnum(String name) {
+    public static ResourceType getEnum(@NonNull String name) {
         return sNameToType.get(name);
     }
 
     /**
      * Returns an array with all the names defined by this enum.
      */
+    @NonNull
     public static String[] getNames() {
         ResourceType[] values = values();
         String[] names = new String[values.length];

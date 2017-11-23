@@ -15,16 +15,13 @@
  */
 package com.android.build.gradle.tasks;
 
-import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.CombinedInput;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.io.File;
 import java.util.Map;
-import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
@@ -129,19 +126,5 @@ public abstract class ManifestProcessorTask extends IncrementalTask {
                 "Manifest Tasks does not support the manifestOutputFile property any more, please"
                         + " use the manifestOutputDirectory instead.\nFor more information, please check "
                         + "https://developer.android.com/studio/build/gradle-plugin-3-0-0-migration.html");
-    }
-
-    // Workaround for https://issuetracker.google.com/67418335
-    @Override
-    @Input
-    @NonNull
-    public String getCombinedInput() {
-        return new CombinedInput(super.getCombinedInput())
-                .add("instantRunManifestOutputDirectory", getInstantRunManifestOutputDirectory())
-                .add(
-                        "aaptFriendlyManifestOutputDirectory",
-                        getAaptFriendlyManifestOutputDirectory())
-                .add("reportFile", getReportFile())
-                .toString();
     }
 }

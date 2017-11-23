@@ -26,6 +26,7 @@ import static com.android.SdkConstants.TAG_SKIP;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.symbols.ResourceValuesXmlParser;
 import com.android.resources.ResourceType;
 import com.android.utils.PositionXmlParser;
 import com.android.utils.XmlUtils;
@@ -49,7 +50,7 @@ import org.xml.sax.SAXException;
 
 /**
  * This class is deprecated and it's usages will soon move to a new parser in the Symbols package
- * {@link com.android.builder.symbols.ResourceValuesXmlParser}.
+ * {@link ResourceValuesXmlParser}.
  *
  * <p>Parser for "values" files.
  *

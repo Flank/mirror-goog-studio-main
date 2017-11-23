@@ -23,9 +23,7 @@ import com.android.ide.common.blame.parser.util.OutputLineReader;
 import com.android.utils.ILogger;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class ToolOutputParser {
 
@@ -110,6 +108,8 @@ public class ToolOutputParser {
                 messages.add(new Message(mUnparsedMessageKind, line, SourceFilePosition.UNKNOWN));
             }
         }
-        return messages;
+        // Remove duplicates b/67421644
+        LinkedHashSet<Message> uniqueMessages = new LinkedHashSet<>(messages);
+        return Lists.newArrayList(uniqueMessages);
     }
 }

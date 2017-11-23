@@ -68,7 +68,7 @@ public class PreOSideLoaderTest {
         } catch (InstantAppRunException e) {
             assertEquals(InstantAppRunException.ErrorType.READ_IAPK_FAILED, e.getErrorType());
             assertEquals(
-                    "Failure when trying to read bundle. Device is not provisioned with Instant Apps SDK.",
+                    "Failure when trying to read bundle. Device is not provisioned with Instant Apps SDK. - Please see the Logcat for more information.",
                     e.getMessage());
         }
     }

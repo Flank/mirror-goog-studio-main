@@ -26,6 +26,7 @@ import static com.android.SdkConstants.TAG_LAYOUT;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.ide.common.symbols.ResourceExtraXmlParser;
 import com.android.resources.ResourceType;
 import com.android.utils.XmlUtils;
 import com.google.common.collect.Lists;
@@ -43,7 +44,7 @@ import org.xml.sax.SAXException;
 
 /**
  * This class is deprecated and it's usages will soon move to a new parser in the Symbols package
- * {@link com.android.builder.symbols.ResourceExtraXmlParser}.
+ * {@link ResourceExtraXmlParser}.
  *
  * <p>Parser for scanning id-generating XML files (layout or menu).
  *
@@ -146,7 +147,7 @@ class IdGeneratingResourceParser {
                     // the list of pending ids.
                     if (value.startsWith(NEW_ID_PREFIX) && !ATTR_ID.equals(attrName)) {
                         String id = value.substring(NEW_ID_PREFIX.length());
-                        if (!pendingResourceIds.contains(id)) {
+                        if (!id.isEmpty()) {
                             pendingResourceIds.add(id);
                         }
                     }
@@ -168,8 +169,10 @@ class IdGeneratingResourceParser {
                             continue;
                         }
                         pendingResourceIds.remove(id);
-                        ResourceItem item = new IdResourceItem(id, mNamespace, ResourceType.ID);
-                        items.add(item);
+                        if (!id.isEmpty()) {
+                            ResourceItem item = new IdResourceItem(id, mNamespace, ResourceType.ID);
+                            items.add(item);
+                        }
                     }
                 }
             }

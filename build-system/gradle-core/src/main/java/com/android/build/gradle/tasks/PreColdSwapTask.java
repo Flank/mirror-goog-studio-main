@@ -19,7 +19,6 @@ package com.android.build.gradle.tasks;
 import com.android.annotations.NonNull;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
-import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.build.gradle.internal.scope.InstantRunVariantScope;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
 import com.android.build.gradle.internal.scope.TransformVariantScope;
@@ -69,7 +68,7 @@ public class PreColdSwapTask extends AndroidVariantTask {
         }
     }
 
-    private <T extends Task> void disableTask(AndroidTask<T> task) {
+    private void disableTask(Task task) {
         LOG.info("Disabling task {}", task.getName());
         transformVariantScope.getGlobalScope().getProject().getTasks().getByName(task.getName())
                 .setEnabled(false);

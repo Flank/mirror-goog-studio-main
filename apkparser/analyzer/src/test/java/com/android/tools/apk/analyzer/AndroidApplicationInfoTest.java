@@ -37,4 +37,26 @@ public class AndroidApplicationInfoTest {
         assertEquals("51.0.2704.10", info.versionName);
         assertEquals(270401001, info.versionCode);
     }
+
+    @Test
+    public void parseBadgingNoVersionTest() throws Exception {
+        AndroidApplicationInfo info =
+                AndroidApplicationInfo.parseBadging(
+                        Arrays.asList(
+                                ("package: name='com.google.samples.apps.topeka.test' versionCode='' versionName='' platformBuildVersionName=''\n"
+                                                + "sdkVersion:'14'\n"
+                                                + "targetSdkVersion:'25'\n"
+                                                + "application: label='' icon=''\n"
+                                                + "application-debuggable\n"
+                                                + "uses-library:'android.test.runner'\n"
+                                                + "feature-group: label=''\n"
+                                                + "  uses-feature: name='android.hardware.faketouch'\n"
+                                                + "  uses-implied-feature: name='android.hardware.faketouch' reason='default feature for all apps'\n"
+                                                + "supports-screens: 'small' 'normal' 'large' 'xlarge'\n"
+                                                + "supports-any-density: 'true'\n")
+                                        .split("\n")));
+        assertEquals("com.google.samples.apps.topeka.test", info.packageId);
+        assertEquals("", info.versionName);
+        assertEquals(0, info.versionCode);
+    }
 }

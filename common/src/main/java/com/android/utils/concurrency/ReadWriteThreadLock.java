@@ -25,8 +25,7 @@ import com.google.common.reflect.TypeToken;
 import java.io.File;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -79,40 +78,13 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *   <li>Two lock objects are considered the same if one equals() the other.
  * </ol>
  *
- * <p>This lock is reentrant.
+ * <p>This lock is reentrant, down-gradable, but not upgradable (similar to {@link
+ * ReentrantReadWriteLock}).
  *
  * <p>This class is thread-safe.
  */
 @Immutable
 public final class ReadWriteThreadLock {
-
-    /**
-     * Map from a lock object to a {@link ReentrantReadWriteLock}, used to make sure that there is
-     * only one instance of {@code ReentrantReadWriteLock} per lock object within the current JVM.
-     */
-    @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
-    @NonNull
-    private static final ConcurrentMap<Object, ReentrantReadWriteLock> lockMap =
-            new JvmWideVariable<>(
-                            ReadWriteThreadLock.class,
-                            "lockMap",
-                            new TypeToken<ConcurrentMap<Object, ReentrantReadWriteLock>>() {},
-                            ConcurrentHashMap::new)
-                    .get();
-
-    /**
-     * Map from the name of a lock object's class to the lock object's class, used to make sure that
-     * the lock object's class is loaded only once.
-     */
-    @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
-    @NonNull
-    private static final ConcurrentMap<String, Class> lockOjectClassMap =
-            new JvmWideVariable<>(
-                            ReadWriteThreadLock.class,
-                            "lockOjectClassMap",
-                            new TypeToken<ConcurrentMap<String, Class>>() {},
-                            ConcurrentHashMap::new)
-                    .get();
 
     /** The lock used for reading. */
     @NonNull private final ReadWriteThreadLock.Lock readLock = new ReadWriteThreadLock.ReadLock();
@@ -124,10 +96,11 @@ public final class ReadWriteThreadLock {
     @NonNull private final Object lockObject;
 
     /**
-     * The unique {@link ReentrantReadWriteLock} instance corresponding to the given lock object.
+     * A lock used to synchronize threads within the current JVM. This lock is shared across all
+     * instances of {@code ReadWriteThreadLock} (and also across class loaders) in the current JVM
+     * for the given lock object.
      */
-    @NonNull
-    private final ReentrantReadWriteLock lock;
+    @NonNull private final ReentrantReadWriteLock lock;
 
     /**
      * Creates a {@code ReadWriteThreadLock} instance for the given lock object. Threads will be
@@ -149,23 +122,40 @@ public final class ReadWriteThreadLock {
      * @param lockObject the lock object, whose class must be loaded only once
      */
     public ReadWriteThreadLock(@NonNull Object lockObject) {
-        lockOjectClassMap.putIfAbsent(lockObject.getClass().getName(), lockObject.getClass());
+        // Check that the lock object's class is loaded only once
+        Class lockObjectClass =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        ReadWriteThreadLock.class,
+                        "lockObjectClass",
+                        TypeToken.of(String.class),
+                        TypeToken.of(Class.class),
+                        lockObject.getClass().getName(),
+                        lockObject::getClass);
         Preconditions.checkArgument(
-                lockObject.getClass() == lockOjectClassMap.get(lockObject.getClass().getName()),
+                lockObject.getClass() == lockObjectClass,
                 String.format(
                         "Lock object's class %1$s must be loaded once but is loaded twice",
                         lockObject.getClass().getName()));
 
         this.lockObject = lockObject;
-        this.lock = lockMap.computeIfAbsent(lockObject, (any) -> new ReentrantReadWriteLock());
+        this.lock =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        ReadWriteThreadLock.class,
+                        "lock",
+                        TypeToken.of(Object.class),
+                        TypeToken.of(ReentrantReadWriteLock.class),
+                        lockObject,
+                        ReentrantReadWriteLock::new);
     }
 
     /** Returns the lock used for reading. */
+    @NonNull
     public ReadWriteThreadLock.Lock readLock() {
         return readLock;
     }
 
     /** Returns the lock used for writing. */
+    @NonNull
     public ReadWriteThreadLock.Lock writeLock() {
         return writeLock;
     }
@@ -177,8 +167,34 @@ public final class ReadWriteThreadLock {
 
     public interface Lock {
 
+        /**
+         * Acquires the lock, blocking to wait until the lock can be acquired.
+         *
+         * <p>If the thread executing this method is interrupted, this method will throw a runtime
+         * exception.
+         */
         void lock();
 
+        /**
+         * Tries acquiring the lock, blocking to wait until the lock can be acquired or the
+         * specified time has passed, then returns {@code true} in the first case and {@code false}
+         * in the second case.
+         *
+         * <p>If the thread executing this method is interrupted, this method will throw a runtime
+         * exception.
+         *
+         * <p>This method will try acquiring the lock first before checking for timeout. A
+         * non-positive timeout means the method will return immediately after the first try. This
+         * behavior is similar to a {@link ReentrantReadWriteLock}.
+         *
+         * @param timeout the maximum time to wait for the lock
+         * @param timeUnit the unit of the timeout
+         * @return {@code true} if the lock was acquired
+         */
+        @SuppressWarnings("SameParameterValue")
+        boolean tryLock(long timeout, @NonNull TimeUnit timeUnit);
+
+        /** Releases the lock. This method does not block. */
         void unlock();
     }
 
@@ -188,6 +204,15 @@ public final class ReadWriteThreadLock {
         @Override
         public void lock() {
             lock.readLock().lock();
+        }
+
+        @Override
+        public boolean tryLock(long timeout, @NonNull TimeUnit timeUnit) {
+            try {
+                return lock.readLock().tryLock(timeout, timeUnit);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
@@ -202,6 +227,15 @@ public final class ReadWriteThreadLock {
         @Override
         public void lock() {
             lock.writeLock().lock();
+        }
+
+        @Override
+        public boolean tryLock(long timeout, @NonNull TimeUnit timeUnit) {
+            try {
+                return lock.writeLock().tryLock(timeout, timeUnit);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override

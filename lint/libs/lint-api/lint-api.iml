@@ -8,7 +8,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="library" exported="" name="asm-tools" level="project" />
-    <orderEntry type="library" exported="" name="lombok-ast" level="project" />
     <orderEntry type="module" module-name="android-annotations" exported="" />
     <orderEntry type="library" exported="" name="Guava" level="project" />
     <orderEntry type="module" module-name="builder-model" exported="" />

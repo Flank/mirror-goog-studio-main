@@ -16,6 +16,7 @@
 package com.android.layoutinspector.model;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -264,13 +265,29 @@ public class ViewNode implements TreeNode {
         return root;
     }
 
+    /** Finds the path from node to the root. */
     @NonNull
     public static TreePath getPath(@NonNull ViewNode node) {
+        return getPathImpl(node, null);
+    }
+
+    /** Finds the path from node to the parent. */
+    @NonNull
+    public static TreePath getPathFromParent(@NonNull ViewNode node, @NonNull ViewNode root) {
+        return getPathImpl(node, root);
+    }
+
+    @NonNull
+    private static TreePath getPathImpl(@NonNull ViewNode node, @Nullable ViewNode root) {
         List<Object> nodes = Lists.newArrayList();
         do {
             nodes.add(0, node);
             node = node.parent;
-        } while (node != null);
+        } while (node != null && node != root);
+        if (root != null && node == root) {
+            nodes.add(0, root);
+        }
         return new TreePath(nodes.toArray());
     }
+
 }

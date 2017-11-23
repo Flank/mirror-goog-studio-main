@@ -29,9 +29,6 @@ import org.w3c.dom.Node;
  * are clipped by the path.
  */
 public class SvgClipPathNode extends SvgGroupNode {
-    private static final Logger logger = Logger.getLogger(SvgLeafNode.class.getSimpleName());
-    private static final String INDENT_LEVEL = "    ";
-
     private final ArrayList<SvgNode> mAffectedNodes = new ArrayList<>();
 
     public SvgClipPathNode(SvgTree svgTree, Node docNode, String name) {
@@ -100,22 +97,24 @@ public class SvgClipPathNode extends SvgGroupNode {
      * path data of children into one path for the clip-path. Affected nodes are contained in the
      * same group as the clip-path.
      *
-     * @param writer
+     * @param writer the writer to write the group XML element to
      * @param inClipPath boolean to flag whether the pathData should be apart of clip-path or not
-     * @throws IOException
      */
     @Override
     public void writeXML(OutputStreamWriter writer, boolean inClipPath) throws IOException {
-        writer.write("    <group>\n");
+        writer.write("    <group>");
+        writer.write(System.lineSeparator());
         writer.write("        <clip-path android:pathData=\"");
         for (SvgNode node : mChildren) {
             node.writeXML(writer, true);
         }
-        writer.write("\" />\n");
+        writer.write("\" />");
+        writer.write(System.lineSeparator());
         for (SvgNode node : mAffectedNodes) {
             node.writeXML(writer, false);
         }
-        writer.write("    </group>\n");
+        writer.write("    </group>");
+        writer.write(System.lineSeparator());
     }
 
     /**

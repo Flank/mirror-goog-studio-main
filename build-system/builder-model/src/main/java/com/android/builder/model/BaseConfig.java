@@ -125,16 +125,4 @@ public interface BaseConfig {
 
     @Nullable
     File getMultiDexKeepProguard();
-
-    /**
-     * This property can only be used with the Jack toolchain, which is deprecated.
-     *
-     * <p>If you are currently using Jack, you should migrate to using the default toolchain, which
-     * includes improved support for Java 8 language features. To learn more, read <a
-     * href="https://developer.android.com/studio/write/java8-support.html">Use Java 8 language
-     * features</a>.
-     */
-    @Deprecated
-    @NonNull
-    List<File> getJarJarRuleFiles();
 }

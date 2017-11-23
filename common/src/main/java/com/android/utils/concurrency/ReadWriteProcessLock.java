@@ -22,6 +22,7 @@ import com.android.annotations.concurrency.Immutable;
 import com.android.utils.JvmWideVariable;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.common.base.Verify;
 import com.google.common.reflect.TypeToken;
 import java.io.IOException;
@@ -33,9 +34,11 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -85,49 +88,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *
  * <p>This class is thread-safe.
  */
+@Immutable
 public final class ReadWriteProcessLock {
-
-    /**
-     * Map from a lock file to a {@link FileChannel}, used to make sure that there is only one
-     * instance of {@code FileChannel} per lock file within the current process.
-     */
-    @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
-    @NonNull
-    private static final ConcurrentMap<Path, FileChannel> fileChannelMap =
-            new JvmWideVariable<>(
-                            ReadWriteProcessLock.class,
-                            "fileChannelMap",
-                            new TypeToken<ConcurrentMap<Path, FileChannel>>() {},
-                            ConcurrentHashMap::new)
-                    .get();
-
-    /**
-     * Map from a lock file to a {@link FileLock}, used to make sure that there is only one instance
-     * of {@code FileLock} per lock file within the current process.
-     */
-    @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
-    @NonNull
-    private static final ConcurrentMap<Path, FileLock> fileLockMap =
-            new JvmWideVariable<>(
-                            ReadWriteProcessLock.class,
-                            "fileLockMap",
-                            new TypeToken<ConcurrentMap<Path, FileLock>>() {},
-                            ConcurrentHashMap::new)
-                    .get();
-
-    /**
-     * Map from a lock file to an {@link AtomicInteger} that counts the number of actions that are
-     * holding the within-process read lock on the given lock file.
-     */
-    @SuppressWarnings("ConstantConditions") // Guaranteed to be non-null
-    @NonNull
-    private static final ConcurrentMap<Path, AtomicInteger> numOfReadingActionsMap =
-            new JvmWideVariable<>(
-                            ReadWriteProcessLock.class,
-                            "numOfReadingActionsMap",
-                            new TypeToken<ConcurrentMap<Path, AtomicInteger>>() {},
-                            ConcurrentHashMap::new)
-                    .get();
 
     /** The lock used for reading. */
     @NonNull private final ReadWriteProcessLock.Lock readLock = new ReadWriteProcessLock.ReadLock();
@@ -140,23 +102,43 @@ public final class ReadWriteProcessLock {
     @NonNull private final Path lockFile;
 
     /**
-     * Lock used to synchronize threads within the current process.
-     *
-     * <p>Synchronization of processes is achieved via Java's file locking API (FileChannel.lock()).
-     * However, Java does not allow the same process to acquire a FileLock twice (it will throw an
-     * OverlappingFileLockException if a process has not released a FileLock object but attempts to
-     * acquire another one on the same lock file). Therefore, we use this within-process lock to
-     * synchronize threads within the same process first before using FileLock to synchronize
-     * processes.
+     * A lock used to synchronize threads within the current process. This lock is shared across all
+     * instances of {@code ReadWriteProcessLock} (and also across class loaders) in the current
+     * process for the given lock file.
      */
-    @NonNull
-    private final ReadWriteThreadLock readWriteThreadLock;
+    @NonNull private final ReentrantReadWriteLock withinProcessLock;
 
     /**
-     * The number of actions that are holding the within-process read lock on the given lock file.
+     * A lock used to provide exclusive access to a critical section. This lock is shared across all
+     * instances of {@code ReadWriteProcessLock} (and also across class loaders) in the current
+     * process for the given lock file.
      */
-    @NonNull
-    private final AtomicInteger numOfReadingActions;
+    @NonNull private final ReentrantLock criticalSectionLock;
+
+    /**
+     * A map from threads to the type of lock (shared or exclusive) that the threads are currently
+     * holding. This map is shared across all instances of {@code ReadWriteProcessLock} (and also
+     * across class loaders) in the current process for the given lock file.
+     *
+     * <p>At any given point during execution, this map must either be empty, or contain entries
+     * with only {@code true} values (multiple threads are holding shared locks), or contain exactly
+     * one entry with {@code false} value (exactly one thread is holding an exclusive lock).
+     */
+    @NonNull private final Map<Thread, Boolean> threadToLockTypeMap;
+
+    /**
+     * A reference to the file channel that provides a file lock. This reference is shared across
+     * all instances of {@code ReadWriteProcessLock} (and also across class loaders) in the current
+     * process for the given lock file.
+     */
+    @NonNull private final AtomicReference<FileChannel> sharedFileChannel;
+
+    /**
+     * A reference to the file lock which is used to synchronize threads across different processes.
+     * This reference is shared across all instances of {@code ReadWriteProcessLock} (and also
+     * across class loaders) in the current process for the given lock file.
+     */
+    @NonNull private final AtomicReference<FileLock> sharedFileLock;
 
     /**
      * Creates a {@code ReadWriteProcessLock} instance for the given lock file. Threads and
@@ -190,9 +172,47 @@ public final class ReadWriteProcessLock {
         }
 
         this.lockFile = lockFile;
-        this.readWriteThreadLock = new ReadWriteThreadLock(lockFile);
-        this.numOfReadingActions =
-                numOfReadingActionsMap.computeIfAbsent(lockFile, (any) -> new AtomicInteger(0));
+
+        this.withinProcessLock =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        ReadWriteProcessLock.class,
+                        "withinProcessLock",
+                        TypeToken.of(Path.class),
+                        TypeToken.of(ReentrantReadWriteLock.class),
+                        lockFile,
+                        ReentrantReadWriteLock::new);
+        this.criticalSectionLock =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        ReadWriteProcessLock.class,
+                        "criticalSectionLock",
+                        TypeToken.of(Path.class),
+                        TypeToken.of(ReentrantLock.class),
+                        lockFile,
+                        ReentrantLock::new);
+        this.threadToLockTypeMap =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        ReadWriteProcessLock.class,
+                        "threadToLockTypeMap",
+                        TypeToken.of(Path.class),
+                        new TypeToken<Map<Thread, Boolean>>() {},
+                        lockFile,
+                        HashMap::new);
+        this.sharedFileChannel =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        ReadWriteProcessLock.class,
+                        "sharedFileChannel",
+                        TypeToken.of(Path.class),
+                        new TypeToken<AtomicReference<FileChannel>>() {},
+                        lockFile,
+                        AtomicReference::new);
+        this.sharedFileLock =
+                JvmWideVariable.getJvmWideObjectPerKey(
+                        ReadWriteProcessLock.class,
+                        "sharedFileLock",
+                        TypeToken.of(Path.class),
+                        new TypeToken<AtomicReference<FileLock>>() {},
+                        lockFile,
+                        AtomicReference::new);
     }
 
     /**
@@ -242,96 +262,242 @@ public final class ReadWriteProcessLock {
     }
 
     /** Returns the lock used for reading. */
+    @NonNull
     public ReadWriteProcessLock.Lock readLock() {
         return readLock;
     }
 
     /** Returns the lock used for writing. */
+    @NonNull
     public ReadWriteProcessLock.Lock writeLock() {
         return writeLock;
     }
 
-    private void acquireReadLock() throws IOException  {
-        // Acquire a read lock within the current process first
-        readWriteThreadLock.readLock().lock();
-
-        // At this point, there could be multiple threads in the current process having the
-        // within-process read lock. If more than one of them attempt to acquire an inter-process
-        // read lock (a shared FileLock), Java would throw an OverlappingFileLockException.
-        // Therefore, we only let the first of these threads acquire a FileLock on behalf of the
-        // entire process.
+    private void acquireLock(boolean shared) throws IOException {
+        /*
+         * We synchronize threads across different processes using Java's file locking API (a
+         * FileLock returned by FileChannel.lock()). It is not possible to use FileLock to also
+         * synchronize threads within the same process as a FileLock is held on behalf of the entire
+         * process and the javadoc of FileLock explicitly says that it cannot be used for
+         * within-process synchronization.
+         *
+         * Therefore, we use a separate within-process lock to synchronize threads within the same
+         * process first before using a FileLock to synchronize threads across different processes.
+         */
+        java.util.concurrent.locks.Lock lock =
+                shared ? withinProcessLock.readLock() : withinProcessLock.writeLock();
+        lock.lock();
         try {
-            synchronized (numOfReadingActions) {
-                if (numOfReadingActions.get() == 0) {
-                    acquireFileLock(true);
-                }
-                // We increase numOfReadingActions after the above acquireFileLock() so that if that
-                // method throws an exception, numOfReadingActions remains 0
-                numOfReadingActions.getAndIncrement();
-            }
+            acquireInterProcessLock(shared);
         } catch (Throwable throwable) {
-            // If an error occurred, release the read lock within the current process
-            readWriteThreadLock.readLock().unlock();
+            // If an error occurred, release the within-process lock
+            lock.unlock();
             throw throwable;
         }
     }
 
-    private void releaseReadLock() throws IOException {
-        // Do the reverse of acquireReadLock()
+    private boolean tryAcquireLock(boolean shared, long nanosTimeout) throws IOException {
+        // The implementation of this method is similar to acquireLock(), except that we return
+        // early if the lock cannot be acquired after the specified time
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        java.util.concurrent.locks.Lock lock =
+                shared ? withinProcessLock.readLock() : withinProcessLock.writeLock();
         try {
-            synchronized (numOfReadingActions) {
-                // We decrease numOfReadingActions before releaseFileLock() so that even if that
-                // method throws an exception, numOfReadingActions is still decreased
-                if (numOfReadingActions.decrementAndGet() == 0) {
-                    releaseFileLock();
-                }
+            if (!lock.tryLock(nanosTimeout, TimeUnit.NANOSECONDS)) {
+                return false;
             }
-        } finally {
-            // Whether an error occurred or not, release the read lock within the current process
-            readWriteThreadLock.readLock().unlock();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
-    }
 
-    private void acquireWriteLock() throws IOException  {
-        // Acquire a write lock within the current process first
-        readWriteThreadLock.writeLock().lock();
-
-        // At this point, the current thread is the only thread in the current process that has the
-        // within-process write lock. Let the current thread also acquire an inter-process write
-        // lock (an exclusive FileLock) on behalf of the entire process.
+        boolean interProcessLockAcquired;
         try {
-            acquireFileLock(false);
+            stopwatch.stop();
+            long nanosRemainingTimeout = nanosTimeout - stopwatch.elapsed(TimeUnit.NANOSECONDS);
+            interProcessLockAcquired = tryAcquireInterProcessLock(shared, nanosRemainingTimeout);
         } catch (Throwable throwable) {
-            // If an error occurred, release the write lock within the current process
-            readWriteThreadLock.writeLock().unlock();
+            lock.unlock();
             throw throwable;
         }
+
+        if (!interProcessLockAcquired) {
+            lock.unlock();
+        }
+        return interProcessLockAcquired;
     }
 
-    private void releaseWriteLock() throws IOException  {
-        // Do the reverse of acquireWriteLock()
+    private void releaseLock(boolean shared) throws IOException {
         try {
-            releaseFileLock();
+            // Release the inter-process lock first
+            releaseInterProcessLock(shared);
         } finally {
-            // Whether an error occurred or not, release the write lock within the current process
-            readWriteThreadLock.writeLock().unlock();
+            // Whether an error occurred or not, release the within-process lock
+            java.util.concurrent.locks.Lock lock =
+                    shared ? withinProcessLock.readLock() : withinProcessLock.writeLock();
+            lock.unlock();
+        }
+    }
+
+    private void acquireInterProcessLock(boolean shared) throws IOException {
+        // There could be multiple threads attempting to run this method. Therefore, we acquire an
+        // exclusive lock so that only one of them can run at a time.
+        criticalSectionLock.lock();
+        try {
+            Preconditions.checkState(
+                    !threadToLockTypeMap.containsKey(Thread.currentThread()),
+                    "ReadWriteProcessLock is not reentrant, violated by thread "
+                            + Thread.currentThread());
+            // This method is called when a within-process lock has already been acquired (see
+            // acquireLock()). If it is a shared lock, then other threads (in the current process)
+            // may be holding shared locks but not exclusive locks. If it is an exclusive lock, then
+            // no other threads can be holding any locks.
+            if (shared) {
+                Preconditions.checkState(!threadToLockTypeMap.values().contains(false));
+            } else {
+                Preconditions.checkState(threadToLockTypeMap.isEmpty());
+            }
+
+            // Although multiple threads may want to acquire a FileLock, it is enough to allow only
+            // the first thread to actually acquire it, as FileLock is held on behalf of the entire
+            // process. The acquired FileLock can then be shared by multiple threads in the current
+            // process. (In fact, it is also not possible to acquire a FileLock twice as it will
+            // result in an OverlappingFileLockException.)
+            if (threadToLockTypeMap.isEmpty()) {
+                acquireFileLock(shared);
+            }
+
+            // We update the map after acquiring the FileLock so that if the acquiring step throws
+            // an exception, the map doesn't get updated.
+            // This method call is guaranteed to not throw an exception (if it did, we would need
+            // to release the acquired FileLock before returning).
+            threadToLockTypeMap.put(Thread.currentThread(), shared);
+        } finally {
+            criticalSectionLock.unlock();
+        }
+    }
+
+    private boolean tryAcquireInterProcessLock(boolean shared, long nanosTimeout)
+            throws IOException {
+        // The implementation of this method is similar to acquireInterProcessLock() except that we
+        // return early if the lock cannot be acquired after the specified time
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        try {
+            if (!criticalSectionLock.tryLock(nanosTimeout, TimeUnit.NANOSECONDS)) {
+                return false;
+            }
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        boolean fileLockAcquired;
+        try {
+            Preconditions.checkState(
+                    !threadToLockTypeMap.containsKey(Thread.currentThread()),
+                    "ReadWriteProcessLock is not reentrant, violated by thread "
+                            + Thread.currentThread());
+            if (shared) {
+                Preconditions.checkState(!threadToLockTypeMap.values().contains(false));
+            } else {
+                Preconditions.checkState(threadToLockTypeMap.isEmpty());
+            }
+
+            if (threadToLockTypeMap.isEmpty()) {
+                stopwatch.stop();
+                long nanosRemainingTimeout = nanosTimeout - stopwatch.elapsed(TimeUnit.NANOSECONDS);
+                fileLockAcquired = tryAcquireFileLock(shared, nanosRemainingTimeout);
+            } else {
+                fileLockAcquired = true;
+            }
+
+            if (fileLockAcquired) {
+                threadToLockTypeMap.put(Thread.currentThread(), shared);
+            }
+        } finally {
+            criticalSectionLock.unlock();
+        }
+
+        return fileLockAcquired;
+    }
+
+    private void releaseInterProcessLock(boolean shared) throws IOException {
+        criticalSectionLock.lock();
+        try {
+            Preconditions.checkState(threadToLockTypeMap.containsKey(Thread.currentThread()));
+            if (shared) {
+                Preconditions.checkState(!threadToLockTypeMap.values().contains(false));
+            } else {
+                Preconditions.checkState(
+                        threadToLockTypeMap.size() == 1
+                                && threadToLockTypeMap.containsValue(false));
+            }
+
+            // We update the map before releasing the FileLock so that even if the releasing step
+            // throws an exception, the map still gets updated.
+            // This method call is guaranteed to not throw an exception (if it did, we would need
+            // to still attempt releasing the FileLock before returning).
+            threadToLockTypeMap.remove(Thread.currentThread());
+
+            // Only release the FileLock if the current thread was the only one using it
+            if (threadToLockTypeMap.isEmpty()) {
+                releaseFileLock();
+            }
+        } finally {
+            criticalSectionLock.unlock();
         }
     }
 
     private void acquireFileLock(boolean shared) throws IOException {
-        // Within the current process, this method is never called from more than one thread and is
-        // never called concurrently with releaseFileLock().
-        // However, this method might be called from more than one process or might be called
-        // concurrently with releaseFileLock() from another process. If after the current process
-        // opens the file channel (thereby creating the lock file if it does not yet exist), another
-        // process deletes the lock file, then the file lock used by the current process will become
-        // ineffective. Therefore, we do not allow deleting lock files in this class. As long as the
-        // lock files are not deleted, this method and releaseFileLock() are safe to be called from
-        // multiple processes.
-        Preconditions.checkState(
-                !fileChannelMap.containsKey(lockFile) && !fileLockMap.containsKey(lockFile),
-                "acquireFileLock() must not be called twice"
-                        + " (ReadWriteProcessLock is not reentrant)");
+        /*
+         * This method and the releaseFileLock() method are called from an exclusive critical
+         * section, so only one of them can be executed, and executed by a single thread at a time
+         * in the current process.
+         *
+         * However, it is still possible that both methods are executed concurrently or each of them
+         * is executed multiple times concurrently by different processes. If the lock file is
+         * deleted while one of these two methods is being executed or when a process has acquired
+         * the FileLock but has not yet released it, the acquired FileLock can become ineffective
+         * (even when no exception is thrown).
+         *
+         * Therefore, this class does not delete lock files and requires that the client must not
+         * access (read, write, or delete) the lock files while the locking mechanism is in use. If
+         * this requirement is met, the two methods are safe to be executed concurrently by
+         * different processes.
+         */
+        Preconditions.checkState(sharedFileChannel.get() == null && sharedFileLock.get() == null);
+
+        FileChannel fileChannel =
+                FileChannel.open(
+                        lockFile,
+                        StandardOpenOption.READ,
+                        StandardOpenOption.WRITE,
+                        StandardOpenOption.CREATE);
+        try {
+            FileLock fileLock;
+            try {
+                fileLock = fileChannel.lock(0L, Long.MAX_VALUE, shared);
+            } catch (OverlappingFileLockException e) {
+                // This error is common so we want to print out the lock file's path when it happens
+                throw new RuntimeException(
+                        "Unable to acquire a file lock for " + lockFile.toAbsolutePath(), e);
+            }
+
+            // We update the references after acquiring the FileLock so that if the acquiring step
+            // throws an exception, the references don't get updated.
+            // These method calls are guaranteed to not throw an exception (if they did, we would
+            // need to release the acquired FileLock before returning).
+            sharedFileChannel.set(fileChannel);
+            sharedFileLock.set(fileLock);
+        } catch (Throwable throwable) {
+            fileChannel.close();
+            throw throwable;
+        }
+    }
+
+    private boolean tryAcquireFileLock(boolean shared, long nanosTimeout) throws IOException {
+        // The implementation of this method is similar to acquireFileLock() except that we return
+        // early if the lock cannot be acquired after the specified time
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        Preconditions.checkState(sharedFileChannel.get() == null && sharedFileLock.get() == null);
 
         FileChannel fileChannel =
                 FileChannel.open(
@@ -341,33 +507,75 @@ public final class ReadWriteProcessLock {
                         StandardOpenOption.CREATE);
         FileLock fileLock;
         try {
-            fileLock = fileChannel.lock(0L, Long.MAX_VALUE, shared);
-        } catch (OverlappingFileLockException e) {
-            throw new RuntimeException(
-                    "Unable to acquire a file lock for " + lockFile.toAbsolutePath(), e);
+            // FileLock does not have built-in support for tryLock() with timeout so we need to
+            // support it here using a loop.
+            // Make sure we try acquiring the lock first *before* checking for timeout, as stated in
+            // the javadoc of our locking API.
+            long maxSleepTime = nanosTimeout / 10;
+            while (true) {
+                try {
+                    fileLock = fileChannel.tryLock(0L, Long.MAX_VALUE, shared);
+                } catch (OverlappingFileLockException e) {
+                    throw new RuntimeException(
+                            "Unable to acquire a file lock for " + lockFile.toAbsolutePath(), e);
+                }
+
+                if (fileLock != null) {
+                    sharedFileChannel.set(fileChannel);
+                    sharedFileLock.set(fileLock);
+                    break;
+                } else {
+                    long nanosRemainingTimeout =
+                            nanosTimeout - stopwatch.elapsed(TimeUnit.NANOSECONDS);
+                    if (nanosRemainingTimeout <= 0) {
+                        break;
+                    } else {
+                        // Sleep a little before retrying to avoid polling continuously
+                        try {
+                            Thread.sleep(
+                                    TimeUnit.MILLISECONDS.convert(
+                                            Math.min(nanosRemainingTimeout, maxSleepTime),
+                                            TimeUnit.NANOSECONDS));
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+            }
+        } catch (Throwable throwable) {
+            fileChannel.close();
+            throw throwable;
         }
 
-        fileChannelMap.put(lockFile, fileChannel);
-        fileLockMap.put(lockFile, fileLock);
+        if (fileLock == null) {
+            fileChannel.close();
+        }
+        return fileLock != null;
     }
 
-    private void releaseFileLock() throws IOException  {
-        // As commented in acquireFileLock(), this method and acquireFileLock() are never called
-        // from more than one thread per process and are safe to be called from multiple processes.
-        FileChannel fileChannel = fileChannelMap.get(lockFile);
-        FileLock fileLock = fileLockMap.get(lockFile);
+    private void releaseFileLock() throws IOException {
+        // As commented in acquireFileLock(), that method and this method are never executed
+        // concurrently by multiple threads in the same process, but it is possible and safe for
+        // them to be executed concurrently by different processes (as long as lock files are not
+        // deleted).
+        FileChannel fileChannel = Preconditions.checkNotNull(sharedFileChannel.get());
+        FileLock fileLock = Preconditions.checkNotNull(sharedFileLock.get());
 
-        Preconditions.checkNotNull(fileChannel);
-        Preconditions.checkNotNull(fileLock);
+        // We update the references before releasing the FileLock so that even if the releasing step
+        // throws an exception, the references still get updated.
+        // These method calls are guaranteed to not throw an exception (if they did, we would need
+        // to still attempt releasing the FileLock before returning).
+        sharedFileChannel.set(null);
+        sharedFileLock.set(null);
 
-        // We close the resources but do not delete the lock file as doing so would be unsafe to
-        // other processes which might be using the same lock file (see the comments in
-        // acquireFileLock()).
-        fileLock.release();
-        fileChannel.close();
-
-        fileChannelMap.remove(lockFile);
-        fileLockMap.remove(lockFile);
+        // We release the resources but do not delete the lock file as doing so would be unsafe to
+        // other processes which might be using the lock file (see comments in acquireFileLock()).
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            fileLock.release();
+        } finally {
+            fileChannel.close();
+        }
     }
 
     @Override
@@ -377,8 +585,34 @@ public final class ReadWriteProcessLock {
 
     public interface Lock {
 
+        /**
+         * Acquires the lock, blocking to wait until the lock can be acquired.
+         *
+         * <p>If the thread executing this method is interrupted, this method will throw a runtime
+         * exception.
+         */
         void lock() throws IOException;
 
+        /**
+         * Tries acquiring the lock, blocking to wait until the lock can be acquired or the
+         * specified time has passed, then returns {@code true} in the first case and {@code false}
+         * in the second case.
+         *
+         * <p>If the thread executing this method is interrupted, this method will throw a runtime
+         * exception.
+         *
+         * <p>This method will try acquiring the lock first before checking for timeout. A
+         * non-positive timeout means the method will return immediately after the first try. This
+         * behavior is similar to a {@link ReentrantReadWriteLock}.
+         *
+         * @param timeout the maximum time to wait for the lock
+         * @param timeUnit the unit of the timeout
+         * @return {@code true} if the lock was acquired
+         */
+        @SuppressWarnings("SameParameterValue")
+        boolean tryLock(long timeout, @NonNull TimeUnit timeUnit) throws IOException;
+
+        /** Releases the lock. This method does not block. */
         void unlock() throws IOException;
     }
 
@@ -387,12 +621,17 @@ public final class ReadWriteProcessLock {
 
         @Override
         public void lock() throws IOException {
-            acquireReadLock();
+            acquireLock(true);
+        }
+
+        @Override
+        public boolean tryLock(long timeout, @NonNull TimeUnit timeUnit) throws IOException {
+            return tryAcquireLock(true, TimeUnit.NANOSECONDS.convert(timeout, timeUnit));
         }
 
         @Override
         public void unlock() throws IOException {
-            releaseReadLock();
+            releaseLock(true);
         }
     }
 
@@ -401,12 +640,17 @@ public final class ReadWriteProcessLock {
 
         @Override
         public void lock() throws IOException {
-            acquireWriteLock();
+            acquireLock(false);
+        }
+
+        @Override
+        public boolean tryLock(long timeout, @NonNull TimeUnit timeUnit) throws IOException {
+            return tryAcquireLock(false, TimeUnit.NANOSECONDS.convert(timeout, timeUnit));
         }
 
         @Override
         public void unlock() throws IOException {
-            releaseWriteLock();
+            releaseLock(false);
         }
     }
 }

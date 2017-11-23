@@ -22,6 +22,7 @@ import com.android.tools.profiler.FakeAndroidDriver;
 import com.android.tools.profiler.GrpcUtils;
 import com.android.tools.profiler.PerfDriver;
 import com.android.tools.profiler.proto.NetworkProfiler;
+import com.android.tools.profiler.proto.NetworkProfiler.HttpConnectionData;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsRequest.Type;
 import com.android.tools.profiler.proto.NetworkProfiler.HttpDetailsResponse;
 import com.android.tools.profiler.proto.Profiler;
@@ -81,6 +82,10 @@ public class OkHttpTest {
         String responseFields = responseDetails.getResponse().getFields();
         assertThat(responseFields.contains("response-status-code = 200")).isTrue();
 
+        HttpDetailsResponse threadDetails =
+                stubWrapper.getHttpDetails(connectionId, Type.ACCESSING_THREADS);
+        assertThat(threadDetails.getAccessingThreads().getThreadList().size()).isEqualTo(1);
+
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
         Profiler.BytesResponse bytesResponse =
@@ -109,7 +114,13 @@ public class OkHttpTest {
                 stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
         String responseFields = responseDetails.getResponse().getFields();
         assertThat(responseFields.contains("response-status-code = 200")).isTrue();
-        // TODO: Assert request body when it is supported.
+
+        String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
+        assertThat(payloadId.isEmpty()).isFalse();
+        Profiler.BytesResponse bytesResponse =
+                myGrpc.getProfilerStub()
+                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
+        assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("OkHttp3 request body");
     }
 
     @Test
@@ -131,6 +142,10 @@ public class OkHttpTest {
                 stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
         String responseFields = responseDetails.getResponse().getFields();
         assertThat(responseFields.contains("response-status-code = 200")).isTrue();
+
+        HttpDetailsResponse threadDetails =
+                stubWrapper.getHttpDetails(connectionId, Type.ACCESSING_THREADS);
+        assertThat(threadDetails.getAccessingThreads().getThreadList().size()).isEqualTo(1);
 
         String payloadId = stubWrapper.getPayloadId(connectionId, Type.RESPONSE_BODY);
         assertThat(payloadId.isEmpty()).isFalse();
@@ -160,7 +175,13 @@ public class OkHttpTest {
                 stubWrapper.getHttpDetails(connectionId, Type.RESPONSE);
         String responseFields = responseDetails.getResponse().getFields();
         assertThat(responseFields.contains("response-status-code = 200")).isTrue();
-        // TODO: Assert request body when it is supported.
+
+        String payloadId = stubWrapper.getPayloadId(connectionId, Type.REQUEST_BODY);
+        assertThat(payloadId.isEmpty()).isFalse();
+        Profiler.BytesResponse bytesResponse =
+                myGrpc.getProfilerStub()
+                        .getBytes(BytesRequest.newBuilder().setId(payloadId).build());
+        assertThat(bytesResponse.getContents().toStringUtf8()).isEqualTo("OkHttp2 request body");
     }
 
     @Test
@@ -182,5 +203,79 @@ public class OkHttpTest {
         connectionId = httpRangeResponse.getDataList().get(1).getConnId();
         requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
         assertThat(requestDetails.getRequest().getUrl().contains(urlQuery)).isTrue();
+    }
+
+    @Test
+    public void testOkHttp2AndOkHttp3WithThreadClassLoaderIsNull() {
+        String nullThreadClassLoader = "NULLTHREADCLASSLOADER";
+        myAndroidDriver.triggerMethod(
+                ACTIVITY_CLASS, "runOkHttp2AndOkHttp3WithThreadClassLoaderIsNull");
+        assertThat(myAndroidDriver.waitForInput(nullThreadClassLoader)).isTrue();
+
+        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        NetworkProfiler.HttpRangeResponse httpRangeResponse =
+                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
+        assertThat(httpRangeResponse.getDataList().size()).isEqualTo(2);
+
+        long connectionId = httpRangeResponse.getDataList().get(0).getConnId();
+        HttpDetailsResponse requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
+        String urlQuery = "?method=" + nullThreadClassLoader;
+        assertThat(requestDetails.getRequest().getUrl().contains(urlQuery)).isTrue();
+
+        connectionId = httpRangeResponse.getDataList().get(1).getConnId();
+        requestDetails = stubWrapper.getHttpDetails(connectionId, Type.REQUEST);
+        assertThat(requestDetails.getRequest().getUrl().contains(urlQuery)).isTrue();
+    }
+
+    @Test
+    public void testOkHttp2GetAbortedByError() throws Exception {
+        String okHttp2Error = "OKHTTP2ERROR";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp2GetAbortedByError");
+        assertThat(myAndroidDriver.waitForInput(okHttp2Error)).isTrue();
+
+        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        assertNetworkErrorBehavior(stubWrapper);
+    }
+
+    @Test
+    public void testOkHttp3GetAbortedByError() throws Exception {
+        String okHttp3Error = "OKHTTP3ERROR";
+        myAndroidDriver.triggerMethod(ACTIVITY_CLASS, "runOkHttp3GetAbortedByError");
+        assertThat(myAndroidDriver.waitForInput(okHttp3Error)).isTrue();
+
+        NetworkStubWrapper stubWrapper = new NetworkStubWrapper(myGrpc.getNetworkStub());
+        assertNetworkErrorBehavior(stubWrapper);
+    }
+
+    private void assertNetworkErrorBehavior(NetworkStubWrapper stubWrapper) {
+        // Get two responses: 1 aborted and 1 completed
+        NetworkProfiler.HttpRangeResponse httpRangeResponse =
+                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
+        assertThat(httpRangeResponse.getDataList().size()).isEqualTo(2);
+
+        // The first request should have no response fields after being aborted
+        HttpConnectionData connectionAborted = httpRangeResponse.getDataList().get(0);
+        HttpDetailsResponse responseDetails =
+                stubWrapper.getHttpDetails(connectionAborted.getConnId(), Type.RESPONSE);
+        assertThat(responseDetails.getResponse().getFields()).isEmpty();
+        // TODO(b/69328111): Once the error message is being propagated through, check it here.
+
+        // Even though the request was aborted, it should still have thread information available
+        HttpDetailsResponse threadDetails =
+                stubWrapper.getHttpDetails(connectionAborted.getConnId(), Type.ACCESSING_THREADS);
+        assertThat(threadDetails.getAccessingThreads().getThreadList().size()).isEqualTo(1);
+
+        // The second request should have completed normally
+        HttpConnectionData connectionSuccess = httpRangeResponse.getDataList().get(1);
+        responseDetails = stubWrapper.getHttpDetails(connectionSuccess.getConnId(), Type.RESPONSE);
+        assertThat(responseDetails.getResponse().getFields().contains("response-status-code = 200"))
+                .isTrue();
+
+        // Both failed and successful requests should have valid time ranges (and the successful
+        // connection should naturally start after the failed connection finished)
+        assertThat(connectionAborted.getEndTimestamp()).isGreaterThan((long) 0);
+        assertThat(connectionSuccess.getEndTimestamp()).isGreaterThan((long) 0);
+        assertThat(connectionAborted.getEndTimestamp())
+                .isLessThan(connectionSuccess.getStartTimestamp());
     }
 }

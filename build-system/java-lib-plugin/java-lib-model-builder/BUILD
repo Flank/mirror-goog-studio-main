@@ -14,7 +14,7 @@ iml_module(
         "//tools/idea/.idea/libraries:gradle-api",
         "//tools/base/build-system/java-lib-plugin/java-lib-model:studio.java-lib-model[module]",
         "//tools/base/annotations:studio.android-annotations[module]",
-        "//tools/idea/.idea/libraries:equalsverifier",
+        "//tools/idea/.idea/libraries:equalsverifier[test]",
         "//tools/idea/.idea/libraries:JUnit4[test]",
     ],
 )

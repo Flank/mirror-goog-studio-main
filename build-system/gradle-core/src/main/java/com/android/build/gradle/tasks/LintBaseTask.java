@@ -57,7 +57,6 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
-import org.jetbrains.annotations.NotNull;
 
 public abstract class LintBaseTask extends AndroidBuilderTask {
     public static final String LINT_CLASS_PATH = "lintClassPath";
@@ -134,7 +133,7 @@ public abstract class LintBaseTask extends AndroidBuilderTask {
             LOG.warn(message, args);
         }
 
-        @NotNull
+        @NonNull
         @Override
         public String getGradlePluginVersion() {
             return Version.ANDROID_GRADLE_PLUGIN_VERSION;

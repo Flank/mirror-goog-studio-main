@@ -19,6 +19,7 @@ package com.android.builder.internal.aapt;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.core.VariantType;
+import com.android.ide.common.symbols.SymbolIo;
 import com.android.sdklib.BuildToolInfo;
 import com.android.sdklib.IAndroidTarget;
 import com.android.utils.ILogger;
@@ -245,7 +246,7 @@ public class AaptPackageConfig implements Cloneable {
      * The library symbol table files.
      *
      * <p>These are R.txt files but with the package name as the first line. They can be parsed
-     * using {@link com.android.builder.symbols.SymbolIo#readTableWithPackage(File)}
+     * using {@link SymbolIo#readTableWithPackage(File)}
      */
     @NonNull
     public Set<File> getLibrarySymbolTableFiles() {

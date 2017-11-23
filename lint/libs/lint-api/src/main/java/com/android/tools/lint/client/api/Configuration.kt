@@ -79,7 +79,7 @@ abstract class Configuration {
 
     /**
      * Returns the severity for a given issue. This is the same as the
-     * [Issue.getDefaultSeverity] unless the user has selected a custom
+     * [Issue.defaultSeverity] unless the user has selected a custom
      * severity (which is tool context dependent).
      *
      * @param issue the issue to look up the severity from

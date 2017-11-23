@@ -126,8 +126,6 @@ public class CommentDetector extends ResourceXmlDetector implements UastScanner 
     }
 
     private static void checkJava(@NonNull JavaContext context) {
-        // Lombok does not generate comment nodes for block and line comments, only for
-        // javadoc comments!
         CharSequence source = context.getContents();
         if (source == null) {
             return;

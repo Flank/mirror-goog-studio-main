@@ -22,9 +22,9 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Cons
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.build.gradle.internal.CombinedInput;
 import com.android.build.gradle.internal.core.VariantConfiguration;
 import com.android.build.gradle.internal.scope.TaskConfigAction;
+import com.android.build.gradle.internal.scope.TaskOutputHolder;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.tasks.IncrementalTask;
 import com.android.build.gradle.internal.tasks.TaskInputHelper;
@@ -381,20 +381,15 @@ public class AidlCompile extends IncrementalTask {
             compileTask.setSourceOutputDir(scope.getAidlSourceOutputDir());
 
             if (variantConfiguration.getType() == VariantType.LIBRARY) {
-                compileTask.setPackagedDir(scope.getPackagedAidlDir());
+                File packagedAidlDir = scope.getPackagedAidlDir();
+                compileTask.setPackagedDir(packagedAidlDir);
+                scope.addTaskOutput(
+                        TaskOutputHolder.TaskOutputType.AIDL_PARCELABLE,
+                        packagedAidlDir,
+                        getName());
                 compileTask.setPackageWhitelist(
                         scope.getGlobalScope().getExtension().getAidlPackageWhiteList());
             }
         }
-    }
-
-    // Workaround for https://issuetracker.google.com/67418335
-    @Override
-    @Input
-    @NonNull
-    public String getCombinedInput() {
-        return new CombinedInput(super.getCombinedInput())
-                .add("packagedDir", getPackagedDir())
-                .toString();
     }
 }

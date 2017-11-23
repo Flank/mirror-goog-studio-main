@@ -18,7 +18,7 @@ package com.android.tools.lint.detector.api
 
 import com.android.ide.common.blame.SourcePosition
 import com.android.ide.common.res2.ResourceItem
-import com.android.tools.lint.client.api.JavaParser
+import com.android.tools.lint.client.api.UastParser
 import com.android.tools.lint.client.api.LintClient
 import com.android.utils.CharSequences.indexOf
 import com.android.utils.CharSequences.lastIndexOf
@@ -115,8 +115,7 @@ protected constructor(
      * sense.
      *
      * This attribute is ignored for the primary location for an issue (e.g. the location
-     * passed to
-     * [LintClient.report],
+     * passed to [LintClient.report],
      * and it applies for all the secondary locations linked from that location.
      */
     open var visible = true
@@ -427,7 +426,7 @@ protected constructor(
         /**
          * Special marker location which means location not available, or not applicable,
          * or filtered out, etc. For example, the infrastructure may return [.NONE] if you ask
-         * [JavaParser.getLocation] for an element which is not in the current
+         * [UastParser.getLocation] for an element which is not in the current
          * file during an incremental lint run in a single file.
          */
         @JvmField

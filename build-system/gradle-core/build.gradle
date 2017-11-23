@@ -95,7 +95,7 @@ apply from: "$rootDir/buildSrc/base/bintray.gradle"
 
 test {
     environment("CUSTOM_REPO",
-            rootProject.file("../out/repo").toString()
+            new File(rootProject.ext.androidHostOut, "repo").toString()
                     + File.pathSeparator
                     + rootProject.file("../prebuilts/tools/common/m2/repository/").toString())
 

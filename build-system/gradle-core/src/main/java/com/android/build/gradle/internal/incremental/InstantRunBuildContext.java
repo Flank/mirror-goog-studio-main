@@ -48,7 +48,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
-import org.gradle.internal.impldep.org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -285,7 +284,7 @@ public class InstantRunBuildContext {
 
     public InstantRunBuildContext(
             boolean isInstantRunMode,
-            @NotNull AaptGeneration aaptGeneration,
+            @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidVersion androidVersion,
             @Nullable String targetAbi,
             @Nullable String density,
@@ -304,7 +303,7 @@ public class InstantRunBuildContext {
     InstantRunBuildContext(
             @NonNull BuildIdAllocator buildIdAllocator,
             boolean isInstantRunMode,
-            @NotNull AaptGeneration aaptGeneration,
+            @NonNull AaptGeneration aaptGeneration,
             @NonNull AndroidVersion androidVersion,
             @Nullable String targetAbi,
             @Nullable String density,

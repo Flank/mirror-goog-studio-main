@@ -24,7 +24,6 @@ import com.android.SdkConstants.ATTR_MESSAGE
 import com.android.SdkConstants.TAG_ISSUE
 import com.android.SdkConstants.TAG_ISSUES
 import com.android.SdkConstants.TAG_LOCATION
-import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.LintUtils
 import com.android.tools.lint.detector.api.Location
@@ -141,10 +140,8 @@ class LintBaseline(
             val baselineFile = file
             val message = describeBaselineFilter(foundErrorCount,
                     foundWarningCount, getDisplayPath(project, baselineFile))
-            client.report(Context(driver, project, project, baselineFile, null),
-                    IssueRegistry.BASELINE,
-                    client.getConfiguration(project, driver).getSeverity(IssueRegistry.BASELINE),
-                    Location.create(baselineFile), message, TextFormat.RAW, null)
+            LintClient.report(client, IssueRegistry.BASELINE, message,
+                    file = baselineFile, project = project, driver = driver)
         }
 
         val fixedCount = fixedCount
@@ -187,10 +184,9 @@ class LintBaseline(
                         "`android.lintOptions.checkDependencies=true`."
             }
             message += " Unmatched issue types: " + issueTypes
-            client.report(Context(driver, project, project, baselineFile, null),
-                    IssueRegistry.BASELINE,
-                    client.getConfiguration(project, driver).getSeverity(IssueRegistry.BASELINE),
-                    Location.create(baselineFile), message, TextFormat.RAW, null)
+
+            LintClient.report(client, IssueRegistry.BASELINE, message,
+                    file = baselineFile, project = project, driver = driver)
         }
     }
 

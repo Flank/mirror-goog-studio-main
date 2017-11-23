@@ -22,14 +22,19 @@ import com.android.testutils.TestResources;
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import javax.imageio.ImageIO;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
 @SuppressWarnings("javadoc")
 public class VectorDrawableGeneratorTest extends TestCase {
-
     private static final GeneratorTester GENERATOR_TESTER =
             GeneratorTester.withTestDataRelativePath(
                     "tools/base/sdk-common/src/test/resources/testData/vectordrawable");
@@ -82,15 +87,23 @@ public class VectorDrawableGeneratorTest extends TestCase {
             xmlContent = Files.toString(incomingFile, Charsets.UTF_8);
         }
 
-        final VdPreview.TargetSize imageTargetSize = VdPreview.TargetSize.createSizeFromWidth(IMAGE_SIZE);
+        VdPreview.TargetSize imageTargetSize = VdPreview.TargetSize.createSizeFromWidth(IMAGE_SIZE);
         StringBuilder builder = new StringBuilder();
-        BufferedImage image = VdPreview.getPreviewFromVectorXml(imageTargetSize, xmlContent,
-                builder);
+        BufferedImage image =
+                VdPreview.getPreviewFromVectorXml(imageTargetSize, xmlContent, builder);
 
         String imageNameWithParent = parentDir + imageName;
         File pngFile = new File(parentDirFile, imageName);
         if (!pngFile.exists()) {
-            GENERATOR_TESTER.generateGoldenImage(image, imageNameWithParent, imageName);
+            String golden = imageNameWithParent;
+            String path = parentDirFile.getPath();
+            int pos = path.replace('\\', '/').indexOf("/tools/base/");
+            if (pos > 0) {
+                golden = path.substring(0, pos) + File.separator
+                        + GENERATOR_TESTER.getTestDataRelPath() + File.separator + imageName;
+            }
+            GENERATOR_TESTER.generateGoldenImage(image, golden, imageName);
+            fail("Golden file " + golden + " didn't exist, created by the test.");
         } else {
             InputStream is = new FileInputStream(pngFile);
             BufferedImage goldenImage = ImageIO.read(is);
@@ -103,7 +116,6 @@ public class VectorDrawableGeneratorTest extends TestCase {
             GeneratorTester.assertImageSimilar(
                     imageNameWithParent, goldenImage, image, diffThreshold);
         }
-
     }
 
     private void checkSvgConversion(String fileName) throws IOException {
@@ -287,6 +299,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
 
     public void testSvgTransformCircleScale() throws Exception {
         checkSvgConversion("test_transform_circle_scale");
+    }
+
+    public void testSvgTransformCircleMatrix() throws Exception {
+        checkSvgConversion("test_transform_circle_matrix");
     }
 
     public void testSvgTransformRectMatrix() throws Exception {

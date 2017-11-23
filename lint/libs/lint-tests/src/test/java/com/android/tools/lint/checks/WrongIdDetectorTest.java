@@ -25,7 +25,7 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
         return new WrongIdDetector();
     }
 
-    public void test() throws Exception {
+    public void testBasic() throws Exception {
         assertEquals(""
                 + "res/layout/layout1.xml:14: Error: The id \"button5\" is not defined anywhere. Did you mean one of {button1, button2, button3, button4} ? [UnknownId]\n"
                 + "        android:layout_alignBottom=\"@+id/button5\"\n"
@@ -441,6 +441,46 @@ public class WrongIdDetectorTest extends AbstractCheckTest {
                         + "        app:layout_editor_absoluteY=\"94dp\"\n"
                         + "        android:id=\"@+id/button5\" />\n"
                         + "</android.support.constraint.ConstraintLayout>")));
+    }
+
+    public void testConstraintReferencedIds() {
+        // Validate id lists in <Barrier> elements
+
+        //noinspection all // Sample code
+        lint().files(
+                xml("res/layout/layout3.xml", "" +
+                        "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+                        "<android.support.constraint.ConstraintLayout " +
+                        "    xmlns:android=\"http://schemas.android.com/apk/res/android\"\n" +
+                        "    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\n" +
+                        "    xmlns:tools=\"http://schemas.android.com/tools\"\n" +
+                        "    android:layout_width=\"match_parent\"\n" +
+                        "    android:layout_height=\"match_parent\">\n" +
+                        "\n" +
+                        "    <android.support.constraint.Barrier\n" +
+                        "        android:id=\"@+id/barrier\"\n" +
+                        "        android:layout_width=\"wrap_content\"\n" +
+                        "        android:layout_height=\"wrap_content\"\n" +
+                        "        app:barrierDirection=\"end\"\n" +
+                        "        app:constraint_referenced_ids=\"text1,text2\" />\n" +
+                        "\n" +
+                        "    <TextView\n" +
+                        "        android:layout_width=\"wrap_content\"\n" +
+                        "        android:layout_height=\"wrap_content\"\n" +
+                        "        android:text=\"Hello World!\"\n" +
+                        "        android:id=\"@+id/text1\"\n" +
+                        "        app:layout_constraintBottom_toBottomOf=\"parent\"\n" +
+                        "        app:layout_constraintLeft_toLeftOf=\"parent\"\n" +
+                        "        app:layout_constraintRight_toRightOf=\"parent\"\n" +
+                        "        app:layout_constraintTop_toTopOf=\"parent\" />\n" +
+                        "\n" +
+                        "</android.support.constraint.ConstraintLayout>\n"))
+                .incremental()
+                .run()
+                .expect("res/layout/layout3.xml:13: Error: The id \"text2\" is not defined anywhere. Did you mean text1 ? [UnknownId]\n" +
+                        "        app:constraint_referenced_ids=\"text1,text2\" />\n" +
+                        "        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "1 errors, 0 warnings");
     }
 
     @SuppressWarnings("all") // Sample code

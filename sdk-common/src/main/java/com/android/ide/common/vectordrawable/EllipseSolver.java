@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import java.awt.geom.AffineTransform;
@@ -47,7 +46,7 @@ class EllipseSolver {
     private Point2D.Float mDstMinorAxisPoint;
 
     /**
-     * Rotate the Point2D by radians
+     * Rotates the Point2D by radians
      *
      * @return the rotated Point2D
      */
@@ -61,7 +60,7 @@ class EllipseSolver {
     }
 
     /**
-     * Construct the solver with all necessary parameters, and all the output value will be
+     * Constructs the solver with all necessary parameters, and all the output value will be
      * ready after this constructor is called.
      *
      * Note that all the x y values are in absolute coordinates, such that we can apply the
@@ -118,7 +117,7 @@ class EllipseSolver {
      * Here, we use the cross product to figure out the direction of the 3 control points for the
      * src and dst ellipse.
      */
-    private boolean computeDirectionChange(final Point2D.Float middlePoint,
+    private static boolean computeDirectionChange(final Point2D.Float middlePoint,
             final Point2D.Float majorAxisPoint, final Point2D.Float minorAxisPoint,
             final Point2D.Float dstMiddlePoint, final Point2D.Float dstMajorAxisPoint,
             final Point2D.Float dstMinorAxisPoint) {
@@ -127,10 +126,10 @@ class EllipseSolver {
         float dstCrossProduct = getCrossProduct(dstMiddlePoint, dstMajorAxisPoint,
                 dstMinorAxisPoint);
 
-        return srcCrossProduct * dstCrossProduct < 0 ? true : false;
+        return srcCrossProduct * dstCrossProduct < 0;
     }
 
-    private float getCrossProduct(final Point2D.Float middlePoint,
+    private static float getCrossProduct(final Point2D.Float middlePoint,
             final Point2D.Float majorAxisPoint, final Point2D.Float minorAxisPoint) {
         float majorMinusMiddleX = majorAxisPoint.x - middlePoint.x;
         float majorMinusMiddleY = majorAxisPoint.y - middlePoint.y;
@@ -138,14 +137,13 @@ class EllipseSolver {
         float minorMinusMiddleX = minorAxisPoint.x - middlePoint.x;
         float minorMinusMiddleY = minorAxisPoint.y - middlePoint.y;
 
-        return (majorMinusMiddleX * minorMinusMiddleY) - (majorMinusMiddleY
-                * minorMinusMiddleX);
+        return (majorMinusMiddleX * minorMinusMiddleY) - (majorMinusMiddleY * minorMinusMiddleX);
     }
 
     /**
-     * @return true if there is something error going on, either due to the ellipse is not setup
-     *         correctly, or some computation error happens. This error is ignorable, but the
-     *         output ellipse will not be correct.
+     * Returns true if there is something error going on, either due to the ellipse is not setup
+     * correctly, or some computation error happens. This error is ignorable, but the output ellipse
+     * will not be correct.
      */
     private boolean computeABThetaFromControlPoints(float relMiddleX, float relMiddleY,
             float relativeMajorAxisPointX, float relativeMajorAxisPointY,

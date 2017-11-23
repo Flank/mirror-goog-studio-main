@@ -16,49 +16,45 @@
 
 package com.android.build.gradle.internal;
 
+import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.build.gradle.internal.scope.TaskConfigAction;
 import org.gradle.api.Action;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 
 /**
  * Interface for a container that can create Task.
  */
 public interface TaskFactory {
-    /**
-     * Returns true if this collection contains an item with the given name.
-     */
-    boolean containsKey(String name);
-
-    /**
-     * Creates a task with the given name.
-     */
-    void create(String name);
-
-    /**
-     * Creates a task and initialize it with the given configAction.
-     */
-    void create(String name, Action<? super Task> configAction);
-
-    /**
-     * Creates a task with the given name and type.
-     */
-    <S extends Task> void create(String name, Class<S> type);
-
-    /**
-     * Creates a task the given name and type, and initialize it with the given configAction.
-     */
-    <S extends Task> void create(String name, Class<S> type, Action<? super S> configAction);
-
-    /**
-     * Applies the given configAction to the task with given name.
-     */
-    void named(String name, Action<? super Task> configAction);
+    /** Returns true if this collection contains an item with the given name. */
+    boolean containsKey(@NonNull String name);
 
     /**
      * Returns the {@link Task} named name from the current set of defined tasks.
+     *
      * @param name the name of the requested {@link Task}
      * @return the {@link Task} instance or null if not found.
      */
     @Nullable
-    Task named(String name);
+    Task findByName(@NonNull String name);
+
+    /** Creates a task with the given name. */
+    Task create(@NonNull String name);
+
+    /** Creates a task with the given name and type. */
+    <S extends Task> S create(@NonNull String name, @NonNull Class<S> type);
+
+    /** Creates a task with the given {@link TaskConfigAction} */
+    <T extends Task> T create(@NonNull TaskConfigAction<T> configAction);
+
+    /** Creates a task wit the given name, type and configuration action */
+    <T extends Task> T create(
+            @NonNull String taskName, Class<T> taskClass, @NonNull Action<T> configAction);
+
+    /** Creates a task with the given name and config action. */
+    DefaultTask create(@NonNull String taskName, @NonNull Action<DefaultTask> configAction);
+
+    /** Applies the given configAction to the task with given name. */
+    void configure(@NonNull String name, @NonNull Action<? super Task> configAction);
 }

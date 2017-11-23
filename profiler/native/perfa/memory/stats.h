@@ -97,6 +97,7 @@ class TimingStats {
     kGetCallstack,       // Time to retrieve callstack's method+frame ids
     kResolveCallstack,   // Method ids -> Method nmaes
     kResolveLineNumber,  // Frame ids -> Line numbers
+    kNativeBacktrace,    // Time to unwind native stack.
     kTimingTagCount,
   };
 

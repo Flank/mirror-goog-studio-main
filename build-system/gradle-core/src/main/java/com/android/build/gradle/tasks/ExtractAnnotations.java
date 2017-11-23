@@ -326,9 +326,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                     typeDefFile,
                     getName());
 
-            // FIXME Replace with TaskOutputHolder.AnchorOutputType.ALL_CLASSES
-            // https://issuetracker.google.com/64344432
-            task.setClassDir(variantScope.getOutput(TaskOutputHolder.TaskOutputType.JAVAC));
+            task.setClassDir(variantScope.getOutput(TaskOutputHolder.AnchorOutputType.ALL_CLASSES));
 
             task.setSource(variantScope.getVariantData().getJavaSources());
             task.setEncoding(extension.getCompileOptions().getEncoding());

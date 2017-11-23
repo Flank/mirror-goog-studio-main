@@ -116,11 +116,11 @@ public class VariantDependencies {
         // At most it's going to be flavor dimension count + 5:
         // variant-specific, build type, multi-flavor, flavor1, ..., flavorN, defaultConfig, test.
         // Default hash-map size of 16 (w/ load factor of .75) should be enough.
-        private final Set<Configuration> compileClasspaths = Sets.newHashSet();
-        private final Set<Configuration> apiClasspaths = Sets.newHashSet();
-        private final Set<Configuration> runtimeClasspaths = Sets.newHashSet();
-        private final Set<Configuration> annotationConfigs = Sets.newHashSet();
-        private final Set<Configuration> wearAppConfigs = Sets.newHashSet();
+        private final Set<Configuration> compileClasspaths = Sets.newLinkedHashSet();
+        private final Set<Configuration> apiClasspaths = Sets.newLinkedHashSet();
+        private final Set<Configuration> runtimeClasspaths = Sets.newLinkedHashSet();
+        private final Set<Configuration> annotationConfigs = Sets.newLinkedHashSet();
+        private final Set<Configuration> wearAppConfigs = Sets.newLinkedHashSet();
 
         protected Builder(
                 @NonNull Project project,

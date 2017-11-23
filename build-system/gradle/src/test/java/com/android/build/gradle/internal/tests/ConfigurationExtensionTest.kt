@@ -161,7 +161,7 @@ class ConfigurationExtensionTest(val pluginType: TestProjects.Plugin) {
         project = TestProjects.builder(projectDirectory.newFolder("project").toPath())
                 .withPlugin(pluginType)
                 .build()
-        android = project.extensions?.getByType(pluginType.extensionClass) as BaseExtension
+        android = project.extensions.getByType(pluginType.extensionClass) as BaseExtension
         android.setCompileSdkVersion(TestConstants.COMPILE_SDK_VERSION)
         android.buildToolsVersion = TestConstants.BUILD_TOOL_VERSION
         plugin = project.plugins.getPlugin(pluginType.pluginClass) as BasePlugin<*>

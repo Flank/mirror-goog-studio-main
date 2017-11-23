@@ -124,6 +124,7 @@ def java_proto_library(
       visibility = visibility,
     )
 
+  java_deps = list(java_deps)
   java_deps += ["//tools/base/third_party:com.google.protobuf_protobuf-java"]
   if grpc_support:
     java_deps += ["//tools/base/third_party:io.grpc_grpc-all"]

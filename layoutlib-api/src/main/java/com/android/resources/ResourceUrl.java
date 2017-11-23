@@ -57,19 +57,6 @@ public class ResourceUrl implements Serializable {
             boolean framework,
             boolean create,
             boolean theme) {
-        if (name.isEmpty() && type != ResourceType.PUBLIC) {
-            throw new IllegalArgumentException("Resource name cannot be empty.");
-        }
-
-        if (namespace != null && namespace.isEmpty()) {
-            throw new IllegalArgumentException("Namespace provided but it's an empty string.");
-        }
-
-        if (create && theme) {
-            throw new IllegalArgumentException(
-                    "Both `create` and `theme` cannot be used at the same time.");
-        }
-
         this.type = type;
         this.name = name;
         this.framework = framework;
@@ -108,6 +95,7 @@ public class ResourceUrl implements Serializable {
      * @param type the resource type
      * @param name the name
      */
+    @NonNull
     public static ResourceUrl create(
             @Nullable String namespace, @NonNull ResourceType type, @NonNull String name) {
         return new ResourceUrl(

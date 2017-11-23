@@ -36,6 +36,7 @@ import com.android.tools.lint.checks.PermissionFinder.Operation.READ
 import com.android.tools.lint.checks.PermissionFinder.Operation.WRITE
 import com.android.tools.lint.checks.PermissionRequirement.ATTR_PROTECTION_LEVEL
 import com.android.tools.lint.checks.PermissionRequirement.VALUE_DANGEROUS
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
 import com.android.tools.lint.detector.api.Detector
@@ -70,7 +71,8 @@ class PermissionDetector : AbstractAnnotationDetector(), Detector.UastScanner {
 
     override fun visitAnnotationUsage(
             context: JavaContext,
-            argument: UElement,
+            usage: UElement,
+            type: AnnotationUsageType,
             annotation: UAnnotation,
             qualifiedName: String,
             method: PsiMethod?,
@@ -81,14 +83,14 @@ class PermissionDetector : AbstractAnnotationDetector(), Detector.UastScanner {
         if (annotations === allMemberAnnotations) {
             // Permission annotation specified on method:
             val requirement = PermissionRequirement.create(annotation)
-            checkPermission(context, argument, method, null, requirement)
+            checkPermission(context, usage, method, null, requirement)
         } else {
             // PERMISSION_ANNOTATION, PERMISSION_ANNOTATION_READ, PERMISSION_ANNOTATION_WRITE
             // When specified on a parameter, that indicates that we're dealing with
             // a permission requirement on this *method* which depends on the value
             // supplied by this parameter
-            if (argument is UExpression && method != null) {
-                checkParameterPermission(context, qualifiedName, method, argument)
+            if (usage is UExpression && method != null) {
+                checkParameterPermission(context, qualifiedName, method, usage)
             }
         }
     }

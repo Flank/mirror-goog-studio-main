@@ -139,8 +139,7 @@ public class SyncOptions {
                 }
                 output = validateOutputFile(output);
                 try {
-                    flags.getReporters().add(Reporter.createHtmlReporter(client, output, flags,
-                            false));
+                    flags.getReporters().add(Reporter.createHtmlReporter(client, output, flags));
                 } catch (IOException e) {
                     throw new GradleException("HTML invalid argument.", e);
                 }

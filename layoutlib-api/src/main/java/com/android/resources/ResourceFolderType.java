@@ -16,6 +16,8 @@
 
 package com.android.resources;
 
+import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,6 +60,7 @@ public enum ResourceFolderType {
     /**
      * Returns the folder name for this resource folder type.
      */
+    @NonNull
     public String getName() {
         return name;
     }
@@ -67,7 +70,8 @@ public enum ResourceFolderType {
      * @param name The enum string value.
      * @return the enum or null if not found.
      */
-    public static ResourceFolderType getTypeByName(String name) {
+    @Nullable
+    public static ResourceFolderType getTypeByName(@NonNull String name) {
         assert name.indexOf('-') == -1 : name; // use #getFolderType instead
         return nameToType.get(name);
     }
@@ -79,7 +83,8 @@ public enum ResourceFolderType {
      * @return the <code>ResourceFolderType</code> representing the type of the folder, or
      * <code>null</code> if no matching type was found.
      */
-    public static ResourceFolderType getFolderType(String folderName) {
+    @Nullable
+    public static ResourceFolderType getFolderType(@NonNull String folderName) {
         int index = folderName.indexOf(ResourceConstants.RES_QUALIFIER_SEP);
         if (index != -1) {
             folderName = folderName.substring(0, index);

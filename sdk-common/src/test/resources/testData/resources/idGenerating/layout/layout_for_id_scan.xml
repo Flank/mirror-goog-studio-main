@@ -4,6 +4,9 @@
               android:layout_width="fill_parent"
               android:layout_height="fill_parent">
 
+  <!-- View with an empty id. -->
+  <ImageView android:id="@+id/" />
+
   <RelativeLayout style="@style/TitleBar" android:id="@+id/header">
     <ImageView style="@style/TitleBarLogo"
                android:id="@+id/image"

@@ -97,8 +97,7 @@ public class InstantRunResourcesApkBuilderTest {
 
         File incrementalDir = temporaryFolder.newFolder("test-incremental");
 
-        when(packagingScope.getIncrementalDir(eq("instant-run-resources")))
-                .thenReturn(incrementalDir);
+        when(packagingScope.getIncrementalDir(eq(task.getName()))).thenReturn(incrementalDir);
         outputFolder = temporaryFolder.newFolder("test-output-folder");
         when(packagingScope.getInstantRunResourceApkFolder()).thenReturn(outputFolder);
     }

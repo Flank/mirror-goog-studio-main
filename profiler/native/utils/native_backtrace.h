@@ -26,7 +26,6 @@ namespace profiler {
 // invocation point.
 // Addresses are ordered from innermost to outermost frames.
 // Size of the returned vector is limited by the max_frames parameter.
-std::vector<std::uintptr_t> backtrace(int max_frames);
-
+std::vector<std::uintptr_t> GetBacktrace(int max_frames);
 }
 #endif  // UTILS_NATIVE_BACKTRACE_H_

@@ -37,12 +37,14 @@ public final class HttpTracker {
         private InputStream myWrapped;
         private boolean myFirstRead = true;
 
-        private final ByteBatcher mByteBatcher = new ByteBatcher(new ByteBatcher.FlushReceiver() {
-            @Override
-            public void receive(byte[] bytes) {
-                reportBytes(myConnectionTracker.myId, bytes);
-            }
-        });
+        private final ByteBatcher mByteBatcher =
+                new ByteBatcher(
+                        new ByteBatcher.FlushReceiver() {
+                            @Override
+                            public void receive(byte[] bytes, int validBytesLength) {
+                                reportBytes(myConnectionTracker.myId, bytes, validBytesLength);
+                            }
+                        });
 
         InputStreamTracker(InputStream wrapped, Connection connectionTracker) {
             myWrapped = wrapped;
@@ -118,7 +120,7 @@ public final class HttpTracker {
 
         private native void onClose(long id);
         private native void onReadBegin(long id);
-        private native void reportBytes(long id, byte[] bytes);
+        private native void reportBytes(long id, byte[] bytes, int len);
     }
 
     /**
@@ -134,8 +136,8 @@ public final class HttpTracker {
                 new ByteBatcher(
                         new ByteBatcher.FlushReceiver() {
                             @Override
-                            public void receive(byte[] bytes) {
-                                reportBytes(myConnectionTracker.myId, bytes);
+                            public void receive(byte[] bytes, int validBytesLength) {
+                                reportBytes(myConnectionTracker.myId, bytes, validBytesLength);
                             }
                         });
 
@@ -185,7 +187,7 @@ public final class HttpTracker {
 
         private native void onClose(long id);
         private native void onWriteBegin(long id);
-        private native void reportBytes(long id, byte[] bytes);
+        private native void reportBytes(long id, byte[] bytes, int len);
     }
 
 

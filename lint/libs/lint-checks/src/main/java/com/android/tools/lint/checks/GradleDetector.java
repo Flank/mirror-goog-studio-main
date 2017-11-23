@@ -1766,6 +1766,17 @@ public class GradleDetector extends Detector implements Detector.GradleScanner {
             sortedVersions.sort(Collections.reverseOrder());
             MavenCoordinates c1 = findFirst(versionToCoordinate.get(sortedVersions.get(0)));
             MavenCoordinates c2 = findFirst(versionToCoordinate.get(sortedVersions.get(1)));
+
+            // For GMS, the synced version requirement ends at version 14
+            if (groupId.equals(GMS_GROUP_ID) || groupId.equals(FIREBASE_GROUP_ID)) {
+                // c2 is the smallest of all the versions; if it is at least 14,
+                // they all are
+                GradleVersion version = GradleVersion.tryParse(c2.getVersion());
+                if (version != null && version.getMajor() >= 14) {
+                    return;
+                }
+            }
+
             // Not using toString because in the IDE, these are model proxies which display garbage output
             String example1 = c1.getGroupId() + ":" + c1.getArtifactId() + ":" + c1.getVersion();
             String example2 = c2.getGroupId() + ":" + c2.getArtifactId() + ":" + c2.getVersion();

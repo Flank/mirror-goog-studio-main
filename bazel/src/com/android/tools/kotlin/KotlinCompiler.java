@@ -112,8 +112,7 @@ public class KotlinCompiler extends JarOutputCompiler {
                 writer.println("</modules>");
             }
 
-            args.add("-module");
-            args.add(xml.getAbsolutePath());
+            args.add("-Xbuild-file=" + xml.getAbsolutePath());
             if (jvmTarget != null) {
                 args.add("-jvm-target");
                 args.add(jvmTarget);

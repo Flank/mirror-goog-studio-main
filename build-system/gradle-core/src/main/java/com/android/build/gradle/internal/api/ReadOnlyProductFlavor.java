@@ -172,12 +172,6 @@ public class ReadOnlyProductFlavor extends ReadOnlyBaseConfig implements Product
         return productFlavor.getDimension();
     }
 
-    @NonNull
-    @Override
-    public List<File> getJarJarRuleFiles() {
-        return ImmutableList.copyOf(productFlavor.getJarJarRuleFiles());
-    }
-
     @Nullable
     @Deprecated
     public String getFlavorDimension() {

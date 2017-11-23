@@ -60,27 +60,27 @@ public class Storage {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (o == this) {
+    public boolean equals(Object other) {
+        if (other == this) {
             return true;
         }
-
-        if (!(o instanceof Storage)) {
+        if (!(other instanceof Storage)) {
             return false;
         }
+        return this.getSize() == ((Storage)other).getSize();
+    }
 
-        Storage s = (Storage) o;
-        if (s.getSize() == this.getSize()) {
-            return true;
-        } else {
+    public boolean lessThan(Object other) {
+        if (!(other instanceof Storage)) {
             return false;
         }
+        return this.getSize() < ((Storage)other).getSize();
     }
 
     @Override
     public int hashCode() {
         int result = 17;
-        return 31 * result + (int) (mNoBytes^(mNoBytes>>>32));
+        return 31 * result + (int)(mNoBytes^(mNoBytes>>>32));
     }
 
     public enum Unit{
@@ -107,9 +107,9 @@ public class Storage {
 
         @Nullable
         public static Unit getEnum(@NonNull String val) {
-            for (Unit v : values()) {
-                if (v.mValue.equals(val)) {
-                    return v;
+            for (Unit unit : values()) {
+                if (unit.mValue.equals(val)) {
+                    return unit;
                 }
             }
             return null;
@@ -120,10 +120,12 @@ public class Storage {
         }
 
         @Override
+        @NonNull
         public String toString() {
             return mValue;
         }
 
+        @NonNull
         public String getDisplayValue() {
           return mDisplayValue;
         }
@@ -148,10 +150,9 @@ public class Storage {
     }
 
     @Override
+    @NonNull
     public String toString() {
-        Unit u = getAppropriateUnits();
-        return String.format("%d %s", getSizeAsUnit(u), u);
+        Unit unit = getAppropriateUnits();
+        return String.format("%d %s", getSizeAsUnit(unit), unit.getDisplayValue());
     }
-
-
 }

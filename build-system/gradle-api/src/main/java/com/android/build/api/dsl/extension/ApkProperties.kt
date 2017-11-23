@@ -40,6 +40,28 @@ interface ApkProperties {
 
     fun splits(action: Action<Splits>)
 
-    /** Whether to generate pure splits or multi apk.  */
+    /**
+     * Specifies whether to build APK splits or multiple APKs from configurations in the
+     * [splits][com.android.build.api.dsl.options.Splits] block.
+     *
+     * Generating APK splits is an incubating feature, which requires you to set
+     * [`minSdkVersion`][com.android.build.api.dsl.model.ProductFlavorOrVariant.minSdkVersion] to
+     * `21` or higher, and is currently supported only when publishing
+     * [Android Instant Apps](https://d.android.com/instant-apps).
+     *
+     * When you set this property to `true`, the Android plugin generates each object
+     * in the `splits` block as a portion of a whole APK, called a _Configuration APK_.
+     * Compared to [building multiple APKs](https://d.android.com/studio/build/configure-apk-splits.html),
+     * configuration APKs do not represent stand-alone versions of your app. That is, devices need
+     * to download both a base APK (that includes your app's device-agnostic code and resources)
+     * and additional device-specific configuration APKs from the Google Play Store to run your
+     * instant app.
+     *
+     * When you do not configure this property or set it to `false` (default), the
+     * Android plugin builds separate stand-alone APKs for each object you configure in the `splits`
+     * block, which you can deploy to a device. To learn more about building device-specific Android
+     * Instant App artifacts, read
+     * [Set up your build for configuration APKs](https://d.android.com/topic/instant-apps/guides/config-splits.html).
+     */
     var generatePureSplits: Boolean
 }

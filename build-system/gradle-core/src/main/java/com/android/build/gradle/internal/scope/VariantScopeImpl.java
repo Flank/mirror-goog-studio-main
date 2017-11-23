@@ -20,12 +20,12 @@ import static com.android.SdkConstants.FD_COMPILED;
 import static com.android.SdkConstants.FD_MERGED;
 import static com.android.SdkConstants.FD_RES;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
-import static com.android.build.gradle.internal.TaskManager.DIR_BUNDLES;
+import static com.android.SdkConstants.FN_CLASSES_JAR;
 import static com.android.build.gradle.internal.dsl.BuildType.PostprocessingConfiguration.POSTPROCESSING_BLOCK;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ARTIFACT_TYPE;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.ALL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
-import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_R_CLASS_JAR;
+import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.SHARED_CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
@@ -38,7 +38,6 @@ import static com.android.builder.model.AndroidProject.FD_GENERATED;
 import static com.android.builder.model.AndroidProject.FD_OUTPUTS;
 import static com.android.sdklib.BuildToolInfo.SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS;
 
-import android.databinding.tool.DataBindingBuilder;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -167,50 +166,50 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Nullable private File mergeResourceOutputDir;
 
     // Tasks
-    private AndroidTask<DefaultTask> assembleTask;
-    private AndroidTask<? extends DefaultTask> preBuildTask;
+    private DefaultTask assembleTask;
+    private DefaultTask preBuildTask;
 
-    private AndroidTask<Task> sourceGenTask;
-    private AndroidTask<Task> resourceGenTask;
-    private AndroidTask<Task> assetGenTask;
-    private AndroidTask<CheckManifest> checkManifestTask;
+    private Task sourceGenTask;
+    private Task resourceGenTask;
+    private Task assetGenTask;
+    private CheckManifest checkManifestTask;
 
-    private AndroidTask<RenderscriptCompile> renderscriptCompileTask;
-    private AndroidTask<AidlCompile> aidlCompileTask;
-    @Nullable private AndroidTask<MergeResources> mergeResourcesTask;
-    @Nullable private AndroidTask<MergeSourceSetFolders> mergeAssetsTask;
-    private AndroidTask<GenerateBuildConfig> generateBuildConfigTask;
+    private RenderscriptCompile renderscriptCompileTask;
+    private AidlCompile aidlCompileTask;
+    @Nullable private MergeResources mergeResourcesTask;
+    @Nullable private MergeSourceSetFolders mergeAssetsTask;
+    private GenerateBuildConfig generateBuildConfigTask;
 
-    private AndroidTask<Sync> processJavaResourcesTask;
-    private AndroidTask<TransformTask> mergeJavaResourcesTask;
+    private Sync processJavaResourcesTask;
+    private TransformTask mergeJavaResourcesTask;
 
-    @Nullable private AndroidTask<? extends JavaCompile> javacTask;
+    @Nullable private JavaCompile javacTask;
 
     // empty anchor compile task to set all compilations tasks as dependents.
-    private AndroidTask<Task> compileTask;
+    private Task compileTask;
 
-    @Nullable private AndroidTask<? extends DefaultTask> connectedTask;
+    @Nullable private DefaultTask connectedTask;
 
-    private AndroidTask<GenerateApkDataTask> microApkTask;
+    private GenerateApkDataTask microApkTask;
 
-    @Nullable private AndroidTask<ExternalNativeBuildTask> externalNativeBuild;
+    @Nullable private ExternalNativeBuildTask externalNativeBuild;
 
     @Nullable private ExternalNativeJsonGenerator externalNativeJsonGenerator;
 
     @Nullable private CodeShrinker defaultCodeShrinker;
 
     /**
-     * This is an instance of {@link JacocoReportTask} in android test variants, an umbrella
-     * {@link Task} in app and lib variants and null in unit test variants.
+     * This is an instance of {@link JacocoReportTask} in android test variants, an umbrella {@link
+     * Task} in app and lib variants and null in unit test variants.
      */
-    private AndroidTask<?> coverageReportTask;
+    private Task coverageReportTask;
 
     private File resourceOutputDir;
 
     private InstantRunTaskManager instantRunTaskManager;
 
     private ConfigurableFileCollection desugarTryWithResourcesRuntimeJar;
-    private AndroidTask<DataBindingExportBuildInfoTask> dataBindingExportBuildInfoTask;
+    private DataBindingExportBuildInfoTask dataBindingExportBuildInfoTask;
 
     public VariantScopeImpl(
             @NonNull GlobalScope globalScope,
@@ -860,10 +859,13 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         if (Boolean.TRUE.equals(globalScope.getExtension().getAaptOptions().getNamespaced())) {
             mainCollection =
                     mainCollection.plus(
-                            getOutput(VariantScope.TaskOutputType.COMPILE_ONLY_R_CLASS_JAR));
+                            getOutput(
+                                    VariantScope.TaskOutputType
+                                            .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             mainCollection =
                     mainCollection.plus(
-                            getArtifactFileCollection(configType, ALL, COMPILE_ONLY_R_CLASS_JAR));
+                            getArtifactFileCollection(
+                                    configType, ALL, COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             mainCollection =
                     mainCollection.plus(getArtifactFileCollection(configType, ALL, SHARED_CLASSES));
             BaseVariantData tested = getTestedVariantData();
@@ -873,7 +875,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                 tested.getScope()
                                         .getOutput(
                                                 VariantScope.TaskOutputType
-                                                        .COMPILE_ONLY_R_CLASS_JAR));
+                                                        .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
             }
         }
 
@@ -920,9 +922,10 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @NonNull
     @Override
-    public File getInstantRunSupportDir() {
-        return new File(globalScope.getIntermediatesDir(), "/instant-run-support/" +
-                variantData.getVariantConfiguration().getDirName());
+    public File getManifestCheckerDir() {
+        return new File(
+                globalScope.getIntermediatesDir(),
+                "/manifest-checker/" + variantData.getVariantConfiguration().getDirName());
     }
 
     @Override
@@ -931,13 +934,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return new File(
                 globalScope.getIntermediatesDir(),
                 "/instant-run-main-apk-res/" + variantData.getVariantConfiguration().getDirName());
-    }
-
-    @NonNull
-    @Override
-    public File getInstantRunSliceSupportDir() {
-        return new File(globalScope.getIntermediatesDir(), "/instant-run-slices/" +
-                variantData.getVariantConfiguration().getDirName());
     }
 
     @NonNull
@@ -1140,6 +1136,33 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return compile.minus(pkg);
     }
 
+    /**
+     * An intermediate directory for this variant.
+     *
+     * <p>Of the form build/intermediates/dirName/variant/
+     */
+    @NonNull
+    private File intermediate(@NonNull String directoryName) {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                directoryName,
+                getVariantConfiguration().getDirName());
+    }
+
+    /**
+     * An intermediate file for this variant.
+     *
+     * <p>Of the form build/intermediates/directoryName/variant/filename
+     */
+    @NonNull
+    private File intermediate(@NonNull String directoryName, @NonNull String fileName) {
+        return FileUtils.join(
+                globalScope.getIntermediatesDir(),
+                directoryName,
+                getVariantConfiguration().getDirName(),
+                fileName);
+    }
+
     @Override
     @NonNull
     public File getIntermediateJarOutputFolder() {
@@ -1159,6 +1182,12 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     public File getManifestKeepListProguardFile() {
         return new File(globalScope.getIntermediatesDir(), "multi-dex/" + getVariantConfiguration().getDirName()
                 + "/manifest_keep.txt");
+    }
+
+    @NonNull
+    @Override
+    public File getConsumerProguardFile() {
+        return intermediate("publish-proguard", SdkConstants.FN_PROGUARD_TXT);
     }
 
     @Override
@@ -1352,7 +1381,19 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @Override
     @NonNull
     public File getPackagedAidlDir() {
-        return new File(getBaseBundleDir(), "aidl");
+        return intermediate("packaged-aidl");
+    }
+
+    @NonNull
+    @Override
+    public File getAarClassesJar() {
+        return intermediate("packaged-classes", FN_CLASSES_JAR);
+    }
+
+    @NonNull
+    @Override
+    public File getAarLibsDirectory() {
+        return intermediate("packaged-classes", SdkConstants.LIBS_FOLDER);
     }
 
     @NonNull
@@ -1431,7 +1472,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     @NonNull
     @Override
     public File getBundleFolderForDataBinding() {
-        return new File(getBaseBundleDir(), DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR);
+        return intermediate("data-binding-bundle");
     }
 
     @Override
@@ -1619,34 +1660,16 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return FileUtils.join(globalScope.getBuildDir(), FD_OUTPUTS, "apk");
     }
 
-    private AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask;
+    private ManifestProcessorTask manifestProcessorTask;
 
     @Override
-    public AndroidTask<? extends ManifestProcessorTask> getManifestProcessorTask() {
+    public ManifestProcessorTask getManifestProcessorTask() {
         return manifestProcessorTask;
     }
 
     @Override
-    public void setManifestProcessorTask(
-            AndroidTask<? extends ManifestProcessorTask> manifestProcessorTask) {
+    public void setManifestProcessorTask(ManifestProcessorTask manifestProcessorTask) {
         this.manifestProcessorTask = manifestProcessorTask;
-    }
-
-    @NonNull
-    @Override
-    public File getBaseBundleDir() {
-        // The base bundle dir must be recomputable from outside of this project.
-        // DirName is a set for folders (flavor1/flavor2/buildtype) which is difficult to
-        // recompute if all you have is the fullName (flavor1Flavor2Buildtype) as it would
-        // require string manipulation which could break if a flavor is using camelcase in
-        // its name (myFlavor).
-        // So here we use getFullName directly. It's a direct match with the externally visible
-        // variant name (which is == to getFullName), and set as the published artifact's
-        // classifier.
-        return FileUtils.join(
-                globalScope.getIntermediatesDir(),
-                DIR_BUNDLES,
-                getVariantConfiguration().getFullName());
     }
 
     @NonNull
@@ -1676,192 +1699,181 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     // Tasks getters/setters.
 
     @Override
-    public AndroidTask<DefaultTask> getAssembleTask() {
+    public DefaultTask getAssembleTask() {
         return assembleTask;
     }
 
     @Override
-    public void setAssembleTask(@NonNull AndroidTask<DefaultTask> assembleTask) {
+    public void setAssembleTask(@NonNull DefaultTask assembleTask) {
         this.assembleTask = assembleTask;
     }
 
     @Override
-    public AndroidTask<? extends DefaultTask> getPreBuildTask() {
+    public DefaultTask getPreBuildTask() {
         return preBuildTask;
     }
 
     @Override
-    public void setPreBuildTask(AndroidTask<? extends DefaultTask> preBuildTask) {
+    public void setPreBuildTask(DefaultTask preBuildTask) {
         this.preBuildTask = preBuildTask;
     }
 
     @Override
-    public AndroidTask<Task> getSourceGenTask() {
+    public Task getSourceGenTask() {
         return sourceGenTask;
     }
 
     @Override
-    public void setSourceGenTask(
-            AndroidTask<Task> sourceGenTask) {
+    public void setSourceGenTask(Task sourceGenTask) {
         this.sourceGenTask = sourceGenTask;
     }
 
     @Override
-    public AndroidTask<Task> getResourceGenTask() {
+    public Task getResourceGenTask() {
         return resourceGenTask;
     }
 
     @Override
-    public void setResourceGenTask(
-            AndroidTask<Task> resourceGenTask) {
+    public void setResourceGenTask(Task resourceGenTask) {
         this.resourceGenTask = resourceGenTask;
     }
 
     @Override
-    public AndroidTask<Task> getAssetGenTask() {
+    public Task getAssetGenTask() {
         return assetGenTask;
     }
 
     @Override
-    public void setAssetGenTask(
-            AndroidTask<Task> assetGenTask) {
+    public void setAssetGenTask(Task assetGenTask) {
         this.assetGenTask = assetGenTask;
     }
 
     @Override
-    public AndroidTask<CheckManifest> getCheckManifestTask() {
+    public CheckManifest getCheckManifestTask() {
         return checkManifestTask;
     }
 
     @Override
-    public void setCheckManifestTask(
-            AndroidTask<CheckManifest> checkManifestTask) {
+    public void setCheckManifestTask(CheckManifest checkManifestTask) {
         this.checkManifestTask = checkManifestTask;
     }
 
     @Override
-    public AndroidTask<RenderscriptCompile> getRenderscriptCompileTask() {
+    public RenderscriptCompile getRenderscriptCompileTask() {
         return renderscriptCompileTask;
     }
 
     @Override
-    public void setRenderscriptCompileTask(
-            AndroidTask<RenderscriptCompile> renderscriptCompileTask) {
+    public void setRenderscriptCompileTask(RenderscriptCompile renderscriptCompileTask) {
         this.renderscriptCompileTask = renderscriptCompileTask;
     }
 
     @Override
-    public AndroidTask<AidlCompile> getAidlCompileTask() {
+    public AidlCompile getAidlCompileTask() {
         return aidlCompileTask;
     }
 
     @Override
-    public void setAidlCompileTask(AndroidTask<AidlCompile> aidlCompileTask) {
+    public void setAidlCompileTask(AidlCompile aidlCompileTask) {
         this.aidlCompileTask = aidlCompileTask;
     }
 
     @Override
     @Nullable
-    public AndroidTask<MergeSourceSetFolders> getMergeAssetsTask() {
+    public MergeSourceSetFolders getMergeAssetsTask() {
         return mergeAssetsTask;
     }
 
     @Override
-    public void setMergeAssetsTask(
-            @Nullable AndroidTask<MergeSourceSetFolders> mergeAssetsTask) {
+    public void setMergeAssetsTask(@Nullable MergeSourceSetFolders mergeAssetsTask) {
         this.mergeAssetsTask = mergeAssetsTask;
     }
 
     @Override
-    public AndroidTask<GenerateBuildConfig> getGenerateBuildConfigTask() {
+    public GenerateBuildConfig getGenerateBuildConfigTask() {
         return generateBuildConfigTask;
     }
 
     @Override
-    public void setGenerateBuildConfigTask(
-            AndroidTask<GenerateBuildConfig> generateBuildConfigTask) {
+    public void setGenerateBuildConfigTask(GenerateBuildConfig generateBuildConfigTask) {
         this.generateBuildConfigTask = generateBuildConfigTask;
     }
 
     @Override
-    public AndroidTask<Sync> getProcessJavaResourcesTask() {
+    public Sync getProcessJavaResourcesTask() {
         return processJavaResourcesTask;
     }
 
     @Override
-    public void setProcessJavaResourcesTask(
-            AndroidTask<Sync> processJavaResourcesTask) {
+    public void setProcessJavaResourcesTask(Sync processJavaResourcesTask) {
         this.processJavaResourcesTask = processJavaResourcesTask;
     }
 
     @Override
-    public void setMergeJavaResourcesTask(
-            AndroidTask<TransformTask> mergeJavaResourcesTask) {
+    public void setMergeJavaResourcesTask(TransformTask mergeJavaResourcesTask) {
         this.mergeJavaResourcesTask = mergeJavaResourcesTask;
     }
 
     /**
      * Returns the task extracting java resources from libraries and merging those with java
      * resources coming from the variant's source folders.
+     *
      * @return the task merging resources.
      */
     @Override
-    public AndroidTask<TransformTask> getMergeJavaResourcesTask() {
+    public TransformTask getMergeJavaResourcesTask() {
         return mergeJavaResourcesTask;
     }
 
     @Override
     @Nullable
-    public AndroidTask<? extends  JavaCompile> getJavacTask() {
+    public JavaCompile getJavacTask() {
         return javacTask;
     }
 
     @Override
-    public void setJavacTask(
-            @Nullable AndroidTask<? extends JavaCompile> javacTask) {
+    public void setJavacTask(@Nullable JavaCompile javacTask) {
         this.javacTask = javacTask;
     }
 
     @Override
-    public AndroidTask<Task> getCompileTask() {
+    public Task getCompileTask() {
         return compileTask;
     }
 
     @Override
-    public void setCompileTask(
-            AndroidTask<Task> compileTask) {
+    public void setCompileTask(Task compileTask) {
         this.compileTask = compileTask;
     }
 
     @Override
     @Nullable
-    public AndroidTask<? extends DefaultTask> getConnectedTask() {
+    public DefaultTask getConnectedTask() {
         return this.connectedTask;
     }
 
     @Override
-    public void setConnectedTask(AndroidTask<? extends DefaultTask> connectedTask) {
+    public void setConnectedTask(DefaultTask connectedTask) {
         this.connectedTask = connectedTask;
     }
 
     @Override
-    public AndroidTask<GenerateApkDataTask> getMicroApkTask() {
+    public GenerateApkDataTask getMicroApkTask() {
         return microApkTask;
     }
 
     @Override
-    public void setMicroApkTask(
-            AndroidTask<GenerateApkDataTask> microApkTask) {
+    public void setMicroApkTask(GenerateApkDataTask microApkTask) {
         this.microApkTask = microApkTask;
     }
 
     @Override
-    public AndroidTask<?> getCoverageReportTask() {
+    public Task getCoverageReportTask() {
         return coverageReportTask;
     }
 
     @Override
-    public void setCoverageReportTask(AndroidTask<?> coverageReportTask) {
+    public void setCoverageReportTask(Task coverageReportTask) {
         this.coverageReportTask = coverageReportTask;
     }
 
@@ -1941,8 +1953,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
     }
 
     @Override
-    public void setExternalNativeBuildTask(
-            @NonNull AndroidTask<ExternalNativeBuildTask> task) {
+    public void setExternalNativeBuildTask(@NonNull ExternalNativeBuildTask task) {
         this.externalNativeBuild = task;
     }
 
@@ -1962,7 +1973,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
     @Nullable
     @Override
-    public AndroidTask<ExternalNativeBuildTask> getExternalNativeBuildTask() {
+    public ExternalNativeBuildTask getExternalNativeBuildTask() {
         return externalNativeBuild;
     }
 
@@ -2090,27 +2101,26 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         return FileUtils.join(getGlobalScope().getIntermediatesDir(), FD_RES, getDirName());
     }
 
-    AndroidTask<? extends ProcessAndroidResources> processAndroidResourcesTask;
+    ProcessAndroidResources processAndroidResourcesTask;
 
     @Override
     public void setProcessResourcesTask(
-            AndroidTask<? extends ProcessAndroidResources> processAndroidResourcesAndroidTask) {
+            ProcessAndroidResources processAndroidResourcesAndroidTask) {
         this.processAndroidResourcesTask = processAndroidResourcesAndroidTask;
     }
 
     @Override
-    public AndroidTask<? extends ProcessAndroidResources> getProcessResourcesTask() {
+    public ProcessAndroidResources getProcessResourcesTask() {
         return processAndroidResourcesTask;
     }
 
     @Override
-    public void setDataBindingExportBuildInfoTask(
-            AndroidTask<DataBindingExportBuildInfoTask> task) {
+    public void setDataBindingExportBuildInfoTask(DataBindingExportBuildInfoTask task) {
         this.dataBindingExportBuildInfoTask = task;
     }
 
     @Override
-    public AndroidTask<DataBindingExportBuildInfoTask> getDataBindingExportBuildInfoTask() {
+    public DataBindingExportBuildInfoTask getDataBindingExportBuildInfoTask() {
         return dataBindingExportBuildInfoTask;
     }
 
@@ -2174,10 +2184,6 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
 
         if (globalScope.getProject().getPlugins().hasPlugin("me.tatarka.retrolambda")) {
             return Java8LangSupport.RETROLAMBDA;
-        }
-
-        if (globalScope.getProject().getPlugins().hasPlugin("dexguard")) {
-            return Java8LangSupport.DEXGUARD;
         }
 
         if (isD8Desugaring) {

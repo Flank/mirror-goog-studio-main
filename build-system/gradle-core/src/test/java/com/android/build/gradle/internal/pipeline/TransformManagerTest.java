@@ -22,7 +22,6 @@ import com.android.build.api.transform.QualifiedContent;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
 import com.android.build.api.transform.Transform;
-import com.android.build.gradle.internal.scope.AndroidTask;
 import com.android.builder.model.SyncIssue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -71,7 +70,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        AndroidTask<TransformTask> task =
+        TransformTask task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -91,7 +90,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .test();
 
         // check the task contains the stream
-        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
         assertThat(transformTask.consumedInputStreams).containsExactly(projectClass);
         assertThat(transformTask.referencedInputStreams).isEmpty();
@@ -166,7 +165,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        AndroidTask<TransformTask> task =
+        TransformTask task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -181,7 +180,7 @@ public class TransformManagerTest extends TaskTestUtils {
         assertThat(streams).containsAllOf(libClasses, modulesClasses);
 
         // check the task contains the stream
-        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
         assertThat(transformTask.consumedInputStreams).containsExactly(projectClass);
         assertThat(transformTask.referencedInputStreams).containsAllOf(libClasses, modulesClasses);
@@ -212,7 +211,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        AndroidTask<TransformTask> task =
+        TransformTask task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -239,7 +238,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .test();
 
         // check the task contains the stream
-        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
         streamTester(transformTask.consumedInputStreams)
                 .withContentTypes(DefaultContentType.CLASSES)
@@ -279,7 +278,7 @@ public class TransformManagerTest extends TaskTestUtils {
                         .build();
 
         // add the transform
-        AndroidTask<TransformTask> task =
+        TransformTask task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -316,7 +315,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // we also check that the stream used by the transform only has the requested scopes.
 
         // check the task contains the stream
-        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
         streamTester(transformTask.consumedInputStreams)
                 .withContentTypes(DefaultContentType.CLASSES)
@@ -391,7 +390,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        AndroidTask<TransformTask> task =
+        TransformTask task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -421,7 +420,7 @@ public class TransformManagerTest extends TaskTestUtils {
         // we also check that the stream used by the transform only has the requested scopes.
 
         // check the task contains the stream
-        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
         streamTester(transformTask.consumedInputStreams)
                 .withContentTypes(DefaultContentType.CLASSES)
@@ -460,7 +459,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        AndroidTask<TransformTask> task =
+        TransformTask task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -481,7 +480,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .test();
 
         // check the task contains the stream
-        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
         assertThat(transformTask.consumedInputStreams).containsAllOf(projectClass, libClasses);
         assertThat(transformTask.referencedInputStreams).isEmpty();
@@ -507,7 +506,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        AndroidTask<TransformTask> task =
+        TransformTask task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -516,7 +515,7 @@ public class TransformManagerTest extends TaskTestUtils {
         assertThat(transformManager.getStreams()).containsExactly(projectClass);
 
         // check the task contains no consumed streams
-        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
         assertThat(transformTask.consumedInputStreams).isEmpty();
         assertThat(transformTask.referencedInputStreams).containsExactly(projectClass);
@@ -551,7 +550,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        AndroidTask<TransformTask> task =
+        TransformTask task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -572,7 +571,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .test();
 
         // check the task contains the stream
-        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
         assertThat(transformTask.consumedInputStreams).containsExactly(projectClass, libClasses);
         assertThat(transformTask.referencedInputStreams).isEmpty();
@@ -602,7 +601,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        AndroidTask<TransformTask> task =
+        TransformTask task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -621,7 +620,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .test();
 
         // check the task contains the stream
-        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
         assertThat(transformTask.consumedInputStreams).containsExactly(projectClass);
         assertThat(transformTask.referencedInputStreams).isEmpty();
@@ -660,7 +659,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        AndroidTask<TransformTask> task =
+        TransformTask task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -681,7 +680,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .test();
 
         // check the task contains the streams
-        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
         assertThat(transformTask.consumedInputStreams).containsExactly(projectClass, libClass);
         assertThat(transformTask.referencedInputStreams).isEmpty();
@@ -712,7 +711,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        AndroidTask<TransformTask> task =
+        TransformTask task =
                 transformManager
                         .addTransform(taskFactory, scope, t)
                         .orElseThrow(mTransformTaskFailed);
@@ -739,7 +738,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .test();
 
         // check the task contains the stream
-        TransformTask transformTask = (TransformTask) taskFactory.named(task.getName());
+        TransformTask transformTask = (TransformTask) taskFactory.findByName(task.getName());
         assertThat(transformTask).isNotNull();
         streamTester(transformTask.consumedInputStreams)
                 .withContentTypes(DefaultContentType.CLASSES)
@@ -768,8 +767,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        Optional<AndroidTask<TransformTask>> task =
-                transformManager.addTransform(taskFactory, scope, t);
+        Optional<TransformTask> task = transformManager.addTransform(taskFactory, scope, t);
 
         assertThat(task.isPresent()).isFalse();
 
@@ -792,8 +790,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        Optional<AndroidTask<TransformTask>> task =
-                transformManager.addTransform(taskFactory, scope, t);
+        Optional<TransformTask> task = transformManager.addTransform(taskFactory, scope, t);
 
         assertThat(task.isPresent()).isFalse();
 
@@ -815,8 +812,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        Optional<AndroidTask<TransformTask>> task =
-                transformManager.addTransform(taskFactory, scope, t);
+        Optional<TransformTask> task = transformManager.addTransform(taskFactory, scope, t);
 
         assertThat(task.isPresent()).isFalse();
 
@@ -836,8 +832,7 @@ public class TransformManagerTest extends TaskTestUtils {
                 .build();
 
         // add the transform
-        Optional<AndroidTask<TransformTask>> task =
-                transformManager.addTransform(taskFactory, scope, t);
+        Optional<TransformTask> task = transformManager.addTransform(taskFactory, scope, t);
 
         assertThat(task.isPresent()).isFalse();
 

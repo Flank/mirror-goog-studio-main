@@ -508,7 +508,7 @@ public class MainTest extends AbstractCheckTest {
         );
         checkDriver(""
                 + "\n"
-                + "MainTest_testGradle: Error: \"MainTest_testGradle\" is a Gradle project. To correctly analyze Gradle projects, you should run \"gradlew :lint\" instead. [LintError]\n"
+                + "build.gradle: Error: \"MainTest_testGradle\" is a Gradle project. To correctly analyze Gradle projects, you should run \"gradlew :lint\" instead. [LintError]\n"
                 + "1 errors, 0 warnings\n",
 
                 "",

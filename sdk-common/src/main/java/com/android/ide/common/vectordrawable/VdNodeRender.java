@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import java.awt.geom.Path2D;
@@ -21,26 +20,25 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Given an array of VdPath.Node, generate a Path2D object.
- * In another word, this is the engine which converts the pathData into
+ * Given an array of {@link VdPath.Node}, generates a Path2D object.
+ * In other words, this is the engine which converts the pathData into
  * a Path2D object, which is able to draw on Swing components.
  * The logic and math here are the same as PathParser.java in framework.
  */
 class VdNodeRender {
     private static final Logger LOGGER = Logger.getLogger(VdNodeRender.class.getSimpleName());
 
-    public static void createPath(VdPath.Node[] node, Path2D path) {
+    public static void createPath(VdPath.Node[] nodes, Path2D path) {
         float[] current = new float[6];
         char lastCmd = ' ';
-        for (int i = 0; i < node.length; i++) {
-            addCommand(path, current, node[i].getType(), lastCmd,node[i].getParams());
-            lastCmd = node[i].getType();
+        for (VdPath.Node node : nodes) {
+            addCommand(path, current, node.getType(), lastCmd, node.getParams());
+            lastCmd = node.getType();
         }
     }
 
     private static void addCommand(Path2D path, float[] current, char cmd,
             char lastCmd, float[] val) {
-
         int incr = 2;
 
         float cx = current[0];
@@ -56,6 +54,7 @@ class VdNodeRender {
                 path.closePath();
                 cx = loopX;
                 cy = loopY;
+                //noinspection fallthrough
             case 'm':
             case 'M':
             case 'l':
@@ -253,13 +252,11 @@ class VdNodeRender {
         current[3] = cpy;
         current[4] = loopX;
         current[5] = loopY;
-
     }
 
     private static void drawArc(Path2D p, float x0, float y0, float x1,
             float y1, float a, float b, float theta, boolean isMoreThanHalf,
             boolean isPositiveArc) {
-
         LOGGER.log(Level.FINE, "(" + x0 + "," + y0 + ")-(" + x1 + "," + y1
                 + ") {" + a + " " + b + "}");
         /* Convert rotation angle from degrees to radians */
@@ -361,7 +358,6 @@ class VdNodeRender {
         // Maximum of 45 degrees per cubic Bezier segment
         int numSegments = (int) Math.ceil(Math.abs(sweep * 4 / Math.PI));
 
-
         double eta1 = start;
         double cosTheta = Math.cos(theta);
         double sinTheta = Math.sin(theta);
@@ -375,10 +371,8 @@ class VdNodeRender {
             double eta2 = eta1 + anglePerSegment;
             double sinEta2 = Math.sin(eta2);
             double cosEta2 = Math.cos(eta2);
-            double e2x = cx + (a * cosTheta * cosEta2)
-                    - (b * sinTheta * sinEta2);
-            double e2y = cy + (a * sinTheta * cosEta2)
-                    + (b * cosTheta * sinEta2);
+            double e2x = cx + (a * cosTheta * cosEta2) - (b * sinTheta * sinEta2);
+            double e2y = cy + (a * sinTheta * cosEta2) + (b * cosTheta * sinEta2);
             double ep2x = -a * cosTheta * sinEta2 - b * sinTheta * cosEta2;
             double ep2y = -a * sinTheta * sinEta2 + b * cosTheta * cosEta2;
             double tanDiff2 = Math.tan((eta2 - eta1) / 2);
@@ -389,8 +383,7 @@ class VdNodeRender {
             double q2x = e2x - alpha * ep2x;
             double q2y = e2y - alpha * ep2y;
 
-            p.curveTo((float) q1x, (float) q1y, (float) q2x, (float) q2y,
-                    (float) e2x, (float) e2y);
+            p.curveTo((float) q1x, (float) q1y, (float) q2x, (float) q2y, (float) e2x, (float) e2y);
             eta1 = eta2;
             e1x = e2x;
             e1y = e2y;
@@ -398,5 +391,4 @@ class VdNodeRender {
             ep1y = ep2y;
         }
     }
-
 }

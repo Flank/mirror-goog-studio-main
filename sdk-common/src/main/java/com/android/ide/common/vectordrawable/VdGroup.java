@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
-import java.awt.*;
+import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -153,24 +152,22 @@ class VdGroup extends VdElement{
 
     @Override
     public String toString() {
-        StringBuilder pathInfo = new StringBuilder();
-        pathInfo.append("Group:")
-                .append(" Name: ")
-                .append(mName)
-                .append(" mTranslateX: ")
-                .append(mTranslateX)
-                .append(" mTranslateY:")
-                .append(mTranslateY)
-                .append(" mScaleX:")
-                .append(mScaleX)
-                .append(" mScaleY:")
-                .append(mScaleY)
-                .append(" mPivotX:")
-                .append(mPivotX)
-                .append(" mPivotY:")
-                .append(mPivotY)
-                .append(" mRotate:")
-                .append(mRotate);
-        return pathInfo.toString();
+        return "Group:" +
+                " Name: " +
+                mName +
+                " mTranslateX: " +
+                mTranslateX +
+                " mTranslateY:" +
+                mTranslateY +
+                " mScaleX:" +
+                mScaleX +
+                " mScaleY:" +
+                mScaleY +
+                " mPivotX:" +
+                mPivotX +
+                " mPivotY:" +
+                mPivotY +
+                " mRotate:" +
+                mRotate;
     }
 }

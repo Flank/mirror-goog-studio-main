@@ -27,7 +27,6 @@ import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
 
 /** Class that checks the presence of the manifest. */
-@CacheableTask
 public class CheckManifest extends AndroidVariantTask {
 
     private File manifest;

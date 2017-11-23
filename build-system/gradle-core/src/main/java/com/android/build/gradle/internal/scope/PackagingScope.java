@@ -32,7 +32,6 @@ import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
-import org.gradle.internal.impldep.org.jetbrains.annotations.NotNull;
 
 /** Data needed by the packaging tasks. */
 public interface PackagingScope extends TaskOutputHolder {
@@ -55,12 +54,6 @@ public interface PackagingScope extends TaskOutputHolder {
 
     @NonNull
     InstantRunBuildContext getInstantRunBuildContext();
-
-    /**
-     * Directory with instant run support files.
-     */
-    @NonNull
-    File getInstantRunSupportDir();
 
     /**
      * Returns the directory for storing incremental files.
@@ -122,7 +115,7 @@ public interface PackagingScope extends TaskOutputHolder {
     @NonNull
     AaptOptions getAaptOptions();
 
-    @NotNull
+    @NonNull
     ProjectOptions getProjectOptions();
 
     OutputScope getOutputScope();

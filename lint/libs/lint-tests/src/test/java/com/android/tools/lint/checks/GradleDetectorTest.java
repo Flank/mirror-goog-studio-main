@@ -1216,7 +1216,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSupportLibraryConsistency() throws Exception {
+    public void testSupportLibraryConsistency() {
         String expected = ""
                 + "build.gradle:4: Error: All com.android.support libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 25.0-SNAPSHOT, 24.2, 24.1. Examples include com.android.support:preference-v7:25.0-SNAPSHOT and com.android.support:animated-vector-drawable:24.2 [GradleCompatible]\n"
                 + "    compile \"com.android.support:appcompat-v7:24.2\"\n"
@@ -1419,7 +1419,7 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testPlayServiceConsistencyNonIncremental() throws Exception {
+    public void testPlayServiceConsistencyNonIncremental() {
         String expected = ""
                 + "build.gradle:4: Error: All gms/firebase libraries must use the exact same version specification (mixing versions can lead to runtime crashes). Found versions 7.5.0, 7.3.0. Examples include com.google.android.gms:play-services-wearable:7.5.0 and com.google.android.gms:play-services-location:7.3.0 [GradleCompatible]\n"
                 + "    compile 'com.google.android.gms:play-services-wearable:7.5.0'\n"
@@ -1441,7 +1441,22 @@ public class GradleDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testWrongQuotes() throws Exception {
+    public void testPlayServiceInconsistentVersionsVersion14() {
+        lint().files(
+                gradle(""
+                        + "apply plugin: 'android'\n"
+                        + "\n"
+                        + "dependencies {\n"
+                        + "    compile 'com.google.android.gms:play-services-wearable:14.0.0'\n"
+                        + "    compile 'com.google.android.gms:play-services-location:15.0.1'\n"
+                        + "}\n"))
+                .issues(COMPATIBILITY)
+                .sdkHome(getMockSupportLibraryInstallation())
+                .run()
+                .expectClean();
+    }
+
+    public void testWrongQuotes() {
         String expected = ""
                 + "build.gradle:5: Error: It looks like you are trying to substitute a version variable, but using single quotes ('). For Groovy string interpolation you must use double quotes (\"). [NotInterpolated]\n"
                 + "    compile 'com.android.support:design:${supportLibVersion}'\n"

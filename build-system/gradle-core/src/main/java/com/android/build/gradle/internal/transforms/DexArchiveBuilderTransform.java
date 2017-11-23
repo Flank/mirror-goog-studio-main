@@ -115,6 +115,8 @@ public class DexArchiveBuilderTransform extends Transform {
     @VisibleForTesting @NonNull final WaitableExecutor executor;
     private final int minSdkVersion;
     @NonNull private final DexerTool dexer;
+    @NonNull private String projectVariant;
+    private boolean enableIncrementalDesugaring;
     @NonNull private final DexArchiveBuilderCacheHandler cacheHandler;
     private final boolean useGradleWorkers;
     private final int inBufferSize;
@@ -122,7 +124,7 @@ public class DexArchiveBuilderTransform extends Transform {
     private final boolean isDebuggable;
     @NonNull private final VariantScope.Java8LangSupport java8LangSupportType;
 
-    public DexArchiveBuilderTransform(
+    DexArchiveBuilderTransform(
             @NonNull Supplier<List<File>> androidJarClasspath,
             @NonNull DexOptions dexOptions,
             @NonNull MessageReceiver messageReceiver,
@@ -133,12 +135,16 @@ public class DexArchiveBuilderTransform extends Transform {
             @Nullable Integer inBufferSize,
             @Nullable Integer outBufferSize,
             boolean isDebuggable,
-            @NonNull VariantScope.Java8LangSupport java8LangSupportType) {
+            @NonNull VariantScope.Java8LangSupport java8LangSupportType,
+            @NonNull String projectVariant,
+            boolean enableIncrementalDesugaring) {
         this.androidJarClasspath = androidJarClasspath;
         this.dexOptions = dexOptions;
         this.messageReceiver = messageReceiver;
         this.minSdkVersion = minSdkVersion;
         this.dexer = dexer;
+        this.projectVariant = projectVariant;
+        this.enableIncrementalDesugaring = enableIncrementalDesugaring;
         this.executor = WaitableExecutor.useGlobalSharedThreadPool();
         this.cacheHandler =
                 new DexArchiveBuilderCacheHandler(
@@ -223,28 +229,14 @@ public class DexArchiveBuilderTransform extends Transform {
             outputProvider.deleteAll();
         }
 
+        Set<File> additionalPaths =
+                incrementalAnalysis(transformInvocation)
+                        .stream()
+                        .map(Path::toFile)
+                        .collect(Collectors.toSet());
         ClassFileProviderFactory classFileProviderFactory = new ClassFileProviderFactory();
         List<DexArchiveBuilderCacheHandler.CacheableItem> cacheableItems = new ArrayList<>();
         boolean isIncremental = transformInvocation.isIncremental();
-        if (isIncremental && java8LangSupportType == VariantScope.Java8LangSupport.D8) {
-            transformInputs:
-            for (TransformInput input :
-                    Iterables.concat(
-                            transformInvocation.getInputs(),
-                            transformInvocation.getReferencedInputs())) {
-                for (JarInput jarInput : input.getJarInputs()) {
-                    if (jarInput.getStatus() != Status.NOTCHANGED) {
-                        // If any change is made to the libraries, we need to redo every dex to
-                        // ensure correct desugaring by D8.
-                        // This is required for jars because we don't know dependencies between
-                        // them, but we assert that no library depend on project sources.
-                        // Class files modified in directories are handled by incremental support.
-                        isIncremental = false;
-                        break transformInputs;
-                    }
-                }
-            }
-        }
         try {
             for (TransformInput input : transformInvocation.getInputs()) {
 
@@ -261,7 +253,8 @@ public class DexArchiveBuilderTransform extends Transform {
                             isIncremental,
                             classFileProviderFactory,
                             bootclasspath,
-                            classpath);
+                            classpath,
+                            additionalPaths);
                 }
 
                 for (JarInput jarInput : input.getJarInputs()) {
@@ -274,7 +267,8 @@ public class DexArchiveBuilderTransform extends Transform {
                                     outputProvider,
                                     classFileProviderFactory,
                                     bootclasspath,
-                                    classpath);
+                                    classpath,
+                                    additionalPaths);
                     cacheableItems.add(
                             new DexArchiveBuilderCacheHandler.CacheableItem(
                                     jarInput, dexArchives, bootclasspath, classpath));
@@ -337,6 +331,7 @@ public class DexArchiveBuilderTransform extends Transform {
         }
     }
 
+    @NonNull
     private List<File> processJarInput(
             @NonNull Context context,
             boolean isIncremental,
@@ -344,9 +339,10 @@ public class DexArchiveBuilderTransform extends Transform {
             @NonNull TransformOutputProvider transformOutputProvider,
             @NonNull ClassFileProviderFactory classFileProviderFactory,
             @NonNull List<String> bootclasspath,
-            @NonNull List<String> classpath)
+            @NonNull List<String> classpath,
+            @NonNull Set<File> additionalPaths)
             throws Exception {
-        if (!isIncremental) {
+        if (!isIncremental || additionalPaths.contains(jarInput.getFile())) {
             Preconditions.checkState(
                     jarInput.getFile().exists(),
                     "File %s does not exist, yet it is reported as input. Try \n"
@@ -407,7 +403,8 @@ public class DexArchiveBuilderTransform extends Transform {
                     false,
                     classFileProviderFactory,
                     bootclasspath,
-                    classpath);
+                    classpath,
+                    ImmutableSet.of());
         } else {
             File outputFile = getPreDexJar(transformOutputProvider, toConvert, null);
             Files.copy(
@@ -435,6 +432,7 @@ public class DexArchiveBuilderTransform extends Transform {
         private final boolean isIncremental;
         private final ClassFileProviderFactory classFileProviderFactory;
         private final VariantScope.Java8LangSupport java8LangSupportType;
+        @NonNull private final Set<File> additionalPaths;
 
         public DexConversionParameters(
                 @NonNull QualifiedContent input,
@@ -451,7 +449,8 @@ public class DexArchiveBuilderTransform extends Transform {
                 boolean isDebuggable,
                 boolean isIncremental,
                 @NonNull ClassFileProviderFactory classFileProviderFactory,
-                @NonNull VariantScope.Java8LangSupport java8LangSupportType) {
+                @NonNull VariantScope.Java8LangSupport java8LangSupportType,
+                @NonNull Set<File> additionalPaths) {
             this.input = input;
             this.bootClasspath = bootClasspath;
             this.classpath = classpath;
@@ -467,6 +466,7 @@ public class DexArchiveBuilderTransform extends Transform {
             this.isIncremental = isIncremental;
             this.classFileProviderFactory = classFileProviderFactory;
             this.java8LangSupportType = java8LangSupportType;
+            this.additionalPaths = additionalPaths;
         }
 
         public boolean belongsToThisBucket(String path) {
@@ -558,16 +558,11 @@ public class DexArchiveBuilderTransform extends Transform {
             boolean isIncremental,
             @NonNull ClassFileProviderFactory classFileProviderFactory,
             @NonNull List<String> bootClasspath,
-            @NonNull List<String> classpath)
+            @NonNull List<String> classpath,
+            @NonNull Set<File> additionalPaths)
             throws Exception {
 
         logger.verbose("Dexing %s", input.getFile().getAbsolutePath());
-
-        // TODO Restore incremental.
-        // For now we miss the dependency graph to ensure valid incremental desugaring.
-        if (java8LangSupportType == VariantScope.Java8LangSupport.D8) {
-            isIncremental = false;
-        }
 
         ImmutableList.Builder<File> dexArchives = ImmutableList.builder();
         for (int bucketId = 0; bucketId < NUMBER_OF_BUCKETS; bucketId++) {
@@ -590,7 +585,8 @@ public class DexArchiveBuilderTransform extends Transform {
                             isDebuggable,
                             isIncremental,
                             classFileProviderFactory,
-                            java8LangSupportType);
+                            java8LangSupportType,
+                            additionalPaths);
 
             if (useGradleWorkers) {
                 context.getWorkerExecutor()
@@ -660,11 +656,14 @@ public class DexArchiveBuilderTransform extends Transform {
         Predicate<String> toProcess =
                 hasIncrementalInfo
                         ? path -> {
+                            File resolved = inputPath.resolve(path).toFile();
+                            if (dexConversionParameters.additionalPaths.contains(resolved)) {
+                                return true;
+                            }
                             Map<File, Status> changedFiles =
                                     ((DirectoryInput) dexConversionParameters.input)
                                             .getChangedFiles();
 
-                            File resolved = inputPath.resolve(path).toFile();
                             Status status = changedFiles.get(resolved);
                             return status == Status.ADDED || status == Status.CHANGED;
                         }
@@ -765,5 +764,18 @@ public class DexArchiveBuilderTransform extends Transform {
                         ImmutableSet.of(ExtendedContentType.DEX_ARCHIVE),
                         directoryInput.getScopes(),
                         Format.DIRECTORY));
+    }
+
+    @NonNull
+    private Set<Path> incrementalAnalysis(@NonNull TransformInvocation invocation)
+            throws InterruptedException {
+        if (!enableIncrementalDesugaring
+                || java8LangSupportType != VariantScope.Java8LangSupport.D8) {
+            return ImmutableSet.of();
+        }
+
+        DesugarIncrementalTransformHelper helper =
+                new DesugarIncrementalTransformHelper(projectVariant);
+        return helper.getAdditionalPaths(invocation, executor);
     }
 }
