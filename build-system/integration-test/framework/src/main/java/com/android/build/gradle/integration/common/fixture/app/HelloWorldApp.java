@@ -153,12 +153,21 @@ public class HelloWorldApp extends AbstractAndroidTestApp implements AndroidTest
     protected HelloWorldApp(String plugin) {
         this();
 
-        TestSourceFile buildFile = new TestSourceFile("", "build.gradle", "" +
-                "apply plugin: '" + plugin + "'\n" +
-                "\n" +
-                "android {\n" +
-                "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
-                "}\n");
+        TestSourceFile buildFile =
+                new TestSourceFile(
+                        "",
+                        "build.gradle",
+                        ""
+                                + "apply plugin: '"
+                                + plugin
+                                + "'\n"
+                                + "\n"
+                                + "android {\n"
+                                + "    compileSdkVersion "
+                                + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION
+                                + "\n"
+                                + "    lintOptions.checkReleaseBuilds = false\n"
+                                + "}\n");
 
         addFile(buildFile);
     }
