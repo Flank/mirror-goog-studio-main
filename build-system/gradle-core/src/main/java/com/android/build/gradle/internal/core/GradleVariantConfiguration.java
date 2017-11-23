@@ -246,6 +246,11 @@ public class GradleVariantConfiguration
                         @NonNull VariantType type) {
                     throw new UnsupportedOperationException("Test modules have no test variants.");
                 }
+
+                @Override
+                public boolean isInstantRunBuild(@NonNull GlobalScope globalScope) {
+                    return false;
+                }
             };
         }
     }
