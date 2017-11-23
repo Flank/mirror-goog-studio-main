@@ -18,8 +18,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
@@ -31,7 +29,6 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 public class JacocoTransformTest {
 
@@ -45,9 +42,6 @@ public class JacocoTransformTest {
 
     private static final AndroidTestApp TEST_APP =
             HelloWorldApp.forPlugin("com.android.application");
-
-    @Rule
-    public Adb adb = new Adb();
 
     @Rule
     public final GradleTestProject project =
@@ -87,13 +81,5 @@ public class JacocoTransformTest {
         TestFileUtils.appendToFile(
                 project.getBuildFile(), "\nandroid.buildTypes.debug.testCoverageEnabled true\n");
         project.executor().run("assembleDebug");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws Exception {
-        adb.exclusiveAccess();
-        project.executor().run("connectedCheck");
-        assertThat(project.file("build/reports/coverage/debug/index.html")).exists();
     }
 }

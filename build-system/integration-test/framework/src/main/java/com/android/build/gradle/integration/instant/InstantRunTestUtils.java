@@ -71,6 +71,7 @@ public final class InstantRunTestUtils {
                     .put("DaggerTest", 8119)
                     .put("ResourcesSwapConnectedTest", 8120)
                     .put("KotlinHotSwapTest", 8121)
+                    .put("KotlinHotSwapConnectedTest", 8122)
                     .build();
     private static final int SLEEP_TIME_MSEC = 200;
 

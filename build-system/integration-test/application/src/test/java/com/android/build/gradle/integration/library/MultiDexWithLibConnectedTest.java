@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,36 +18,22 @@ package com.android.build.gradle.integration.library;
 
 import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.AssumeUtil;
 import java.io.IOException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/** Assemble tests for multiDexWithLib. */
-public class MultiDexWithLibTest {
-    @ClassRule
-    public static GradleTestProject project =
+public class MultiDexWithLibConnectedTest {
+    @Rule
+    public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestProject("multiDexWithLib")
                     .withHeap("2048M")
                     .create();
 
-    @BeforeClass
-    public static void setUp() throws IOException, InterruptedException {
-        AssumeUtil.assumeBuildToolsAtLeast(21);
-        project.execute("clean", "assembleDebug", "assembleDebugAndroidTest");
-    }
-
-    @AfterClass
-    public static void cleanUp() {
-        project = null;
-    }
-
     @Test
-    public void lint() throws IOException, InterruptedException {
-        project.execute("lint");
+    @Category(DeviceTests.class)
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 }

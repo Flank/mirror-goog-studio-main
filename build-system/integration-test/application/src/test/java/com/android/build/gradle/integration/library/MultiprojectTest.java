@@ -16,25 +16,18 @@
 
 package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Assemble tests for multiproject. */
 public class MultiprojectTest {
     @ClassRule
     public static GradleTestProject project =
             GradleTestProject.builder().fromTestProject("multiproject").create();
-
-    @Rule
-    public Adb adb = new Adb();
 
     @BeforeClass
     public static void setUp() throws IOException, InterruptedException {
@@ -49,14 +42,5 @@ public class MultiprojectTest {
     @Test
     public void lint() throws IOException, InterruptedException {
         project.execute("lint");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheckAndReport() throws IOException, InterruptedException {
-        adb.exclusiveAccess();
-        project.execute("connectedCheck");
-        // android-reporting plugin currently executes connected tasks.
-        project.execute("mergeAndroidReports");
     }
 }

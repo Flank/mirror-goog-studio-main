@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,31 +16,21 @@
 
 package com.android.build.gradle.integration.library;
 
+import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/** Assemble tests for libMinifyJarDep. */
-public class LibMinifyJarDepTest {
+public class LibMinifyLibDepConnectedTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("libMinifyJarDep").create();
-
-    @Before
-    public void setUp() throws IOException, InterruptedException {
-        project.execute("clean", "assembleDebug");
-    }
-
-    @After
-    public void cleanUp() {
-        project = null;
-    }
+            GradleTestProject.builder().fromTestProject("libMinifyLibDep").create();
 
     @Test
-    public void lint() throws IOException, InterruptedException {
-        project.execute("lint");
+    @Category(DeviceTests.class)
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 }

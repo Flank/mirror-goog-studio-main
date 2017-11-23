@@ -19,9 +19,8 @@ package com.android.build.gradle.integration.application;
 import static com.android.builder.core.VariantType.ANDROID_TEST;
 import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.SourceProviderHelper;
@@ -31,7 +30,6 @@ import com.android.builder.model.SourceProviderContainer;
 import java.io.File;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Assemble tests for migrated. */
 public class MigratedTest {
@@ -45,7 +43,8 @@ public class MigratedTest {
                 project.executeAndReturnModel("clean", "assembleDebug").getOnlyModel();
         File projectDir = project.getTestDir();
 
-        assertFalse("Library Project", model.isLibrary());
+        assertNotEquals(
+                "Library Project", AndroidProject.PROJECT_TYPE_LIBRARY, model.getProjectType());
         assertEquals("Project Type", AndroidProject.PROJECT_TYPE_APP, model.getProjectType());
 
         ProductFlavorContainer defaultConfig = model.getDefaultConfig();
@@ -79,11 +78,5 @@ public class MigratedTest {
                 .setAssetsDir("tests/assets")
                 .setManifestFile("tests/AndroidManifest.xml")
                 .test();
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws Exception, InterruptedException {
-        project.executeConnectedCheck();
     }
 }

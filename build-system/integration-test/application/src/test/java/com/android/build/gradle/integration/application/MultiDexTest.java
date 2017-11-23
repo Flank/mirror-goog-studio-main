@@ -21,8 +21,6 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.sdklib.BuildToolInfo.SHRINKED_ANDROID_FOR_LEGACY_MULTIDEX_TESTS;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
@@ -49,7 +47,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -60,8 +57,6 @@ public class MultiDexTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("multiDex").withHeap("2048M").create();
-
-    @Rule public Adb adb = new Adb();
 
     @Parameterized.Parameters(name = "dexInProcess = {0}")
     public static List<Boolean> data() {
@@ -88,8 +83,7 @@ public class MultiDexTest {
     }
 
     @Test
-    public void checkApplicationNameAdded()
-            throws IOException, InterruptedException, ProcessException {
+    public void checkApplicationNameAdded() throws IOException, InterruptedException {
         // noinspection ResultOfMethodCallIgnored
         FileUtils.join(project.getTestDir(), "src/ics/AndroidManifest.xml").delete();
         project.execute("processIcsDebugManifest");
@@ -333,17 +327,5 @@ public class MultiDexTest {
 
         assertThat(unwantedExtraClasses).named("Unwanted classes in main dex").isEmpty();
 
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws Exception {
-        project.execute(
-                "assembleIcsDebug",
-                "assembleIcsDebugAndroidTest",
-                "assembleLollipopDebug",
-                "assembleLollipopDebugAndroidTest");
-        adb.exclusiveAccess();
-        project.execute("connectedCheck");
     }
 }

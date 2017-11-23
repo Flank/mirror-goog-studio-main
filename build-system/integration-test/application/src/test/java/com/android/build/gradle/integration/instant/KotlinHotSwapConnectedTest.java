@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,25 +17,32 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.testutils.truth.MoreTruth.assertThatDex;
-import static org.junit.Assert.assertTrue;
+import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 
+import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
-import com.android.builder.model.InstantRun;
-import com.android.sdklib.AndroidVersion;
-import com.android.testutils.apk.SplitApks;
-import com.android.tools.ir.client.InstantRunArtifact;
-import com.google.common.truth.Expect;
+import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
+import com.android.ddmlib.IDevice;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/** Smoke test for Kotlin hot swaps. */
-public class KotlinHotSwapTest {
+public class KotlinHotSwapConnectedTest {
     private static final String LOG_TAG = "kotlinHotswapTest";
     private static final String ORIGINAL_MESSAGE = "Original";
+    private static final int CHANGES_COUNT = 3;
+
+    @Rule public final Adb adb = new Adb();
+
+    @Rule public Logcat logcat = Logcat.create();
 
     @Rule
     public GradleTestProject project =
@@ -43,51 +50,37 @@ public class KotlinHotSwapTest {
                     .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
                     .create();
 
-    @Rule public Expect expect = Expect.createAndEnableStackTrace();
-
-    @Before
-    public void activityClass() throws Exception {
-        createActivityClass(ORIGINAL_MESSAGE);
+    @Test
+    @Ignore("b/68305039")
+    @Category(DeviceTests.class)
+    public void artHotSwapChangeTest() throws Exception {
+        doHotSwapChangeTest(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
     }
 
-    @Test
-    public void buildIncrementallyWithInstantRun() throws Exception {
-        InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
+    private void doHotSwapChangeTest(@NonNull IDevice device) throws Exception {
+        HotSwapTester tester =
+                new HotSwapTester(
+                        project,
+                        KotlinHelloWorldApp.APP_ID,
+                        "HelloWorld",
+                        LOG_TAG,
+                        device,
+                        logcat,
+                        PORTS.get(KotlinHotSwapTest.class.getSimpleName()));
 
-        InstantRunTestUtils.doInitialBuild(project, new AndroidVersion(21, null));
+        List<HotSwapTester.Change> changes = new ArrayList<>();
 
-        SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
+        for (int i = 0; i < CHANGES_COUNT; i++) {
+            changes.add(
+                    new HotSwapTester.LogcatChange(i, ORIGINAL_MESSAGE) {
+                        @Override
+                        public void makeChange() throws Exception {
+                            createActivityClass(CHANGE_PREFIX + changeId);
+                        }
+                    });
+        }
 
-        // As no injected API level, will default to no splits.
-        assertThat(apks)
-                .hasClass("Lcom/example/helloworld/HelloWorld;")
-                .that()
-                .hasMethod("onCreate");
-        assertThat(apks).hasClass("Lcom/android/tools/ir/server/InstantRunContentProvider;");
-
-        createActivityClass("CHANGE");
-
-        project.executor().withInstantRun(new AndroidVersion(21, null)).run("assembleDebug");
-
-        InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
-
-        assertThatDex(artifact.file)
-                .containsClass("Lcom/example/helloworld/HelloWorld$onCreate$callable$1$override;")
-                .that()
-                .hasMethod("call");
-    }
-
-    @Test
-    public void testModel() throws Exception {
-        InstantRun instantRunModel =
-                InstantRunTestUtils.getInstantRunModel(project.model().getSingle().getOnlyModel());
-
-        assertTrue(instantRunModel.isSupportedByArtifact());
-
-        // TODO:  The kotlin android gradle plugin is very unhappy with the test
-        // from ./HotSwapTest#testModel that checks that Jack is not supported.
-        // It cannot process the build file at all.
+        tester.run(() -> assertThat(logcat).containsMessageWithText("Original"), changes);
     }
 
     private void createActivityClass(String message) throws Exception {

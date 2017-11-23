@@ -30,7 +30,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 @Ignore
-public class InstantUnitTest {
+public class InstantUnitConnectedTest {
 
     @Rule
     public final Adb adb = new Adb();

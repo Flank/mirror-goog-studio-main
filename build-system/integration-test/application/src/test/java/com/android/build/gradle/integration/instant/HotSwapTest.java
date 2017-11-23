@@ -53,22 +53,12 @@ public class HotSwapTest {
 
     private static final String LOG_TAG = "hotswapTest";
     private static final String ORIGINAL_MESSAGE = "Original";
-    private static final int CHANGES_COUNT = 3;
-
-    @Rule
-    public final Adb adb = new Adb();
 
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(HelloWorldApp.forPlugin("com.android.application"))
                     .create();
-
-    @Rule
-    public Logcat logcat = Logcat.create();
-
-    @Rule
-    public Expect expect = Expect.createAndEnableStackTrace();
 
     @Before
     public void activityClass() throws Exception {
@@ -125,40 +115,6 @@ public class HotSwapTest {
                 .isEqualTo(InstantRunVerifierStatus.COMPATIBLE.toString());
     }
 
-    @Test
-    @Ignore("b/68305039")
-    @Category(DeviceTests.class)
-    public void artHotSwapChangeTest() throws Exception {
-        doHotSwapChangeTest(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
-    }
-
-    private void doHotSwapChangeTest(@NonNull IDevice device) throws Exception {
-        HotSwapTester tester =
-                new HotSwapTester(
-                        project,
-                        HelloWorldApp.APP_ID,
-                        "HelloWorld",
-                        LOG_TAG,
-                        device,
-                        logcat,
-                        PORTS.get(HotSwapTest.class.getSimpleName()));
-
-        List<HotSwapTester.Change> changes = new ArrayList<>();
-
-        for (int i = 0; i < CHANGES_COUNT; i++) {
-            changes.add(new HotSwapTester.LogcatChange(i, ORIGINAL_MESSAGE) {
-                @Override
-                public void makeChange() throws Exception {
-                    createActivityClass(CHANGE_PREFIX + changeId);
-                }
-            });
-        }
-
-        tester.run(
-                () -> assertThat(logcat).containsMessageWithText("Original"),
-                changes);
-    }
-
     private void createActivityClass(String message) throws Exception {
         String javaCompile = "package com.example.helloworld;\n"
                 + "import android.app.Activity;\n"
@@ -192,5 +148,4 @@ public class HotSwapTest {
                 project.file("src/main/java/com/example/helloworld/HelloWorld.java"),
                 Charsets.UTF_8);
     }
-
 }

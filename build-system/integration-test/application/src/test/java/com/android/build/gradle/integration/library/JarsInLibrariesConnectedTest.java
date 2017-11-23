@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,9 @@
 
 package com.android.build.gradle.integration.library;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-
+import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.ide.common.process.ProcessException;
-import com.android.testutils.apk.Apk;
 import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
@@ -31,9 +27,9 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/** Assemble tests for jars inside libraries as assets, res, java res and actual dependencies. */
-public class JarsInLibraries {
+public class JarsInLibrariesConnectedTest {
     byte[] simpleJarDataA;
     byte[] simpleJarDataB;
     byte[] simpleJarDataC;
@@ -97,25 +93,8 @@ public class JarsInLibraries {
     }
 
     @Test
-    public void checkJarLocations() throws IOException, ProcessException {
-        // Obtain the apk file.
-        Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
-        assertThat(apk).exists();
-
-        // a1.jar was placed in libs so it should have been merged into the dex.
-        assertThatApk(apk).doesNotContain("jars/a1.jar");
-        assertThatApk(apk).containsClass("LA_DoIExist;");
-
-        // b1.jar was placed into assets and should be in assets.
-        assertThatApk(apk).containsFileWithContent("assets/b1.jar", simpleJarDataB);
-        assertThatApk(apk).doesNotContainClass("LB_DoIExist;");
-
-        // c1.jar was placed into resources and should be in the root.
-        assertThatApk(apk).containsFileWithContent("c1.jar", simpleJarDataC);
-        assertThatApk(apk).doesNotContainClass("LC_DoIExist;");
-
-        // d1.jar was placed into res/raw and should be in the root.
-        assertThatApk(apk).containsFileWithContent("res/raw/d1.jar", simpleJarDataD);
-        assertThatApk(apk).doesNotContainClass("LD_DoIExist;");
+    @Category(DeviceTests.class)
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executor().executeConnectedCheck();
     }
 }
