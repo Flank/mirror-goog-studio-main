@@ -267,8 +267,33 @@ public class ManifestMerger2 {
             }
         }
 
-        // done with proper merging phase, now we need to trim unwanted elements, placeholder
-        // substitution and system properties injection.
+        // done with proper merging phase, now we need to expand <nav-graph> elements, trim unwanted
+        // elements, perform placeholder substitution and system properties injection.
+        Map<String, NavigationXmlDocument> loadedNavigationMap = new HashMap<>();
+        for (File navigationFile : mNavigationFiles) {
+            String navigationId = navigationFile.getName().replaceAll("\\.xml$", "");
+            if (loadedNavigationMap.get(navigationId) != null) {
+                continue;
+            }
+            try (InputStream inputStream = mFileStreamProvider.getInputStream(navigationFile)) {
+                loadedNavigationMap.put(
+                        navigationId,
+                        NavigationXmlLoader.INSTANCE.load(
+                                navigationId, navigationFile, inputStream));
+            } catch (Exception e) {
+                throw new MergeFailureException(e);
+            }
+        }
+        xmlDocumentOptional =
+                Optional.of(
+                        NavGraphExpander.INSTANCE.expandNavGraphs(
+                                xmlDocumentOptional.get(),
+                                loadedNavigationMap,
+                                mergingReportBuilder));
+        if (mergingReportBuilder.hasErrors()) {
+            return mergingReportBuilder.build();
+        }
+
         ElementsTrimmer.trim(xmlDocumentOptional.get(), mergingReportBuilder);
         if (mergingReportBuilder.hasErrors()) {
             return mergingReportBuilder.build();

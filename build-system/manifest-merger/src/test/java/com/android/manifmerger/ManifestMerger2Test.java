@@ -126,7 +126,8 @@ public class ManifestMerger2Test {
                 "89_remove_uses_permission_sdk_23.xml",
                 "90_main_and_library_placeholder_replacement.xml",
                 "91_tools_in_lib_but_not_main.xml",
-                "92_do_not_duplicate_xmlns_when_injecting_into_added_application_node.xml"
+                "92_do_not_duplicate_xmlns_when_injecting_into_added_application_node.xml",
+                "93_expand_nav_graphs"
             };
 
     private static final Set<String> DATA_FILES_NO_TOOLS_REMOVAL =
@@ -172,6 +173,7 @@ public class ManifestMerger2Test {
                                 ManifestMerger2.MergeType.APPLICATION)
                         .addLibraryManifests(testFiles.getLibs())
                         .addFlavorAndBuildTypeManifests(testFiles.getOverlayFiles())
+                        .addNavigationFiles(testFiles.getNavigationFiles())
                         .withFeatures(
                                 optionalFeatures.toArray(
                                         new ManifestMerger2.Invoker.Feature
