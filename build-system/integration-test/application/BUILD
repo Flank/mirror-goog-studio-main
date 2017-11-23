@@ -33,10 +33,19 @@ TEST_DEPS = [
     "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
 ]
 
+maven_repo(
+    name = "gradle_plugin",
+    artifacts = [
+        "//tools/base/build-system/gradle",
+        "//tools/base/build-system/java-lib-plugin/java-lib-model-builder",  #TODO: remove.
+        "//tools/base/lint:tools.lint-gradle",
+    ],
+    visibility = ["__subpackages__"],
+)
+
 TEST_DATA = [
-    ":prebuilts_repo_repo.zip",
-    "//tools/data-binding:data_binding_runtime_repo.zip",
-    "//tools/data-binding:integration-test-projects",
+    ":gradle_plugin_repo.zip",
+    ":prebuilts_repo.zip",
     "//tools/base/build-system/integration-test:test-projects",
     "@AntennaPod//:all_files",
     "@gradle_perf_android_medium//:all_files",
@@ -45,7 +54,6 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:build-tools/latest",
     "//prebuilts/studio/sdk:cmake",
     "//prebuilts/studio/sdk:constraint-layout_latest",
-    "//prebuilts/studio/sdk:databinding_latest",
     "//prebuilts/studio/sdk:espresso_latest",
     "//prebuilts/studio/sdk:gms_latest",
     "//prebuilts/studio/sdk:multidex",
@@ -61,7 +69,6 @@ TEST_DATA = [
     "//prebuilts/studio/sdk:uiautomator_latest",
     "//prebuilts/studio/sdk:test-runner_latest",
     "//prebuilts/tools/common/cmake:cmake-3.8.2",
-    "//tools/base/bazel:offline_repo_repo.zip",
     "//tools/base/build-system:gradle-distrib",
 ]
 
@@ -98,6 +105,7 @@ java_test(
         "-Dsun.jnu.encoding=UTF-8",
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
         "-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.DeviceTestsQuarantine,com.android.build.gradle.integration.common.category.OnlineTests",
+        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/integration-test/application/gradle_plugin_repo.zip,tools/base/build-system/integration-test/application/prebuilts_repo.zip",
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     tags = [
@@ -125,6 +133,7 @@ java_test(
     data = TEST_DATA,
     jvm_flags = [
         "-Dtest.suite.jar=automatic-tests.jar",
+        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/integration-test/application/gradle_plugin_repo.zip,tools/base/build-system/integration-test/application/prebuilts_repo.zip",
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
     tags = [
@@ -155,7 +164,7 @@ java_test(
 #   | sed -e 's/\.$/:jar",/' \
 #   | sed -e 's/\([a-z]\)\.\([a-z]\)/\1\/\2/g'
 maven_repo(
-    name = "prebuilts_repo",
+    name = "prebuilts",
     # keep sorted
     artifacts = [
         "//prebuilts/tools/common/m2/repository/backport-util-concurrent/backport-util-concurrent/3.1:jar",

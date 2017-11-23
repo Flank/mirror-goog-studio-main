@@ -48,10 +48,10 @@ java_test(
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/platform-tools_r26.0.2-windows.zip",
         "//prebuilts/studio/sdk/remote:dl.google.com/android/repository/repository2-1.xml",
         "//prebuilts/tools/common/cmake:cmake-3.8.2",
-        "//tools/base/bazel:offline_repo_repo.zip",
         "//tools/base/build-system:gradle-distrib",
         "//tools/base/build-system/integration-test:test-projects/commonBuildScript.gradle",
-        "//tools/base/build-system/integration-test/application:prebuilts_repo_repo.zip",
+        "//tools/base/build-system/integration-test/application:gradle_plugin_repo.zip",
+        "//tools/base/build-system/integration-test/application:prebuilts_repo.zip",
         "//tools/data-binding:data_binding_runtime_repo.zip",
     ],
     jvm_flags = [
@@ -59,6 +59,7 @@ java_test(
         "-Dfile.encoding=UTF-8",
         "-Dsun.jnu.encoding=UTF-8",
         "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
+        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/integration-test/application/gradle_plugin_repo.zip,tools/base/build-system/integration-test/application/prebuilts_repo.zip",
     ],
     tags = [
         "block-network",

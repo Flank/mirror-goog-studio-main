@@ -60,9 +60,7 @@ public class DataBindingTest {
         if (withoutAdapters) {
             options.add("withoutadapters");
         }
-        project = GradleTestProject.builder()
-                .fromTestProject("databinding")
-                .create();
+        project = GradleTestProject.builder().fromTestProject("databinding").create();
         buildFile = options.isEmpty()
                 ? null
                 : "build." + Joiner.on('-').join(options) + ".gradle";

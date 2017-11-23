@@ -279,25 +279,6 @@ public class DesugarAppTest {
     }
 
     @Test
-    public void testDatabinding() throws IOException, ProcessException, InterruptedException {
-        // regression test for - http://b.android.com/321693
-        enableDesugar();
-        TestFileUtils.appendToFile(
-                project.getBuildFile(),
-                String.format(
-                        "\n"
-                                + "android.dataBinding.enabled true\n"
-                                + "android.defaultConfig.minSdkVersion %d\n"
-                                + "dependencies {\n"
-                                + "    compile 'com.android.support:support-v4:%s'\n"
-                                + "}",
-                        GradleTestProject.SUPPORT_LIB_MIN_SDK,
-                        GradleTestProject.SUPPORT_LIB_VERSION));
-
-        getProjectExecutor().run("assembleDebug");
-    }
-
-    @Test
     public void testTryWithResourcesPlatformUnsupported()
             throws IOException, InterruptedException, ProcessException {
         enableDesugar();

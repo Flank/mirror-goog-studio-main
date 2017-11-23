@@ -649,11 +649,7 @@ public final class GradleTestProject implements TestRule {
             @NonNull
             @Override
             List<Path> getLocalRepositories() {
-                return ImmutableList.<Path>builder()
-                        .add(BazelIntegrationTestsSuite.OFFLINE_REPO)
-                        .add(BazelIntegrationTestsSuite.PREBUILTS_REPO)
-                        .add(BazelIntegrationTestsSuite.DATA_BINDING_RUNTIME_REPO)
-                        .build();
+                return BazelIntegrationTestsSuite.MAVEN_REPOS;
             }
         },
         IDEA {
