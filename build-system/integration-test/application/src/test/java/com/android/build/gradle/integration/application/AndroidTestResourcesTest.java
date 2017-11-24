@@ -1,6 +1,5 @@
 package com.android.build.gradle.integration.application;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -18,7 +17,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Check resources in androidTest are available in the generated R.java. */
 public class AndroidTestResourcesTest {
@@ -114,12 +112,6 @@ public class AndroidTestResourcesTest {
         Assert.assertTrue(checkLayoutInR(project, 1, 1));
         Assert.assertFalse(checkLayoutInR(project, 2, 2));
         Assert.assertFalse(checkLayoutInR(project, 2, 3));
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void checkTestLayoutCanBeUsedInDeviceTests() throws IOException, InterruptedException {
-        appProject.executeConnectedCheck();
     }
 
     private static boolean checkLayoutInR(

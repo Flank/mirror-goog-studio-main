@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,34 +16,20 @@
 
 package com.android.build.gradle.integration.ndk;
 
+import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/**
- * Assemble tests for ndkLibPrebuilts.
- */
-public class NdkLibPrebuiltsTest {
-    @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("ndkLibPrebuilts")
-            .addGradleProperties("android.useDeprecatedNdk=true")
-            .create();
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        project.execute("clean", "assembleDebug");
-    }
-
-    @AfterClass
-    public static void cleanUp() {
-        project = null;
-    }
+public class NdkJniLibConnectedTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("ndkJniLib").create();
 
     @Test
-    public void lint() throws Exception {
-        project.execute("lint");
+    @Category(DeviceTests.class)
+    public void connectedCheck() throws Exception {
+        project.executeConnectedCheck();
     }
 }

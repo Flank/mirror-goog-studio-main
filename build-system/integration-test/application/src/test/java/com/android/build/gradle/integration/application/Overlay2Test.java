@@ -18,74 +18,35 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ImageHelper;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
-import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import org.junit.AfterClass;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 /** Assemble tests for overlay2. */
-@RunWith(Parameterized.class)
 public class Overlay2Test {
-
-    @Parameterized.Parameters(name = "enableAapt2 = {0}")
-    public static Collection<Boolean> data() {
-        return ImmutableList.of(false, true);
-    }
-
-    @Parameterized.Parameter
-    public boolean useAapt2;
-
-    @ClassRule
-    public static GradleTestProject project =
+    @Rule
+    public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("overlay2").create();
-
-    @AfterClass
-    public static void cleanUp() {
-        project = null;
-    }
 
     @Test
     public void checkImageColor() throws IOException, InterruptedException {
-        project.executor().withEnabledAapt2(useAapt2).run("clean", "assembleDebug");
+        project.executor().run("clean", "assembleDebug");
 
         int GREEN = ImageHelper.GREEN;
 
-        if (!useAapt2) {
-            File drawableOutput =
-                    project.file(
-                            "build/"
-                                    + AndroidProject.FD_INTERMEDIATES
-                                    + "/res/merged/one/debug/drawable");
+        File resOutput =
+                project.file("build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/one/debug");
+        assertThat(new File(resOutput, "drawable_no_overlay.png.flat")).exists();
+        assertThat(new File(resOutput, "drawable_type_overlay.png.flat")).exists();
+        assertThat(new File(resOutput, "drawable_flavor_overlay.png.flat")).exists();
+        assertThat(new File(resOutput, "drawable_type_flavor_overlay.png.flat")).exists();
+        assertThat(new File(resOutput, "drawable_variant_type_flavor_overlay.png.flat")).exists();
 
-            //First picture should remain unchanged (first pixel remains green), while all the
-            //others should have the first image overlay them (first pixel turns from red to green).
-            ImageHelper.checkImageColor(drawableOutput, "no_overlay.png", GREEN);
-            ImageHelper.checkImageColor(drawableOutput, "type_overlay.png", GREEN);
-            ImageHelper.checkImageColor(drawableOutput, "flavor_overlay.png", GREEN);
-            ImageHelper.checkImageColor(drawableOutput, "type_flavor_overlay.png", GREEN);
-            ImageHelper.checkImageColor(drawableOutput, "variant_type_flavor_overlay.png", GREEN);
-        } else {
-            File resOutput =
-                    project.file(
-                            "build/" + AndroidProject.FD_INTERMEDIATES + "/res/merged/one/debug");
-            assertThat(new File(resOutput, "drawable_no_overlay.png.flat")).exists();
-            assertThat(new File(resOutput, "drawable_type_overlay.png.flat")).exists();
-            assertThat(new File(resOutput, "drawable_flavor_overlay.png.flat")).exists();
-            assertThat(new File(resOutput, "drawable_type_flavor_overlay.png.flat")).exists();
-            assertThat(new File(resOutput, "drawable_variant_type_flavor_overlay.png.flat"))
-                    .exists();
-        }
 
         Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG, "one");
         //First picture should remain unchanged (first pixel remains green), while all the
@@ -96,11 +57,5 @@ public class Overlay2Test {
         ImageHelper.checkImageColor(apk.getResource("drawable/type_flavor_overlay.png"), GREEN);
         ImageHelper.checkImageColor(
                 apk.getResource("drawable/variant_type_flavor_overlay.png"), GREEN);
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
     }
 }

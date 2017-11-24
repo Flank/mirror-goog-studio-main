@@ -14,36 +14,24 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.ndk;
+package com.android.build.gradle.integration.application;
 
+import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import java.io.IOException;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/**
- * Assemble tests for ndkLibPrebuilts.
- */
-public class NdkLibPrebuiltsTest {
-    @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestProject("ndkLibPrebuilts")
-            .addGradleProperties("android.useDeprecatedNdk=true")
-            .create();
-
-    @BeforeClass
-    public static void setUp() throws Exception {
-        project.execute("clean", "assembleDebug");
-    }
-
-    @AfterClass
-    public static void cleanUp() {
-        project = null;
-    }
+/** Assemble tests for pkgOverride. */
+public class PkgOverrideConnectedTest {
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestProject("pkgOverride").create();
 
     @Test
-    public void lint() throws Exception {
-        project.execute("lint");
+    @Category(DeviceTests.class)
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 }

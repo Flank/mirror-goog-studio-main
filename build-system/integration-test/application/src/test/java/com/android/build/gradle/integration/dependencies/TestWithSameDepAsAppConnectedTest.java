@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 package com.android.build.gradle.integration.dependencies;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
+import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -29,17 +29,14 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-/**
- * Tests the handling of test dependency.
- */
 @RunWith(FilterableParameterized.class)
-public class TestWithSameDepAsApp {
+public class TestWithSameDepAsAppConnectedTest {
 
-    @Rule
-    public GradleTestProject project;
+    @Rule public GradleTestProject project;
 
     public String plugin;
     public String appDependency;
@@ -55,22 +52,26 @@ public class TestWithSameDepAsApp {
 
         for (String plugin : plugins) {
             // Check two JARs.
-            parameters.add(Lists.newArrayList(
-                    plugin,
-                    "org.hamcrest:hamcrest-core:1.3",
-                    "org.hamcrest:hamcrest-core:1.3",
-                    "Lorg/hamcrest/Matcher;",
-                    "org.hamcrest.Matcher<String> m = org.hamcrest.CoreMatchers.is(\"foo\");",
-                    "org.hamcrest.Matcher<String> m = org.hamcrest.CoreMatchers.is(\"foo\");").toArray());
+            parameters.add(
+                    Lists.newArrayList(
+                                    plugin,
+                                    "org.hamcrest:hamcrest-core:1.3",
+                                    "org.hamcrest:hamcrest-core:1.3",
+                                    "Lorg/hamcrest/Matcher;",
+                                    "org.hamcrest.Matcher<String> m = org.hamcrest.CoreMatchers.is(\"foo\");",
+                                    "org.hamcrest.Matcher<String> m = org.hamcrest.CoreMatchers.is(\"foo\");")
+                            .toArray());
 
             // Check two JARs, indirect conflict.
-            parameters.add(Lists.newArrayList(
-                    plugin,
-                    "org.hamcrest:hamcrest-core:1.3",
-                    "junit:junit:4.12",
-                    "Lorg/hamcrest/Matcher;",
-                    "org.hamcrest.Matcher<String> m = org.hamcrest.CoreMatchers.is(\"foo\");",
-                    "org.hamcrest.Matcher<String> m = org.hamcrest.CoreMatchers.is(\"foo\");").toArray());
+            parameters.add(
+                    Lists.newArrayList(
+                                    plugin,
+                                    "org.hamcrest:hamcrest-core:1.3",
+                                    "junit:junit:4.12",
+                                    "Lorg/hamcrest/Matcher;",
+                                    "org.hamcrest.Matcher<String> m = org.hamcrest.CoreMatchers.is(\"foo\");",
+                                    "org.hamcrest.Matcher<String> m = org.hamcrest.CoreMatchers.is(\"foo\");")
+                            .toArray());
 
             // Check two AARs.
             parameters.add(
@@ -102,7 +103,7 @@ public class TestWithSameDepAsApp {
         return parameters;
     }
 
-    public TestWithSameDepAsApp(
+    public TestWithSameDepAsAppConnectedTest(
             String plugin,
             String appDependency,
             String testDependency,
@@ -116,30 +117,35 @@ public class TestWithSameDepAsApp {
         this.appUsage = appUsage;
         this.testUsage = testUsage;
 
-        this.project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldApp.forPlugin(plugin))
-            .create();
+        this.project =
+                GradleTestProject.builder().fromTestApp(HelloWorldApp.forPlugin(plugin)).create();
     }
 
     @Before
     public void setUp() throws Exception {
-        appendToFile(project.getBuildFile(),
-                "\n" +
-                "dependencies {\n" +
-                "    compile \"" + this.appDependency + "\"\n" +
-                "    androidTestCompile \"" + this.testDependency + "\"\n" +
-                "}\n" +
-                "\n" +
-                "android.defaultConfig.minSdkVersion 16\n");
+        appendToFile(
+                project.getBuildFile(),
+                "\n"
+                        + "dependencies {\n"
+                        + "    compile \""
+                        + this.appDependency
+                        + "\"\n"
+                        + "    androidTestCompile \""
+                        + this.testDependency
+                        + "\"\n"
+                        + "}\n"
+                        + "\n"
+                        + "android.defaultConfig.minSdkVersion 16\n");
 
         TestFileUtils.addMethod(
                 project.file("src/main/java/com/example/helloworld/HelloWorld.java"),
-                        "\n" +
-                        "public void useDependency() {\n" +
-                        "    " + this.appUsage + "\n" +
-                        "}\n" +
-                        ""
-        );
+                "\n"
+                        + "public void useDependency() {\n"
+                        + "    "
+                        + this.appUsage
+                        + "\n"
+                        + "}\n"
+                        + "");
 
         TestFileUtils.addMethod(
                 project.file("src/androidTest/java/com/example/helloworld/HelloWorldTest.java"),
@@ -153,18 +159,8 @@ public class TestWithSameDepAsApp {
     }
 
     @Test
-    public void testWithSameDepVersionThanTestedDoesNotEmbedDependency() throws Exception {
-        project.execute("assembleDebug", "assembleDebugAndroidTest");
-
-        if (plugin.contains("application")) {
-            assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
-                    .containsClass(this.className);
-            assertThat(project.getTestApk()).doesNotContainClass(this.className);
-        } else {
-            // External dependencies are not packaged in AARs.
-            assertThat(project.getAar("debug")).doesNotContainClass(this.className);
-            // But should be in the test APK.
-            assertThat(project.getTestApk()).containsClass(this.className);
-        }
+    @Category(DeviceTests.class)
+    public void runTestsOnDevices() throws Exception {
+        project.executeConnectedCheck();
     }
 }

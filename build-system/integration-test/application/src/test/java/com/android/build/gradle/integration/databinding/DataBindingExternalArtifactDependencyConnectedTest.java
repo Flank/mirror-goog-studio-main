@@ -17,16 +17,18 @@
 package com.android.build.gradle.integration.databinding;
 
 import com.android.annotations.NonNull;
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.util.List;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
-public class DataBindingExternalArtifactDependencyTest {
+public class DataBindingExternalArtifactDependencyConnectedTest {
     private static final String MAVEN_REPO_ARG_PREFIX = "-Ptest_maven_repo=";
 
     @Rule
@@ -43,11 +45,13 @@ public class DataBindingExternalArtifactDependencyTest {
 
     @Rule public TemporaryFolder mavenRepo = new TemporaryFolder();
 
-    @Before
-    public void clean() throws IOException, InterruptedException {
-        // just provide test_maven_repo so that build.gradle does not complain
-        library.execute(ImmutableList.of(MAVEN_REPO_ARG_PREFIX + "."), "clean");
-        app.execute(ImmutableList.of(MAVEN_REPO_ARG_PREFIX + "."), "clean");
+    @Rule public Adb adb = new Adb();
+
+    @Test
+    @Category(DeviceTests.class)
+    public void buildLibraryThenBuildApp_connectedCheck() throws IOException, InterruptedException {
+        List<String> args = createLibraryArtifact();
+        app.executeConnectedCheck(args);
     }
 
     @NonNull
@@ -56,12 +60,5 @@ public class DataBindingExternalArtifactDependencyTest {
                 ImmutableList.of(MAVEN_REPO_ARG_PREFIX + mavenRepo.getRoot().getAbsolutePath());
         library.execute(args, "uploadArchives");
         return args;
-    }
-
-    @Test
-    public void compile() throws Exception {
-        List<String> args = createLibraryArtifact();
-        app.execute(args, "assembleDebug");
-        app.execute(args, "assembleDebugAndroidTest");
     }
 }

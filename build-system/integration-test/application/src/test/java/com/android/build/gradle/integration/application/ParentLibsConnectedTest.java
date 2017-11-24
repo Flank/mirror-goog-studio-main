@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,22 @@
 
 package com.android.build.gradle.integration.application;
 
-import com.android.SdkConstants;
+import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.Files;
 import java.io.IOException;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/**
- * Assemble tests for parentLibTest
- */
-public class ParentLibsTest {
+public class ParentLibsConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("parentLibsTest").create();
 
-    @Before
-    public void moveLocalProperties() throws IOException {
-        Files.move(
-                project.file(SdkConstants.FN_LOCAL_PROPERTIES),
-                project.getSubproject("app").file(SdkConstants.FN_LOCAL_PROPERTIES));
-    }
-
     @Test
-    public void assembleAndLint() throws IOException, InterruptedException {
-        project.execute(ImmutableList.of("-p", "app"), "clean", "assembleDebug", "lint");
+    @Category(DeviceTests.class)
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.executeConnectedCheck(ImmutableList.of("-p", "app"));
     }
 }

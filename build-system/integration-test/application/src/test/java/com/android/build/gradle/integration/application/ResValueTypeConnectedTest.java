@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,25 +16,21 @@
 
 package com.android.build.gradle.integration.application;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
+import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TestSourceFile;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.utils.FileUtils;
-import java.io.File;
 import java.io.IOException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/** Test resValue for string type is treated as String. */
-public class ResValueTypeTest {
+public class ResValueTypeConnectedTest {
     public static AndroidTestApp app = HelloWorldApp.noBuildFile();
+
     static {
         app.removeFile(app.getFile("HelloWorldTest.java"));
         app.addFile(
@@ -53,11 +49,10 @@ public class ResValueTypeTest {
                                 + "}\n"));
     }
 
-    @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder().fromTestApp(app).create();
+    @Rule public GradleTestProject project = GradleTestProject.builder().fromTestApp(app).create();
 
-    @BeforeClass
-    public static void setUp() throws IOException {
+    @Before
+    public void setUp() throws IOException {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
@@ -88,51 +83,10 @@ public class ResValueTypeTest {
                         + "}\n");
     }
 
-    @AfterClass
-    public static void cleanUp() {
-        project = null;
-        app = null;
-    }
-
     @Test
-    public void checkStringTagIsUsedInGeneratedDotXmlFile()
-            throws IOException, InterruptedException {
-        project.execute("clean", "generateDebugResValue");
-        File outputFile = project.file("build/generated/res/resValues/debug/values/generated.xml");
-        assertTrue("Missing file: " + outputFile, outputFile.isFile());
-        assertEquals(
-                ""
-                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                        + "<resources>\n"
-                        + "\n"
-                        + "    <!-- Automatically generated file. DO NOT MODIFY -->\n"
-                        + "\n"
-                        + "    <!-- Values from default config. -->\n"
-                        + "    <array name=\"resArray\">foo</array>\n"
-                        + "\n"
-                        + "    <attr name=\"resAttr\">foo</attr>\n"
-                        + "\n"
-                        + "    <bool name=\"resBool\">true</bool>\n"
-                        + "\n"
-                        + "    <color name=\"resColor\">#ffffff</color>\n"
-                        + "\n"
-                        + "    <declare-styleable name=\"resDeclareStyleable\">foo</declare-styleable>\n"
-                        + "\n"
-                        + "    <dimen name=\"resDimen\">42px</dimen>\n"
-                        + "\n"
-                        + "    <fraction name=\"resFraction\">42%</fraction>\n"
-                        + "\n"
-                        + "    <item name=\"resId\" type=\"id\">42</item>\n"
-                        + "\n"
-                        + "    <integer name=\"resInteger\">42</integer>\n"
-                        + "\n"
-                        + "    <plurals name=\"resPlurals\">s</plurals>\n"
-                        + "\n"
-                        + "    <string name=\"resString\" translatable=\"false\">00</string>\n"
-                        + "\n"
-                        + "    <style name=\"resStyle\">foo</style>\n"
-                        + "\n"
-                        + "</resources>",
-                FileUtils.loadFileWithUnixLineSeparators(outputFile));
+    @Category(DeviceTests.class)
+    public void checkResValueIsTreatedAsAString() throws IOException, InterruptedException {
+        project.execute("clean");
+        project.executeConnectedCheck();
     }
 }

@@ -16,21 +16,23 @@
 
 package com.android.build.gradle.integration.databinding;
 
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.google.common.collect.ImmutableList;
-import java.io.IOException;
-import org.junit.Before;
+import org.junit.AssumptionViolatedException;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 @RunWith(FilterableParameterized.class)
-public class DataBindingIntegrationTestAppsTest {
+public class DataBindingIntegrationTestAppsConnectedTest {
     @Rule public GradleTestProject project;
 
-    public DataBindingIntegrationTestAppsTest(String projectName) {
+    public DataBindingIntegrationTestAppsConnectedTest(String projectName) {
         project = GradleTestProject.builder().fromDataBindingIntegrationTest(projectName).create();
     }
 
@@ -44,14 +46,20 @@ public class DataBindingIntegrationTestAppsTest {
                 "AppWithDataBindingInTests");
     }
 
-    @Before
-    public void clean() throws IOException, InterruptedException {
-        project.execute("clean");
-    }
+    @Rule public Adb adb = new Adb();
 
     @Test
-    public void compile() throws Exception {
-        project.execute("assembleDebug");
-        project.execute("assembleDebugAndroidTest");
+    @Category(DeviceTests.class)
+    public void connectedCheck() throws Exception {
+        String projectName = project.getName();
+        if (projectName.equals("TestApp") || projectName.equals("ProguardedAppWithTest")) {
+            // Disabled due to b/69446221
+            throw new AssumptionViolatedException(
+                    String.format(
+                            "Project %s disabled for connected tests due to missing prebuilts.",
+                            projectName));
+        }
+
+        project.executeConnectedCheck();
     }
 }

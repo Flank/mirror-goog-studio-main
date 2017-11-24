@@ -871,6 +871,7 @@ public final class GradleTestProject implements TestRule {
     public interface ApkType {
         ApkType DEBUG = of("debug", true);
         ApkType RELEASE = of("release", false);
+        ApkType RELEASE_SIGNED = of("release", true);
         ApkType ANDROIDTEST_DEBUG = of("debug", "androidTest", true);
 
         @NonNull

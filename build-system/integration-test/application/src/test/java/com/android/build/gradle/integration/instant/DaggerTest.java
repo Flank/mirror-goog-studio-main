@@ -18,23 +18,17 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
-import com.android.ddmlib.IDevice;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
@@ -45,24 +39,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 /** Tests support for Dagger and Instant Run. */
 @RunWith(FilterableParameterized.class)
 public class DaggerTest {
-
-    private static final String ORIGINAL_MESSAGE = "from module";
     private static final String APP_MODULE_DESC = "Lcom/android/tests/AppModule;";
     private static final String GET_MESSAGE = "getMessage";
-
-    @Rule public Logcat logcat = Logcat.create();
-
-    @Rule public final Adb adb = new Adb();
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> data() {
@@ -74,10 +60,7 @@ public class DaggerTest {
 
     private File mAppModule;
 
-    private final String testProject;
-
     public DaggerTest(String testProject) {
-        this.testProject = testProject;
 
         project = GradleTestProject.builder()
                 .fromTestProject(testProject)
@@ -115,13 +98,12 @@ public class DaggerTest {
 
                             @Override
                             public void checkVerifierStatus(
-                                    @NonNull InstantRunVerifierStatus status) throws Exception {
+                                    @NonNull InstantRunVerifierStatus status) {
                                 assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
                             }
 
                             @Override
-                            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
-                                    throws Exception {
+                            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode) {
                                 // for multi dex cold build mode is triggered
                                 assertEquals(InstantRunBuildMode.COLD, buildMode);
                             }
@@ -152,41 +134,5 @@ public class DaggerTest {
         InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
         assertThatDex(artifact.file).containsClass("Lcom/android/tests/AppModule$override;");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    @Ignore("b/68305039")
-    public void hotSwap_art() throws Exception {
-        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
-    }
-
-    private void doTestHotSwap(IDevice iDevice) throws Exception {
-        HotSwapTester tester =
-                new HotSwapTester(
-                        project,
-                        "com.android.tests",
-                        "MainActivity",
-                        this.testProject,
-                        iDevice,
-                        logcat,
-                        PORTS.get(DaggerTest.class.getSimpleName()));
-
-        tester.run(
-                () -> assertThat(logcat).containsMessageWithText(ORIGINAL_MESSAGE),
-                new HotSwapTester.LogcatChange(1, ORIGINAL_MESSAGE) {
-                    @Override
-                    public void makeChange() throws Exception {
-                        TestFileUtils.searchAndReplace(
-                                mAppModule, "from module", CHANGE_PREFIX + 1);
-                    }
-                },
-                new HotSwapTester.LogcatChange(2, ORIGINAL_MESSAGE) {
-                    @Override
-                    public void makeChange() throws Exception {
-                        TestFileUtils.searchAndReplace(
-                                mAppModule, CHANGE_PREFIX + 1, CHANGE_PREFIX + 2);
-                    }
-                });
     }
 }

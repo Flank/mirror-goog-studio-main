@@ -16,24 +16,23 @@
 
 package com.android.build.gradle.integration.shrinker;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
 import static com.android.build.gradle.integration.shrinker.ShrinkerTestUtils.checkShrinkerWasUsed;
 
+import com.android.build.gradle.integration.common.category.DeviceTestsQuarantine;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/** Tests for integration of the new class shrinker with Gradle. */
-public class HelloWorldShrinkerTest {
+public class HelloWorldShrinkerConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
@@ -56,28 +55,21 @@ public class HelloWorldShrinkerTest {
     }
 
     @Test
-    public void checkApkIsCorrect() throws Exception {
-        project.execute("assembleDebug", "assembleDebugAndroidTest");
-        File helloWorld = findHelloWorld();
-        File utils = findUtils();
-
+    @Category(DeviceTestsQuarantine.class)
+    public void connectedCheck() throws Exception {
+        project.executeConnectedCheck();
         checkShrinkerWasUsed(project);
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .containsClass("Lcom/example/helloworld/HelloWorld;");
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
-                .containsClass("Lcom/example/helloworld/Utils;");
 
         TestFileUtils.searchAndReplace(
                 project.file("src/main/java/com/example/helloworld/Utils.java"),
                 "test log entry",
                 "CHANGE");
 
-        project.execute("assembleDebug", "assembleDebugAndroidTest");
+        project.executeConnectedCheck();
         checkShrinkerWasUsed(project);
-
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+        assertThatApk(project.getApk((GradleTestProject.ApkType.DEBUG)))
                 .containsClass("Lcom/example/helloworld/HelloWorld;");
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+        assertThatApk(project.getApk((GradleTestProject.ApkType.DEBUG)))
                 .containsClass("Lcom/example/helloworld/Utils;");
 
         TestFileUtils.searchAndReplace(
@@ -85,45 +77,29 @@ public class HelloWorldShrinkerTest {
                 "Utils.helper\\(\\);",
                 "// onCreate");
 
-        project.execute("assembleDebug", "assembleDebugAndroidTest");
+        project.executeConnectedCheck();
         checkShrinkerWasUsed(project);
-
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+        assertThatApk(project.getApk((GradleTestProject.ApkType.DEBUG)))
                 .containsClass("Lcom/example/helloworld/HelloWorld;");
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+        assertThatApk(project.getApk((GradleTestProject.ApkType.DEBUG)))
                 .doesNotContainClass("Lcom/example/helloworld/Utils;");
-        assertThat(helloWorld).isNewerThan(utils);
 
         FileUtils.delete(project.file("src/main/java/com/example/helloworld/Utils.java"));
-        project.execute("assembleDebug", "assembleDebugAndroidTest");
-
+        project.executeConnectedCheck();
         checkShrinkerWasUsed(project);
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+        assertThatApk(project.getApk((GradleTestProject.ApkType.DEBUG)))
                 .containsClass("Lcom/example/helloworld/HelloWorld;");
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+        assertThatApk(project.getApk((GradleTestProject.ApkType.DEBUG)))
                 .doesNotContainClass("Lcom/example/helloworld/Utils;");
 
-        long timestamp = helloWorld.lastModified();
         addUtilityClass();
-        project.execute("assembleDebug", "assembleDebugAndroidTest");
+        project.executeConnectedCheck();
 
         checkShrinkerWasUsed(project);
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+        assertThatApk(project.getApk((GradleTestProject.ApkType.DEBUG)))
                 .containsClass("Lcom/example/helloworld/HelloWorld;");
-        assertThatApk(project.getApk(GradleTestProject.ApkType.DEBUG))
+        assertThatApk(project.getApk((GradleTestProject.ApkType.DEBUG)))
                 .containsClass("Lcom/example/helloworld/Utils;");
-
-        assertThat(helloWorld).isNewerThan(timestamp);
-        assertThat(utils).isNewerThan(timestamp);
-    }
-
-    private File findHelloWorld() {
-        return FileUtils.find(ShrinkerTestUtils.getShrinkerOutputDir(project), "HelloWorld.class")
-                .get();
-    }
-
-    private File findUtils() {
-        return FileUtils.find(ShrinkerTestUtils.getShrinkerOutputDir(project), "Utils.class").get();
     }
 
     private void addUtilityClass() throws Exception {

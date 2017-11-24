@@ -2,9 +2,7 @@ package com.android.build.gradle.integration.testing;
 
 import static com.android.build.gradle.integration.common.fixture.BuildModel.Feature.FULL_DEPENDENCIES;
 import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Property.COORDINATES;
-import static com.android.build.gradle.integration.common.utils.LibraryGraphHelper.Type.MODULE;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
@@ -23,7 +21,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Test separate test module testing an app with aar dependencies. */
 public class SeparateTestWithAarDependencyTest {
@@ -76,27 +73,27 @@ public class SeparateTestWithAarDependencyTest {
 
     @Test
     public void checkAppDoesntContainTestAppCode() throws IOException, ProcessException {
-        Apk apk = project.getSubproject("test").getApk("debug");
+        Apk apk = project.getSubproject("test").getApk(GradleTestProject.ApkType.DEBUG);
         TruthHelper.assertThatApk(apk).doesNotContainClass("Lcom/android/tests/basic/Main;");
     }
 
     @Test
     public void checkAppDoesntContainTestAppLayout() throws IOException, ProcessException {
-        Apk apk = project.getSubproject("test").getApk("debug");
+        Apk apk = project.getSubproject("test").getApk(GradleTestProject.ApkType.DEBUG);
         TruthHelper.assertThatApk(apk).doesNotContainResource("layout/main.xml");
     }
 
     @Test
     public void checkAppDoesntContainTestAppDependencyLibCode()
             throws IOException, ProcessException {
-        Apk apk = project.getSubproject("test").getApk("debug");
+        Apk apk = project.getSubproject("test").getApk(GradleTestProject.ApkType.DEBUG);
         TruthHelper.assertThatApk(apk).doesNotContainClass("Landroid/support/v7/app/ActionBar;");
     }
 
     @Test
-    public void checkAppDoesntContainTestAppDependencyLibEesources()
+    public void checkAppDoesNotContainTestAppDependencyLibResources()
             throws IOException, ProcessException {
-        Apk apk = project.getSubproject("test").getApk("debug");
+        Apk apk = project.getSubproject("test").getApk(GradleTestProject.ApkType.DEBUG);
         TruthHelper.assertThatApk(apk)
                 .doesNotContainResource("layout/abc_action_bar_title_item.xml");
     }
@@ -149,7 +146,7 @@ public class SeparateTestWithAarDependencyTest {
     }
 
     @Test
-    public void checkTestModelPackageDepsDoesntIncludeTheTestedApp() {
+    public void checkTestModelPackageDepsDoesNotIncludeTheTestedApp() {
         Collection<Variant> variants = models.getModelMap().get(":test").getVariants();
 
         // get the main artifact of the debug artifact and its dependencies
@@ -160,9 +157,6 @@ public class SeparateTestWithAarDependencyTest {
         DependencyGraphs dependencyGraph = artifact.getDependencyGraphs();
 
         LibraryGraphHelper.Items packageItems = helper.on(dependencyGraph).forPackage();
-
-        // check the app project shows up as a project dependency
-        LibraryGraphHelper.Items moduleItems = packageItems.withType(MODULE);
 
         // make sure the package does not contain the app or its dependencies
         TruthHelper.assertThat(packageItems.mapTo(COORDINATES))
@@ -198,11 +192,5 @@ public class SeparateTestWithAarDependencyTest {
                         "com.android.support:support-vector-drawable:"
                                 + GradleTestProject.SUPPORT_LIB_VERSION
                                 + "@aar");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.execute("clean", ":test:deviceCheck");
     }
 }

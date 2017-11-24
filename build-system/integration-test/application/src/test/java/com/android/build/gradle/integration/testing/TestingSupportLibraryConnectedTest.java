@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,11 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-/**
- * Test project to cover the Android Gradle plugin's interaction with the testing support library.
- */
-public class TestingSupportLibraryTest {
-
+public class TestingSupportLibraryConnectedTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestApp(helloWorldApp).create();
@@ -136,7 +132,8 @@ public class TestingSupportLibraryTest {
     }
 
     @Test
-    public void checkCompile() throws IOException, InterruptedException {
-        project.execute("assembleDebugAndroidTest");
+    @Category(DeviceTests.class)
+    public void testIgnoredTestsAreNotRun() throws IOException, InterruptedException {
+        project.executeConnectedCheck();
     }
 }

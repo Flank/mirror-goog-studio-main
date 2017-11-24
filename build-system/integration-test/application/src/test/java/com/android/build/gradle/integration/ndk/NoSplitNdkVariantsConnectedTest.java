@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,32 +16,31 @@
 
 package com.android.build.gradle.integration.ndk;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static com.android.build.gradle.integration.common.utils.AndroidVersionMatcher.anyAndroidVersion;
 
+import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.testutils.apk.Apk;
+import com.android.build.gradle.options.StringOption;
+import com.android.ddmlib.IDevice;
 import java.io.File;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import java.util.Collection;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/**
- * Integration test of the native plugin with multiple variants without using splits.
- */
-public class NoSplitNdkVariantsTest {
+public class NoSplitNdkVariantsConnectedTest {
+    @Rule public Adb adb = new Adb();
 
-    @ClassRule
-    public static GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(new HelloWorldJniApp())
-            .create();
+    @Rule
+    public GradleTestProject project =
+            GradleTestProject.builder().fromTestApp(new HelloWorldJniApp()).create();
 
-    @BeforeClass
-    public static void setUp() throws Exception {
+    @Before
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 project.getBuildFile(),
                 "\n"
@@ -95,45 +94,21 @@ public class NoSplitNdkVariantsTest {
                         + "include $(BUILD_SHARED_LIBRARY)");
     }
 
-    @AfterClass
-    public static void cleanUp() {
-        project = null;
-    }
-
     @Test
-    public void assembleX86Release() throws Exception {
-        project.execute("assembleX86Release");
-
-        // Verify .so are built for all platform.
-        Apk apk = project.getApk(null, ApkType.RELEASE, "x86");
-        assertNotNull(apk.getEntry("lib/x86/libhello-jni.so"));
-        assertNull(apk.getEntry("lib/mips/libhello-jni.so"));
-        assertNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
-        assertNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
-    }
-
-    @Test
-    public void assembleArmRelease() throws Exception {
-        project.execute("assembleArmRelease");
-
-        // Verify .so are built for all platform.
-        Apk apk = project.getApk(null, ApkType.RELEASE, "arm");
-        assertNull(apk.getEntry("lib/x86/libhello-jni.so"));
-        assertNull(apk.getEntry("lib/mips/libhello-jni.so"));
-        assertNotNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
-        assertNotNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
-
-    }
-
-    @Test
-    public void assembleMipsRelease() throws Exception {
-        project.execute("assembleMipsRelease");
-
-        // Verify .so are built for all platform.
-        Apk apk = project.getApk(null, ApkType.RELEASE, "mips");
-        assertNull(apk.getEntry("lib/x86/libhello-jni.so"));
-        assertNotNull(apk.getEntry("lib/mips/libhello-jni.so"));
-        assertNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
-        assertNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
+    @Category(DeviceTests.class)
+    public void connectedAndroidTest() throws Exception {
+        project.executor()
+                .run(
+                        "assembleX86Debug", "assembleX86DebugAndroidTest",
+                        "assembleArmDebug", "assembleArmDebugAndroidTest");
+        IDevice testDevice = adb.getDevice(anyAndroidVersion());
+        Collection<String> abis = testDevice.getAbis();
+        String taskName =
+                abis.contains("x86")
+                        ? "devicePoolX86DebugAndroidTest"
+                        : "devicePoolArmDebugAndroidTest";
+        project.executor()
+                .with(StringOption.DEVICE_POOL_SERIAL, testDevice.getSerialNumber())
+                .run(taskName);
     }
 }

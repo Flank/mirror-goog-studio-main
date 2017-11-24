@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 The Android Open Source Project
+ * Copyright (C) 2017 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,25 @@
  * limitations under the License.
  */
 
-package com.android.build.gradle.integration.library;
+package com.android.build.gradle.integration.testing;
 
+import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/** Assemble tests for sameNamedLibs. */
-public class SameNamedLibsTest {
+public class SeparateTestWithMinificationButNoObfuscationConnectedTest {
     @Rule
     public GradleTestProject project =
-            GradleTestProject.builder().fromTestProject("sameNamedLibs").create();
-
-    @Before
-    public void setUp() throws IOException, InterruptedException {
-        project.execute("clean", "assembleDebug");
-    }
+            GradleTestProject.builder()
+                    .fromTestProject("separateTestWithMinificationButNoObfuscation")
+                    .create();
 
     @Test
-    public void lint() throws IOException, InterruptedException {
-        project.execute("lint");
+    @Category(DeviceTests.class)
+    public void connectedCheck() throws IOException, InterruptedException {
+        project.execute(":test:deviceAndroidTest");
     }
 }
