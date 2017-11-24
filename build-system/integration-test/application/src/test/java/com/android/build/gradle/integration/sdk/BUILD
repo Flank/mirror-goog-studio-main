@@ -1,35 +1,11 @@
-java_library(
-    name = "java_tests",
-    srcs = glob(["**/*.java"]),
-    deps = [
-        "//tools/apksig",
-        "//tools/base/annotations",
-        "//tools/base/build-system:gradle-api",
-        "//tools/base/build-system/builder",
-        "//tools/base/build-system/builder-model",
-        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
-        "//tools/base/build-system/gradle-api",
-        "//tools/base/build-system/gradle-core",
-        "//tools/base/build-system/integration-test/framework",
-        "//tools/base/common:tools.common",
-        "//tools/base/ddmlib:tools.ddmlib",
-        "//tools/base/instant-run:instant-run-client",
-        "//tools/base/repository:tools.repository",
-        "//tools/base/sdk-common:tools.sdk-common",
-        "//tools/base/sdklib:tools.sdklib",
-        "//tools/base/testutils:tools.testutils",
-        "//tools/base/third_party:com.google.guava_guava",
-        "//tools/base/third_party:com.google.truth_truth",
-        "//tools/base/third_party:junit_junit",
-    ],
-)
+load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
 
-java_test(
-    name = "tests",
-    timeout = "eternal",
+gradle_integration_test(
+    name = "sdk_tests",
     # TODO: can we make this test start from no prebuilt SDK.
     # Note: this test is slightly unusual in testing the auto download, hence the hardcoded file
     # references. This is not necessarily the pattern to follow in other tests.
+    srcs = glob(["**/*.java"]),
     data = [
         "//prebuilts/studio/sdk:build-tools/27.0.1",
         "//prebuilts/studio/sdk:ndk-bundle",
@@ -50,24 +26,30 @@ java_test(
         "//prebuilts/tools/common/cmake:cmake-3.8.2",
         "//tools/base/build-system:gradle-distrib",
         "//tools/base/build-system/integration-test:test-projects/commonBuildScript.gradle",
-        "//tools/base/build-system/integration-test/application:gradle_plugin_repo.zip",
-        "//tools/base/build-system/integration-test/application:prebuilts_repo.zip",
-        "//tools/data-binding:data_binding_runtime_repo.zip",
     ],
-    jvm_flags = [
-        "-Dtest.suite.jar=tests.jar",
-        "-Dfile.encoding=UTF-8",
-        "-Dsun.jnu.encoding=UTF-8",
-        "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
-        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/integration-test/application/gradle_plugin_repo.zip,tools/base/build-system/integration-test/application/prebuilts_repo.zip",
+    maven_repos = [
+        "//tools/base/build-system/integration-test/application:gradle_plugin",
+        "//tools/base/build-system/integration-test/application:prebuilts",
     ],
-    tags = [
-        "block-network",
-        "no_mac",
-        "no_windows",
-    ],
-    test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
-    runtime_deps = [
-        ":java_tests",
+    deps = [
+        "//tools/apksig",
+        "//tools/base/annotations",
+        "//tools/base/build-system:gradle-api",
+        "//tools/base/build-system/builder",
+        "//tools/base/build-system/builder-model",
+        "//tools/base/build-system/builder-test-api:tools.builder-test-api",
+        "//tools/base/build-system/gradle-api",
+        "//tools/base/build-system/gradle-core",
+        "//tools/base/build-system/integration-test/framework",
+        "//tools/base/common:tools.common",
+        "//tools/base/ddmlib:tools.ddmlib",
+        "//tools/base/instant-run:instant-run-client",
+        "//tools/base/repository:tools.repository",
+        "//tools/base/sdk-common:tools.sdk-common",
+        "//tools/base/sdklib:tools.sdklib",
+        "//tools/base/testutils:tools.testutils",
+        "//tools/base/third_party:com.google.guava_guava",
+        "//tools/base/third_party:com.google.truth_truth",
+        "//tools/base/third_party:junit_junit",
     ],
 )
