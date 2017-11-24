@@ -1,9 +1,10 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <com.android.support.test>
-  <runner versions="1.0.1,1.0.1"/>
-  <rules versions="1.0.1,1.0.1"/>
+  <runner versions="0.5,1.0.1,1.0.2-alpha1"/>
+  <rules versions="0.5,1.0.1,1.0.2-alpha1"/>
   <exposed-instrumentation-api-publish versions="0.5,0.6-alpha"/>
-  <testing-support-lib versions="0.1,0.1"/>
-  <orchestrator versions="1.0.1,1.0.1"/>
+  <testing-support-lib versions="0.1"/>
+  <orchestrator versions="1.0.1,1.0.2-alpha1"/>
+  <monitor versions="1.0.2-alpha1"/>
 </com.android.support.test>
 

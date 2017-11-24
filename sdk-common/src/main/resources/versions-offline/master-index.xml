@@ -26,4 +26,12 @@
   <com.android.support.test.services/>
   <com.google.firebase/>
   <com.google.android.gms/>
+  <com.google.gms/>
+  <android.arch.paging/>
+  <com.crashlytics.sdk.android/>
+  <io.fabric.sdk.android/>
+  <android.arch.persistence/>
+  <com.google.android.wearable/>
+  <com.google.android.support/>
+  <com.android.installreferrer/>
 </metadata>

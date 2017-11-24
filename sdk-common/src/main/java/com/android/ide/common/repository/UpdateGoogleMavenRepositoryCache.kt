@@ -22,6 +22,7 @@ import com.google.common.io.Files
 import com.google.common.io.Resources
 import java.io.File
 import java.net.URL
+import java.util.*
 
 /**
  * Updates the checked in index files of the Google Maven repository.
@@ -71,25 +72,24 @@ fun main(args: Array<String>) {
                 val end: Int = line.indexOf("\"", start)
                 val sub = line.substring(start, end)
                 var max: GradleVersion? = null
-                var maxStable: GradleVersion? = null
+                val maxStablePerMajor = TreeMap<Int, GradleVersion>(Collections.reverseOrder())
                 sub.splitToSequence(",").forEach {
                     val v = GradleVersion.parse(it)
                     if (max == null || v > max!!) {
                         max = v
                     }
-                    if (!v.isPreview && (maxStable == null || v > maxStable!!)) {
-                        maxStable = v
+
+                    if (!v.isPreview) {
+                        maxStablePerMajor.compute(v.major) { _, old -> if (old == null) v else maxOf(old, v) }
                     }
                 }
                 if (max != null) {
-                    val newVersions =
-                            if (maxStable != null) {
-                                "$maxStable,$max"
-                            } else {
-                                max.toString()
-                            }
                     sb.append(line.substring(0, start))
-                    sb.append(newVersions)
+                    maxStablePerMajor.values
+                            .take(2)
+                            .plus(max!!)
+                            .toSortedSet()
+                            .joinTo(sb, separator = ",")
                     sb.append(line.substring(end))
                     sb.append("\n")
                     done = true

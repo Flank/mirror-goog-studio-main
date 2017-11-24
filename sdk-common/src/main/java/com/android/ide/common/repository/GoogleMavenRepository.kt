@@ -21,13 +21,8 @@ import com.google.common.io.Files
 import org.kxml2.io.KXmlParser
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
-import java.io.BufferedInputStream
-import java.io.ByteArrayInputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.IOException
-import java.io.InputStream
-import java.util.HashMap
+import java.io.*
+import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.function.Predicate
 
@@ -90,7 +85,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                     artifactId: String,
                     filter: Predicate<GradleVersion>?,
                     allowPreview: Boolean = false): GradleVersion? =
-            findVersion(groupId, artifactId, { filter?.test(it) ?: true }, allowPreview)
+            findVersion(groupId, artifactId, { filter?.test(it) != false }, allowPreview)
 
     fun findVersion(groupId: String,
                     artifactId: String,
@@ -108,9 +103,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
     private fun getPackageMap(): MutableMap<String, PackageInfo> {
         if (packageMap == null) {
             val map = Maps.newHashMapWithExpectedSize<String, PackageInfo>(28)
-            findData("master-index.xml")?.let {
-                readMasterIndex(it, map)
-            }
+            findData("master-index.xml")?.use { readMasterIndex(it, map) }
             packageMap = map
         }
 
@@ -132,42 +125,39 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
         if (cacheDir != null) {
             synchronized(this) {
                 val file = File(cacheDir, relative)
-                val refresh: Boolean
                 if (file.exists()) {
                     val lastModified = file.lastModified()
                     val now = System.currentTimeMillis()
                     val expiryMs = TimeUnit.HOURS.toMillis(cacheExpiryHours.toLong())
-                    if (lastModified != 0L && now - lastModified > expiryMs) {
-                        refresh = true
-                    } else {
+
+                    if (lastModified == 0L || now - lastModified <= expiryMs) {
                         // We found a cached file. Make sure it's actually newer than what the IDE
                         // ships with? Not really necessary since within the cache expiry interval
                         // it will be refreshed anyway
                         return BufferedInputStream(FileInputStream(file))
                     }
-                } else {
-                    // No cache yet: read remote index
-                    refresh = true
                 }
 
-                if (refresh) {
-                    try {
-                        val index = readUrlData("https://maven.google.com/$relative",
-                                networkTimeoutMs)
-                        if (index != null) {
-                            val parent = file.parentFile
-                            parent?.mkdirs()
-                            Files.write(index, file)
-                            return ByteArrayInputStream(index)
-                        }
-                    } catch (e: Throwable) {
-                        // timeouts etc: fall through to use built-in data
+                try {
+                    val index = readUrlData("https://maven.google.com/$relative",
+                            networkTimeoutMs)
+                    if (index != null) {
+                        val parent = file.parentFile
+                        parent?.mkdirs()
+                        Files.write(index, file)
+                        return ByteArrayInputStream(index)
                     }
+                } catch (e: Throwable) {
+                    // timeouts etc: fall through to use built-in data
                 }
             }
         }
 
         // Fallback: Builtin index, used for offline scenarios etc
+        return readDefaultData(relative)
+    }
+
+    open protected fun readDefaultData(relative: String): InputStream? {
         return GoogleMavenRepository::class.java.getResourceAsStream("/versions-offline/$relative")
     }
 
@@ -204,7 +194,7 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
 
         private fun initializeIndex(map: MutableMap<String, ArtifactInfo>) {
             val stream = findData("${pkg.replace('.', '/')}/group-index.xml")
-            stream?.let { readGroupData(stream, map) }
+            stream?.use { readGroupData(stream, map) }
         }
 
         private fun readGroupData(stream: InputStream, map: MutableMap<String, ArtifactInfo>) =
@@ -229,3 +219,4 @@ abstract class GoogleMavenRepository @JvmOverloads constructor(
                 }
     }
 }
+

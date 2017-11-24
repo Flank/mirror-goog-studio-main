@@ -86,8 +86,7 @@ public class JarContentsTest {
 
     static {
         // Useful command for getting these lists:
-        // unzip -l path/to.jar | grep -v ".class$" | grep -v -E "NOTICE|NOTICE.txt|META\-INF\/MANIFEST.MF" \
-        // | tail -n +4 | head -n -2 | cut -c 31- | sort -f | awk '{print "\"" $0 "\"," }'
+        // unzip -l path/to.jar | grep -v ".class$" | tail -n +4 | head -n -2 | cut -c 31- | sort -f | awk '{print "\"" $0 "\"," }'
 
         ImmutableSetMultimap.Builder<String, String> expected = ImmutableSetMultimap.builder();
         expected.putAll(
@@ -589,13 +588,18 @@ public class JarContentsTest {
                 "versions-offline/android/arch/core/group-index.xml",
                 "versions-offline/android/arch/lifecycle/",
                 "versions-offline/android/arch/lifecycle/group-index.xml",
+                "versions-offline/android/arch/paging/",
+                "versions-offline/android/arch/paging/group-index.xml",
                 "versions-offline/android/arch/persistence/",
+                "versions-offline/android/arch/persistence/group-index.xml",
                 "versions-offline/android/arch/persistence/room/",
                 "versions-offline/android/arch/persistence/room/group-index.xml",
                 "versions-offline/com/",
                 "versions-offline/com/android/",
                 "versions-offline/com/android/databinding/",
                 "versions-offline/com/android/databinding/group-index.xml",
+                "versions-offline/com/android/installreferrer/",
+                "versions-offline/com/android/installreferrer/group-index.xml",
                 "versions-offline/com/android/java/",
                 "versions-offline/com/android/java/tools/",
                 "versions-offline/com/android/java/tools/build/",
@@ -610,10 +614,10 @@ public class JarContentsTest {
                 "versions-offline/com/android/support/test/espresso/idling/",
                 "versions-offline/com/android/support/test/espresso/idling/group-index.xml",
                 "versions-offline/com/android/support/test/group-index.xml",
-                "versions-offline/com/android/support/test/services/",
-                "versions-offline/com/android/support/test/services/group-index.xml",
                 "versions-offline/com/android/support/test/janktesthelper/",
                 "versions-offline/com/android/support/test/janktesthelper/group-index.xml",
+                "versions-offline/com/android/support/test/services/",
+                "versions-offline/com/android/support/test/services/group-index.xml",
                 "versions-offline/com/android/support/test/uiautomator/",
                 "versions-offline/com/android/support/test/uiautomator/group-index.xml",
                 "versions-offline/com/android/tools/",
@@ -637,6 +641,10 @@ public class JarContentsTest {
                 "versions-offline/com/android/tools/layoutlib/group-index.xml",
                 "versions-offline/com/android/tools/lint/",
                 "versions-offline/com/android/tools/lint/group-index.xml",
+                "versions-offline/com/crashlytics/",
+                "versions-offline/com/crashlytics/sdk/",
+                "versions-offline/com/crashlytics/sdk/android/",
+                "versions-offline/com/crashlytics/sdk/android/group-index.xml",
                 "versions-offline/com/google/",
                 "versions-offline/com/google/android/",
                 "versions-offline/com/google/android/gms/",
@@ -645,8 +653,19 @@ public class JarContentsTest {
                 "versions-offline/com/google/android/instantapps/group-index.xml",
                 "versions-offline/com/google/android/instantapps/thirdpartycompat/",
                 "versions-offline/com/google/android/instantapps/thirdpartycompat/group-index.xml",
+                "versions-offline/com/google/android/support/",
+                "versions-offline/com/google/android/support/group-index.xml",
+                "versions-offline/com/google/android/wearable/",
+                "versions-offline/com/google/android/wearable/group-index.xml",
                 "versions-offline/com/google/firebase/",
                 "versions-offline/com/google/firebase/group-index.xml",
+                "versions-offline/com/google/gms/",
+                "versions-offline/com/google/gms/group-index.xml",
+                "versions-offline/io/",
+                "versions-offline/io/fabric/",
+                "versions-offline/io/fabric/sdk/",
+                "versions-offline/io/fabric/sdk/android/",
+                "versions-offline/io/fabric/sdk/android/group-index.xml",
                 "versions-offline/master-index.xml",
                 "wireless/",
                 "wireless/android/",
