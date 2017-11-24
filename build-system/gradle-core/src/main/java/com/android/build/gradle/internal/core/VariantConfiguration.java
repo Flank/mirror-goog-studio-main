@@ -719,10 +719,6 @@ public class VariantConfiguration<T extends BuildType, D extends ProductFlavor, 
             }
         }
 
-        if (id == null) {
-            throw new RuntimeException("Failed to get application id for " + getFullName());
-        }
-
         return id;
     }
 

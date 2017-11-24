@@ -70,7 +70,6 @@ import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.tooling.BuildException;
 import org.gradle.tooling.provider.model.ToolingModelBuilderRegistry;
 
 /** TaskManager for creating tasks in an Android library project. */
@@ -343,9 +342,6 @@ public class LibraryTaskManager extends TaskManager {
                         }
 
                         String packageName = variantConfig.getPackageFromManifest();
-                        if (packageName == null) {
-                            throw new BuildException("Failed to read manifest", null);
-                        }
 
                         // Now add transforms for intermediate publishing (projects to projects).
                         File jarOutputFolder = variantScope.getIntermediateJarOutputFolder();

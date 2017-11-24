@@ -226,7 +226,7 @@ public class GradleVariantConfiguration
                     return applicationId;
                 }
 
-                @Nullable
+                @NonNull
                 @Override
                 public String getOriginalApplicationId() {
                     return getApplicationId();
