@@ -72,8 +72,8 @@ public class RemoteAndroidTestRunnerTest extends TestCase {
         final String className = "FooTest";
         final String testName = "fooTest";
         mRunner.setMethodName(className, testName);
-        String expectedCmd = EasyMock.contains(String.format("-e class %s#%s", className,
-                testName));
+        String expectedCmd =
+                EasyMock.contains(String.format("-e class '%s#%s'", className, testName));
         runAndVerify(expectedCmd);
     }
 

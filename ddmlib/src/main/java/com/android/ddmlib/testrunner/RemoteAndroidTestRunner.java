@@ -118,7 +118,8 @@ public class RemoteAndroidTestRunner implements IRemoteAndroidTestRunner  {
 
     @Override
     public void setClassName(String className) {
-        addInstrumentationArg(CLASS_ARG_NAME, className);
+        // The class name may contain the dollar sign, so needs to be quoted.
+        addInstrumentationArg(CLASS_ARG_NAME, "'" + className + "'");
     }
 
     @Override
