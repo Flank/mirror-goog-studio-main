@@ -208,6 +208,24 @@ public class TestUtils {
     }
 
     /**
+     * @return a directory which tests can output data to. If running through Bazel's test runner,
+     *     this returns the directory as specified by the TEST_UNDECLARED_OUTPUT_DIR environment
+     *     variable. Data written to this directory will be zipped and made available under the
+     *     WORKSPACE_ROOT/bazel-testlogs/ after the test completes. For non-Bazel runs, this
+     *     currently returns a tmp directory that is deleted on exit.
+     */
+    @NonNull
+    public static File getTestOutputDir() {
+        // If running via bazel, returns the sandboxed test output dir.
+        String testOutputDir = System.getenv("TEST_UNDECLARED_OUTPUTS_DIR");
+        if (testOutputDir != null) {
+            return new File(testOutputDir);
+        }
+
+        return createTempDirDeletedOnExit();
+    }
+
+    /**
      * Returns a file at {@code path} relative to the root for {@link #getLatestAndroidPlatform}.
      *
      * @throws IllegalStateException if the current OS is not supported.
