@@ -35,15 +35,22 @@ import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.util.List;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
 
 public class ResourcesSwapConnectedTest {
 
     private static final String LOG_TAG = "ResourcesSwapTest.sha";
     private static final String BLACK_PNG_SHA = "256111655c33c5b5c095f6287abe6db307eab27a";
     private static final String WHITE_PNG_SHA = "bdd80c122f819fd58ee0603530d27f591a9cc46c";
+
+    // This test is a bit flaky, re-run it up to 3 times to see if it's actually broken.
+    @ClassRule public static RetryTest retry = new RetryTest(3);
 
     @Rule
     public GradleTestProject mProject =
@@ -58,10 +65,6 @@ public class ResourcesSwapConnectedTest {
     @Test
     @Category(DeviceTests.class)
     public void swapResourcesDeviceTest_art() throws Exception {
-        testWithRetries(3, this::doTest);
-    }
-
-    private void doTest() throws Exception {
         IDevice device = adb.getDevice(AndroidVersionMatcher.thatUsesArt());
 
         TestFileUtils.appendToFile(
@@ -161,31 +164,40 @@ public class ResourcesSwapConnectedTest {
         Resources.asByteSource(Resources.getResource(resourceName)).copyTo(Files.asByteSink(file));
     }
 
-    private static void testWithRetries(int retries, TestMethod test) throws Exception {
-        int failedTries = 0;
-        while (true) {
-            try {
-                test.runTest();
-                break;
-            } catch (AssertionError e) {
-                failedTries++;
-                if (failedTries >= retries) {
-                    System.out.println("Failed too many times.");
-                    throw new TooManyRetriesException(e);
+    private static class RetryTest implements TestRule {
+        private int retries;
+
+        public RetryTest(int retries) {
+            this.retries = retries;
+        }
+
+        @Override
+        public Statement apply(Statement base, Description description) {
+            return new Statement() {
+                @Override
+                public void evaluate() throws Throwable {
+                    int failedTries = 0;
+                    while (true) {
+                        try {
+                            base.evaluate();
+                            break;
+                        } catch (Throwable t) {
+                            failedTries++;
+                            if (failedTries >= retries) {
+                                System.out.println("Failed too many times.");
+                                throw new TooManyRetriesException(t);
+                            }
+                        }
+                        System.out.println("Retrying...");
+                    }
                 }
-                System.out.println("Retrying...");
+            };
+        }
+
+        public static class TooManyRetriesException extends Exception {
+            public TooManyRetriesException(Throwable e) {
+                super(e);
             }
         }
-    }
-
-    private interface TestMethod {
-        void runTest() throws Exception;
-    }
-
-    public static class TooManyRetriesException extends Exception {
-        public TooManyRetriesException(Throwable e) {
-            super(e);
-        }
-
     }
 }
