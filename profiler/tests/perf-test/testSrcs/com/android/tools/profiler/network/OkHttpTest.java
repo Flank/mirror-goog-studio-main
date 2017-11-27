@@ -31,10 +31,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+@Ignore // TODO: Re-enable (b/69805152)
 @RunWith(Parameterized.class)
 public class OkHttpTest {
 
