@@ -1,5 +1,6 @@
 load("//tools/base/bazel:maven.bzl", "maven_repo")
 load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "kotlin_jar")
+load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
 
 TEST_DEPS = [
     "//tools/base/build-system/integration-test/framework",
@@ -44,12 +45,7 @@ maven_repo(
 )
 
 TEST_DATA = [
-    ":gradle_plugin_repo.zip",
-    ":prebuilts_repo.zip",
     "//tools/base/build-system/integration-test:test-projects",
-    "@AntennaPod//:all_files",
-    "@gradle_perf_android_medium//:all_files",
-    "@android_studio_gradle_test//:all_files",
     "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
     "//prebuilts/studio/sdk:build-tools/latest",
     "//prebuilts/studio/sdk:cmake",
@@ -72,83 +68,42 @@ TEST_DATA = [
     "//tools/base/build-system:gradle-distrib",
 ]
 
-java_library(
-    name = "java_tests",
+gradle_integration_test(
+    name = "tests",
     srcs = glob(
         [
             "src/test/java/**/*.java",
-            "src/test/groovy/**/*.java",
+            "src/test/java/**/*.kt",
         ],
         exclude = [
             "src/test/java/**/CheckAll*",
             "src/test/java/**/performance/**",
         ],
     ),
+    data = TEST_DATA + [
+        "@AntennaPod//:all_files",
+        "@gradle_perf_android_medium//:all_files",
+        "@android_studio_gradle_test//:all_files",
+    ],
+    maven_repos = [
+        "//tools/base/build-system/integration-test/application:gradle_plugin",
+        "//tools/base/build-system/integration-test/application:prebuilts",
+    ],
     resources = glob(["src/test/resources/**"]),
-    deps = TEST_DEPS,
-)
-
-kotlin_jar(
-    name = "kotlin_tests",
-    srcs = ["src/test/java"],
-    inputs = glob(["src/test/java/**/*.kt"]),
-    deps = TEST_DEPS,
-)
-
-java_test(
-    name = "tests",
-    timeout = "eternal",
-    data = TEST_DATA,
-    jvm_flags = [
-        "-Dtest.suite.jar=tests.jar",
-        "-Dfile.encoding=UTF-8",
-        "-Dsun.jnu.encoding=UTF-8",
-        "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
-        "-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.DeviceTestsQuarantine,com.android.build.gradle.integration.common.category.OnlineTests",
-        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/integration-test/application/gradle_plugin_repo.zip,tools/base/build-system/integration-test/application/prebuilts_repo.zip",
-    ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
-    tags = [
-        "block-network",
-        "cpu:3",
-        "gradle_integration",
-        "no_test_mac",  # b/69151132 Time out frequently when run on mac.
-        "slow",
-    ],
-    test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
-    runtime_deps = [
-        # Need to put this on the classpath before TestRunner_deploy.jar which contains
-        # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
-        "//tools/base/third_party:junit_junit",
-        ":java_tests",
-        ":libkotlin_tests.jar",
-    ],
+    deps = TEST_DEPS,
 )
 
 # Test that builds and lints all test projects, without any additional assertions.
-java_test(
+gradle_integration_test(
     name = "automatic-tests",
-    timeout = "eternal",
     srcs = glob(["src/test/java/**/CheckAll.java"]),
     data = TEST_DATA,
-    jvm_flags = [
-        "-Dtest.suite.jar=automatic-tests.jar",
-        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/integration-test/application/gradle_plugin_repo.zip,tools/base/build-system/integration-test/application/prebuilts_repo.zip",
+    maven_repos = [
+        "//tools/base/build-system/integration-test/application:gradle_plugin",
+        "//tools/base/build-system/integration-test/application:prebuilts",
     ],
     shard_count = 8,  # Keep this in sync with logic in our bazel launcher script and CheckAllRunner.
-    tags = [
-        "block-network",
-        "cpu:3",
-        "gradle_integration",
-        "no_test_mac",  # b/69151132 Time out frequently when run on mac.
-        "slow",
-    ],
-    test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
-    runtime_deps = [
-        # Need to put this on the classpath before TestRunner_deploy.jar which contains
-        # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
-        "//tools/base/third_party:junit_junit",
-    ],
     deps = TEST_DEPS,
 )
 

@@ -21,13 +21,18 @@ def gradle_integration_test(
 
   if kotlin_srcs:
     kotlin_name = name + '.kotlin.gradle_integration_test'
-    test_classes_target_names += [kotlin_name]
     kotlin_jar(
         name = kotlin_name,
-        srcs = '',
+        srcs = ['src'],
         inputs = kotlin_srcs,
         deps = deps,
     )
+    kotlin_java_import_name = kotlin_name + '.java_import'
+    native.java_import(
+      name = kotlin_java_import_name,
+      jars = [kotlin_name],
+    )
+    test_classes_target_names += [kotlin_java_import_name]
 
   if java_srcs:
     java_name = name + '.java.gradle_integration_test'
@@ -61,6 +66,7 @@ def gradle_integration_test(
           '-Dtest.excludeCategories=com.android.build.gradle.integration.common.category.DeviceTests,com.android.build.gradle.integration.common.category.DeviceTestsQuarantine,com.android.build.gradle.integration.common.category.OnlineTests',
           '-Dtest.android.build.gradle.integration.repos=' + zip_file_names,
       ],
+      resources = resources,
       shard_count = shard_count,
       tags = [
           'block-network',
