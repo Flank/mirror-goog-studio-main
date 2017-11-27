@@ -248,10 +248,11 @@ public class OkHttpTest {
     }
 
     private void assertNetworkErrorBehavior(NetworkStubWrapper stubWrapper) {
-        // Get two responses: 1 aborted and 1 completed
-        NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
-        assertThat(httpRangeResponse.getDataList().size()).isEqualTo(2);
+        // Wait until get two responses: 1 aborted and 1 completed.
+        NetworkProfiler.HttpRangeResponse httpRangeResponse = null;
+        while (httpRangeResponse == null || httpRangeResponse.getDataList().size() != 2) {
+            httpRangeResponse = stubWrapper.getAllHttpRange(myGrpc.getProcessId());
+        }
 
         // The first request should have no response fields after being aborted
         HttpConnectionData connectionAborted = httpRangeResponse.getDataList().get(0);

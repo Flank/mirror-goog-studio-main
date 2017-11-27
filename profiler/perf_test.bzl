@@ -69,7 +69,7 @@ def perf_test(name, srcs, test_app, native_lib="", deps = []):
       shard_count = 1,
       test_class = "com.android.testutils.JarTestSuite",
       visibility = ["//visibility:public"],
-      size = "small",
+      size = "medium",
       data = [
         ":" + name + "_transform-app",
         test_app,
