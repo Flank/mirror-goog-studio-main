@@ -39,8 +39,15 @@ public class AetherUtils {
     static final RemoteRepository GOOGLE =
             new RemoteRepository.Builder("Google", "default", "https://maven.google.com/").build();
 
+    static final RemoteRepository GRADLE =
+            new RemoteRepository.Builder(
+                            "Gradle",
+                            "default",
+                            "https://repo.gradle.org/gradle/libs-releases-local/")
+                    .build();
+
     public static final ImmutableList<RemoteRepository> REPOSITORIES =
-            ImmutableList.of(MAVEN_CENTRAL, JCENTER, GOOGLE);
+            ImmutableList.of(MAVEN_CENTRAL, JCENTER, GOOGLE, GRADLE);
 
     private AetherUtils() {}
 
