@@ -518,7 +518,7 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
                 "Ensures that when parameter in a method only allows a specific set " +
                         "of constants, calls obey those rules.",
 
-                Category.SECURITY,
+                Category.CORRECTNESS,
                 6,
                 Severity.ERROR,
                 IMPLEMENTATION)

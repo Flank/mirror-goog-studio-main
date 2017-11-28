@@ -86,6 +86,7 @@ import org.jetbrains.uast.UAnnotated
 import org.jetbrains.uast.UCallExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.UFile
 import org.jetbrains.uast.ULiteralExpression
 import org.objectweb.asm.ClassReader
 import org.objectweb.asm.Opcodes
@@ -2279,10 +2280,10 @@ class LintDriver
                 return true
             }
 
-            currentScope = currentScope.uastParent
-            if (currentScope is PsiFile) {
+            if (currentScope is UFile) {
                 return false
             }
+            currentScope = currentScope.uastParent
         }
 
         return false
@@ -2661,7 +2662,7 @@ class LintDriver
          */
         @JvmStatic
         fun isSuppressed(issue: Issue, annotated: UAnnotated): Boolean {
-            val annotations = annotated.annotations;
+            val annotations = annotated.annotations
             if (annotations.isEmpty()) {
                 return false
             }
@@ -2733,7 +2734,7 @@ class LintDriver
          * @return true if the issue or all issues should be suppressed for this modifier
          */
         @JvmStatic
-        fun isSuppressedExpression(issue: Issue, value: UExpression?): Boolean {
+        private fun isSuppressedExpression(issue: Issue, value: UExpression?): Boolean {
             if (value is ULiteralExpression) {
                 val literalValue = value.value
                 if (literalValue is String) {

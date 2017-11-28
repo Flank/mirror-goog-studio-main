@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Detector
+import org.junit.Ignore
 
 class TypedefDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = TypedefDetector()
@@ -942,6 +943,91 @@ class TypedefDetectorTest : AbstractCheckTest() {
                         "                ~~~~~~~~~~~~~~\n" +
                         "src/test/pkg/IntDefTest.java:12: Error: Must be one of: TestType.LOL [WrongConstant]\n" +
                         "        wantInt(giveWrongIntAnnotated()); //ERROR\n" +
+                        "                ~~~~~~~~~~~~~~~~~~~~~~~\n" +
+                        "5 errors, 0 warnings")
+    }
+
+    fun testEnforceMethodReturnValueConstraintsKotlin() {
+        // Regression test for 69321287
+        lint().files(
+                kotlin("""
+                    package test.pkg
+
+                    @Suppress("UseExpressionBody")
+                    class IntDefTest {
+                        fun test() {
+                            wantInt(100) // ERROR
+                            wantInt(WrongType.NO) // ERROR
+                            wantInt(giveRandomInt()) // ERROR
+                            wantInt(giveWrongInt()) //ERROR
+                            wantInt(giveWrongIntAnnotated()) //ERROR
+                            wantInt(giveUnknownInt()) // OK (unknown)
+                            wantInt(giveRightInt()) //OK
+                        }
+
+                        fun wantInt(@TestType input: Int) {}
+
+                        fun giveRandomInt(): Int {
+                            return 100
+                        }
+
+                        fun giveUnknownInt(): Int {
+                            return (giveRandomInt() * System.currentTimeMillis()).toInt()
+                        }
+
+                        fun giveWrongInt(): Int {
+                            return WrongType.NO
+                        }
+
+                        fun giveRightInt(): Int {
+                            return TestType.LOL
+                        }
+
+                        @WrongType
+                        fun giveWrongIntAnnotated(): Int {
+                            return WrongType.NO
+                        }
+                    }
+                """).indented(),
+                java("""
+                    package test.pkg;
+
+                    import android.support.annotation.IntDef;
+
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    @IntDef({WrongType.NO})
+                    public @interface WrongType {
+                        int NO = 2;
+                    }
+                    """).indented(),
+                java("""
+                    package test.pkg;
+
+                    import android.support.annotation.IntDef;
+
+                    @SuppressWarnings("ClassNameDiffersFromFileName")
+                    @IntDef({TestType.LOL})
+                    public @interface TestType {
+                        int LOL = 1;
+                    }
+                    """).indented(),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .run()
+                .expect("src/test/pkg/IntDefTest.kt:6: Error: Must be one of: TestType.LOL [WrongConstant]\n" +
+                        "        wantInt(100) // ERROR\n" +
+                        "                ~~~\n" +
+                        "src/test/pkg/IntDefTest.kt:7: Error: Must be one of: TestType.LOL [WrongConstant]\n" +
+                        "        wantInt(WrongType.NO) // ERROR\n" +
+                        "                ~~~~~~~~~~~~\n" +
+                        "src/test/pkg/IntDefTest.kt:8: Error: Must be one of: TestType.LOL [WrongConstant]\n" +
+                        "        wantInt(giveRandomInt()) // ERROR\n" +
+                        "                ~~~~~~~~~~~~~~~\n" +
+                        "src/test/pkg/IntDefTest.kt:9: Error: Must be one of: TestType.LOL [WrongConstant]\n" +
+                        "        wantInt(giveWrongInt()) //ERROR\n" +
+                        "                ~~~~~~~~~~~~~~\n" +
+                        "src/test/pkg/IntDefTest.kt:10: Error: Must be one of: TestType.LOL [WrongConstant]\n" +
+                        "        wantInt(giveWrongIntAnnotated()) //ERROR\n" +
                         "                ~~~~~~~~~~~~~~~~~~~~~~~\n" +
                         "5 errors, 0 warnings")
     }

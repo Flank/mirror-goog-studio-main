@@ -34,7 +34,7 @@ import com.google.common.io.Files;
 import com.intellij.mock.MockProject;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.util.Disposer;
-import com.intellij.psi.PsiClassOwner;
+import com.intellij.psi.PsiFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -243,8 +243,7 @@ public class ExtractAnnotationsDriver {
         List<File> paths = projectEnvironment.getPaths();
 
         List<File> allSourceFiles = Extractor.gatherSources(sources);
-        List<? extends PsiClassOwner> units = Extractor.createUnitsForFiles(project,
-                allSourceFiles);
+        List<? extends PsiFile> units = Extractor.createUnitsForFiles(project, allSourceFiles);
 
         List<File> ktFiles = new ArrayList<>();
         for (File file : allSourceFiles) {

@@ -883,7 +883,6 @@ public class TestLintTask {
                         Class<?> fileClass = Class.forName(detectorClass.getName() + "Kt");
                         addIssuesFromClass(checkedIssues, fileClass);
                     } catch (ClassNotFoundException ignore) {
-                        ignore.printStackTrace();
                     }
                 }
                 if (checkedIssues.isEmpty()) {

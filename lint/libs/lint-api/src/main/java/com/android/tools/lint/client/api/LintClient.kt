@@ -1241,7 +1241,7 @@ abstract class LintClient {
         if (manifestFiles.size == 1) {
             val primary = manifestFiles[0]
             try {
-                val xml = Files.toString(primary, UTF_8)
+                val xml = Files.asCharSource(primary, UTF_8).read()
                 return XmlUtils.parseDocumentSilently(xml, true)
             } catch (e: IOException) {
                 log(Severity.ERROR, e, "Could not read manifest " + primary)
