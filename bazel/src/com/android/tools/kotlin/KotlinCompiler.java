@@ -112,13 +112,8 @@ public class KotlinCompiler extends JarOutputCompiler {
                     if (friendDir.exists()) {
                         File test = new File(friendDir,
                                 "git4idea/rebase/GitAutomaticRebaseEditor.kt");
-                        System.err.println("test: " + test);
-                        System.err.println("test exists: " + test.exists());
                         writer.print("<friendDir path=\"");
                         writer.print(friendDir.getAbsolutePath());
-                        System.err.println("friend: " + friendDir);
-                        System.err.println("friend exists: " + friendDir.exists());
-                        System.err.println("friend is directory: " + friendDir.isDirectory());
                         writer.println("\"/>");
                     }
                 }
