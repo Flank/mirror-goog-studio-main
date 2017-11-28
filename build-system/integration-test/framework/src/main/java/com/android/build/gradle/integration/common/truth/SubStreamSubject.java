@@ -16,7 +16,10 @@
 
 package com.android.build.gradle.integration.common.truth;
 
+import static com.google.common.truth.Truth.assert_;
+
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.api.transform.Format;
 import com.android.build.gradle.internal.pipeline.SubStream;
 import com.google.common.truth.FailureStrategy;
@@ -25,6 +28,11 @@ import com.google.common.truth.SubjectFactory;
 
 /** Truth Subject for {@link com.android.build.gradle.internal.pipeline.SubStream} */
 public class SubStreamSubject extends Subject<SubStreamSubject, SubStream> {
+
+    @NonNull
+    public static SubStreamSubject assertThat(@Nullable SubStream stream) {
+        return assert_().about(Factory.get()).that(stream);
+    }
 
     static class Factory extends SubjectFactory<SubStreamSubject, SubStream> {
         @NonNull

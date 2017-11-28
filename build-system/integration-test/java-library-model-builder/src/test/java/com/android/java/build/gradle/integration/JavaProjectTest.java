@@ -19,7 +19,7 @@ package com.android.java.build.gradle.integration;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.app.HelloWorldAppWithJavaLibs;
+import com.android.build.gradle.integration.common.fixture.app.MultiModuleJavaLibs;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.java.model.JavaLibrary;
 import com.android.java.model.JavaProject;
@@ -39,9 +39,13 @@ import org.junit.Test;
  */
 public class JavaProjectTest {
     @Rule
-    public GradleTestProject project = GradleTestProject.builder()
-            .fromTestApp(HelloWorldAppWithJavaLibs.createWithLibs(2))
-            .create();
+    public GradleTestProject project =
+            GradleTestProject.builder()
+                    .withDeviceProvider(false)
+                    .withSdk(false)
+                    .withAndroidGradlePlugin(false)
+                    .fromTestApp(MultiModuleJavaLibs.createWithLibs(2))
+                    .create();
     private Map<String, JavaProject> javaModelMap;
 
     @Before

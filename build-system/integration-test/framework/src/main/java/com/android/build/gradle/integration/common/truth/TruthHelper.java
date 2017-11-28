@@ -22,7 +22,6 @@ import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
-import com.android.build.gradle.internal.pipeline.SubStream;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.Dependencies;
@@ -217,11 +216,6 @@ public class TruthHelper {
     @NonNull
     public static TransformOutputSubject assertThat(@Nullable TransformOutputContent content) {
         return assert_().about(TransformOutputSubject.Factory.get()).that(content);
-    }
-
-    @NonNull
-    public static SubStreamSubject assertThat(@Nullable SubStream stream) {
-        return assert_().about(SubStreamSubject.Factory.get()).that(stream);
     }
 
     // ---- helper method from com.google.common.truth.Truth

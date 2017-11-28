@@ -28,7 +28,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**

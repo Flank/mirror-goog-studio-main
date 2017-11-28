@@ -68,6 +68,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -114,8 +115,8 @@ public final class GradleTestProject implements TestRule {
 
     public static final String ANDROID_GRADLE_PLUGIN_VERSION;
 
-    @NonNull public static final File ANDROID_HOME;
-    @NonNull public static final File ANDROID_NDK_HOME;
+    @Nullable public static final File ANDROID_HOME;
+    @Nullable public static final File ANDROID_NDK_HOME;
 
     public static final String DEVICE_TEST_TASK = "deviceCheck";
 
@@ -185,7 +186,13 @@ public final class GradleTestProject implements TestRule {
                 ANDROID_HOME = new File(envCustomAndroidHome);
                 assertThat(ANDROID_HOME).named("$CUSTOM_ANDROID_HOME").isDirectory();
             } else {
-                ANDROID_HOME = TestUtils.getSdk();
+                File androidHome;
+                try {
+                    androidHome = TestUtils.getSdk();
+                } catch (IllegalArgumentException e) {
+                    androidHome = null;
+                }
+                ANDROID_HOME = androidHome;
             }
 
             String envCustomAndroidNdkHome =
@@ -218,6 +225,9 @@ public final class GradleTestProject implements TestRule {
     private static final String DEFAULT_TEST_PROJECT_NAME = "project";
 
     private final String name;
+    private final boolean withDeviceProvider;
+    private final boolean withSdk;
+    private final boolean withAndroidGradlePlugin;
     @Nullable private File testDir;
     private File sourceDir;
     private File buildFile;
@@ -261,7 +271,13 @@ public final class GradleTestProject implements TestRule {
             @Nullable BenchmarkRecorder benchmarkRecorder,
             @NonNull Path relativeProfileDirectory,
             @NonNull String cmakeVersion,
-            boolean withCmake) {
+            boolean withCmake,
+            boolean withDeviceProvider,
+            boolean withSdk,
+            boolean withAndroidGradlePlugin) {
+        this.withDeviceProvider = withDeviceProvider;
+        this.withSdk = withSdk;
+        this.withAndroidGradlePlugin = withAndroidGradlePlugin;
         this.testDir = null;
         this.buildFile = sourceDir = null;
         this.name = (name == null) ? DEFAULT_TEST_PROJECT_NAME : name;
@@ -305,6 +321,9 @@ public final class GradleTestProject implements TestRule {
         this.rootProject = rootProject;
         this.relativeProfileDirectory = rootProject.relativeProfileDirectory;
         this.cmakeVersion = rootProject.cmakeVersion;
+        this.withDeviceProvider = rootProject.withDeviceProvider;
+        this.withSdk = rootProject.withSdk;
+        this.withAndroidGradlePlugin = rootProject.withAndroidGradlePlugin;
         this.withCmakeDirInLocalProp = rootProject.withCmakeDirInLocalProp;
     }
 
@@ -663,7 +682,9 @@ public final class GradleTestProject implements TestRule {
             }
 
             @Override
-            String getCommonBuildScriptContent() throws IOException {
+            String getCommonBuildScriptContent(
+                    boolean withAndroidGradlePlugin, boolean withDeviceProvider)
+                    throws IOException {
                 StringBuilder buildScript =
                         new StringBuilder(
                                 "\n"
@@ -688,10 +709,26 @@ public final class GradleTestProject implements TestRule {
         @NonNull
         abstract List<Path> getLocalRepositories();
 
-        String getCommonBuildScriptContent() throws IOException {
-            File commonBuildScript =
-                    new File(TestProjectPaths.getTestProjectDir(), COMMON_BUILD_SCRIPT);
-            return Files.asCharSource(commonBuildScript, StandardCharsets.UTF_8).read();
+        String getCommonBuildScriptContent(
+                boolean withAndroidGradlePlugin, boolean withDeviceProvider) throws IOException {
+            StringBuilder stringBuilder =
+                    new StringBuilder(
+                            "def commonScriptFolder = buildscript.sourceFile.parent\n"
+                                    + "apply from: \"$commonScriptFolder/commonVersions.gradle\", to: rootProject.ext\n"
+                                    + "\n"
+                                    + "project.buildscript { buildscript ->\n"
+                                    + "    apply from: \"$commonScriptFolder/commonLocalRepo.gradle\", to:buildscript\n"
+                                    + "    dependencies {\n");
+            if (withAndroidGradlePlugin) {
+                stringBuilder.append(
+                        "        classpath \"com.android.tools.build:gradle:$rootProject.buildVersion\"\n");
+            }
+            if (withDeviceProvider) {
+                stringBuilder.append(
+                        "        classpath 'com.android.tools.internal.build.test:devicepool:0.1'\n");
+            }
+            stringBuilder.append("    }\n" + "}");
+            return stringBuilder.toString();
         }
 
         static BuildSystem get() {
@@ -705,8 +742,9 @@ public final class GradleTestProject implements TestRule {
         }
     }
 
-    public static String generateCommonBuildScript() throws IOException {
-        return BuildSystem.get().getCommonBuildScriptContent();
+    public String generateCommonBuildScript() throws IOException {
+        return BuildSystem.get()
+                .getCommonBuildScriptContent(withAndroidGradlePlugin, withDeviceProvider);
     }
 
     @NonNull
@@ -1313,7 +1351,11 @@ public final class GradleTestProject implements TestRule {
                 ProjectProperties.create(
                         testDir.getAbsolutePath(), ProjectProperties.PropertyType.LOCAL);
 
-        localProp.setProperty(ProjectProperties.PROPERTY_SDK, ANDROID_HOME.getAbsolutePath());
+        if (withSdk) {
+            localProp.setProperty(
+                    ProjectProperties.PROPERTY_SDK,
+                    Objects.requireNonNull(ANDROID_HOME).getAbsolutePath());
+        }
         if (!withoutNdk) {
             localProp.setProperty(
                     ProjectProperties.PROPERTY_NDK, ANDROID_NDK_HOME.getAbsolutePath());

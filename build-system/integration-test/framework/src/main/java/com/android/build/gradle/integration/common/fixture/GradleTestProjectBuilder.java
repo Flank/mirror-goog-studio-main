@@ -49,6 +49,10 @@ public final class GradleTestProjectBuilder {
     private boolean withCmakeDirInLocalProp = false;
     @NonNull String cmakeVersion;
 
+    private boolean withDeviceProvider = true;
+    private boolean withSdk = true;
+    private boolean withAndroidGradlePlugin = true;
+
     /** Create a GradleTestProject. */
     @NonNull
     public GradleTestProject create() {
@@ -67,7 +71,10 @@ public final class GradleTestProjectBuilder {
                 benchmarkRecorder,
                 relativeProfileDirectory,
                 cmakeVersion,
-                withCmakeDirInLocalProp);
+                withCmakeDirInLocalProp,
+                withDeviceProvider,
+                withSdk,
+                withAndroidGradlePlugin);
     }
 
     /**
@@ -83,6 +90,21 @@ public final class GradleTestProjectBuilder {
     /** Create a project without setting ndk.dir in local.properties. */
     public GradleTestProjectBuilder withoutNdk() {
         this.withoutNdk = true;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withDeviceProvider(boolean withDeviceProvider) {
+        this.withDeviceProvider = withDeviceProvider;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withSdk(boolean withSdk) {
+        this.withSdk = withSdk;
+        return this;
+    }
+
+    public GradleTestProjectBuilder withAndroidGradlePlugin(boolean withAndroidGradlePlugin) {
+        this.withAndroidGradlePlugin = withAndroidGradlePlugin;
         return this;
     }
 
