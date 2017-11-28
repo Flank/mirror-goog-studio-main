@@ -42,7 +42,7 @@ public enum BooleanOption implements Option<Boolean> {
 
     ENABLE_D8("android.enableD8", true),
     ENABLE_D8_DESUGARING("android.enableD8.desugaring", false),
-    ENABLE_D8_MAIN_DEX_LIST("android.enableD8MainDexList", false),
+    ENABLE_D8_MAIN_DEX_LIST("android.enableD8MainDexList", true),
 
     ENABLE_DEPRECATED_NDK("android.useDeprecatedNdk"),
     DISABLE_RESOURCE_VALIDATION("android.disableResourceValidation"),
