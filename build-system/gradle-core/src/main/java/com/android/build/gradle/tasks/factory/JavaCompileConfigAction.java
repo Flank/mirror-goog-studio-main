@@ -74,12 +74,8 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             // normal classpath.
             javacTask
                     .getOptions()
-                    .setBootClasspath(
-                            Joiner.on(File.pathSeparator)
-                                    .join(
-                                            globalScope
-                                                    .getAndroidBuilder()
-                                                    .getBootClasspathAsStrings(false)));
+                    .setBootstrapClasspath(
+                            project.files(globalScope.getAndroidBuilder().getBootClasspath(false)));
         }
 
         FileCollection classpath = scope.getJavaClasspath(COMPILE_CLASSPATH, CLASSES);
