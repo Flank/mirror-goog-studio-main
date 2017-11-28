@@ -3,19 +3,26 @@ load(":maven.bzl", "maven_pom")
 load(":utils.bzl", "singlejar")
 
 
-def kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs, kotlin_deps, package_prefixes, kotlin_jar):
+def kotlin_impl(ctx, name, roots,java_srcs, kotlin_srcs, kotlin_deps, package_prefixes, kotlin_jar, friend_roots, friend_srcs):
   merged = []
   for root in roots:
     if root in package_prefixes:
       root += ":" + package_prefixes[root]
     merged += [label_workspace_path(ctx.label) + "/" + root]
 
+  full_test_roots = []
+  for root in friend_roots:
+    full_test_roots += [label_workspace_path(ctx.label) + "/" + root]
+
   kotlin_deps = list(kotlin_deps) + ctx.files._kotlin
   args, option_files = create_java_compiler_args_srcs(ctx, merged, kotlin_jar, kotlin_deps)
 
   args += ["--module_name", name]
+  for dir in full_test_roots:
+    args += ["--friend_dir", dir]
+
   ctx.action(
-    inputs = java_srcs + kotlin_srcs + option_files + kotlin_deps,
+    inputs = java_srcs + kotlin_srcs + option_files + kotlin_deps + friend_srcs,
     outputs = [kotlin_jar],
     mnemonic = "kotlinc",
     arguments = args,

@@ -154,9 +154,13 @@ public class IrToBazel {
                                     } else {
                                         target = packageRelative.replaceAll("\\.jar$", "");
                                     }
-                                    JavaImport javaImport = new JavaImport(jarPkg, target);
-                                    javaImport.addJar(packageRelative);
-                                    jarRule = javaImport;
+                                    try {
+                                        JavaImport javaImport = new JavaImport(jarPkg, target);
+                                        javaImport.addJar(packageRelative);
+                                        jarRule = javaImport;
+                                    } catch (IllegalStateException e) {
+                                        throw new IllegalStateException("Cannot add jar " + packageRelative, e);
+                                    }
                                 } else {
                                     System.err.println("Cannot find package for:" + relJar);
                                 }

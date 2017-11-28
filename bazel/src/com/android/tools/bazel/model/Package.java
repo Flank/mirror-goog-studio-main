@@ -94,11 +94,10 @@ public class Package {
             String before = Files.toString(build, StandardCharsets.UTF_8);
             String after = Files.toString(tmp, StandardCharsets.UTF_8);
             if (!before.equals(after)) {
-
                 if (listener.packageUpdated(name)) {
                     Files.copy(tmp, build);
                 } else {
-                    System.err.println("idea diff " + build.getAbsolutePath() + " " + tmp.getAbsolutePath());
+                    System.err.println("diff " + tmp.getAbsolutePath() + " " + build.getAbsolutePath());
                 }
             }
         }
@@ -127,7 +126,7 @@ public class Package {
 
     public void addRule(BazelRule rule) {
         if (rules.get(rule.getName().toLowerCase()) != null) {
-            throw new IllegalStateException("Duplicated rule " + rule.getLabel());
+            throw new IllegalStateException("Package \"" + this.name + "\", cannot add rule:\n" + rule.toString());
         }
         rules.put(rule.getName().toLowerCase(), rule);
     }

@@ -170,6 +170,9 @@ public class ImlToIr {
                     // across systems. Choose alphabetical always:
                     Collections.sort(files);
                     for (File file : files) {
+                        if (!file.exists()) {
+                          System.err.println("Library \"" + library.getName() + "\" points to non existing file: " + file);
+                        }
                         if (!file.exists() ||
                                 !Files.getFileExtension(file.getName()).equals("jar") ||
                                 file.getName().endsWith("-sources.jar")) {
@@ -182,13 +185,19 @@ public class ImlToIr {
                     // A dependency to another module
                     JpsModuleDependency moduleDependency = (JpsModuleDependency) dependency;
                     JpsModule dep = moduleDependency.getModule();
-                    dot.addEdge(jpsModule.getName(), dep.getName(), scopeToColor(scope));
-                    IrModule irDep = imlToIr.get(dep);
-                    if (irDep == null) {
-                        throw new IllegalStateException("Cannot find dependency " + dep.getName() + " from " + module.getName());
-                    }
-                    if (irDep != jpsModule) {
-                        module.addDependency(irDep, isExported, scope);
+                    if (dep == null) {
+                        System.err.println("Invalid module dependency: " + moduleDependency.getModuleReference().getModuleName() + " from " + module.getName());
+                    } else {
+                        dot.addEdge(jpsModule.getName(), dep.getName(), scopeToColor(scope));
+                        IrModule irDep = imlToIr.get(dep);
+                        if (irDep == null) {
+                            throw new IllegalStateException(
+                                    "Cannot find dependency " + dep.getName() + " from " +
+                                            module.getName());
+                        }
+                        if (irDep != jpsModule) {
+                            module.addDependency(irDep, isExported, scope);
+                        }
                     }
                 }
             }

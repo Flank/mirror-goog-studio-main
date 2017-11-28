@@ -63,6 +63,10 @@ public class Workspace {
         }
 
         File pkg = findBuildDirectory(new File(directory, rel));
+        return loadPackage(pkg);
+    }
+
+    private Package loadPackage(File pkg) {
         if (pkg == null) {
             return null;
         }
@@ -76,15 +80,32 @@ public class Workspace {
         return result;
     }
 
+    private void loadAllPackages(File dir) {
+        if (isBuildDirectory(dir)) {
+            loadPackage(dir);
+        }
+        for (File file : dir.listFiles()) {
+            if (file.isDirectory() && !(dir == directory && file.getName().startsWith("bazel-"))) {
+                loadAllPackages(file);
+            }
+        }
+    }
 
     private File findBuildDirectory(@NotNull File dir) {
-        for (String name : BUILD_FILES) {
-            if (new File(dir, name).isFile()) {
-                return dir;
-            }
+        if (isBuildDirectory(dir)) {
+            return dir;
         }
         File parent = dir.getParentFile();
         return (parent == null) ? null : findBuildDirectory(parent);
+    }
+
+    private boolean isBuildDirectory(@NotNull File dir) {
+        for (String name : BUILD_FILES) {
+            if (new File(dir, name).isFile()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public interface GenerationListener {

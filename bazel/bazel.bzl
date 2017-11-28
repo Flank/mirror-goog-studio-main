@@ -67,6 +67,8 @@ def _iml_module_jar_impl(ctx,
     java_deps,
     form_deps,
     exports,
+    friend_roots,
+    friend_srcs,
     transitive_compile_time_jars,
     transitive_runtime_jars):
   jars = []
@@ -83,7 +85,7 @@ def _iml_module_jar_impl(ctx,
     groovy_deps += [kotlin_jar] if kotlin_jar else []
     groovy_deps += list(transitive_runtime_jars)
     stub_jar = ctx.actions.declare_file(name + ".groovy_stubs.src.jar")
-    groovy_impl(ctx, groovy_srcs, groovy_deps, groovy_jar, stub_jar)
+    groovy_impl(ctx, roots, groovy_srcs, groovy_deps, transitive_runtime_jars, groovy_jar, stub_jar)
     sourcepath += [stub_jar]
     jars += [groovy_jar]
 
@@ -91,7 +93,7 @@ def _iml_module_jar_impl(ctx,
   kotlin_providers = []
   if kotlin_srcs:
     kotlin_providers += [kotlin_impl(ctx, name, roots, java_srcs, kotlin_srcs,
-        transitive_runtime_jars, ctx.attr.package_prefixes, kotlin_jar)]
+        transitive_runtime_jars, ctx.attr.package_prefixes, kotlin_jar, friend_roots, friend_srcs)]
 
     jars += [kotlin_jar]
 
@@ -222,6 +224,8 @@ def _iml_module_impl(ctx):
     java_deps,
     form_deps,
     exports,
+    [],
+    [],
     transitive_compile_time_jars,
     transitive_runtime_jars)
 
@@ -238,6 +242,8 @@ def _iml_module_impl(ctx):
     [main_provider] + test_java_deps,
     test_form_deps,
     exports + test_exports,
+    ctx.attr.roots,
+    ctx.files.kotlin_srcs,
     transitive_test_compile_time_jars,
     transitive_test_runtime_jars,
   )
@@ -475,7 +481,6 @@ def iml_module(name,
       "//tools/base/bazel:langtools",
     ] + test_utils,
   )
-
 
   test_tags = tags + test_tags if tags and test_tags else (tags if tags else test_tags)
   if test_srcs:

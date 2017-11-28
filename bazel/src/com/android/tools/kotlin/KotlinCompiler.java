@@ -25,6 +25,7 @@ import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import org.jetbrains.kotlin.cli.common.CLICompiler;
 import org.jetbrains.kotlin.cli.common.ExitCode;
@@ -38,6 +39,7 @@ public class KotlinCompiler extends JarOutputCompiler {
 
     private String moduleName;
     private String jvmTarget = "1.8";
+    private List<String> friends = new LinkedList<>();
 
     protected KotlinCompiler() {
         super("kotlinc");
@@ -50,10 +52,13 @@ public class KotlinCompiler extends JarOutputCompiler {
 
     @Override
     protected void additionalOptions(Iterator<String> it) {
+
         while (it.hasNext()) {
             String arg = it.next();
             if (arg.equals("--module_name") && it.hasNext()) {
                 moduleName = it.next();
+            } else if (arg.equals("--friend_dir") && it.hasNext()) {
+                friends.add(it.next());
             }
             if (arg.equals("--jvm-target") && it.hasNext()) {
                 jvmTarget = it.next();
@@ -99,6 +104,21 @@ public class KotlinCompiler extends JarOutputCompiler {
                             writer.print("\" packagePrefix=\"");
                             writer.print(prefix);
                         }
+                        writer.println("\"/>");
+                    }
+                }
+                for (String friend : friends) {
+                    File friendDir = new File(friend);
+                    if (friendDir.exists()) {
+                        File test = new File(friendDir,
+                                "git4idea/rebase/GitAutomaticRebaseEditor.kt");
+                        System.err.println("test: " + test);
+                        System.err.println("test exists: " + test.exists());
+                        writer.print("<friendDir path=\"");
+                        writer.print(friendDir.getAbsolutePath());
+                        System.err.println("friend: " + friendDir);
+                        System.err.println("friend exists: " + friendDir.exists());
+                        System.err.println("friend is directory: " + friendDir.isDirectory());
                         writer.println("\"/>");
                     }
                 }

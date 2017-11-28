@@ -28,7 +28,7 @@ java_library(
     # TODO: Update and use the prebuilts dependency
     deps = [
         ":utils",
-        "//tools/idea/lib:groovy-all-2.4.6",
+        "//tools/idea/.idea/libraries:Groovy",
     ],
 )
 

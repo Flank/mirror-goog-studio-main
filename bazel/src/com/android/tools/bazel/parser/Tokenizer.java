@@ -70,9 +70,11 @@ public class Tokenizer {
                             rewind();
                             closeToken();
                         }
+                        break;
                     case STRING:
-                        //TODO String escape
-                        if (c == '\"') {
+                        if (c == '\\' && index < string.length() - 1) {
+                            index++;
+                        } else if (c == '\"') {
                             closeToken();
                         }
                         break;
@@ -98,7 +100,7 @@ public class Tokenizer {
                     comment = true;
                 } else if (Character.isWhitespace(c)) {
                     start++;
-                } else if (Character.isLetter(c)) {
+                } else if (Character.isLetter(c) || c == '_') {
                     token = new TokenizerToken(this, Kind.IDENT);
                 } else if (Character.isDigit(c)) {
                     token = new TokenizerToken(this, Kind.NUMBER);
