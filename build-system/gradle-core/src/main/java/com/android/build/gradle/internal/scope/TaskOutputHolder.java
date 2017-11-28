@@ -100,12 +100,10 @@ public interface TaskOutputHolder {
         RES_COMPILED_FLAT_FILES,
         // An AAPT2 static library, containing only the current sub-project's resources.
         RES_STATIC_LIBRARY,
-        // R Class sources (for compilation only)
-        COMPILE_ONLY_R_CLASS_SOURCES,
-        // Compiled R class sources (for compilation only)
-        COMPILE_ONLY_R_CLASS_CLASSES,
         // Compiled R class jar (for compilation only, packaged in AAR)
         COMPILE_ONLY_NAMESPACED_R_CLASS_JAR,
+        // res-ids.txt
+        NAMESPACED_SYMBOL_LIST_WITH_PACKAGE_NAME,
         // Final R class sources (to package)
         RUNTIME_R_CLASS_SOURCES,
         // Final R class classes (for packaging)

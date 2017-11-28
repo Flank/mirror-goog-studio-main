@@ -92,7 +92,7 @@ open class BundleFeatureClasses @Inject constructor(private val workerExecutor: 
             if (java.lang.Boolean.TRUE == globalScope.extension.aaptOptions.namespaced) {
                 task.thisRClassClasses =
                         scope.getOutput(
-                                TaskOutputHolder.TaskOutputType.COMPILE_ONLY_R_CLASS_CLASSES)
+                                TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)
                 task.dependencyRClassClasses = scope.getArtifactFileCollection(
                         AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH,
                         ALL,
