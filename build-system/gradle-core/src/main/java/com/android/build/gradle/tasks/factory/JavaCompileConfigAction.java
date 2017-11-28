@@ -154,9 +154,10 @@ public class JavaCompileConfigAction implements TaskConfigAction<AndroidJavaComp
             }
         }
 
-        javacTask.getOptions().getCompilerArgs().add("-s");
-        javacTask.getOptions().getCompilerArgs().add(
-                scope.getAnnotationProcessorOutputDir().getAbsolutePath());
+        javacTask
+                .getOptions()
+                .setAnnotationProcessorGeneratedSourcesDirectory(
+                        scope.getAnnotationProcessorOutputDir());
         javacTask.annotationProcessorOutputFolder = scope.getAnnotationProcessorOutputDir();
 
 
