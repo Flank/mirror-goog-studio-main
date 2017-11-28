@@ -64,6 +64,7 @@ data class Config(
          * True if legacy multi-dex is enabled. Null if not set.
          */
         val legacyMultidexEnabled: Boolean? = null,
+        @get:JvmName("isMinifyEnabled")
         /**
          * True if there's a possibility that a proguard-like tool will be used to perform
          * minification in this configuration.
@@ -81,6 +82,7 @@ data class Config(
          * The resource configurations for this [Config]. This is the list of -c parameters passed to aapt.
          */
         val resourceConfigurations: Collection<String> = emptyList(),
+        @get:JvmName("isUsingSupportLibVectors")
         /**
          * True iff the [Config] is using the support library to draw vectors at runtime.
          */
