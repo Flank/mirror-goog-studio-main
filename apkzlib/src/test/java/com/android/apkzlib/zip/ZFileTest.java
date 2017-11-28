@@ -33,6 +33,7 @@ import com.android.apkzlib.zip.utils.CloseableByteSource;
 import com.android.apkzlib.zip.utils.RandomAccessFileUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.hash.Hashing;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Closer;
@@ -1780,6 +1781,41 @@ public class ZFileTest {
 
         try (ZFile zf = new ZFile(zipFileWithComments)) {
             assertArrayEquals(comment, zf.getEocdComment());
+        }
+    }
+
+    @Test
+    public void overlappingZipEntries() throws Exception {
+        File myZip = ZipTestUtils.cloneRsrc("overlapping.zip", mTemporaryFolder);
+        try (ZFile zf = new ZFile(myZip)) {
+            fail();
+        } catch (IOException e) {
+            assertTrue(Throwables.getStackTraceAsString(e).contains("overlapping/bbb"));
+            assertTrue(Throwables.getStackTraceAsString(e).contains("overlapping/ddd"));
+            assertFalse(Throwables.getStackTraceAsString(e).contains("Central Directory"));
+        }
+    }
+
+    @Test
+    public void overlappingZipEntryWithCentralDirectory() throws Exception {
+        File myZip = ZipTestUtils.cloneRsrc("overlapping2.zip", mTemporaryFolder);
+        try (ZFile zf = new ZFile(myZip)) {
+            fail();
+        } catch (IOException e) {
+            assertFalse(Throwables.getStackTraceAsString(e).contains("overlapping/bbb"));
+            assertTrue(Throwables.getStackTraceAsString(e).contains("overlapping/ddd"));
+            assertTrue(Throwables.getStackTraceAsString(e).contains("Central Directory"));
+        }
+    }
+
+    @Test
+    public void readFileWithOffsetBeyondFileEnd() throws Exception {
+        File myZip = ZipTestUtils.cloneRsrc("entry-outside-file.zip", mTemporaryFolder);
+        try (ZFile zf = new ZFile(myZip)) {
+            fail();
+        } catch (IOException e) {
+            assertTrue(Throwables.getStackTraceAsString(e).contains("entry-outside-file/foo"));
+            assertTrue(Throwables.getStackTraceAsString(e).contains("EOF"));
         }
     }
 }
