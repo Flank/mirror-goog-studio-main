@@ -102,8 +102,10 @@ public class PerfDriver {
         myMockApp.start();
         myPerfdDriver.start();
         //Block until we are in a state for the test to continue.
-        assertTrue(myPerfdDriver.waitForInput("Server listening on"));
-        assertTrue(myMockApp.waitForInput("Test Framework Server Listening"));
+        assertTrue(myPerfdDriver.waitForInput("Server listening on", ProcessRunner.NO_TIMEOUT));
+        assertTrue(
+                myMockApp.waitForInput(
+                        "Test Framework Server Listening", ProcessRunner.NO_TIMEOUT));
         myMockApp.setProperty(
                 "profiler.service.address", String.format("%s:%d", PerfDriver.LOCAL_HOST, myPort));
         if (!myIsOPlusDevice) {

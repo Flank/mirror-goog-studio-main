@@ -10,6 +10,7 @@ import java.util.List;
 
 public class ProcessRunner {
 
+    public static final int NO_TIMEOUT = Integer.MAX_VALUE;
     private static final int DEFAULT_INPUT_TIMEOUT = 5000;
     private String[] myProcessArgs;
     private Process myProcess;
