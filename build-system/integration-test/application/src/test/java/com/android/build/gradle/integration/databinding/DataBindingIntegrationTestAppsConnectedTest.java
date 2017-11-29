@@ -53,8 +53,7 @@ public class DataBindingIntegrationTestAppsConnectedTest {
         List<Object[]> params = new ArrayList<>();
         for (boolean useV2 : new boolean[] {true, false}) {
             params.add(new Object[] {"IndependentLibrary", useV2});
-            // "TestApp" project disabled due to b/69446221
-            //params.add(new Object[] {"TestApp", useV2});
+            params.add(new Object[] {"TestApp", useV2});
             params.add(new Object[] {"ProguardedAppWithTest", useV2});
             params.add(new Object[] {"AppWithDataBindingInTests", useV2});
         }
