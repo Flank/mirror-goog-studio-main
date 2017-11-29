@@ -35,22 +35,16 @@ import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.util.List;
-import org.junit.ClassRule;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
 
 public class ResourcesSwapConnectedTest {
 
     private static final String LOG_TAG = "ResourcesSwapTest.sha";
     private static final String BLACK_PNG_SHA = "256111655c33c5b5c095f6287abe6db307eab27a";
     private static final String WHITE_PNG_SHA = "bdd80c122f819fd58ee0603530d27f591a9cc46c";
-
-    // This test is a bit flaky, re-run it up to 3 times to see if it's actually broken.
-    @ClassRule public static RetryTest retry = new RetryTest(3);
 
     @Rule
     public GradleTestProject mProject =
@@ -62,11 +56,8 @@ public class ResourcesSwapConnectedTest {
 
     @Rule public final Adb adb = new Adb();
 
-    @Test
-    @Category(DeviceTests.class)
-    public void swapResourcesDeviceTest_art() throws Exception {
-        IDevice device = adb.getDevice(AndroidVersionMatcher.thatUsesArt());
-
+    @Before
+    public void setUp() throws Exception {
         TestFileUtils.appendToFile(
                 mProject.getBuildFile(),
                 // Use Guava for hashing:
@@ -96,65 +87,92 @@ public class ResourcesSwapConnectedTest {
                         + "}");
 
         TestFileUtils.searchAndReplace(activity, "// onCreate", "logChecksum();");
+    }
 
-        HotSwapTester tester =
-                new HotSwapTester(
-                        mProject,
-                        HelloWorldApp.APP_ID,
-                        "HelloWorld",
-                        LOG_TAG,
-                        device,
-                        logcat,
-                        PORTS.get(ResourcesSwapConnectedTest.class.getSimpleName()));
+    @Test
+    @Category(DeviceTests.class)
+    public void swapResourcesDeviceTest_art() throws Exception {
+        // Run up to 5 times if necessary, the test sometimes even 3 times in a row.
+        testWithRetries(5, this::doTest);
+    }
 
-        tester.run(
-                () -> {
-                    List<LogCatMessage> allMessages = logcat.getFilteredLogCatMessages();
-                    String sha = allMessages.get(0).getMessage();
-                    assertThat(sha).named("SHA on first run").isEqualTo(BLACK_PNG_SHA);
-                },
-                new HotSwapTester.Change() {
-                    @Override
-                    public void makeChange() throws Exception {
-                        copyTestResourceToProjectFile("images/white.png");
-                    }
+    private void doTest() throws Exception {
+        IDevice device = adb.getDevice(AndroidVersionMatcher.thatUsesArt());
+        try {
+            HotSwapTester tester =
+                    new HotSwapTester(
+                            mProject,
+                            HelloWorldApp.APP_ID,
+                            "HelloWorld",
+                            LOG_TAG,
+                            device,
+                            logcat,
+                            PORTS.get(ResourcesSwapConnectedTest.class.getSimpleName()));
 
-                    @Override
-                    public void verifyChange(
-                            @NonNull InstantRunClient client,
-                            @NonNull Logcat logcat,
-                            @NonNull IDevice device) {
-                        String sha = logcat.getFilteredLogCatMessages().get(0).getMessage();
+            tester.run(
+                    () -> {
+                        List<LogCatMessage> allMessages = logcat.getFilteredLogCatMessages();
+                        String sha = allMessages.get(0).getMessage();
+                        assertThat(sha).named("SHA on first run").isEqualTo(BLACK_PNG_SHA);
+                    },
+                    new HotSwapTester.Change() {
+                        @Override
+                        public void makeChange() throws Exception {
+                            copyTestResourceToProjectFile("images/white.png");
+                        }
 
-                        assertThat(sha).named("SHA after first change").isEqualTo(WHITE_PNG_SHA);
-                    }
+                        @Override
+                        public void verifyChange(
+                                @NonNull InstantRunClient client,
+                                @NonNull Logcat logcat,
+                                @NonNull IDevice device) {
+                            String sha = logcat.getFilteredLogCatMessages().get(0).getMessage();
 
-                    @Override
-                    public InstantRunArtifactType getExpectedArtifactType() {
-                        return InstantRunArtifactType.RESOURCES;
-                    }
-                },
-                new HotSwapTester.Change() {
-                    @Override
-                    public void makeChange() throws Exception {
-                        copyTestResourceToProjectFile("images/black.png");
-                    }
+                            assertThat(sha)
+                                    .named("SHA after first change")
+                                    .isEqualTo(WHITE_PNG_SHA);
+                        }
 
-                    @Override
-                    public void verifyChange(
-                            @NonNull InstantRunClient client,
-                            @NonNull Logcat logcat,
-                            @NonNull IDevice device) {
-                        String sha = logcat.getFilteredLogCatMessages().get(0).getMessage();
+                        @Override
+                        public InstantRunArtifactType getExpectedArtifactType() {
+                            return InstantRunArtifactType.RESOURCES;
+                        }
+                    },
+                    new HotSwapTester.Change() {
+                        @Override
+                        public void makeChange() throws Exception {
+                            copyTestResourceToProjectFile("images/black.png");
+                        }
 
-                        assertThat(sha).named("SHA after second change").isEqualTo(BLACK_PNG_SHA);
-                    }
+                        @Override
+                        public void verifyChange(
+                                @NonNull InstantRunClient client,
+                                @NonNull Logcat logcat,
+                                @NonNull IDevice device) {
+                            String sha = logcat.getFilteredLogCatMessages().get(0).getMessage();
 
-                    @Override
-                    public InstantRunArtifactType getExpectedArtifactType() {
-                        return InstantRunArtifactType.RESOURCES;
-                    }
-                });
+                            assertThat(sha)
+                                    .named("SHA after second change")
+                                    .isEqualTo(BLACK_PNG_SHA);
+                        }
+
+                        @Override
+                        public InstantRunArtifactType getExpectedArtifactType() {
+                            return InstantRunArtifactType.RESOURCES;
+                        }
+                    });
+        } finally {
+            // In case we failed and need to re-run the test, clean up after the last run.
+            cleanUp();
+        }
+    }
+
+    private void cleanUp() throws Exception {
+        // Revert the image to the state it was before the tests ran.
+        copyTestResourceToProjectFile("images/black.png");
+        // Return the device, so we can get it again for the next run. We cannot just keep the same
+        // iDevice because that results in concurrent modification exceptions.
+        adb.close();
     }
 
     private void copyTestResourceToProjectFile(String resourceName) throws Exception {
@@ -164,40 +182,32 @@ public class ResourcesSwapConnectedTest {
         Resources.asByteSource(Resources.getResource(resourceName)).copyTo(Files.asByteSink(file));
     }
 
-    private static class RetryTest implements TestRule {
-        private int retries;
-
-        public RetryTest(int retries) {
-            this.retries = retries;
-        }
-
-        @Override
-        public Statement apply(Statement base, Description description) {
-            return new Statement() {
-                @Override
-                public void evaluate() throws Throwable {
-                    int failedTries = 0;
-                    while (true) {
-                        try {
-                            base.evaluate();
-                            break;
-                        } catch (Throwable t) {
-                            failedTries++;
-                            if (failedTries >= retries) {
-                                System.out.println("Failed too many times.");
-                                throw new TooManyRetriesException(t);
-                            }
-                        }
-                        System.out.println("Retrying...");
-                    }
+    // TODO(imorlowska): if this works, refactor it out so other tests can use it too.
+    private static void testWithRetries(int retries, TestMethod test) throws Exception {
+        int failedTries = 0;
+        while (true) {
+            try {
+                test.runTest();
+                break;
+            } catch (AssertionError e) {
+                failedTries++;
+                if (failedTries >= retries) {
+                    System.out.println("Failed too many times.");
+                    throw new TooManyRetriesException(e);
                 }
-            };
-        }
-
-        public static class TooManyRetriesException extends Exception {
-            public TooManyRetriesException(Throwable e) {
-                super(e);
+                System.out.println("Failed with error: " + e.getMessage());
+                System.out.println("Retrying...");
             }
+        }
+    }
+
+    private interface TestMethod {
+        void runTest() throws Exception;
+    }
+
+    public static class TooManyRetriesException extends Exception {
+        public TooManyRetriesException(Throwable e) {
+            super(e);
         }
     }
 }

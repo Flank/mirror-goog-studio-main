@@ -73,6 +73,7 @@ public class Adb implements TestRule {
     public void close() throws IOException {
         if (!devicesToReturn.isEmpty()) {
             DevicePoolClient.returnDevices(devicesToReturn, displayName);
+            devicesToReturn.clear();
         } else if (exclusiveAccess) {
             DevicePoolClient.returnAllDevices(displayName);
         }
