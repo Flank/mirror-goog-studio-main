@@ -23,12 +23,10 @@ import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestA
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.MultiModuleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.io.Files;
 import java.io.IOException;
+import java.nio.file.Files;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -67,19 +65,19 @@ public class CompositeBuildTest {
     @Before
     public void setUp() throws IOException {
         Files.write(
-                "includeBuild('../lib') {\n"
-                        + "    dependencySubstitution {\n"
-                        + "        substitute module('com.example:lib') with project(':')\n"
-                        + "    }\n"
-                        + "}\n"
-                        + "includeBuild('../androidLib') {\n"
-                        + "    dependencySubstitution {\n"
-                        + "        substitute module('com.example:androidLib1') with project(':androidLib1')\n"
-                        + "        substitute module('com.example:androidLib2') with project(':androidLib2')\n"
-                        + "    }\n"
-                        + "}\n",
-                app.file("settings.gradle"),
-                Charsets.UTF_8);
+                app.file("settings.gradle").toPath(),
+                ("includeBuild('../lib') {\n"
+                                + "    dependencySubstitution {\n"
+                                + "        substitute module('com.example:lib') with project(':')\n"
+                                + "    }\n"
+                                + "}\n"
+                                + "includeBuild('../androidLib') {\n"
+                                + "    dependencySubstitution {\n"
+                                + "        substitute module('com.example:androidLib1') with project(':androidLib1')\n"
+                                + "        substitute module('com.example:androidLib2') with project(':androidLib2')\n"
+                                + "    }\n"
+                                + "}\n")
+                        .getBytes());
 
         TestFileUtils.appendToFile(
                 app.getBuildFile(),
@@ -96,11 +94,23 @@ public class CompositeBuildTest {
         lib.file("settings.gradle").createNewFile();
         TestFileUtils.appendToFile(lib.getBuildFile(), "apply plugin: 'java'\n");
 
+        // b/62428620 - Add a dummy file to the classpath to cause androidLib project to be loaded
+        // in a different classloader.  This used to cause problem in composite build in older
+        // Gradle plugin.
+        TestFileUtils.searchAndReplace(
+                androidLib.getBuildFile(),
+                "buildscript \\{ apply from: \"\\.\\./commonBuildScript\\.gradle\" \\}",
+                "buildscript {"
+                        + "    apply from: \"../commonBuildScript.gradle\"\n"
+                        + "    dependencies {"
+                        + "        classpath files('dummy')\n"
+                        + "    }\n"
+                        + "}\n");
+
         // androidLib1 and androidLib2 are empty aar project.
         Files.write(
-                "include 'androidLib1'\n" + "include 'androidLib2'\n",
-                androidLib.file("settings.gradle"),
-                Charsets.UTF_8);
+                androidLib.file("settings.gradle").toPath(),
+                ("include 'androidLib1'\n" + "include 'androidLib2'\n").getBytes());
         String androidLibBuildGradle =
                 "apply plugin: 'com.android.library'\n"
                         + "\n"
@@ -111,6 +121,7 @@ public class CompositeBuildTest {
                         + "}\n";
         TestFileUtils.appendToFile(
                 androidLib.getSubproject(":androidLib1").getBuildFile(), androidLibBuildGradle);
+
         TestFileUtils.appendToFile(
                 androidLib.getSubproject(":androidLib2").getBuildFile(), androidLibBuildGradle);
     }
