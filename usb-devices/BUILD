@@ -6,6 +6,7 @@ iml_module(
     iml_files = ["usb-devices.iml"],
     tags = ["managed"],
     test_data = glob(["testData/**"]),
+    test_resources = ["testData"],
     test_srcs = ["testSrc"],
     visibility = ["//visibility:public"],
     # do not sort: must match IML order
