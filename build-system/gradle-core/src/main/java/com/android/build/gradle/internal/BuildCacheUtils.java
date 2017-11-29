@@ -24,7 +24,11 @@ import com.android.build.gradle.options.ProjectOptions;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.utils.FileCache;
 import com.android.prefs.AndroidLocation;
+import com.android.utils.FileUtils;
 import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.time.Duration;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.gradle.api.Project;
@@ -39,6 +43,15 @@ public final class BuildCacheUtils {
                     + " go to https://d.android.com/r/tools/build-cache.html.\n"
                     + "If you are unable to fix the issue,"
                     + " please file a bug at https://d.android.com/studio/report-bugs.html.";
+
+    /** The number of days that cache entries are kept in the build cache. */
+    private static final long CACHE_ENTRY_DAYS_TO_LIVE = 30;
+
+    /**
+     * The number of days until the next cache eviction is performed. This is to avoid running cache
+     * eviction too frequently (e.g., with every build).
+     */
+    private static final long DAYS_BETWEEN_CACHE_EVICTION_RUNS = 1;
 
     /**
      * Returns a {@link FileCache} instance representing the build cache if the build cache is
@@ -68,8 +81,19 @@ public final class BuildCacheUtils {
             }
         };
 
-        return doCreateBuildCacheIfEnabled(
-                rootProjectFile, projectOptions, defaultBuildCacheDirSupplier);
+        FileCache buildCache =
+                doCreateBuildCacheIfEnabled(
+                        rootProjectFile, projectOptions, defaultBuildCacheDirSupplier);
+
+        //noinspection VariableNotUsedInsideIf
+        if (buildCache != null) {
+            deleteOldCacheEntries(
+                    buildCache,
+                    Duration.ofDays(CACHE_ENTRY_DAYS_TO_LIVE),
+                    Duration.ofDays(DAYS_BETWEEN_CACHE_EVICTION_RUNS));
+        }
+
+        return buildCache;
     }
 
     @Nullable
@@ -86,6 +110,44 @@ public final class BuildCacheUtils {
                             : defaultBuildCacheDirSupplier.get());
         } else {
             return null;
+        }
+    }
+
+    /**
+     * Deletes all the cache entries that have been kept in the build cache for longer than or as
+     * long as the specified life time, but only performs this action if this is the first cache
+     * eviction or the specified interval has elapsed since the last cache eviction.
+     */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @VisibleForTesting
+    static void deleteOldCacheEntries(
+            @NonNull FileCache buildCache,
+            @NonNull Duration cacheEntryLifeTime,
+            @NonNull Duration cacheEvictionInterval) {
+        // Use a marker file to record the last time cache eviction was run
+        File markerFile = new File(buildCache.getCacheDirectory(), ".cache-eviction-marker");
+        long lastEvictionTimestamp = markerFile.lastModified();
+
+        if (lastEvictionTimestamp == 0 /* The marker file does not yet exist */
+                || Duration.ofMillis(System.currentTimeMillis() - lastEvictionTimestamp)
+                                .compareTo(cacheEvictionInterval)
+                        >= 0) {
+            // There could be a race condition here if another thread/process also reaches this
+            // point, but that is Okay because the method call below is thread-safe and
+            // process-safe, it's just that the code below will be executed more than once (which is
+            // fine).
+            buildCache.deleteOldCacheEntries(
+                    System.currentTimeMillis() - cacheEntryLifeTime.toMillis());
+
+            // Create the marker file if it does not yet exist
+            FileUtils.mkdirs(markerFile.getParentFile());
+            try {
+                markerFile.createNewFile();
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+
+            markerFile.setLastModified(System.currentTimeMillis());
         }
     }
 }

@@ -17,6 +17,7 @@
 package com.android.builder.utils;
 
 import static com.android.testutils.truth.MoreTruth.assertThat;
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -34,6 +35,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import org.junit.Before;
@@ -798,6 +800,92 @@ public class FileCacheTest {
                                 "Expected contents '%s' but found '%s'",
                                 inputs.toString(), "Corrupted inputs"));
         assertThat(result.getCachedFile()).isNotNull();
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void testDeleteOldCacheEntries() throws Exception {
+        FileCache fileCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
+        FileCache.Inputs inputs1 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putString("input", "foo1")
+                        .build();
+        FileCache.Inputs inputs2 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putString("input", "foo2")
+                        .build();
+        FileCache.Inputs inputs3 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putString("input", "foo3")
+                        .build();
+
+        // Make the first cache entry look as if it was created 60 days ago
+        fileCache.createFileInCacheIfAbsent(inputs1, (outputFile) -> {});
+        File cacheEntryDir1 = fileCache.getFileInCache(inputs1).getParentFile();
+        File lockFile1 =
+                new File(cacheDir, cacheEntryDir1.getName() + SynchronizedFile.LOCK_FILE_EXTENSION);
+        cacheEntryDir1.setLastModified(System.currentTimeMillis() - Duration.ofDays(60).toMillis());
+
+        // Make the second cache entry look as if it was created 30 days ago
+        fileCache.createFileInCacheIfAbsent(inputs2, (outputFile) -> {});
+        File cacheEntryDir2 = fileCache.getFileInCache(inputs2).getParentFile();
+        File lockFile2 =
+                new File(cacheDir, cacheEntryDir2.getName() + SynchronizedFile.LOCK_FILE_EXTENSION);
+        cacheEntryDir2.setLastModified(System.currentTimeMillis() - Duration.ofDays(30).toMillis());
+
+        // Make the third cache entry without modifying its timestamp
+        fileCache.createFileInCacheIfAbsent(inputs3, (outputFile) -> {});
+        File cacheEntryDir3 = fileCache.getFileInCache(inputs3).getParentFile();
+        File lockFile3 =
+                new File(cacheDir, cacheEntryDir3.getName() + SynchronizedFile.LOCK_FILE_EXTENSION);
+
+        // Create some random directory inside the cache directory and make sure it won't be deleted
+        File notDeletedDir = new File(fileCache.getCacheDirectory(), "foo");
+        FileUtils.mkdirs(notDeletedDir);
+
+        // The cache directory should now contains 3 cache entry directories, 3 lock files for those
+        // directories, and 1 not-to-delete directory
+        assertThat(checkNotNull(cacheDir.listFiles()).length).isEqualTo(7);
+
+        // Delete all the cache entries that are older than or as old as 31 days
+        fileCache.deleteOldCacheEntries(
+                System.currentTimeMillis() - Duration.ofDays(31).toMillis());
+
+        // Check that only the first cache entry and its lock file are deleted
+        assertThat(checkNotNull(cacheDir.listFiles()).length).isEqualTo(5);
+        assertThat(cacheEntryDir1).doesNotExist();
+        assertThat(lockFile1).doesNotExist();
+        assertThat(fileCache.cacheEntryExists(inputs2)).isTrue();
+        assertThat(lockFile2).exists();
+        assertThat(fileCache.cacheEntryExists(inputs3)).isTrue();
+        assertThat(lockFile3).exists();
+        assertThat(notDeletedDir).exists();
+
+        // Delete all the cache entries that are older than or as old as the second cache entry
+        fileCache.deleteOldCacheEntries(cacheEntryDir2.lastModified());
+
+        // Check that only the third cache entry, its lock file, and the not-to-delete directory are
+        // kept
+        assertThat(checkNotNull(cacheDir.listFiles()).length).isEqualTo(3);
+        assertThat(cacheEntryDir1).doesNotExist();
+        assertThat(lockFile1).doesNotExist();
+        assertThat(cacheEntryDir2).doesNotExist();
+        assertThat(lockFile2).doesNotExist();
+        assertThat(fileCache.cacheEntryExists(inputs3)).isTrue();
+        assertThat(lockFile3).exists();
+        assertThat(notDeletedDir).exists();
+
+        // Check that deleting cache entries in an empty or non-existent cache directory does not
+        // throw an exception
+        FileUtils.deleteDirectoryContents(cacheDir);
+        assertThat(checkNotNull(cacheDir.listFiles()).length).isEqualTo(0);
+        fileCache.deleteOldCacheEntries(System.currentTimeMillis());
+        assertThat(checkNotNull(cacheDir.listFiles()).length).isEqualTo(0);
+
+        FileUtils.deletePath(cacheDir);
+        assertThat(cacheDir).doesNotExist();
+        fileCache.deleteOldCacheEntries(System.currentTimeMillis());
+        assertThat(cacheDir).doesNotExist();
     }
 
     @Test

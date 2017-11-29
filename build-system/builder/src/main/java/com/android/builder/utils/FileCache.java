@@ -25,6 +25,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
+import com.google.common.base.Verify;
 import com.google.common.collect.Maps;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -616,12 +617,52 @@ public class FileCache {
     }
 
     /**
+     * Deletes all the cache entries that were last modified before or at the given timestamp.
+     *
+     * <p>This method may block if the cache is being accessed by another thread/process.
+     *
+     * @param lastTimestamp the timestamp to determine whether a cache entry will be kept or deleted
+     */
+    public void deleteOldCacheEntries(long lastTimestamp) {
+        // Check the parent directory of the cache directory, similarly to FileCache.delete()
+        if (lockingScope == LockingScope.MULTI_PROCESS) {
+            if (!FileUtils.parentDirExists(cacheDirectory)) {
+                return;
+            }
+        }
+
+        try {
+            getSynchronizedFile(cacheDirectory).write(sameCacheDirectory -> {
+                if (!cacheDirectory.exists()) {
+                    return null;
+                }
+                for (File fileInDir : Verify.verifyNotNull(cacheDirectory.listFiles())) {
+                    if (fileInDir.isDirectory() && getInputsFile(fileInDir).isFile()) {
+                        //noinspection UnnecessaryLocalVariable - Use it for clarity
+                        File cacheEntryDir = fileInDir;
+
+                        if (cacheEntryDir.lastModified() <= lastTimestamp) {
+                            FileUtils.deletePath(cacheEntryDir);
+                            // Also delete the lock file if it exists
+                            FileUtils.deleteIfExists(
+                                    new File(
+                                            cacheEntryDir.getParentFile(),
+                                            cacheEntryDir.getName()
+                                                    + SynchronizedFile.LOCK_FILE_EXTENSION));
+                        }
+                    }
+                }
+                return null;
+            });
+        } catch (ExecutionException exception) {
+            throw new RuntimeException(exception);
+        }
+    }
+
+    /**
      * Deletes the cache directory and its contents.
      *
-     * <p>If the cache is being used by another thread of any process in the case of {@code
-     * MULTI_PROCESS} locking scope, or by another thread of the current process in the case of
-     * {@code SINGLE_PROCESS} locking scope, then this method will block until that operation
-     * completes.
+     * <p>This method may block if the cache is being accessed by another thread/process.
      */
     public void delete() throws IOException {
         // The underlying facility for multi-process locking (SynchronizedFile) requires that the
@@ -882,7 +923,7 @@ public class FileCache {
                     @NonNull Hasher hasher, @NonNull File directory, @NonNull byte[] buffer)
                     throws IOException {
                 for (File file :
-                        Arrays.stream(directory.listFiles())
+                        Arrays.stream(Verify.verifyNotNull(directory.listFiles()))
                                 .sorted()
                                 .collect(Collectors.toList())) {
                     if (file.isDirectory()) {
