@@ -52,6 +52,13 @@ public class ManifestMergingTest {
             .fromTestProject("flavors")
             .create();
 
+    @Rule
+    public GradleTestProject navigation =
+            GradleTestProject.builder()
+                    .withName("navigation")
+                    .fromTestProject("navigation")
+                    .create();
+
     @Test
     public void simpleManifestMerger() throws Exception {
         simpleManifestMergingTask.execute("clean", "manifestMerger");
@@ -166,5 +173,28 @@ public class ManifestMergingTest {
                 flavors.file("build/intermediates/manifests/full/f1Fa/debug/AndroidManifest.xml");
         assertThat(manifestFile)
                 .containsAllOf("android:minSdkVersion=\"15\"", "android:targetSdkVersion=\"24\"");
+    }
+
+    /**
+     * Check that navigation files added to the app's source sets override each other as expected
+     * and generate the expected <intent-filter> elements in the app's merged manifest
+     */
+    @Test
+    public void checkManifestMergingWithNavigationFiles() throws Exception {
+        navigation.executor().run("clean", ":app:assembleF1Debug");
+        File manifestFile =
+                navigation.file(
+                        "app/build/intermediates/manifests/full/f1/debug/AndroidManifest.xml");
+        assertThat(manifestFile).contains("/library/nav1");
+        assertThat(manifestFile).contains("/main/nav1");
+        assertThat(manifestFile).contains("/f1/nav2");
+        assertThat(manifestFile).contains("/debug/nav3");
+        assertThat(manifestFile).contains("/f1Debug/nav4");
+        assertThat(manifestFile).doesNotContain("/main/nav2");
+        assertThat(manifestFile).doesNotContain("/main/nav3");
+        assertThat(manifestFile).doesNotContain("/main/nav4");
+        assertThat(manifestFile).doesNotContain("/f1/nav3");
+        assertThat(manifestFile).doesNotContain("/f1/nav4");
+        assertThat(manifestFile).doesNotContain("/debug/nav4");
     }
 }
