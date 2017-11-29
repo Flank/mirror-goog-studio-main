@@ -67,7 +67,6 @@ class PathStringFormattingTest {
     fun testVfsPathDoesntInsertTrailingSeparator() {
         val path = PathString("/foo/bar")
         verifyEquals(path.rawPath, "/foo/bar")
-        val parent = path.parent
         verifyEquals(path.parent!!.rawPath, "/foo")
     }
 
