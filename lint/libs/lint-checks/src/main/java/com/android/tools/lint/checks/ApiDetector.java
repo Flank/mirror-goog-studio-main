@@ -1617,8 +1617,7 @@ public class ApiDetector extends ResourceXmlDetector
                             for (PsiClassType type : inheritanceChain) {
                                 String expressionOwner = evaluator.getQualifiedName(type);
                                 if (expressionOwner != null && !expressionOwner.equals(owner)) {
-                                    int specificApi =
-                                            mApiDatabase.getMethodVersion(expressionOwner, name, desc);
+                                    int specificApi = mApiDatabase.getMethodVersion(expressionOwner, name, desc);
                                     if (specificApi == -1) {
                                         if (mApiDatabase.isRelevantOwner(expressionOwner)) {
                                             return;
@@ -1706,7 +1705,7 @@ public class ApiDetector extends ResourceXmlDetector
                         int specificApi = mApiDatabase.getMethodVersion(expressionOwner, name, desc);
                         if (specificApi == -1) {
                             if (mApiDatabase.isRelevantOwner(expressionOwner)) {
-                                return;
+                                break;
                             }
                         } else if (specificApi <= minSdk) {
                             return;

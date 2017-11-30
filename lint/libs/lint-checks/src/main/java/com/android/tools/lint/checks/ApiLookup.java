@@ -77,7 +77,7 @@ public class ApiLookup {
     /** Database moved from platform-tools to SDK in API level 26 */
     public static final int SDK_DATABASE_MIN_VERSION = 26;
     private static final String FILE_HEADER = "API database used by Android lint\000";
-    private static final int BINARY_FORMAT_VERSION = 13;
+    private static final int BINARY_FORMAT_VERSION = 14;
     private static final boolean DEBUG_SEARCH = false;
     private static final boolean WRITE_STATS = false;
 
@@ -451,29 +451,9 @@ public class ApiLookup {
 
                 Set<String> allMethods = cls.getAllMethods(info);
                 Set<String> allFields = cls.getAllFields(info);
-                // Strip out all members that have have the same lifecycle as the class itself.
-                // This makes the database *much* leaner (down from about 4M to about
-                // 1.7M), and this just fills the table with entries that ultimately
-                // don't help the API checker since it just needs to know if something
-                // requires a version *higher* than the minimum. If in the future the
-                // database needs to answer queries about whether a method is public
-                // or not, then we'd need to put this data back in.
                 List<String> members = new ArrayList<>(allMethods.size() + allFields.size());
-                for (String member : allMethods) {
-                    if (cls.getMethod(member, info) != cls.getSince()
-                            || cls.getMemberDeprecatedIn(member, info) != cls.getDeprecatedIn()
-                            || cls.getMemberRemovedIn(member, info) != cls.getRemovedIn()) {
-                        members.add(member);
-                    }
-                }
-
-                for (String member : allFields) {
-                    if (cls.getField(member, info) != cls.getSince()
-                            || cls.getMemberDeprecatedIn(member, info) != cls.getDeprecatedIn()
-                            || cls.getMemberRemovedIn(member, info) != cls.getRemovedIn()) {
-                        members.add(member);
-                    }
-                }
+                members.addAll(allMethods);
+                members.addAll(allFields);
 
                 estimatedSize += 2 + 4 * (cls.getInterfaces().size());
                 if (cls.getSuperClasses().size() > 1) {
@@ -818,7 +798,7 @@ public class ApiLookup {
         if (classNumber >= 0) {
             int offset = seekClassData(classNumber, CLASS_HEADER_API);
             int api = Byte.toUnsignedInt(mData[offset]) & API_MASK;
-            return api > 1 ? api : -1;
+            return api > 0 ? api : -1;
         }
         return -1;
     }
@@ -891,7 +871,7 @@ public class ApiLookup {
                     // Not deprecated
                     return -1;
                 }
-                int deprecatedIn = Byte.toUnsignedInt(mData[offset]);
+                int deprecatedIn = Byte.toUnsignedInt(mData[offset]) & API_MASK;;
                 return deprecatedIn != 0 ? deprecatedIn : -1;
             }
         }  else if (mInfo != null) {
@@ -921,7 +901,7 @@ public class ApiLookup {
                     // Not removed
                     return -1;
                 }
-                int removedIn = Byte.toUnsignedInt(mData[offset]);
+                int removedIn = Byte.toUnsignedInt(mData[offset]) & API_MASK;
                 return removedIn != 0 ? removedIn : -1;
             }
         } else if (mInfo != null) {
@@ -972,7 +952,7 @@ public class ApiLookup {
             if (classNumber >= 0) {
                 int api = findMember(classNumber, name, desc);
                 if (api < 0) {
-                    return getClassVersion(classNumber);
+                    return -1;
                 }
                 return api;
             }
@@ -1183,7 +1163,7 @@ public class ApiLookup {
             if (classNumber >= 0) {
                 int api = findMember(classNumber, name, null);
                 if (api < 0) {
-                    return getClassVersion(classNumber);
+                    return -1;
                 }
                 return api;
             }

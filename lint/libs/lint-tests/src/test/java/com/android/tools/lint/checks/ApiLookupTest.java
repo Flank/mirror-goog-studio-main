@@ -16,59 +16,16 @@
 
 package com.android.tools.lint.checks;
 
-import static com.android.SdkConstants.ANDROID_MANIFEST_XML;
-import static com.android.SdkConstants.ANDROID_URI;
-import static com.android.SdkConstants.ATTR_MIN_SDK_VERSION;
-import static com.android.SdkConstants.DOT_AAR;
-import static com.android.SdkConstants.DOT_CLASS;
-import static com.android.SdkConstants.DOT_JAR;
-import static com.android.SdkConstants.FN_CLASSES_JAR;
-import static com.android.SdkConstants.TAG_USES_SDK;
-import static com.android.ide.common.repository.SdkMavenRepository.ANDROID;
-import static com.google.common.base.Charsets.UTF_8;
-import static java.io.File.separatorChar;
-
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
-import com.android.ide.common.repository.GradleCoordinate;
-import com.android.ide.common.xml.XmlFormatPreferences;
-import com.android.ide.common.xml.XmlFormatStyle;
-import com.android.ide.common.xml.XmlPrettyPrinter;
-import com.android.repository.io.FileOpUtils;
 import com.android.tools.lint.detector.api.Detector;
 import com.android.tools.lint.detector.api.Severity;
 import com.android.utils.Pair;
-import com.android.utils.XmlUtils;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-import com.google.common.io.ByteStreams;
-import com.google.common.io.Closeables;
-import com.google.common.io.Files;
-import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.RandomAccessFile;
 import java.io.StringWriter;
-import java.lang.reflect.Modifier;
-import java.util.Calendar;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
-import java.util.zip.ZipEntry;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.MethodNode;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 @SuppressWarnings({"javadoc", "ConstantConditions"})
 public class ApiLookupTest extends AbstractCheckTest {
@@ -270,6 +227,16 @@ public class ApiLookupTest extends AbstractCheckTest {
 
     @SuppressWarnings({"ConstantConditions", "IOResourceOpenedButNotSafelyClosed",
             "ResultOfMethodCallIgnored"})
+    @Override
+    protected TestLintClient createClient() {
+        mCacheDir = new File(getTempDir(), "lint-test-cache");
+        mCacheDir.mkdirs();
+
+        return new LookupTestClient();
+    }
+
+    @SuppressWarnings({"ConstantConditions", "IOResourceOpenedButNotSafelyClosed",
+            "ResultOfMethodCallIgnored"})
     public void testCorruptedCacheHandling() throws Exception {
         if (ApiLookup.DEBUG_FORCE_REGENERATE_BINARY) {
             System.err.println("Skipping " + getName() + ": not valid while regenerating indices");
@@ -346,13 +313,6 @@ public class ApiLookupTest extends AbstractCheckTest {
     private static final boolean CHECK_DEPRECATED = true;
 
     private static void assertSameApi(String desc, int expected, int actual) {
-        // In the database we don't distinguish between 1 and -1 (to save diskspace)
-        if (expected <= 1) {
-            expected = -1;
-        }
-        if (actual <= 1) {
-            actual = -1;
-        }
         assertEquals(desc, expected, actual);
     }
 
@@ -368,17 +328,30 @@ public class ApiLookupTest extends AbstractCheckTest {
         // not api 3 as lint reports.
         // (The root bug was that for deprecation we also lowered it if superclasses were
         // deprecated (such as AbsoluteLayout, a superclass of WebView) - this is necessary when
-        // computing version-requirementsbut not deprecation versions.
+        // computing version-requirements but not deprecation versions.
         assertEquals(21, mDb.getMethodDeprecatedIn("android/webkit/WebView", "createPrintDocumentAdapter", "()"));
+    }
+
+    public void testClassLookupInnerClasses() {
+        assertEquals(24, mDb.getClassVersion("java/util/Locale$Category"));
+        assertEquals(24, mDb.getClassVersion("java.util.Locale.Category"));
+        assertEquals(1, mDb.getClassVersion("android/view/WindowManager$BadTokenException"));
+        assertEquals(1, mDb.getClassVersion("android.view.WindowManager.BadTokenException"));
+    }
+
+    public void testClassDeprecation() {
+        assertEquals(5, mDb.getClassDeprecatedIn("android/webkit/PluginData"));
+        assertEquals(1, mDb.getClassVersion("java/io/LineNumberInputStream"));
+        assertEquals(1, mDb.getClassDeprecatedIn("java/io/LineNumberInputStream"));
     }
 
     // Flaky test - http://b.android.com/225879
     @SuppressWarnings("unused")
-    public void ignoredTestFindEverything() {
+    public void testFindEverything() {
         // Load the API versions file and look up every single method/field/class in there
         // (provided since != 1) and also check the deprecated calls.
 
-        File file = createClient().findResource("platform-tools/api/api-versions.xml");
+        File file = createClient().findResource(ApiLookup.XML_FILE_PATH);
         if (file == null || !file.exists()) {
             return;
         }
@@ -398,7 +371,6 @@ public class ApiLookupTest extends AbstractCheckTest {
                 String name = method.substring(0, index);
                 String desc = method.substring(index);
                 assertSameApi(method, since, mDb.getMethodVersion(className, name, desc));
-
             }
             for (String method : cls.getAllFields(info)) {
                 int since = cls.getField(method, info);
@@ -420,7 +392,7 @@ public class ApiLookupTest extends AbstractCheckTest {
                 if (className.startsWith("android/support/")) {
                     continue;
                 }
-                if (classDeprecatedIn > 1) {
+                if (classDeprecatedIn >= 1) {
                     assertSameApi(className, classDeprecatedIn,
                             mDb.getClassDeprecatedIn(className));
                 } else {
@@ -429,6 +401,9 @@ public class ApiLookupTest extends AbstractCheckTest {
 
                 for (String method : cls.getAllMethods(info)) {
                     int deprecatedIn = cls.getMemberDeprecatedIn(method, info);
+                    if (deprecatedIn == 0) {
+                        deprecatedIn = -1;
+                    }
                     int index = method.indexOf('(');
                     String name = method.substring(0, index);
                     String desc = method.substring(index);
@@ -437,6 +412,9 @@ public class ApiLookupTest extends AbstractCheckTest {
                 }
                 for (String method : cls.getAllFields(info)) {
                     int deprecatedIn = cls.getMemberDeprecatedIn(method, info);
+                    if (deprecatedIn == 0) {
+                        deprecatedIn = -1;
+                    }
                     assertSameApi(method, deprecatedIn, mDb.getFieldDeprecatedIn(className,
                             method));
                 }
@@ -482,373 +460,5 @@ public class ApiLookupTest extends AbstractCheckTest {
         public void log(Throwable exception, String format, Object... args) {
             log(Severity.WARNING, exception, format, args);
         }
-    }
-
-    /**
-     * Finds the most recent version of the support/appcompat library, and for any
-     * classes that extend framework classes, creates a list of APIs that should
-     * <b>not</b> be flagged when called via the support library (since the support
-     * library provides a backport of the APIs).
-     * <p>
-     * Example: {@code FloatingActionButton#setBackgroundTintList()}
-     * This method is available on any version, yet it extends a method
-     * ({@code ImageButton#setBackgroundTintList} which has min api 21) so lint
-     * flags it.
-     */
-    public void testSupportLibraryMap() throws Exception {
-        if (ApiLookup.DEBUG_FORCE_REGENERATE_BINARY) {
-            generateSupportLibraryFile();
-        }
-    }
-
-    @SuppressWarnings({"unchecked", "UnusedAssignment"})
-    private void generateSupportLibraryFile() throws Exception {
-        //noinspection PointlessBooleanExpression
-        if (!ApiLookup.DEBUG_FORCE_REGENERATE_BINARY) {
-            System.out.println("Ignoring " + getName() + " since"
-                    + " ApiLookup.DEBUG_FORCE_REGENERATE_BINARY is not set to true");
-            return;
-        }
-        File sdkHome = createClient().getSdkHome();
-        if (sdkHome == null) {
-            System.err.println("Ignoring " + getName() + ": no SDK home found");
-            return;
-        }
-
-        File root = ANDROID.getRepositoryLocation(sdkHome, true, FileOpUtils.create());
-        if (root == null) {
-            System.out.println("No android support repository installed in the SDK home");
-            return;
-        }
-
-        String groupId = "com.android.support";
-
-        Set<String> skip = ImmutableSet.of("test", "support-annotations", "multidex",
-                "multidex-instrumentation");
-        File dir = new File(sdkHome, "extras/android/m2repository/com/android/support");
-        List<String> artifacts = Lists.newArrayList();
-        for (File artifactDir : dir.listFiles()) {
-            if (artifactDir.isDirectory() && new File(artifactDir, "maven-metadata.xml").isFile()) {
-                String name = artifactDir.getName();
-                if (!skip.contains(name)) {
-                    artifacts.add(name);
-                }
-            }
-        }
-        Collections.sort(artifacts);
-
-        Map<String, ClassNode> classes = Maps.newHashMapWithExpectedSize(1000);
-        Map<String, Integer> minSdkMap = Maps.newHashMapWithExpectedSize(1000);
-
-        for (String artifact : artifacts) {
-            GradleCoordinate version = ANDROID.getHighestInstalledVersion(sdkHome, groupId,
-                    artifact, null, true, FileOpUtils.create());
-            String revision = version.getRevision();
-            File file = new File(root, groupId.replace('.', separatorChar) + separatorChar
-                    + artifact + separatorChar + revision
-                    + separatorChar + artifact + "-" + revision + DOT_AAR);
-            if (!file.exists()) {
-                String path = file.getPath();
-                path = path.substring(0, path.length() - DOT_AAR.length()) + DOT_JAR;
-                file = new File(path);
-                if (!file.exists()) {
-                    System.err.println(
-                            "Ignoring artifact " + artifact + ": couldn't find .aar/.jar file");
-                    continue;
-                }
-            }
-
-            System.out.println("Analyzing file " + file);
-
-            byte[] bytes = Files.toByteArray(file);
-            String path = file.getPath();
-            if (path.endsWith(DOT_AAR)) {
-                analyzeAar(file, bytes, classes, minSdkMap);
-            } else {
-                assertTrue(path, path.endsWith(DOT_JAR));
-                analyzeJar(bytes, classes, minSdkMap, -1);
-            }
-        }
-
-        System.out.println("Found " + classes.size() + " classes (including innerclasses)");
-        File file = createClient().findResource(ApiLookup.XML_FILE_PATH);
-        if (file == null || !file.exists()) {
-            System.out.println("No API versions xml file found.");
-            return;
-        }
-
-        Api api = Api.parseApi(file);
-
-        int year = Calendar.getInstance().get(Calendar.YEAR);
-        Document document = XmlUtils.parseDocument(""
-                + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
-                + "<!--\n"
-                + "  ~ Copyright (C) " + year + " The Android Open Source Project\n"
-                + "  ~\n"
-                + "  ~ Licensed under the Apache License, Version 2.0 (the \"License\");\n"
-                + "  ~ you may not use this file except in compliance with the License.\n"
-                + "  ~ You may obtain a copy of the License at\n"
-                + "  ~\n"
-                + "  ~      http://www.apache.org/licenses/LICENSE-2.0\n"
-                + "  ~\n"
-                + "  ~ Unless required by applicable law or agreed to in writing, software\n"
-                + "  ~ distributed under the License is distributed on an \"AS IS\" BASIS,\n"
-                + "  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n"
-                + "  ~ See the License for the specific language governing permissions and\n"
-                + "  ~ limitations under the License.\n"
-                + "  -->\n"
-                + "<!-- This file is generated by ApiLookupTest#generateSupportLibraryFile() -->\n"
-                + "<api version=\"3\"/>", false);
-        Element rootElement = document.getDocumentElement();
-
-        Set<ClassNode> referencedClasses = Sets.newHashSetWithExpectedSize(100);
-        Set<ClassNode> referencedSuperClasses = Sets.newHashSetWithExpectedSize(100);
-
-        // Walk through the various support classes, and walk up the inheritance chain
-        // to see if it extends a class from the support library, and if so, mark
-        // any methods as deliberately having a lower API level
-        for (ClassNode node : sorted(classes.values())) {
-            String name = node.name;
-            if (name.indexOf('$') != -1) {
-                // Ignore inner classes
-                continue;
-            }
-            if ((node.access & Modifier.PUBLIC) == 0) {
-                continue;
-            }
-            ApiClass apiClass = extendsKnownApi(api, node, classes);
-            if (apiClass != null && !apiClass.getName().equals("java/lang/Object")) {
-                @SuppressWarnings("unchecked") // ASM API
-                List<MethodNode> methodList = sorted((List<MethodNode>) node.methods);
-                if (methodList.isEmpty()) {
-                    return;
-                }
-
-                int supportMin = getMinSdk(node.name, minSdkMap);
-                Element classNode = null;
-
-                for (MethodNode method : methodList) {
-                    String signature = method.name + method.desc;
-                    int end = signature.indexOf(')');
-                    if (end != -1) {
-                        signature = signature.substring(0, end + 1);
-                    }
-                    int methodSince = apiClass.getMethod(signature, api);
-                    if (methodSince < Integer.MAX_VALUE) {
-                        if (supportMin < methodSince) {
-                            referencedClasses.add(node);
-                            if (classNode == null) {
-                                classNode = document.createElement("class");
-                                rootElement.appendChild(classNode);
-                                classNode.setAttribute("name", node.name);
-                                classNode.setAttribute("since", Integer.toString(supportMin));
-                                if (node.superName != null) {
-                                    Element extendsNode = document.createElement("extends");
-                                    classNode.appendChild(extendsNode);
-                                    extendsNode.setAttribute("name", node.superName);
-
-                                    ClassNode superClassNode = classes.get(node.superName);
-                                    while (superClassNode != null) {
-                                        referencedSuperClasses.add(superClassNode);
-                                        superClassNode = classes.get(superClassNode.superName);
-                                    }
-                                }
-                            }
-                            Element methodNode = document.createElement("method");
-                            classNode.appendChild(methodNode);
-                            methodNode.setAttribute("name", method.name + method.desc);
-                            methodNode.setAttribute("since", Integer.toString(supportMin));
-                        }
-                    }
-                }
-            }
-        }
-
-        // Also list any super classes referenced such that we ensure we have super-class
-        // references to them in the ApiClass info (such that it can correctly pull in
-        // methods from the framework to check their since-versions relative to the class'
-        // own since value)
-        referencedSuperClasses.removeAll(referencedClasses);
-        if (!referencedSuperClasses.isEmpty()) {
-            rootElement.appendChild(document.createTextNode("\n"));
-            rootElement.appendChild(document.createComment("Referenced Super Classes"));
-            for (ClassNode node : sorted(referencedSuperClasses)) {
-                int supportMin = getMinSdk(node.name, minSdkMap);
-                Element classNode = document.createElement("class");
-                rootElement.appendChild(classNode);
-                classNode.setAttribute("name", node.name);
-                classNode.setAttribute("since", Integer.toString(supportMin));
-                if (node.superName != null) {
-                    Element extendsNode = document.createElement("extends");
-                    classNode.appendChild(extendsNode);
-                    extendsNode.setAttribute("name", node.superName);
-                }
-            }
-        }
-
-        String xml = XmlPrettyPrinter.prettyPrint(document, XmlFormatPreferences.defaults(),
-                XmlFormatStyle.RESOURCE, "\n", false);
-        xml = xml.replace("\n\n", "\n");
-
-        File xmlFile = findSrcDir();
-        if (xmlFile == null) {
-            System.out.println("Ignoring " + getName() + ": Should set $ANDROID_SRC to point "
-                    + "to source dir to run this test");
-            return;
-        }
-        xmlFile = new File(xmlFile, ("tools/base/lint/libs/lint-checks/src/main/java/com/android/"
-                + "tools/lint/checks/api-versions-support-library.xml").replace('/', separatorChar));
-        assertTrue(xmlFile.getPath(), xmlFile.exists());
-        String prev = Files.toString(xmlFile, UTF_8);
-        assertEquals(prev, xml);
-    }
-
-    @NonNull
-    private static List<MethodNode> sorted(List<MethodNode> methods) {
-        List<MethodNode> sorted = Lists.newArrayList(methods);
-        sorted.sort((node1, node2) -> {
-            int delta = node1.name.compareTo(node2.name);
-            if (delta != 0) {
-                return delta;
-            }
-            return node1.desc.compareTo(node2.desc);
-        });
-        return sorted;
-    }
-
-    @NonNull
-    private static List<ClassNode> sorted(Collection<ClassNode> classes) {
-        List<ClassNode> sorted = Lists.newArrayList(classes);
-        sorted.sort(Comparator.comparing(node -> node.name));
-        return sorted;
-    }
-
-    private static int getMinSdk(@NonNull String name, @NonNull Map<String, Integer> minSdkMap) {
-        Integer min = minSdkMap.get(name);
-        if (min != null) {
-            return min;
-        }
-        String prefix = "android/support/v";
-        if (name.startsWith(prefix)) {
-            int endIndex = name.indexOf('/', prefix.length());
-            if (endIndex != -1) {
-                return Integer.parseInt(name.substring(prefix.length(), endIndex));
-            }
-        }
-
-        // Current default minSdkVersion in the support library
-        return 14;
-    }
-
-    @Nullable
-    private static ClassNode getSuperClass(@NonNull ClassNode node,
-            @NonNull Map<String, ClassNode> classes) {
-        if (node.superName != null) {
-            return classes.get(node.superName);
-        }
-
-        return null;
-    }
-
-    @Nullable
-    private static ApiClass extendsKnownApi(@NonNull Api api, @Nullable ClassNode node,
-            @NonNull Map<String, ClassNode> classes) {
-        while (node != null) {
-            ApiClass cls = api.getClass(node.name);
-            if (cls != null) {
-                return cls;
-            }
-
-            ClassNode superClass = getSuperClass(node, classes);
-            if (superClass == null && node.superName != null) {
-                // Pointing up into android.jar, not in our class map?
-                return api.getClass(node.superName);
-            } else {
-                node = superClass;
-            }
-        }
-
-        return null;
-    }
-
-    private static void analyzeAar(File file, @NonNull byte[] bytes,
-            @NonNull Map<String, ClassNode> classes,
-            @NonNull Map<String, Integer> minSdkMap) throws Exception {
-        // Two passes: first compute minSdkVersion, then process the jar
-        //try (JarInputStream zis = new JarInputStream(new Byte))
-        int minSdk = -1;
-        try (JarFile jarFile = new JarFile(file)) {
-            JarEntry manifestEntry = jarFile.getJarEntry(ANDROID_MANIFEST_XML);
-            if (manifestEntry != null) {
-                byte[] b = ByteStreams.toByteArray(jarFile.getInputStream(manifestEntry));
-                assertNotNull(b);
-                String xml = new String(b, UTF_8);
-                Document document = XmlUtils.parseDocumentSilently(xml, true);
-                assertNotNull(document);
-                assertNotNull(document.getDocumentElement());
-                for (Element element : XmlUtils.getSubTags(document.getDocumentElement())) {
-                    if (element.getTagName().equals(TAG_USES_SDK)) {
-                        String min = element.getAttributeNS(ANDROID_URI,
-                                ATTR_MIN_SDK_VERSION);
-                        if (!min.isEmpty()) {
-                            try {
-                                minSdk = Integer.parseInt(min);
-                            } catch (NumberFormatException e) {
-                                fail(e.toString());
-                            }
-                        }
-                    }
-                }
-            }
-
-            JarEntry classJarEntry = jarFile.getJarEntry(FN_CLASSES_JAR);
-            if (classJarEntry != null) {
-                byte[] b = ByteStreams.toByteArray(jarFile.getInputStream(classJarEntry));
-                assertNotNull(b);
-                analyzeJar(b, classes, minSdkMap, minSdk);
-            }
-        }
-    }
-
-    private static void analyzeJar(@NonNull byte[] bytes, @NonNull Map<String, ClassNode> classes,
-            @NonNull Map<String, Integer> minSdkMap, int manifestMinSdk) throws Exception {
-        JarInputStream zis = null;
-        try {
-            InputStream fis = new ByteArrayInputStream(bytes);
-            try {
-                zis = new JarInputStream(fis);
-                ZipEntry entry = zis.getNextEntry();
-                while (entry != null) {
-                    String name = entry.getName();
-                    if (name.endsWith(DOT_CLASS)) {
-                        // Bingo!
-                        byte[] b = ByteStreams.toByteArray(zis);
-                        if (b != null) {
-                            analyzeClass(b, classes, minSdkMap, manifestMinSdk);
-                        }
-                    }
-                    entry = zis.getNextEntry();
-                }
-            } finally {
-                Closeables.close(fis, true);
-            }
-        } finally {
-            Closeables.close(zis, false);
-        }
-    }
-
-    private static void analyzeClass(@NonNull byte[] bytes,
-            @NonNull Map<String, ClassNode> classes, @NonNull Map<String, Integer> minSdkMap,
-            int manifestMinSdk) {
-
-        ClassReader reader = new ClassReader(bytes);
-        ClassNode classNode = new ClassNode();
-        reader.accept(classNode, 0 /* flags */);
-
-        assertNull(classes.get(classNode.name));
-        classes.put(classNode.name, classNode);
-
-        int minSdk = manifestMinSdk != -1 ? manifestMinSdk : getMinSdk(classNode.name, minSdkMap);
-        minSdkMap.put(classNode.name, minSdk);
     }
 }

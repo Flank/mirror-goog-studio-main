@@ -5016,6 +5016,55 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
+    public void test69788053() {
+        // Regression test for issue 69788053:
+        // Lint NewApi check doesn't work with inner classes that extend another class
+        //noinspection all // Sample code
+        lint().files(
+                manifest().minSdk(15),
+                java("" +
+                        "package test.pkg;\n" +
+                        "\n" +
+                        "import android.app.Fragment;\n" +
+                        "import android.os.AsyncTask;\n" +
+                        "\n" +
+                        "public class MyFragment extends Fragment {\n" +
+                        "    class MyGoodClass {\n" +
+                        "        private void hello() {\n" +
+                        "            getContext(); // Expect warning from lint\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    class MyBadClass extends AsyncTask<Void, Void, Void> {\n" +
+                        "        private void hello() {\n" +
+                        "            getContext(); // Expects warning from lint\n" +
+                        "        }\n" +
+                        "\n" +
+                        "        @Override\n" +
+                        "        protected Void doInBackground(Void... voids) {\n" +
+                        "            return null;\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "}\n"))
+                .run()
+                .expect("src/test/pkg/MyFragment.java:9: Error: Call requires API level 23 (current min is 15): android.app.Fragment#getContext [NewApi]\n" +
+                        "            getContext(); // Expect warning from lint\n" +
+                        "            ~~~~~~~~~~\n" +
+                        "src/test/pkg/MyFragment.java:15: Error: Call requires API level 23 (current min is 15): android.app.Fragment#getContext [NewApi]\n" +
+                        "            getContext(); // Expects warning from lint\n" +
+                        "            ~~~~~~~~~~\n" +
+                        "2 errors, 0 warnings");
+    }
+
+    @Override
+    protected boolean ignoreSystemErrors() {
+        //noinspection SimplifiableIfStatement
+        if (getName().equals("testMissingApiDatabase")) {
+            return false;
+        }
+        return super.ignoreSystemErrors();
+    }
+
     @Override
     protected void checkReportedError(
             @NonNull Context context,
