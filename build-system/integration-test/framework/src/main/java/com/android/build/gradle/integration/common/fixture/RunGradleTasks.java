@@ -262,11 +262,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             case AAPT_V1:
                 with(BooleanOption.ENABLE_AAPT2, false);
                 break;
-            case AAPT_V2:
-                with(BooleanOption.ENABLE_AAPT2, true);
-                with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, false);
-                with(BooleanOption.ENABLE_DAEMON_MODE_AAPT2, false);
-                break;
             case AAPT_V2_JNI:
                 with(BooleanOption.ENABLE_AAPT2, true);
                 with(BooleanOption.ENABLE_IN_PROCESS_AAPT2, true);

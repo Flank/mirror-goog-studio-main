@@ -22,7 +22,6 @@ import com.android.builder.core.AndroidBuilder;
 import com.android.builder.internal.aapt.Aapt;
 import com.android.builder.internal.aapt.v1.AaptV1;
 import com.android.builder.internal.aapt.v2.AaptV2Jni;
-import com.android.builder.internal.aapt.v2.OutOfProcessAaptV2;
 import com.android.builder.internal.aapt.v2.QueueableAapt2;
 import com.android.builder.sdk.TargetInfo;
 import com.android.builder.utils.FileCache;
@@ -89,13 +88,6 @@ public final class AaptGradleFactory {
                         new FilteringLogger(builder.getLogger()),
                         crunchPng ? AaptV1.PngProcessMode.ALL : AaptV1.PngProcessMode.NO_CRUNCH,
                         cruncherProcesses);
-            case AAPT_V2:
-                return new OutOfProcessAaptV2(
-                        builder.getProcessExecutor(),
-                        outputHandler,
-                        buildTools,
-                        intermediateDir,
-                        new FilteringLogger(builder.getLogger()));
             case AAPT_V2_JNI:
                 return new AaptV2Jni(
                         intermediateDir,

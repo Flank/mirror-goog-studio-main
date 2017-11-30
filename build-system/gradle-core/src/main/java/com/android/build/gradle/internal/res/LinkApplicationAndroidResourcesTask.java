@@ -511,8 +511,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                                 .setPreferredDensity(preferredDensity)
                                 .setPackageId(packageId)
                                 .setDependentFeatures(featurePackagesBuilder.build())
-                                .setImports(imports)
-                                .setListResourceFiles(aaptGeneration == AaptGeneration.AAPT_V2);
+                                .setImports(imports);
 
                 if (isNamespaced) {
                     config.setStaticLibraryDependencies(ImmutableList.copyOf(dependencies));
