@@ -41,9 +41,11 @@ import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 import org.gradle.api.logging.Logger;
 
@@ -126,49 +128,44 @@ public class InstantRunSliceSplitApkBuilder extends InstantRunSplitApkBuilder {
                 }
 
                 for (DirectoryInput directoryInput : transformInput.getDirectoryInputs()) {
-                    for (Map.Entry<File, Status> fileEntry : directoryInput
-                            .getChangedFiles()
-                            .entrySet()) {
+                    Map<File, Set<Status>> sliceStatuses =
+                            directoryInput
+                                    .getChangedFiles()
+                                    .entrySet()
+                                    .stream()
+                                    .collect(
+                                            Collectors.groupingBy(
+                                                    fileStatus ->
+                                                            fileStatus.getKey().getParentFile(),
+                                                    Collectors.mapping(
+                                                            Map.Entry::getValue,
+                                                            Collectors.toSet())));
 
-                        // we might have several dex files in that slice, so we take the parent
-                        File inputFolder = fileEntry.getKey().getParentFile();
-                        switch (fileEntry.getValue()) {
-                            case NOTCHANGED:
-                                break;
-                            case ADDED:
-                            case CHANGED:
-                                File[] dexFiles = inputFolder.listFiles();
-                                if (dexFiles != null) {
-                                    try {
-                                        splitsToBuild.add(
-                                                new DexFiles(dexFiles, directoryInput.getName()));
-                                    } catch (Exception e) {
-                                        throw new TransformException(e);
-                                    }
+                    for (Map.Entry<File, Set<Status>> slices : sliceStatuses.entrySet()) {
+                        if (slices.getValue().equals(EnumSet.of(Status.REMOVED))) {
+                            DexFiles dexFile =
+                                    new DexFiles(ImmutableSet.of(), slices.getKey().getName());
+
+                            String outputFileName = dexFile.encodeName() + "_unaligned.apk";
+                            FileUtils.deleteIfExists(new File(outputDirectory, outputFileName));
+                            outputFileName = dexFile.encodeName() + ".apk";
+                            FileUtils.deleteIfExists(new File(outputDirectory, outputFileName));
+                            break;
+                        } else if (!slices.getValue().equals(EnumSet.of(Status.NOTCHANGED))) {
+                            File[] dexFiles = slices.getKey().listFiles();
+                            if (dexFiles != null) {
+                                try {
+                                    splitsToBuild.add(
+                                            new DexFiles(dexFiles, directoryInput.getName()));
+                                } catch (Exception e) {
+                                    throw new TransformException(e);
                                 }
-                                break;
-                            case REMOVED:
-                                DexFiles dexFile = new DexFiles(
-                                        ImmutableSet.of(),
-                                        inputFolder.getName());
-
-                                String outputFileName = dexFile.encodeName() + "_unaligned.apk";
-                                //noinspection ResultOfMethodCallIgnored
-                                new File(outputDirectory, outputFileName).delete();
-                                outputFileName = dexFile.encodeName() + ".apk";
-                                //noinspection ResultOfMethodCallIgnored
-                                new File(outputDirectory, outputFileName).delete();
-                                break;
-                            default:
-                                throw new TransformException(String.format(
-                                        "Unhandled status %1$s for %2$s",
-                                        fileEntry.getValue(),
-                                        fileEntry.getKey().getAbsolutePath()));
+                            }
+                            break;
                         }
                     }
                 }
             }
-
         } else {
             FileUtils.cleanOutputDir(outputDirectory);
             for (TransformInput transformInput : transformInvocation.getInputs()) {
