@@ -200,6 +200,7 @@ public class JarContentsTest {
                 "com/android/builder/internal/packaging/",
                 "com/android/builder/internal/testing/",
                 "com/android/builder/merge/",
+                "com/android/builder/multidex/",
                 "com/android/builder/packaging/",
                 "com/android/builder/png/",
                 "com/android/builder/profile/",

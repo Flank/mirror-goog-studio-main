@@ -20,7 +20,6 @@ import static com.android.build.gradle.integration.common.fixture.GradleTestProj
 import static com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType.DEBUG;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
@@ -30,6 +29,7 @@ import com.android.build.gradle.integration.shrinker.ShrinkerTestUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.testutils.apk.Apk;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.File;
@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -49,8 +48,7 @@ public class MinifyLibTest {
         return ImmutableList.of(true, false);
     }
 
-    @Parameterized.Parameter(0)
-    public Boolean useProguard;
+    @Parameterized.Parameter public Boolean useProguard;
 
     @Rule
     public GradleTestProject project =
@@ -139,15 +137,9 @@ public class MinifyLibTest {
         enableLibShrinking();
         // Remove the -keep rules.
         File config = project.getSubproject(":lib").file("config.pro");
-        config.delete();
+        FileUtils.deleteIfExists(config);
         TestFileUtils.appendToFile(config, "");
         project.executor().run(":lib:assembleDebug");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
     }
 
     private void enableLibShrinking() throws IOException {

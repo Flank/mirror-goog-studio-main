@@ -19,7 +19,6 @@ package com.android.build.gradle.integration.application;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.AndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -32,7 +31,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Test resValue for string type is treated as String. */
 public class ResValueTypeTest {
@@ -136,12 +134,5 @@ public class ResValueTypeTest {
                         + "\n"
                         + "</resources>",
                 FileUtils.loadFileWithUnixLineSeparators(outputFile));
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void checkResValueIsTreatedAsAString() throws IOException, InterruptedException {
-        project.execute("clean");
-        project.executeConnectedCheck();
     }
 }

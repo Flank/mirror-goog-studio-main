@@ -17,6 +17,7 @@ package com.android.projectmodel
 
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
+import java.io.File
 import java.nio.file.Paths
 
 class PathStringTest {
@@ -166,7 +167,7 @@ class PathStringTest {
         assertThat(PathString("A:\\b").compareTo(PathString("A:\\b\\"))).isLessThan(0)
     }
 
-    fun assertRelativize(relativeTo: String, fullPath: String, relPath: String) {
+    private fun assertRelativize(relativeTo: String, fullPath: String, relPath: String) {
         val p1 = PathString(relativeTo)
         val p2 = PathString(fullPath)
         val rel = p1.relativize(p2)
@@ -530,6 +531,12 @@ class PathStringTest {
     }
 
     @Test
+    fun testFilesystemUri() {
+        val path = PathString("/")
+        assertThat(path.filesystemUri).isEqualTo(File(File.separator).toURI())
+    }
+
+    @Test
     fun testResolve() {
         assertResolves("", "", "")
         assertResolves("", "C:", "C:")
@@ -740,7 +747,7 @@ class PathStringTest {
         assertResolves("misc/some_file", "misc/some_file", "misc/some_file/misc/some_file")
     }
 
-    fun assertResolves(path1: String, path2: String, resolved: String) {
+    private fun assertResolves(path1: String, path2: String, resolved: String) {
         val p1 = PathString(path1)
         val p2 = PathString(path2)
         val res = p1.resolve(p2)

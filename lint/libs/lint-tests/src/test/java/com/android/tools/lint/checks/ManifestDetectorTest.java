@@ -188,7 +188,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                     mStrings));
     }
 
-    public void testOldTargetSdk() throws Exception {
+    public void testOldTargetSdk() {
         String expected = ""
                 + "AndroidManifest.xml:7: Warning: Not targeting the latest versions of Android; compatibility modes apply. Consider testing and updating this version. Consult the android.os.Build.VERSION_CODES javadoc for details. [OldTargetApi]\n"
                 + "    <uses-sdk android:minSdkVersion=\"10\" android:targetSdkVersion=\"14\" />\n"
@@ -714,7 +714,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings\n");
     }
 
-    public void testMissingVersion() throws Exception {
+    public void testMissingVersion() {
         String expected = ""
                 + "AndroidManifest.xml:2: Warning: Should set android:versionCode to specify the application version [MissingVersion]\n"
                 + "<manifest xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"
@@ -852,7 +852,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                     mStrings));
     }
 
-    public void testMissingApplicationIcon() throws Exception {
+    public void testMissingApplicationIcon() {
         String expected = ""
                 + "AndroidManifest.xml:9: Warning: Should explicitly set android:icon, there is no default [MissingApplicationIcon]\n"
                 + "    <application\n"
@@ -988,7 +988,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                             + "</manifest>\n")));
     }
 
-    public void testMockLocations() throws Exception {
+    public void testMockLocations() {
         String expected = ""
                 + "src/main/AndroidManifest.xml:9: Error: Mock locations should only be requested in a test or debug-specific manifest file (typically src/debug/AndroidManifest.xml) [MockLocation]\n"
                 + "    <uses-permission android:name=\"android.permission.ACCESS_MOCK_LOCATION\" /> \n"
@@ -1052,7 +1052,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
         // that a manifest file in a debug build type does not get flagged.
     }
 
-    public void testMockLocationsOk() throws Exception {
+    public void testMockLocationsOk() {
         lint().files(
                 // Not a Gradle project
                 xml("AndroidManifest.xml", ""
@@ -1072,7 +1072,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testGradleOverrides() throws Exception {
+    public void testGradleOverrides() {
         String expected = ""
                 + "src/main/AndroidManifest.xml:4: Warning: This versionCode value (1) is not used; it is always overridden by the value specified in the Gradle build script (2) [GradleOverrides]\n"
                 + "    android:versionCode=\"1\"\n"
@@ -1106,7 +1106,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testGradleOverridesOk() throws Exception {
+    public void testGradleOverridesOk() {
         lint().files(
                 mGradle_override,
                 gradle(""
@@ -1117,7 +1117,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testGradleOverrideManifestMergerOverride() throws Exception {
+    public void testGradleOverrideManifestMergerOverride() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=186762
         lint().files(
                 xml("AndroidManifest.xml", ""
@@ -1147,7 +1147,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testManifestPackagePlaceholder() throws Exception {
+    public void testManifestPackagePlaceholder() {
         String expected = ""
                 + "src/main/AndroidManifest.xml:3: Warning: Cannot use placeholder for the package in the manifest; set applicationId in build.gradle instead [GradleOverrides]\n"
                 + "    package=\"${packageName}\" >\n"
@@ -1181,7 +1181,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                         mMipmap));
     }
 
-    public void testMipMapWithDensityFiltering() throws Exception {
+    public void testMipMapWithDensityFiltering() {
         String expected = ""
                 + "src/main/AndroidManifest.xml:9: Warning: Should use @mipmap instead of @drawable for launcher icons [MipmapIcons]\n"
                 + "        android:icon=\"@drawable/ic_launcher\"\n"
@@ -1216,7 +1216,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testFullBackupContentBoolean() throws Exception {
+    public void testFullBackupContentBoolean() {
         //noinspection all // Sample code
         lint().files(
                 manifest(""
@@ -1238,7 +1238,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testFullBackupContentMissing() throws Exception {
+    public void testFullBackupContentMissing() {
         String expected = ""
                 + "AndroidManifest.xml:7: Warning: Missing <full-backup-content> resource [AllowBackup]\n"
                 + "        android:fullBackupContent=\"@xml/backup\"\n"
@@ -1265,7 +1265,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testFullBackupContentMissingInLibrary() throws Exception {
+    public void testFullBackupContentMissingInLibrary() {
         //noinspection all // Sample code
         lint().files(
                 projectProperties().library(true).compileSdk(14),
@@ -1288,7 +1288,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testFullBackupContentOk() throws Exception {
+    public void testFullBackupContentOk() {
         //noinspection all // Sample code
         lint().files(
                 projectProperties().library(true).compileSdk(14),
@@ -1318,7 +1318,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testHasBackupSpecifiedInTarget23() throws Exception {
+    public void testHasBackupSpecifiedInTarget23() {
         //noinspection all // Sample code
         lint().files(
                 manifest(""
@@ -1340,7 +1340,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testMissingBackupInTarget23() throws Exception {
+    public void testMissingBackupInTarget23() {
         String expected = ""
                 + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n"
                 + "    <application\n"
@@ -1367,7 +1367,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testMissingBackupInPreTarget23() throws Exception {
+    public void testMissingBackupInPreTarget23() {
         //noinspection all // Sample code
         lint().files(
                 manifest(""
@@ -1388,7 +1388,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testMissingBackupWithoutGcmPreTarget23() throws Exception {
+    public void testMissingBackupWithoutGcmPreTarget23() {
         //noinspection all // Sample code
         lint().files(
                 manifest(""
@@ -1409,7 +1409,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testMissingBackupWithoutGcmPostTarget23() throws Exception {
+    public void testMissingBackupWithoutGcmPostTarget23() {
         String expected = ""
                 + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up and restored on app install. Consider adding the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n"
                 + "    <application\n"
@@ -1435,7 +1435,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMissingBackupWithGcmPreTarget23() throws Exception {
+    public void testMissingBackupWithGcmPreTarget23() {
         //noinspection all // Sample code
         lint().files(
                 manifest(""
@@ -1464,7 +1464,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
 
     }
 
-    public void testMissingBackupWithGcmPostTarget23() throws Exception {
+    public void testMissingBackupWithGcmPostTarget23() {
         String expected = ""
                 + "AndroidManifest.xml:5: Warning: On SDK version 23 and up, your app data will be automatically backed up, and restored on app install. Your GCM regid will not work across restores, so you must ensure that it is excluded from the back-up set. Use the attribute android:fullBackupContent to specify an @xml resource which configures which files to backup. More info: https://developer.android.com/training/backup/autosyncapi.html [AllowBackup]\n"
                 + "    <application\n"
@@ -1497,7 +1497,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoMissingFullBackupWithDoNotAllowBackup() throws Exception {
+    public void testNoMissingFullBackupWithDoNotAllowBackup() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=181805
         //noinspection all // Sample code
         lint().files(
@@ -1527,7 +1527,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testFullBackupContentMissingIgnored() throws Exception {
+    public void testFullBackupContentMissingIgnored() {
         // Make sure now that we look at the merged manifest that we correctly handle tools:ignore
         //noinspection all // Sample code
         lint().files(
@@ -1552,7 +1552,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testBackupAttributeFromMergedManifest() throws Exception {
+    public void testBackupAttributeFromMergedManifest() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=236584
         // Library project specifies backup descriptor, main project does not.
 
@@ -1599,7 +1599,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 run().expectClean();
     }
 
-    public void testWearableBindListener() throws Exception {
+    public void testWearableBindListener() {
         String expected = ""
                 + "src/main/AndroidManifest.xml:11: Error: The com.google.android.gms.wearable.BIND_LISTENER action is deprecated. [WearableBindListener]\n"
                 + "                  <action android:name=\"com.google.android.gms.wearable.BIND_LISTENER\" />\n"
@@ -1636,7 +1636,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
     }
 
     // No warnings here because the variant points to a gms dependency version 8.1.0
-    public void testWearableBindListenerNoWarn() throws Exception {
+    public void testWearableBindListenerNoWarn() {
         lint().files(
                 xml("src/main/AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -1667,7 +1667,7 @@ public class ManifestDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWearableBindListenerCompileSdk24() throws Exception {
+    public void testWearableBindListenerCompileSdk24() {
         String expected = ""
                 + "src/main/AndroidManifest.xml:11: Error: The com.google.android.gms.wearable.BIND_LISTENER action is deprecated. Please upgrade to the latest available version of play-services-wearable: 8.4.0 [WearableBindListener]\n"
                 + "                  <action android:name=\"com.google.android.gms.wearable.BIND_LISTENER\" />\n"

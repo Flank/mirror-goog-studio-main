@@ -25,7 +25,11 @@ import static com.android.SdkConstants.ATTR_MIN_SDK_VERSION;
 import static com.android.SdkConstants.ATTR_PACKAGE;
 import static com.android.SdkConstants.ATTR_TARGET_SDK_VERSION;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
+import static com.android.SdkConstants.FN_BUILD_GRADLE;
+import static com.android.SdkConstants.FN_BUILD_GRADLE_KTS;
 import static com.android.SdkConstants.FN_PROJECT_PROGUARD_FILE;
+import static com.android.SdkConstants.FN_SETTINGS_GRADLE;
+import static com.android.SdkConstants.FN_SETTINGS_GRADLE_KTS;
 import static com.android.SdkConstants.OLD_PROGUARD_FILE;
 import static com.android.SdkConstants.PROGUARD_CONFIG;
 import static com.android.SdkConstants.PROJECT_PROPERTIES;
@@ -36,7 +40,6 @@ import static com.android.SdkConstants.VALUE_TRUE;
 import static com.android.sdklib.SdkVersionInfo.HIGHEST_KNOWN_API;
 import static com.android.sdklib.SdkVersionInfo.LOWEST_ACTIVE_API;
 
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.build.FilterData;
@@ -1008,11 +1011,19 @@ public class Project {
         if (gradleFiles == null) {
             if (isGradleProject()) {
                 gradleFiles = Lists.newArrayListWithExpectedSize(2);
-                File build = new File(dir, SdkConstants.FN_BUILD_GRADLE);
+                File build = new File(dir, FN_BUILD_GRADLE);
                 if (build.exists()) {
                     gradleFiles.add(build);
                 }
-                File settings = new File(dir, SdkConstants.FN_SETTINGS_GRADLE);
+                build = new File(dir, FN_BUILD_GRADLE_KTS);
+                if (build.exists()) {
+                    gradleFiles.add(build);
+                }
+                File settings = new File(dir, FN_SETTINGS_GRADLE);
+                if (settings.exists()) {
+                    gradleFiles.add(settings);
+                }
+                settings = new File(dir, FN_SETTINGS_GRADLE_KTS);
                 if (settings.exists()) {
                     gradleFiles.add(settings);
                 }

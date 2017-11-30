@@ -109,7 +109,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
             + "    }\n"
             + "}\n");
 
-    public void testPrivateInXml() throws Exception {
+    public void testPrivateInXml() {
         String expected = ""
                 + "res/layout/private.xml:11: Warning: The resource @string/my_private_string is marked as private in com.android.tools:test-library [PrivateResource]\n"
                 + "            android:text=\"@string/my_private_string\" />\n"
@@ -140,7 +140,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testPrivateInJava() throws Exception {
+    public void testPrivateInJava() {
         String expected = ""
                 + "src/main/java/test/pkg/Private.java:4: Warning: The resource @string/my_private_string is marked as private in com.android.tools:test-library [PrivateResource]\n"
                 + "        int x = R.string.my_private_string; // ERROR\n"
@@ -166,7 +166,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testStyle() throws Exception {
+    public void testStyle() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=221560
         lint().files(
                 xml("res/layout/private2.xml", ""
@@ -190,7 +190,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testOverride() throws Exception {
+    public void testOverride() {
         String expected = ""
                 + "res/layout/my_private_layout.xml: Warning: Overriding @layout/my_private_layout which is marked as private in com.android.tools:test-library. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
                 + "res/values/strings.xml:5: Warning: Overriding @string/my_private_string which is marked as private in com.android.tools:test-library. If deliberate, use tools:override=\"true\", otherwise pick a different name. [PrivateResource]\n"
@@ -235,7 +235,7 @@ public class PrivateResourceDetectorTest extends AbstractCheckTest {
     }
 
     @SuppressWarnings("ClassNameDiffersFromFileName")
-    public void testIds() throws Exception {
+    public void testIds() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=183851
         //noinspection all // Sample code
         lint().files(

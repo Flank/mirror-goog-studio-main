@@ -17,6 +17,7 @@
 package com.android.tools.lint.checks
 
 import com.android.SdkConstants.INT_DEF_ANNOTATION
+import com.android.SdkConstants.LONG_DEF_ANNOTATION
 import com.android.SdkConstants.STRING_DEF_ANNOTATION
 import com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE
 import com.android.tools.lint.checks.AnnotationDetector.INT_RANGE_ANNOTATION
@@ -68,6 +69,7 @@ import org.jetbrains.uast.util.isNewArrayWithInitializer
 class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
     override fun applicableAnnotations(): List<String> = listOf(
             INT_DEF_ANNOTATION,
+            LONG_DEF_ANNOTATION,
             STRING_DEF_ANNOTATION,
 
             // Such that the annotation is considered relevant by the annotation handler
@@ -75,9 +77,8 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             INT_RANGE_ANNOTATION
     )
 
-    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean {
-        return type != AnnotationUsageType.BINARY
-    }
+    override fun isApplicableAnnotationUsage(type: AnnotationUsageType): Boolean =
+            type != AnnotationUsageType.BINARY
 
     override fun visitAnnotationUsage(
             context: JavaContext,
@@ -91,7 +92,8 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             allClassAnnotations: List<UAnnotation>,
             allPackageAnnotations: List<UAnnotation>) {
         when (qualifiedName) {
-            INT_DEF_ANNOTATION -> {
+            INT_DEF_ANNOTATION,
+            LONG_DEF_ANNOTATION -> {
                 val flagAttribute = getAnnotationBooleanValue(annotation, TYPE_DEF_FLAG_ATTRIBUTE)
                 val flag = flagAttribute != null && flagAttribute
                 checkTypeDefConstant(context, annotation, usage, null, flag,
@@ -286,6 +288,7 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
                 for (a in evaluator.filterRelevantAnnotations(annotations)) {
                     val qualifiedName = a.qualifiedName
                     if (INT_DEF_ANNOTATION == qualifiedName ||
+                            LONG_DEF_ANNOTATION == qualifiedName ||
                             STRING_DEF_ANNOTATION == qualifiedName) {
                         hadTypeDef = true
                         val paramValues = getAnnotationValue(JavaUAnnotation.wrap(a))
@@ -522,7 +525,9 @@ class TypedefDetector : AbstractAnnotationDetector(), Detector.UastScanner {
 
         fun findIntDef(annotations: List<UAnnotation>): UAnnotation? {
             for (annotation in annotations) {
-                if (INT_DEF_ANNOTATION == annotation.qualifiedName) {
+                val qualifiedName = annotation.qualifiedName
+                if (INT_DEF_ANNOTATION == qualifiedName ||
+                        LONG_DEF_ANNOTATION == qualifiedName) {
                     return annotation
                 }
             }

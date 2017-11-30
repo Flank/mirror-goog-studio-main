@@ -290,10 +290,8 @@ internal class UElementVisitor constructor(private val parser: UastParser,
 
     }
 
-    fun prepare(contexts: List<JavaContext>,
-            testContexts: List<JavaContext>): Boolean {
-        return parser.prepare(contexts, testContexts)
-    }
+    fun prepare(contexts: List<JavaContext>, testContexts: List<JavaContext>): Boolean =
+            parser.prepare(contexts, testContexts)
 
     fun visitGroups(
             projectContext: Context,

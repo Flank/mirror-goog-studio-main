@@ -24,7 +24,7 @@ public class OverrideConcreteDetectorTest extends AbstractCheckTest {
         return new OverrideConcreteDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/OverrideConcreteTest.java:23: Error: Must override android.service.notification.NotificationListenerService.onNotificationPosted(android.service.notification.StatusBarNotification): Method was abstract until 21, and your minSdkVersion is 18 [OverrideAbstract]\n"
                 + "    private static class MyNotificationListenerService2 extends NotificationListenerService {\n"

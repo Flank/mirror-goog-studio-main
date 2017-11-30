@@ -276,7 +276,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
             ));
     }
 
-    public void testMultiProject() throws Exception {
+    public void testMultiProject() {
         //noinspection all // Sample code
         ProjectDescription library = project(
                 // Library project
@@ -335,6 +335,33 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                         "        setContentView(R.layout.main)\n" +
                         "    }\n" +
                         "}\n"),
+                java("src/test/pkg/R.java", "" +
+                        "package test.pkg;\n" +
+                        "public class R {\n" +
+                        "    public static class layout {\n" +
+                        "        public static final int main = 1;\n" +
+                        "    }\n" +
+                        "}"),
+                manifest().minSdk(14))
+                .issues(UnusedResourceDetector.ISSUE) // Not id's
+                .run()
+                .expectClean();
+    }
+
+    public void ignore_testKotlin2() {
+        // Regression test for issue 63150366, comment #17 - reference in class declaration
+        // Blocked on https://youtrack.jetbrains.com/issue/KT-21409
+        //
+        //noinspection all // Sample code
+        lint().files(
+                mLayout1,
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "open class Parent(val number: Int) {\n" +
+                        "}\n" +
+                        "\n" +
+                        "class Five : Parent(R.layout.main)"),
                 java("src/test/pkg/R.java", "" +
                         "package test.pkg;\n" +
                         "public class R {\n" +
@@ -623,7 +650,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testDynamicResources() throws Exception {
+    public void testDynamicResources() {
         String expected = ""
                 + "build.gradle: Warning: The resource R.string.cat appears to be unused [UnusedResources]\n"
                 + "build.gradle: Warning: The resource R.string.dog appears to be unused [UnusedResources]\n"
@@ -715,7 +742,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testStyles() throws Exception {
+    public void testStyles() {
         String expected = ""
                 + "res/values/styles.xml:4: Warning: The resource R.style.UnusedStyleExtendingFramework appears to be unused [UnusedResources]\n"
                 + "   <style name=\"UnusedStyleExtendingFramework\" parent=\"android:Theme\"/>\n"
@@ -751,7 +778,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testStylePrefix() throws Exception {
+    public void testStylePrefix() {
         // AAPT accepts parent style references that simply start with "style/" (not @style);
         // similarly, it also allows android:style/ rather than @android:style/
         lint().files(
@@ -804,7 +831,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testReferenceFromObjectLiteralArguments() throws Exception {
+    public void testReferenceFromObjectLiteralArguments() {
         lint().files(
                 xml("res/layout/main.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -917,7 +944,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testReferenceFromDataBinding() throws Exception {
+    public void testReferenceFromDataBinding() {
         // Regression test for https://issuetracker.google.com/38213600
         //noinspection all // Sample code
         lint().files(
@@ -1022,7 +1049,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
     }
 
     @SuppressWarnings("SpellCheckingInspection")
-    public void testButterknife() throws Exception {
+    public void testButterknife() {
         // Regression test for https://issuetracker.google.com/62640956
         //noinspection all // Sample code
         lint().files(

@@ -601,7 +601,7 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
         // If the new DSL block is not used, all these flags need to be in the config files.
         PostprocessingOptions postprocessingOptions = getPostprocessingOptionsIfUsed();
         if (postprocessingOptions != null) {
-            return PostprocessingFeatures.create(
+            return new PostprocessingFeatures(
                     postprocessingOptions.isRemoveUnusedCode(),
                     postprocessingOptions.isObfuscate(),
                     postprocessingOptions.isOptimizeCode());
@@ -876,6 +876,22 @@ public class VariantScopeImpl extends GenericVariantScopeImpl implements Variant
                                         .getOutput(
                                                 VariantScope.TaskOutputType
                                                         .COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
+            }
+        } else {
+            if (hasOutput(
+                    TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+                FileCollection rJar =
+                        getOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                mainCollection = mainCollection.plus(rJar);
+            }
+            BaseVariantData tested = getTestedVariantData();
+            if (tested != null
+                    && tested.getScope()
+                            .hasOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+                FileCollection rJar =
+                        tested.getScope()
+                                .getOutput(TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR);
+                mainCollection = mainCollection.plus(rJar);
             }
         }
 

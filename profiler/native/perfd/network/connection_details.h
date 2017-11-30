@@ -40,9 +40,9 @@ struct ConnectionDetails final {
     // Available immediately.
     std::string fields;
 
-    // The code stacktrace where this connection was created
+    // An ID for fetching the code stacktrace where this connection was created.
     // Available immediately.
-    std::string trace;
+    std::string trace_id;
 
     // A unique ID which can be used as a key to fetch the contents of a request
     // payload (or empty string otherwise).

@@ -25,7 +25,7 @@ public class DateFormatDetectorTest extends AbstractCheckTest {
         return new DateFormatDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/LocaleTest.java:32: Warning: To get local formatting use getDateInstance(), getDateTimeInstance(), or getTimeInstance(), or use new SimpleDateFormat(String template, Locale locale) with for example Locale.US for ASCII dates. [SimpleDateFormat]\n"
                 + "        new SimpleDateFormat(); // WRONG\n"

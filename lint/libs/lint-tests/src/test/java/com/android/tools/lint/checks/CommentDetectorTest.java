@@ -25,7 +25,7 @@ public class CommentDetectorTest extends AbstractCheckTest {
         return new CommentDetector();
     }
 
-    public void testJava() throws Exception {
+    public void testJava() {
         String expected = ""
                 + "src/test/pkg/Hidden.java:11: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
                 + "    // STOPSHIP\n"
@@ -71,7 +71,7 @@ public class CommentDetectorTest extends AbstractCheckTest {
                         + "+     /* We must ! */\n");
     }
 
-    public void test2() throws Exception {
+    public void test2() {
         //noinspection all // Sample code
         lint().files(
                 java(""
@@ -115,7 +115,7 @@ public class CommentDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testXml() throws Exception {
+    public void testXml() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=207168
         // StopShip doesn't work in XML
         String expected = ""
@@ -140,7 +140,7 @@ public class CommentDetectorTest extends AbstractCheckTest {
                         + "+ <!-- implement this first -->\n");
     }
 
-    public void testNoStopShipInDebugVariant() throws Exception {
+    public void testNoStopShipInDebugVariant() {
         //noinspection all // Sample code
         lint().files(
                 java(""
@@ -164,7 +164,7 @@ public class CommentDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testDoWarnAboutStopShipInDebugVariantWhileEditing() throws Exception {
+    public void testDoWarnAboutStopShipInDebugVariantWhileEditing() {
         //noinspection all // Sample code
         lint().files(
                 java(""
@@ -193,7 +193,7 @@ public class CommentDetectorTest extends AbstractCheckTest {
                         + "1 errors, 0 warnings\n");
     }
 
-    public void testStopShipInReleaseVariant() throws Exception {
+    public void testStopShipInReleaseVariant() {
         String expected = ""
                 + "src/main/java/test/pkg/Hidden.java:4: Error: STOPSHIP comment found; points to code which must be fixed prior to release [StopShip]\n"
                 + "    /* We must STOPSHIP! */\n"

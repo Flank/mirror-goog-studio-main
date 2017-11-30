@@ -245,8 +245,9 @@ message HttpDetailsResponse {
     // Key/value pairs associated with the request
     string fields = 3;
 
-    // Code stack trace for where this request was generated
-    string trace = 4;
+    // ID to fetch a code stack trace for where this request was generated
+    // Use with |ProfilerService.GetBytes|
+    string trace_id = 4;
   }
 
   message Response {

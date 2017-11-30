@@ -26,6 +26,7 @@ kotlin_library(
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",
         "//tools/base/lint:tools.lint-kotlin",
+        "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",
         "//tools/base/third_party:com.google.guava_guava",

@@ -20,6 +20,7 @@ import com.android.tools.lint.checks.AnnotationDetector.CHECK_RESULT_ANNOTATION
 import com.android.tools.lint.checks.AnnotationDetector.ERRORPRONE_CAN_IGNORE_RETURN_VALUE
 import com.android.tools.lint.checks.AnnotationDetector.FINDBUGS_ANNOTATIONS_CHECK_RETURN_VALUE
 import com.android.tools.lint.checks.AnnotationDetector.JAVAX_ANNOTATION_CHECK_RETURN_VALUE
+import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Detector
 import com.android.tools.lint.detector.api.Implementation
@@ -27,7 +28,6 @@ import com.android.tools.lint.detector.api.Issue
 import com.android.tools.lint.detector.api.JavaContext
 import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
-import com.android.tools.lint.detector.api.AnnotationUsageType
 import com.android.tools.lint.detector.api.UastLintUtils.containsAnnotation
 import com.android.tools.lint.detector.api.UastLintUtils.getAnnotationStringValue
 import com.intellij.psi.PsiMethod
@@ -35,6 +35,7 @@ import org.jetbrains.uast.UAnnotation
 import org.jetbrains.uast.UBlockExpression
 import org.jetbrains.uast.UElement
 import org.jetbrains.uast.UExpression
+import org.jetbrains.uast.ULambdaExpression
 import org.jetbrains.uast.getParentOfType
 import org.jetbrains.uast.getQualifiedParentOrThis
 
@@ -82,6 +83,16 @@ class CheckResultDetector : AbstractAnnotationDetector(), Detector.UastScanner {
             allClassAnnotations: List<UAnnotation>) {
         val expression = element.getParentOfType<UExpression>(
                 UExpression::class.java, false) ?: return
+
+        val parent = expression.uastParent
+        if (parent is UBlockExpression) {
+            val blockParent = parent.uastParent
+            if (blockParent is ULambdaExpression) {
+                // Used in lambda
+                return
+            }
+        }
+
         if (isExpressionValueUnused(expression)) {
 
             // If this CheckResult annotation is from a class, check to see

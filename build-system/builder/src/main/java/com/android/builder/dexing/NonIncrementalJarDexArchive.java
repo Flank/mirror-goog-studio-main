@@ -106,7 +106,7 @@ final class NonIncrementalJarDexArchive implements DexArchive {
             try (BufferedInputStream inputStream =
                     new BufferedInputStream(readOnlyZipFile.getInputStream(zipEntry))) {
                 byte[] content = ByteStreams.toByteArray(inputStream);
-                dexEntries.add(new DexArchiveEntry(content, zipEntry.getName()));
+                dexEntries.add(new DexArchiveEntry(content, zipEntry.getName(), this));
             }
         }
         return dexEntries;

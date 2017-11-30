@@ -26,7 +26,7 @@ public class AppCompatCustomViewDetectorTest extends AbstractCheckTest {
         return new AppCompatCustomViewDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/TestAppCompatSuperClasses.java:23: Error: This custom view should extend android.support.v7.widget.AppCompatButton instead [AppCompatCustomView]\n"
                 + "    public class MyButton1 extends Button { // ERROR\n"
@@ -183,11 +183,11 @@ public class AppCompatCustomViewDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoWarningsWithoutAppCompatDependency() throws Exception {
+    public void testNoWarningsWithoutAppCompatDependency() {
         lint().files(mTestClass).run().expectClean();
     }
 
-    public void testWarningsForMinSdk20() throws Exception {
+    public void testWarningsForMinSdk20() {
         String expected = ""
                 + "src/test/pkg/MyButton.java:7: Error: This custom view should extend android.support.v7.widget.AppCompatButton instead [AppCompatCustomView]\n"
                 + "public class MyButton extends Button implements Runnable {\n"
@@ -196,7 +196,7 @@ public class AppCompatCustomViewDetectorTest extends AbstractCheckTest {
         lint().files(mTestClass, appCompatJar, manifest().minSdk(20)).run().expect(expected);
     }
 
-    public void testWarningsForMinSdkVersion22() throws Exception {
+    public void testWarningsForMinSdkVersion22() {
         // We're not applying a minSdkVersion filter yet/ever
         String expected = ""
                 + "src/test/pkg/MyButton.java:7: Error: This custom view should extend android.support.v7.widget.AppCompatButton instead [AppCompatCustomView]\n"
@@ -206,7 +206,7 @@ public class AppCompatCustomViewDetectorTest extends AbstractCheckTest {
         lint().files(mTestClass, appCompatJar, manifest().minSdk(20)).run().expect(expected);
     }
 
-    public void testQuickfix() throws Exception {
+    public void testQuickfix() {
         lint().files(mTestClass, appCompatJar, manifest().minSdk(20)).run().expectFixDiffs(""
                 + "Fix for src/test/pkg/MyButton.java line 6: Extend AppCompat widget instead:\n"
                 + "@@ -7 +7\n"

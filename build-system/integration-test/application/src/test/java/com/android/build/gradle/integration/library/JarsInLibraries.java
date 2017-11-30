@@ -18,13 +18,12 @@ package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.builder.core.BuilderConstants.DEBUG;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
+import com.android.utils.FileUtils;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.File;
@@ -32,7 +31,6 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Assemble tests for jars inside libraries as assets, res, java res and actual dependencies. */
 public class JarsInLibraries {
@@ -48,10 +46,6 @@ public class JarsInLibraries {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("assets").create();
-
-    private void execute(String... tasks) throws IOException, InterruptedException {
-        project.executor().run(tasks);
-    }
 
     @Before
     public void setUp() throws IOException, InterruptedException {
@@ -78,13 +72,13 @@ public class JarsInLibraries {
 
         // Make directories where we will place jars.
         assetsDir = project.file("lib/src/main/assets");
-        assetsDir.mkdirs();
+        FileUtils.mkdirs(assetsDir);
         resRawDir = project.file("lib/src/main/res/raw");
-        resRawDir.mkdirs();
+        FileUtils.mkdirs(resRawDir);
         resourcesDir = project.file("lib/src/main/resources");
-        resourcesDir.mkdirs();
+        FileUtils.mkdirs(resourcesDir);
         libsDir = project.file("lib/libs");
-        libsDir.mkdirs();
+        FileUtils.mkdirs(libsDir);
 
         // Add the libs dependency in the library build file.
         TestFileUtils.appendToFile(
@@ -99,13 +93,13 @@ public class JarsInLibraries {
         Files.write(simpleJarDataD, new File(resRawDir, "d1.jar"));
 
         // Run the project.
-        execute("clean", "assembleDebug");
+        project.execute("clean", "assembleDebug");
     }
 
     @Test
     public void checkJarLocations() throws IOException, ProcessException {
         // Obtain the apk file.
-        Apk apk = project.getSubproject("app").getApk(DEBUG);
+        Apk apk = project.getSubproject("app").getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).exists();
 
         // a1.jar was placed in libs so it should have been merged into the dex.
@@ -123,11 +117,5 @@ public class JarsInLibraries {
         // d1.jar was placed into res/raw and should be in the root.
         assertThatApk(apk).containsFileWithContent("res/raw/d1.jar", simpleJarDataD);
         assertThatApk(apk).doesNotContainClass("LD_DoIExist;");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.executor().executeConnectedCheck();
     }
 }

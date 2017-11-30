@@ -24,6 +24,7 @@ import static com.android.tools.lint.LintCliFlags.ERRNO_SUCCESS;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.testutils.TestUtils;
 import com.android.tools.lint.checks.AbstractCheckTest;
 import com.android.tools.lint.checks.AccessibilityDetector;
 import com.android.tools.lint.client.api.LintDriver;
@@ -137,7 +138,7 @@ public class MainTest extends AbstractCheckTest {
         });
     }
 
-    public void testShowDescription() throws Exception {
+    public void testShowDescription() {
         checkDriver(
         // Expected output
         "NewApi\n" +
@@ -185,7 +186,7 @@ public class MainTest extends AbstractCheckTest {
         });
     }
 
-    public void testShowDescriptionWithUrl() throws Exception {
+    public void testShowDescriptionWithUrl() {
         checkDriver(""
                 // Expected output
                 + "SdCardPath\n"
@@ -219,7 +220,7 @@ public class MainTest extends AbstractCheckTest {
                 });
     }
 
-    public void testNonexistentLibrary() throws Exception {
+    public void testNonexistentLibrary() {
         checkDriver(
         "",
         "Library foo.jar does not exist.\n",
@@ -444,6 +445,8 @@ public class MainTest extends AbstractCheckTest {
                         "ContentDescription",
                         "--baseline",
                         baseline.getPath(),
+                        "--sdk-home", // SDK is needed to get version number for the baseline
+                        TestUtils.getSdk().getPath(),
                         "--disable",
                         "LintError",
                         getProjectDir(null, mAccessibility).getPath()
@@ -461,7 +464,7 @@ public class MainTest extends AbstractCheckTest {
         return new AccessibilityDetector();
     }
 
-    public void test_getCleanPath() throws Exception {
+    public void test_getCleanPath() {
         assertEquals("foo", LintCliClient.getCleanPath(new File("foo")));
         String sep = File.separator;
         assertEquals("foo" + sep + "bar",

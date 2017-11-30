@@ -28,7 +28,10 @@ import org.w3c.dom.Node
 import java.io.File
 
 internal const val SUPPRESS_XML_COMMENT_PREFIX = "<!--suppress "
-internal const val SUPPRESS_JAVA_COMMENT_PREFIX = "//noinspection "
+/** The prefix is usually //noinspection but it can also be @noinspection
+ * (such as / ** @noinspection ClassNameDiffersFromFileName * /
+ * in a javadoc, so just use the basename as the prefix */
+internal const val SUPPRESS_JAVA_COMMENT_PREFIX = "noinspection "
 
 /**
  * A [Context] used when checking XML files.

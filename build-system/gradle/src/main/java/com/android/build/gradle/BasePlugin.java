@@ -246,7 +246,7 @@ public abstract class BasePlugin<E extends BaseExtension2>
         checkPathForErrors();
         checkModulesForErrors();
 
-        PluginInitializer.initialize(project, projectOptions);
+        PluginInitializer.initialize(project);
         ProfilerInitializer.init(project, projectOptions);
         threadRecorder = ThreadRecorder.get();
 

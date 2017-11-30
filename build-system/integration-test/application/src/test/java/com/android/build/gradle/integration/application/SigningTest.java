@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.builder.core.BuilderConstants.DEBUG;
 import static com.android.builder.core.BuilderConstants.RELEASE;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -28,22 +27,19 @@ import com.android.apksig.ApkVerifier;
 import com.android.apksig.ApkVerifier.IssueWithParams;
 import com.android.apkzlib.sign.DigestAlgorithm;
 import com.android.apkzlib.sign.SignatureAlgorithm;
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.SigningConfigHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.OptionalBooleanOption;
 import com.android.build.gradle.options.StringOption;
+import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SigningConfig;
 import com.android.builder.model.Variant;
-import com.android.ddmlib.IDevice;
 import com.android.testutils.TestUtils;
 import com.android.testutils.apk.Apk;
 import com.google.common.io.Resources;
@@ -53,11 +49,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.junit.AssumptionViolatedException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -70,6 +64,7 @@ public class SigningTest {
     public static final String ALIAS_NAME = "alias_name";
 
     public static final String KEY_PASSWORD = "key_password";
+
     @Parameterized.Parameter() public String keystoreName;
 
     @Parameterized.Parameter(1)
@@ -82,7 +77,6 @@ public class SigningTest {
     public GradleTestProject project =
             GradleTestProject.builder().fromTestApp(HelloWorldApp.noBuildFile()).create();
 
-    @Rule public Adb adb = new Adb();
     private File keystore;
 
     @Parameterized.Parameters(name = "{0}")
@@ -125,8 +119,7 @@ public class SigningTest {
             return result;
         }
 
-        List<IssueWithParams> errors = new ArrayList<>();
-        errors.addAll(result.getErrors());
+        List<IssueWithParams> errors = new ArrayList<>(result.getErrors());
         for (ApkVerifier.Result.V1SchemeSignerInfo signer : result.getV1SchemeSigners()) {
             errors.addAll(signer.getErrors());
         }
@@ -137,7 +130,7 @@ public class SigningTest {
                 "APK signatures failed to verify. " + errors.size() + " error(s): " + errors);
     }
 
-    private static ApkVerifier.Result assertApkSignaturesDoNotVerify(Apk apk, int minSdkVersion)
+    private static void assertApkSignaturesDoNotVerify(Apk apk, int minSdkVersion)
             throws Exception {
         ApkVerifier.Result result =
                 new ApkVerifier.Builder(apk.getFile().toFile())
@@ -146,9 +139,7 @@ public class SigningTest {
                         .verify();
         if (result.isVerified()) {
             fail("APK signatures unexpectedly verified");
-            return null;
         }
-        return result;
     }
 
     @Before
@@ -213,14 +204,10 @@ public class SigningTest {
 
     }
 
-    private void execute(String... tasks) throws Exception {
-        project.executor().run(tasks);
-    }
-
     @Test
     public void signingDsl() throws Exception {
-        execute("assembleDebug");
-        Apk apk = project.getApk("debug");
+        project.execute("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
         ApkVerifier.Result verificationResult = assertApkSignaturesVerify(apk, minSdkVersion);
@@ -236,7 +223,7 @@ public class SigningTest {
                 .with(StringOption.IDE_SIGNING_KEY_ALIAS, ALIAS_NAME)
                 .with(StringOption.IDE_SIGNING_KEY_PASSWORD, KEY_PASSWORD)
                 .run("assembleRelease");
-        Apk apk = project.getApk("release");
+        Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
         // Check for signing file inside the archive.
         assertThat(apk).contains("META-INF/" + certEntryName);
@@ -271,8 +258,12 @@ public class SigningTest {
         assertThat(signingConfigs.stream().map(SigningConfig::getName).collect(Collectors.toList()))
                 .containsExactly("debug", "customDebug");
 
-        SigningConfig debugSigningConfig = ModelHelper.getSigningConfig(signingConfigs, DEBUG);
-        new SigningConfigHelper(debugSigningConfig, DEBUG, GradleTestProject.ANDROID_SDK_HOME)
+        SigningConfig debugSigningConfig =
+                ModelHelper.getSigningConfig(signingConfigs, BuilderConstants.DEBUG);
+        new SigningConfigHelper(
+                        debugSigningConfig,
+                        BuilderConstants.DEBUG,
+                        GradleTestProject.ANDROID_SDK_HOME)
                 .test();
 
         SigningConfig mySigningConfig = ModelHelper.getSigningConfig(signingConfigs, "customDebug");
@@ -282,7 +273,7 @@ public class SigningTest {
                 .setKeyPassword(KEY_PASSWORD)
                 .test();
 
-        Variant debugVariant = ModelHelper.getVariant(model.getVariants(), DEBUG);
+        Variant debugVariant = ModelHelper.getVariant(model.getVariants(), BuilderConstants.DEBUG);
         assertThat(debugVariant.getMainArtifact().getSigningConfigName()).isEqualTo("customDebug");
         Collection<AndroidArtifact> debugExtraAndroidArtifacts =
                 debugVariant.getExtraAndroidArtifacts();
@@ -298,15 +289,15 @@ public class SigningTest {
 
     @Test
     public void signingReportTask() throws Exception {
-        execute("signingReport");
+        project.execute("signingReport");
     }
 
     @Test
     public void ShaAlgorithmChange() throws Exception {
 
         if (minSdkVersion < DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA) {
-            execute("assembleDebug");
-            Apk apk = project.getApk("debug");
+            project.execute("assembleDebug");
+            Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
             assertThat(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA1-Digest");
             assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");
             assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-256-Digest");
@@ -321,8 +312,8 @@ public class SigningTest {
         }
 
         TestUtils.waitForFileSystemTick();
-        execute("assembleDebug");
-        Apk apk = project.getApk("debug");
+        project.execute("assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         if ((certEntryName.endsWith(SignatureAlgorithm.RSA.keyAlgorithm))
                 || (certEntryName.endsWith(SignatureAlgorithm.ECDSA.keyAlgorithm))) {
             assertThat(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA-256-Digest");
@@ -345,8 +336,8 @@ public class SigningTest {
                 "minSdkVersion " + DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS);
 
         TestUtils.waitForFileSystemTick();
-        execute("assembleDebug");
-        apk = project.getApk("debug");
+        project.execute("assembleDebug");
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).containsFileWithMatch("META-INF/CERT.SF", "SHA-256-Digest");
         assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA1-Digest");
         assertThat(apk).containsFileWithoutContent("META-INF/CERT.SF", "SHA-1-Digest");
@@ -354,84 +345,12 @@ public class SigningTest {
         assertThat(apk).containsFileWithoutContent("META-INF/MANIFEST.MF", "SHA-1-Digest");
     }
 
-    /**
-     * Runs the connected tests to make sure the APK can be successfully installed.
-     *
-     * <p>To cover different scenarios, for every signature algorithm we need to build APKs with
-     * three different minimum SDK versions and run each one against three different system images.
-     *
-     * <p>This method covers 24 and 19 devices. The test for a 17 device is a separate test method
-     * that will report as skipped if the device is not available.
-     */
-    @Test
-    @Category(DeviceTests.class)
-    public void shaAlgorithmChange_OnDevice() throws Exception {
-
-        // Check APK with minimum SDK 21.
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "minSdkVersion \\d+",
-                "minSdkVersion " + DigestAlgorithm.API_SHA_256_ALL_ALGORITHMS);
-
-        IDevice device24Plus = adb.getDevice(AndroidVersionMatcher.atLeast(24));
-        checkOnDevice(device24Plus);
-
-        // Check APK with minimum SDK 18.
-        // Don't run on the oldest device, it's not compatible with the APK.
-        TestFileUtils.searchAndReplace(
-                project.getBuildFile(),
-                "minSdkVersion \\d+",
-                "minSdkVersion " + DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA);
-        checkOnDevice(device24Plus);
-        IDevice device19 = adb.getDevice(19);
-        checkOnDevice(device19);
-
-        // Check APK with minimum SDK 1. Skip this for ECDSA.
-        if (minSdkVersion < DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA) {
-            TestFileUtils.searchAndReplace(
-                    project.getBuildFile(), "minSdkVersion \\d+", "minSdkVersion " + minSdkVersion);
-
-            checkOnDevice(device19);
-            checkOnDevice(device24Plus);
-        }
-    }
-
-    /**
-     * Run the connected tests against an api 17 device.
-     *
-     * <p>This will be ignored, rather than fail, if no api 17 device is connected.
-     */
-    @Test
-    @Category(DeviceTests.class)
-    public void deployOnApi17() throws Exception {
-        if (minSdkVersion >= DigestAlgorithm.API_SHA_256_RSA_AND_ECDSA) {
-            // if min SDK is higher than the device, we cannot deploy.
-            return;
-        }
-        IDevice device17 =
-                adb.getDevice(
-                        AndroidVersionMatcher.exactly(17),
-                        error -> {
-                            throw new AssumptionViolatedException(error);
-                        });
-        assert device17 != null;
-        checkOnDevice(device17);
-    }
-
-    private void checkOnDevice(@NonNull IDevice device) throws Exception {
-        device.uninstallPackage("com.example.helloworld");
-        device.uninstallPackage("com.example.helloworld.test");
-        project.executor()
-                .with(StringOption.DEVICE_POOL_SERIAL, device.getSerialNumber())
-                .run(GradleTestProject.DEVICE_TEST_TASK);
-    }
-
     @Test
     public void signingSchemeToggle() throws Exception {
 
         // Toggles not specified -- testing their default values
-        execute("clean", "assembleDebug");
-        Apk apk = project.getApk("debug");
+        project.execute("clean", "assembleDebug");
+        Apk apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
         assertThat(apk).containsApkSigningBlock();
@@ -446,8 +365,8 @@ public class SigningTest {
                 "customDebug {\nv1SigningEnabled false\nv2SigningEnabled false");
 
         TestUtils.waitForFileSystemTick();
-        execute("clean", "assembleDebug");
-        apk = project.getApk("debug");
+        project.execute("clean", "assembleDebug");
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).doesNotContain("META-INF/" + certEntryName);
         assertThat(apk).doesNotContain("META-INF/CERT.SF");
         assertThat(apk).doesNotContainApkSigningBlock();
@@ -458,8 +377,8 @@ public class SigningTest {
                 project.getBuildFile(), "v1SigningEnabled false", "v1SigningEnabled true");
 
         TestUtils.waitForFileSystemTick();
-        execute("clean", "assembleDebug");
-        apk = project.getApk("debug");
+        project.execute("clean", "assembleDebug");
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
         assertThat(apk).doesNotContainApkSigningBlock();
@@ -474,8 +393,8 @@ public class SigningTest {
                 project.getBuildFile(), "v2SigningEnabled false", "v2SigningEnabled true");
 
         TestUtils.waitForFileSystemTick();
-        execute("clean", "assembleDebug");
-        apk = project.getApk("debug");
+        project.execute("clean", "assembleDebug");
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).doesNotContain("META-INF/" + certEntryName);
         assertThat(apk).doesNotContain("META-INF/CERT.SF");
         assertThat(apk).containsApkSigningBlock();
@@ -490,8 +409,8 @@ public class SigningTest {
                 project.getBuildFile(), "v1SigningEnabled false", "v1SigningEnabled true");
 
         TestUtils.waitForFileSystemTick();
-        execute("clean", "assembleDebug");
-        apk = project.getApk("debug");
+        project.execute("clean", "assembleDebug");
+        apk = project.getApk(GradleTestProject.ApkType.DEBUG);
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
         assertThat(apk).containsApkSigningBlock();
@@ -511,7 +430,7 @@ public class SigningTest {
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, true)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, false)
                 .run("assembleRelease");
-        Apk apk = project.getApk("release");
+        Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
         assertThat(apk).contains("META-INF/" + certEntryName);
         assertThat(apk).contains("META-INF/CERT.SF");
@@ -532,7 +451,7 @@ public class SigningTest {
                 .with(OptionalBooleanOption.SIGNING_V1_ENABLED, false)
                 .with(OptionalBooleanOption.SIGNING_V2_ENABLED, true)
                 .run("assembleRelease");
-        Apk apk = project.getApk("release");
+        Apk apk = project.getApk(GradleTestProject.ApkType.RELEASE_SIGNED);
 
         assertThat(apk).doesNotContain("META-INF/" + certEntryName);
         assertThat(apk).doesNotContain("META-INF/CERT.SF");

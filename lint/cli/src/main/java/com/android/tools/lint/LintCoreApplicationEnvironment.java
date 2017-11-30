@@ -22,7 +22,6 @@ import com.intellij.codeInsight.ExternalAnnotationsManager;
 import com.intellij.codeInsight.InferredAnnotationsManager;
 import com.intellij.codeInsight.runner.JavaMainMethodProvider;
 import com.intellij.core.CoreApplicationEnvironment;
-import com.intellij.core.CoreJavaFileManager;
 import com.intellij.core.JavaCoreApplicationEnvironment;
 import com.intellij.core.JavaCoreProjectEnvironment;
 import com.intellij.lang.MetaLanguage;
@@ -31,7 +30,6 @@ import com.intellij.mock.MockProject;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.TransactionGuard;
 import com.intellij.openapi.application.TransactionGuardImpl;
-import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.extensions.Extensions;
 import com.intellij.openapi.extensions.ExtensionsArea;
 import com.intellij.openapi.fileTypes.FileTypeExtensionPoint;
@@ -39,21 +37,21 @@ import com.intellij.openapi.fileTypes.PlainTextFileType;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.impl.ZipHandler;
 import com.intellij.psi.FileContextProvider;
+import com.intellij.psi.JavaModuleSystem;
 import com.intellij.psi.PsiElementFinder;
 import com.intellij.psi.augment.PsiAugmentProvider;
 import com.intellij.psi.augment.TypeAnnotationModifier;
 import com.intellij.psi.compiled.ClassFileDecompilers;
 import com.intellij.psi.impl.JavaClassSupersImpl;
-import com.intellij.psi.impl.PsiElementFinderImpl;
 import com.intellij.psi.impl.PsiTreeChangePreprocessor;
 import com.intellij.psi.impl.compiled.ClsCustomNavigationPolicy;
-import com.intellij.psi.impl.file.impl.JavaFileManager;
 import com.intellij.psi.meta.MetaDataContributor;
 import com.intellij.psi.stubs.BinaryFileStubBuilders;
 import com.intellij.psi.util.JavaClassSupers;
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment;
 import org.jetbrains.uast.UastContext;
 import org.jetbrains.uast.UastLanguagePlugin;
+import org.jetbrains.uast.evaluation.UEvaluatorExtension;
 import org.jetbrains.uast.kotlin.KotlinUastLanguagePlugin;
 
 public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironment {
@@ -137,9 +135,11 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, ClsCustomNavigationPolicy.EP_NAME, ClsCustomNavigationPolicy.class);
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, ClassFileDecompilers.EP_NAME, ClassFileDecompilers.Decompiler.class);
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, TypeAnnotationModifier.EP_NAME, TypeAnnotationModifier.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, UastLanguagePlugin.Companion.getExtensionPointName(), UastLanguagePlugin.class);
         CoreApplicationEnvironment.registerExtensionPoint(rootArea, MetaLanguage.EP_NAME, MetaLanguage.class);
-        CoreApplicationEnvironment.registerExtensionPoint(rootArea, CustomExceptionHandler.KEY, CustomExceptionHandler.class);
+
+        CoreApplicationEnvironment.registerExtensionPoint(rootArea, UastLanguagePlugin.Companion.getExtensionPointName(), UastLanguagePlugin.class);
+        CoreApplicationEnvironment.registerExtensionPoint(rootArea, CustomExceptionHandler.KEY, CustomExceptionHandler.class); // TODO: Remove
+        CoreApplicationEnvironment.registerExtensionPoint(rootArea, JavaModuleSystem.EP_NAME, JavaModuleSystem.class);
 
         rootArea.getExtensionPoint(UastLanguagePlugin.Companion.getExtensionPointName()).registerExtension(
                 new org.jetbrains.uast.java.JavaUastLanguagePlugin());
@@ -163,7 +163,8 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
     static void registerProjectExtensionPoints(ExtensionsArea area) {
         CoreApplicationEnvironment.registerExtensionPoint(area, PsiTreeChangePreprocessor.EP_NAME, PsiTreeChangePreprocessor.class);
         CoreApplicationEnvironment.registerExtensionPoint(area, PsiElementFinder.EP_NAME, PsiElementFinder.class);
-        CoreApplicationEnvironment.registerExtensionPoint(area, "org.jetbrains.uast.uastLanguagePlugin", UastLanguagePlugin.class);
+        CoreApplicationEnvironment.registerExtensionPoint(area, UastLanguagePlugin.Companion.getExtensionPointName(), UastLanguagePlugin.class);
+        CoreApplicationEnvironment.registerExtensionPoint(area, UEvaluatorExtension.Companion.getEXTENSION_POINT_NAME(), UEvaluatorExtension.class);
     }
 
     public static void registerProjectServices(JavaCoreProjectEnvironment projectEnvironment) {
@@ -171,18 +172,5 @@ public class LintCoreApplicationEnvironment extends JavaCoreApplicationEnvironme
         project.registerService(UastContext.class, new UastContext(project));
         project.registerService(ExternalAnnotationsManager.class, LintExternalAnnotationsManager.class);
         project.registerService(InferredAnnotationsManager.class, LintInferredAnnotationsManager.class);
-    }
-
-    static void registerProjectServicesForCLI(
-            JavaCoreProjectEnvironment projectEnvironment) {
-        MockProject project = projectEnvironment.getProject();
-        project.registerService(CoreJavaFileManager.class,
-                (CoreJavaFileManager) ServiceManager.getService(project, JavaFileManager.class));
-
-        ExtensionsArea area = Extensions.getArea(project);
-        area.getExtensionPoint(PsiElementFinder.EP_NAME).registerExtension(
-                new PsiElementFinderImpl(
-                        project, ServiceManager.getService(
-                        project, JavaFileManager.class)));
     }
 }

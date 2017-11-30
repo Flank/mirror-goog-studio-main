@@ -18,6 +18,8 @@ package com.android.tools.lint.detector.api;
 
 import static com.android.SdkConstants.ANDROID_URI;
 import static com.android.SdkConstants.ATTR_NAME;
+import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_KT;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BOOLEAN;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BOOLEAN_WRAPPER;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_BYTE;
@@ -74,6 +76,7 @@ import com.android.sdklib.AndroidVersion;
 import com.android.sdklib.IAndroidTarget;
 import com.android.testutils.TestUtils;
 import com.android.tools.lint.LintCliClient;
+import com.android.tools.lint.checks.infrastructure.ClassName;
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest;
 import com.android.tools.lint.checks.infrastructure.TestFiles;
 import com.android.tools.lint.checks.infrastructure.TestIssueRegistry;
@@ -88,6 +91,7 @@ import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.util.Disposer;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -99,6 +103,7 @@ import java.util.Locale;
 import junit.framework.TestCase;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.uast.UFile;
+import org.jetbrains.uast.UastUtils;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -510,25 +515,54 @@ public class LintUtilsTest extends TestCase {
         return new XmlTestContext(driver, project, xml, fullPath, folderType, parser, document);
     }
 
-    public static Pair<JavaContext,Disposable>  parse(@Language("JAVA") final String javaSource,
+    public static Pair<JavaContext,Disposable> parse(@Language("JAVA") String javaSource,
+            @Nullable File relativePath) {
+        if (relativePath == null) {
+            ClassName className = new ClassName(javaSource);
+            String pkg = className.getPackageName();
+            String name = className.getClassName();
+            assert pkg != null;
+            assert name != null;
+            relativePath = new File("src" + File.separatorChar +
+                    pkg.replace('.', File.separatorChar) + File.separatorChar + name + DOT_JAVA);
+        }
+
+        return doParse(javaSource, relativePath);
+    }
+
+    public static Pair<JavaContext,Disposable> parseKotlin(@Language("Kt") String kotlinSource,
+            @Nullable File relativePath) {
+        if (relativePath == null) {
+            ClassName className = new ClassName(kotlinSource);
+            String pkg = className.getPackageName();
+            String name = className.getClassName();
+            assert pkg != null;
+            assert name != null;
+            relativePath = new File("src" + File.separatorChar +
+                    pkg.replace('.', File.separatorChar) + File.separatorChar + name + DOT_KT);
+        }
+
+        return doParse(kotlinSource, relativePath);
+    }
+    public static Pair<JavaContext,Disposable> doParse(String source,
             final File relativePath) {
         // TODO: Clean up -- but where?
         File dir = Files.createTempDir();
         final File fullPath = new File(dir, relativePath.getPath());
         fullPath.getParentFile().mkdirs();
         try {
-            Files.write(javaSource, fullPath, Charsets.UTF_8);
+            Files.asCharSink(fullPath, Charsets.UTF_8).write(source);
         } catch (IOException e) {
             fail(e.getMessage());
         }
-        Project project = createTestProjectForFile(dir, relativePath, javaSource);
+        Project project = createTestProjectForFile(dir, relativePath, source);
         LintCliClient client = (LintCliClient) project.getClient();
         LintRequest request = new LintRequest(client, Collections.singletonList(fullPath));
 
         LintDriver driver = new LintDriver(new TestIssueRegistry(),
                 new LintCliClient(), request);
         driver.setScope(Scope.JAVA_FILE_SCOPE);
-        JavaTestContext context = new JavaTestContext(driver, client, project, javaSource, fullPath);
+        JavaTestContext context = new JavaTestContext(driver, client, project, source, fullPath);
         UastParser uastParser = client.getUastParser(project);
         assertNotNull(uastParser);
         context.setUastParser(uastParser);
@@ -777,5 +811,4 @@ public class LintUtilsTest extends TestCase {
             return xmlSource;
         }
     }
-
 }

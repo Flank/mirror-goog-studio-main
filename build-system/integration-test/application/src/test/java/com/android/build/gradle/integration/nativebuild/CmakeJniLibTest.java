@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.nativebuild;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
@@ -36,7 +35,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Assemble tests for CMake. */
 public class CmakeJniLibTest {
@@ -125,11 +123,5 @@ public class CmakeJniLibTest {
 
         assertThat(groupToArtifacts.keySet()).containsExactly("debug", "release");
         assertThat(groupToArtifacts.get("debug")).hasSize(groupToArtifacts.get("release").size());
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
     }
 }

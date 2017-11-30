@@ -26,7 +26,7 @@ public class ByteOrderMarkDetectorTest extends AbstractCheckTest {
         return new ByteOrderMarkDetector();
     }
 
-    public void testXml() throws Exception {
+    public void testXml() {
         // See issue b.android.com/65103
         //noinspection all // Sample code
         lint().files(

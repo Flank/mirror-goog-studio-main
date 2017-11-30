@@ -99,8 +99,12 @@ public final class SdkConstants {
     public static final String FN_BUILD_XML = "build.xml"; //$NON-NLS-1$
     /** An SDK Project's build.gradle file */
     public static final String FN_BUILD_GRADLE = "build.gradle"; //$NON-NLS-1$
+    /** An SDK Project's build.gradle Kotlin script file */
+    public static final String FN_BUILD_GRADLE_KTS = "build.gradle.kts"; //$NON-NLS-1$
     /** An SDK Project's settings.gradle file */
     public static final String FN_SETTINGS_GRADLE = "settings.gradle"; //$NON-NLS-1$
+    /** An SDK Project's settings.gradle Kotlin script file */
+    public static final String FN_SETTINGS_GRADLE_KTS = "settings.gradle.kts"; //$NON-NLS-1$
     /** An SDK Project's gradle.properties file */
     public static final String FN_GRADLE_PROPERTIES = "gradle.properties"; //$NON-NLS-1$
     /** An SDK Project's gradle daemon executable */
@@ -1674,6 +1678,7 @@ public final class SdkConstants {
     public static final String DOT_9PNG = ".9.png"; //$NON-NLS-1$
     public static final String DOT_JAVA = ".java"; //$NON-NLS-1$
     public static final String DOT_KT = ".kt"; //$NON-NLS-1$
+    public static final String DOT_KTS = ".kts"; //$NON-NLS-1$
     public static final String DOT_CLASS = ".class"; //$NON-NLS-1$
     public static final String DOT_JAR = ".jar"; //$NON-NLS-1$
     public static final String DOT_GRADLE = ".gradle"; //$NON-NLS-1$
@@ -1888,6 +1893,7 @@ public final class SdkConstants {
     public static final String FQCN_SUPPRESS_LINT =
             "android.annotation." + SUPPRESS_LINT; //$NON-NLS-1$
     public static final String FQCN_TARGET_API = "android.annotation." + TARGET_API; //$NON-NLS-1$
+    public static final String KOTLIN_SUPPRESS = "kotlin.Suppress";
 
     // Class Names
     public static final String CONSTRUCTOR_NAME = "<init>"; //$NON-NLS-1$
@@ -2246,6 +2252,7 @@ public final class SdkConstants {
     // Annotations
     public static final String SUPPORT_ANNOTATIONS_PREFIX = "android.support.annotation.";
     public static final String INT_DEF_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "IntDef";
+    public static final String LONG_DEF_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "LongDef";
     public static final String STRING_DEF_ANNOTATION = SUPPORT_ANNOTATIONS_PREFIX + "StringDef";
     public static final String TYPE_DEF_VALUE_ATTRIBUTE = "value";
     public static final String TYPE_DEF_FLAG_ATTRIBUTE = "flag";

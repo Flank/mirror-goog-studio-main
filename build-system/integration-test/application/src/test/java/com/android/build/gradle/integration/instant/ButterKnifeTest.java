@@ -18,22 +18,16 @@ package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThatApk;
-import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
 import static org.junit.Assert.assertEquals;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Logcat;
-import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.internal.incremental.InstantRunBuildContext;
 import com.android.build.gradle.internal.incremental.InstantRunBuildMode;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.builder.model.InstantRun;
-import com.android.ddmlib.IDevice;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.Apk;
 import com.android.testutils.apk.SplitApks;
@@ -42,13 +36,10 @@ import com.google.common.collect.Iterables;
 import java.io.File;
 import java.util.List;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 public class ButterKnifeTest {
-    private static final String ORIGINAL_MESSAGE = "original";
     private static final String ACTIVITY_DESC = "Lcom/example/bk/Activ;";
 
     @Rule
@@ -56,10 +47,6 @@ public class ButterKnifeTest {
             GradleTestProject.builder().fromTestProject("butterknife").create();
 
     private File mActiv;
-
-    @Rule public Logcat logcat = Logcat.create();
-
-    @Rule public final Adb adb = new Adb();
 
     @Before
     public void setUp() throws Exception {
@@ -94,13 +81,12 @@ public class ButterKnifeTest {
 
                             @Override
                             public void checkVerifierStatus(
-                                    @NonNull InstantRunVerifierStatus status) throws Exception {
+                                    @NonNull InstantRunVerifierStatus status) {
                                 assertThat(status).isEqualTo(InstantRunVerifierStatus.METHOD_ADDED);
                             }
 
                             @Override
-                            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode)
-                                    throws Exception {
+                            public void checkBuildMode(@NonNull InstantRunBuildMode buildMode) {
                                 // for multi dex cold build mode is triggered
                                 assertEquals(InstantRunBuildMode.COLD, buildMode);
                             }
@@ -125,52 +111,13 @@ public class ButterKnifeTest {
 
         InstantRun instantRunModel = InstantRunTestUtils.doInitialBuild(project, androidVersion);
 
-        makeHotSwapChange("CHANGE");
+        TestFileUtils.searchAndReplace(
+                mActiv, "text\\.getText\\(\\)\\.toString\\(\\)", "\"CHANGE\"");
 
         project.executor().withInstantRun(androidVersion).run("assembleDebug");
 
         InstantRunArtifact artifact = InstantRunTestUtils.getReloadDexArtifact(instantRunModel);
 
         assertThatDex(artifact.file).containsClass("Lcom/example/bk/Activ$override;");
-    }
-
-    private void makeHotSwapChange(String change) throws Exception {
-        TestFileUtils.searchAndReplace(
-                mActiv, "text\\.getText\\(\\)\\.toString\\(\\)", "\"" + change + "\"");
-    }
-
-    @Test
-    @Ignore("b/68305039")
-    @Category(DeviceTests.class)
-    public void hotSwap_art() throws Exception {
-        doTestHotSwap(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
-    }
-
-    private void doTestHotSwap(IDevice device) throws Exception {
-        HotSwapTester tester =
-                new HotSwapTester(
-                        project,
-                        "com.example.bk",
-                        "Activ",
-                        "butterknife",
-                        device,
-                        logcat,
-                        PORTS.get(ButterKnifeTest.class.getSimpleName()));
-
-        tester.run(
-                () -> assertThat(logcat).containsMessageWithText(ORIGINAL_MESSAGE),
-                new HotSwapTester.LogcatChange(1, ORIGINAL_MESSAGE) {
-                    @Override
-                    public void makeChange() throws Exception {
-                        makeHotSwapChange(CHANGE_PREFIX + 1);
-                    }
-                },
-                new HotSwapTester.LogcatChange(2, ORIGINAL_MESSAGE) {
-                    @Override
-                    public void makeChange() throws Exception {
-                        TestFileUtils.searchAndReplace(
-                                mActiv, CHANGE_PREFIX + 1, CHANGE_PREFIX + 2);
-                    }
-                });
     }
 }

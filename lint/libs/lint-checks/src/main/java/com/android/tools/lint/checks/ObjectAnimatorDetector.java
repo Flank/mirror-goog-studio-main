@@ -486,6 +486,12 @@ public class ObjectAnimatorDetector extends Detector implements UastScanner {
             @NonNull PsiElement element2) {
         UFile containingFile = UastUtils.getContainingFile(element1);
         PsiFile file = containingFile != null ? containingFile.getPsi() : null;
+        if (file == null) {
+            PsiElement psi = element1.getPsi();
+            if (psi != null) {
+                file = psi.getContainingFile();
+            }
+        }
         return Objects.equals(file, element2.getContainingFile());
     }
 

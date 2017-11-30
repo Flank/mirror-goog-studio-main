@@ -16,39 +16,31 @@
 
 package com.android.build.gradle.integration.library;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.IOException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Assemble tests for libMinifyJarDep. */
 public class LibMinifyJarDepTest {
-    @ClassRule
-    public static GradleTestProject project =
+    @Rule
+    public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("libMinifyJarDep").create();
 
-    @BeforeClass
-    public static void setUp() throws IOException, InterruptedException {
+    @Before
+    public void setUp() throws IOException, InterruptedException {
         project.execute("clean", "assembleDebug");
     }
 
-    @AfterClass
-    public static void cleanUp() {
+    @After
+    public void cleanUp() {
         project = null;
     }
 
     @Test
     public void lint() throws IOException, InterruptedException {
         project.execute("lint");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
     }
 }

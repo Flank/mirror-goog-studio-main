@@ -23,6 +23,7 @@ import com.android.build.gradle.internal.scope.TaskConfigAction
 import com.android.build.gradle.internal.scope.TaskOutputHolder
 import com.android.build.gradle.internal.scope.VariantScope
 import com.android.build.gradle.internal.variant.TaskContainer
+import com.android.build.gradle.options.BooleanOption
 import com.android.build.gradle.tasks.ProcessAndroidResources
 import com.android.builder.symbols.processLibraryMainSymbolTable
 import com.android.ide.common.symbols.IdProvider
@@ -46,10 +47,13 @@ import java.io.IOException
 @CacheableTask
 open class GenerateLibraryRFileTask : ProcessAndroidResources() {
 
-    @get:OutputDirectory lateinit var sourceOutputDirectory: File
-        private set
+    @get:OutputDirectory @get:Optional var sourceOutputDirectory: File? = null; private set
+    @Input fun outputSources() = sourceOutputDirectory != null
 
-    override fun getSourceOutputDir() = sourceOutputDirectory
+    @get:OutputFile @get:Optional var rClassOutputJar: File? = null; private set
+    @Input fun outputRClassJar() = rClassOutputJar != null
+
+    override fun getSourceOutputDir() = sourceOutputDirectory ?: rClassOutputJar
 
     @get:OutputFile lateinit var textSymbolOutputFile: File
         private set
@@ -103,16 +107,17 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                 androidAttrSymbol)
 
         processLibraryMainSymbolTable(
-                symbolTable,
-                this.dependencies.files,
-                packageForR,
-                manifest,
-                sourceOutputDirectory,
-                textSymbolOutputFile,
-                proguardOutputFile,
-                inputResourcesDir.singleFile,
-                androidAttrSymbol,
-                true)
+                librarySymbols = symbolTable,
+                libraries = this.dependencies.files,
+                mainPackageName = packageForR,
+                manifestFile = manifest,
+                sourceOut = sourceOutputDirectory,
+                rClassOutputJar = rClassOutputJar,
+                symbolFileOut = textSymbolOutputFile,
+                proguardOut = proguardOutputFile,
+                mergedResources = inputResourcesDir.singleFile,
+                platformSymbols = androidAttrSymbol,
+                disableMergeInLib = true)
 
         SymbolIo.writeSymbolTableWithPackage(
                 textSymbolOutputFile.toPath(),
@@ -131,8 +136,7 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
     class ConfigAction(
             private val variantScope: VariantScope,
             private val symbolFile: File,
-            private val symbolsWithPackageNameOutputFile: File,
-            private val sourceOutputDir: File
+            private val symbolsWithPackageNameOutputFile: File
     ) : TaskConfigAction<GenerateLibraryRFileTask> {
 
         override fun getName() = variantScope.getTaskName("generate", "RFile")
@@ -154,8 +158,21 @@ open class GenerateLibraryRFileTask : ProcessAndroidResources() {
                     RUNTIME_CLASSPATH,
                     ALL,
                     AndroidArtifacts.ArtifactType.SYMBOL_LIST_WITH_PACKAGE_NAME)
-
-            task.sourceOutputDirectory = sourceOutputDir
+            if (variantScope.globalScope.projectOptions.get(BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION)) {
+                val rJar = File(variantScope.getIntermediateDir(TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR), "R.jar")
+                task.rClassOutputJar = rJar
+                variantScope.addTaskOutput(
+                        TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR,
+                        rJar,
+                        task.name)
+            } else {
+                val sourceOutputDirectory = variantScope.rClassSourceOutputDir
+                task.sourceOutputDirectory = sourceOutputDirectory
+                variantScope.addTaskOutput(
+                        TaskOutputHolder.TaskOutputType.NOT_NAMESPACED_R_CLASS_SOURCES,
+                        sourceOutputDirectory,
+                        task.name)
+            }
             task.textSymbolOutputFile = symbolFile
             task.symbolsWithPackageNameOutputFile = symbolsWithPackageNameOutputFile
 

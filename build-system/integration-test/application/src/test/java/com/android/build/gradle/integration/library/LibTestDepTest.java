@@ -22,7 +22,6 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
@@ -41,7 +40,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Assemble tests for libTestDep. */
 public class LibTestDepTest {
@@ -92,13 +90,7 @@ public class LibTestDepTest {
     }
 
     @Test
-    public void checkDebugAndReleaseOutputHaveDifferentNames() throws Exception {
+    public void checkDebugAndReleaseOutputHaveDifferentNames() {
         ModelHelper.compareDebugAndReleaseOutput(outputModel);
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
     }
 }

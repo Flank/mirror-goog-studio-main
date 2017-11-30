@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 public class TypoLookupTest extends AbstractCheckTest {
     private static final String SEPARATOR = "->";
 
-    public void testCapitalization() throws Exception {
+    public void testCapitalization() {
         LintClient client = createClient();
         // Make sure it can be read in
         TypoLookup db = TypoLookup.get(client, "de", null);
@@ -233,7 +233,7 @@ public class TypoLookupTest extends AbstractCheckTest {
         }
     }
 
-    public void testComparison1() throws Exception {
+    public void testComparison1() {
         String prevText = "heraus gebracht\u0000";
         byte[] prevBytes = prevText.getBytes(Charsets.UTF_8);
 
@@ -251,7 +251,7 @@ public class TypoLookupTest extends AbstractCheckTest {
                 Math.signum(textCompare), Math.signum(byteCompare));
     }
 
-    public void testComparison2() throws Exception {
+    public void testComparison2() {
         String prevText = "intepretation\u0000";
         byte[] prevBytes = prevText.getBytes(Charsets.UTF_8);
 

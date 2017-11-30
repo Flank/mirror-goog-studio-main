@@ -649,11 +649,7 @@ public final class GradleTestProject implements TestRule {
             @NonNull
             @Override
             List<Path> getLocalRepositories() {
-                return ImmutableList.<Path>builder()
-                        .add(BazelIntegrationTestsSuite.OFFLINE_REPO)
-                        .add(BazelIntegrationTestsSuite.PREBUILTS_REPO)
-                        .add(BazelIntegrationTestsSuite.DATA_BINDING_RUNTIME_REPO)
-                        .build();
+                return BazelIntegrationTestsSuite.MAVEN_REPOS;
             }
         },
         IDEA {
@@ -871,6 +867,7 @@ public final class GradleTestProject implements TestRule {
     public interface ApkType {
         ApkType DEBUG = of("debug", true);
         ApkType RELEASE = of("release", false);
+        ApkType RELEASE_SIGNED = of("release", true);
         ApkType ANDROIDTEST_DEBUG = of("debug", "androidTest", true);
 
         @NonNull

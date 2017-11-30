@@ -260,7 +260,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testRelativeLayoutCompat() throws Exception {
+    public void testRelativeLayoutCompat() {
         //noinspection all // Sample code
         String expected = ""
                 + "res/layout/relative.xml:10: Error: To support older versions than API 17 (project specifies 5) you should also add android:layout_alignParentLeft=\"true\" [RtlCompat]\n"
@@ -501,7 +501,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testRtlQuickFixBelow17() throws Exception {
+    public void testRtlQuickFixBelow17() {
         //noinspection all // Sample code
         lint().files(
                 projectProperties().compileSdk(17),
@@ -531,7 +531,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
                 + "          android:paddingLeft=\"25dip\"\n");
     }
 
-    public void testRtlQuickFix17() throws Exception {
+    public void testRtlQuickFix17() {
         //noinspection all // Sample code
         lint().files(
                 projectProperties().compileSdk(17),
@@ -681,7 +681,7 @@ public class RtlDetectorTest extends AbstractCheckTest {
                 ));
     }
 
-    public void testCompatAttributeValueConversion() throws Exception {
+    public void testCompatAttributeValueConversion() {
         // Ensure that when the RTL value contains a direction, we produce the
         // compatibility version of it for the compatibility attribute, e.g. if the
         // attribute for paddingEnd is ?listPreferredItemPaddingEnd, when we suggest

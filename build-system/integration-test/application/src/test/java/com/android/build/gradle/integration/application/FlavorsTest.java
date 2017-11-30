@@ -22,7 +22,6 @@ import static com.android.builder.model.AndroidProject.ARTIFACT_ANDROID_TEST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.android.build.gradle.integration.common.category.DeviceTestsQuarantine;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.ProductFlavorHelper;
@@ -47,7 +46,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Assemble tests for flavors. */
 public class FlavorsTest {
@@ -156,12 +154,6 @@ public class FlavorsTest {
                         .isNotNull();
             }
         }
-    }
-
-    @Test
-    @Category(DeviceTestsQuarantine.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
     }
 
     private void addProductFlavorsVersionNameSuffixes() throws IOException {

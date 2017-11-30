@@ -255,6 +255,7 @@ kotlin_test(
     deps = [
         ":tools.lint-gradle",
         "//prebuilts/tools/common/lint-psi/intellij-core",
+        "//prebuilts/tools/common/lint-psi/kotlin-compiler",
         "//prebuilts/tools/common/lint-psi/uast",
         "//prebuilts/tools/common/m2/repository/org/mockito/mockito-all/1.9.5:jar",
         "//tools/base/annotations",
@@ -265,6 +266,7 @@ kotlin_test(
         "//tools/base/lint:tools.lint-api",
         "//tools/base/lint:tools.lint-checks",
         "//tools/base/lint/cli",
+        "//tools/base/lint/libs/lint-tests",
         "//tools/base/repository:tools.repository",
         "//tools/base/sdk-common:tools.sdk-common",
         "//tools/base/sdklib:tools.sdklib",

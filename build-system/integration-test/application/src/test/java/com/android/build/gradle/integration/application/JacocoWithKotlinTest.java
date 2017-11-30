@@ -16,10 +16,6 @@
 
 package com.android.build.gradle.integration.application;
 
-import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
 import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
@@ -35,12 +31,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Check that Jacoco runs for a Kotlin-based project. */
 public class JacocoWithKotlinTest {
-
-    @Rule public Adb adb = new Adb();
 
     @Rule
     public GradleTestProject project =
@@ -84,16 +77,5 @@ public class JacocoWithKotlinTest {
         // contain HelloWorld.
         Truth.assertThat(Lists.newArrayList(content).stream().filter(containsHelloWorld).count())
                 .isEqualTo(1);
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void createDebugCoverageReport() throws Exception {
-        adb.exclusiveAccess();
-        project.execute("createDebugCoverageReport");
-        assertThat(
-                        project.file(
-                                "build/reports/coverage/debug/com.example.helloworld/HelloWorld.kt.html"))
-                .exists();
     }
 }

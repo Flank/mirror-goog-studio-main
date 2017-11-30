@@ -24,7 +24,6 @@ import static com.android.SdkConstants.FN_PUBLIC_TXT;
 import static com.android.build.gradle.internal.scope.TaskOutputHolder.TaskOutputType.JAVAC;
 
 import android.databinding.tool.DataBindingBuilder;
-import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.build.api.transform.QualifiedContent.DefaultContentType;
 import com.android.build.api.transform.QualifiedContent.Scope;
@@ -46,8 +45,6 @@ import com.android.build.gradle.internal.transforms.LibraryAarJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryBaseTransform;
 import com.android.build.gradle.internal.transforms.LibraryIntermediateJarsTransform;
 import com.android.build.gradle.internal.transforms.LibraryJniLibsTransform;
-import com.android.build.gradle.internal.variant.LibraryVariantData;
-import com.android.build.gradle.internal.variant.TaskContainer;
 import com.android.build.gradle.internal.variant.VariantHelper;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
@@ -58,26 +55,19 @@ import com.android.build.gradle.tasks.MergeSourceSetFolders;
 import com.android.build.gradle.tasks.VerifyLibraryResourcesTask;
 import com.android.build.gradle.tasks.ZipMergingTask;
 import com.android.builder.core.AndroidBuilder;
-import com.android.builder.core.BuilderConstants;
 import com.android.builder.errors.EvalIssueReporter.Type;
 import com.android.builder.profile.Recorder;
 import com.android.utils.FileUtils;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.wireless.android.sdk.stats.GradleBuildProfileSpan.ExecutionType;
 import java.io.File;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.CopySpec;
-import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.tooling.BuildException;
@@ -112,14 +102,9 @@ public class LibraryTaskManager extends TaskManager {
 
     @Override
     public void createTasksForVariantScope(@NonNull final VariantScope variantScope) {
-        final LibraryVariantData libVariantData =
-                (LibraryVariantData) variantScope.getVariantData();
         final GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
 
         GlobalScope globalScope = variantScope.getGlobalScope();
-
-        final File intermediatesDir = globalScope.getIntermediatesDir();
-        final Collection<String> variantDirectorySegments = variantConfig.getDirectorySegments();
 
         final String projectPath = project.getPath();
         final String variantName = variantScope.getFullVariantName();
@@ -510,94 +495,16 @@ public class LibraryTaskManager extends TaskManager {
     }
 
     private void createBundleTask(@NonNull VariantScope variantScope) {
-        LibraryVariantData libVariantData = (LibraryVariantData) variantScope.getVariantData();
-        GradleVariantConfiguration variantConfig = variantScope.getVariantConfiguration();
         final AndroidZip bundle =
-                project.getTasks().create(variantScope.getTaskName("bundle"), AndroidZip.class);
-
-        libVariantData.addTask(TaskContainer.TaskKind.PACKAGE_ANDROID_ARTIFACT, bundle);
-
-        // Sanity check, there should never be duplicates.
-        bundle.setDuplicatesStrategy(DuplicatesStrategy.FAIL);
-        // Make the AAR reproducible. Note that we package several zips inside the AAR, so all of
-        // those need to be reproducible too before we can switch this on.
-        // https://issuetracker.google.com/67597902
-        bundle.setReproducibleFileOrder(true);
-        bundle.setPreserveFileTimestamps(false);
-
-
-        Preconditions.checkNotNull(variantScope.getOutputScope().getMainSplit());
-        bundle.setDescription(
-                "Assembles a bundle containing the library in "
-                        + variantConfig.getFullName()
-                        + ".");
-
-        bundle.setDestinationDir(variantScope.getAarLocation());
-        bundle.setArchiveNameSupplier(
-                () -> variantScope.getOutputScope().getMainSplit().getOutputFileName());
-        bundle.setExtension(BuilderConstants.EXT_LIB_ARCHIVE);
-        bundle.from(
-                variantScope.getOutput(TaskOutputType.AIDL_PARCELABLE),
-                prependToCopyPath(SdkConstants.FD_AIDL));
-        bundle.from(variantScope.getOutput(TaskOutputType.CONSUMER_PROGUARD_FILE));
-        if (extension.getDataBinding().isEnabled()) {
-            bundle.from(
-                    variantScope.getOutput(TaskOutputType.DATA_BINDING_ARTIFACT),
-                    prependToCopyPath(DataBindingBuilder.DATA_BINDING_ROOT_FOLDER_IN_AAR));
-        }
-        bundle.from(variantScope.getOutput(TaskOutputType.LIBRARY_MANIFEST));
-        // TODO: this should be unconditional b/69358522
-        if (!Boolean.TRUE.equals(
-                variantScope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
-            bundle.from(variantScope.getOutput(TaskOutputType.SYMBOL_LIST));
-            bundle.from(
-                    variantScope.getOutput(TaskOutputType.PACKAGED_RES),
-                    prependToCopyPath(SdkConstants.FD_RES));
-        }
-        bundle.from(
-                variantScope.getOutput(TaskOutputType.RENDERSCRIPT_HEADERS),
-                prependToCopyPath(SdkConstants.FD_RENDERSCRIPT));
-        bundle.from(variantScope.getOutput(TaskOutputType.PUBLIC_RES));
-        if (variantScope.hasOutput(TaskOutputType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR)) {
-            bundle.from(variantScope.getOutput(TaskOutputType.COMPILE_ONLY_NAMESPACED_R_CLASS_JAR));
-        }
-        if (variantScope.hasOutput(TaskOutputType.RES_STATIC_LIBRARY)) {
-            bundle.from(variantScope.getOutput(TaskOutputType.RES_STATIC_LIBRARY));
-        }
-        bundle.from(
-                variantScope.getOutput(TaskOutputType.LIBRARY_AND_LOCAL_JARS_JNI),
-                prependToCopyPath(SdkConstants.FD_JNI));
-        bundle.from(variantScope.getGlobalScope().getOutput(TaskOutputType.LINT_JAR));
-        if (variantScope.hasOutput(TaskOutputType.ANNOTATIONS_ZIP)) {
-            bundle.from(variantScope.getOutput(TaskOutputType.ANNOTATIONS_ZIP));
-        }
-        bundle.from(variantScope.getOutput(TaskOutputType.AAR_MAIN_JAR));
-        bundle.from(
-                variantScope.getOutput(TaskOutputType.AAR_LIBS_DIRECTORY),
-                prependToCopyPath(SdkConstants.LIBS_FOLDER));
-        bundle.from(
-                variantScope.getOutput(TaskOutputType.LIBRARY_ASSETS),
-                prependToCopyPath(SdkConstants.FD_ASSETS));
-
-        variantScope.addTaskOutput(
-                TaskOutputType.AAR,
-                (Callable<File>)
-                        () ->
-                                new File(
-                                        variantScope.getAarLocation(),
-                                        variantScope
-                                                .getOutputScope()
-                                                .getMainSplit()
-                                                .getOutputFileName()),
-                bundle.getName());
-
-        libVariantData.packageLibTask = bundle;
+                taskFactory.create(new AndroidZip.ConfigAction(extension, variantScope));
 
         variantScope.getAssembleTask().dependsOn(bundle);
 
         // if the variant is the default published, then publish the aar
         // FIXME: only generate the tasks if this is the default published variant?
-        if (extension.getDefaultPublishConfig().equals(variantConfig.getFullName())) {
+        if (extension
+                .getDefaultPublishConfig()
+                .equals(variantScope.getVariantConfiguration().getFullName())) {
             VariantHelper.setupArchivesConfig(
                     project, variantScope.getVariantDependencies().getRuntimeClasspath());
 
@@ -608,14 +515,6 @@ public class LibraryTaskManager extends TaskManager {
             // (leading to their pom not containing dependencies).
             project.getArtifacts().add("default", bundle);
         }
-    }
-
-    private static Action<CopySpec> prependToCopyPath(String pathSegment) {
-        return copySpec ->
-                copySpec.eachFile(
-                        fileCopyDetails ->
-                                fileCopyDetails.setRelativePath(
-                                        fileCopyDetails.getRelativePath().prepend(pathSegment)));
     }
 
     @Override

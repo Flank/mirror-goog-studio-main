@@ -50,6 +50,7 @@ public enum InstantRunVerifierStatus {
 
     // changes in constructors,
     CONSTRUCTOR_SIGNATURE_CHANGE,
+    SYNTHETIC_CONSTRUCTOR_CHANGE,
 
     // changes in method
     METHOD_SIGNATURE_CHANGE,

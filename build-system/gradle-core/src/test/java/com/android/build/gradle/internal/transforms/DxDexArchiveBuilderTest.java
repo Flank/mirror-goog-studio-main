@@ -16,7 +16,9 @@
 
 package com.android.build.gradle.internal.transforms;
 
+import com.android.annotations.NonNull;
 import com.android.builder.dexing.ClassFileEntry;
+import com.android.builder.dexing.ClassFileInput;
 import com.android.builder.dexing.DexArchiveBuilder;
 import com.android.builder.dexing.DexArchiveBuilderConfig;
 import com.android.builder.dexing.DexerTool;
@@ -97,6 +99,12 @@ public class DxDexArchiveBuilderTest {
         @Override
         public String getRelativePath() {
             return name;
+        }
+
+        @NonNull
+        @Override
+        public ClassFileInput getInput() {
+            throw new UnsupportedOperationException();
         }
 
         @Override

@@ -79,7 +79,7 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
         return false;
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/LayoutInflationTest.java:13: Warning: Avoid passing null as the view root (needed to resolve layout parameters on the inflated layout's root element) [InflateParams]\n"
                 + "        convertView = mInflater.inflate(R.layout.your_layout, null);\n"
@@ -105,7 +105,7 @@ public class LayoutInflationDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoLayoutParams() throws Exception {
+    public void testNoLayoutParams() {
         lint().files(
                 mLayoutInflationTest,
                 xml("res/layout/your_layout.xml", ""

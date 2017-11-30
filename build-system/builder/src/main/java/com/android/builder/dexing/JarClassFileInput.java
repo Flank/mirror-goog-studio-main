@@ -66,11 +66,16 @@ final class JarClassFileInput implements ClassFileInput {
         return jarFile.entries()
                 .stream()
                 .filter(entry -> newFilter.test(entry.getCentralDirectoryHeader().getName()))
-                .map(JarClassFileInput::createEntryFromEntry);
+                .map(this::createEntryFromEntry);
+    }
+
+    @Override
+    public Path getPath() {
+        return rootPath;
     }
 
     @NonNull
-    private static ClassFileEntry createEntryFromEntry(@NonNull StoredEntry storedEntry) {
-        return new NoCacheJarClassFileEntry(storedEntry);
+    private ClassFileEntry createEntryFromEntry(@NonNull StoredEntry storedEntry) {
+        return new NoCacheJarClassFileEntry(storedEntry, this);
     }
 }

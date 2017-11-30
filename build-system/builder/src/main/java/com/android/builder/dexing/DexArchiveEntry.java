@@ -28,10 +28,15 @@ public final class DexArchiveEntry {
 
     @NonNull private final byte[] dexFileContent;
     @NonNull private final String relativePathInArchive;
+    @NonNull private final DexArchive dexArchive;
 
-    public DexArchiveEntry(@NonNull byte[] dexFileContent, @NonNull String relativePathInArchive) {
+    public DexArchiveEntry(
+            @NonNull byte[] dexFileContent,
+            @NonNull String relativePathInArchive,
+            @NonNull DexArchive dexArchive) {
         this.relativePathInArchive = relativePathInArchive;
         this.dexFileContent = dexFileContent;
+        this.dexArchive = dexArchive;
     }
 
     /**
@@ -62,5 +67,10 @@ public final class DexArchiveEntry {
     @NonNull
     public String getRelativePathInArchive() {
         return relativePathInArchive;
+    }
+
+    @NonNull
+    public DexArchive getDexArchive() {
+        return dexArchive;
     }
 }

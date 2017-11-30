@@ -19,6 +19,7 @@ package com.android.builder.dexing;
 import com.android.SdkConstants;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -40,4 +41,8 @@ public interface ClassFileInput extends Closeable {
      * @throws IOException if the jar/directory cannot be read correctly.
      */
     Stream<ClassFileEntry> entries(Predicate<String> filter) throws IOException;
+
+    /** @return the root {@link Path} of this {@link ClassFileInput}. */
+    Path getPath();
+
 }

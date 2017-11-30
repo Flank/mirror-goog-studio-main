@@ -22,16 +22,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.api.AndroidBasePlugin;
 import com.android.builder.model.Version;
-import com.android.testutils.classloader.SingleClassLoader;
 import com.android.utils.JvmWideVariable;
 import com.google.common.base.Verify;
 import com.google.common.reflect.TypeToken;
 import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicReference;
 import org.gradle.api.Project;
 import org.junit.Test;
 
@@ -141,57 +138,6 @@ public class PluginInitializerTest {
                 projectToPluginVersionMap, sameProject1, Version.ANDROID_GRADLE_PLUGIN_VERSION);
     }
 
-    @Test
-    public void testVerifyPluginLoadedOnce() throws Exception {
-        // Initialize the reference to the loaded plugin class. (NOTE: the group or name of the
-        // variable must be different from the one used in PluginInitializer since that variable may
-        // currently be used by running integration tests.)
-        AtomicReference<Class<?>> loadedPluginClass =
-                Verify.verifyNotNull(
-                        new JvmWideVariable<>(
-                                        PluginInitializerTest.class.getName(),
-                                        "loadedPluginClass",
-                                        Version.ANDROID_GRADLE_PLUGIN_VERSION,
-                                        new TypeToken<AtomicReference<Class<?>>>() {},
-                                        () -> new AtomicReference<>(null))
-                                .get());
-
-        // Simulate loading the plugin
-        PluginInitializer.verifyPluginLoadedOnce(loadedPluginClass, AndroidBasePlugin.class, true);
-
-        // Apply the plugin again without reloading it, expect success
-        PluginInitializer.verifyPluginLoadedOnce(loadedPluginClass, AndroidBasePlugin.class, true);
-
-        // Apply the plugin again with a newly loaded class, expect failure
-        SingleClassLoader classLoader = new SingleClassLoader(AndroidBasePlugin.class.getName());
-        Class<?> androidBasePluginClasss = classLoader.load();
-        try {
-            PluginInitializer.verifyPluginLoadedOnce(
-                    loadedPluginClass, androidBasePluginClasss, true);
-            fail("Expected IllegalStateException");
-        } catch (IllegalStateException e) {
-            assertThat(e.getMessage())
-                    .contains(
-                            "loading the Android Gradle plugin in different class loaders"
-                                    + " leads to a build error");
-        }
-
-        // Apply the plugin again with a newly loaded class, but with the check disabled, expect
-        // success
-        PluginInitializer.verifyPluginLoadedOnce(loadedPluginClass, androidBasePluginClasss, false);
-
-        // Reset the reference to the loaded plugin class at the end of the build
-        loadedPluginClass.set(null);
-
-        // Apply the plugin twice without reloading in different builds, expect success
-        simulateRunningBuild(loadedPluginClass, AndroidBasePlugin.class);
-        simulateRunningBuild(loadedPluginClass, AndroidBasePlugin.class);
-
-        // Apply the plugin twice with reloading in different builds, expect success
-        simulateRunningBuild(loadedPluginClass, AndroidBasePlugin.class);
-        simulateRunningBuild(loadedPluginClass, androidBasePluginClasss);
-    }
-
     private static void simulateRunningBuild(
             @NonNull ConcurrentMap<Object, String> projectToPluginVersionMap,
             @NonNull Project project,
@@ -199,11 +145,5 @@ public class PluginInitializerTest {
         PluginInitializer.verifySamePluginVersion(
                 projectToPluginVersionMap, project, pluginVersion);
         projectToPluginVersionMap.clear();
-    }
-
-    private static void simulateRunningBuild(
-            @NonNull AtomicReference<Class<?>> loadedPluginClass, @NonNull Class<?> pluginClass) {
-        PluginInitializer.verifyPluginLoadedOnce(loadedPluginClass, pluginClass, true);
-        loadedPluginClass.set(null);
     }
 }

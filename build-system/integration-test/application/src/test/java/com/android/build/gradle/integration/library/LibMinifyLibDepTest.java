@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.library;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import java.io.File;
 import java.io.IOException;
@@ -26,7 +25,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Assemble tests for libMinifyLibDep. */
 public class LibMinifyLibDepTest {
@@ -57,11 +55,5 @@ public class LibMinifyLibDepTest {
                 .containsAllOf(
                         "com.android.tests.basic.StringGetter -> com.android.tests.basic.StringGetter",
                         "com.android.tests.internal.StringGetterInternal -> com.android.tests.a.a");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
     }
 }

@@ -92,6 +92,27 @@ shared_ptr<File> FileCache::Complete(const std::string &cache_id) {
   return file_to;
 }
 
+std::string FileCache::AddString(const std::string &value) {
+  std::stringstream cache_id_stream;
+  std::hash<std::string> hasher;
+  cache_id_stream << hasher(value);
+  std::string cache_id = cache_id_stream.str();
+
+  auto file = cache_complete_->GetFile(cache_id);
+  if (file->Exists()) {
+    // TODO: Do we have to worry about duplicate hashes?
+    file->Touch();
+    return cache_id;
+  }
+
+  file->Create();
+  file->OpenForWrite();
+  file->Append(value);
+  file->Close();
+
+  return cache_id;
+}
+
 shared_ptr<File> FileCache::GetFile(const std::string &cache_id) {
   return cache_complete_->GetFile(cache_id);
 }

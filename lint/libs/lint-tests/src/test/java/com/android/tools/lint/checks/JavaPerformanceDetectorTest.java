@@ -399,7 +399,7 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                     mLongSparseArray));
     }
 
-    public void testSparseLongArray1() throws Exception {
+    public void testSparseLongArray1() {
         String expected = ""
                 + "src/test/pkg/SparseLongArray.java:10: Warning: Use new SparseLongArray(...) instead for better performance [UseSparseArrays]\n"
                 + "        Map<Integer, Long> myStringMap = new HashMap<Integer, Long>();\n"
@@ -412,7 +412,7 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testSparseLongArray2() throws Exception {
+    public void testSparseLongArray2() {
         // Note -- it's offering a SparseArray, not a SparseLongArray!
         String expected = ""
                 + "src/test/pkg/SparseLongArray.java:10: Warning: Use new SparseArray<Long>(...) instead for better performance [UseSparseArrays]\n"
@@ -426,7 +426,7 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoSparseArrayOutsideAndroid() throws Exception {
+    public void testNoSparseArrayOutsideAndroid() {
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(17),
@@ -436,7 +436,7 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testUseValueOfOnArrays() throws Exception {
+    public void testUseValueOfOnArrays() {
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(1),
@@ -507,7 +507,7 @@ public class JavaPerformanceDetectorTest extends AbstractCheckTest {
                         + "0 errors, 2 warnings\n");
     }
 
-    public void testWildcards() throws Exception {
+    public void testWildcards() {
         String expected = ""
                 + "src/test/pkg/SparseLongArray.java:10: Warning: Use new SparseArray<Long>(...) instead for better performance [UseSparseArrays]\n"
                 + "        Map<Integer, Long> myStringMap = new HashMap<>();\n"

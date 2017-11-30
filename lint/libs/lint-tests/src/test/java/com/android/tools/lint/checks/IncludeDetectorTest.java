@@ -24,7 +24,7 @@ public class IncludeDetectorTest extends AbstractCheckTest {
         return new IncludeDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "res/layout/include_params.xml:43: Error: Layout parameter layout_margin ignored unless both layout_width and layout_height are also specified on <include> tag [IncludeLayoutParam]\n"
                 + "        android:layout_margin=\"20dp\"\n"

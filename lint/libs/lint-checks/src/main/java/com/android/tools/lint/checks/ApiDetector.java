@@ -1162,6 +1162,14 @@ public class ApiDetector extends ResourceXmlDetector
         public void visitBinaryExpressionWithType(@NonNull UBinaryExpressionWithType node) {
             if (UastExpressionUtils.isTypeCast(node)) {
                 visitTypeCastExpression(node);
+            } else if (UastExpressionUtils.isInstanceCheck(node)) {
+                UTypeReferenceExpression typeReference = node.getTypeReference();
+                if (typeReference != null){
+                    PsiType type = typeReference.getType();
+                    if (type instanceof PsiClassType) {
+                        checkClassReference(typeReference, (PsiClassType) type);
+                    }
+                }
             }
         }
 
@@ -1183,7 +1191,7 @@ public class ApiDetector extends ResourceXmlDetector
 
             UTypeReferenceExpression typeReference = expression.getTypeReference();
             if (typeReference != null) {
-                if (!checkCastTypeReference(typeReference, interfaceType)) {
+                if (!checkClassReference(typeReference, interfaceType)) {
                     // Found problem with cast type itself: don't bother also warning
                     // about problem with LHS
                     return;
@@ -1193,7 +1201,7 @@ public class ApiDetector extends ResourceXmlDetector
             checkCast(expression, classType, interfaceType);
         }
 
-        private boolean checkCastTypeReference(@NonNull UTypeReferenceExpression node,
+        private boolean checkClassReference(@NonNull UElement node,
                 @NonNull PsiClassType classType) {
             JavaEvaluator evaluator = mContext.getEvaluator();
             String expressionOwner = evaluator.getQualifiedName(classType);
@@ -1250,10 +1258,18 @@ public class ApiDetector extends ResourceXmlDetector
             }
 
             Location location = mContext.getLocation(node);
-            String message = String.format("Cast from %1$s to %2$s requires API level %3$d "
-                            + "(current min is %4$d)",
-                    classType.getClassName(),
-                    interfaceType.getClassName(), api, Math.max(minSdk, getTargetApi(node)));
+            String message;
+            String to = interfaceType.getClassName();
+            String from = classType.getClassName();
+            int min = Math.max(minSdk, getTargetApi(node));
+            if (interfaceTypeInternal.equals(classTypeInternal)) {
+                message = String.format("Cast to %1$s requires API level %2$d "
+                        + "(current min is %3$d)", to, api, min);
+            } else {
+                message = String.format("Cast from %1$s to %2$s requires API level %3$d "
+                        + "(current min is %4$d)", from, to, api, min);
+            }
+
             mContext.report(UNSUPPORTED, node, location, message, apiLevelFix(api));
         }
 

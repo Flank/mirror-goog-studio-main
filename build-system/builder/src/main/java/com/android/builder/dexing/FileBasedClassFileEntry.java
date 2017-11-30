@@ -29,10 +29,15 @@ final class FileBasedClassFileEntry implements ClassFileEntry {
 
     @NonNull private final String relativePath;
     @NonNull private final Path fullPath;
+    @NonNull private final DirectoryBasedClassFileInput input;
 
-    public FileBasedClassFileEntry(@NonNull Path rootPath, @NonNull Path fullPath) {
+    public FileBasedClassFileEntry(
+            @NonNull Path rootPath,
+            @NonNull Path fullPath,
+            @NonNull DirectoryBasedClassFileInput input) {
         this.relativePath = PathUtils.toSystemIndependentPath(rootPath.relativize(fullPath));
         this.fullPath = fullPath;
+        this.input = input;
     }
 
     @Override
@@ -49,6 +54,12 @@ final class FileBasedClassFileEntry implements ClassFileEntry {
     @Override
     public String getRelativePath() {
         return relativePath;
+    }
+
+    @NonNull
+    @Override
+    public ClassFileInput getInput() {
+        return input;
     }
 
     @Override

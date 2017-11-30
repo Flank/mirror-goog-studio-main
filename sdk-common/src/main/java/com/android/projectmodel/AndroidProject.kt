@@ -18,6 +18,9 @@ package com.android.projectmodel
 /**
  * Represents a single Android project. This is the collection of sources and metadata needed to construct a single android artifact (an
  * application, library, etc.). An android project contains one or more [Variant]s, which are alternative ways of constructing the project.
+ *
+ * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
+ * to stay source compatible.
  */
 data class AndroidProject(
         /**
@@ -35,5 +38,9 @@ data class AndroidProject(
         /**
          * List of variants for the project.
          */
-        val variants: List<Variant> = emptyList()
+        val variants: List<Variant> = emptyList(),
+        /**
+         * Config table for this project.
+         */
+        val configTable: ConfigTable = ConfigTable()
 )

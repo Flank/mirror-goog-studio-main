@@ -57,7 +57,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
             + "\n"
             + "</vector>";
 
-    public void testWarn() throws Exception {
+    public void testWarn() {
         String expected = ""
                 + "res/drawable/foo.xml:6: Warning: This attribute is not supported in images generated from this vector icon for API < 21; check generated icon to make sure it looks acceptable [VectorRaster]\n"
                 + "        android:autoMirrored=\"true\"\n"
@@ -99,7 +99,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoWarningsWithMinSdk21() throws Exception {
+    public void testNoWarningsWithMinSdk21() {
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(21),
@@ -114,7 +114,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoWarningsInV21Folder() throws Exception {
+    public void testNoWarningsInV21Folder() {
         lint().files(
                 manifest().minSdk(14),
                 xml("res/drawable-v21/foo.xml", VECTOR),
@@ -128,7 +128,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoGroupWarningWithPlugin15() throws Exception {
+    public void testNoGroupWarningWithPlugin15() {
         lint().files(
                 manifest().minSdk(14),
                 xml("res/drawable/foo.xml", ""
@@ -152,7 +152,7 @@ public class VectorDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoWarningsWithSupportLibVectors() throws Exception {
+    public void testNoWarningsWithSupportLibVectors() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=206005
         lint().files(
                 manifest().minSdk(14),

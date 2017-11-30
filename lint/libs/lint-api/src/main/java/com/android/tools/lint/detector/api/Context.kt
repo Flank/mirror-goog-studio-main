@@ -304,7 +304,6 @@ open class Context
     /** Returns the comment marker used in Studio to suppress statements for language, if any  */
     protected open val suppressCommentPrefix: String?
         get() {
-
             val path = file.path
             if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_GRADLE)) {
                 return SUPPRESS_JAVA_COMMENT_PREFIX

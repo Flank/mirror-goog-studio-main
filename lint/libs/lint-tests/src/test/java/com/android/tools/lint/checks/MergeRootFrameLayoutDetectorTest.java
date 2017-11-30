@@ -25,7 +25,7 @@ public class MergeRootFrameLayoutDetectorTest extends AbstractCheckTest {
         return new MergeRootFrameLayoutDetector();
     }
 
-    public void testMergeRefFromJava() throws Exception {
+    public void testMergeRefFromJava() {
         String expected = ""
                 + "res/layout/simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]\n"
                 + "<FrameLayout\n"
@@ -59,7 +59,7 @@ public class MergeRootFrameLayoutDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMergeRefFromInclude() throws Exception {
+    public void testMergeRefFromInclude() {
         String expected = ""
                 + "res/layout/simple.xml:3: Warning: This <FrameLayout> can be replaced with a <merge> tag [MergeRootFrame]\n"
                 + "<FrameLayout\n"
@@ -68,7 +68,7 @@ public class MergeRootFrameLayoutDetectorTest extends AbstractCheckTest {
         lint().files(mSimple, mSimpleinclude).run().expect(expected);
     }
 
-    public void testMergeRefFromIncludeSuppressed() throws Exception {
+    public void testMergeRefFromIncludeSuppressed() {
         //noinspection all // Sample code
         lint().files(
                 xml("res/layout/simple.xml", ""
@@ -85,7 +85,7 @@ public class MergeRootFrameLayoutDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNotIncluded() throws Exception {
+    public void testNotIncluded() {
         lint().files(mSimple).run().expectClean();
     }
 

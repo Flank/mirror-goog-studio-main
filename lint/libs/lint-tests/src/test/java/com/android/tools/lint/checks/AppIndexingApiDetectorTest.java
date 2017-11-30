@@ -26,7 +26,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
         return new AppIndexingApiDetector();
     }
 
-    public void testOk() throws Exception {
+    public void testOk() {
         //noinspection all // Sample code
         lint().files(
                 xml("AndroidManifest.xml", ""
@@ -61,7 +61,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoActivity() throws Exception {
+    public void testNoActivity() {
         String expected = ""
                 + "AndroidManifest.xml:5: Warning: App is not indexable by Google Search; consider adding at least one Activity with an ACTION-VIEW intent filter. See issue explanation for more details. [GoogleAppIndexingWarning]\n"
                 + "    <application\n"
@@ -87,7 +87,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoWarningInLibraries() throws Exception {
+    public void testNoWarningInLibraries() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=194937
         // 194937: App indexing lint check shouldn't apply to library projects
         //noinspection all // Sample code
@@ -112,7 +112,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoActionView() throws Exception {
+    public void testNoActionView() {
         String expected = ""
                 + "AndroidManifest.xml:5: Warning: App is not indexable by Google Search; consider adding at least one Activity with an ACTION-VIEW intent filter. See issue explanation for more details. [GoogleAppIndexingWarning]\n"
                 + "    <application\n"
@@ -146,7 +146,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testJavaOk() throws Exception {
+    public void testJavaOk() {
         lint().files(
                 mAppIndexingApiTestOk,
                 mApp_indexing_api_test,
@@ -159,7 +159,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoManifest() throws Exception {
+    public void testNoManifest() {
         String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:28: Warning: Missing support for Firebase App Indexing in the manifest [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.start(mClient, action);\n"
@@ -179,7 +179,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoStartEnd() throws Exception {
+    public void testNoStartEnd() {
         String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:11: Warning: Missing support for Firebase App Indexing API [GoogleAppIndexingApiWarning]\n"
                 + "public class AppIndexingApiTest extends Activity {\n"
@@ -232,7 +232,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testStartMatch() throws Exception {
+    public void testStartMatch() {
         String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:27: Warning: GoogleApiClient mClient is not connected [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.start(mClient, action);\n"
@@ -290,7 +290,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testEndMatch() throws Exception {
+    public void testEndMatch() {
         //noinspection all // Sample code
         String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:33: Warning: GoogleApiClient mClient is not disconnected [GoogleAppIndexingApiWarning]\n"
@@ -348,7 +348,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testViewMatch() throws Exception {
+    public void testViewMatch() {
         //noinspection all // Sample code
         String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:26: Warning: GoogleApiClient mClient is not connected [GoogleAppIndexingApiWarning]\n"
@@ -404,7 +404,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testViewEndMatch() throws Exception {
+    public void testViewEndMatch() {
         String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:29: Warning: GoogleApiClient mClient is not disconnected [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.viewEnd(mClient, this, APP_URI);\n"
@@ -457,7 +457,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testWrongOrder() throws Exception {
+    public void testWrongOrder() {
         //noinspection all // Sample code
         lint().files(
                 java(""
@@ -511,7 +511,7 @@ public class AppIndexingApiDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testGoogleApiClientAddApi() throws Exception {
+    public void testGoogleApiClientAddApi() {
         String expected = ""
                 + "src/com/example/helloworld/AppIndexingApiTest.java:28: Warning: GoogleApiClient mClient has not added support for App Indexing API [GoogleAppIndexingApiWarning]\n"
                 + "    AppIndex.AppIndexApi.start(mClient, action);\n"

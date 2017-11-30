@@ -45,8 +45,13 @@ final class DirectoryBasedClassFileInput implements ClassFileInput {
                 .map(this::createEntryFromPath);
     }
 
+    @Override
+    public Path getPath() {
+        return rootPath;
+    }
+
     @NonNull
     private ClassFileEntry createEntryFromPath(@NonNull Path path) {
-        return new FileBasedClassFileEntry(rootPath, path);
+        return new FileBasedClassFileEntry(rootPath, path, this);
     }
 }

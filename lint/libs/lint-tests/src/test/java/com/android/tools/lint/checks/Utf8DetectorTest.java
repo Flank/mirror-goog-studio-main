@@ -25,7 +25,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
         return new Utf8Detector();
     }
 
-    public void testIsoLatin() throws Exception {
+    public void testIsoLatin() {
         String expected = ""
                 + "res/layout/encoding.xml:1: Error: iso-latin-1: Not using UTF-8 as the file encoding. This can lead to subtle bugs with non-ascii characters [EnforceUTF8]\n"
                 + "<?xml version=\"1.0\" encoding=\"iso-latin-1\"?>\n"
@@ -50,7 +50,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                         + "+ <?xml version=\"1.0\" encoding=\"utf-8\"?>\n");
     }
 
-    public void testRaw() throws Exception {
+    public void testRaw() {
         //noinspection all // Sample code
         lint().files(
                 xml("res/raw/encoding.xml", ""
@@ -65,7 +65,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWithWindowsCarriageReturn() throws Exception {
+    public void testWithWindowsCarriageReturn() {
         String expected = ""
                 + "res/layout/encoding2.xml:1: Error: iso-latin-1: Not using UTF-8 as the file encoding. This can lead to subtle bugs with non-ascii characters [EnforceUTF8]\n"
                 + "<?xml version=\"1.0\" encoding=\"iso-latin-1\"?>\n"
@@ -86,7 +86,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNegative() throws Exception {
+    public void testNegative() {
         // Make sure we don't get warnings for a correct file
         //noinspection all // Sample code
         lint().files(
@@ -119,7 +119,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testNoProlog() throws Exception {
+    public void testNoProlog() {
         //noinspection all // Sample code
         lint().files(
                 xml("res/layout/activity_item_two_pane.xml", ""
@@ -164,7 +164,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testImplicitUtf16() throws Exception {
+    public void testImplicitUtf16() {
         // Implicit encoding: Not currently checked
         //noinspection all // Sample code
         lint().files(
@@ -177,7 +177,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testUtf16WithByteOrderMark() throws Exception {
+    public void testUtf16WithByteOrderMark() {
         String expected = ""
                 + "res/layout/layout.xml:1: Error: UTF-16: Not using UTF-8 as the file encoding. This can lead to subtle bugs with non-ascii characters [EnforceUTF8]\n"
                 + "<?xml version=\"1.0\" encoding=\"UTF-16\"?>\n"
@@ -194,7 +194,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testUtf16WithoutByteOrderMark() throws Exception {
+    public void testUtf16WithoutByteOrderMark() {
         String expected = ""
                 + "res/layout/layout.xml:1: Error: UTF-16: Not using UTF-8 as the file encoding. This can lead to subtle bugs with non-ascii characters [EnforceUTF8]\n"
                 + "<?xml version=\"1.0\" encoding=\"UTF-16\"?>\n"
@@ -211,7 +211,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testUtf32WithByteOrderMark() throws Exception {
+    public void testUtf32WithByteOrderMark() {
         String expected = ""
                 + "res/layout/layout.xml:1: Error: UTF_32: Not using UTF-8 as the file encoding. This can lead to subtle bugs with non-ascii characters [EnforceUTF8]\n"
                 + "<?xml version=\"1.0\" encoding=\"UTF_32\"?>\n"
@@ -229,7 +229,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testUtf32WithoutByteOrderMark() throws Exception {
+    public void testUtf32WithoutByteOrderMark() {
         String expected = ""
                 + "res/layout/layout.xml:1: Error: UTF_32: Not using UTF-8 as the file encoding. This can lead to subtle bugs with non-ascii characters [EnforceUTF8]\n"
                 + "<?xml version=\"1.0\" encoding=\"UTF_32\"?>\n"
@@ -247,7 +247,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testUtf32LeWithoutByteOrderMark() throws Exception {
+    public void testUtf32LeWithoutByteOrderMark() {
         String expected = ""
                 + "res/layout/layout.xml:1: Error: UTF_32LE: Not using UTF-8 as the file encoding. This can lead to subtle bugs with non-ascii characters [EnforceUTF8]\n"
                 + "<?xml version=\"1.0\" encoding=\"UTF_32LE\"?>\n"
@@ -265,7 +265,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testMacRoman() throws Exception {
+    public void testMacRoman() {
         String expected = ""
                 + "res/layout/layout.xml:1: Error: MacRoman: Not using UTF-8 as the file encoding. This can lead to subtle bugs with non-ascii characters [EnforceUTF8]\n"
                 + "<?xml version=\"1.0\" encoding=\"MacRoman\"?>\n"
@@ -281,7 +281,7 @@ public class Utf8DetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testWindows1252() throws Exception {
+    public void testWindows1252() {
         String expected = ""
                 + "res/layout/layout.xml:1: Error: windows-1252: Not using UTF-8 as the file encoding. This can lead to subtle bugs with non-ascii characters [EnforceUTF8]\n"
                 + "<?xml version=\"1.0\" encoding=\"windows-1252\"?>\n"

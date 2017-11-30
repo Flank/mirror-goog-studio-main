@@ -25,7 +25,7 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
         return new PreferenceActivityDetector();
     }
 
-    public void testWarningWhenImplicitlyExportingPreferenceActivity() throws Exception {
+    public void testWarningWhenImplicitlyExportingPreferenceActivity() {
         String expected = ""
                 + "AndroidManifest.xml:28: Warning: PreferenceActivity should not be exported [ExportedPreferenceActivity]\n"
                 + "        <activity\n"
@@ -76,7 +76,7 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testWarningWhenExplicitlyExportingPreferenceActivity() throws Exception {
+    public void testWarningWhenExplicitlyExportingPreferenceActivity() {
         String expected = ""
                 + "AndroidManifest.xml:28: Warning: PreferenceActivity should not be exported [ExportedPreferenceActivity]\n"
                 + "        <activity\n"
@@ -124,11 +124,11 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoWarningWhenExportingNonPreferenceActivity() throws Exception {
+    public void testNoWarningWhenExportingNonPreferenceActivity() {
         lint().files(manifest().minSdk(14)).run().expectClean();
     }
 
-    public void testNoWarningWhenSuppressed() throws Exception {
+    public void testNoWarningWhenSuppressed() {
         lint().files(
                 xml("AndroidManifest.xml", ""
                         + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
@@ -174,7 +174,7 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWarningWhenImplicitlyExportingPreferenceActivitySubclass() throws Exception {
+    public void testWarningWhenImplicitlyExportingPreferenceActivitySubclass() {
         String expected = ""
                 + "AndroidManifest.xml:28: Warning: PreferenceActivity subclass test.pkg.PreferenceActivitySubclass should not be exported [ExportedPreferenceActivity]\n"
                 + "        <activity\n"
@@ -227,7 +227,7 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testWarningWhenExplicitlyExportingPreferenceActivitySubclass() throws Exception {
+    public void testWarningWhenExplicitlyExportingPreferenceActivitySubclass() {
         String expected = ""
                 + "AndroidManifest.xml:28: Warning: PreferenceActivity subclass test.pkg.PreferenceActivitySubclass should not be exported [ExportedPreferenceActivity]\n"
                 + "        <activity\n"
@@ -277,7 +277,7 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testNoWarningWhenActivityNotExported() throws Exception {
+    public void testNoWarningWhenActivityNotExported() {
         //noinspection all // Sample code
         lint().files(
                 xml("AndroidManifest.xml", ""
@@ -319,7 +319,7 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testWarningWhenTargetSDK19ButNoIsValidFragmentOverridden() throws Exception {
+    public void testWarningWhenTargetSDK19ButNoIsValidFragmentOverridden() {
         lint().files(
                 mPreferenceActivity,
                 mPreferenceActivitySubclass,
@@ -332,7 +332,7 @@ public class PreferenceActivityDetectorTest extends AbstractCheckTest {
                 + "0 errors, 1 warnings\n");
     }
 
-    public void testNoWarningWhenTargetSDK19AndIsValidFragmentOverridden() throws Exception {
+    public void testNoWarningWhenTargetSDK19AndIsValidFragmentOverridden() {
         //noinspection all // Sample code
         lint().files(
                 mPreferenceActivity,

@@ -20,6 +20,7 @@ import static com.android.build.gradle.internal.incremental.InstantRunVerifierSt
 import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.COMPATIBLE;
 import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.METHOD_ADDED;
 import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.METHOD_DELETED;
+import static com.android.build.gradle.internal.incremental.InstantRunVerifierStatus.REFLECTION_USED;
 import static org.junit.Assert.assertEquals;
 
 import Lpackage.AnyClassWithMethodInvocation;
@@ -240,7 +241,7 @@ public class InstantRunVerifierTest {
     @Test
     public void testClassNewInstanceReflectionUser() throws IOException {
         // not changing a method implementation that uses reflection should be ok.
-        assertEquals(COMPATIBLE, harness.verify(NewInstanceReflectionUser.class, null));
+        assertEquals(REFLECTION_USED, harness.verify(NewInstanceReflectionUser.class, null));
         assertEquals(InstantRunVerifierStatus.REFLECTION_USED,
                 harness.verify(NewInstanceReflectionUser.class, "verifier"));
     }
@@ -248,11 +249,9 @@ public class InstantRunVerifierTest {
     @Test
     public void testReflectiveUserNotChanging() throws IOException {
         // not changing a method implementation that uses reflection should be ok.
-        assertEquals(COMPATIBLE,
-                harness.verify(ReflectiveUserNotChanging.class, null));
+        assertEquals(REFLECTION_USED, harness.verify(ReflectiveUserNotChanging.class, null));
         // changing other methods should be fine.
-        assertEquals(COMPATIBLE,
-                harness.verify(ReflectiveUserNotChanging.class, "verifier"));
+        assertEquals(REFLECTION_USED, harness.verify(ReflectiveUserNotChanging.class, "verifier"));
     }
 
     @Test
@@ -506,6 +505,15 @@ public class InstantRunVerifierTest {
         assertEquals(
                 ABSTRACT_METHOD_CHANGE,
                 harness.verify(ChangingNonDefaultIntoDefaultMethod.class, "verifier"));
+    }
+
+    @Test
+    public void testSyntheticConstructorChange() throws IOException {
+        // not changing a synthetic constructor should be ok.
+        assertEquals(COMPATIBLE, harness.verify(com.kotlin.MyDataClass.class, null));
+        assertEquals(
+                InstantRunVerifierStatus.SYNTHETIC_CONSTRUCTOR_CHANGE,
+                harness.verify(com.kotlin.MyDataClass.class, "verifier"));
     }
 
 }

@@ -21,11 +21,10 @@ import com.android.ide.common.symbols.RGeneration
 import com.android.ide.common.symbols.SymbolIo
 import com.android.ide.common.symbols.SymbolTable
 import com.android.ide.common.symbols.SymbolUtils
+import com.android.utils.FileUtils
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
-
-
 
 /**
  * Processes the symbol table and generates necessary files: R.txt, R.java and proguard rules
@@ -37,6 +36,7 @@ import java.nio.file.Files
  * @param mainPackageName package name of this library
  * @param manifestFile manifest file
  * @param sourceOut directory to contain R.java
+ * @param rClassOutputJar file to output R.jar.
  * @param symbolFileOut R.txt file location
  * @param proguardOut directory to contain proguard rules
  * @param mergedResources directory containing merged resources
@@ -47,7 +47,8 @@ fun processLibraryMainSymbolTable(
         libraries: Set<File>,
         mainPackageName: String?,
         manifestFile: File,
-        sourceOut: File,
+        sourceOut: File?,
+        rClassOutputJar: File?,
         symbolFileOut: File,
         proguardOut: File?,
         mergedResources: File?,
@@ -57,7 +58,6 @@ fun processLibraryMainSymbolTable(
     // Parse the manifest only when necessary.
     val finalPackageName = if (mainPackageName == null || proguardOut != null) {
         val manifestData = SymbolUtils.parseManifest(manifestFile)
-
         // Generate aapt_rules.txt containing keep rules if minify is enabled.
         if (proguardOut != null) {
             Files.write(
@@ -72,7 +72,8 @@ fun processLibraryMainSymbolTable(
     // Get symbol tables of the libraries we depend on.
     val depSymbolTables = SymbolUtils.loadDependenciesSymbolTables(libraries)
 
-    val mainSymbolTable = if (disableMergeInLib) {
+    val mainSymbolTable: SymbolTable
+    mainSymbolTable = if (disableMergeInLib) {
         // Merge all the symbols together.
         // We have to rewrite the IDs because some published R.txt inside AARs are using the
         // wrong value for some types, and we need to ensure there is no collision in the
@@ -87,9 +88,17 @@ fun processLibraryMainSymbolTable(
     Files.createDirectories(symbolFileOut.toPath().parent)
     SymbolIo.write(mainSymbolTable, symbolFileOut)
 
-    // Generate R.java file.
-    SymbolIo.exportToJava(mainSymbolTable, sourceOut, false)
+    val tablesToWrite = RGeneration.generateAllSymbolTablesToWrite(mainSymbolTable, depSymbolTables)
 
-    // Generate the R.java files for each individual library.
-    RGeneration.generateRForLibraries(mainSymbolTable, depSymbolTables, sourceOut, false)
+    if (sourceOut != null) {
+        FileUtils.cleanOutputDir(sourceOut)
+        // Generate R.java files for main and dependencies
+        tablesToWrite.forEach { SymbolIo.exportToJava(it, sourceOut, false) }
+    }
+
+    if (rClassOutputJar != null) {
+        FileUtils.deleteIfExists(rClassOutputJar)
+        exportToCompiledJava(tablesToWrite, rClassOutputJar.toPath())
+    }
 }
+

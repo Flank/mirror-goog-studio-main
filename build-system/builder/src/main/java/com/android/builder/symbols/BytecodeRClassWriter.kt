@@ -52,23 +52,24 @@ import java.util.zip.ZipEntry
 private val VALUE_ID_SPLITTER = Splitter.on(',').trimResults()
 
 @Throws(IOException::class)
-fun exportToCompiledJava(table: SymbolTable, outJar: Path) {
+fun exportToCompiledJava(tables: Iterable<SymbolTable>, outJar: Path) {
     JarOutputStream(BufferedOutputStream(Files.newOutputStream(outJar))).use { jarOutputStream ->
-        val resourceTypes = EnumSet.noneOf(ResourceType::class.java)
-        for (resType in ResourceType.values()) {
-            // Don't write empty R$ classes.
-            val bytes = generateResourceTypeClass(table, resType) ?: continue
-            resourceTypes.add(resType)
-            val innerR = internalName(table, resType)
-            jarOutputStream.putNextEntry(ZipEntry(innerR + SdkConstants.DOT_CLASS))
-            jarOutputStream.write(bytes)
-        }
+        tables.forEach { table ->
+            val resourceTypes = EnumSet.noneOf(ResourceType::class.java)
+            for (resType in ResourceType.values()) {
+                // Don't write empty R$ classes.
+                val bytes = generateResourceTypeClass(table, resType) ?: continue
+                resourceTypes.add(resType)
+                val innerR = internalName(table, resType)
+                jarOutputStream.putNextEntry(ZipEntry(innerR + SdkConstants.DOT_CLASS))
+                jarOutputStream.write(bytes)
+            }
 
-        // Generate and write the main R class file.
-        val packageR = internalName(table, null)
-        jarOutputStream.putNextEntry(ZipEntry(packageR + SdkConstants.DOT_CLASS))
-        jarOutputStream.write(generateOuterRClass(resourceTypes,
-                packageR))
+            // Generate and write the main R class file.
+            val packageR = internalName(table, null)
+            jarOutputStream.putNextEntry(ZipEntry(packageR + SdkConstants.DOT_CLASS))
+            jarOutputStream.write(generateOuterRClass(resourceTypes, packageR))
+        }
     }
 }
 
@@ -127,7 +128,7 @@ private fun generateResourceTypeClass(table: SymbolTable, resType: ResourceType)
                 ACC_PUBLIC + ACC_STATIC,
                 s.name,
                 if (s.javaType == INT) /* int */ "I" else /* int[] */ "[I", null,
-                if (s.javaType == INT) Integer.valueOf(s.value, 16) else null)
+                if (s.javaType == INT) valueStringToInt(valueString = s.value) else null)
                 .visitEnd()
 
         if (s.javaType == INT_LIST) {
@@ -193,6 +194,14 @@ private fun internalName(table: SymbolTable, type: ResourceType?): String {
 }
 
 @VisibleForTesting
+fun valueStringToInt(valueString: String) =
+        if (valueString.startsWith("0x")) {
+            Integer.parseInt(valueString.substring(2), 16)
+        } else {
+            throw IllegalArgumentException("""Value string '$valueString' does not start with 0x""")
+        }
+
+@VisibleForTesting
 fun parseArrayLiteral(size: Int, valuesString: String): IntArray {
     if (size == 0) {
         return IntArray(0)
@@ -203,12 +212,12 @@ fun parseArrayLiteral(size: Int, valuesString: String): IntArray {
             valuesString.length - 1)).iterator()
     for (i in 0 until size) {
         if (!values.hasNext()) {
-            throw IllegalStateException("""Values string $valuesString should have $size items.""")
+            throw IllegalArgumentException("""Values string $valuesString should have $size items.""")
         }
-        ints[i] = Integer.parseInt(values.next())
+        ints[i] = valueStringToInt(values.next())
     }
     if (values.hasNext()) {
-        throw IllegalStateException("""Values string $valuesString should have $size items.""")
+        throw IllegalArgumentException("""Values string $valuesString should have $size items.""")
     }
 
     return ints

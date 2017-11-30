@@ -18,7 +18,7 @@ package com.android.tools.lint.checks
 
 import com.android.tools.lint.detector.api.Detector
 
-class aCheckResultDetectorTest : AbstractCheckTest() {
+class CheckResultDetectorTest : AbstractCheckTest() {
     override fun getDetector(): Detector = CheckResultDetector()
 
     fun testCheckResult() {
@@ -190,6 +190,28 @@ src/test/pkg/CheckPermissions.java:11: Warning: The result of checkPermission is
                         "9hl1Xph3jUfYfevj1Ikf/1e3BVo/i5rRI39pzpLZTDyM+zgu/CwQ3+t2WI2z" +
                         "0Rzky33aDlPmAv1wAOxLRiYRBtQwh8UGKMJQAUr0oWtFDjwRFG22OCIP2QRQ" +
                         "ICM7TBrFhJP4gzzAm5UNpIwZCI8B6fWMIB4A/Y4BiosCAAA="),
+                SUPPORT_ANNOTATIONS_CLASS_PATH,
+                SUPPORT_ANNOTATIONS_JAR)
+                .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)
+                .run()
+                .expectClean()
+    }
+
+    fun testNotIgnoredInBlock() {
+        // Regression test for
+        // 69534608: False positive for "The result of <method_name> is not used"
+        lint().files(
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.support.annotation.CheckResult\n" +
+                        "\n" +
+                        "fun something(list: List<String>) {\n" +
+                        "    list.map { fromNullable(it) }\n" +
+                        "}\n" +
+                        "\n" +
+                        "@CheckResult\n" +
+                        "fun fromNullable(a: Any?): Any? = a"),
                 SUPPORT_ANNOTATIONS_CLASS_PATH,
                 SUPPORT_ANNOTATIONS_JAR)
                 .issues(CheckResultDetector.CHECK_RESULT, PermissionDetector.CHECK_PERMISSION)

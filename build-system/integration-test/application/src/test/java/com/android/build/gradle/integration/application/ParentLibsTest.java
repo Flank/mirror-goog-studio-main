@@ -17,7 +17,6 @@
 package com.android.build.gradle.integration.application;
 
 import com.android.SdkConstants;
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
@@ -25,7 +24,6 @@ import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Assemble tests for parentLibTest
@@ -45,11 +43,5 @@ public class ParentLibsTest {
     @Test
     public void assembleAndLint() throws IOException, InterruptedException {
         project.execute(ImmutableList.of("-p", "app"), "clean", "assembleDebug", "lint");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck(ImmutableList.of("-p", "app"));
     }
 }

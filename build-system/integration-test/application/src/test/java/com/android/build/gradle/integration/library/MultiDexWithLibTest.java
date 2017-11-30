@@ -50,10 +50,4 @@ public class MultiDexWithLibTest {
     public void lint() throws IOException, InterruptedException {
         project.execute("lint");
     }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
-    }
 }

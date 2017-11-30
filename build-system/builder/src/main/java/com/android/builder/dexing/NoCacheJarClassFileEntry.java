@@ -23,9 +23,12 @@ import java.io.IOException;
 final class NoCacheJarClassFileEntry implements ClassFileEntry {
 
     @NonNull private final StoredEntry entry;
+    @NonNull private final ClassFileInput input;
 
-    public NoCacheJarClassFileEntry(@NonNull StoredEntry storedEntry) {
+    public NoCacheJarClassFileEntry(
+            @NonNull StoredEntry storedEntry, @NonNull ClassFileInput input) {
         this.entry = storedEntry;
+        this.input = input;
     }
 
     @Override
@@ -41,6 +44,12 @@ final class NoCacheJarClassFileEntry implements ClassFileEntry {
     @Override
     public String getRelativePath() {
         return entry.getCentralDirectoryHeader().getName();
+    }
+
+    @NonNull
+    @Override
+    public ClassFileInput getInput() {
+        return input;
     }
 
     @Override

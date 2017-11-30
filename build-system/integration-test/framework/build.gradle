@@ -62,3 +62,6 @@ configurations {
     compile.exclude group: 'com.google.guava', module: 'guava-jdk5'
 }
 
+test {
+    environment << [TEST_TMPDIR: project.buildDir]
+}

@@ -16,35 +16,24 @@
 
 package com.android.build.gradle.integration.ndk;
 
-import static com.android.build.gradle.integration.common.utils.AndroidVersionMatcher.anyAndroidVersion;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject.ApkType;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.options.StringOption;
-import com.android.ddmlib.IDevice;
 import com.android.testutils.apk.Apk;
 import java.io.File;
-import java.util.Collection;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Integration test of the native plugin with multiple variants without using splits.
  */
 public class NoSplitNdkVariantsTest {
-
-    @Rule
-    public Adb adb = new Adb();
 
     @ClassRule
     public static GradleTestProject project = GradleTestProject.builder()
@@ -146,20 +135,5 @@ public class NoSplitNdkVariantsTest {
         assertNotNull(apk.getEntry("lib/mips/libhello-jni.so"));
         assertNull(apk.getEntry("lib/armeabi/libhello-jni.so"));
         assertNull(apk.getEntry("lib/armeabi-v7a/libhello-jni.so"));
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedAndroidTest() throws Exception {
-        project.executor().run(
-                "assembleX86Debug", "assembleX86DebugAndroidTest",
-                "assembleArmDebug", "assembleArmDebugAndroidTest");
-        IDevice testDevice = adb.getDevice(anyAndroidVersion());
-        Collection<String> abis = testDevice.getAbis();
-        String taskName = abis.contains("x86") ?
-                "devicePoolX86DebugAndroidTest" : "devicePoolArmDebugAndroidTest";
-        project.executor()
-                .with(StringOption.DEVICE_POOL_SERIAL, testDevice.getSerialNumber())
-                .run(taskName);
     }
 }

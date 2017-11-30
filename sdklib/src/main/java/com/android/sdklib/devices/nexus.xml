@@ -1476,7 +1476,7 @@
             </d:abi>
             <d:dock> </d:dock>
             <d:power-type>battery</d:power-type>
-            <d:skin>pixel</d:skin>
+            <d:skin>pixel_silver</d:skin>
         </d:hardware>
         <d:software>
             <d:api-level>25</d:api-level>
@@ -1563,7 +1563,7 @@
             </d:abi>
             <d:dock> </d:dock>
             <d:power-type>battery</d:power-type>
-            <d:skin>pixel_xl</d:skin>
+            <d:skin>pixel_xl_silver</d:skin>
         </d:hardware>
         <d:software>
             <d:api-level>25</d:api-level>

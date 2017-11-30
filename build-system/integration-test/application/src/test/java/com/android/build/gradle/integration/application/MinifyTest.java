@@ -18,7 +18,6 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.TransformOutputContent;
 import com.android.build.gradle.integration.common.utils.ZipHelper;
@@ -31,7 +30,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.FieldNode;
 
@@ -40,12 +38,6 @@ public class MinifyTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("minify").create();
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws Exception {
-        project.executeConnectedCheck();
-    }
 
     @Test
     public void appApkIsMinified() throws Exception {

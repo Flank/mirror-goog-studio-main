@@ -498,14 +498,16 @@ abstract class LintClient {
         // This is not an accurate test; specific LintClient implementations (e.g.
         // IDEs or a gradle-integration of lint) have more context and can perform a more accurate
         // check
-        if (File(project.dir, SdkConstants.FN_BUILD_GRADLE).exists()) {
+        if (File(project.dir, SdkConstants.FN_BUILD_GRADLE).exists() ||
+                File(project.dir, SdkConstants.FN_BUILD_GRADLE_KTS).exists()) {
             return true
         }
 
         val parent = project.dir.parentFile
         if (parent != null && parent.name == SdkConstants.FD_SOURCES) {
             val root = parent.parentFile
-            if (root != null && File(root, SdkConstants.FN_BUILD_GRADLE).exists()) {
+            if (root != null && (File(root, SdkConstants.FN_BUILD_GRADLE).exists() ||
+                    File(root, SdkConstants.FN_BUILD_GRADLE_KTS).exists())) {
                 return true
             }
         }

@@ -98,10 +98,6 @@ public class NdkConnectedCheckTest {
                         + "    }\n"
                         + "}\n");
         project.execute("clean", "assembleAndroidTest");
-    }
-
-    @Test
-    public void checkTestLibIsPackaged() throws Exception {
         Apk apk = project.getTestApk();
         assertThat(apk).contains("lib/x86/libhello-jni_test.so");
     }

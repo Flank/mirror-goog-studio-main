@@ -25,15 +25,15 @@ public class LabelForDetectorTest extends AbstractCheckTest {
     protected Detector getDetector() {
         return new LabelForDetector();
     }
-    public void testWithHint() throws Exception {
+    public void testWithHint() {
         lint().files(withHint).run().expectClean();
     }
 
-    public void testWithHintBelow17() throws Exception {
+    public void testWithHintBelow17() {
         lint().files(manifest().minSdk(16), withHint).run().expectClean();
     }
 
-    public void testWithEmptyHint() throws Exception {
+    public void testWithEmptyHint() {
         String expected =
                 "res/layout/labelfororhint_empty_hint.xml:11: Warning: Empty android:hint attribute [LabelFor]\n"
                         + "            android:hint=\"\"\n"
@@ -80,11 +80,11 @@ public class LabelForDetectorTest extends AbstractCheckTest {
                         + "</LinearLayout>")).run().expect(expected);
     }
 
-    public void testWithLabelFor() throws Exception {
+    public void testWithLabelFor() {
         lint().files(manifest().minSdk(17), withLabelFor).run().expectClean();
     }
 
-    public void testWithLabelForBelow17() throws Exception {
+    public void testWithLabelForBelow17() {
         String expected =
                 "res/layout/labelfororhint_with_labelfor.xml:14: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
                         + "    <EditText\n"
@@ -100,7 +100,7 @@ public class LabelForDetectorTest extends AbstractCheckTest {
     }
 
 
-    public void testWithNoHintAndNoLabelFor() throws Exception {
+    public void testWithNoHintAndNoLabelFor() {
         String expected =
                 "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:5: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint [LabelFor]\n"
                         + "    <EditText\n"
@@ -116,7 +116,7 @@ public class LabelForDetectorTest extends AbstractCheckTest {
         lint().files(manifest().minSdk(17), noHintNoLabelFor).run().expect(expected);
     }
 
-    public void testWithNoHintAndNoLabelForBelow17() throws Exception {
+    public void testWithNoHintAndNoLabelForBelow17() {
         String expected =
                 "res/layout/labelfororhint_no_hint_and_no_labelfor.xml:5: Warning: Missing accessibility label: where minSdk < 17, you should provide an android:hint [LabelFor]\n"
                         + "    <EditText\n"
@@ -132,7 +132,7 @@ public class LabelForDetectorTest extends AbstractCheckTest {
         lint().files(manifest().minSdk(16), noHintNoLabelFor).run().expect(expected);
     }
 
-    public void testWithHintAndLabelFor() throws Exception {
+    public void testWithHintAndLabelFor() {
         String expected =
                 "res/layout/labelfororhint_with_hint_and_labelfor.xml:14: Warning: Missing accessibility label: provide either a view with an android:labelFor that references this view or provide an android:hint, but not both [LabelFor]\n"
                         + "    <EditText\n"
@@ -148,12 +148,12 @@ public class LabelForDetectorTest extends AbstractCheckTest {
         lint().files(manifest().minSdk(17), hintAndLabelFor).run().expect(expected);
     }
 
-    public void testWithHintAndLabelForBelow17() throws Exception {
+    public void testWithHintAndLabelForBelow17() {
         lint().files(manifest().minSdk(16), hintAndLabelFor).run().expectClean();
     }
 
 
-    public void testWithLabelForNoTextNoContentDescription() throws Exception {
+    public void testWithLabelForNoTextNoContentDescription() {
         String expected =
                 "res/layout/labelfororhint_no_text_no_contentdescription.xml:5: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
                         + "    <TextView\n"
@@ -269,7 +269,7 @@ public class LabelForDetectorTest extends AbstractCheckTest {
                                 + "          android:textAppearance=\"?android:attr/textAppearanceMedium\" />\n");
     }
 
-    public void testWithLabelForEmptyText() throws Exception {
+    public void testWithLabelForEmptyText() {
         String expected =
                 "res/layout/labelfororhint_empty_text.xml:6: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
                         + "    <TextView\n"
@@ -338,7 +338,7 @@ public class LabelForDetectorTest extends AbstractCheckTest {
                                 + "</LinearLayout>")).run().expect(expected);
     }
 
-    public void testWithLabelForEmptyContentDescription() throws Exception {
+    public void testWithLabelForEmptyContentDescription() {
         String expected =
                 "res/layout/labelfororhint_empty_contentdescription.xml:5: Warning: Missing accessibility label: when using android:labelFor, you must also define an android:text or an android:contentDescription [LabelFor]\n"
                         + "    <TextView\n"
@@ -410,7 +410,7 @@ public class LabelForDetectorTest extends AbstractCheckTest {
                                 + "</LinearLayout>")).run().expect(expected);
     }
 
-    public void testWithLabelForNoTextWithContentDescription() throws Exception {
+    public void testWithLabelForNoTextWithContentDescription() {
         lint().files(manifest().minSdk(17),
                 xml("res/layout/labelfororhint_with_contentdescription.xml",
                         "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\n"

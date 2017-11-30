@@ -574,6 +574,7 @@ public class DexMergerTransform extends Transform {
             @Nullable Path mainDexList) {
         DexMergerTransformCallable callable =
                 new DexMergerTransformCallable(
+                        messageReceiver,
                         dexingType,
                         output,
                         dexOutputDir,

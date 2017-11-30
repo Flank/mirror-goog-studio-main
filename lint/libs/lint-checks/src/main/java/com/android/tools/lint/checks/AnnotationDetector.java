@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.SdkConstants.FQCN_SUPPRESS_LINT;
 import static com.android.SdkConstants.INT_DEF_ANNOTATION;
+import static com.android.SdkConstants.LONG_DEF_ANNOTATION;
 import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
 import static com.android.SdkConstants.TYPE_DEF_FLAG_ATTRIBUTE;
@@ -372,7 +373,7 @@ public class AnnotationDetector extends Detector implements UastScanner {
                 } else if (COLOR_INT_ANNOTATION.equals(type) || (PX_ANNOTATION.equals(type))) {
                     // Check that ColorInt applies to the right type
                     checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
-                } else if (INT_DEF_ANNOTATION.equals(type)) {
+                } else if (INT_DEF_ANNOTATION.equals(type) || LONG_DEF_ANNOTATION.equals(type)) {
                     // Make sure IntDef constants are unique
                     ensureUniqueValues(annotation);
                 } else if (PERMISSION_ANNOTATION.equals(type) ||
@@ -427,6 +428,8 @@ public class AnnotationDetector extends Detector implements UastScanner {
                             String name = a.getQualifiedName();
                             if (INT_DEF_ANNOTATION.equals(name)) {
                                 checkTargetType(annotation, TYPE_INT, TYPE_LONG, true);
+                            } else if (LONG_DEF_ANNOTATION.equals(name)) {
+                                checkTargetType(annotation, TYPE_LONG, null, true);
                             } else if (STRING_DEF_ANNOTATION.equals(type)) {
                                 checkTargetType(annotation, TYPE_STRING, null, true);
                             }
@@ -1055,6 +1058,7 @@ public class AnnotationDetector extends Detector implements UastScanner {
                     continue;
                 }
                 if (a.equals(INT_DEF_ANNOTATION)
+                        || a.equals(LONG_DEF_ANNOTATION)
                         || a.equals(PERMISSION_ANNOTATION)
                         || a.equals(INT_RANGE_ANNOTATION)
                         || a.equals(STRING_DEF_ANNOTATION)) {

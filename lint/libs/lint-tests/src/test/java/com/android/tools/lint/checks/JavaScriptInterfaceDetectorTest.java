@@ -25,7 +25,7 @@ public class JavaScriptInterfaceDetectorTest extends AbstractCheckTest {
         return new JavaScriptInterfaceDetector();
     }
 
-    public void testOlderSdk() throws Exception {
+    public void testOlderSdk() {
         lint().files(
                 classpath(),
                 projectProperties().compileSdk(19),
@@ -38,7 +38,7 @@ public class JavaScriptInterfaceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/JavaScriptTest.java:10: Error: None of the methods in the added interface (NonAnnotatedObject) have been annotated with @android.webkit.JavascriptInterface; they will not be visible in API 17 [JavascriptInterface]\n"
                 + "  webview.addJavascriptInterface(new NonAnnotatedObject(), \"myobj\");\n"

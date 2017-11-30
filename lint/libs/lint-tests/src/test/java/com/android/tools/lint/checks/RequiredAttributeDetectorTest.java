@@ -27,7 +27,7 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
         return new RequiredAttributeDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         // Simple: Only consider missing attributes in the layout xml file
         // (though skip warnings on <merge> tags and under <GridLayout>
         lint().files(mSize).run().expect(""
@@ -43,7 +43,7 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                 + "3 errors, 0 warnings\n");
     }
 
-    public void test2() throws Exception {
+    public void test2() {
         // Consider styles (specifying sizes) and includes (providing sizes for the root tags)
         String expected = ""
                 + "res/layout/size2.xml:9: Error: The required layout_width and layout_height attributes are missing [RequiredSize]\n"
@@ -122,7 +122,7 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testPercent() throws Exception {
+    public void testPercent() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=198432
         // Don't flag missing layout_width in PercentFrameLayout or PercentRelativeLayout
         String expected = ""
@@ -186,7 +186,7 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testInflaters() throws Exception {
+    public void testInflaters() {
         // Consider java inflation
         String expected = ""
                 + "res/layout/size5.xml:2: Error: The required layout_width and layout_height attributes are missing [RequiredSize]\n"
@@ -285,7 +285,7 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testRequestFocus() throws Exception {
+    public void testRequestFocus() {
         // See http://code.google.com/p/android/issues/detail?id=38700
         //noinspection all // Sample code
         lint().files(
@@ -390,7 +390,7 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testFrameworkStyles() throws Exception {
+    public void testFrameworkStyles() {
         // See http://code.google.com/p/android/issues/detail?id=38958
         //noinspection all // Sample code
         lint().files(
@@ -402,7 +402,7 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testThemeStyles() throws Exception {
+    public void testThemeStyles() {
         // Check that we don't complain about cases where the size is defined in a theme
         //noinspection all // Sample code
         lint().files(
@@ -420,7 +420,7 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testThemeStyles2() throws Exception {
+    public void testThemeStyles2() {
         // Check that we don't complain about cases where the size is defined in a theme
         //noinspection all // Sample code
         lint().files(
@@ -453,7 +453,7 @@ public class RequiredAttributeDetectorTest extends AbstractCheckTest {
                 new File(projectDir, "res/layout/size2.xml".replace('/', File.separatorChar))));
     }
 
-    public void testDataBinding() throws Exception {
+    public void testDataBinding() {
         //noinspection all // Sample code
         lint().files(
                 xml("res/layout/db.xml", ""

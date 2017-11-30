@@ -19,6 +19,7 @@
     <orderEntry type="module" module-name="manifest-merger-base" />
     <orderEntry type="library" name="intellij-core" level="project" />
     <orderEntry type="library" name="uast" level="project" />
+    <orderEntry type="library" name="kotlin-compiler" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
     <orderEntry type="module" module-name="lint-api-base" />
     <orderEntry type="module" module-name="lint-checks-base" />
@@ -29,5 +30,6 @@
     <orderEntry type="module" module-name="builder" />
     <orderEntry type="library" scope="TEST" name="JUnit4" level="project" />
     <orderEntry type="module" module-name="testutils" scope="TEST" />
+    <orderEntry type="module" module-name="lint-tests" scope="TEST" />
   </component>
 </module>

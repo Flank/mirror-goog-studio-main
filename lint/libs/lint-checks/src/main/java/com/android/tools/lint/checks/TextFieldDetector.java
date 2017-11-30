@@ -17,7 +17,6 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.ANDROID_URI;
-import static com.android.SdkConstants.ATTR_HINT;
 import static com.android.SdkConstants.ATTR_ID;
 import static com.android.SdkConstants.ATTR_INPUT_METHOD;
 import static com.android.SdkConstants.ATTR_INPUT_TYPE;

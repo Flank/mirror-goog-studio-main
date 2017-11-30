@@ -16,13 +16,12 @@
 
 package com.android.build.gradle.integration.dependencies;
 
+import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 import static com.android.build.gradle.integration.common.utils.TestFileUtils.appendToFile;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
-import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.google.common.collect.Lists;
 import java.util.Collection;
@@ -30,7 +29,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -110,8 +108,7 @@ public class TestWithSameDepAsApp {
             String testDependency,
             String className,
             String appUsage,
-            String testUsage)
-            throws Exception {
+            String testUsage) {
         this.plugin = plugin;
         this.appDependency = appDependency;
         this.testDependency = testDependency;
@@ -156,23 +153,18 @@ public class TestWithSameDepAsApp {
     }
 
     @Test
-    public void testWithSamedepVersionThanTestedDoesNotEmbedDependency() throws Exception {
+    public void testWithSameDepVersionThanTestedDoesNotEmbedDependency() throws Exception {
         project.execute("assembleDebug", "assembleDebugAndroidTest");
 
         if (plugin.contains("application")) {
-            TruthHelper.assertThat(project.getApk("debug")).containsClass(this.className);
-            TruthHelper.assertThat(project.getTestApk()).doesNotContainClass(this.className);
+            assertThat(project.getApk(GradleTestProject.ApkType.DEBUG))
+                    .containsClass(this.className);
+            assertThat(project.getTestApk()).doesNotContainClass(this.className);
         } else {
             // External dependencies are not packaged in AARs.
-            TruthHelper.assertThat(project.getAar("debug")).doesNotContainClass(this.className);
+            assertThat(project.getAar("debug")).doesNotContainClass(this.className);
             // But should be in the test APK.
-            TruthHelper.assertThat(project.getTestApk()).containsClass(this.className);
+            assertThat(project.getTestApk()).containsClass(this.className);
         }
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void runTestsOnDevices() throws Exception {
-        project.executeConnectedCheck();
     }
 }

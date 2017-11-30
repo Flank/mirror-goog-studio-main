@@ -85,7 +85,7 @@ public class ProjectTest extends AbstractCheckTest {
                 checkLint(Arrays.asList(master, library)));
     }
 
-    public void testInvalidLibraryReferences1() throws Exception {
+    public void testInvalidLibraryReferences1() {
         TestClient client = new TestClient();
         File dir = new File("project");
         TestProject project1 = new TestProject(client, dir);
@@ -98,7 +98,7 @@ public class ProjectTest extends AbstractCheckTest {
                 client.getLoggedOutput());
     }
 
-    public void testInvalidLibraryReferences2() throws Exception {
+    public void testInvalidLibraryReferences2() {
         TestClient client = new TestClient();
         File dir1 = new File("project1");
         File dir2 = new File("project2");
@@ -119,7 +119,7 @@ public class ProjectTest extends AbstractCheckTest {
         assertSame(project1, project2.getAllLibraries().get(0));
     }
 
-    public void testOkLibraryReferences() throws Exception {
+    public void testOkLibraryReferences() {
         TestClient client = new TestClient();
         File dir1 = new File("project1");
         File dir2 = new File("project2");
@@ -173,7 +173,7 @@ public class ProjectTest extends AbstractCheckTest {
         }
     }
 
-    public void testDependsOn1() throws Exception {
+    public void testDependsOn1() {
         List<Project> projects = lint().files(
                 projectProperties(),
                 manifest().minSdk(14),
@@ -186,7 +186,7 @@ public class ProjectTest extends AbstractCheckTest {
         assertTrue(project1.dependsOn("com.android.support:support-v4"));
     }
 
-    public void testDependsOn2() throws Exception {
+    public void testDependsOn2() {
         List<Project> projects = lint().files(
                 projectProperties(),
                 manifest().minSdk(14),

@@ -31,10 +31,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+@Ignore // TODO: Re-enable (b/69805152)
 @RunWith(Parameterized.class)
 public class OkHttpTest {
 
@@ -248,10 +250,11 @@ public class OkHttpTest {
     }
 
     private void assertNetworkErrorBehavior(NetworkStubWrapper stubWrapper) {
-        // Get two responses: 1 aborted and 1 completed
-        NetworkProfiler.HttpRangeResponse httpRangeResponse =
-                stubWrapper.getAllHttpRange(myGrpc.getProcessId());
-        assertThat(httpRangeResponse.getDataList().size()).isEqualTo(2);
+        // Wait until get two responses: 1 aborted and 1 completed.
+        NetworkProfiler.HttpRangeResponse httpRangeResponse = null;
+        while (httpRangeResponse == null || httpRangeResponse.getDataList().size() != 2) {
+            httpRangeResponse = stubWrapper.getAllHttpRange(myGrpc.getProcessId());
+        }
 
         // The first request should have no response fields after being aborted
         HttpConnectionData connectionAborted = httpRangeResponse.getDataList().get(0);

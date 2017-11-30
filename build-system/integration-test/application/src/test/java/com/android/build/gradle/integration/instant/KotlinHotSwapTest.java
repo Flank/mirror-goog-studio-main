@@ -17,49 +17,31 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 import static com.android.testutils.truth.MoreTruth.assertThatDex;
 import static org.junit.Assert.assertTrue;
 
-import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.fixture.Logcat;
 import com.android.build.gradle.integration.common.fixture.app.KotlinHelloWorldApp;
-import com.android.build.gradle.integration.common.utils.AndroidVersionMatcher;
 import com.android.builder.model.InstantRun;
-import com.android.ddmlib.IDevice;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.ir.client.InstantRunArtifact;
-import com.google.common.base.Charsets;
-import com.google.common.io.Files;
 import com.google.common.truth.Expect;
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.commons.io.FileUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Smoke test for Kotlin hot swaps. */
 public class KotlinHotSwapTest {
-
     private static final String LOG_TAG = "kotlinHotswapTest";
     private static final String ORIGINAL_MESSAGE = "Original";
-    private static final int CHANGES_COUNT = 3;
-
-    @Rule public final Adb adb = new Adb();
 
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder()
                     .fromTestApp(KotlinHelloWorldApp.forPlugin("com.android.application"))
                     .create();
-
-    @Rule public Logcat logcat = Logcat.create();
 
     @Rule public Expect expect = Expect.createAndEnableStackTrace();
 
@@ -108,39 +90,6 @@ public class KotlinHotSwapTest {
         // It cannot process the build file at all.
     }
 
-    @Test
-    @Ignore("b/68305039")
-    @Category(DeviceTests.class)
-    public void artHotSwapChangeTest() throws Exception {
-        doHotSwapChangeTest(adb.getDevice(AndroidVersionMatcher.thatUsesArt()));
-    }
-
-    private void doHotSwapChangeTest(@NonNull IDevice device) throws Exception {
-        HotSwapTester tester =
-                new HotSwapTester(
-                        project,
-                        KotlinHelloWorldApp.APP_ID,
-                        "HelloWorld",
-                        LOG_TAG,
-                        device,
-                        logcat,
-                        PORTS.get(HotSwapTest.class.getSimpleName()));
-
-        List<HotSwapTester.Change> changes = new ArrayList<>();
-
-        for (int i = 0; i < CHANGES_COUNT; i++) {
-            changes.add(
-                    new HotSwapTester.LogcatChange(i, ORIGINAL_MESSAGE) {
-                        @Override
-                        public void makeChange() throws Exception {
-                            createActivityClass(CHANGE_PREFIX + changeId);
-                        }
-                    });
-        }
-
-        tester.run(() -> assertThat(logcat).containsMessageWithText("Original"), changes);
-    }
-
     private void createActivityClass(String message) throws Exception {
         String kotlinCompile =
                 "package com.example.helloworld\n"
@@ -172,9 +121,9 @@ public class KotlinHotSwapTest {
                         + "        }\n"
                         + "    }\n"
                         + "}\n";
-        Files.write(
-                kotlinCompile,
+
+        FileUtils.write(
                 project.file("src/main/kotlin/com/example/helloworld/HelloWorld.kt"),
-                Charsets.UTF_8);
+                kotlinCompile);
     }
 }

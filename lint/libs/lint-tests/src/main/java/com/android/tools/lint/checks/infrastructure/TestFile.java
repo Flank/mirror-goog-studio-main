@@ -22,6 +22,7 @@ import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.DOT_JPEG;
 import static com.android.SdkConstants.DOT_JPG;
 import static com.android.SdkConstants.DOT_KT;
+import static com.android.SdkConstants.DOT_KTS;
 import static com.android.SdkConstants.DOT_PNG;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.FN_ANDROID_MANIFEST_XML;
@@ -232,8 +233,8 @@ public class TestFile {
         @NonNull
         public static LintDetectorTest.TestFile create(@NonNull String to,
                 @NonNull @Language("kotlin") String source) {
-            if (!to.endsWith(DOT_KT)) {
-                throw new IllegalArgumentException("Expected .kt suffix for Kotlin test file");
+            if (!to.endsWith(DOT_KT) && !to.endsWith(DOT_KTS)) {
+                throw new IllegalArgumentException("Expected .kt or .kts suffix for Kotlin test file");
             }
             return new KotlinTestFile().to(to).withSource(source);
         }

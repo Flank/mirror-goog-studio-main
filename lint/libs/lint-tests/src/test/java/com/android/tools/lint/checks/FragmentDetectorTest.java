@@ -24,7 +24,7 @@ public class FragmentDetectorTest extends AbstractCheckTest {
         return new FragmentDetector();
     }
 
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/FragmentTest.java:10: Error: This fragment class should be public (test.pkg.FragmentTest.Fragment1) [ValidFragment]\n"
                 + "    private static class Fragment1 extends Fragment {\n"
@@ -111,7 +111,7 @@ public class FragmentDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testAnonymousInnerClass() throws Exception {
+    public void testAnonymousInnerClass() {
         String expected = ""
                 + "src/test/pkg/Parent.java:7: Error: Fragments should be static such that they can be re-instantiated by the system, and anonymous classes are not static [ValidFragment]\n"
                 + "        return new Fragment() {\n"

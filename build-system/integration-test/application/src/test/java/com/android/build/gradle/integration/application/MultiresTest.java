@@ -32,10 +32,4 @@ public class MultiresTest {
     public void assemble() throws Exception {
         project.execute("clean", "assembleDebug");
     }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws Exception {
-        project.executeConnectedCheck();
-    }
 }

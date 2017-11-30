@@ -19,6 +19,7 @@ package com.android.builder.dexing;
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
+import com.android.builder.core.StandardOutErrMessageReceiver;
 import com.android.builder.dexing.r8.ClassFileProviderFactory;
 import com.android.dx.command.dexer.DxContext;
 import com.android.testutils.TestClassesGenerator;
@@ -83,7 +84,8 @@ public final class DexArchiveTestUtil {
                                 Collections.emptyList(),
                                 Collections.emptyList(),
                                 new ClassFileProviderFactory(),
-                                true);
+                                true,
+                                new StandardOutErrMessageReceiver());
             }
 
             dexArchiveBuilder.convert(inputs.entries(p -> true), dexArchiveOutput, true);
@@ -212,7 +214,7 @@ public final class DexArchiveTestUtil {
             case D8:
                 merger =
                         DexArchiveMerger.createD8DexMerger(
-                                System.err,
+                                new StandardOutErrMessageReceiver(),
                                 dexingType == DexingType.NATIVE_MULTIDEX ? 21 : 1,
                                 true);
                 break;

@@ -20,6 +20,7 @@ import com.android.tools.lint.checks.GradleDetector;
 import com.android.tools.lint.detector.api.Context;
 import com.android.tools.lint.detector.api.DefaultPosition;
 import com.android.tools.lint.detector.api.Implementation;
+import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Scope;
 import com.android.utils.Pair;
@@ -55,6 +56,11 @@ public class GroovyGradleDetector extends GradleDetector {
     @Override
     public void visitBuildScript(@NonNull final Context context) {
         try {
+            if (context instanceof JavaContext) {
+                handleGradleKotlinScript((JavaContext)context);
+                return;
+            }
+
             visitQuietly(context);
         } catch (Throwable t) {
             // ignore
@@ -237,6 +243,11 @@ public class GroovyGradleDetector extends GradleDetector {
 
     @Override
     protected int getStartOffset(@NonNull Context context, @NonNull Object cookie) {
+        int startOffset = super.getStartOffset(context, cookie);
+        if (startOffset != -1) {
+            return startOffset;
+        }
+
         ASTNode node = (ASTNode) cookie;
         Pair<Integer, Integer> offsets = getOffsets(node, context);
         return offsets.getFirst();
@@ -244,6 +255,11 @@ public class GroovyGradleDetector extends GradleDetector {
 
     @Override
     protected Location createLocation(@NonNull Context context, @NonNull Object cookie) {
+        Location location = super.createLocation(context, cookie);
+        if (location != null) {
+            return location;
+        }
+
         ASTNode node = (ASTNode) cookie;
         Pair<Integer, Integer> offsets = getOffsets(node, context);
         int fromLine = node.getLineNumber() - 1;

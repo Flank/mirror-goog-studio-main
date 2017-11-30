@@ -27,7 +27,7 @@ import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Severity;
 
 public class ConstraintLayoutDetectorTest extends AbstractCheckTest {
-    public void testMissingConstraints() throws Exception {
+    public void testMissingConstraints() {
         String expected = ""
                 + "res/layout/layout1.xml:19: Error: This view is not constrained. It only has designtime positions, so it will jump to (0,0) at runtime unless you add the constraints [MissingConstraints]\n"
                 + "    <TextView\n"

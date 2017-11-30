@@ -217,6 +217,9 @@ public class IncrementalSupportVisitor extends IncrementalVisitor {
                         : new ISMethodVisitor(jsrInlinerAdapter, access, name, desc);
 
         if (name.equals(ByteCodeUtils.CONSTRUCTOR)) {
+            if ((access & Opcodes.ACC_SYNTHETIC) != 0) {
+                return defaultVisitor;
+            }
             Constructor constructor = ConstructorBuilder.build(visitedClassName, method);
             LabelNode start = new LabelNode();
             method.instructions.insert(constructor.loadThis, start);

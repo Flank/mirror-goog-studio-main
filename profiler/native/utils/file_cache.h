@@ -68,6 +68,8 @@ class FileCache final {
   //
   // Finally, it's up to the caller to ensure they choose a unique name, or else
   // they will overwrite something else in the cache.
+  //
+  // Note: If you already have an entire string, use |AddString| instead.
   void AddChunk(const std::string &cache_id, const std::string &chunk);
 
   // Delete the cached file associated with the |cache_id|, if you were
@@ -78,6 +80,16 @@ class FileCache final {
   // complete, having called |AddChunk| enough times. This will put the
   // contents of the file into a final location, returning it.
   std::shared_ptr<File> Complete(const std::string &cache_id);
+
+  // Add a complete string into the cache, returning a unique ID generated for
+  // it. You can then use |GetFile| to pull a file that contains that string.
+  // If you add a string with the same value as one that's already been added,
+  // the same ID will be returned (meaning the string value is reused and
+  // shared).
+  //
+  // This method is best reserved for strings that are long-ish and/or
+  // you expect the string to have many duplicates (e.g. callstacks)
+  std::string AddString(const std::string &value);
 
   // Return the cached file associated with the |cache_id|. While the pointer
   // returned will never be null, the file may not exist, if |Complete|

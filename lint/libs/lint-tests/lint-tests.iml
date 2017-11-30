@@ -30,5 +30,6 @@
     <orderEntry type="library" name="intellij-core" level="project" />
     <orderEntry type="library" name="uast" level="project" />
     <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
+    <orderEntry type="library" scope="TEST" name="kotlin-compiler" level="project" />
   </component>
 </module>

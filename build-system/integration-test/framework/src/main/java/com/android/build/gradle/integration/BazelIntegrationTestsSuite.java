@@ -26,10 +26,17 @@ import com.android.repository.testframework.FakeProgressIndicator;
 import com.android.repository.util.InstallerUtil;
 import com.android.testutils.TestUtils;
 import com.android.utils.FileUtils;
+import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import org.gradle.tooling.internal.consumer.DefaultGradleConnector;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -39,19 +46,17 @@ import org.junit.runner.RunWith;
 public class BazelIntegrationTestsSuite {
 
     public static final Path DATA_DIR;
-    public static final Path OFFLINE_REPO;
-    public static final Path PREBUILTS_REPO;
-    public static final Path DATA_BINDING_RUNTIME_REPO;
+    private static final ImmutableMap<String, Path> MAVEN_REPO_SOURCES;
+    public static final ImmutableList<Path> MAVEN_REPOS;
     public static final Path NDK_IN_TMP;
     public static final Path GRADLE_USER_HOME;
 
+
     static {
         try {
-            DATA_DIR = Files.createTempDirectory("data");
-            OFFLINE_REPO = DATA_DIR.resolve("offlineRepo").toAbsolutePath();
-            PREBUILTS_REPO = DATA_DIR.resolve("prebuiltsRepo").toAbsolutePath();
-            DATA_BINDING_RUNTIME_REPO =
-                    DATA_DIR.resolve("data_binding_runtime_repo").toAbsolutePath();
+            DATA_DIR = Files.createTempDirectory("data").toAbsolutePath();
+            MAVEN_REPO_SOURCES = mavenRepos(DATA_DIR);
+            MAVEN_REPOS = MAVEN_REPO_SOURCES.values().asList();
             NDK_IN_TMP = DATA_DIR.resolve("ndk").toAbsolutePath();
             GRADLE_USER_HOME = Files.createTempDirectory("gradleUserHome");
 
@@ -66,11 +71,9 @@ public class BazelIntegrationTestsSuite {
 
     @BeforeClass
     public static void unzipOfflineRepo() throws Exception {
-        unzip(OFFLINE_REPO, "tools/base/bazel/offline_repo_repo.zip");
-        unzip(
-                PREBUILTS_REPO,
-                "tools/base/build-system/integration-test/application/prebuilts_repo_repo.zip");
-        unzip(DATA_BINDING_RUNTIME_REPO, "tools/data-binding/data_binding_runtime_repo.zip");
+        for (Map.Entry<String, Path> mavenRepoSource : MAVEN_REPO_SOURCES.entrySet()) {
+            unzip(mavenRepoSource.getValue(), mavenRepoSource.getKey());
+        }
     }
 
     /**
@@ -83,21 +86,22 @@ public class BazelIntegrationTestsSuite {
     @BeforeClass
     public static void symlinkNdkToTmp() throws Exception {
         assertThat(NDK_IN_TMP).doesNotExist();
-        Files.createSymbolicLink(
-                NDK_IN_TMP, new File(GradleTestProject.ANDROID_HOME, SdkConstants.FD_NDK).toPath());
+        Path ndk = new File(GradleTestProject.ANDROID_HOME, SdkConstants.FD_NDK).toPath();
+        if (Files.exists(ndk)) {
+            Files.createSymbolicLink(NDK_IN_TMP, ndk);
+        }
     }
 
     @AfterClass
     public static void cleanUp() throws Exception {
         DefaultGradleConnector.close();
-
-        FileUtils.deletePath(OFFLINE_REPO.toFile());
-        FileUtils.deletePath(PREBUILTS_REPO.toFile());
-        Files.delete(NDK_IN_TMP);
+        FileUtils.deletePath(DATA_DIR.toFile());
+        Files.deleteIfExists(NDK_IN_TMP);
     }
 
     private static void unzip(@NonNull Path repoPath, @NonNull String zipName) throws IOException {
         File offlineRepoZip = TestUtils.getWorkspaceFile(zipName);
+
         Files.createDirectory(repoPath);
 
         InstallerUtil.unzip(
@@ -106,5 +110,26 @@ public class BazelIntegrationTestsSuite {
                 FileOpUtils.create(),
                 offlineRepoZip.length(),
                 new FakeProgressIndicator());
+    }
+
+    private static ImmutableSortedMap<String, Path> mavenRepos(Path parentDirectory) {
+        ImmutableSortedMap.Builder<String, Path> builder = ImmutableSortedMap.naturalOrder();
+        Set<String> shortNames = new HashSet<>();
+        String property = System.getProperty("test.android.build.gradle.integration.repos");
+        for (String item : Splitter.on(',').split(property)) {
+            String shortName = item.substring(item.lastIndexOf('/') + 1, item.lastIndexOf('.'));
+            if (!shortNames.add(shortName)) {
+                throw new IllegalArgumentException(
+                        "Repos should have unique file names. \n"
+                                + "Duplicated name is "
+                                + shortName
+                                + "\n"
+                                + "Injected property is "
+                                + property
+                                + ".");
+            }
+            builder.put(item, parentDirectory.resolve(shortName));
+        }
+        return builder.build();
     }
 }

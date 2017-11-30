@@ -139,10 +139,4 @@ public class TestingSupportLibraryTest {
     public void checkCompile() throws IOException, InterruptedException {
         project.execute("assembleDebugAndroidTest");
     }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void testIgnoredTestsAreNotRun() throws IOException, InterruptedException {
-        project.executeConnectedCheck();
-    }
 }

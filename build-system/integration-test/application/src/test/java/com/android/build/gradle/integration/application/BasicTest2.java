@@ -25,9 +25,6 @@ import static com.android.build.gradle.integration.common.utils.LibraryGraphHelp
 
 import com.android.annotations.NonNull;
 import com.android.build.OutputFile;
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.category.DeviceTestsQuarantine;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.LibraryGraphHelper;
@@ -61,9 +58,7 @@ import java.util.stream.Collectors;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Assemble tests for basic that loads the model but doesn't build.
@@ -91,10 +86,6 @@ public class BasicTest2 {
                     "com.android.support:support-core-ui:" + SUPPORT_LIB_VERSION + "@aar",
                     "com.android.support:support-core-utils:" + SUPPORT_LIB_VERSION + "@aar",
                     "com.android.support:support-compat:" + SUPPORT_LIB_VERSION + "@aar");
-
-
-    @Rule
-    public Adb adb = new Adb();
 
     public static ModelContainer<AndroidProject> modelContainer;
     public static ProjectBuildOutput outputModel;
@@ -125,7 +116,7 @@ public class BasicTest2 {
     }
 
     @Test
-    public void checkDebugVariant() throws Exception {
+    public void checkDebugVariant() {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
         AndroidProject model = modelContainer.getOnlyModel();
 
@@ -206,7 +197,7 @@ public class BasicTest2 {
         // this variant is tested.
         Collection<AndroidArtifact> debugExtraAndroidArtifacts = debugVariant
                 .getExtraAndroidArtifacts();
-        debugExtraAndroidArtifacts.forEach(art -> System.out.println(art));
+        debugExtraAndroidArtifacts.forEach(System.out::println);
         AndroidArtifact debugTestInfo = ModelHelper.getAndroidArtifact(
                 debugExtraAndroidArtifacts,
                 AndroidProject.ARTIFACT_ANDROID_TEST);
@@ -236,8 +227,9 @@ public class BasicTest2 {
                         .stream()
                         .filter(
                                 testVariant ->
-                                        testVariant.getType()
-                                                == TestVariantBuildOutput.ANDROID_TEST)
+                                        testVariant
+                                                .getType()
+                                                .equals(TestVariantBuildOutput.ANDROID_TEST))
                         .collect(Collectors.toList());
 
         assertThat(androidTestVariantOutputs)
@@ -291,7 +283,7 @@ public class BasicTest2 {
     }
 
     @Test
-    public void checkReleaseVariant() throws Exception {
+    public void checkReleaseVariant() {
         LibraryGraphHelper helper = new LibraryGraphHelper(modelContainer);
         AndroidProject model = modelContainer.getOnlyModel();
 
@@ -393,23 +385,5 @@ public class BasicTest2 {
                     .named(name + "[" + key + "]")
                     .isEqualTo(value);
         }
-    }
-
-    @Test
-    @Category(DeviceTestsQuarantine.class)
-    public void install() throws Exception {
-        project.execute("assembleDebug");
-        adb.exclusiveAccess();
-        try {
-            project.execute("installDebug");
-        } finally {
-            project.execute("uninstallAll");
-        }
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws Exception {
-        project.executeConnectedCheck();
     }
 }

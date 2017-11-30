@@ -86,7 +86,7 @@ public class NetworkSecurityConfigDetectorTest extends AbstractCheckTest {
     }
 
     // Test expiration, invalid digest algorithm and invalid digest length for sha-256
-    public void testPinSetElement() throws Exception {
+    public void testPinSetElement() {
         String fiveDaysFromNow = LocalDate.now()
                 .plusDays(5)
                 .format(DateTimeFormatter.ISO_LOCAL_DATE);

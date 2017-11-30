@@ -85,7 +85,7 @@ public class TestFiles {
     @NonNull
     public static LintDetectorTest.TestFile kotlin(@NonNull String to,
             @NonNull @Language("kotlin") String source) {
-        return TestFile.KotlinTestFile.create(source);
+        return TestFile.KotlinTestFile.create(to, source);
     }
 
     @NonNull

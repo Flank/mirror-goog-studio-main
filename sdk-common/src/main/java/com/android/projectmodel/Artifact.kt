@@ -16,7 +16,11 @@
 package com.android.projectmodel
 
 /**
- * Holds information about what is involved in producing a single Android artifact (a single output of the project).
+ * Holds information about what is involved in producing a single Android artifact (a single output
+ * of the project).
+ *
+ * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
+ * to stay source compatible.
  */
 data class Artifact(
         /**
@@ -26,24 +30,19 @@ data class Artifact(
         /**
          * Contains the merged project [Config] for this [Artifact]. Note that this contains the resolved information
          * used by the build system to produce the artifact. This will be similar to what would be produced by merging
-         * the [configs] list, but it is not guaranteed to be exactly the same.
+         * the matching [Config] instances from the [ConfigTable], but it is not guaranteed to be exactly the same.
          *
          * For example, the build system is likely to apply additional smarts when resolving dependencies (in order
          * to resolve conflicts between [Config] instances or remove redundant dependencies). It also may apply additional
          * manifest substitutions at resolve-time that didn't come directly from one of the constituent [Config] instances.
          *
          * For this reason, API consumers that need to know what went into the artifact should generally use this
-         * [Config] rather than trying to compute it themselves from the [configs] list.
+         * [Config] rather than trying to compute it themselves.
          *
          * For well-formed projects, this [Config] is expected to override all possible metadata and to
          * supply a valid dependency list.
          */
         val resolved: Config,
-        /**
-         * All [Config] instances that contributed to this artifact, in priority order. [Config] instances later in the list
-         * override configs earlier in the list.
-         */
-        val configs: List<Config> = listOf(resolved),
         /**
          * List of class folders and .jar files containing the output of java compilation for this artifact.
          */
@@ -61,9 +60,5 @@ data class Artifact(
      * The compile-time dependencies for this artifact. This is a shorthand for accessing the compile time dependencies from [resolved].
      */
     val compileDeps: List<ArtifactDependency>
-        get() {
-            // Note that the resolved dependencies will always supply a list of compile-time dependencies for well-formed projects,
-            // so there is no need for the return value to be nullable.
-            return resolved.compileDeps ?: emptyList()
-        }
+        get() = resolved.compileDeps ?: emptyList()
 }

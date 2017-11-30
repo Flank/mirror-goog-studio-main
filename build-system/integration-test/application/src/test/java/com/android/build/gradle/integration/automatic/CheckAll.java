@@ -104,6 +104,11 @@ public class CheckAll {
                     "ndkSanAngeles2",
                     "ndkVariants",
 
+                    // Data binding projects are tested in tools/base/build-system/integration-test/databinding
+                    "databindingIncremental",
+                    "databindingAndDagger",
+                    "databinding",
+
                     // These are all right:
                     "genFolderApi", // Has a required injectable property
                     "ndkJniPureSplitLib", // Doesn't build until externalNativeBuild {} is added.

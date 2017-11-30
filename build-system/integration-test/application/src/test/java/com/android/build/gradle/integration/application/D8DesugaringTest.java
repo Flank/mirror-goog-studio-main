@@ -17,9 +17,8 @@
 package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
+import static org.junit.Assert.assertTrue;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.GradleBuildResult;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.app.EmptyAndroidTestApp;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp;
@@ -30,13 +29,13 @@ import com.android.builder.model.AndroidProject;
 import com.android.builder.model.SyncIssue;
 import com.android.ide.common.process.ProcessException;
 import com.android.testutils.apk.Apk;
+import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /** Test desugaring using D8. */
 public class D8DesugaringTest {
@@ -112,7 +111,7 @@ public class D8DesugaringTest {
         File interfaceWithDefault =
                 project.getSubproject(":lib")
                         .file("src/main/java/com/example/helloworld/InterfaceWithDefault.java");
-        interfaceWithDefault.getParentFile().mkdirs();
+        FileUtils.mkdirs(interfaceWithDefault.getParentFile());
         TestFileUtils.appendToFile(
                 interfaceWithDefault,
                 "package com.example.helloworld;\n"
@@ -130,7 +129,7 @@ public class D8DesugaringTest {
         File stringTool =
                 project.getSubproject(":lib")
                         .file("src/main/java/com/example/helloworld/StringTool.java");
-        stringTool.getParentFile().mkdirs();
+        FileUtils.mkdirs(stringTool.getParentFile());
         TestFileUtils.appendToFile(
                 stringTool,
                 "package com.example.helloworld;\n"
@@ -148,7 +147,7 @@ public class D8DesugaringTest {
                 project.getSubproject(":app")
                         .file(
                                 "src/androidTest/java/com/example/helloworld/ExampleInstrumentedTest.java");
-        exampleInstrumentedTest.getParentFile().mkdirs();
+        FileUtils.mkdirs(exampleInstrumentedTest.getParentFile());
         TestFileUtils.appendToFile(
                 exampleInstrumentedTest,
                 "package com.example.helloworld;\n"
@@ -205,6 +204,7 @@ public class D8DesugaringTest {
                 project.getSubproject(":app").getApk(GradleTestProject.ApkType.DEBUG, "multidex");
         assertThat(multidexApk).hasMainClass("Lcom/example/helloworld/InterfaceWithDefault;");
         boolean foundTheSynthetic = false;
+        assertTrue(multidexApk.getMainDexFile().isPresent());
         for (String clazz : multidexApk.getMainDexFile().get().getClasses().keySet()) {
             if (clazz.contains("-CC")) {
                 foundTheSynthetic = true;
@@ -214,20 +214,8 @@ public class D8DesugaringTest {
         assertThat(foundTheSynthetic).isTrue();
     }
 
-    @Category(DeviceTests.class)
     @Test
-    public void runAndroidTest() throws IOException, InterruptedException, ProcessException {
-        GradleBuildResult result =
-                project.executor()
-                        .with(BooleanOption.ENABLE_D8, true)
-                        .with(BooleanOption.ENABLE_D8_DESUGARING, true)
-                        .run("app:connectedBaseDebugAndroidTest");
-        assertThat(result.getStdout().contains("Starting 2 tests on"));
-    }
-
-    @Test
-    public void checkD8DesugaringWithoutD8Enable()
-            throws IOException, InterruptedException, ProcessException {
+    public void checkD8DesugaringWithoutD8Enable() throws IOException {
         AndroidProject app =
                 project.model()
                         .ignoreSyncIssues()

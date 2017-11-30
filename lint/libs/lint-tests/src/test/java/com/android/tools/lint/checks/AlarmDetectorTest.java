@@ -25,7 +25,7 @@ public class AlarmDetectorTest extends AbstractCheckTest {
     }
 
     @SuppressWarnings("ClassNameDiffersFromFileName")
-    public void test() throws Exception {
+    public void test() {
         String expected = ""
                 + "src/test/pkg/AlarmTest.java:9: Warning: Value will be forced up to 5000 as of Android 5.1; don't rely on this to be exact [ShortAlarm]\n"
                 + "        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME, 50, 10, null); // ERROR\n"

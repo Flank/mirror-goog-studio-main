@@ -30,8 +30,6 @@ sourceSets {
 }
 
 dependencies {
-    compileOnly libs.auto_value
-
     compile project(':base:builder')
     compile project(':base:lint-gradle-api')
     compile project(':base:gradle-api')

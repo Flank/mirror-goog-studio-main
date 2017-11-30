@@ -38,16 +38,12 @@ kotlin_library(
         "org.jacoco:org.jacoco.report": ["org.ow2.asm:asm-debug-all"],
     },
     java_srcs = [":proguard-parser"],
-    plugins = [
-        "//tools/base:auto-value-plugin",
-    ],
     pom = ":pom",
     resource_strip_prefix = "tools/base/build-system/gradle-core",
     resources = [":resources"],
     visibility = ["//visibility:public"],
     deps = [
         "//tools/analytics-library/protos/src/main/proto",
-        "//tools/base:com.google.auto.value_auto-value_neverlink",
         "//tools/base/annotations",
         "//tools/base/build-system:gradle-api_neverlink",
         "//tools/base/build-system:tools.manifest-merger",

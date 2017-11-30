@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.builder.model.ProjectBuildOutput;
@@ -34,7 +33,6 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Assemble tests for ndkSanAngeles.
@@ -64,7 +62,7 @@ public class NdkSanAngelesTest {
     }
 
     @Test
-    public void checkVersionCodeInModel() throws Exception {
+    public void checkVersionCodeInModel() {
         VariantBuildOutput debugOutput = ModelHelper.getDebugVariantBuildOutput(outputModel);
 
         // get the outputs.
@@ -94,11 +92,5 @@ public class NdkSanAngelesTest {
 
         // this checks we didn't miss any expected output.
         assertTrue(expected.isEmpty());
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws Exception {
-        project.executeConnectedCheck();
     }
 }

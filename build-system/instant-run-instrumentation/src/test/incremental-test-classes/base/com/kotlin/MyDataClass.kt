@@ -18,7 +18,6 @@ package com.kotlin
 
 data class MyDataClass(
         val user:String,
-        val age:Int
-        // uncommenting the code below will generate bytecode instrumentation error.
-//        val someFilters: List<EnumType> = EnumType.values().filter { it.someField != null }
+        val age:Int,
+        val someFilters: List<EnumType> = EnumType.values().filter { it.someField != null }
 )

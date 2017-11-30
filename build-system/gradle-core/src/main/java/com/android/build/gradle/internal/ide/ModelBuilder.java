@@ -100,6 +100,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -486,6 +487,17 @@ public class ModelBuilder implements ToolingModelBuilder {
         if (scope.hasOutput(TaskOutputHolder.TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY)) {
             additionalTestClasses.add(
                     scope.getOutput(TaskOutputHolder.TaskOutputType.UNIT_TEST_CONFIG_DIRECTORY)
+                            .getSingleFile());
+        }
+        // The separately compile R class, if applicable.
+        VariantScope testedScope = Objects.requireNonNull(scope.getTestedVariantData()).getScope();
+        if (testedScope.hasOutput(
+                TaskOutputHolder.TaskOutputType.COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)) {
+            additionalTestClasses.add(
+                    testedScope
+                            .getOutput(
+                                    TaskOutputHolder.TaskOutputType
+                                            .COMPILE_ONLY_NOT_NAMESPACED_R_CLASS_JAR)
                             .getSingleFile());
         }
 

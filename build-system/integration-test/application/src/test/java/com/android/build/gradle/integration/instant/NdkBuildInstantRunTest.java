@@ -17,39 +17,24 @@
 package com.android.build.gradle.integration.instant;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
-import static com.android.build.gradle.integration.common.utils.AndroidVersionMatcher.thatUsesArt;
-import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.TemporaryProjectModification;
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldJniApp;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.integration.common.utils.UninstallOnClose;
 import com.android.build.gradle.internal.incremental.InstantRunVerifierStatus;
 import com.android.build.gradle.options.StringOption;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.InstantRun;
-import com.android.builder.model.OptionalCompilationStep;
-import com.android.builder.packaging.PackagingUtils;
-import com.android.ddmlib.IDevice;
 import com.android.sdklib.AndroidVersion;
 import com.android.testutils.apk.SplitApks;
 import com.android.tools.ir.client.InstantRunBuildInfo;
-import com.android.tools.ir.client.InstantRunClient;
-import com.android.utils.ILogger;
-import com.android.utils.StdLogger;
-import com.google.common.base.Charsets;
 import com.google.common.collect.Iterables;
-import com.google.common.io.Files;
-import java.io.Closeable;
 import java.io.File;
 import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
 /** Test to ensure ndk-build project works with instant run. */
@@ -63,10 +48,6 @@ public class NdkBuildInstantRunTest {
                     .create();
 
     @Rule public TemporaryFolder temporaryFolder = new TemporaryFolder();
-
-    private final ILogger iLogger = new StdLogger(StdLogger.Level.INFO);
-
-    @Rule public Adb adb = new Adb();
 
     @Before
     public void setUp() throws Exception {
@@ -131,7 +112,7 @@ public class NdkBuildInstantRunTest {
         byte[] so1 = getSo(instantRunModel);
 
         File src = project.file("src/main/jni/hello-jni.c");
-        Files.append("\nvoid foo() {}\n", src, Charsets.UTF_8);
+        TestFileUtils.appendToFile(src, "\nvoid foo() {}\n");
 
         project.executor()
                 .withInstantRun(new AndroidVersion(23, null))
@@ -149,41 +130,5 @@ public class NdkBuildInstantRunTest {
         SplitApks apks = InstantRunTestUtils.getCompiledColdSwapChange(instantRunModel);
         Path so = Iterables.getOnlyElement(apks.getEntries("lib/x86/libhello-jni.so"));
         return java.nio.file.Files.readAllBytes(so);
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void checkItRunsOnDevice() throws Exception {
-        IDevice device = adb.getDevice(thatUsesArt());
-        try (Closeable ignored = new UninstallOnClose(device, "com.example.hellojni")) {
-            AndroidProject model = project.model().getSingle().getOnlyModel();
-            InstantRun instantRunModel = InstantRunTestUtils.getInstantRunModel(model);
-            project.executor()
-                    .withInstantRun(
-                            new AndroidVersion(device.getVersion().getApiLevel(), null),
-                            OptionalCompilationStep.RESTART_ONLY)
-                    .run("assembleDebug");
-            InstantRunBuildInfo info = InstantRunTestUtils.loadContext(instantRunModel);
-            device.uninstallPackage("com.example.hellojni");
-            InstantRunTestUtils.doInstall(device, info);
-
-            // Run app
-            InstantRunTestUtils.unlockDevice(device);
-
-            InstantRunTestUtils.runApp(device, "com.example.hellojni/.HelloJni");
-
-            long token = PackagingUtils.computeApplicationHash(model.getBuildFolder());
-
-            // Connect to device
-            InstantRunClient client =
-                    new InstantRunClient(
-                            "com.example.hellojni",
-                            iLogger,
-                            token,
-                            PORTS.get(NdkBuildInstantRunTest.class.getSimpleName()));
-
-            // Give the app a chance to start
-            InstantRunTestUtils.waitForAppStart(client, device);
-        }
     }
 }

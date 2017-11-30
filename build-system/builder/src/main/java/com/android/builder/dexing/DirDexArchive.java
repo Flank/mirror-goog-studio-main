@@ -90,6 +90,6 @@ final class DirDexArchive implements DexArchive {
         byte[] content = Files.readAllBytes(dexFile);
         Path relativePath = getRootPath().relativize(dexFile);
 
-        return new DexArchiveEntry(content, PathUtils.toSystemIndependentPath(relativePath));
+        return new DexArchiveEntry(content, PathUtils.toSystemIndependentPath(relativePath), this);
     }
 }

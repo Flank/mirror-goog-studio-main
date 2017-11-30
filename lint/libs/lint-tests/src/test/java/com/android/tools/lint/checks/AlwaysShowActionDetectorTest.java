@@ -25,7 +25,7 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
         return new AlwaysShowActionDetector();
     }
 
-    public void testXmlMenus() throws Exception {
+    public void testXmlMenus() {
         //noinspection all // Sample code
         String expected = ""
                 + "res/menu-land/actions.xml:6: Warning: Prefer \"ifRoom\" instead of \"always\" [AlwaysShowAction]\n"
@@ -108,7 +108,7 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
                         + "+         android:showAsAction=\"ifRoom|collapseActionView\"\n");
     }
 
-    public void testXmlMenusWithFlags() throws Exception {
+    public void testXmlMenusWithFlags() {
         String expected = ""
                 + "res/menu-land/actions2.xml:6: Warning: Prefer \"ifRoom\" instead of \"always\" [AlwaysShowAction]\n"
                 + "        android:showAsAction=\"always|collapseActionView\"\n"
@@ -186,7 +186,7 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testJavaFail() throws Exception {
+    public void testJavaFail() {
         String expected = ""
                 + "src/test/pkg/ActionTest1.java:7: Warning: Prefer \"SHOW_AS_ACTION_IF_ROOM\" instead of \"SHOW_AS_ACTION_ALWAYS\" [AlwaysShowAction]\n"
                 + "        System.out.println(MenuItem.SHOW_AS_ACTION_ALWAYS);\n"
@@ -199,7 +199,7 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testJavaPass() throws Exception {
+    public void testJavaPass() {
         //noinspection all // Sample code
         lint().files(
                 // Both references to ALWAYS and IF_ROOM
@@ -218,7 +218,7 @@ public class AlwaysShowActionDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testSuppress() throws Exception {
+    public void testSuppress() {
         //noinspection all // Sample code
         lint().files(
                 xml("res/menu-land/actions2_ignore.xml", ""

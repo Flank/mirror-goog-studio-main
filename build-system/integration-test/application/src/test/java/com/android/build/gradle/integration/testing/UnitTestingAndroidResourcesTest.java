@@ -12,7 +12,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
-import com.android.build.gradle.internal.aapt.AaptGeneration;
+import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidArtifact;
 import com.android.builder.model.AndroidProject;
 import com.android.builder.model.JavaArtifact;
@@ -28,6 +28,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -49,24 +50,28 @@ public class UnitTestingAndroidResourcesTest {
         APPLICATION
     }
 
+    enum RClassStrategy {
+        COMPILE_SOURCES,
+        GENERATE_JAR,
+    }
+
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("unitTestingAndroidResources").create();
 
-    @Parameterized.Parameters(name = "plugin={0}  librarySetup={1}  aaptGeneration={2}")
+    @Parameterized.Parameters(name = "plugin={0}, aaptGeneration={1}, rClassStrategy={2}")
     public static Object[][] data() {
         return new Object[][] {
-            {Plugin.APPLICATION, AaptGeneration.AAPT_V1},
-            {Plugin.APPLICATION, AaptGeneration.AAPT_V2_DAEMON_MODE},
-            {Plugin.LIBRARY, AaptGeneration.AAPT_V1},
-            {Plugin.LIBRARY, AaptGeneration.AAPT_V2_DAEMON_MODE},
+            {Plugin.APPLICATION, null},
+            {Plugin.LIBRARY, RClassStrategy.COMPILE_SOURCES},
+            {Plugin.LIBRARY, RClassStrategy.GENERATE_JAR},
         };
     }
 
     @Parameterized.Parameter public Plugin plugin;
 
     @Parameterized.Parameter(value = 1)
-    public AaptGeneration aaptGeneration;
+    public RClassStrategy rClassStrategy;
 
     @Before
     public void changePlugin() throws Exception {
@@ -105,7 +110,11 @@ public class UnitTestingAndroidResourcesTest {
     @Test
     public void runUnitTests() throws Exception {
 
-        RunGradleTasks runGradleTasks = project.executor().with(aaptGeneration);
+        RunGradleTasks runGradleTasks =
+                project.executor()
+                        .with(
+                                BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION,
+                                rClassStrategy == RClassStrategy.GENERATE_JAR);
 
         runGradleTasks.run("testDebugUnitTest");
 
@@ -124,7 +133,14 @@ public class UnitTestingAndroidResourcesTest {
         runGradleTasks.run("clean");
 
         // Check that the model contains the generated file
-        AndroidProject model = project.model().getMulti().getModelMap().get(":");
+        AndroidProject model =
+                project.model()
+                        .with(
+                                BooleanOption.ENABLE_SEPARATE_R_CLASS_COMPILATION,
+                                rClassStrategy == RClassStrategy.GENERATE_JAR)
+                        .getMulti()
+                        .getModelMap()
+                        .get(":");
         Variant debug = ModelHelper.getVariant(model.getVariants(), "debug");
         JavaArtifact debugUnitTest =
                 ModelHelper.getJavaArtifact(
@@ -154,10 +170,18 @@ public class UnitTestingAndroidResourcesTest {
                     if (name.equals("android_custom_package")) {
                         try (URLClassLoader cl =
                                 makeClassloader(debug.getMainArtifact(), debugUnitTest)) {
-                            cl.loadClass(value + ".R");
-                        } catch (ClassNotFoundException e) {
-                            throw new AssertionError(
-                                    "expected R class at " + name + " = " + value, e);
+                            try {
+                                cl.loadClass(value + ".R");
+                            } catch (ClassNotFoundException e) {
+                                throw new AssertionError(
+                                        "expected R class at "
+                                                + value
+                                                + ".R, with classpath \n    -"
+                                                + Arrays.stream(cl.getURLs())
+                                                        .map(Object::toString)
+                                                        .collect(Collectors.joining("\n    - ")),
+                                        e);
+                            }
                         } catch (IOException e) {
                             throw new UncheckedIOException(e);
                         }

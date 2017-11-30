@@ -18,12 +18,9 @@ package com.android.build.gradle.integration.application;
 
 import static com.android.build.gradle.integration.common.truth.TruthHelper.assertThat;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.category.SmokeTests;
-import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
-import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
 import com.android.testutils.apk.Apk;
 import java.io.IOException;
@@ -38,8 +35,6 @@ public class KotlinAppTest {
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("kotlinApp").create();
-
-    @Rule public Adb adb = new Adb();
 
     @After
     public void cleanUp() {
@@ -71,23 +66,4 @@ public class KotlinAppTest {
         assertThat(apk).containsMainClass("Lcom/example/android/kotlin/LibActivity;");
     }
 
-    @Test
-    public void dataBindingEnabled() throws IOException, InterruptedException {
-        TestFileUtils.appendToFile(
-                project.getSubproject(":app").getBuildFile(),
-                "\n"
-                        + "android.dataBinding.enabled = true\n"
-                        + "\n"
-                        + "dependencies {\n"
-                        + "    compile \"com.android.support:support-v4:${rootProject.supportLibVersion}\"\n"
-                        + "}\n");
-
-        project.executor().run("clean", "app:assembleDebug");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws Exception {
-        project.executeConnectedCheck();
-    }
 }

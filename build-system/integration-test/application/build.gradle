@@ -259,7 +259,7 @@ allConnectedTestTasks.forEach({task -> stopDevicePool.mustRunAfter(task)})
 
 automaticTest.dependsOn ':publishLocal'
 onlineTest.dependsOn ':publishLocal'
-test.dependsOn buildTestDependencies, ':publishLocal'
+test.dependsOn buildTestDependencies, ':publishAndroidGradleLocal'
 testPrebuilts.dependsOn buildTestDependencies
 allConnectedTestTasks.forEach({task -> task.dependsOn buildTestDependencies, startDevicePool})
 connectedIntegrationTest.dependsOn ':publishLocal'

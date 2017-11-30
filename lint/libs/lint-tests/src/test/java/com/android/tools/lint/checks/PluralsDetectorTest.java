@@ -157,7 +157,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                         mPlurals2_class2));
     }
 
-    public void testExpandTemplates() throws Exception {
+    public void testExpandTemplates() {
         // Regression test for https://code.google.com/p/android/issues/detail?id=228989
         // "ImpliedQuantity lint check should allow ^1 as format argument"
         lint().files(
@@ -175,7 +175,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testUnused() throws Exception {
+    public void testUnused() {
         lint().files(
                 xml("res/values-en/strings.xml", ""
                         + "<resources tools:locale=\"en\" xmlns:tools=\"http://schemas.android.com/tools\">\n"
@@ -198,7 +198,7 @@ public class PluralsDetectorTest extends AbstractCheckTest {
                         + "0 errors, 1 warnings\n");
     }
 
-    public void testUnused2() throws Exception {
+    public void testUnused2() {
         lint().files(
                 xml("res/values-en/strings.xml", ""
                         + "<resources>\n"

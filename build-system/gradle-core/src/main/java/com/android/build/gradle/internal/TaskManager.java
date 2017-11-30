@@ -125,6 +125,7 @@ import com.android.build.gradle.internal.test.AbstractTestDataImpl;
 import com.android.build.gradle.internal.test.TestDataImpl;
 import com.android.build.gradle.internal.transforms.BuiltInShrinkerTransform;
 import com.android.build.gradle.internal.transforms.CustomClassTransform;
+import com.android.build.gradle.internal.transforms.D8MainDexListTransform;
 import com.android.build.gradle.internal.transforms.DesugarTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransform;
 import com.android.build.gradle.internal.transforms.DexArchiveBuilderTransformBuilder;
@@ -1213,7 +1214,6 @@ public abstract class TaskManager {
             @NonNull MergeType mergeType,
             @NonNull String baseName,
             boolean useAaptToGenerateLegacyMultidexMainDexProguardRules) {
-        File sourcesOut = scope.getRClassSourceOutputDir();
         File symbolTableWithPackageName =
                 FileUtils.join(
                         globalScope.getIntermediatesDir(),
@@ -1230,7 +1230,7 @@ public abstract class TaskManager {
             GenerateLibraryRFileTask task =
                     taskFactory.create(
                             new GenerateLibraryRFileTask.ConfigAction(
-                                    scope, symbolFile, symbolTableWithPackageName, sourcesOut));
+                                    scope, symbolFile, symbolTableWithPackageName));
             taskName = task.getName();
             scope.setProcessResourcesTask(task);
 
@@ -1260,6 +1260,9 @@ public abstract class TaskManager {
         }
         scope.addTaskOutput(VariantScope.TaskOutputType.SYMBOL_LIST, symbolFile, taskName);
 
+        // Needed for the IDE
+        scope.getSourceGenTask().dependsOn(taskName);
+
         // Synthetic output for AARs (see SymbolTableWithPackageNameTransform), and created in
         // process resources for local subprojects.
         scope.addTaskOutput(
@@ -1267,8 +1270,6 @@ public abstract class TaskManager {
                 symbolTableWithPackageName,
                 taskName);
 
-        scope.addTaskOutput(
-                VariantScope.TaskOutputType.NOT_NAMESPACED_R_CLASS_SOURCES, sourcesOut, taskName);
         // Needed for the IDE
         Task t = project.getTasks().findByName(taskName);
         if (t != null) {
@@ -2282,9 +2283,12 @@ public abstract class TaskManager {
             // from above and compute the main class list.
             Transform multiDexTransform;
             if (usingIncrementalDexing(variantScope)) {
-                multiDexTransform = new MainDexListTransform(
-                        variantScope,
-                        extension.getDexOptions());
+                if (projectOptions.get(BooleanOption.ENABLE_D8_MAIN_DEX_LIST)) {
+                    multiDexTransform = new D8MainDexListTransform(variantScope);
+                } else {
+                    multiDexTransform =
+                            new MainDexListTransform(variantScope, extension.getDexOptions());
+                }
             } else {
                 multiDexTransform = new MultiDexTransform(variantScope, extension.getDexOptions());
             }
@@ -3176,7 +3180,7 @@ public abstract class TaskManager {
 
     private static void applyProguardDefaultsForTest(ProGuardTransform transform) {
         // Don't remove any code in tested app.
-        transform.setActions(PostprocessingFeatures.create(false, true, false));
+        transform.setActions(new PostprocessingFeatures(false, true, false));
 
         // We can't call dontobfuscate, since that would make ProGuard ignore the mapping file.
         transform.keep("class * {*;}");

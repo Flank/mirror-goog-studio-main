@@ -1,0 +1,165 @@
+load("//tools/base/bazel:maven.bzl", "maven_repo")
+load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "kotlin_jar")
+
+#keep sorted
+TEST_DEPS = [
+    "//tools/base/annotations",
+    "//tools/base/build-system:gradle-api",
+    "//tools/base/build-system/builder",
+    "//tools/base/build-system/builder-model",
+    "//tools/base/build-system/builder-test-api:tools.builder-test-api",
+    "//tools/base/build-system/gradle-api",
+    "//tools/base/build-system/gradle-core",
+    "//tools/base/build-system/integration-test/framework",
+    "//tools/base/common:tools.common",
+    "//tools/base/ddmlib:tools.ddmlib",
+    "//tools/base/instant-run:instant-run-client",
+    "//tools/base/repository:tools.repository",
+    "//tools/base/sdk-common:tools.sdk-common",
+    "//tools/base/sdklib:tools.sdklib",
+    "//tools/base/testutils:tools.testutils",
+    "//tools/base/third_party:com.google.guava_guava",
+    "//tools/base/third_party:com.google.truth_truth",
+    "//tools/base/third_party:org.jetbrains.kotlin_kotlin-stdlib",
+]
+
+#keep sorted
+TEST_DATA = [
+    ":gradle_plugin_with_data_binding_repo.zip",
+    ":prebuilts_repo.zip",
+    "//prebuilts/studio/sdk:add-ons/addon-google_apis-google-latest",
+    "//prebuilts/studio/sdk:build-tools/latest",
+    "//prebuilts/studio/sdk:constraint-layout_latest",
+    "//prebuilts/studio/sdk:databinding_latest",
+    "//prebuilts/studio/sdk:espresso_latest",
+    "//prebuilts/studio/sdk:gms_latest",
+    "//prebuilts/studio/sdk:multidex",
+    "//prebuilts/studio/sdk:ndk-bundle",
+    "//prebuilts/studio/sdk:platform-tools",
+    "//prebuilts/studio/sdk:platforms/android-19",
+    "//prebuilts/studio/sdk:platforms/android-21",
+    "//prebuilts/studio/sdk:platforms/android-23",
+    "//prebuilts/studio/sdk:platforms/android-24",
+    "//prebuilts/studio/sdk:platforms/latest",
+    "//prebuilts/studio/sdk:platforms/latest-preview",
+    "//prebuilts/studio/sdk:support_latest",
+    "//prebuilts/studio/sdk:test-runner_latest",
+    "//prebuilts/studio/sdk:uiautomator_latest",
+    "//tools/base/build-system:gradle-distrib",
+    "//tools/base/build-system/integration-test:test-projects",
+    "//tools/data-binding:data_binding_runtime_repo.zip",
+    "//tools/data-binding:integration-test-projects",
+]
+
+java_library(
+    name = "java_tests",
+    srcs = glob(["src/test/java/**/*.java"]),
+    resources = glob(["src/test/resources/**"]),
+    deps = TEST_DEPS,
+)
+
+kotlin_jar(
+    name = "kotlin_tests",
+    srcs = ["src/test/java"],
+    inputs = glob(["src/test/java/**/*.kt"]),
+    deps = TEST_DEPS,
+)
+
+java_test(
+    name = "tests",
+    timeout = "eternal",
+    data = TEST_DATA,
+    jvm_flags = [
+        "-Dtest.suite.jar=tests.jar",
+        "-Dfile.encoding=UTF-8",
+        "-Dsun.jnu.encoding=UTF-8",
+        "-Dmaven.repo.local=/tmp/localMavenRepo",  # For gradle publishing, writing to ~/.m2
+        "-Dtest.android.build.gradle.integration.repos=tools/base/build-system/integration-test/databinding/gradle_plugin_with_data_binding_repo.zip,tools/base/build-system/integration-test/databinding/prebuilts_repo.zip,tools/data-binding/data_binding_runtime_repo.zip",
+    ],
+    shard_count = 3,  #TODO: better sharding.
+    tags = [
+        "block-network",
+        "cpu:3",
+        "gradle_integration",
+        "no_test_mac",  # b/69151132 Time out frequently when run on mac.
+        "slow",
+    ],
+    test_class = "com.android.build.gradle.integration.BazelIntegrationTestsSuite",
+    runtime_deps = [
+        # Need to put this on the classpath before TestRunner_deploy.jar which contains
+        # old JUnit classes. See https://github.com/bazelbuild/bazel/issues/2146.
+        "//tools/base/third_party:junit_junit",
+        ":java_tests",
+        ":libkotlin_tests.jar",
+    ],
+)
+
+maven_repo(
+    name = "gradle_plugin_with_data_binding",
+    artifacts = [
+        "//tools/data-binding:tools.compiler",
+        "//tools/base/build-system/gradle",
+        "//tools/base/lint:tools.lint-gradle",
+    ],
+)
+
+# Maven repo with dependencies required by data binding test projects.
+#
+# TODO: Clean this up to the minimum requeired for data binding.
+maven_repo(
+    name = "prebuilts",
+    # keep sorted
+    artifacts = [
+        "//prebuilts/tools/common/m2/repository/android/arch/core/common/1.0.0:jar",
+        "//prebuilts/tools/common/m2/repository/android/arch/core/runtime/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/common/1.0.3:jar",
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/compiler/1.0.0:jar",
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/extensions/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/android/arch/lifecycle/runtime/1.0.3:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/animated-vector-drawable/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/appcompat-v7/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/cardview-v7/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-annotations/26.1.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-compat/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-core-ui/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-core-utils/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-fragment/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-media-compat/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-v4/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/support-vector-drawable/26.1.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/test/orchestrator/1.0.0:apk",
+        "//prebuilts/tools/common/m2/repository/com/android/support/test/runner/1.0.0:aar",
+        "//prebuilts/tools/common/m2/repository/com/android/support/test/services/test-services/1.0.0:apk",
+        "//prebuilts/tools/common/m2/repository/com/android/tools/build/transform-api/1.5.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/1.3.9:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/2.0.1:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/code/findbugs/jsr305/3.0.1:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/code/gson/gson/2.8.0:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/dagger/dagger-compiler/2.6:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/dagger/dagger-producers/2.6:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/dagger/dagger/2.6:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/dexmaker/dexmaker-mockito/1.2:jar",
+        "//prebuilts/tools/common/m2/repository/com/google/dexmaker/dexmaker/1.2:jar",
+        "//prebuilts/tools/common/m2/repository/com/squareup/javawriter/2.1.1:jar",
+        "//prebuilts/tools/common/m2/repository/javax/annotation/javax.annotation-api/1.2:jar",
+        "//prebuilts/tools/common/m2/repository/javax/annotation/jsr250-api/1.0:jar",
+        "//prebuilts/tools/common/m2/repository/javax/inject/javax.inject/1:jar",
+        "//prebuilts/tools/common/m2/repository/junit/junit/4.11:jar",
+        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-integration/1.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/hamcrest/hamcrest-library/1.3:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-android-extensions/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-annotation-processing/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-embeddable/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-compiler-runner/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin-api/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-gradle-plugin/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre7/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib-jre8/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.1.51:jar",
+        "//prebuilts/tools/common/m2/repository/org/mockito/mockito-core/1.9.5:jar",
+        "//prebuilts/tools/common/m2/repository/org/objenesis/objenesis/1.0:jar",
+        "//tools/base/testing-infrastructure/device-pool/device-provider",  # TODO: decouple
+        "//tools/base/third_party:junit_junit",
+    ],
+    visibility = ["__subpackages__"],
+)

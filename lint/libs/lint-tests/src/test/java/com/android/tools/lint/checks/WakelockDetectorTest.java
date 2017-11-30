@@ -25,7 +25,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
         return new WakelockDetector();
     }
 
-    public void test1() throws Exception {
+    public void test1() {
         String expected = ""
                 + "src/test/pkg/WakelockActivity1.java:15: Warning: Found a wakelock acquire() but no release() calls anywhere [Wakelock]\n"
                 + "        mWakeLock.acquire(); // Never released\n"
@@ -74,7 +74,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test2() throws Exception {
+    public void test2() {
         String expected = ""
                 + "src/test/pkg/WakelockActivity2.java:13: Warning: Wakelocks should be released in onPause, not onDestroy [Wakelock]\n"
                 + "            mWakeLock.release(); // Should be done in onPause instead\n"
@@ -128,7 +128,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test3() throws Exception {
+    public void test3() {
         String expected = ""
                 + "src/test/pkg/WakelockActivity3.java:13: Warning: The release() call is not always reached [Wakelock]\n"
                 + "        lock.release(); // Should be in finally block\n"
@@ -180,7 +180,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test4() throws Exception {
+    public void test4() {
         String expected = ""
                 + "src/test/pkg/WakelockActivity4.java:10: Warning: The release() call is not always reached [Wakelock]\n"
                 + "        getLock().release(); // Should be in finally block\n"
@@ -241,7 +241,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test5() throws Exception {
+    public void test5() {
         String expected = ""
                 + "src/test/pkg/WakelockActivity5.java:13: Warning: The release() call is not always reached [Wakelock]\n"
                 + "        lock.release(); // Should be in finally block\n"
@@ -292,7 +292,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test6() throws Exception {
+    public void test6() {
         String expected = ""
                 + "src/test/pkg/WakelockActivity6.java:19: Warning: The release() call is not always reached [Wakelock]\n"
                 + "            lock.release(); // Wrong\n"
@@ -413,7 +413,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void test7() throws Exception {
+    public void test7() {
         //noinspection all // Sample code
         lint().files(
                 classpath(),
@@ -454,7 +454,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void test8() throws Exception {
+    public void test8() {
         //noinspection all // Sample code
         lint().files(
                 classpath(),
@@ -505,7 +505,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void test9() throws Exception {
+    public void test9() {
         // Regression test for 66040
         //noinspection all // Sample code
         lint().files(
@@ -549,7 +549,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void test10() throws Exception {
+    public void test10() {
         // Regression test for 43212
         //noinspection all // Sample code
         lint().files(
@@ -598,7 +598,7 @@ public class WakelockDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void testFlags() throws Exception {
+    public void testFlags() {
         String expected = ""
                 + "src/test/pkg/PowerManagerFlagTest.java:15: Warning: Should not set both PARTIAL_WAKE_LOCK and ACQUIRE_CAUSES_WAKEUP. If you do not want the screen to turn on, get rid of ACQUIRE_CAUSES_WAKEUP [Wakelock]\n"
                 + "        pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK|ACQUIRE_CAUSES_WAKEUP, \"Test\"); // Bad\n"

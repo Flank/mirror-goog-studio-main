@@ -92,7 +92,7 @@ public class WarningTest extends AbstractCheckTest {
         final AtomicReference<List<Warning>> warningsHolder = new AtomicReference<>();
         TestLintClient lintClient = new TestLintClient() {
             @Override
-            public String analyze(List<File> files) throws Exception {
+            public String analyze(List<File> files) {
                 //String analyze = super.analyze(files);
                 LintRequest lintRequest = new LintRequest(this, files);
                 lintRequest.setScope(getLintScope(files));

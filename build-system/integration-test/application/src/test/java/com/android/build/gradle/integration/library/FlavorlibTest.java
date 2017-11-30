@@ -125,11 +125,4 @@ public class FlavorlibTest {
                 .named(variantName + " sub-modules as variant name")
                 .containsExactly(depVariantName);
     }
-
-
-    @Test
-    @Category(DeviceTests.class)
-    public void connectedCheck() throws Exception {
-        project.executeConnectedCheck();
-    }
 }

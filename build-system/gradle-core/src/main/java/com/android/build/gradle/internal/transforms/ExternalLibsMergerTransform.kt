@@ -107,7 +107,9 @@ class ExternalLibsMergerTransform(
         }
 
         outputHandler.createOutput().use { processOutputHandler ->
-            val callable = callableFactory.create(dexingType,
+            val callable = callableFactory.create(
+                    messageReceiver,
+                    dexingType,
                     processOutputHandler,
                     outputDir,
                     jarInputList,

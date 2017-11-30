@@ -23,6 +23,7 @@ using profiler::FileSystem;
 using profiler::FileCache;
 using profiler::MemoryFileSystem;
 using std::unique_ptr;
+using std::string;
 
 TEST(FileCache, CanAddCacheByChunks) {
   FileCache cache(unique_ptr<FileSystem>(new MemoryFileSystem()), "/");
@@ -61,4 +62,26 @@ TEST(FileCache, CanOverwriteCache) {
   cache.AddChunk("dummy-id", "abc");
   file = cache.Complete("dummy-id");
   EXPECT_EQ(file->Contents(), "abc");
+}
+
+TEST(FileCache, CanAddStringsToCache) {
+  FileCache cache(unique_ptr<FileSystem>(new MemoryFileSystem()), "/");
+
+  auto str_a = string("This is my first string");
+  auto str_b = string("This is my second string");
+
+  auto cache_id1 = cache.AddString(str_a);
+  auto cache_id2 = cache.AddString(str_b);
+  auto cache_id3 = cache.AddString(str_a);
+
+  auto file1 = cache.GetFile(cache_id1);
+  auto file2 = cache.GetFile(cache_id2);
+  auto file3 = cache.GetFile(cache_id3);
+
+  EXPECT_EQ(file1->Contents(), str_a);
+  EXPECT_EQ(file2->Contents(), str_b);
+  EXPECT_EQ(file3->Contents(), str_a);
+
+  EXPECT_NE(cache_id1, cache_id2);
+  EXPECT_EQ(cache_id1, cache_id3);
 }

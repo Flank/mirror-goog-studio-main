@@ -19,6 +19,7 @@ package com.android.build.gradle.tasks;
 import static com.android.SdkConstants.DOT_JAVA;
 import static com.android.SdkConstants.INT_DEF_ANNOTATION;
 import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
+import static com.android.SdkConstants.LONG_DEF_ANNOTATION;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactScope.EXTERNAL;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.CLASSES;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
@@ -248,6 +249,7 @@ public class ExtractAnnotations extends AbstractAndroidCompile {
                 return lines.anyMatch(
                         line -> line.contains("Def") && (
                                 line.contains(INT_DEF_ANNOTATION) ||
+                                        line.contains(LONG_DEF_ANNOTATION) ||
                                         line.contains(STRING_DEF_ANNOTATION))
                 );
             }

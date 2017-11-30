@@ -9,25 +9,18 @@ A typical model would be a tree that looks like this:
         - resolved
           - Config (merged & resolved)
             - Dependencies (resolved)
-        - configs
-          - Config (main)
-            - Dependencies (main)
-          - Config (demo)
-            - Dependencies (demo)
-          - Config (release)
-            - Dependencies (release)
       - Artifact (tests)
     - Variant (demoDebug)
     - ...
-    - BuildMatrix
+    - ConfigTable
       - dimensions
         - BuildDimension (flavor=demo,full)
         - BuildDimension (buildType=release,debug)
-      - Config (main, filter:all/all)
-      - Config (demo, filter:demo/all)
-      - Config (full, filter:full/all)
-      - Config (release, filter:all/release)
-      - Config (debug, filter:all/debug)
+      - Config (main, path:)
+      - Config (demo, path:demo)
+      - Config (full, path:full)
+      - Config (release, path:null/release)
+      - Config (debug, path:null/debug)
 
 The build system output is used to construct one or more AndroidModel instances, which are
 the root of the model. Each AndroidModel instance contains one or more AndroidProjects. In
@@ -85,21 +78,18 @@ projectmodel as a missing optional feature.
 The project name and project type attributes map fairly directly from Gradle and
 projectmodel. 
 
-## Build Matrix
+## Config Table
 
-Note: The build matrix is a planned future addition to the model. It is not
-implemented yet.
-
-BuildMatrix describes all the build types and flavors present in the project. It
+ConfigTable describes all the build types and flavors present in the project. It
 also describes the default configuration and all the source providers, including
 the main source provider and any per-artifact source providers. 
 
-Gradle projects always fill in the optional buildMatrix attribute on AndroidProject.
-The first dimensions of the build matrix correspond to flavor dimensions, in the 
+Gradle projects always fill in the optional configTable attribute on AndroidProject.
+The first dimensions of the config table correspond to flavor dimensions, in the 
 same order dimensions are declared in the build.gradle file. The last dimension
 corresponds to the build type.
 
-Cells in the BuildMatrix correspond to variants of a specific artifact. They
+Cells in the ConfigTable correspond to variants of a specific artifact. They
 are identified using an ArtifactVariantPath. ArtifactVariantPath are a lot
 like Gradle variant names, except:
 
@@ -115,29 +105,25 @@ Each configuration (build type, flavor) and source provider pair is combined int
 an instance of Config. The Config describes all the source folders
 involved in that build type/flavor along with any configuration metadata it overrides.
 
-Configs are inserted into the build matrix with an ArtifactVariantFilter.
-The filter identifies which variants and/or artifacts the Config should
+Configs are inserted into the config table with a ConfigPath.
+The path identifies which variants and/or artifacts the Config should
 be used with. So from the perspective of a model consumer, a build type or flavor
-would both be instances of Config. The only difference is what sort of 
-filter is attached.
-
-ArtifactVariantFilters are essentially like ArtifactVariantPaths except that they
-permit nulls, which are interpreted as "match everything in this segment" wildcards.
+would both be instances of Config. The only difference is what artifacts
+the Config is attached to, and this is controlled by the path.
 
 ### Build Types
 
-Build types are represented in the BuildMatrix as a Config with a filter
-that only matches the second-last segment of the ArtifactVariantPath. So, for example,
-the "debug" build type in a 2-dimensional build matrix would use the filter
-null/debug/null. The first null means that it applies to all flavors. The
-"debug" segment indicates that it applies to the debug build type, and the final
-null indicates that it applies to all Artifacts from that build type.
+Build types are represented in the ConfigTable as a Config with a ConfigPath
+that only matches the second-last segment. So, for example, the "debug" build type
+in a 2-dimensional config table would use the path null/debug/null. The first null
+means that it applies to all flavors. The "debug" segment indicates that it applies
+to the debug build type, and the final null indicates that it applies to all Artifacts
+from that build type.
 
 ### Flavors
 
-Flavors are also represented using Configs, except 
-that they use a filter that matches an earlier segment of the
-ArtifactVariantPath.
+Flavors are also represented using Configs, except that they use a path that matches
+an earlier segment.
 
 Flavors also differ from build types in that their Config will never
 override certain attributes - such as isDebuggable. Configs return
@@ -147,29 +133,29 @@ null from such attributes, indicating that they don't modify that attribute.
 
 Gradle permits custom configuration to be attached to specific flavor combinations.
 Such flavor combinations are also represented as Configs but
-they use a filter that matches multiple segments. For example, the following
-filter would match only match the v2 and pro flavors:
+they use a path that matches multiple segments. For example, the following
+path would match only match the v2 and pro flavors:
 
 v2/pro/null/null
 
 ### Default Configuration
 
 The default configuration for a project (the "main" source tree) is attached
-to the BuildMatrix with a filter that matches everything. It is always the
-first Config in the matrix, indicating that everything else overrides it.
+to the ConfigTable with a path that matches everything. It is always the
+first Config in the table, indicating that everything else overrides it.
 
 ### Per-artifact Configuration
 
 Configuration and source files that only apply to a single artifact also
-use Configs, but they use a filter that only matches the last
-segment. For example, this filter would match all variants of the "main"
+use Configs, but they use a path that only matches the last
+segment. For example, this path would match all variants of the "main"
 artifact:
 
 null/null/main
 
 ### Flavor/build type Priorities
 
-Gradle inserts Configs into the BuildMatrix in priority order.
+Gradle inserts Configs into the ConfigTable in priority order.
 That is, configs inserted later will override identical attributes in earlier
 configs.
 
@@ -184,7 +170,7 @@ Artifacts in projectmodel store the result of merging their configs
 (the main config, flavors, build type, and any per-artifact configuration)
 in a Config called "resolved". Application code that wants to know what
 went into the artifact but doesn't care what flavor it came from will normally
-use Artifact.resolved rather than examining the build matrix.
+use Artifact.resolved rather than examining the config table.
 
 So, for example, to access the application ID using a projectmodel Artifact,
 a caller would invoke artifact.source.overrides.applicationId.
@@ -208,7 +194,7 @@ any per-artifact configuration and overrides).
 ## Dependencies
 
 Gradle will not fill in the optional dependency information for individual
-configs in the build matrix (since that information is not reported by the
+configs in the config table (since that information is not reported by the
 Gradle model), but it will fill in the resolved dependencies for each Artifact.
 
 # Blaze
@@ -233,7 +219,7 @@ Configs for the android_resources and android_manifest_merge rules that
 are referenced by the original rule. The name of the Configs will
 match the name of the blaze rule they came from.
 
-Blaze will not supply a build matrix for its models.
+Blaze will not supply a config table for its models.
 
 Blaze will not fill in the dependencies for Configs that come from
 a android_manifest_merge rule or android_resources rule, but will fill them in
@@ -243,6 +229,12 @@ that produced AndroidProject instances.
 Note that - unlike gradle models where each Config contains no more than
 one manifest - it will be common for Blaze models to contain multiple manifests
 per fragment.
+
+# JPS projects
+
+Legacy intellij projects that don't use gradle or blaze will have a project with
+one Variant and two Artifacts (for test and app sources). The attributes will
+be extracted from the manifest and the IntelliJ module metadata.
 
 # Design principles
 

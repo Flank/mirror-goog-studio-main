@@ -26,7 +26,7 @@ public class AllowAllHostnameVerifierDetectorTest extends AbstractCheckTest {
         return new AllowAllHostnameVerifierDetector();
     }
 
-    public void testBroken() throws Exception {
+    public void testBroken() {
         String expected = ""
                 + "src/test/pkg/InsecureHostnameVerifier.java:22: Warning: Using the AllowAllHostnameVerifier HostnameVerifier is unsafe because it always returns true, which could cause insecure network traffic due to trusting TLS/SSL server certificates for wrong hostnames [AllowAllHostnameVerifier]\n"
                 + "            connection.setHostnameVerifier(new AllowAllHostnameVerifier());\n"
@@ -88,7 +88,7 @@ public class AllowAllHostnameVerifierDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testCorrect() throws Exception {
+    public void testCorrect() {
         //noinspection all // Sample code
         lint().files(
                 xml("AndroidManifest.xml", ""

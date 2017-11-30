@@ -2,7 +2,6 @@ package com.android.build.gradle.integration.testing;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import com.android.build.gradle.integration.common.category.DeviceTests;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.truth.TruthHelper;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
@@ -16,14 +15,12 @@ import java.util.Collection;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 /**
  * Test for setup with 2 modules: app and test-app Checking the manifest merging for the test
  * modules.
  */
 public class SeparateTestModuleWithVariantsTest {
-
     @Rule
     public GradleTestProject project =
             GradleTestProject.builder().fromTestProject("separateTestModule").create();
@@ -74,12 +71,6 @@ public class SeparateTestModuleWithVariantsTest {
                         "<instrumentation",
                         "android:name=\"android.support.test.runner.AndroidJUnitRunner\"",
                         "android:targetPackage=\"com.android.tests.basic\"");
-    }
-
-    @Test
-    @Category(DeviceTests.class)
-    public void checkWillRunWithoutInstrumentationInManifest() throws Exception {
-        project.execute(":test:deviceCheck");
     }
 
     @Test

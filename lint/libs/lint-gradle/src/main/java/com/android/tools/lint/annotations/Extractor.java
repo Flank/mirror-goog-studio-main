@@ -23,10 +23,12 @@ import static com.android.SdkConstants.ATTR_VALUE;
 import static com.android.SdkConstants.DOT_CLASS;
 import static com.android.SdkConstants.DOT_JAR;
 import static com.android.SdkConstants.DOT_JAVA;
+import static com.android.SdkConstants.DOT_KT;
 import static com.android.SdkConstants.DOT_XML;
 import static com.android.SdkConstants.DOT_ZIP;
 import static com.android.SdkConstants.GT_ENTITY;
 import static com.android.SdkConstants.INT_DEF_ANNOTATION;
+import static com.android.SdkConstants.LONG_DEF_ANNOTATION;
 import static com.android.SdkConstants.LT_ENTITY;
 import static com.android.SdkConstants.QUOT_ENTITY;
 import static com.android.SdkConstants.STRING_DEF_ANNOTATION;
@@ -40,6 +42,7 @@ import static com.android.tools.lint.detector.api.LintUtils.assertionsEnabled;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
 import com.android.builder.packaging.TypedefRemover;
+import com.android.tools.lint.detector.api.ConstantEvaluator;
 import com.android.tools.lint.detector.api.LintUtils;
 import com.android.utils.FileUtils;
 import com.android.utils.XmlUtils;
@@ -51,37 +54,28 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Closeables;
 import com.google.common.io.Files;
 import com.google.common.xml.XmlEscapers;
+import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Ref;
 import com.intellij.openapi.vfs.StandardFileSystems;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.vfs.VirtualFileSystem;
-import com.intellij.psi.JavaRecursiveElementVisitor;
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiAnnotationMemberValue;
-import com.intellij.psi.PsiAnonymousClass;
-import com.intellij.psi.PsiArrayInitializerMemberValue;
 import com.intellij.psi.PsiClass;
-import com.intellij.psi.PsiClassInitializer;
+import com.intellij.psi.PsiClassOwner;
+import com.intellij.psi.PsiCompiledElement;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiFile;
-import com.intellij.psi.PsiImportList;
-import com.intellij.psi.PsiJavaCodeReferenceElement;
-import com.intellij.psi.PsiJavaFile;
-import com.intellij.psi.PsiLiteral;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiMethod;
-import com.intellij.psi.PsiModifier;
 import com.intellij.psi.PsiModifierList;
 import com.intellij.psi.PsiNameValuePair;
-import com.intellij.psi.PsiPackageStatement;
 import com.intellij.psi.PsiParameter;
 import com.intellij.psi.PsiParameterList;
-import com.intellij.psi.PsiReferenceExpression;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.PsiVariable;
-import com.intellij.psi.impl.JavaConstantExpressionEvaluator;
 import com.intellij.psi.javadoc.PsiDocComment;
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -95,7 +89,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -109,6 +102,28 @@ import java.util.jar.JarOutputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
+import org.jetbrains.uast.UAnnotated;
+import org.jetbrains.uast.UAnnotation;
+import org.jetbrains.uast.UAnonymousClass;
+import org.jetbrains.uast.UCallExpression;
+import org.jetbrains.uast.UClass;
+import org.jetbrains.uast.UClassInitializer;
+import org.jetbrains.uast.UComment;
+import org.jetbrains.uast.UElement;
+import org.jetbrains.uast.UExpression;
+import org.jetbrains.uast.UField;
+import org.jetbrains.uast.UFile;
+import org.jetbrains.uast.ULiteralExpression;
+import org.jetbrains.uast.UMethod;
+import org.jetbrains.uast.UNamedExpression;
+import org.jetbrains.uast.UParameter;
+import org.jetbrains.uast.UReferenceExpression;
+import org.jetbrains.uast.UastContext;
+import org.jetbrains.uast.UastEmptyExpression;
+import org.jetbrains.uast.UastVisibility;
+import org.jetbrains.uast.java.JavaUAnnotation;
+import org.jetbrains.uast.util.UastExpressionUtils;
+import org.jetbrains.uast.visitor.AbstractUastVisitor;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -172,6 +187,7 @@ public class Extractor {
     public static final String ANDROID_NOTNULL = "android.annotation.NonNull";
     public static final String SUPPORT_NOTNULL = "android.support.annotation.NonNull";
     public static final String ANDROID_INT_DEF = "android.annotation.IntDef";
+    public static final String ANDROID_LONG_DEF = "android.annotation.LongDef";
     public static final String ANDROID_INT_RANGE = "android.annotation.IntRange";
     public static final String ANDROID_STRING_DEF = "android.annotation.StringDef";
     public static final String REQUIRES_PERMISSION = "android.support.annotation.RequiresPermission";
@@ -209,9 +225,9 @@ public class Extractor {
     private Map<String,Boolean> sourceRetention;
     private final List<Item> keepItems = new ArrayList<>();
 
-    public static List<PsiJavaFile> createUnitsForFiles(@NonNull Project project,
+    public static List<? extends PsiClassOwner> createUnitsForFiles(@NonNull Project project,
             @NonNull List<File> specificSources) {
-        List<PsiJavaFile> units = new ArrayList<>(specificSources.size());
+        List<PsiClassOwner> units = new ArrayList<>(specificSources.size());
         VirtualFileSystem fileSystem = StandardFileSystems.local();
         PsiManager manager = PsiManager.getInstance(project);
 
@@ -219,20 +235,21 @@ public class Extractor {
             VirtualFile virtualFile = fileSystem.findFileByPath(source.getPath());
             if (virtualFile != null) {
                 PsiFile psiFile = manager.findFile(virtualFile);
-                if (psiFile instanceof PsiJavaFile) {
-                    units.add((PsiJavaFile) psiFile);
+                if (psiFile instanceof PsiClassOwner) {
+                    units.add((PsiClassOwner) psiFile);
                 }
             }
         }
         return units;
     }
 
-    public static List<PsiJavaFile> createUnitsInDirectories(@NonNull Project project,
+    public static List<? extends PsiClassOwner> createUnitsInDirectories(@NonNull Project project,
             @NonNull List<File> sourceDirs) {
-        return createUnitsForFiles(project, gatherJavaSources(sourceDirs));
+        List<File> specificSources = gatherSources(sourceDirs);
+        return createUnitsForFiles(project, specificSources);
     }
 
-    private static void addJavaSources(List<File> list, File file) {
+    public static void addJavaSources(@NonNull List<File> list, @NonNull File file) {
         if (file.isDirectory()) {
             File[] files = file.listFiles();
             if (files != null) {
@@ -241,13 +258,16 @@ public class Extractor {
                 }
             }
         } else {
-            if (file.isFile() && file.getName().endsWith(DOT_JAVA)) {
-                list.add(file);
+            if (file.isFile()) {
+                String path = file.getPath();
+                if (path.endsWith(DOT_JAVA) || path.endsWith(DOT_KT)) {
+                    list.add(file);
+                }
             }
         }
     }
 
-    private static List<File> gatherJavaSources(List<File> sourcePath) {
+    public static List<File> gatherSources(List<File> sourcePath) {
         List<File> sources = new ArrayList<>();
         for (File file : sourcePath) {
             addJavaSources(sources, file);
@@ -265,11 +285,23 @@ public class Extractor {
         this.sortAnnotations = sortAnnotations;
     }
 
-    public void extractFromProjectSource(List<PsiJavaFile> units) {
+    public void extractFromProjectSource(List<? extends PsiClassOwner> units) {
+        if (units.isEmpty()) {
+            return;
+        }
+
+        Project project = units.get(0).getProject();
+        UastContext uastContext = ServiceManager.getService(project, UastContext.class);
+
         AnnotationVisitor visitor = new AnnotationVisitor(false, true);
 
-        for (PsiJavaFile unit : units) {
-            unit.accept(visitor);
+        for (PsiClassOwner unit : units) {
+            UElement uFile = uastContext.convertElementWithParent(unit, UFile.class);
+            if (uFile == null) {
+                System.out.println("Warning: Could not convert " + unit.getName() + " with UAST");
+                continue;
+            }
+            uFile.accept(visitor);
         }
 
         typedefsToRemove = visitor.getPrivateTypedefClasses();
@@ -409,7 +441,7 @@ public class Extractor {
     }
 
     @Nullable
-    private static String getFqn(@NonNull PsiAnnotation annotation) {
+    private static String getFqn(@NonNull UAnnotation annotation) {
         return annotation.getQualifiedName();
     }
 
@@ -430,7 +462,7 @@ public class Extractor {
         return null;
     }
 
-    private boolean hasSourceRetention(@NonNull String fqn, @Nullable PsiAnnotation annotation) {
+    private boolean hasSourceRetention(@NonNull String fqn, @Nullable UAnnotation annotation) {
         if (annotation == null) {
             return false;
         }
@@ -454,35 +486,38 @@ public class Extractor {
         }
 
         boolean hasSourceRetention = false;
-        PsiJavaCodeReferenceElement ref = annotation.getNameReferenceElement();
-        if (ref != null) {
-            PsiElement resolved = ref.resolve();
-            if (resolved instanceof PsiClass) {
-                hasSourceRetention = hasSourceRetention((PsiClass) resolved);
-            }
+        PsiClass annotationClass = annotation.resolve();
+        if (annotationClass != null) {
+            hasSourceRetention = hasSourceRetention(annotationClass);
         }
         sourceRetention.put(fqn, hasSourceRetention);
 
         return hasSourceRetention;
     }
 
-    static boolean hasSourceRetention(@NonNull PsiAnnotation psiAnnotation) {
-        if ("java.lang.annotation.Retention".equals(psiAnnotation.getQualifiedName())) {
-            PsiNameValuePair[] attributes = psiAnnotation.getParameterList()
-                    .getAttributes();
-            if (attributes.length != 1) {
+    static boolean hasSourceRetention(@NonNull UAnnotation annotation) {
+        String qualifiedName = annotation.getQualifiedName();
+        if ("java.lang.annotation.Retention".equals(qualifiedName) ||
+                "kotlin.annotation.Retention".equals(qualifiedName)) {
+            List<UNamedExpression> attributes = annotation.getAttributeValues();
+            if (attributes.size() != 1) {
                 error("Expected exactly one parameter passed to @Retention");
                 return false;
             }
-            PsiAnnotationMemberValue value = attributes[0].getValue();
-            if (value instanceof PsiReferenceExpression) {
-                PsiReferenceExpression expression = (PsiReferenceExpression) value;
-                PsiElement element = expression.resolve();
-                if (element instanceof PsiField) {
-                    PsiField field = (PsiField) element;
-                    if ("SOURCE".equals(field.getName())) {
-                        return true;
+            UExpression value = attributes.get(0).getExpression();
+            if (value instanceof UReferenceExpression) {
+                UReferenceExpression expression = (UReferenceExpression) value;
+                try {
+                    PsiElement element = expression.resolve();
+                    if (element instanceof PsiField) {
+                        PsiField field = (PsiField) element;
+                        if ("SOURCE".equals(field.getName())) {
+                            return true;
+                        }
                     }
+                } catch (Throwable t) {
+                    String s = expression.asSourceString();
+                    return s.contains("SOURCE");
                 }
             }
         }
@@ -494,7 +529,8 @@ public class Extractor {
         PsiModifierList modifierList = cls.getModifierList();
         if (modifierList != null) {
             for (PsiAnnotation psiAnnotation : modifierList.getAnnotations()) {
-                if (hasSourceRetention(psiAnnotation)) {
+                UAnnotation annotation = JavaUAnnotation.wrap(psiAnnotation);
+                if (hasSourceRetention(annotation)) {
                     return true;
                 }
             }
@@ -503,9 +539,9 @@ public class Extractor {
         return false;
     }
 
-    private void addAnnotations(@Nullable PsiModifierList modifierList, @NonNull Item item) {
-        if (modifierList != null) {
-            for (PsiAnnotation annotation : modifierList.getAnnotations()) {
+    private void addAnnotations(@Nullable UAnnotated annotated, @NonNull Item item) {
+        if (annotated != null) {
+            for (UAnnotation annotation : annotated.getAnnotations()) {
                 if (isRelevantAnnotation(annotation)) {
                     String fqn = getFqn(annotation);
                     if (SUPPORT_KEEP.equals(fqn)) {
@@ -521,7 +557,7 @@ public class Extractor {
         }
     }
 
-    private void addAnnotation(@NonNull PsiAnnotation annotation, @Nullable String fqn,
+    private void addAnnotation(@NonNull UAnnotation annotation, @Nullable String fqn,
             @NonNull List<AnnotationData> list) {
         if (fqn == null) {
             return;
@@ -596,9 +632,9 @@ public class Extractor {
         stats.put(fqn, count + 1);
     }
 
-    private boolean hasRelevantAnnotations(@Nullable PsiModifierList modifiers) {
-        if (modifiers != null) {
-            for (PsiAnnotation annotation : modifiers.getAnnotations()) {
+    private boolean hasRelevantAnnotations(@Nullable UAnnotated annotated) {
+        if (annotated != null) {
+            for (UAnnotation annotation : annotated.getAnnotations()) {
                 if (isRelevantAnnotation(annotation)) {
                     return true;
                 }
@@ -608,17 +644,7 @@ public class Extractor {
         return false;
     }
 
-    private boolean isRelevantAnnotation(@NonNull PsiAnnotation annotation) {
-        PsiJavaCodeReferenceElement nameReferenceElement = annotation.getNameReferenceElement();
-        if (nameReferenceElement != null) {
-            // Common case: Don't even look up qualified name for the common @Override
-            // annotation.
-            String name = nameReferenceElement.getReferenceName();
-            if ("Override".equals(name) || "SuppressWarnings".equals(name)) {
-                return false;
-            }
-        }
-
+    private boolean isRelevantAnnotation(@NonNull UAnnotation annotation) {
         String fqn = getFqn(annotation);
         if (fqn == null || fqn.startsWith("java.lang.")) {
             return false;
@@ -658,7 +684,7 @@ public class Extractor {
                 && !fqn.endsWith(".SdkConstant");
     }
 
-    boolean isMagicConstant(@NonNull PsiAnnotation annotation, @NonNull String typeName) {
+    boolean isMagicConstant(@NonNull UAnnotation annotation, @NonNull String typeName) {
         if (irrelevantAnnotations.contains(typeName)
                 || typeName.startsWith("java.lang.")) { // @Override, @SuppressWarnings, etc.
             return false;
@@ -668,38 +694,37 @@ public class Extractor {
         }
         switch (typeName) {
             case INT_DEF_ANNOTATION:
+            case LONG_DEF_ANNOTATION:
             case STRING_DEF_ANNOTATION:
             case INT_RANGE_ANNOTATION:
             case ANDROID_INT_RANGE:
             case ANDROID_INT_DEF:
+            case ANDROID_LONG_DEF:
             case ANDROID_STRING_DEF:
                 return true;
         }
 
         // See if this annotation is itself annotated.
         // We only support a single level of IntDef type annotations, not arbitrary nesting
-        PsiJavaCodeReferenceElement referenceElement = annotation.getNameReferenceElement();
-        if (referenceElement != null) {
-            PsiElement resolved = referenceElement.resolve();
-            if (resolved instanceof PsiClass) {
-                PsiModifierList modifierList = ((PsiClass) resolved).getModifierList();
-                if (modifierList != null) {
-                    boolean match = false;
-                    for (PsiAnnotation a : modifierList.getAnnotations()) {
-                        String fqn = a.getQualifiedName();
-                        if (isNestedAnnotation(fqn)) {
-                            List<AnnotationData> list = types.get(typeName);
-                            if (list == null) {
-                                list = new ArrayList<>(2);
-                                types.put(typeName, list);
-                            }
-                            addAnnotation(a, fqn, list);
-                            match = true;
-                        }
+        PsiClass resolved = annotation.resolve();
+        if (resolved != null) {
+            PsiModifierList modifierList = resolved.getModifierList();
+            if (modifierList != null) {
+                boolean match = false;
+                for (PsiAnnotation pa : modifierList.getAnnotations()) {
+                    String fqn = pa.getQualifiedName();
+                    if (isNestedAnnotation(fqn)) {
+                        UAnnotation a = JavaUAnnotation.wrap(pa);
+                        a = findRealAnnotation(a, resolved);
+                        List<AnnotationData> list = types.computeIfAbsent(typeName,
+                                k -> new ArrayList<>(2));
+                        addAnnotation(a, fqn, list);
+                        match = true; // can't break yet: there could be multiple, e.g.
+                        // both intdef and intrange
                     }
-                    if (match) {
-                        return true;
-                    }
+                }
+                if (match) {
+                    return true;
                 }
             }
         }
@@ -709,15 +734,73 @@ public class Extractor {
         return false;
     }
 
+    private static UAnnotation findRealAnnotation(@NonNull UAnnotation annotation,
+            @NonNull PsiClass resolved) {
+        if (annotation.getPsi() instanceof PsiCompiledElement) {
+            // We sometimes get binaries out of Kotlin files after a resolve; find the
+            // original AST nodes
+            String className = resolved.getQualifiedName();
+            Project project = resolved.getProject();
+            UastContext uastContext = ServiceManager.getService(project, UastContext.class);
+            // Ideally we could just call
+            //   (UClass) uastContext.convertElementWithParent(resolved, UClass.class);
+            // here and get the real KotlinUAnnotations from the class' getAnnotations method,
+            // but that doesn't work; our resolved class is a ClsWrapperStubPsiFactory innerclass
+            // (wrapping the real KtClass) so when we call conversion on the class we end up
+            // with a JavaUClass instead.
+
+            // Instead look up the underlying source file and convert that, looking
+            // for the UClass within it
+            PsiFile containingFile = resolved.getContainingFile();
+            PsiFile psi = PsiManager.getInstance(project).findFile(containingFile.getVirtualFile());
+            UFile uFile = (UFile) uastContext.convertElement(psi, null, UFile.class);
+            Ref<UClass> cls = new Ref<>();
+            if (uFile != null && className != null) {
+                uFile.accept(new AbstractUastVisitor() {
+                    @Override
+                    public boolean visitClass(UClass node) {
+                        if (className.equals(node.getQualifiedName())) {
+                            cls.set(node);
+                            return true;
+                        }
+                        return super.visitClass(node);
+                    }
+
+                    @Override
+                    public boolean visitElement(UElement node) {
+                        return cls.get() != null || super.visitElement(node);
+                    }
+                });
+
+                UClass uClass = cls.get();
+                String annotationQualifiedName = annotation.getQualifiedName();
+                if (uClass != null && annotationQualifiedName != null) {
+                    //noinspection RedundantCast
+                    for (UAnnotation uAnnotation : ((UAnnotated) uClass).getAnnotations()) {
+                        if (annotationQualifiedName.equals(uAnnotation.getQualifiedName())) {
+                            //((PsiArrayInitializerMemberValue)psiAnnotation.findAttributeValue(null)).getInitializers();
+                            //return JavaUAnnotation.wrap(psiAnnotation);
+                            return uAnnotation;
+                        }
+                    }
+                }
+            }
+        }
+
+        return annotation;
+    }
+
     static boolean isNestedAnnotation(@Nullable String fqn) {
         return (fqn != null &&
                 (fqn.equals(INT_DEF_ANNOTATION) ||
+                        fqn.equals(LONG_DEF_ANNOTATION) ||
                         fqn.equals(STRING_DEF_ANNOTATION) ||
                         fqn.equals(REQUIRES_PERMISSION) ||
                         fqn.equals(ANDROID_REQUIRES_PERMISSION) ||
                         fqn.equals(INT_RANGE_ANNOTATION) ||
                         fqn.equals(ANDROID_INT_RANGE) ||
                         fqn.equals(ANDROID_INT_DEF) ||
+                        fqn.equals(ANDROID_LONG_DEF) ||
                         fqn.equals(ANDROID_STRING_DEF)));
     }
 
@@ -933,7 +1016,7 @@ public class Extractor {
                 mergeFromJar(file);
             } else if (file.getPath().endsWith(DOT_XML)) {
                 try {
-                    String xml = Files.toString(file, Charsets.UTF_8);
+                    String xml = Files.asCharSource(file, Charsets.UTF_8).read();
                     mergeAnnotationsXml(file.getPath(), xml);
                 } catch (IOException e) {
                     error("Aborting: I/O problem during transform: " + e.toString());
@@ -1411,7 +1494,8 @@ public class Extractor {
                             TYPE_DEF_VALUE_ATTRIBUTE, value,
                             flag ? TYPE_DEF_FLAG_ATTRIBUTE : null, flag ? VALUE_TRUE : null });
         } else if (STRING_DEF_ANNOTATION.equals(name) || ANDROID_STRING_DEF.equals(name) ||
-                INT_DEF_ANNOTATION.equals(name) || ANDROID_INT_DEF.equals(name)) {
+                INT_DEF_ANNOTATION.equals(name) || ANDROID_INT_DEF.equals(name) ||
+                LONG_DEF_ANNOTATION.equals(name) || ANDROID_LONG_DEF.equals(name)) {
             List<Element> children = getChildren(annotationElement);
             Element valueElement = children.get(0);
             String valName = valueElement.getAttribute(ATTR_NAME);
@@ -1424,8 +1508,10 @@ public class Extractor {
                 flag = VALUE_TRUE.equals(valueElement.getAttribute(ATTR_VAL));
             }
             boolean intDef = INT_DEF_ANNOTATION.equals(name) || ANDROID_INT_DEF.equals(name);
+            boolean longDef = LONG_DEF_ANNOTATION.equals(name) || ANDROID_LONG_DEF.equals(name);
             annotation = new AnnotationData(
-                    intDef ? INT_DEF_ANNOTATION : STRING_DEF_ANNOTATION,
+                    intDef ? INT_DEF_ANNOTATION : longDef ?
+                            LONG_DEF_ANNOTATION : STRING_DEF_ANNOTATION,
                     new String[] { TYPE_DEF_VALUE_ATTRIBUTE, value,
                     flag ? TYPE_DEF_FLAG_ATTRIBUTE : null, flag ? VALUE_TRUE : null});
         } else if (IDEA_CONTRACT.equals(name)) {
@@ -1529,12 +1615,12 @@ public class Extractor {
         return listIgnored;
     }
 
-    public AnnotationData createData(@NonNull String name, @NonNull PsiAnnotation annotation) {
-        PsiNameValuePair[] pairs = annotation.getParameterList().getAttributes();
-        if (pairs.length == 0) {
+    public AnnotationData createData(@NonNull String name, @NonNull UAnnotation annotation) {
+        List<UNamedExpression> pairs = annotation.getAttributeValues();
+        if (pairs.isEmpty()) {
             return new AnnotationData(name);
         }
-        return new AnnotationData(name, pairs);
+       return new AnnotationData(name, pairs);
     }
 
     /**
@@ -1582,16 +1668,16 @@ public class Extractor {
         public String[] attributeStrings;
 
         @Nullable
-        public PsiNameValuePair[] attributes;
+        public List<UNamedExpression> attributes;
 
         private AnnotationData(@NonNull String name) {
             this.name = name;
         }
 
-        private AnnotationData(@NonNull String name, @Nullable PsiNameValuePair[] pairs) {
+        private AnnotationData(@NonNull String name, @Nullable List<UNamedExpression> pairs) {
             this(name);
             attributes = pairs;
-            assert attributes == null || attributes.length > 0;
+            assert attributes == null || !attributes.isEmpty();
         }
 
         private AnnotationData(@NonNull String name, @Nullable String[] attributeStrings) {
@@ -1609,10 +1695,11 @@ public class Extractor {
                 writer.print("\">");
                 writer.println();
                 //noinspection PointlessBooleanExpression,ConstantConditions
-                if (attributes.length > 1 && sortAnnotations) {
+                if (attributes.size() > 1 && sortAnnotations) {
                     // Ensure that the value attribute is written first
-                    Arrays.sort(attributes, new Comparator<PsiNameValuePair>() {
-                        private String getName(PsiNameValuePair pair) {
+                    attributes = new ArrayList<>(attributes); // make list mutable
+                    attributes.sort(new Comparator<UNamedExpression>() {
+                        private String getName(UNamedExpression pair) {
                             String name = pair.getName();
                             if (name == null) {
                                 return ATTR_VALUE;
@@ -1621,12 +1708,12 @@ public class Extractor {
                             }
                         }
 
-                        private int rank(PsiNameValuePair pair) {
+                        private int rank(UNamedExpression pair) {
                             return ATTR_VALUE.equals(getName(pair)) ? -1 : 0;
                         }
 
                         @Override
-                        public int compare(PsiNameValuePair o1, PsiNameValuePair o2) {
+                        public int compare(UNamedExpression o1, UNamedExpression o2) {
                             int r1 = rank(o1);
                             int r2 = rank(o2);
                             int delta = r1 - r2;
@@ -1638,28 +1725,40 @@ public class Extractor {
                     });
                 }
 
-                PsiNameValuePair[] attributes = this.attributes;
+                List<UNamedExpression> attributes = this.attributes;
 
-                if (attributes.length == 1
+                if (attributes.size() == 1
                         && name.startsWith(REQUIRES_PERMISSION)
-                        && name.length() > REQUIRES_PERMISSION.length()
-                        && attributes[0].getValue() instanceof PsiAnnotation) {
-                    // The external annotations format does not allow for nested/complex annotations.
-                    // However, these special annotations (@RequiresPermission.Read,
-                    // @RequiresPermission.Write, etc) are known to only be simple containers with a
-                    // single permission child, so instead we "inline" the content:
-                    //  @Read(@RequiresPermission(allOf={P1,P2},conditional=true)
-                    //     =>
-                    //      @RequiresPermission.Read(allOf({P1,P2},conditional=true)
-                    // That's setting attributes that don't actually exist on the container permission,
-                    // but we'll counteract that on the read-annotations side.
-                    PsiAnnotation annotation = (PsiAnnotation) attributes[0].getValue();
-                    attributes = annotation.getParameterList().getAttributes();
+                        && name.length() > REQUIRES_PERMISSION.length()) {
+                    UExpression expression = attributes.get(0).getExpression();
+                    if (expression instanceof UAnnotation) {
+                        // The external annotations format does not allow for nested/complex annotations.
+                        // However, these special annotations (@RequiresPermission.Read,
+                        // @RequiresPermission.Write, etc) are known to only be simple containers with a
+                        // single permission child, so instead we "inline" the content:
+                        //  @Read(@RequiresPermission(allOf={P1,P2},conditional=true)
+                        //     =>
+                        //      @RequiresPermission.Read(allOf({P1,P2},conditional=true)
+                        // That's setting attributes that don't actually exist on the container permission,
+                        // but we'll counteract that on the read-annotations side.
+                        UAnnotation annotation = (UAnnotation) expression;
+                        attributes = annotation.getAttributeValues();
+                    } else if (expression instanceof UastEmptyExpression &&
+                            attributes.get(0).getPsi() instanceof PsiNameValuePair) {
+                        PsiAnnotationMemberValue memberValue =
+                                ((PsiNameValuePair) attributes.get(0).getPsi()).getValue();
+                        if (memberValue instanceof PsiAnnotation) {
+                            UAnnotation annotation =
+                                    JavaUAnnotation.wrap((PsiAnnotation) memberValue);
+                            attributes = annotation.getAttributeValues();
+                        }
+                    }
                 }
 
                 boolean empty = true;
-                for (PsiNameValuePair pair : attributes) {
-                    String value = attributeString(pair.getValue());
+                for (UNamedExpression pair : attributes) {
+                    UExpression expression = pair.getExpression();
+                    String value = attributeString(expression);
                     if (value == null) {
                         continue;
                     }
@@ -1732,7 +1831,7 @@ public class Extractor {
         }
 
         @Nullable
-        private String attributeString(@Nullable PsiAnnotationMemberValue value) {
+        private String attributeString(@Nullable UExpression value) {
             StringBuilder sb = new StringBuilder();
             if (value != null && appendExpression(sb, value)) {
                 return sb.toString();
@@ -1742,14 +1841,14 @@ public class Extractor {
         }
 
         private boolean appendExpression(@NonNull StringBuilder sb,
-                @NonNull PsiAnnotationMemberValue expression) {
-            if (expression instanceof PsiArrayInitializerMemberValue) {
+                @NonNull UExpression expression) {
+            if (UastExpressionUtils.isArrayInitializer(expression)) {
+                UCallExpression call = (UCallExpression) expression;
+                List<UExpression> initializers = call.getValueArguments();
                 sb.append('{');
-                PsiArrayInitializerMemberValue initializer
-                        = (PsiArrayInitializerMemberValue) expression;
                 boolean first = true;
                 int initialLength = sb.length();
-                for (PsiAnnotationMemberValue e : initializer.getInitializers()) {
+                for (UExpression e : initializers) {
                     int length = sb.length();
                     if (first) {
                         first = false;
@@ -1772,8 +1871,8 @@ public class Extractor {
                     return false;
                 }
                 return true;
-            } else if (expression instanceof PsiReferenceExpression) {
-                PsiReferenceExpression referenceExpression = (PsiReferenceExpression) expression;
+            } else if (expression instanceof UReferenceExpression) {
+                UReferenceExpression referenceExpression = (UReferenceExpression) expression;
                 PsiElement resolved = referenceExpression.resolve();
                 if (resolved instanceof PsiField) {
                     PsiField field = (PsiField) resolved;
@@ -1812,16 +1911,17 @@ public class Extractor {
                     warning("Unexpected reference to " + resolved);
                     return false;
                 }
-            } else if (expression instanceof PsiLiteral) {
-                PsiLiteral literal = (PsiLiteral) expression;
+            } else if (expression instanceof ULiteralExpression) {
+                ULiteralExpression literal = (ULiteralExpression) expression;
                 Object literalValue = literal.getValue();
                 if (appendLiteralValue(sb, literalValue)) {
                     return true;
                 }
-            } else if (expression instanceof PsiExpression) {
-                // For example, binary expressions like 3 + 4
-                Object literalValue = JavaConstantExpressionEvaluator.computeConstantExpression(
-                        (PsiExpression) expression, false);
+            }
+
+            // For example, binary expressions like 3 + 4
+            Object literalValue = ConstantEvaluator.evaluate(null, expression);
+            if (literalValue != null) {
                 if (appendLiteralValue(sb, literalValue)) {
                     return true;
                 }
@@ -1833,8 +1933,9 @@ public class Extractor {
             return false;
         }
 
-        private boolean isInlinedConstant() {
+        private boolean isInlinedConstant() { // TODO: Add android.* versions of these
             return name.equals(INT_DEF_ANNOTATION) ||
+                    name.equals(LONG_DEF_ANNOTATION) ||
                     name.equals(STRING_DEF_ANNOTATION) ||
                     name.equals("android.support.annotation.SystemService");
         }
@@ -2480,6 +2581,24 @@ public class Extractor {
     }
 
     /**
+     * Returns true if the given javadoc contains a {@code @hide} marker
+     *
+     * @param element the documented element
+     * @return true if the javadoc contains a hide marker
+     */
+    private static boolean javadocContainsHide(@NonNull UElement element) {
+        List<UComment> comments = element.getComments();
+        for (UComment comment : comments) {
+            String text = comment.getText();
+            if (text.contains("@hide")) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Returns true if this type declaration for a typedef is hidden (e.g. should not
      * be extracted into an external annotation database)
      *
@@ -2487,20 +2606,19 @@ public class Extractor {
      * @return true if the type is hidden
      */
     @SuppressWarnings("RedundantIfStatement")
-    public static boolean isHiddenTypeDef(@NonNull PsiClass declaration) {
-        PsiModifierList modifierList = declaration.getModifierList();
-        if (modifierList == null || !modifierList.hasModifierProperty(PsiModifier.PUBLIC)) {
+    public static boolean isHiddenTypeDef(@NonNull UClass declaration) {
+        if (declaration.getVisibility() != UastVisibility.PUBLIC) {
             return true;
         }
 
-        if (REMOVE_HIDDEN_TYPEDEFS && javadocContainsHide(declaration.getDocComment())) {
+        if (REMOVE_HIDDEN_TYPEDEFS && javadocContainsHide(declaration)) {
             return true;
         }
 
         return false;
     }
 
-    private class AnnotationVisitor extends JavaRecursiveElementVisitor {
+    private class AnnotationVisitor extends AbstractUastVisitor {
         private List<String> privateTypedefs = new ArrayList<>();
         private final boolean requireHide;
         private final boolean requireSourceRetention;
@@ -2515,12 +2633,11 @@ public class Extractor {
         }
 
         @Override
-        public void visitMethod(@NonNull PsiMethod method) {
-            // Not calling super: don't recurse inside methods
-
-            PsiModifierList modifierList = method.getModifierList();
+        public boolean visitMethod(UMethod method) {
             PsiClass containingClass = method.getContainingClass();
-            if (hasRelevantAnnotations(modifierList)) {
+
+            // Not calling super: don't recurse inside methods
+            if (hasRelevantAnnotations(method)) {
                 String fqn = getFqn(containingClass);
                 MethodItem item = MethodItem.create(containingClass, fqn, method);
                 if (item != null) {
@@ -2542,114 +2659,101 @@ public class Extractor {
                     }
 
                     if (!skipReturnAnnotations) {
-                        addAnnotations(modifierList, item);
+                        addAnnotations(method, item);
                     }
                 }
             }
 
-            PsiParameterList parameterList = method.getParameterList();
-            PsiParameter[] parameters = parameterList.getParameters();
+            List<UParameter> parameters = method.getUastParameters();
             int index = 0;
-            for (PsiParameter parameter : parameters) {
-                PsiModifierList parameterModifierList = parameter.getModifierList();
-                if (hasRelevantAnnotations(parameterModifierList)) {
+            for (UParameter parameter : parameters) {
+                if (hasRelevantAnnotations(parameter)) {
                     String fqn = getFqn(containingClass);
                     Item item = ParameterItem.create(containingClass, fqn, method, parameter,
                             index);
                     if (item != null) {
                         addItem(fqn, item);
-                        addAnnotations(parameterModifierList, item);
+                        addAnnotations(parameter, item);
                     }
                 }
                 index++;
             }
+
+            return true;
         }
 
         @Override
-        public void visitField(PsiField field) {
+        public boolean visitField(UField field) {
             // Not calling super: don't recurse inside field (e.g. field initializer)
             //super.visitField(field);
-            PsiModifierList modifierList = field.getModifierList();
-            if (hasRelevantAnnotations(modifierList)) {
+            if (hasRelevantAnnotations(field)) {
                 PsiClass containingClass = field.getContainingClass();
                 if (containingClass != null) {
                     String fqn = getFqn(containingClass);
                     Item item = FieldItem.create(containingClass, fqn, field);
                     if (item != null) {
                         addItem(fqn, item);
-                        addAnnotations(modifierList, item);
+                        addAnnotations(field, item);
                     }
                 }
             }
+
+            return true;
         }
 
         @Override
-        public void visitClassInitializer(PsiClassInitializer initializer) {
+        public boolean visitInitializer(UClassInitializer initializer) {
             // Don't look inside
+            return true;
         }
 
         @Override
-        public void visitImportList(PsiImportList list) {
-            // Don't look inside
-        }
-
-        @Override
-        public void visitPackageStatement(PsiPackageStatement statement) {
+        public boolean visitFile(UFile node) {
             // Extract package. PSI doesn't expose the fact that for a package-info
             // the modifier list is one of the children of the package statement
-            PsiElement curr = statement.getFirstChild();
-            if (curr instanceof PsiModifierList) {
-                // Is it a package-info.java file?
-                PsiModifierList modifierList = (PsiModifierList) curr;
-                if (hasRelevantAnnotations(modifierList)) {
-                    String fqn = statement.getPackageName();
-                    if (fqn != null) {
-                        PackageItem item = PackageItem.create(fqn);
-                        addPackage(fqn, item);
-                        addAnnotations(modifierList, item);
-                    }
-                }
+            // Is it a package-info.java file?
+
+            if (hasRelevantAnnotations(node)) {
+                String fqn = node.getPackageName();
+                PackageItem item = PackageItem.create(fqn);
+                addPackage(fqn, item);
+                addAnnotations(node, item);
             }
+
+            return super.visitFile(node);
         }
 
         @Override
-        public void visitDocComment(PsiDocComment comment) {
-            // Don't look inside
-        }
-
-        @Override
-        public void visitClass(PsiClass aClass) {
+        public boolean visitClass(UClass aClass) {
             super.visitClass(aClass);
 
-            if (aClass instanceof PsiAnonymousClass) {
-                return;
+            if (aClass instanceof UAnonymousClass) {
+                return true;
             }
 
             if (aClass.isAnnotationType()) {
                 // Let's see if it's a typedef
-                PsiModifierList modifierList = aClass.getModifierList();
-                if (modifierList != null) {
-                    for (PsiAnnotation annotation : modifierList.getAnnotations()) {
-                        String fqn = annotation.getQualifiedName();
-                        if (isNestedAnnotation(fqn)) {
-                            if (requireHide && !javadocContainsHide(aClass.getDocComment())) {
-                                Extractor.warning(aClass.getQualifiedName()
-                                        + ": This typedef annotation should specify @hide in a "
-                                        + "doc comment");
-                            }
-                            if (requireSourceRetention
-                                    && !hasSourceRetention(aClass)) {
-                                Extractor.warning(aClass.getQualifiedName()
-                                        + ": The typedef annotation should have "
-                                        + "@Retention(RetentionPolicy.SOURCE)");
-                            }
-                            if (isHiddenTypeDef(aClass)) {
-                                String cls = LintUtils.getInternalName(aClass);
-                                privateTypedefs.add(cls);
-                            }
-
-                            break;
+                //noinspection RedundantCast
+                for (UAnnotation annotation : ((UAnnotated)aClass).getAnnotations()) {
+                    String fqn = annotation.getQualifiedName();
+                    if (isNestedAnnotation(fqn)) {
+                        if (requireHide && !javadocContainsHide(aClass)) {
+                            Extractor.warning(aClass.getQualifiedName()
+                                    + ": This typedef annotation should specify @hide in a "
+                                    + "doc comment");
                         }
+                        if (requireSourceRetention
+                                && !hasSourceRetention(aClass)) {
+                            Extractor.warning(aClass.getQualifiedName()
+                                    + ": The typedef annotation should have "
+                                    + "@Retention(RetentionPolicy.SOURCE)");
+                        }
+                        if (isHiddenTypeDef(aClass)) {
+                            String cls = LintUtils.getInternalName(aClass);
+                            privateTypedefs.add(cls);
+                        }
+
+                        break;
                     }
                 }
             }
@@ -2658,18 +2762,19 @@ public class Extractor {
                     // removed by TypedefCollector#recordTypedefs so users may
                     // end up referencing the typedef annotation itself
                     && isHiddenTypeDef(aClass)) {
-                return;
+                return false;
             }
 
-            PsiModifierList modifierList = aClass.getModifierList();
-            if (hasRelevantAnnotations(modifierList)) {
+            if (hasRelevantAnnotations(aClass)) {
                 String fqn = getFqn(aClass);
                 if (fqn != null) {
                     Item item = ClassItem.create(aClass, fqn);
                     addItem(fqn, item);
-                    addAnnotations(modifierList, item);
+                    addAnnotations(aClass, item);
                 }
             }
+
+            return false;
         }
     }
 }
