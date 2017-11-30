@@ -89,6 +89,7 @@ import com.android.build.gradle.internal.incremental.InstantRunAnchorTaskConfigA
 import com.android.build.gradle.internal.incremental.InstantRunPatchingPolicy;
 import com.android.build.gradle.internal.model.CoreExternalNativeBuild;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.ExtendedContentType;
 import com.android.build.gradle.internal.pipeline.OriginalStream;
 import com.android.build.gradle.internal.pipeline.StreamFilter;
@@ -3163,8 +3164,9 @@ public abstract class TaskManager {
     }
 
     protected Task getValidateSigningTask(@NonNull PackagingScope packagingScope) {
+        File defaultDebugKeystoreLocation = GradleKeystoreHelper.getDefaultDebugKeystoreLocation();
         ValidateSigningTask.ConfigAction configAction =
-                new ValidateSigningTask.ConfigAction(packagingScope);
+                new ValidateSigningTask.ConfigAction(packagingScope, defaultDebugKeystoreLocation);
 
         Task validateSigningTask = taskFactory.findByName(configAction.getName());
         if (validateSigningTask == null) {

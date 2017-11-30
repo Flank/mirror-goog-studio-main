@@ -16,16 +16,19 @@
 
 package com.android.build.gradle;
 
+import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertNotNull;
+
 import com.android.build.gradle.internal.BadPluginException;
 import com.android.build.gradle.internal.fixture.TestConstants;
 import com.android.build.gradle.internal.fixture.TestProjects;
 import com.android.build.gradle.internal.fixture.VariantCheckers;
+import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.scope.VariantScope;
 import com.android.build.gradle.internal.variant.BaseVariantData;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.core.DefaultBuildType;
 import com.android.builder.model.SigningConfig;
-import com.android.ide.common.signing.KeystoreHelper;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Eval;
 import java.io.File;
@@ -350,9 +353,10 @@ public class AppPluginInternalTest {
         signingConfig = variant.getVariantConfiguration().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         final File file = signingConfig.getStoreFile();
-        TestCase.assertEquals(
-                KeystoreHelper.defaultDebugKeystoreLocation(),
-                (file == null ? null : file.getAbsolutePath()));
+        assertNotNull(file);
+        assertThat(file.getAbsolutePath())
+                .isEqualTo(
+                        GradleKeystoreHelper.getDefaultDebugKeystoreLocation().getAbsolutePath());
 
         variant = VariantCheckers.findVariantData(variants, "flavor1Staging");
         signingConfig = variant.getVariantConfiguration().getSigningConfig();
@@ -368,9 +372,10 @@ public class AppPluginInternalTest {
         signingConfig = variant.getVariantConfiguration().getSigningConfig();
         TestCase.assertNotNull(signingConfig);
         final File file1 = signingConfig.getStoreFile();
-        TestCase.assertEquals(
-                KeystoreHelper.defaultDebugKeystoreLocation(),
-                (file1 == null ? null : file1.getAbsolutePath()));
+        assertNotNull(file1);
+        assertThat(file1.getAbsolutePath())
+                .isEqualTo(
+                        GradleKeystoreHelper.getDefaultDebugKeystoreLocation().getAbsolutePath());
 
         variant = VariantCheckers.findVariantData(variants, "flavor2Staging");
         signingConfig = variant.getVariantConfiguration().getSigningConfig();

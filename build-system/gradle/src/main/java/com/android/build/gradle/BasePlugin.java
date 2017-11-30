@@ -50,6 +50,7 @@ import com.android.build.gradle.internal.dsl.SigningConfigFactory;
 import com.android.build.gradle.internal.ide.ModelBuilder;
 import com.android.build.gradle.internal.ide.NativeModelBuilder;
 import com.android.build.gradle.internal.ndk.NdkHandler;
+import com.android.build.gradle.internal.packaging.GradleKeystoreHelper;
 import com.android.build.gradle.internal.pipeline.TransformTask;
 import com.android.build.gradle.internal.plugin.PluginDelegate;
 import com.android.build.gradle.internal.plugin.ProjectWrapper;
@@ -452,7 +453,11 @@ public abstract class BasePlugin<E extends BaseExtension2>
                         ProductFlavor.class,
                         new ProductFlavorFactory(objectFactory, project, project.getLogger()));
         final NamedDomainObjectContainer<SigningConfig> signingConfigContainer =
-                project.container(SigningConfig.class, new SigningConfigFactory(objectFactory));
+                project.container(
+                        SigningConfig.class,
+                        new SigningConfigFactory(
+                                objectFactory,
+                                GradleKeystoreHelper.getDefaultDebugKeystoreLocation()));
 
         final NamedDomainObjectContainer<BaseVariantOutput> buildOutputs =
                 project.container(BaseVariantOutput.class);
