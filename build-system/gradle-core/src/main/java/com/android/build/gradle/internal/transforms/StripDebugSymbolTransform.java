@@ -85,7 +85,7 @@ public class StripDebugSymbolTransform extends Transform {
         this.isLibrary = isLibrary;
         checkArgument(ndkHandler.isConfigured());
 
-        for (Abi abi : Abi.values()) {
+        for (Abi abi : ndkHandler.getDefaultAbis()) {
             stripExecutables.put(abi, ndkHandler.getStripExecutable(abi));
         }
         this.project = project;
@@ -228,9 +228,14 @@ public class StripDebugSymbolTransform extends Transform {
             FileUtils.copyFile(input, output);
             return;
         }
+        File exe = stripExecutables.get(abi);
+        if (exe == null || !exe.isFile()) {
+            FileUtils.copyFile(input, output);
+            return;
+        }
 
         ProcessInfoBuilder builder = new ProcessInfoBuilder();
-        builder.setExecutable(stripExecutables.get(abi));
+        builder.setExecutable(exe);
         builder.addArgs("--strip-unneeded");
         builder.addArgs("-o");
         builder.addArgs(output.toString());
