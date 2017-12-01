@@ -348,7 +348,7 @@ public class UnusedResourceDetectorTest extends AbstractCheckTest {
                 .expectClean();
     }
 
-    public void ignore_testKotlin2() {
+    public void testKotlin2() {
         // Regression test for issue 63150366, comment #17 - reference in class declaration
         // Blocked on https://youtrack.jetbrains.com/issue/KT-21409
         //

@@ -80,12 +80,16 @@ class TypesTest : TestCase() {
                 "                UAnnotation (fqName = org.jetbrains.annotations.Nullable) [@org.jetbrains.annotations.Nullable]\n" +
                 "        UAnnotationMethod (name = getProperty1) [public final fun getProperty1() : java.lang.String = UastEmptyExpression]\n" +
                 "            ULiteralExpression (value = \"Default Value\") [\"Default Value\"]\n" +
-                "        UAnnotationMethod (name = Kotlin) [public fun Kotlin(@org.jetbrains.annotations.NotNull property1: java.lang.String, @null arg2: int) = UastEmptyExpression]\n" +
+                "        UAnnotationMethod (name = Kotlin) [public fun Kotlin(@org.jetbrains.annotations.NotNull property1: java.lang.String, @null arg2: int) {...}]\n" +
                 "            UParameter (name = property1) [@org.jetbrains.annotations.NotNull var property1: java.lang.String = \"Default Value\"]\n" +
                 "                UAnnotation (fqName = org.jetbrains.annotations.NotNull) [@org.jetbrains.annotations.NotNull]\n" +
                 "                ULiteralExpression (value = \"Default Value\") [\"Default Value\"]\n" +
                 "            UParameter (name = arg2) [@null var arg2: int]\n" +
                 "                UAnnotation (fqName = null) [@null]\n" +
+                "            UBlockExpression [{...}]\n" +
+                "                UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 0)) [<init>()]\n" +
+                "                    UIdentifier (Identifier (Parent)) [UIdentifier (Identifier (Parent))]\n" +
+                "                    USimpleNameReferenceExpression (identifier = <init>) [<init>]\n" +
                 "    UClass (name = Parent) [public class Parent {...}]\n" +
                 "        UAnnotationMethod (name = method) [public fun method() : java.lang.String = null]\n" +
                 "            ULiteralExpression (value = null) [null] : PsiType:Void\n" +
@@ -140,6 +144,10 @@ class TypesTest : TestCase() {
                 "                ULiteralExpression (value = \"Default Value\")\n" +
                 "            UParameter (name = arg2)\n" +
                 "                UAnnotation (fqName = null)\n" +
+                "            UBlockExpression\n" +
+                "                UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 0))\n" +
+                "                    UIdentifier (Identifier (Parent))\n" +
+                "                    USimpleNameReferenceExpression (identifier = <init>)\n" +
                 "    UClass (name = Parent)\n" +
                 "        UAnnotationMethod (name = method)\n" +
                 "            ULiteralExpression (value = null)\n" +
@@ -185,6 +193,49 @@ class TypesTest : TestCase() {
         Disposer.dispose(pair.second)
     }
 
+    fun testSecondaryConstructorBodies() {
+        // Regression test for https://youtrack.jetbrains.com/issue/KT-21575
+        val pair = LintUtilsTest.parseKotlin("" +
+                "class Foo() {\n" +
+                "    constructor(number: Int) : this() {\n" +
+                "        sideeffect(number)\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "fun sideeffect(number: Int) {\n" +
+                "    println(number)\n" +
+                "}\n" +
+                "\n" +
+                "\n" +
+                "fun main(args: Array<String>) {\n" +
+                "    Foo()\n" +
+                "    Foo(5)\n" +
+                "}", File("src/test/pkg/test.kt"))
+
+        val file = pair.first.uastFile
+
+        assertEquals("" +
+                "public final class TestKt {\n" +
+                "    public static final fun sideeffect(@null number: int) : void {\n" +
+                "        <anonymous class>(number)\n" +
+                "    }\n" +
+                "    public static final fun main(@org.jetbrains.annotations.NotNull args: java.lang.String[]) : void {\n" +
+                "        <init>()\n" +
+                "        <init>(5)\n" +
+                "    }\n" +
+                "}\n" +
+                "\n" +
+                "public final class Foo {\n" +
+                "    public fun Foo() = UastEmptyExpression\n" +
+                "    public fun Foo(@null number: int) {\n" +
+                "        <init>()\n" +
+                "        sideeffect(number)\n" +
+                "" +
+                "    }\n" +
+                "}\n", file?.asRenderString())
+        Disposer.dispose(pair.second)
+    }
+
     fun testPrimitiveKotlinTypes3() {
         val pair = LintUtilsTest.parseKotlin("" +
                 "open class Parent(val number: Int) {\n" +
@@ -194,13 +245,6 @@ class TypesTest : TestCase() {
                 "class Five : Parent(5)", File("src/test/pkg/test.kt"))
 
         val file = pair.first.uastFile
-
-        file?.accept(object : AbstractUastVisitor() {
-            override fun visitLiteralExpression(node: ULiteralExpression): Boolean {
-                println(node.asRenderString())
-                return super.visitLiteralExpression(node)
-            }
-        })
 
         assertEquals("" +
                 "UFile (package = ) [public class Parent {...]\n" +
@@ -214,7 +258,12 @@ class TypesTest : TestCase() {
                 "            UParameter (name = number) [@null var number: int]\n" +
                 "                UAnnotation (fqName = null) [@null]\n" +
                 "    UClass (name = Five) [public final class Five : Parent {...}]\n" +
-                "        UAnnotationMethod (name = Five) [public fun Five() = UastEmptyExpression]\n",
+                "        UAnnotationMethod (name = Five) [public fun Five() {...}]\n" +
+                "            UBlockExpression [{...}]\n" +
+                "                UCallExpression (kind = UastCallKind(name='constructor_call'), argCount = 1)) [<init>(5)]\n" +
+                "                    UIdentifier (Identifier (Parent)) [UIdentifier (Identifier (Parent))]\n" +
+                "                    USimpleNameReferenceExpression (identifier = <init>) [<init>]\n" +
+                "                    ULiteralExpression (value = 5) [5] : PsiType:int\n",
                 file?.asLogTypes())
         Disposer.dispose(pair.second)
     }

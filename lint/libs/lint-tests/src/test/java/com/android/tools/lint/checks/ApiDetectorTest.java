@@ -4781,6 +4781,45 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         "8 errors, 0 warnings");
     }
 
+    public void testKotlinArgumentsInConstructorDelegation() {
+        // Regression test for https://issuetracker.google.com/69948867
+        // NewApi doesn't work for calls in arguments of constructor delegation
+        lint().files(
+                manifest().minSdk(15),
+                kotlin("" +
+                        "package test.pkg\n" +
+                        "\n" +
+                        "import android.content.Context\n" +
+                        "import android.graphics.drawable.Drawable\n" +
+                        "import android.text.style.ImageSpan\n" +
+                        "\n" +
+                        "class SomeClass(val drawable: Drawable) {\n" +
+                        "    constructor(context: Context, resourceId: Int) : this(context.getDrawable(resourceId)) {\n" +
+                        "        SomeClass(context.getDrawable(resourceId))\n" +
+                        "    }\n" +
+                        "}\n" +
+                        "\n" +
+                        "class AnotherClass(context: Context, id: Int): ImageSpan(context.getDrawable(id)) {\n" +
+                        "    init {\n" +
+                        "        val x = context.getDrawable(id)\n" +
+                        "    }\n" +
+                        "}\n"))
+                .run()
+                .expect("src/test/pkg/SomeClass.kt:8: Error: Call requires API level 21 (current min is 15): android.content.Context#getDrawable [NewApi]\n" +
+                        "    constructor(context: Context, resourceId: Int) : this(context.getDrawable(resourceId)) {\n" +
+                        "                                                                  ~~~~~~~~~~~\n" +
+                        "src/test/pkg/SomeClass.kt:9: Error: Call requires API level 21 (current min is 15): android.content.Context#getDrawable [NewApi]\n" +
+                        "        SomeClass(context.getDrawable(resourceId))\n" +
+                        "                          ~~~~~~~~~~~\n" +
+                        "src/test/pkg/SomeClass.kt:13: Error: Call requires API level 21 (current min is 15): android.content.Context#getDrawable [NewApi]\n" +
+                        "class AnotherClass(context: Context, id: Int): ImageSpan(context.getDrawable(id)) {\n" +
+                        "                                                                 ~~~~~~~~~~~\n" +
+                        "src/test/pkg/SomeClass.kt:15: Error: Call requires API level 21 (current min is 15): android.content.Context#getDrawable [NewApi]\n" +
+                        "        val x = context.getDrawable(id)\n" +
+                        "                        ~~~~~~~~~~~\n" +
+                        "4 errors, 0 warnings");
+    }
+
     public void testInstanceOf() {
         // 69736645: "NewApi" not detected in instanceof
         lint().files(
