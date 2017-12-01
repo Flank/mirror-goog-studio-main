@@ -13,27 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.android.ide.common.vectordrawable;
 
 import com.android.SdkConstants;
 import com.android.ide.common.util.GeneratorTester;
 import com.android.testutils.TestResources;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import javax.imageio.ImageIO;
 import junit.framework.TestCase;
 import org.junit.Assert;
 
-@SuppressWarnings("javadoc")
+/** Tests for {@link Svg2Vector} and {@link VdPreview} classes. */
 public class VectorDrawableGeneratorTest extends TestCase {
     private static final GeneratorTester GENERATOR_TESTER =
             GeneratorTester.withTestDataRelativePath(
@@ -47,7 +45,7 @@ public class VectorDrawableGeneratorTest extends TestCase {
     }
 
     private void checkVectorConversion(String testFileName, FileType type,
-                                       boolean dumpXml, String expectedError) throws IOException {
+                                       boolean dumpXml, String expectedError) throws Exception {
         String incomingFileName;
         if (type == FileType.SVG) {
             incomingFileName = testFileName + ".svg";
@@ -60,31 +58,27 @@ public class VectorDrawableGeneratorTest extends TestCase {
         File parentDirFile = TestResources.getDirectory(getClass(), "/testData/vectordrawable");
 
         File incomingFile = new File(parentDirFile, incomingFileName);
-        String xmlContent = null;
+        String xmlContent;
         if (type == FileType.SVG) {
-            try {
-                OutputStream outStream = new ByteArrayOutputStream();
-                String errorLog = Svg2Vector.parseSvgToXml(incomingFile, outStream);
-                if (expectedError != null) {
-                    TestCase.assertNotNull(errorLog);
-                    TestCase.assertFalse(errorLog.isEmpty());
-                    TestCase.assertTrue(errorLog.contains(expectedError));
-                }
-                xmlContent = outStream.toString();
-                if (xmlContent == null || xmlContent.isEmpty()) {
-                    TestCase.fail("Empty Xml file.");
-                }
-                if (dumpXml) {
-                    File tempXmlFile = new File(parentDirFile, imageName + ".xml");
-                    PrintWriter writer = new PrintWriter(tempXmlFile);
+            OutputStream outStream = new ByteArrayOutputStream();
+            String errorLog = Svg2Vector.parseSvgToXml(incomingFile, outStream);
+            if (expectedError != null) {
+                TestCase.assertNotNull(errorLog);
+                TestCase.assertFalse(errorLog.isEmpty());
+                TestCase.assertTrue(errorLog.contains(expectedError));
+            }
+            xmlContent = outStream.toString();
+            if (xmlContent == null || xmlContent.isEmpty()) {
+                TestCase.fail("Empty Xml file.");
+            }
+            if (dumpXml) {
+                File tempXmlFile = new File(parentDirFile, imageName + ".xml");
+                try (PrintWriter writer = new PrintWriter(tempXmlFile)) {
                     writer.println(xmlContent);
-                    writer.close();
                 }
-            } catch (Exception e) {
-                TestCase.fail("Failure: Exception in Svg2Vector.parseSvgToXml!" + e.getMessage());
             }
         } else {
-            xmlContent = Files.toString(incomingFile, Charsets.UTF_8);
+            xmlContent = Files.asCharSource(incomingFile, StandardCharsets.UTF_8).read();
         }
 
         VdPreview.TargetSize imageTargetSize = VdPreview.TargetSize.createSizeFromWidth(IMAGE_SIZE);
@@ -118,19 +112,19 @@ public class VectorDrawableGeneratorTest extends TestCase {
         }
     }
 
-    private void checkSvgConversion(String fileName) throws IOException {
+    private void checkSvgConversion(String fileName) throws Exception {
         checkVectorConversion(fileName, FileType.SVG, false, null);
     }
 
-    private void checkXmlConversion(String filename) throws IOException {
+    private void checkXmlConversion(String filename) throws Exception {
         checkVectorConversion(filename, FileType.XML, false, null);
     }
 
-    private void checkSvgConversionAndContainsError(String filename, String errorLog) throws IOException {
+    private void checkSvgConversionAndContainsError(String filename, String errorLog) throws Exception {
         checkVectorConversion(filename, FileType.SVG, false, errorLog);
     }
 
-    private void checkSvgConversionDebug(String fileName) throws IOException {
+    private void checkSvgConversionDebug(String fileName) throws Exception {
         checkVectorConversion(fileName, FileType.SVG, true, null);
     }
 

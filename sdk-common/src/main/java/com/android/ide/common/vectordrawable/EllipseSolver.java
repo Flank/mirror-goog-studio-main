@@ -15,99 +15,95 @@
  */
 package com.android.ide.common.vectordrawable;
 
+import static java.lang.Math.atan;
+import static java.lang.Math.cos;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
+
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 class EllipseSolver {
-    private static Logger logger = Logger.getLogger(EllipseSolver.class.getSimpleName());
-
     // Final results:
-    private float mMajorAxis = 0;
-
-    private float mMinorAxis = 0;
-
-    private float mRotationDegree = 0;
-
+    private float mMajorAxis;
+    private float mMinorAxis;
+    private float mRotationDegree;
     private boolean mDirectionChanged;
 
-    // Intermediate results:
-    private Point2D.Float mMajorAxisPoint;
-
-    private Point2D.Float mMiddlePoint;
-
-    private Point2D.Float mMinorAxisPoint;
-
-    private Point2D.Float mDstMajorAxisPoint;
-
-    private Point2D.Float mDstMiddlePoint;
-
-    private Point2D.Float mDstMinorAxisPoint;
-
     /**
-     * Rotates the Point2D by radians
-     *
-     * @return the rotated Point2D
+     * Constructs the solver with all necessary parameters, and all the output values will
+     * be ready after this constructor is called.
+     * <p>
+     * Note that all the x y values are in absolute coordinates, such that we can apply
+     * the transform directly.
      */
-    private Point2D.Float rotatePoint2D(Point2D.Float inPoint, float radians) {
-        Point2D.Float result = new Point2D.Float();
-        float cosine = (float) Math.cos(radians);
-        float sine = (float) Math.sin(radians);
-        result.x = inPoint.x * cosine - inPoint.y * sine;
-        result.y = inPoint.x * sine + inPoint.y * cosine;
-        return result;
-    }
-
-    /**
-     * Constructs the solver with all necessary parameters, and all the output value will be
-     * ready after this constructor is called.
-     *
-     * Note that all the x y values are in absolute coordinates, such that we can apply the
-     * transform directly.
-     */
-    public EllipseSolver(AffineTransform totalTransform,
-            float currentX, float currentY, float rx, float ry, float xAxisRotation,
-            float largeArcFlag, float sweepFlag, float destX, float destY) {
+    public EllipseSolver(AffineTransform totalTransform, float currentX, float currentY,
+            float rx, float ry, float xAxisRotation, float largeArcFlag, float sweepFlag,
+            float destX, float destY) {
         boolean largeArc = largeArcFlag != 0;
         boolean sweep = sweepFlag != 0;
 
         // Compute the cx and cy first.
-        Point2D.Float originalCenter = computeOriginalCenter(currentX, currentY, rx, ry,
+        Point2D.Double originalCenter = computeOriginalCenter(currentX, currentY, rx, ry,
                 xAxisRotation, largeArc, sweep, destX, destY);
 
-        // Compute 3 points from original ellipse
-        computeControlPoints(rx, ry, xAxisRotation, originalCenter.x, originalCenter.y);
+        // Compute 3 points from original ellipse.
+        Point2D.Double majorAxisPoint = new Point2D.Double(rx, 0);
+        Point2D.Double minorAxisPoint = new Point2D.Double(0, ry);
+
+        majorAxisPoint = rotatePoint2D(majorAxisPoint, xAxisRotation);
+        minorAxisPoint = rotatePoint2D(minorAxisPoint, xAxisRotation);
+
+        majorAxisPoint.x += originalCenter.x;
+        majorAxisPoint.y += originalCenter.y;
+
+        minorAxisPoint.x += originalCenter.x;
+        minorAxisPoint.y += originalCenter.y;
+
+        double middleRadians = Math.PI / 4; // This number can be anything between 0 and PI/2.
+        double middleR = rx * ry / Math.hypot(ry * cos(middleRadians), rx * sin(middleRadians));
+
+        Point2D.Double middlePoint =
+            new Point2D.Double(middleR * cos(middleRadians),middleR * sin(middleRadians));
+        middlePoint = rotatePoint2D(middlePoint, xAxisRotation);
+        middlePoint.x += originalCenter.x;
+        middlePoint.y += originalCenter.y;
 
         // Transform 3 points and center point into destination.
-        mDstMiddlePoint = (Point2D.Float) totalTransform.transform(mMiddlePoint, null);
-        mDstMajorAxisPoint = (Point2D.Float) totalTransform.transform(mMajorAxisPoint, null);
-        mDstMinorAxisPoint = (Point2D.Float) totalTransform.transform(mMinorAxisPoint, null);
+        Point2D.Double mDstMiddlePoint =
+            (Point2D.Double) totalTransform.transform(middlePoint, null);
+        Point2D.Double mDstMajorAxisPoint =
+            (Point2D.Double) totalTransform.transform(majorAxisPoint, null);
+        Point2D.Double mDstMinorAxisPoint =
+            (Point2D.Double) totalTransform.transform(minorAxisPoint, null);
         Point2D dstCenter = totalTransform.transform(originalCenter, null);
-        float dstCenterX = (float) dstCenter.getX();
-        float dstCenterY = (float) dstCenter.getY();
+        double dstCenterX = dstCenter.getX();
+        double dstCenterY = dstCenter.getY();
 
         // Compute the relative 3 points:
-        float relativeDstMiddleX = mDstMiddlePoint.x - dstCenterX;
-        float relativeDstMiddleY = mDstMiddlePoint.y - dstCenterY;
-        float relativeDstMajorAxisPointX = mDstMajorAxisPoint.x - dstCenterX;
-        float relativeDstMajorAxisPointY = mDstMajorAxisPoint.y - dstCenterY;
-        float relativeDstMinorAxisPointX = mDstMinorAxisPoint.x - dstCenterX;
-        float relativeDstMinorAxisPointY = mDstMinorAxisPoint.y - dstCenterY;
+        double relativeDstMiddleX = mDstMiddlePoint.x - dstCenterX;
+        double relativeDstMiddleY = mDstMiddlePoint.y - dstCenterY;
+        double relativeDstMajorAxisPointX = mDstMajorAxisPoint.x - dstCenterX;
+        double relativeDstMajorAxisPointY = mDstMajorAxisPoint.y - dstCenterY;
+        double relativeDstMinorAxisPointX = mDstMinorAxisPoint.x - dstCenterX;
+        double relativeDstMinorAxisPointY = mDstMinorAxisPoint.y - dstCenterY;
 
-        // Check if the direction has change!
-        mDirectionChanged = computeDirectionChange(mMiddlePoint, mMajorAxisPoint,
-                mMinorAxisPoint,
+        // Check if the direction has changed.
+        mDirectionChanged = computeDirectionChange(middlePoint, majorAxisPoint, minorAxisPoint,
                 mDstMiddlePoint, mDstMajorAxisPoint, mDstMinorAxisPoint);
 
         // From 3 dest points, recompute the a, b and theta.
         if (computeABThetaFromControlPoints(relativeDstMiddleX, relativeDstMiddleY,
-                relativeDstMajorAxisPointX,
-                relativeDstMajorAxisPointY, relativeDstMinorAxisPointX,
-                relativeDstMinorAxisPointY)) {
-            logger.log(Level.WARNING,
-                    "Early return in the ellipse transformation computation!");
+                relativeDstMajorAxisPointX, relativeDstMajorAxisPointY,
+                relativeDstMinorAxisPointX, relativeDstMinorAxisPointY)) {
+            getLog().log(Level.WARNING, "Early return in the ellipse transformation computation!");
         }
+    }
+
+    private static Logger getLog() {
+        return Logger.getLogger(EllipseSolver.class.getSimpleName());
     }
 
     /**
@@ -117,157 +113,129 @@ class EllipseSolver {
      * Here, we use the cross product to figure out the direction of the 3 control points for the
      * src and dst ellipse.
      */
-    private static boolean computeDirectionChange(final Point2D.Float middlePoint,
-            final Point2D.Float majorAxisPoint, final Point2D.Float minorAxisPoint,
-            final Point2D.Float dstMiddlePoint, final Point2D.Float dstMajorAxisPoint,
-            final Point2D.Float dstMinorAxisPoint) {
-        // Compute both Cross Product, then compare the sign.
-        float srcCrossProduct = getCrossProduct(middlePoint, majorAxisPoint, minorAxisPoint);
-        float dstCrossProduct = getCrossProduct(dstMiddlePoint, dstMajorAxisPoint,
+    private static boolean computeDirectionChange(Point2D.Double middlePoint,
+            Point2D.Double majorAxisPoint, Point2D.Double minorAxisPoint,
+            Point2D.Double dstMiddlePoint, Point2D.Double dstMajorAxisPoint,
+            Point2D.Double dstMinorAxisPoint) {
+        // Compute both cross product, then compare the sign.
+        double srcCrossProduct = getCrossProduct(middlePoint, majorAxisPoint, minorAxisPoint);
+        double dstCrossProduct = getCrossProduct(dstMiddlePoint, dstMajorAxisPoint,
                 dstMinorAxisPoint);
 
         return srcCrossProduct * dstCrossProduct < 0;
     }
 
-    private static float getCrossProduct(final Point2D.Float middlePoint,
-            final Point2D.Float majorAxisPoint, final Point2D.Float minorAxisPoint) {
-        float majorMinusMiddleX = majorAxisPoint.x - middlePoint.x;
-        float majorMinusMiddleY = majorAxisPoint.y - middlePoint.y;
+    private static double getCrossProduct(Point2D.Double middlePoint, Point2D.Double majorAxisPoint,
+            Point2D.Double minorAxisPoint) {
+        double majorMinusMiddleX = majorAxisPoint.x - middlePoint.x;
+        double majorMinusMiddleY = majorAxisPoint.y - middlePoint.y;
 
-        float minorMinusMiddleX = minorAxisPoint.x - middlePoint.x;
-        float minorMinusMiddleY = minorAxisPoint.y - middlePoint.y;
+        double minorMinusMiddleX = minorAxisPoint.x - middlePoint.x;
+        double minorMinusMiddleY = minorAxisPoint.y - middlePoint.y;
 
-        return (majorMinusMiddleX * minorMinusMiddleY) - (majorMinusMiddleY * minorMinusMiddleX);
+        return majorMinusMiddleX * minorMinusMiddleY - majorMinusMiddleY * minorMinusMiddleX;
     }
 
     /**
-     * Returns true if there is something error going on, either due to the ellipse is not setup
-     * correctly, or some computation error happens. This error is ignorable, but the output ellipse
+     * Returns true if there is an error, either due to the ellipse not being specified
+     * correctly or some computation error. This error is ignorable, but the output ellipse
      * will not be correct.
      */
-    private boolean computeABThetaFromControlPoints(float relMiddleX, float relMiddleY,
-            float relativeMajorAxisPointX, float relativeMajorAxisPointY,
-            float relativeMinorAxisPointX, float relativeMinorAxisPointY) {
-        float m11 = relMiddleX * relMiddleX;
-        float m12 = relMiddleX * relMiddleY;
-        float m13 = relMiddleY * relMiddleY;
+    private boolean computeABThetaFromControlPoints(double relMiddleX, double relMiddleY,
+            double relativeMajorAxisPointX, double relativeMajorAxisPointY,
+            double relativeMinorAxisPointX, double relativeMinorAxisPointY) {
+        double m11 = relMiddleX * relMiddleX;
+        double m12 = relMiddleX * relMiddleY;
+        double m13 = relMiddleY * relMiddleY;
 
-        float m21 = relativeMajorAxisPointX * relativeMajorAxisPointX;
-        float m22 = relativeMajorAxisPointX * relativeMajorAxisPointY;
-        float m23 = relativeMajorAxisPointY * relativeMajorAxisPointY;
+        double m21 = relativeMajorAxisPointX * relativeMajorAxisPointX;
+        double m22 = relativeMajorAxisPointX * relativeMajorAxisPointY;
+        double m23 = relativeMajorAxisPointY * relativeMajorAxisPointY;
 
-        float m31 = relativeMinorAxisPointX * relativeMinorAxisPointX;
-        float m32 = relativeMinorAxisPointX * relativeMinorAxisPointY;
-        float m33 = relativeMinorAxisPointY * relativeMinorAxisPointY;
+        double m31 = relativeMinorAxisPointX * relativeMinorAxisPointX;
+        double m32 = relativeMinorAxisPointX * relativeMinorAxisPointY;
+        double m33 = relativeMinorAxisPointY * relativeMinorAxisPointY;
 
-        float det = -(m13 * m22 * m31 - m12 * m23 * m31 - m13 * m21 * m32
+        double det = -(m13 * m22 * m31 - m12 * m23 * m31 - m13 * m21 * m32
                 + m11 * m23 * m32 + m12 * m21 * m33 - m11 * m22 * m33);
 
         if (det == 0) {
             return true;
         }
-        float A = (-m13 * m22 + m12 * m23 + m13 * m32 - m23 * m32 - m12 * m33 + m22 * m33)
+        double A = (-m13 * m22 + m12 * m23 + m13 * m32 - m23 * m32 - m12 * m33 + m22 * m33)
                 / det;
-        float B = (m13 * m21 - m11 * m23 - m13 * m31 + m23 * m31 + m11 * m33 - m21 * m33) / det;
-        float C = (m12 * m21 - m11 * m22 - m12 * m31 + m22 * m31 + m11 * m32 - m21 * m32)
+        double B = (m13 * m21 - m11 * m23 - m13 * m31 + m23 * m31 + m11 * m33 - m21 * m33) / det;
+        double C = (m12 * m21 - m11 * m22 - m12 * m31 + m22 * m31 + m11 * m32 - m21 * m32)
                 / (-det);
 
         // Now we know A = cos(t)^2 / a^2 + sin(t)^2 / b^2
         // B = -2 cos(t) sin(t) (1/a^2 - 1/b^2)
         // C = sin(t)^2 / a^2 + cos(t)^2 / b^2
 
-        // Solve it , we got
-        // 2*t = arctan ( B / (A - C);
-        if ((A - C) == 0) {
+        // Solve it, we got
+        // 2*t = arctan ( B / (A - C));
+        if (A - C == 0) {
             // We know that a == b now.
             mMinorAxis = (float) Math.hypot(relativeMajorAxisPointX, relativeMajorAxisPointY);
             mMajorAxis = mMinorAxis;
             mRotationDegree = 0;
             return false;
         }
-        float doubleThetaInRadians = (float) Math.atan(B / (A - C));
-        float thetaInRadians = doubleThetaInRadians / 2;
-        if (Math.sin(doubleThetaInRadians) == 0) {
-            mMinorAxis = (float) Math.sqrt(1 / C);
-            mMajorAxis = (float) Math.sqrt(1 / A);
+
+        double doubleThetaInRadians = atan(B / (A - C));
+        double thetaInRadians = doubleThetaInRadians / 2;
+        if (sin(doubleThetaInRadians) == 0) {
+            mMinorAxis = (float) sqrt(1 / C);
+            mMajorAxis = (float) sqrt(1 / A);
             mRotationDegree = 0;
-            // This is a valid answer, so return false;
+            // This is a valid answer, so return false.
             return false;
         }
-        float bSqInv = (A + C + B / (float) Math.sin(doubleThetaInRadians)) / 2;
-        float aSqInv = A + C - bSqInv;
+
+        double bSqInv = (A + C + B / sin(doubleThetaInRadians)) / 2;
+        double aSqInv = A + C - bSqInv;
 
         if (bSqInv == 0 || aSqInv == 0) {
             return true;
         }
-        mMinorAxis = (float) Math.sqrt(1 / bSqInv);
-        mMajorAxis = (float) Math.sqrt(1 / aSqInv);
+        mMinorAxis = (float) sqrt(1 / bSqInv);
+        mMajorAxis = (float) sqrt(1 / aSqInv);
 
         mRotationDegree = (float) Math.toDegrees(Math.PI / 2 + thetaInRadians);
         return false;
     }
 
-    private void computeControlPoints(float a, float b, float rot, float cx, float cy) {
-        mMajorAxisPoint = new Point2D.Float(a, 0);
-        mMinorAxisPoint = new Point2D.Float(0, b);
-
-        mMajorAxisPoint = rotatePoint2D(mMajorAxisPoint, rot);
-        mMinorAxisPoint = rotatePoint2D(mMinorAxisPoint, rot);
-
-        mMajorAxisPoint.x += cx;
-        mMajorAxisPoint.y += cy;
-
-        mMinorAxisPoint.x += cx;
-        mMinorAxisPoint.y += cy;
-
-        float middleDegree = 45; // This can be anything b/t 0 to 90.
-        float middleRadians = (float) Math.toRadians(middleDegree);
-        float middleR = a * b / (float) Math.hypot(b * (float) Math.cos(middleRadians),
-                a * (float) Math.sin(middleRadians));
-
-        mMiddlePoint = new Point2D.Float(middleR * (float) Math.cos(middleRadians),
-                middleR * (float) Math.sin(middleRadians));
-        mMiddlePoint = rotatePoint2D(mMiddlePoint, rot);
-        mMiddlePoint.x += cx;
-        mMiddlePoint.y += cy;
-    }
-
-    private Point2D.Float computeOriginalCenter(float x1, float y1, float rx, float ry,
+    private static Point2D.Double computeOriginalCenter(float x1, float y1, float rx, float ry,
             float phi, boolean largeArc, boolean sweep, float x2, float y2) {
-        Point2D.Float result = new Point2D.Float();
-        float cosPhi = (float) Math.cos(phi);
-        float sinPhi = (float) Math.sin(phi);
-        float xDelta = (x1 - x2) / 2;
-        float yDelta = (y1 - y2) / 2;
-        float tempX1 = cosPhi * xDelta + sinPhi * yDelta;
-        float tempY1 = -sinPhi * xDelta + cosPhi * yDelta;
+        double cosPhi = cos(phi);
+        double sinPhi = sin(phi);
+        double xDelta = (x1 - x2) / 2;
+        double yDelta = (y1 - y2) / 2;
+        double tempX1 = cosPhi * xDelta + sinPhi * yDelta;
+        double tempY1 = -sinPhi * xDelta + cosPhi * yDelta;
 
-        float rxSq = rx * rx;
-        float rySq = ry * ry;
-        float tempX1Sq = tempX1 * tempX1;
-        float tempY1Sq = tempY1 * tempY1;
+        double rxSq = rx * rx;
+        double rySq = ry * ry;
+        double tempX1Sq = tempX1 * tempX1;
+        double tempY1Sq = tempY1 * tempY1;
 
-        float tempCenterFactor = rxSq * rySq - rxSq * tempY1Sq - rySq * tempX1Sq;
+        double tempCenterFactor = rxSq * rySq - rxSq * tempY1Sq - rySq * tempX1Sq;
         tempCenterFactor /= rxSq * tempY1Sq + rySq * tempX1Sq;
         if (tempCenterFactor < 0) {
             tempCenterFactor = 0;
         }
-        tempCenterFactor = (float) Math.sqrt(tempCenterFactor);
+        tempCenterFactor = sqrt(tempCenterFactor);
         if (largeArc == sweep) {
             tempCenterFactor = -tempCenterFactor;
         }
-        float tempCx = tempCenterFactor * rx * tempY1 / ry;
-        float tempCy = -tempCenterFactor * ry * tempX1 / rx;
+        double tempCx = tempCenterFactor * rx * tempY1 / ry;
+        double tempCy = -tempCenterFactor * ry * tempX1 / rx;
 
-        float xCenter = (x1 + x2) / 2;
-        float yCenter = (y1 + y2) / 2;
+        double xCenter = (x1 + x2) / 2;
+        double yCenter = (y1 + y2) / 2;
 
-        float cx = cosPhi * tempCx - sinPhi * tempCy + xCenter;
-        float cy = sinPhi * tempCx + cosPhi * tempCy + yCenter;
-
-        result.x = cx;
-        result.y = cy;
-        return result;
+        return new Point2D.Double(cosPhi * tempCx - sinPhi * tempCy + xCenter,
+                sinPhi * tempCx + cosPhi * tempCy + yCenter);
     }
 
     public float getMajorAxis() {
@@ -284,5 +252,19 @@ class EllipseSolver {
 
     public boolean getDirectionChanged() {
         return mDirectionChanged;
+    }
+
+    /**
+     * Rotates a point by the given angle.
+     *
+     * @param inPoint the point to rotate
+     * @param radians the rotation angle in radians
+     * @return the rotated point
+     */
+    private static Point2D.Double rotatePoint2D(Point2D.Double inPoint, double radians) {
+        double cos = cos(radians);
+        double sin = sin(radians);
+        return new Point2D.Double(inPoint.x * cos - inPoint.y * sin,
+                inPoint.x * sin + inPoint.y * cos);
     }
 }

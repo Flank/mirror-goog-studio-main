@@ -38,7 +38,7 @@ import java.util.logging.Logger;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.NodeList;
 
-/** Used to represent one VectorDrawable's path element. */
+/** Represents one path element of a VectorDrawable. */
 class VdPath extends VdElement {
     private static final String PATH_ID = "android:name";
     private static final String PATH_DESCRIPTION = "android:pathData";
@@ -67,24 +67,24 @@ class VdPath extends VdElement {
     public static final float EPSILON = 1e-6f;
 
 
-    private VdGradient fillGradient = null;
-    private VdGradient strokeGradient = null;
+    private VdGradient fillGradient;
+    private VdGradient strokeGradient;
 
-    private Node[] mNodeList = null;
-    private int mStrokeColor = 0;
-    private int mFillColor = 0;
+    private Node[] mNodeList;
+    private int mStrokeColor;
+    private int mFillColor;
 
-    private float mStrokeWidth = 0;
-    private int mStrokeLineCap = 0;
-    private int mStrokeLineJoin = 0;
+    private float mStrokeWidth;
+    private int mStrokeLineCap;
+    private int mStrokeLineJoin;
     private float mStrokeMiterlimit = 4;
     private float mStrokeAlpha = 1.0f;
     private float mFillAlpha = 1.0f;
     private int mFillType = PathIterator.WIND_NON_ZERO;
     // TODO: support trim path.
-    private float mTrimPathStart = 0;
+    private float mTrimPathStart;
     private float mTrimPathEnd = 1;
-    private float mTrimPathOffset = 0;
+    private float mTrimPathOffset;
 
     private void toPath(Path2D path) {
         path.reset();
@@ -94,7 +94,7 @@ class VdPath extends VdElement {
     }
 
     /**
-     * Represents one segment of the path data. Like "l 0,0 1,1"
+     * Represents one segment of the path data, e.g. "l 0,0 1,1".
      */
     public static class Node {
         private char mType;
@@ -156,6 +156,7 @@ class VdPath extends VdElement {
         }
 
         private static final char INIT_TYPE = ' ';
+
         public static void transform(AffineTransform totalTransform, Node[] nodes) {
             Point2D.Float currentPoint = new Point2D.Float();
             Point2D.Float currentSegmentStartPoint = new Point2D.Float();
@@ -214,6 +215,7 @@ class VdPath extends VdElement {
                     currentX = currentSegmentStartX;
                     currentY = currentSegmentStartY;
                     break;
+
                 case 'M':
                 case 'L':
                 case 'T':
@@ -229,6 +231,7 @@ class VdPath extends VdElement {
 
                     totalTransform.transform(mParams, 0, mParams, 0, paramsLen / 2);
                     break;
+
                 case 'm':
                     // We also need to workaround a bug in API 21 that 'm' after 'z'
                     // is not picking up the relative value correctly.
@@ -238,16 +241,15 @@ class VdPath extends VdElement {
                         mParams[1] += currentSegmentStartY;
                         currentSegmentStartX = mParams[0];
                         currentSegmentStartY = mParams[1];
-                        for (int i = 1; i < paramsLen / step; i++) {
-                            mParams[i * step + 0] += mParams[(i - 1) * step + 0];
-                            mParams[i * step + 1] += mParams[(i - 1) * step + 1];
+                        for (int i = step; i < paramsLen; i += step) {
+                            mParams[i] += mParams[i - step];
+                            mParams[i + 1] += mParams[i + 1 - step];
                         }
                         currentX = mParams[paramsLen - 2];
                         currentY = mParams[paramsLen - 1];
 
                         totalTransform.transform(mParams, 0, mParams, 0, paramsLen / 2);
                     } else {
-
                         // We need to handle the initial 'm' similar to 'M' for first pair.
                         // Then all the following numbers are handled as 'l'
                         int startIndex = 0;
@@ -259,61 +261,60 @@ class VdPath extends VdElement {
                             currentSegmentStartY = currentY;
 
                             totalTransform.transform(mParams, 0, mParams, 0, paramsLenInitialM / 2);
-                            startIndex = 1;
+                            startIndex = step;
                         }
-                        for (int i = startIndex; i < paramsLen / step; i++) {
-                            int indexX = i * step + (step - 2);
-                            int indexY = i * step + (step - 1);
-                            currentX += mParams[indexX];
-                            currentY += mParams[indexY];
+                        for (int i = startIndex; i < paramsLen; i += step) {
+                            currentX += mParams[i + step - 2];
+                            currentY += mParams[i + step - 1];
                         }
 
                         if (!isTranslationOnly(totalTransform)) {
-                            deltaTransform(totalTransform, mParams, 2 * startIndex,
-                                    paramsLen - 2 * startIndex);
+                            deltaTransform(totalTransform, mParams, startIndex,
+                                    paramsLen - startIndex);
                         }
                     }
-
                     break;
+
                 case 'l':
                 case 't':
                 case 'c':
                 case 's':
                 case 'q':
-                    for (int i = 0; i < paramsLen / step; i ++) {
-                        int indexX = i * step + (step - 2);
-                        int indexY = i * step + (step - 1);
-                        currentX += mParams[indexX];
-                        currentY += mParams[indexY];
+                    for (int i = 0; i < paramsLen; i += step) {
+                        currentX += mParams[i + step - 2];
+                        currentY += mParams[i + step - 1];
                     }
                     if (!isTranslationOnly(totalTransform)) {
                         deltaTransform(totalTransform, mParams, 0, paramsLen);
                     }
                     break;
+
                 case 'H':
                     mType = 'L';
-                    for (int i = 0; i < paramsLen; i ++) {
-                        tempParams[i * 2 + 0] = mParams[i];
+                    for (int i = 0; i < paramsLen; i++) {
+                        tempParams[i * 2] = mParams[i];
                         tempParams[i * 2 + 1] = currentY;
                         currentX = mParams[i];
                     }
                     totalTransform.transform(tempParams, 0, tempParams, 0, paramsLen /*points*/);
                     mParams = tempParams;
                     break;
+
                 case 'V':
                     mType = 'L';
-                    for (int i = 0; i < paramsLen; i ++) {
-                        tempParams[i * 2 + 0] = currentX;
+                    for (int i = 0; i < paramsLen; i++) {
+                        tempParams[i * 2] = currentX;
                         tempParams[i * 2 + 1] = mParams[i];
                         currentY = mParams[i];
                     }
                     totalTransform.transform(tempParams, 0, tempParams, 0, paramsLen /*points*/);
                     mParams = tempParams;
                     break;
+
                 case 'h':
-                    for (int i = 0; i < paramsLen; i ++) {
+                    for (int i = 0; i < paramsLen; i++) {
                         // tempParams may not be used, but I would rather merge the code here.
-                        tempParams[i * 2 + 0] = mParams[i];
+                        tempParams[i * 2] = mParams[i];
                         currentX += mParams[i];
                         tempParams[i * 2 + 1] = 0;
                     }
@@ -323,10 +324,11 @@ class VdPath extends VdElement {
                         mParams = tempParams;
                     }
                     break;
+
                 case 'v':
                     for (int i = 0; i < paramsLen; i++) {
                         // tempParams may not be used, but I would rather merge the code here.
-                        tempParams[i * 2 + 0] = 0;
+                        tempParams[i * 2] = 0;
                         tempParams[i * 2 + 1] = mParams[i];
                         currentY += mParams[i];
                     }
@@ -337,62 +339,65 @@ class VdPath extends VdElement {
                         mParams = tempParams;
                     }
                     break;
+
                 case 'A':
-                    for (int i = 0; i < paramsLen / step; i ++) {
+                    for (int i = 0; i < paramsLen; i += step) {
                         // (0:rx 1:ry 2:x-axis-rotation 3:large-arc-flag 4:sweep-flag 5:x 6:y)
                         // [0, 1, 2]
                         if (!isTranslationOnly(totalTransform)) {
                             EllipseSolver ellipseSolver = new EllipseSolver(totalTransform,
                                     currentX, currentY,
-                                    mParams[i * step + 0], mParams[i * step + 1], mParams[i * step + 2],
-                                    mParams[i * step + 3], mParams[i * step + 4],
-                                    mParams[i * step + 5], mParams[i * step + 6]);
-                            mParams[i * step + 0] = ellipseSolver.getMajorAxis();
-                            mParams[i * step + 1] = ellipseSolver.getMinorAxis();
-                            mParams[i * step + 2] = ellipseSolver.getRotationDegree();
+                                    mParams[i], mParams[i + 1], mParams[i + 2],
+                                    mParams[i + 3], mParams[i + 4],
+                                    mParams[i + 5], mParams[i + 6]);
+                            mParams[i] = ellipseSolver.getMajorAxis();
+                            mParams[i + 1] = ellipseSolver.getMinorAxis();
+                            mParams[i + 2] = ellipseSolver.getRotationDegree();
                             if (ellipseSolver.getDirectionChanged()) {
-                                mParams[i * step + 4] = 1 - mParams[i * step + 4];
+                                mParams[i + 4] = 1 - mParams[i + 4];
                             }
                         } else {
                             // No need to change the value of rx , ry, rotation, and flags.
                         }
                         // [5, 6]
-                        currentX = mParams[i * step + 5];
-                        currentY = mParams[i * step + 6];
+                        currentX = mParams[i + 5];
+                        currentY = mParams[i + 6];
 
-                        totalTransform.transform(mParams, i * step + 5, mParams, i * step + 5, 1 /*1 point only*/);
+                        totalTransform.transform(mParams, i + 5, mParams, i + 5, 1 /*1 point only*/);
                     }
                     break;
+
                 case 'a':
-                    for (int i = 0; i < paramsLen / step; i ++) {
+                    for (int i = 0; i < paramsLen; i += step) {
                         float oldCurrentX = currentX;
                         float oldCurrentY = currentY;
 
-                        currentX += mParams[i * step + 5];
-                        currentY += mParams[i * step + 6];
+                        currentX += mParams[i + 5];
+                        currentY += mParams[i + 6];
                         if (!isTranslationOnly(totalTransform)) {
                             EllipseSolver ellipseSolver = new EllipseSolver(totalTransform,
                                     oldCurrentX, oldCurrentY,
-                                    mParams[i * step + 0], mParams[i * step + 1], mParams[i * step + 2],
-                                    mParams[i * step + 3], mParams[i * step + 4],
-                                    oldCurrentX + mParams[i * step + 5],
-                                    oldCurrentY + mParams[i * step + 6]);
+                                    mParams[i], mParams[i + 1], mParams[i + 2],
+                                    mParams[i + 3], mParams[i + 4],
+                                    oldCurrentX + mParams[i + 5],
+                                    oldCurrentY + mParams[i + 6]);
                             // (0:rx 1:ry 2:x-axis-rotation 3:large-arc-flag 4:sweep-flag 5:x 6:y)
                             // [5, 6]
-                            deltaTransform(totalTransform, mParams, i * step + 5, 2);
+                            deltaTransform(totalTransform, mParams, i + 5, 2);
                             // [0, 1, 2]
-                            mParams[i * step + 0] = ellipseSolver.getMajorAxis();
-                            mParams[i * step + 1] = ellipseSolver.getMinorAxis();
-                            mParams[i * step + 2] = ellipseSolver.getRotationDegree();
+                            mParams[i] = ellipseSolver.getMajorAxis();
+                            mParams[i + 1] = ellipseSolver.getMinorAxis();
+                            mParams[i + 2] = ellipseSolver.getRotationDegree();
                             if (ellipseSolver.getDirectionChanged()) {
-                                mParams[i * step + 4] = 1 - mParams[i * step + 4];
+                                mParams[i + 4] = 1 - mParams[i + 4];
                             }
                         }
 
                     }
                     break;
+
                 default:
-                    throw new IllegalArgumentException("Type is not right!!!");
+                    throw new IllegalStateException("Unexpected type " + mType);
             }
             currentPoint.setLocation(currentX, currentY);
             currentSegmentStartPoint.setLocation(currentSegmentStartX, currentSegmentStartY);
@@ -405,29 +410,29 @@ class VdPath extends VdElement {
         }
 
         /**
-         * Convert the <code>tempParams</code> into a double array, then apply the
-         * delta transform and convert it back to float array.
-         * @param offset in number of floats, not points.
-         * @param paramsLen in number of floats, not points.
+         * Applies delta transform to a set of points represented by a float array.
+         *
+         * @param totalTransform the transform to apply
+         * @param coordinates coordinates of points to apply the transform to
+         * @param offset in number of floats, not points
+         * @param paramsLen in number of floats, not points
          */
-        private static void deltaTransform(AffineTransform totalTransform, float[] tempParams,
+        private static void deltaTransform(AffineTransform totalTransform, float[] coordinates,
                 int offset, int paramsLen) {
             double[] doubleArray = new double[paramsLen];
-            for (int i = 0; i < paramsLen; i++)
-            {
-                doubleArray[i] = (double) tempParams[i + offset];
+            for (int i = 0; i < paramsLen; i++) {
+                doubleArray[i] = (double) coordinates[i + offset];
             }
 
             totalTransform.deltaTransform(doubleArray, 0, doubleArray, 0, paramsLen / 2);
 
-            for (int i = 0; i < paramsLen; i++)
-            {
-                tempParams[i + offset] = (float) doubleArray[i];
+            for (int i = 0; i < paramsLen; i++) {
+                coordinates[i + offset] = (float) doubleArray[i];
             }
         }
     }
 
-    /** @return color value in #AARRGGBB format. */
+    /** Returns color value in #AARRGGBB format. */
     protected static int calculateColor(String value) {
         int len = value.length();
         int ret;
@@ -519,7 +524,7 @@ class VdPath extends VdElement {
         return PathIterator.WIND_NON_ZERO;
     }
 
-    /** Multiply the <code>alpha</code> value into the alpha channel <code>color</code>. */
+    /** Multiplies the {@code alpha} value into the alpha channel {@code color}. */
     protected static int applyAlpha(int color, float alpha) {
         int alphaBytes = (color >> 24) & 0xff;
         color &= 0x00FFFFFF;
@@ -528,7 +533,7 @@ class VdPath extends VdElement {
     }
 
     /**
-     * Draw the current path
+     * Draws the current path.
      */
     @Override
     public void draw(Graphics2D g, AffineTransform currentMatrix, float scaleX, float scaleY) {
@@ -727,7 +732,6 @@ class VdPath extends VdElement {
 
             float[] mFractions = new float[mGradientStops.size()];
             Color[] mGradientColors = new Color[mGradientStops.size()];
-            float[] mOpacities = new float[mGradientStops.size()];
 
             for (int j = 0; j < mGradientStops.size(); j++) {
                 GradientStop stop = mGradientStops.get(j);
