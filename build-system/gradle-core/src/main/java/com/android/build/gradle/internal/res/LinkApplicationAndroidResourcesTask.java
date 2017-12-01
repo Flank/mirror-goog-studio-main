@@ -292,19 +292,20 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             outputScope.deleteAllEntries(
                     VariantScope.TaskOutputType.DENSITY_OR_LANGUAGE_SPLIT_PROCESSED_RES);
             splitList.forEach(
-                    (filterType, filterValues) -> {
+                    (filterType, filters) -> {
                         // only for densities and languages.
                         if (filterType != VariantOutput.FilterType.DENSITY
                                 && filterType != VariantOutput.FilterType.LANGUAGE) {
                             return;
                         }
-                        filterValues.forEach(
-                                filterValue -> {
+                        filters.forEach(
+                                filter -> {
                                     ApkData configurationApkData =
                                             outputFactory.addConfigurationSplit(
                                                     filterType,
-                                                    filterValue,
-                                                    "" /* replaced later */);
+                                                    filter.getValue(),
+                                                    "" /* replaced later */,
+                                                    filter.getDisplayName());
                                     configurationApkData.setVersionCode(
                                             variantScope
                                                     .getVariantConfiguration()

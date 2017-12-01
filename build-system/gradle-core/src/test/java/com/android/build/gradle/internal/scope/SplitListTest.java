@@ -21,10 +21,18 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import com.android.build.OutputFile;
+import com.android.build.VariantOutput;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.truth.Truth;
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.junit.Before;
 import org.junit.Rule;
@@ -54,17 +62,18 @@ public class SplitListTest {
         File outputFile = temporaryFolder.newFile();
         SplitList.save(
                 outputFile,
-                ImmutableSet.of("hdpi", "xxhdpi"),
+                filterListFromStrings(ImmutableSet.of("hdpi", "xxhdpi")),
                 ImmutableSet.of(),
                 ImmutableSet.of(),
                 ImmutableSet.of());
 
         assertThat(outputFile)
                 .contains(
-                        "[{\"splitType\":\""
-                                + "DENSITY\",\"values\":[\"hdpi\",\"xxhdpi\"]},{\"splitType\":\""
-                                + "LANGUAGE\",\"values\":[]},{\"splitType\":\""
-                                + "ABI\",\"values\":[]},{\"splitType\":\"ResConfigs\",\"values\":[]}]");
+                        "[{\"splitType\":\"DENSITY\",\"filters\":"
+                                + "[{\"value\":\"hdpi\"},{\"value\":\"xxhdpi\"}]},"
+                                + "{\"splitType\":\"LANGUAGE\",\"filters\":[]},"
+                                + "{\"splitType\":\"ABI\",\"filters\":[]},"
+                                + "{\"splitType\":\"ResConfigs\",\"filters\":[]}]");
     }
 
     @Test
@@ -73,16 +82,18 @@ public class SplitListTest {
         SplitList.save(
                 outputFile,
                 ImmutableSet.of(),
-                ImmutableSet.of("fr", "fr_BE"),
+                ImmutableList.of(
+                        new SplitList.Filter("fr,fr_BE", "fr"), new SplitList.Filter("it")),
                 ImmutableSet.of(),
                 ImmutableSet.of());
 
         assertThat(outputFile)
                 .contains(
-                        "[{\"splitType\":\""
-                                + "DENSITY\",\"values\":[]},{\"splitType\":\""
-                                + "LANGUAGE\",\"values\":[\"fr\",\"fr_BE\"]},{\"splitType\":\""
-                                + "ABI\",\"values\":[]},{\"splitType\":\"ResConfigs\",\"values\":[]}]");
+                        "[{\"splitType\":\"DENSITY\",\"filters\":[]},"
+                                + "{\"splitType\":\"LANGUAGE\",\"filters\":"
+                                + "[{\"value\":\"fr,fr_BE\",\"simplifiedName\":\"fr\"},{\"value\":\"it\"}]},"
+                                + "{\"splitType\":\"ABI\",\"filters\":[]},"
+                                + "{\"splitType\":\"ResConfigs\",\"filters\":[]}]");
     }
 
     @Test
@@ -92,15 +103,16 @@ public class SplitListTest {
                 outputFile,
                 ImmutableSet.of(),
                 ImmutableSet.of(),
-                ImmutableSet.of("arm", "x86"),
+                filterListFromStrings(ImmutableSet.of("arm", "x86")),
                 ImmutableSet.of());
 
         assertThat(outputFile)
                 .contains(
-                        "[{\"splitType\":\""
-                                + "DENSITY\",\"values\":[]},{\"splitType\":\""
-                                + "LANGUAGE\",\"values\":[]},{\"splitType\":\""
-                                + "ABI\",\"values\":[\"arm\",\"x86\"]},{\"splitType\":\"ResConfigs\",\"values\":[]}]");
+                        "[{\"splitType\":\"DENSITY\",\"filters\":[]},"
+                                + "{\"splitType\":\"LANGUAGE\",\"filters\":[]},"
+                                + "{\"splitType\":\"ABI\",\"filters\":"
+                                + "[{\"value\":\"arm\"},{\"value\":\"x86\"}]},"
+                                + "{\"splitType\":\"ResConfigs\",\"filters\":[]}]");
     }
 
     @Test
@@ -108,17 +120,17 @@ public class SplitListTest {
         File outputFile = temporaryFolder.newFile();
         SplitList.save(
                 outputFile,
-                ImmutableSet.of("xhdpi", "xxhdpi"),
-                ImmutableSet.of("de", "it"),
-                ImmutableSet.of("arm", "x86"),
-                ImmutableSet.of());
+                filterListFromStrings(ImmutableSet.of("xhdpi", "xxhdpi")),
+                filterListFromStrings(ImmutableSet.of("de", "it")),
+                filterListFromStrings(ImmutableSet.of("arm", "x86")),
+                ImmutableList.of());
 
         assertThat(outputFile)
                 .contains(
-                        "[{\"splitType\":\""
-                                + "DENSITY\",\"values\":[\"xhdpi\",\"xxhdpi\"]},{\"splitType\":\""
-                                + "LANGUAGE\",\"values\":[\"de\",\"it\"]},{\"splitType\":\""
-                                + "ABI\",\"values\":[\"arm\",\"x86\"]},{\"splitType\":\"ResConfigs\",\"values\":[]}]");
+                        "[{\"splitType\":\"DENSITY\",\"filters\":[{\"value\":\"xhdpi\"},{\"value\":\"xxhdpi\"}]},"
+                                + "{\"splitType\":\"LANGUAGE\",\"filters\":[{\"value\":\"de\"},{\"value\":\"it\"}]},"
+                                + "{\"splitType\":\"ABI\",\"filters\":[{\"value\":\"arm\"},{\"value\":\"x86\"}]},"
+                                + "{\"splitType\":\"ResConfigs\",\"filters\":[]}]");
     }
 
     @Test
@@ -126,7 +138,7 @@ public class SplitListTest {
         File outputFile = temporaryFolder.newFile();
         SplitList.save(
                 outputFile,
-                ImmutableSet.of("hdpi", "xxhdpi"),
+                filterListFromStrings(ImmutableSet.of("hdpi", "xxhdpi")),
                 ImmutableSet.of(),
                 ImmutableSet.of(),
                 ImmutableSet.of());
@@ -146,7 +158,9 @@ public class SplitListTest {
         SplitList.save(
                 outputFile,
                 ImmutableSet.of(),
-                ImmutableSet.of("fr", "fr_CA"),
+                ImmutableList.of(
+                        new SplitList.Filter("fr,fr_BE,fr_CA", "fr"),
+                        new SplitList.Filter("de", "de")),
                 ImmutableSet.of(),
                 ImmutableSet.of());
 
@@ -154,7 +168,20 @@ public class SplitListTest {
 
         SplitList newSplitList = SplitList.load(fileCollection);
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.LANGUAGE))
-                .containsExactly("fr", "fr_CA");
+                .containsExactly("fr,fr_BE,fr_CA", "de");
+        Map<String, String> expectedLanguageFilters =
+                ImmutableMap.of("fr,fr_BE,fr_CA", "fr", "de", "de");
+        Map<String, String> actualLanguageFilters = new HashMap<>();
+        newSplitList.forEach(
+                (filterType, filters) -> {
+                    if (filterType == VariantOutput.FilterType.LANGUAGE) {
+                        filters.forEach(
+                                filter ->
+                                        actualLanguageFilters.put(
+                                                filter.getValue(), filter.getDisplayName()));
+                    }
+                });
+        Truth.assertThat(actualLanguageFilters).isEqualTo(expectedLanguageFilters);
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.DENSITY)).isEmpty();
         Truth.assertThat(newSplitList.getFilters(OutputFile.FilterType.ABI)).isEmpty();
 
@@ -167,7 +194,7 @@ public class SplitListTest {
                 outputFile,
                 ImmutableSet.of(),
                 ImmutableSet.of(),
-                ImmutableSet.of("arm", "x86"),
+                filterListFromStrings(ImmutableSet.of("arm", "x86")),
                 ImmutableSet.of());
 
         when(fileCollection.getSingleFile()).thenReturn(outputFile);
@@ -184,9 +211,9 @@ public class SplitListTest {
         File outputFile = temporaryFolder.newFile();
         SplitList.save(
                 outputFile,
-                ImmutableSet.of("xhdpi", "xxxhdpi"),
-                ImmutableSet.of("es", "it"),
-                ImmutableSet.of("arm", "x86"),
+                filterListFromStrings(ImmutableSet.of("xhdpi", "xxxhdpi")),
+                filterListFromStrings(ImmutableSet.of("es", "it")),
+                filterListFromStrings(ImmutableSet.of("arm", "x86")),
                 ImmutableSet.of());
 
         when(fileCollection.getSingleFile()).thenReturn(outputFile);
@@ -200,5 +227,9 @@ public class SplitListTest {
                 .containsExactly("arm", "x86");
         // check we only load the file once.
         Mockito.verify(fileCollection, times(1)).getSingleFile();
+    }
+
+    private static List<SplitList.Filter> filterListFromStrings(Collection<String> values) {
+        return values.stream().map(SplitList.Filter::new).collect(Collectors.toList());
     }
 }
