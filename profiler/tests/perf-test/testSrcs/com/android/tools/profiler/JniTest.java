@@ -124,6 +124,7 @@ public class JniTest {
                         if (refs.contains(refValue)) {
                             String refRelatedOutput = String.format("JNI ref deleted %d", refValue);
                             assertThat(androidDriver.waitForInput(refRelatedOutput)).isTrue();
+                            assertThat(tags.contains(event.getObjectTag())).isTrue();
 
                             refs.remove(refValue);
                             if (refs.isEmpty() && refsReported == refCount) {
