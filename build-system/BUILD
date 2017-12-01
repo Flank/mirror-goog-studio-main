@@ -140,7 +140,6 @@ maven_repo(
 # Only use if you need data-binding, otherwise use gradle_plugin_no_databinding_repo
 GRADLE_PLUGIN_ARTIFACTS = GRADLE_PLUGIN_NO_DATABINDING_ARTIFACTS + [
     "//tools/data-binding:tools.compiler",
-    "//prebuilts/tools/common/m2/repository/commons-logging/commons-logging/1.1.1:jar",
 ]
 
 maven_repo(
