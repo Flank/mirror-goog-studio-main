@@ -39,6 +39,12 @@ public class ByteOrderMarkDetectorTest extends AbstractCheckTest {
                         + "\t<string name=\"hanping_chinese\ufeff_lite\ufeff_app_name\">(Translated name)</string>\n"
                         + "\t<string tools:ignore='ByteOrderMark' name=\"something\">test\ufefftest2</string>\n"
                         + "</resources>\n"),
+                xml("res/raw/bom_allowed.xml", ""
+                        + "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+                        + "<resources xmlns:tools=\"http://schemas.android.com/tools\">\n"
+                        + "\t<string name=\"hanping_chinese\ufeff_lite\ufeff_app_name\">(Translated name)</string>\n"
+                        + "\t<string tools:ignore='ByteOrderMark' name=\"something\">test\ufefftest2</string>\n"
+                        + "</resources>\n"),
                 java(""
                         + "package test.pkg;\n"
                         + "import android.annotation.SuppressLint;\n"

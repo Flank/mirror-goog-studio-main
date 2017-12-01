@@ -64,6 +64,8 @@ private const val TAG_LINT_CHECKS = "lint-checks"
 private const val TAG_BASELINE = "baseline"
 private const val TAG_MERGED_MANIFEST = "merged-manifest"
 private const val TAG_CACHE = "cache"
+private const val TAG_AIDL = "aidl"
+private const val TAG_PROGUARD = "proguard"
 private const val ATTR_COMPILE_SDK_VERSION = "compile-sdk-version"
 private const val ATTR_TEST = "test"
 private const val ATTR_NAME = "name"
@@ -74,7 +76,6 @@ private const val ATTR_JAR = "jar"
 private const val ATTR_ANDROID = "android"
 private const val ATTR_LIBRARY = "library"
 private const val ATTR_MODULE = "module"
-
 /**
  * Compute a list of lint [Project] instances from the given XML descriptor files.
  * Each descriptor is considered completely separate from the other (e.g. you can't
@@ -352,6 +353,9 @@ private class ProjectInitializer(val client: LintClient, val file: File,
                         reportError("Invalid module dependency in ${module.name}", child)
                     }
                     dependencies.put(module, target)
+                }
+                TAG_AIDL, TAG_PROGUARD -> {
+                    // Not currently checked by lint
                 }
                 else -> {
                     reportError("Unexpected tag ${child.tagName}", child)

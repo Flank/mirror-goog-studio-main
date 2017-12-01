@@ -16,6 +16,7 @@
 
 package com.android.tools.lint.checks
 
+import com.android.resources.ResourceFolderType
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.Category
 import com.android.tools.lint.detector.api.Context
@@ -66,6 +67,10 @@ to the base resource's name and the translation will not be used.""",
     }
 
     override fun beforeCheckFile(context: Context) {
+        if (context is XmlContext && context.resourceFolderType == ResourceFolderType.RAW) {
+            return
+        }
+
         val source = context.getContents() ?: return
         val max = source.length
         for (i in 1 until max) {
