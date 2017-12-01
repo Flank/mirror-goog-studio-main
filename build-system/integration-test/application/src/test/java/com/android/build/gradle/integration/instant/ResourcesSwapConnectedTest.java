@@ -20,7 +20,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import static com.android.build.gradle.integration.instant.InstantRunTestUtils.PORTS;
 
 import com.android.annotations.NonNull;
-import com.android.build.gradle.integration.common.category.DeviceTests;
+import com.android.build.gradle.integration.common.category.DeviceTestsQuarantine;
 import com.android.build.gradle.integration.common.fixture.Adb;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
 import com.android.build.gradle.integration.common.fixture.Logcat;
@@ -90,7 +90,7 @@ public class ResourcesSwapConnectedTest {
     }
 
     @Test
-    @Category(DeviceTests.class)
+    @Category(DeviceTestsQuarantine.class)
     public void swapResourcesDeviceTest_art() throws Exception {
         // Run up to 5 times if necessary, the test sometimes even 3 times in a row.
         testWithRetries(5, this::doTest);
