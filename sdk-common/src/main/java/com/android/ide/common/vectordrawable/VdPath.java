@@ -130,29 +130,33 @@ class VdPath extends VdElement {
         }
 
         public static String nodeListToString(Node[] nodes, DecimalFormat decimalFormat) {
-            StringBuilder stringBuilder = new StringBuilder();
-            for (Node n : nodes) {
-                stringBuilder.append(n.mType);
-                int len = n.mParams.length;
+            StringBuilder result = new StringBuilder();
+            for (Node node : nodes) {
+                result.append(node.mType);
+                int len = node.mParams.length;
                 boolean implicitLineTo = false;
                 char lineToType = ' ';
-                if ((n.mType == 'm' || n.mType == 'M') && len > 2) {
+                if ((node.mType == 'm' || node.mType == 'M') && len > 2) {
                     implicitLineTo = true;
-                    lineToType = n.mType == 'm' ? 'l' : 'L';
+                    lineToType = node.mType == 'm' ? 'l' : 'L';
                 }
                 for (int j = 0; j < len; j++) {
                     if (j > 0) {
-                        stringBuilder.append(((j & 1) == 1) ? "," : " ");
+                        result.append(j % 2 != 0 ? "," : " ");
                     }
                     if (implicitLineTo && j == 2) {
-                        stringBuilder.append(lineToType);
+                        result.append(lineToType);
                     }
-                    String str = XmlUtils.trimInsignificantZeros(decimalFormat.format(n.mParams[j]));
-                    stringBuilder.append(str);
+                    float param = node.mParams[j];
+                    if (!Float.isFinite(param)) {
+                        throw new IllegalArgumentException("Invalid number: " + param);
+                    }
+                    String str = XmlUtils.trimInsignificantZeros(decimalFormat.format(param));
+                    result.append(str);
                 }
             }
 
-            return stringBuilder.toString();
+            return result.toString();
         }
 
         private static final char INIT_TYPE = ' ';

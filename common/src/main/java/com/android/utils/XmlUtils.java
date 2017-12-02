@@ -576,8 +576,7 @@ public class XmlUtils {
         return null;
     }
 
-    public static SAXParserFactory configureSaxFactory(
-            @NonNull SAXParserFactory factory,
+    public static SAXParserFactory configureSaxFactory(@NonNull SAXParserFactory factory,
             boolean namespaceAware, boolean checkDtd) {
         try {
             factory.setXIncludeAware(false);
@@ -592,8 +591,8 @@ public class XmlUtils {
     }
 
     @NonNull
-    public static SAXParser createSaxParser(
-            @NonNull SAXParserFactory factory) throws ParserConfigurationException, SAXException {
+    public static SAXParser createSaxParser(@NonNull SAXParserFactory factory)
+            throws ParserConfigurationException, SAXException {
         return createSaxParser(factory, false);
     }
 
@@ -795,6 +794,9 @@ public class XmlUtils {
      * @return the corresponding XML string for the value
      */
     public static String formatFloatAttribute(double value) {
+        if (!Double.isFinite(value)) {
+            throw new IllegalArgumentException("Invalid number: " + value);
+        }
         // Use locale-independent conversion to make sure that the decimal separator is always dot.
         // We use Float.toString as opposed to Double.toString to avoid writing too many
         // insignificant digits.

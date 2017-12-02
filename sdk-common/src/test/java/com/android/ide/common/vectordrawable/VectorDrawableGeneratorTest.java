@@ -287,6 +287,10 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkSvgConversion("test_transform_big_arc_translate_scale");
     }
 
+    public void testSvgTransformDegenerateArc() throws Exception {
+        checkSvgConversion("test_transform_degenerate_arc");
+    }
+
     public void testSvgTransformCircleRotate() throws Exception {
         checkSvgConversion("test_transform_circle_rotate");
     }

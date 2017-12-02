@@ -42,6 +42,12 @@ class EllipseSolver {
     public EllipseSolver(AffineTransform totalTransform, float currentX, float currentY,
             float rx, float ry, float xAxisRotation, float largeArcFlag, float sweepFlag,
             float destX, float destY) {
+        if (rx == 0 || ry == 0) {
+            // From https://www.w3.org/TR/SVG11/implnote.html#ArcOutOfRangeParameters:
+            // "If rx = 0 or ry = 0 then this arc is treated as a straight line segment
+            // (a "lineto") joining the endpoints."
+            return;
+        }
         boolean largeArc = largeArcFlag != 0;
         boolean sweep = sweepFlag != 0;
 
