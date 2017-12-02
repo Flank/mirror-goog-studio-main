@@ -198,10 +198,9 @@ class VdPath extends VdElement {
             // Therefore a looping will be necessary for such commands.
             //
             // Note that if the matrix is translation only, then we can save many computations.
-
             int paramsLen = mParams.length;
             float[] tempParams = new float[2 * paramsLen];
-            // These has to be pre-transformed value. In another word, the same as it is
+            // These has to be pre-transformed value. In other words, the same as it is
             // in the pathData.
             float currentX = currentPoint.x;
             float currentY = currentPoint.y;
@@ -313,9 +312,9 @@ class VdPath extends VdElement {
 
                 case 'h':
                     for (int i = 0; i < paramsLen; i++) {
-                        // tempParams may not be used, but I would rather merge the code here.
-                        tempParams[i * 2] = mParams[i];
                         currentX += mParams[i];
+                        // tempParams may not be used but is assigned here to avoid a second loop.
+                        tempParams[i * 2] = mParams[i];
                         tempParams[i * 2 + 1] = 0;
                     }
                     if (!isTranslationOnly(totalTransform)) {
@@ -327,7 +326,7 @@ class VdPath extends VdElement {
 
                 case 'v':
                     for (int i = 0; i < paramsLen; i++) {
-                        // tempParams may not be used, but I would rather merge the code here.
+                        // tempParams may not be used but is assigned here to avoid a second loop.
                         tempParams[i * 2] = 0;
                         tempParams[i * 2 + 1] = mParams[i];
                         currentY += mParams[i];
@@ -356,8 +355,6 @@ class VdPath extends VdElement {
                             if (ellipseSolver.getDirectionChanged()) {
                                 mParams[i + 4] = 1 - mParams[i + 4];
                             }
-                        } else {
-                            // No need to change the value of rx , ry, rotation, and flags.
                         }
                         // [5, 6]
                         currentX = mParams[i + 5];
@@ -392,7 +389,6 @@ class VdPath extends VdElement {
                                 mParams[i + 4] = 1 - mParams[i + 4];
                             }
                         }
-
                     }
                     break;
 
