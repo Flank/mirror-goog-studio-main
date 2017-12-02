@@ -18,7 +18,7 @@
 #include <stdio.h>
 
 #include "perfd/cpu/simpleperf_manager.h"
-#include "proto/profiler.pb.h"
+#include "proto/common.pb.h"
 #include "utils/activity_manager.h"
 #include "utils/file_reader.h"
 #include "utils/process_manager.h"

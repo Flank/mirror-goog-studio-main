@@ -18,9 +18,9 @@
 
 #include <vector>
 
+#include "proto/common.pb.h"
 #include "proto/cpu.grpc.pb.h"
 #include "proto/cpu.pb.h"
-#include "proto/profiler.pb.h"
 
 namespace profiler {
 

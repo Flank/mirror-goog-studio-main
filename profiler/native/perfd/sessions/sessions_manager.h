@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "proto/profiler.pb.h"
+#include "proto/common.pb.h"
 #include "utils/clock.h"
 
 namespace profiler {

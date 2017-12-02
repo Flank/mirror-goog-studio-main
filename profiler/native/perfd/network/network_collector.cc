@@ -22,7 +22,7 @@
 #include "perfd/network/connectivity_sampler.h"
 #include "perfd/network/network_constants.h"
 #include "perfd/network/speed_sampler.h"
-#include "proto/profiler.pb.h"
+#include "proto/common.pb.h"
 #include "utils/clock.h"
 #include "utils/thread_name.h"
 #include "utils/trace.h"

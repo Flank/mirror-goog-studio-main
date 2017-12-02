@@ -19,7 +19,7 @@ package profiler.proto;
 option java_package = "com.android.tools.profiler.proto";
 option java_outer_classname = "IoProfiler";
 
-import "profiler.proto";
+import "common.proto";
 
 enum IoType {
   UNSPECIFIED_TYPE = 0;

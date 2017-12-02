@@ -27,8 +27,8 @@
 #include <vector>
 
 #include "perfd/cpu/cpu_cache.h"
+#include "proto/common.pb.h"
 #include "proto/cpu.pb.h"
-#include "proto/profiler.pb.h"
 #include "utils/file_reader.h"
 #include "utils/tokenizer.h"
 
