@@ -18,7 +18,10 @@ package com.android.projectmodel
 
 /**
  * Describes the schema for a [ConfigTable]. Specifically, it describes the set of dimensions
- * and the allowable values for [ConfigPath] instances along each dimension.
+ * and the allowable values for [ConfigPath] instances along each dimension. For example, in
+ * the case of Gradle projects the first dimensions correspond to flavors, if any, and the second-last
+ * dimension corresponds to build type. For all build systems, the last dimension always corresponds
+ * to an artifact name.
  */
 data class ConfigTableSchema(
         /**
@@ -35,6 +38,29 @@ data class ConfigTableSchema(
         if (index == -1) {
             return matchNoArtifacts()
         }
-        return matchArtifactsWith((0 until index).map { null } + dimensionValue)
+        return matchDimension(index, dimensionValue)
+    }
+
+    /**
+     * Returns a [ConfigPath] that matches an artifact name, which is always stored as the last
+     * segment of the path.
+     */
+    fun matchArtifact(artifactName: String): ConfigPath {
+        return matchDimension(dimensions.size - 1, artifactName)
+    }
+
+    class Builder {
+        private val dimensions = ArrayList<ConfigDimension.Builder>()
+        private val nameToDimension = HashMap<String, ConfigDimension.Builder>()
+
+        fun getOrPutDimension(name: String): ConfigDimension.Builder {
+            return nameToDimension.getOrPut(name, {
+                val builder = ConfigDimension.Builder(name)
+                dimensions.add(builder)
+                builder
+            })
+        }
+
+        fun build(): ConfigTableSchema = ConfigTableSchema(dimensions.map { it.build() })
     }
 }

@@ -23,8 +23,8 @@ import kotlin.reflect.full.memberProperties
  * more than just a list of path names - it also contains all of the metadata supplied by the flavor or build type. There is also no
  * distinction between flavors and build types. They only differ in terms of which attributes are set in the project metadata.
  *
- * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
- * to stay source compatible.
+ * New properties may be added in the future; clients that invoke the constructor are encouraged to
+ * use Kotlin named arguments to stay source compatible.
  */
 data class Config(
         /**
@@ -98,4 +98,34 @@ data class Config(
         }
         return componentStrings.joinToString(",", "Config(", ")")
     }
+
+  /**
+   * Merges this [Config] with another higher-priority [Config].
+   */
+  fun mergeWith(other: Config): Config =
+      Config(
+          applicationIdSuffix = mergeNullable(applicationIdSuffix, other.applicationIdSuffix, { a, b -> a + b} ),
+          versionNameSuffix = mergeNullable(versionNameSuffix, other.versionNameSuffix, { a, b -> a + b} ),
+          manifestValues = manifestValues + other.manifestValues,
+          manifestPlaceholderValues = manifestPlaceholderValues + other.manifestPlaceholderValues,
+          sources = sources + other.sources,
+          resValues = resValues + other.resValues,
+          compileDeps = mergeNullable(compileDeps, other.compileDeps, { a, b -> a + b}),
+          legacyMultidexEnabled = other.legacyMultidexEnabled ?: legacyMultidexEnabled,
+          minifyEnabled = minifyEnabled || other.minifyEnabled,
+          testInstrumentationRunner = other.testInstrumentationRunner ?: testInstrumentationRunner,
+          testInstrumentationRunnerArguments = if (other.testInstrumentationRunner != null)
+            other.testInstrumentationRunnerArguments
+          else testInstrumentationRunnerArguments,
+          resourceConfigurations = resourceConfigurations + other.resourceConfigurations,
+          usingSupportLibVectors = usingSupportLibVectors || other.usingSupportLibVectors
+      )
 }
+
+private fun <T> mergeNullable(deps: T?, moreDeps: T?, merger: (T, T)-> T) : T? =
+  if (deps == null)
+    moreDeps
+  else if (moreDeps == null)
+    deps
+  else
+    merger(deps, moreDeps)

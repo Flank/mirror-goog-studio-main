@@ -18,8 +18,8 @@ package com.android.projectmodel
 /**
  * Variant of an [AndroidProject].
  *
- * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
- * to stay source compatible.
+ * New properties may be added in the future; clients that invoke the constructor are encouraged to
+ * use Kotlin named arguments to stay source compatible.
  */
 data class Variant(
         /**

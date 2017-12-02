@@ -27,8 +27,8 @@ import kotlin.reflect.full.memberProperties
  * This is not a container for all things related to the manifest. New properties should be added
  * here if and only if they could be obtained directly from a manifest and overridden in a [Config].
  *
- * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
- * to stay source compatible.
+ * New properties may be added in the future; clients that invoke the constructor are encouraged to
+ * use Kotlin named arguments to stay source compatible.
  */
 data class ManifestAttributes(
         /**
@@ -44,6 +44,11 @@ data class ManifestAttributes(
          * https://developer.android.com/guide/topics/manifest/manifest-element.html#vcode. Null if undefined.
          */
         val versionCode: Int? = null,
+        /**
+         * The version name shown to users. For more information, see
+         * https://developer.android.com/studio/publish/versioning.html
+         */
+        val versionName: String? = null,
         /**
          * The minimum supported SDK version or null if not set. For more information, see
          * https://developer.android.com/guide/topics/manifest/uses-sdk-element.html. Null if undefined.
@@ -83,6 +88,7 @@ data class ManifestAttributes(
             ManifestAttributes(
                     applicationId = other.applicationId ?: applicationId,
                     versionCode = other.versionCode ?: versionCode,
+                    versionName = other.versionName ?: versionName,
                     apiVersion = other.apiVersion ?: apiVersion,
                     minSdkVersion = other.minSdkVersion ?: minSdkVersion,
                     maxSdkVersion = other.maxSdkVersion ?: maxSdkVersion,

@@ -53,14 +53,6 @@ enum class AndroidPathType {
      */
     MANIFEST,
     /**
-     * A multiDexKeepFile, as described here: https://developer.android.com/studio/build/multidex.html
-     */
-    MULTIDEX_KEEP,
-    /**
-     * A multiDexKeepProguard file, as described here: https://developer.android.com/studio/build/multidex.html
-     */
-    MULTIDEX_KEEP_PROGUARD,
-    /**
      * Proguard file to be used when building artifacts belonging to this [Config].
      */
     PROGUARD_FILE,

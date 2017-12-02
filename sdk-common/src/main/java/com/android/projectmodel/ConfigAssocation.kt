@@ -20,8 +20,8 @@ package com.android.projectmodel
  * This type represents an entry in the [ConfigTable]. It associates a [Config] with one or more
  * [Artifact] instances.
  *
- * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
- * to stay source compatible.
+ * New properties may be added in the future; clients that invoke the constructor are encouraged to
+ * use Kotlin named arguments to stay source compatible.
  */
 data class ConfigAssociation(
         /**

@@ -19,8 +19,8 @@ package com.android.projectmodel
 /**
  * Describes one dimension of the [ConfigTable].
  *
- * New properties may be added in the future; clients are encouraged to use Kotlin named arguments
- * to stay source compatible.
+ * New properties may be added in the future; clients that invoke the constructor are encouraged to
+ * use Kotlin named arguments to stay source compatible.
  */
 data class ConfigDimension(
         /**
@@ -33,4 +33,20 @@ data class ConfigDimension(
          * must be unique within a given [ConfigTable].
          */
         val values: List<String>
-)
+) {
+    class Builder(
+            private val dimensionName: String
+    ) {
+        private val values: ArrayList<String> = ArrayList()
+        private val valuesSet: HashSet<String> = HashSet()
+
+        fun add(value: String) {
+            if (!valuesSet.contains(value)) {
+                values.add(value)
+                valuesSet.add(value)
+            }
+        }
+
+        fun build(): ConfigDimension = ConfigDimension(dimensionName, values)
+    }
+}

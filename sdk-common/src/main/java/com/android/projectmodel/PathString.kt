@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:JvmName("PathStringUtil")
 package com.android.projectmodel
 
 import java.io.File
@@ -549,6 +550,9 @@ class PathString private constructor(
         return result
     }
 }
+
+fun Path.toPathString() : PathString = PathString(this)
+fun File.toPathString() : PathString = PathString(this)
 
 const val PARENT = ".."
 const val SELF = "."

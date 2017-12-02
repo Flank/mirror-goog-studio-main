@@ -143,6 +143,14 @@ fun matchArtifactsWith(filterPath: List<String?>?): ConfigPath =
         ConfigPath(filterPath?.subList(0, indexOfLastNonNull(filterPath) + 1))
 
 /**
+ * Returns a [ConfigPath] that matches the given value in the given dimension. All other segments
+ * are the "match everything" wildcard. For example, if passed 3, "myApp", it would return
+ * the path [null, null, "myApp"].
+ */
+fun matchDimension(dimensionNumber: Int, value: String): ConfigPath =
+        matchArtifactsWith((0 until dimensionNumber).map { null } + value)
+
+/**
  * Returns a [ConfigPath] that matches artifact paths with the given segments. Segments are
  * separated with a forward slash. A segment containing a single asterisk is treated a wildcard
  * that matches any string. The empty string is treated as a path that matches nothing. A string
