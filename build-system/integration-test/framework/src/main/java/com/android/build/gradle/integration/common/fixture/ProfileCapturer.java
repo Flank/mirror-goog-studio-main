@@ -18,89 +18,85 @@
 package com.android.build.gradle.integration.common.fixture;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.build.gradle.integration.performance.BenchmarkRecorder;
-import com.google.common.base.Preconditions;
+import com.android.builder.utils.ExceptionRunnable;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Collects build profiles from gradle builds.
+ * A helper class for finding and parsing GradleBuildProfile protos.
  *
- * <p>If benchmark mode is set:
+ * <p>The way that our profiling works is that a flag is passed in to our Gradle plugin telling it
+ * to enable profiling, and put the profiling results in a given directory. The job of this class is
+ * to monitor that directory and give us any newly created profiles when we ask for them.
  *
- * <ol>
- *   <li>Adds an argument to the build to output a profile in a known location.
- *   <li>At the end of the build load the profile proto from the file and package it in a benchmark
- *       proto builder, which is handed to the {@link BenchmarkRecorder}.
- *   <li>The {@link BenchmarkRecorder} is then responsible for populating the benchmark fields and
- *       uploading the proto
- * </ol>
+ * <p>Usage:
+ *
+ * <pre>
+ *     ProfileCapturer pc = new ProfileCapturer(Path.get("foo"));
+ *     pc.getNewProfiles() // empty, because we haven't invoked Gradle at all
+ *     // do some stuff here with the Gradle plugin, telling it to output to Path.get("foo")
+ *     pc.getNewProfiles() // a list containing newly generated profiles
+ * </pre>
+ *
+ * In tests, a new profile should be generated every time you use the {@code RunGradleTasks} class
+ * with a benchmark recorder set.
  */
-public class ProfileCapturer {
+public final class ProfileCapturer {
+    @NonNull private static final String PROFILE_SUFFIX = ".rawproto";
 
-    @NonNull private final ImmutableSet<Path> existingProfiles;
+    @NonNull private Set<Path> knownProfiles = new HashSet<>();
     @NonNull private final Path profileDirectory;
-    @Nullable private final BenchmarkRecorder benchmarkRecorder;
-    @Nullable private final Logging.BenchmarkMode benchmarkMode;
 
-    public ProfileCapturer(
-            @Nullable BenchmarkRecorder benchmarkRecorder,
-            @Nullable Logging.BenchmarkMode benchmarkMode,
-            @NonNull Path profileDirectory)
-            throws IOException {
-        Preconditions.checkArgument(
-                benchmarkMode == null || benchmarkRecorder != null,
-                "Need to set a profile manager to record profiles");
-        this.benchmarkRecorder = benchmarkRecorder;
-        this.benchmarkMode = benchmarkMode;
+    public ProfileCapturer(@NonNull Path profileDirectory) throws IOException {
         this.profileDirectory = profileDirectory;
-        this.existingProfiles = getProfiles();
+        updateKnownProfiles();
     }
 
-    public void recordProfile() throws IOException {
-        if (benchmarkMode == null) {
-            // no profile to capture
-            return;
-        }
-        Preconditions.checkNotNull(benchmarkRecorder);
-
-        Set<Path> newProfiles = Sets.difference(getProfiles(), existingProfiles);
-
-        if (newProfiles.size() != 1) {
-            throw new IllegalStateException(
-                    "Expected a profile to be written to " + profileDirectory);
-        }
-
-        GradleBuildProfile profile =
-                GradleBuildProfile.parseFrom(
-                        Files.readAllBytes(Iterables.getOnlyElement(newProfiles)));
-
-        Logging.GradleBenchmarkResult.Builder benchmarkResult =
-                Logging.GradleBenchmarkResult.newBuilder()
-                        .setProfile(profile)
-                        .setBenchmarkMode(benchmarkMode);
-
-        benchmarkRecorder.recordBenchmarkResult(benchmarkResult);
+    public List<GradleBuildProfile> capture(ExceptionRunnable r) throws Exception {
+        updateKnownProfiles();
+        r.run();
+        return findNewProfiles();
     }
 
+    @NonNull
+    public List<GradleBuildProfile> findNewProfiles() throws IOException {
+        Set<Path> newProfiles = ImmutableSet.copyOf(Sets.difference(findProfiles(), knownProfiles));
+        knownProfiles.addAll(newProfiles);
 
-    private ImmutableSet<Path> getProfiles() throws IOException {
-        if (benchmarkMode == null || !Files.exists(profileDirectory)) {
-            return ImmutableSet.of();
+        if (newProfiles.isEmpty()) {
+            return Collections.emptyList();
         }
-        return ImmutableSet.copyOf(
-                Files.walk(profileDirectory)
-                        .filter(Files::isRegularFile)
-                        .filter(file -> file.getFileName().toString().endsWith(".rawproto"))
-                        .collect(Collectors.toSet()));
+
+        List<GradleBuildProfile> results = new ArrayList<>(newProfiles.size());
+        for (Path path : newProfiles) {
+            results.add(GradleBuildProfile.parseFrom(Files.readAllBytes(path)));
+        }
+        return results;
+    }
+
+    @NonNull
+    private Set<Path> findProfiles() throws IOException {
+        if (!Files.exists(profileDirectory)) {
+            return Collections.emptySet();
+        }
+
+        return Files.walk(profileDirectory)
+                .filter(Files::isRegularFile)
+                .filter(file -> file.getFileName().toString().endsWith(PROFILE_SUFFIX))
+                .collect(Collectors.toSet());
+    }
+
+    private void updateKnownProfiles() throws IOException {
+        knownProfiles.addAll(findProfiles());
     }
 }

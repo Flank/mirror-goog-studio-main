@@ -42,7 +42,6 @@ public final class GradleTestProjectBuilder {
     private boolean withoutNdk = false;
     @NonNull private List<String> gradleProperties = Lists.newArrayList();
     @Nullable private String heapSize;
-    @Nullable private BenchmarkRecorder benchmarkRecorder;
     @NonNull private Path relativeProfileDirectory = Paths.get("build", "android-profile");
     private boolean withDependencyChecker = true;
     // Indicates if we need to create a project without setting cmake.dir in local.properties.
@@ -68,7 +67,6 @@ public final class GradleTestProjectBuilder {
                 gradleProperties,
                 heapSize,
                 buildToolsVersion,
-                benchmarkRecorder,
                 relativeProfileDirectory,
                 cmakeVersion,
                 withCmakeDirInLocalProp,
@@ -199,11 +197,6 @@ public final class GradleTestProjectBuilder {
 
     public GradleTestProjectBuilder withBuildToolsVersion(String buildToolsVersion) {
         this.buildToolsVersion = buildToolsVersion;
-        return this;
-    }
-
-    public GradleTestProjectBuilder forBenchmarkRecording(BenchmarkRecorder benchmarkRecorder) {
-        this.benchmarkRecorder = benchmarkRecorder;
         return this;
     }
 

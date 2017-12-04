@@ -3,7 +3,9 @@ load("//tools/base/bazel:kotlin.bzl", "kotlin_library", "kotlin_test", "kotlin_j
 load("//tools/base/build-system/integration-test:integration-test.bzl", "gradle_integration_test")
 
 TEST_DEPS = [
+    "//tools/analytics-library/protos/src/main/proto",
     "//tools/base/build-system/integration-test/framework",
+    "//tools/base/build-system/integration-test/framework/src/main/proto",
     "//tools/apksig",
     "//tools/base/annotations",
     "//tools/base/build-system:gradle-api",

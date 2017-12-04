@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -30,7 +31,7 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public class BenchmarkTest {
     @Test
-    public void run() {
+    public void run() throws Exception {
         List<Benchmark> benchmarks = new ArrayList<>();
 
         /*
@@ -98,6 +99,8 @@ public class BenchmarkTest {
          * Run the benchmarks.
          */
         shard.forEach(Benchmark::run);
+
+        BenchmarkRecorder.awaitUploads(15, TimeUnit.MINUTES);
     }
 
     public static List<Benchmark> filterByScenario(List<Benchmark> benchmarks, String scenarioStr) {

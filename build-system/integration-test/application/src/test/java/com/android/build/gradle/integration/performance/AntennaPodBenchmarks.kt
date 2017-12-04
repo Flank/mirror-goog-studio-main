@@ -50,90 +50,98 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                     benchmark(
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.EVALUATION,
-                            recordedAction = { executor, _ -> executor.run("tasks") }
+                            action = { record, _, executor, _ ->
+                                record { executor.run("tasks") }
+                            }
                     ),
 
                     benchmark(
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.SYNC,
-                            recordedAction = { _, model -> model.multi }
+                            action = { record, _, _, model ->
+                                record { model.multi }
+                            }
                     ),
 
                     benchmark(
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.BUILD__FROM_CLEAN,
-                            recordedAction = { executor, _ -> executor.run(":app:assembleDebug") }
+                            action = { record, _, executor, _ ->
+                                record { executor.run(":app:assembleDebug") }
+                            }
                     ),
 
                     benchmark(
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE,
-                            setup = { project, executor, _ ->
+                            action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
                                 addMethodToActivity(project.file(ACTIVITY_PATH))
-                            },
-                            recordedAction = { executor, _ -> executor.run(":app:assembleDebug") }
+                                record { executor.run(":app:assembleDebug") }
+                            }
                     ),
 
                     benchmark(
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
-                            setup = { project, executor, _ ->
+                            action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
                                 changeActivity(project.file(ACTIVITY_PATH))
-                            },
-                            recordedAction = { executor, _ -> executor.run(":app:assembleDebug") }
+                                record { executor.run(":app:assembleDebug") }
+                            }
                     ),
 
                     instantRunBenchmark(
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.INSTANT_RUN_BUILD__FROM_CLEAN,
-                            recordedAction = { executor, _ -> executor.run(":app:assembleDebug") }
+                            action = { record, _, executor, _ ->
+                                record { executor.run(":app:assembleDebug") }
+                            }
                     ),
 
                     instantRunBenchmark(
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__API_CHANGE,
-                            setup = { project, executor, _ ->
+                            action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
                                 addMethodToActivity(project.file(ACTIVITY_PATH))
-                            },
-                            recordedAction = { executor, _ ->
-                                executor.run(":app:assembleDebug")
+                                record { executor.run(":app:assembleDebug") }
                             }
                     ),
 
                     instantRunBenchmark(
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.INSTANT_RUN_BUILD__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
-                            setup = { project, executor, _ ->
+                            action = { record, project, executor, _ ->
                                 executor.run(":app:assembleDebug")
                                 changeActivity(project.file(ACTIVITY_PATH))
-                            },
-                            recordedAction = { executor, _ ->
-                                executor.run(":app:assembleDebug")
+                                record { executor.run(":app:assembleDebug") }
                             }
                     ),
 
                     benchmark(
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.BUILD_ANDROID_TESTS_FROM_CLEAN,
-                            recordedAction = { executor, _ -> executor.run(":app:assembleDebugAndroidTest") }
+                            action = { record, _, executor, _ ->
+                                record { executor.run(":app:assembleDebugAndroidTest") }
+                            }
                     ),
 
                     benchmark(
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.BUILD_UNIT_TESTS_FROM_CLEAN,
-                            recordedAction = { executor, _ -> executor.run(":app:assembleDebugUnitTest") }
+                            action = { record, _, executor, _ ->
+                                record { executor.run(":app:assembleDebugUnitTest") }
+                            }
                     ),
 
                     benchmark(
                             scenario = scenario,
                             benchmarkMode = Logging.BenchmarkMode.GENERATE_SOURCES,
-                            recordedAction = { executor, model ->
+                            action = { record, _, executor, model ->
                                 // We don't care about the model benchmark here.
-                                model.dontRecord {
-                                    val tasks = ModelHelper.getDebugGenerateSourcesCommands(model.multi.modelMap)
+                                val tasks = ModelHelper.getDebugGenerateSourcesCommands(model.multi.modelMap)
+                                record {
                                     executor
                                             .with(BooleanOption.IDE_GENERATE_SOURCES_ONLY, true)
                                             .run(tasks)
@@ -149,8 +157,7 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
     fun benchmark(
             scenario: ProjectScenario,
             benchmarkMode: Logging.BenchmarkMode,
-            setup: (GradleTestProject, RunGradleTasks, BuildModel) -> Unit = { _, _, _ -> },
-            recordedAction: (RunGradleTasks, BuildModel) -> Unit): Benchmark {
+            action: ((() -> Unit) -> Unit, GradleTestProject, RunGradleTasks, BuildModel) -> Unit): Benchmark {
         return Benchmark(
                 scenario = scenario,
                 benchmark = Logging.Benchmark.ANTENNA_POD,
@@ -167,31 +174,23 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
                         .withHeap("1536M")
                         .create()
                 },
-                setup = { project, executor, model ->
+                action = { record, project, executor, model ->
                     executor.run("clean")
                     FileUtils.cleanOutputDir(executor.buildCacheDir)
-                    setup(project, executor, model)
-                },
-                recordedAction = recordedAction
+                    action(record, project, executor, model)
+                }
         )
     }
 
     private fun instantRunBenchmark(
             scenario: ProjectScenario,
             benchmarkMode: Logging.BenchmarkMode,
-            setup: (GradleTestProject, RunGradleTasks, BuildModel) -> Unit = { _, _, _ -> },
-            recordedAction: (RunGradleTasks, BuildModel) -> Unit): Benchmark {
+            action: ((() -> Unit) -> Unit, GradleTestProject, RunGradleTasks, BuildModel) -> Unit): Benchmark {
         return benchmark(
                 scenario = scenario,
                 benchmarkMode = benchmarkMode,
-                setup = { project, executor, model ->
-                    setup(project,
-                            executor.withInstantRun(INSTANT_RUN_TARGET_DEVICE_VERSION),
-                            model)
-                },
-                recordedAction = { executor, model ->
-                    recordedAction(executor.withInstantRun(INSTANT_RUN_TARGET_DEVICE_VERSION),
-                            model)
+                action = { record, project, executor, model ->
+                    action(record, project, executor.withInstantRun(INSTANT_RUN_TARGET_DEVICE_VERSION), model)
                     assertInstantRunInvoked(model)
                 })
     }
@@ -227,16 +226,14 @@ object AntennaPodBenchmarks : Supplier<List<Benchmark>> {
     }
 
     private fun assertInstantRunInvoked(model: BuildModel) {
-        model.dontRecord {
-            /*
-             * The following lines of code verify that an instant run happened
-             * by asserting that we can parse an InstantRunBuildInfo. If we
-             * can't, an exception is thrown.
-             */
-            InstantRunTestUtils.loadContext(
-                    InstantRunTestUtils.getInstantRunModel(
-                            model.multi.modelMap[":app"]!!))
-        }
+        /*
+         * The following lines of code verify that an instant run happened
+         * by asserting that we can parse an InstantRunBuildInfo. If we
+         * can't, an exception is thrown.
+         */
+        InstantRunTestUtils.loadContext(
+                InstantRunTestUtils.getInstantRunModel(
+                        model.multi.modelMap[":app"]!!))
     }
 }
 

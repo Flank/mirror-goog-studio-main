@@ -27,7 +27,6 @@ import com.android.annotations.Nullable;
 import com.android.build.gradle.BasePlugin;
 import com.android.build.gradle.integration.BazelIntegrationTestsSuite;
 import com.android.build.gradle.integration.common.fixture.GetAndroidModelAction.ModelContainer;
-import com.android.build.gradle.integration.performance.BenchmarkRecorder;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.BuilderConstants;
 import com.android.builder.model.AndroidProject;
@@ -247,7 +246,6 @@ public final class GradleTestProject implements TestRule {
 
     @Nullable private final String buildToolsVersion;
 
-    @Nullable private final BenchmarkRecorder benchmarkRecorder;
     @NonNull private final Path relativeProfileDirectory;
 
     @Nullable private String heapSize;
@@ -268,7 +266,6 @@ public final class GradleTestProject implements TestRule {
             @NonNull Collection<String> gradleProperties,
             @Nullable String heapSize,
             @Nullable String buildToolsVersion,
-            @Nullable BenchmarkRecorder benchmarkRecorder,
             @NonNull Path relativeProfileDirectory,
             @NonNull String cmakeVersion,
             boolean withCmake,
@@ -288,7 +285,6 @@ public final class GradleTestProject implements TestRule {
         this.heapSize = heapSize;
         this.gradleProperties = gradleProperties;
         this.buildToolsVersion = buildToolsVersion;
-        this.benchmarkRecorder = benchmarkRecorder;
         this.openConnections = Lists.newArrayList();
         this.rootProject = this;
         this.relativeProfileDirectory = relativeProfileDirectory;
@@ -317,7 +313,6 @@ public final class GradleTestProject implements TestRule {
         targetGradleVersion = rootProject.targetGradleVersion;
         openConnections = null;
         buildToolsVersion = null;
-        benchmarkRecorder = rootProject.benchmarkRecorder;
         this.rootProject = rootProject;
         this.relativeProfileDirectory = rootProject.relativeProfileDirectory;
         this.cmakeVersion = rootProject.cmakeVersion;
@@ -454,9 +449,6 @@ public final class GradleTestProject implements TestRule {
                         }
                     }
                     openConnections.forEach(ProjectConnection::close);
-                    if (benchmarkRecorder != null) {
-                        benchmarkRecorder.doUploads();
-                    }
                     if (testFailed && lastBuildResult != null) {
                         System.err.println("==============================================");
                         System.err.println("= Test " + description + " failed. Last build:");
@@ -1155,11 +1147,6 @@ public final class GradleTestProject implements TestRule {
                 + "buildscript { apply from: \"../commonBuildScript.gradle\" }\n"
                 + "\n"
                 + "apply from: \"../commonLocalRepo.gradle\"\n";
-    }
-
-    @Nullable
-    public BenchmarkRecorder getBenchmarkRecorder() {
-        return benchmarkRecorder;
     }
 
     /** Fluent method to run a build. */

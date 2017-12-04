@@ -18,17 +18,22 @@ package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
 import com.android.build.gradle.integration.common.utils.PerformanceTestProjects;
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.utils.ExceptionRunnable;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -40,17 +45,18 @@ public class LargeGradleProjectPerformanceMatrixTest {
 
     @Rule public final GradleTestProject project;
     @NonNull private final ProjectScenario projectScenario;
+    @NonNull private final BenchmarkRecorder recorder;
 
-    public LargeGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario) {
+    public LargeGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario)
+            throws IOException {
         this.projectScenario = projectScenario;
         project =
                 GradleTestProject.builder()
                         .fromExternalProject("android-studio-gradle-test")
-                        .forBenchmarkRecording(
-                                new BenchmarkRecorder(
-                                        Logging.Benchmark.PERF_ANDROID_LARGE, projectScenario))
                         .withHeap("20G")
                         .create();
+
+        recorder = new BenchmarkRecorder(new ProfileCapturer(project.getProfileDirectory()));
     }
 
     @Parameterized.Parameters(name = "{0}")
@@ -66,6 +72,16 @@ public class LargeGradleProjectPerformanceMatrixTest {
         project.executor().run("addSources");
     }
 
+    @After
+    public void uploadResults() {
+        recorder.uploadAsync();
+    }
+
+    @AfterClass
+    public static void waitForUpload() throws Exception {
+        BenchmarkRecorder.awaitUploads(15, TimeUnit.MINUTES);
+    }
+
     @Test
     public void runBenchmarks() throws Exception {
         Map<String, AndroidProject> models =
@@ -79,42 +95,47 @@ public class LargeGradleProjectPerformanceMatrixTest {
         executor().run("clean");
 
         // recording data
-        executor().recordBenchmark(BenchmarkMode.EVALUATION).run("tasks");
-        executor().recordBenchmark(BenchmarkMode.BUILD__FROM_CLEAN).run(":phthalic:assembleDebug");
-        executor().recordBenchmark(BenchmarkMode.NO_OP).run(":phthalic:assembleDebug");
+        record(BenchmarkMode.EVALUATION, () -> executor().run("tasks"));
+        record(BenchmarkMode.BUILD__FROM_CLEAN, () -> executor().run(":phthalic:assembleDebug"));
+        record(BenchmarkMode.NO_OP, () -> executor().run(":phthalic:assembleDebug"));
 
         String source = "outissue/carnally/src/main/java/com/studio/carnally/LoginActivity.java";
         applyJavaChange(project.getTestDir().toPath().resolve(source), false);
-        executor()
-                .recordBenchmark(BenchmarkMode.BUILD_INC__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE)
-                .run(":phthalic:assembleDebug");
+
+        record(
+                BenchmarkMode.BUILD_INC__SUB_PROJECT__JAVA__IMPLEMENTATION_CHANGE,
+                () -> executor().run(":phthalic:assembleDebug"));
 
         applyJavaChange(project.getTestDir().toPath().resolve(source), true);
-        executor()
-                .recordBenchmark(BenchmarkMode.BUILD_INC__SUB_PROJECT__JAVA__API_CHANGE)
-                .run(":phthalic:assembleDebug");
+        record(
+                BenchmarkMode.BUILD_INC__SUB_PROJECT__JAVA__API_CHANGE,
+                () -> executor().run(":phthalic:assembleDebug"));
 
         String stringsXml = "outissue/carnally/src/main/res/values/strings.xml";
         changeResValue(project.getTestDir().toPath().resolve(stringsXml));
-        executor()
-                .recordBenchmark(BenchmarkMode.BUILD_INC__SUB_PROJECT__RES__EDIT)
-                .run(":phthalic:assembleDebug");
+        record(
+                BenchmarkMode.BUILD_INC__SUB_PROJECT__RES__EDIT,
+                () -> executor().run(":phthalic:assembleDebug"));
 
         addResValue(project.getTestDir().toPath().resolve(stringsXml));
-        executor()
-                .recordBenchmark(BenchmarkMode.BUILD_INC__SUB_PROJECT__RES__ADD)
-                .run(":phthalic:assembleDebug");
+        record(
+                BenchmarkMode.BUILD_INC__SUB_PROJECT__RES__ADD,
+                () -> executor().run(":phthalic:assembleDebug"));
 
         executor().run("clean");
-        project.model().ignoreSyncIssues().recordBenchmark(BenchmarkMode.SYNC).getMulti();
+        record(BenchmarkMode.SYNC, () -> project.model().ignoreSyncIssues().getMulti());
 
-        executor()
-                .recordBenchmark(BenchmarkMode.GENERATE_SOURCES)
-                .run(ModelHelper.getDebugGenerateSourcesCommands(models));
+        record(
+                BenchmarkMode.GENERATE_SOURCES,
+                () -> executor().run(ModelHelper.getDebugGenerateSourcesCommands(models)));
     }
 
     private RunGradleTasks executor() {
         return projectScenario.configureExecutor(project.executor()).withoutOfflineFlag();
+    }
+
+    private void record(BenchmarkMode benchmarkMode, ExceptionRunnable r) throws Exception {
+        recorder.record(projectScenario, Logging.Benchmark.PERF_ANDROID_LARGE, benchmarkMode, r);
     }
 
     private void applyJavaChange(@NonNull Path sourceFile, boolean isAbiChange) throws IOException {

@@ -21,6 +21,7 @@ import static com.android.build.gradle.integration.common.truth.TruthHelper.asse
 import com.android.annotations.NonNull;
 import com.android.build.gradle.integration.common.fixture.BuildModel;
 import com.android.build.gradle.integration.common.fixture.GradleTestProject;
+import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
 import com.android.build.gradle.integration.common.fixture.RunGradleTasks;
 import com.android.build.gradle.integration.common.runner.FilterableParameterized;
 import com.android.build.gradle.integration.common.utils.ModelHelper;
@@ -28,6 +29,7 @@ import com.android.build.gradle.integration.common.utils.PerformanceTestProjects
 import com.android.build.gradle.integration.common.utils.TestFileUtils;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.builder.model.AndroidProject;
+import com.android.builder.utils.ExceptionRunnable;
 import com.android.utils.FileUtils;
 import com.google.common.collect.ImmutableSet;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
@@ -37,6 +39,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,17 +53,18 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
     @Rule public final GradleTestProject project;
     @NonNull private final ProjectScenario projectScenario;
+    @NonNull private final BenchmarkRecorder recorder;
 
-    public MediumGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario) {
+    public MediumGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario)
+            throws IOException {
         this.projectScenario = projectScenario;
         project =
                 GradleTestProject.builder()
                         .fromExternalProject("gradle-perf-android-medium")
-                        .forBenchmarkRecording(
-                                new BenchmarkRecorder(
-                                        Logging.Benchmark.PERF_ANDROID_MEDIUM, projectScenario))
                         .withHeap("1536M")
                         .create();
+
+        recorder = new BenchmarkRecorder(new ProfileCapturer(project.getProfileDirectory()));
     }
 
     @Parameterized.Parameters(name = "{0}")
@@ -107,6 +113,16 @@ public class MediumGradleProjectPerformanceMatrixTest {
         }
     }
 
+    @After
+    public void uploadResults() {
+        recorder.uploadAsync();
+    }
+
+    @AfterClass
+    public static void waitForUpload() throws Exception {
+        BenchmarkRecorder.awaitUploads(15, TimeUnit.MINUTES);
+    }
+
     @Test
     public void runBenchmarks() throws Exception {
         // Warm up
@@ -117,33 +133,35 @@ public class MediumGradleProjectPerformanceMatrixTest {
         for (BenchmarkMode benchmarkMode : getBenchmarks()) {
             switch (benchmarkMode) {
                 case EVALUATION:
-                    executor().recordBenchmark(benchmarkMode).run("tasks");
+                    record(benchmarkMode, () -> executor().run("tasks"));
                     break;
                 case SYNC:
-                    Map<String, AndroidProject> model =
-                            model().recordBenchmark(BenchmarkMode.SYNC).getMulti().getModelMap();
-                    assertThat(model.keySet()).contains(":WordPress");
+                    record(
+                            benchmarkMode,
+                            () -> {
+                                Map<String, AndroidProject> model =
+                                        model().getMulti().getModelMap();
+                                assertThat(model.keySet()).contains(":WordPress");
+                            });
                     continue;
                 case BUILD__FROM_CLEAN:
                     FileUtils.cleanOutputDir(executor().getBuildCacheDir());
                     clean();
-                    executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
+                    record(benchmarkMode, () -> executor().run("assembleVanillaDebug"));
                     break;
                 case BUILD_INC__MAIN_PROJECT__JAVA__IMPLEMENTATION_CHANGE:
                     executor().run("assembleVanillaDebug");
                     changeJavaImplementation();
-                    executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
+                    record(benchmarkMode, () -> executor().run("assembleVanillaDebug"));
                     break;
                 case BUILD_INC__MAIN_PROJECT__JAVA__API_CHANGE:
                     executor().run("assembleVanillaDebug");
                     changeJavaApi("newMethod");
-                    executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
+                    record(benchmarkMode, () -> executor().run("assembleVanillaDebug"));
                     break;
                 case BUILD_ANDROID_TESTS_FROM_CLEAN:
                     clean();
-                    executor()
-                            .recordBenchmark(benchmarkMode)
-                            .run("assembleVanillaDebugAndroidTest");
+                    record(benchmarkMode, () -> executor().run("assembleVanillaDebugAndroidTest"));
                     break;
                 case GENERATE_SOURCES:
                     clean();
@@ -154,14 +172,16 @@ public class MediumGradleProjectPerformanceMatrixTest {
                                             project.equals(":WordPress")
                                                     ? "vanillaDebug"
                                                     : "debug");
-                    executor()
-                            .recordBenchmark(benchmarkMode)
-                            .with(BooleanOption.IDE_GENERATE_SOURCES_ONLY, true)
-                            .run(generateSourcesCommands);
+                    record(
+                            benchmarkMode,
+                            () ->
+                                    executor()
+                                            .with(BooleanOption.IDE_GENERATE_SOURCES_ONLY, true)
+                                            .run(generateSourcesCommands));
                     break;
                 case NO_OP:
                     executor().run("assembleVanillaDebug");
-                    executor().recordBenchmark(benchmarkMode).run("assembleVanillaDebug");
+                    record(benchmarkMode, () -> executor().run("assembleVanillaDebug"));
                     break;
                 default:
                     throw new UnsupportedOperationException(benchmarkMode.toString());
@@ -223,5 +243,9 @@ public class MediumGradleProjectPerformanceMatrixTest {
     @NonNull
     private RunGradleTasks executor() {
         return projectScenario.configureExecutor(project.executor());
+    }
+
+    private void record(BenchmarkMode benchmarkMode, ExceptionRunnable r) throws Exception {
+        recorder.record(projectScenario, Logging.Benchmark.PERF_ANDROID_MEDIUM, benchmarkMode, r);
     }
 }

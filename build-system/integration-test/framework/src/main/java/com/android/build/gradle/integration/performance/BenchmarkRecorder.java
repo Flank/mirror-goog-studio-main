@@ -17,19 +17,22 @@
 package com.android.build.gradle.integration.performance;
 
 import com.android.annotations.NonNull;
-import com.android.annotations.Nullable;
-import com.android.annotations.VisibleForTesting;
+import com.android.build.gradle.integration.common.fixture.ProfileCapturer;
+import com.android.builder.utils.ExceptionRunnable;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Longs;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
-import com.google.wireless.android.sdk.gradlelogging.proto.Logging;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.Benchmark;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.BenchmarkMode;
 import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult;
+import com.google.wireless.android.sdk.gradlelogging.proto.Logging.GradleBenchmarkResult.Flags;
 import com.google.wireless.android.sdk.stats.GradleBuildProfile;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -39,182 +42,207 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+import javax.annotation.concurrent.NotThreadSafe;
 
-/**
- * Records and sends profiles to be uploaded profiles from a single project.
- *
- * <p>A collaborator with GradleTestProject.
- *
- * <p>When building using GradleTestProject with {@link
- *     com.android.build.gradle.integration.common.fixture.BaseGradleExecutor#recordBenchmark(Logging.BenchmarkMode)}
- *     <ol>
- *         <li>A profile is collected by the
- *             {@link com.android.build.gradle.integration.common.fixture.ProfileCapturer} and
- *             is stored in memory.</li>
- *         <li>When the test using GradleTestProject is complete {@link #doUploads()} is called,
- *             which calls the given {@link ProfileUploader#uploadData(List)}.</li>
- *     </ol>
- */
+/** */
+@NotThreadSafe
 public final class BenchmarkRecorder {
     public enum UploadStrategy {
         /*
          * Instructs BenchmarkRecorder to upload all of the GradleBenchmarkResults that it records.
          */
-        ALL,
+        ALL {
+            @Override
+            public List<GradleBenchmarkResult> filter(List<GradleBenchmarkResult> results) {
+                return results;
+            }
+        },
 
         /*
          * Instructs BenchmarkRecorder to upload all only the fastest of the GradleBenchmarkResults
          * that has been recorded. Useful if you want to run a benchmark a number of times in order
          * to get a more stable result.
          */
-        FASTEST
+        FASTEST {
+            @Override
+            public List<GradleBenchmarkResult> filter(List<GradleBenchmarkResult> results) {
+                Optional<GradleBenchmarkResult> result =
+                        results.stream()
+                                .min(Comparator.comparingLong(r -> r.getProfile().getBuildTime()));
+
+                Preconditions.checkArgument(
+                        result.isPresent(), "empty list of benchmarkResults found");
+                return Arrays.asList(result.get());
+            }
+        };
+
+        public abstract List<GradleBenchmarkResult> filter(List<GradleBenchmarkResult> results);
     }
 
-    @NonNull private final Logging.Benchmark benchmark;
+    @NonNull
+    private static final List<ProfileUploader> DEFAULT_UPLOADERS =
+            ImmutableList.of(
+                    GoogleStorageProfileUploader.INSTANCE
 
-    @NonNull private final ProjectScenario projectScenario;
+                    // TODO(samwho): disabled this to check if it's the cause of http://b/69351230
+                    // ActdProfileUploader.fromEnvironment()
+                    );
+
+    /** Variables for asynchronously uploading profiles. */
+    private static final int WORK_QUEUE_SIZE = 64;
+
+    private static final int NUM_THREADS = 1;
+
+    @NonNull
+    private static final ExecutorService EXECUTOR =
+            new ThreadPoolExecutor(
+                    NUM_THREADS,
+                    NUM_THREADS,
+                    0L,
+                    TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>(WORK_QUEUE_SIZE));
+
+    @NonNull
+    private static final List<Future<?>> OUTSTANDING_UPLOADS = new ArrayList<>(WORK_QUEUE_SIZE);
 
     @NonNull private final List<ProfileUploader> uploaders;
 
     @NonNull private final List<GradleBenchmarkResult.Builder> benchmarkResults = new ArrayList<>();
 
-    @NonNull private final UploadStrategy uploadStrategy;
+    @NonNull private final ProfileCapturer capturer;
 
-    public BenchmarkRecorder(
-            @NonNull Logging.Benchmark benchmark, @NonNull ProjectScenario projectScenario) {
-        this(benchmark, projectScenario, null);
-    }
-
-    @VisibleForTesting
-    public BenchmarkRecorder(
-            @NonNull Logging.Benchmark benchmark,
-            @NonNull ProjectScenario projectScenario,
-            @Nullable List<ProfileUploader> uploaders) {
-        this(benchmark, projectScenario, uploaders, UploadStrategy.ALL);
-    }
-
-    public BenchmarkRecorder(
-            @NonNull Logging.Benchmark benchmark,
-            @NonNull ProjectScenario projectScenario,
-            @Nullable List<ProfileUploader> uploaders,
-            @NonNull UploadStrategy uploadStrategy) {
-        this.benchmark = benchmark;
-        this.projectScenario = projectScenario;
-        this.uploaders = uploaders == null ? defaultUploaders() : uploaders;
-        this.uploadStrategy = uploadStrategy;
-    }
-
-    private List<ProfileUploader> defaultUploaders() {
-        List<ProfileUploader> uploaders = Lists.newLinkedList();
+    public BenchmarkRecorder(@NonNull ProfileCapturer capturer) {
+        this(capturer, DEFAULT_UPLOADERS);
 
         if (LocalUploader.INSTANCE.getOutputFolder() != null) {
-            uploaders.add(LocalUploader.INSTANCE);
-            return uploaders;
+            this.uploaders.add(LocalUploader.INSTANCE);
         }
-
-        uploaders.add(GoogleStorageProfileUploader.INSTANCE);
-
-        // TODO(samwho): disabled this to check if it's the cause of http://b/69351230
-        /*
-        try {
-            uploaders.add(ActdProfileUploader.fromEnvironment());
-        } catch (IllegalStateException e) {
-            System.err.println(
-                    "warning: unable to create act-d (Dana) profile uploader. This is "
-                            + "not a problem if you're running locally, but if you're seeing this message "
-                            + "on a build machine, it's likely that an environment variable is missing. "
-                            + "Error: "
-                            + e);
-        }
-        */
-
-        return uploaders;
     }
 
-    public void recordBenchmarkResult(@NonNull GradleBenchmarkResult.Builder benchmarkResult) {
-
-        benchmarkResult.setResultId(UUID.randomUUID().toString());
-
-        try {
-            benchmarkResult.setHostname(InetAddress.getLocalHost().getHostName());
-        } catch (UnknownHostException ignored) {
-        }
-
-        String userName = System.getProperty("user.name");
-        if (userName != null) {
-            benchmarkResult.setUsername(userName);
-        }
-
-        String buildBotBuildNumber = System.getenv("BUILDBOT_BUILDNUMBER");
-        if (buildBotBuildNumber != null) {
-            GradleBenchmarkResult.ScheduledBuild.Builder scheduledBuild =
-                    GradleBenchmarkResult.ScheduledBuild.newBuilder();
-            Long buildNumber = Longs.tryParse(buildBotBuildNumber);
-            if (buildNumber != null) {
-                scheduledBuild.setBuildbotBuildNumber(buildNumber);
-            }
-            benchmarkResult.setScheduledBuild(scheduledBuild);
-        } else {
-            GradleBenchmarkResult.Experiment.Builder experiment =
-                    GradleBenchmarkResult.Experiment.newBuilder();
-            String experimentComment = System.getenv("BENCHMARK_EXPERIMENT");
-            if (experimentComment != null) {
-                experiment.setComment(experimentComment);
-            }
-            benchmarkResult.setExperiment(experiment);
-        }
-
-        GradleBenchmarkResult.Flags.Builder flags = GradleBenchmarkResult.Flags.newBuilder();
-
-        flags.mergeFrom(projectScenario.getFlags());
-
-        GradleBuildProfile profile = benchmarkResult.getProfile();
-
-        // The environment variable USE_GRADLE_NIGHTLY is somewhat misnamed,
-        // It really means test against the newest version that we have checked in.
-        // Those tests will be skipped if that is the same as the minimum version.
-        if (!Strings.isNullOrEmpty(System.getenv("USE_GRADLE_NIGHTLY"))) {
-            flags.setGradleVersion(GradleBenchmarkResult.Flags.GradleVersion.UPCOMING_GRADLE);
-        }
-
-        benchmarkResult.setFlags(flags);
-        benchmarkResult.setBenchmark(benchmark);
-        benchmarkResults.add(benchmarkResult);
+    public BenchmarkRecorder(
+            @NonNull ProfileCapturer capturer, @NonNull List<ProfileUploader> uploaders) {
+        this.uploaders = uploaders;
+        this.capturer = capturer;
     }
 
-    public void doUploads() throws IOException {
+    public void record(
+            @NonNull ProjectScenario scenario,
+            @NonNull Benchmark benchmark,
+            @NonNull BenchmarkMode benchmarkMode,
+            @NonNull ExceptionRunnable r)
+            throws Exception {
+
+        for (GradleBuildProfile profile : capturer.capture(r)) {
+            GradleBenchmarkResult.Builder result =
+                    GradleBenchmarkResult.newBuilder()
+                            .setProfile(profile)
+                            .setBenchmark(benchmark)
+                            .setBenchmarkMode(benchmarkMode)
+                            .setFlags(Flags.newBuilder(scenario.getFlags()));
+
+            // The environment variable USE_GRADLE_NIGHTLY is somewhat misnamed,
+            // It really means test against the newest version that we have checked in.
+            // Those tests will be skipped if that is the same as the minimum version.
+            if (!Strings.isNullOrEmpty(System.getenv("USE_GRADLE_NIGHTLY"))) {
+                result.getFlagsBuilder()
+                        .setGradleVersion(
+                                GradleBenchmarkResult.Flags.GradleVersion.UPCOMING_GRADLE);
+            }
+
+            result.setResultId(UUID.randomUUID().toString());
+
+            try {
+                result.setHostname(InetAddress.getLocalHost().getHostName());
+            } catch (UnknownHostException ignored) {
+            }
+
+            String userName = System.getProperty("user.name");
+            if (userName != null) {
+                result.setUsername(userName);
+            }
+
+            String buildBotBuildNumber = System.getenv("BUILDBOT_BUILDNUMBER");
+            if (buildBotBuildNumber != null) {
+                GradleBenchmarkResult.ScheduledBuild.Builder scheduledBuild =
+                        GradleBenchmarkResult.ScheduledBuild.newBuilder();
+                Long buildNumber = Longs.tryParse(buildBotBuildNumber);
+                if (buildNumber != null) {
+                    scheduledBuild.setBuildbotBuildNumber(buildNumber);
+                }
+                result.setScheduledBuild(scheduledBuild);
+            } else {
+                GradleBenchmarkResult.Experiment.Builder experiment =
+                        GradleBenchmarkResult.Experiment.newBuilder();
+                String experimentComment = System.getenv("BENCHMARK_EXPERIMENT");
+                if (experimentComment != null) {
+                    experiment.setComment(experimentComment);
+                }
+                result.setExperiment(experiment);
+            }
+
+            benchmarkResults.add(result);
+        }
+    }
+
+    public void uploadAsync() {
+        uploadAsync(UploadStrategy.ALL);
+    }
+
+    public void uploadAsync(UploadStrategy strategy) {
         // If a benchmark failed or was skipped for whatever reason, there will be no results. In
         // this case, there's no uploading to do so we just break early.
         if (benchmarkResults.isEmpty()) {
             return;
         }
 
-        Timestamp timestamp = Timestamps.fromMillis(System.currentTimeMillis());
+        Timestamp timestamp = Timestamps.fromNanos(System.nanoTime());
         List<GradleBenchmarkResult> results =
                 benchmarkResults
                         .stream()
                         .map(builder -> builder.setTimestamp(timestamp).build())
                         .collect(Collectors.toList());
 
-        checkAllUploadsAreDistinct(results);
+        benchmarkResults.clear();
 
-        if (uploadStrategy == UploadStrategy.FASTEST) {
-            Optional<GradleBenchmarkResult> result =
-                    results.stream()
-                            .min(Comparator.comparingLong(r -> r.getProfile().getBuildTime()));
+        validateResults(results);
 
-            Preconditions.checkArgument(result.isPresent(), "empty list of benchmarkResults found");
-            results = Arrays.asList(result.get());
-        }
+        List<GradleBenchmarkResult> filteredResults = strategy.filter(results);
+        Preconditions.checkArgument(!results.isEmpty(), "UploadStrategy returned no results");
 
         for (ProfileUploader uploader : uploaders) {
-            uploader.uploadData(results);
+            synchronized (BenchmarkRecorder.class) {
+                OUTSTANDING_UPLOADS.add(
+                        EXECUTOR.submit(
+                                () -> {
+                                    try {
+                                        uploader.uploadData(filteredResults);
+                                    } catch (IOException e) {
+                                        throw new UncheckedIOException(e);
+                                    }
+                                }));
+            }
         }
     }
 
-    private static void checkAllUploadsAreDistinct(
-            @NonNull List<GradleBenchmarkResult> benchmarkResults) {
+    public static void awaitUploads(long timeout, @NonNull TimeUnit unit)
+            throws InterruptedException, ExecutionException, TimeoutException {
+        synchronized (BenchmarkRecorder.class) {
+            for (Future<?> future : OUTSTANDING_UPLOADS) {
+                future.get(timeout, unit);
+            }
+            OUTSTANDING_UPLOADS.clear();
+        }
+    }
+
+    private static void validateResults(@NonNull List<GradleBenchmarkResult> benchmarkResults) {
         Set<GradleBenchmarkResult> benchmarkResultIds =
                 benchmarkResults
                         .stream()

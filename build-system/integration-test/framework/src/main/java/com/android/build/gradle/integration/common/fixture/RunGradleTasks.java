@@ -67,8 +67,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
                 gradleTestProject::setLastBuildResult,
                 gradleTestProject.getTestDir().toPath(),
                 gradleTestProject.getBuildFile().toPath(),
-                gradleTestProject.getBenchmarkRecorder(),
-                gradleTestProject.getProfileDirectory(),
                 gradleTestProject.getHeapSize(),
                 disableRetryLogic);
         buildToolsVersion = gradleTestProject.getBuildToolsVersion();
@@ -178,8 +176,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
 
             launcher.addProgressListener(progressListener, OperationType.TASK);
 
-            ProfileCapturer profiler =
-                    new ProfileCapturer(benchmarkRecorder, benchmarkMode, profilesDirectory);
             launcher.withArguments(Iterables.toArray(args, String.class));
 
             WaitingResultHandler handler = new WaitingResultHandler();
@@ -216,7 +212,6 @@ public final class RunGradleTasks extends BaseGradleExecutor<RunGradleTasks> {
             if (!allowStderr && !result.getStderr().isEmpty()) {
                 throw new AssertionError("Unexpected stderr: " + stderr);
             }
-            profiler.recordProfile();
 
             return result;
         }
