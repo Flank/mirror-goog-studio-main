@@ -158,7 +158,8 @@ public class DexArchiveMergerTest {
             if (dexMerger == DexMergerTool.DX) {
                 exepectedMessage = "method ID not in";
             } else {
-                exepectedMessage = "Cannot fit requested classes in a single dex file";
+                exepectedMessage =
+                        "The number of method references in a .dex file cannot exceed 64K";
             }
             Truth.assertThat(Throwables.getStackTraceAsString(e)).contains(exepectedMessage);
         }

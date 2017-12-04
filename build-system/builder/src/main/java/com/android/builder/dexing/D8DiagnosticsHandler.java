@@ -22,11 +22,10 @@ import com.android.ide.common.blame.SourceFilePosition;
 import com.android.ide.common.blame.SourcePosition;
 import com.android.tools.r8.Diagnostic;
 import com.android.tools.r8.DiagnosticsHandler;
-import com.android.tools.r8.Location;
-import com.android.tools.r8.TextRangeLocation;
 import com.android.tools.r8.origin.ArchiveEntryOrigin;
 import com.android.tools.r8.origin.Origin;
 import com.android.tools.r8.origin.PathOrigin;
+import com.android.tools.r8.origin.TextRangeOrigin;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -86,13 +85,13 @@ class D8DiagnosticsHandler implements DiagnosticsHandler {
     protected Message convertToMessage(Message.Kind kind, Diagnostic diagnostic) {
         String textMessage = diagnostic.getDiagnosticMessage();
 
-        Location location = diagnostic.getLocation();
+        Origin origin = diagnostic.getOrigin();
         SourceFilePosition position;
-        if (location instanceof TextRangeLocation && location.getOrigin() instanceof PathOrigin) {
-            TextRangeLocation textRange = (TextRangeLocation) location;
+        if (origin instanceof TextRangeOrigin && origin.parent() instanceof PathOrigin) {
+            TextRangeOrigin textRange = (TextRangeOrigin) origin;
             position =
                     new SourceFilePosition(
-                            ((PathOrigin) location.getOrigin()).getPath().toFile(),
+                            ((PathOrigin) origin.parent()).getPath().toFile(),
                             new SourcePosition(
                                     textRange.getStart().getLine(),
                                     textRange.getStart().getColumn(),
@@ -100,15 +99,15 @@ class D8DiagnosticsHandler implements DiagnosticsHandler {
                                     textRange.getEnd().getLine(),
                                     textRange.getEnd().getColumn(),
                                     -1));
-        } else if (location.getOrigin() instanceof PathOrigin) {
+        } else if (origin.parent() instanceof PathOrigin) {
             position =
                     new SourceFilePosition(
-                            ((PathOrigin) location.getOrigin()).getPath().toFile(),
+                            ((PathOrigin) origin.parent()).getPath().toFile(),
                             SourcePosition.UNKNOWN);
         } else {
             position = SourceFilePosition.UNKNOWN;
-            if (location != Location.UNKNOWN) {
-                textMessage = location.getDescription() + ": " + textMessage;
+            if (origin != Origin.unknown()) {
+                textMessage = origin.toString() + ": " + textMessage;
             }
         }
 
