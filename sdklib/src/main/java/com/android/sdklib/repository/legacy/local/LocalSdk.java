@@ -16,6 +16,9 @@
 
 package com.android.sdklib.repository.legacy.local;
 
+import static com.android.sdklib.repository.PkgProps.*;
+import static com.android.sdklib.repository.legacy.remote.internal.sources.RepoConstants.*;
+
 import com.android.SdkConstants;
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -950,16 +953,24 @@ public class LocalSdk {
                 AndroidVersion vers = AndroidVersionHelper.create(props);
 
                 // Starting with addon-4.xsd, we have vendor-id and name-id available
-                // in the add-on source properties so we'll use that directly.
+                // in the add-on source properties so we'll use that directly. Otherwise, try manifest.ini
+                Properties allProps = new Properties();
+                Properties manifestProps = parseProperties(new File(addonDir, SdkConstants.FN_MANIFEST_INI));
+                if (manifestProps != null) {
+                    allProps.putAll(manifestProps);
+                }
+                allProps.putAll(props);
 
-                String nameId     = props.getProperty(PkgProps.ADDON_NAME_ID);
-                String nameDisp   = props.getProperty(PkgProps.ADDON_NAME_DISPLAY);
-                String vendorId   = props.getProperty(PkgProps.ADDON_VENDOR_ID);
-                String vendorDisp = props.getProperty(PkgProps.ADDON_VENDOR_DISPLAY);
+                String nameId     = findProperty(allProps, ADDON_NAME_ID, NODE_NAME_ID);
+                String nameDisp   = findProperty(allProps, ADDON_NAME_DISPLAY, NODE_NAME_DISPLAY, ADDON_NAME, NODE_NAME);
+                String vendorId   = findProperty(allProps, ADDON_VENDOR_ID, NODE_VENDOR_ID);
+                String vendorDisp = findProperty(allProps, ADDON_VENDOR_DISPLAY, NODE_VENDOR_DISPLAY, ADDON_VENDOR, NODE_VENDOR);
 
                 if (nameId == null) {
                     // Support earlier add-ons that only had a name display attribute
-                    nameDisp = props.getProperty(PkgProps.ADDON_NAME, "Unknown");
+                    if (nameDisp == null) {
+                        nameDisp = "Unknown";
+                    }
                     nameId = LocalAddonPkgInfo.sanitizeDisplayToNameId(nameDisp);
                 }
 
@@ -973,7 +984,9 @@ public class LocalSdk {
 
                 if (vendorId == null) {
                     // Support earlier add-ons that only had a vendor display attribute
-                    vendorDisp = props.getProperty(PkgProps.ADDON_VENDOR, "Unknown");
+                    if (vendorDisp == null) {
+                        vendorDisp = "Unknown";
+                    }
                     vendorId = LocalAddonPkgInfo.sanitizeDisplayToNameId(vendorDisp);
                 }
 
@@ -1197,6 +1210,16 @@ public class LocalSdk {
                 try {
                     fis.close();
                 } catch (IOException e) {}
+            }
+        }
+        return null;
+    }
+
+    private String findProperty(Properties properties, String... keys) {
+        for (String key : keys) {
+            String value = properties.getProperty(key);
+            if (value != null) {
+                return value;
             }
         }
         return null;

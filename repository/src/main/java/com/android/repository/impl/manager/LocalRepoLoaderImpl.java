@@ -163,7 +163,11 @@ public final class LocalRepoLoaderImpl implements LocalRepoLoader {
                     progress.logWarning("Found corrupted package.xml at " + packageXml);
                 }
             }
-            if (p == null && mFallback != null) {
+            // Note: Android Studio 2.x was generating a local package.xml file with "Unknown" display name
+            // if the name could not be found in source.properties. For AS 3.x we are extending the code
+            // to be less strict (ie we use info from manifest.ini too). Checking "Unknown" allows re-generation
+            // of package.xml. This check for "Unknown" can be removed after most users have updated to v3.x.
+            if ((p == null || p.getDisplayName().startsWith("Unknown")) && mFallback != null) {
                 p = mFallback.parseLegacyLocalPackage(packageDir, progress);
                 if (p != null) {
                     writePackage(p, packageXml, progress);
