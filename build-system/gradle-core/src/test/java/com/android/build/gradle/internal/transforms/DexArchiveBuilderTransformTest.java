@@ -321,6 +321,101 @@ public class DexArchiveBuilderTransformTest {
     }
 
     @Test
+    public void testCacheKeyPathChanges() throws Exception {
+        File cacheDir = FileUtils.join(tmpDir.getRoot(), "cache");
+        FileCache userCache = FileCache.getInstanceWithMultiProcessLocking(cacheDir);
+
+        Path inputJar = tmpDir.getRoot().toPath().resolve("input.jar");
+        Path libJar = tmpDir.getRoot().toPath().resolve("lib.jar");
+        Path emptyLibDir = tmpDir.getRoot().toPath().resolve("emptylib");
+        Path noEmptyLibDir = tmpDir.getRoot().toPath().resolve("populatedlib");
+        TransformInput jarInput = getJarInput(inputJar, ImmutableList.of());
+        TransformInput jarLibInput = getJarInput(libJar, ImmutableList.of());
+        TransformInput emptyLibDirInput = getDirInput(emptyLibDir, ImmutableList.of());
+        TransformInput notEmptyLibDirInput =
+                getDirInput(noEmptyLibDir, ImmutableList.of(PACKAGE + "/A"));
+        TransformInvocation invocation =
+                TransformTestHelper.invocationBuilder()
+                        .addInput(jarInput)
+                        .setTransformOutputProvider(outputProvider)
+                        .setContext(context)
+                        .addReferenceInput(jarLibInput)
+                        .build();
+
+        DexArchiveBuilderTransform transform = getTransform(userCache, 19, true);
+        transform.transform(invocation);
+        assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1);
+
+        if (dexerTool == DexerTool.DX) {
+            TransformInvocation emptyDirLibInvocation =
+                    TransformTestHelper.invocationBuilder()
+                            .addInput(jarInput)
+                            .setTransformOutputProvider(outputProvider)
+                            .setContext(context)
+                            .addReferenceInput(jarLibInput)
+                            .addReferenceInput(emptyLibDirInput)
+                            .build();
+            getTransform(userCache, 19, true).transform(emptyDirLibInvocation);
+            // DX compilation should not be impacted by reference input
+            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1);
+        } else {
+            TransformInvocation emptyDirLibInvocationJava7 =
+                    TransformTestHelper.invocationBuilder()
+                            .addInput(jarInput)
+                            .setTransformOutputProvider(outputProvider)
+                            .setContext(context)
+                            .addReferenceInput(jarLibInput)
+                            .addReferenceInput(emptyLibDirInput)
+                            .build();
+            getTransform(userCache, 19, true).transform(emptyDirLibInvocationJava7);
+            // D8 no desugaring should not be impacted by reference input
+            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(1);
+
+            // Following are enabling D8 Java 8 support and should depend on classpath
+            TransformInvocation baseInvocation =
+                    TransformTestHelper.invocationBuilder()
+                            .addInput(jarInput)
+                            .setTransformOutputProvider(outputProvider)
+                            .setContext(context)
+                            .addReferenceInput(jarLibInput)
+                            .build();
+            getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
+                    .transform(baseInvocation);
+            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(2);
+
+            TransformInvocation emptyDirLibInvocation =
+                    TransformTestHelper.invocationBuilder()
+                            .addInput(jarInput)
+                            .setTransformOutputProvider(outputProvider)
+                            .setContext(context)
+                            .addReferenceInput(emptyLibDirInput)
+                            .addReferenceInput(jarLibInput)
+                            .build();
+            getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
+                    .transform(emptyDirLibInvocation);
+            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(3);
+
+            TransformInvocation allLibsInvocation =
+                    TransformTestHelper.invocationBuilder()
+                            .addInput(jarInput)
+                            .setTransformOutputProvider(outputProvider)
+                            .setContext(context)
+                            .addReferenceInput(jarLibInput)
+                            .addReferenceInput(emptyLibDirInput)
+                            .addReferenceInput(notEmptyLibDirInput)
+                            .build();
+            getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
+                    .transform(allLibsInvocation);
+            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(4);
+
+            // Check that we can cache hit
+            getTransform(userCache, 19, true, VariantScope.Java8LangSupport.D8)
+                    .transform(allLibsInvocation);
+            assertThat(cacheEntriesCount(cacheDir)).isEqualTo(4);
+        }
+    }
+
+    @Test
     public void testIncrementalUnchangedDirInput() throws Exception {
         Path input = tmpDir.newFolder("classes").toPath();
         TestInputsGenerator.dirWithEmptyClasses(input, ImmutableList.of("test/A", "test/B"));
@@ -433,6 +528,16 @@ public class DexArchiveBuilderTransformTest {
     @NonNull
     private DexArchiveBuilderTransform getTransform(
             @Nullable FileCache userCache, int minSdkVersion, boolean isDebuggable) {
+        return getTransform(
+                userCache, minSdkVersion, isDebuggable, VariantScope.Java8LangSupport.UNUSED);
+    }
+
+    @NonNull
+    private DexArchiveBuilderTransform getTransform(
+            @Nullable FileCache userCache,
+            int minSdkVersion,
+            boolean isDebuggable,
+            @NonNull VariantScope.Java8LangSupport java8Support) {
 
         return new DexArchiveBuilderTransformBuilder()
                 .setAndroidJarClasspath(() -> Collections.emptyList())
@@ -445,7 +550,7 @@ public class DexArchiveBuilderTransformTest {
                 .setInBufferSize(10)
                 .setOutBufferSize(10)
                 .setIsDebuggable(isDebuggable)
-                .setJava8LangSupportType(VariantScope.Java8LangSupport.UNUSED)
+                .setJava8LangSupportType(java8Support)
                 .createDexArchiveBuilderTransform();
     }
 

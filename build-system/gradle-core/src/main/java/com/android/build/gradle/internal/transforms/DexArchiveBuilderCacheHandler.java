@@ -28,6 +28,7 @@ import com.android.builder.dexing.DexerTool;
 import com.android.builder.utils.FileCache;
 import com.android.dx.Version;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.base.Verify;
 import com.google.common.io.ByteStreams;
@@ -277,13 +278,48 @@ class DexArchiveBuilderCacheHandler {
                 .putString(FileCacheInputParams.DEXER_TOOL.name(), dexerTool.name())
                 .putLong(FileCacheInputParams.CACHE_KEY_VERSION.name(), CACHE_KEY_VERSION)
                 .putLong(FileCacheInputParams.MIN_SDK_VERSION.name(), minSdkVersion)
-                .putBoolean(FileCacheInputParams.IS_DEBUGGABLE.name(), isDebuggable)
-                .putFiles(
-                        FileCacheInputParams.BOOTCLASSPATH.name(),
-                        bootclasspath.stream().map(File::new).collect(Collectors.toList()))
-                .putFiles(
-                        FileCacheInputParams.CLASSPATH.name(),
-                        classpath.stream().map(File::new).collect(Collectors.toList()));
+                .putBoolean(FileCacheInputParams.IS_DEBUGGABLE.name(), isDebuggable);
+
+        // Remove duplicate entries in the bootclasspath, as the duplicates have no effect on
+        // compilation beyond the first. However, the order of the entries is important, and the use
+        // of Stream.distinct() below preserves that order.
+        List<String> distinctBootClasspath =
+                bootclasspath.stream().distinct().collect(Collectors.toList());
+        for (int i = 0; i < distinctBootClasspath.size(); i++) {
+            File path = new File(distinctBootClasspath.get(i));
+            Preconditions.checkState(path.exists(), path + " does not exist");
+            if (path.isDirectory()) {
+                buildCacheInputs.putDirectory(
+                        FileCacheInputParams.BOOTCLASSPATH.name() + "[" + i + "]",
+                        path,
+                        FileCache.DirectoryProperties.PATH_HASH);
+            } else {
+                buildCacheInputs.putFile(
+                        FileCacheInputParams.BOOTCLASSPATH.name() + "[" + i + "]",
+                        path,
+                        FileCache.FileProperties.PATH_HASH);
+            }
+        }
+
+        // Remove duplicate entries in the classpath, as the duplicates have no effect on
+        // compilation beyond the first. However, the order of the entries is important, and the use
+        // of Stream.distinct() below preserves that order.
+        List<String> distinctClasspath = classpath.stream().distinct().collect(Collectors.toList());
+        for (int i = 0; i < distinctClasspath.size(); i++) {
+            File path = new File(distinctClasspath.get(i));
+            Preconditions.checkState(path.exists(), path + " does not exist");
+            if (path.isDirectory()) {
+                buildCacheInputs.putDirectory(
+                        FileCacheInputParams.CLASSPATH.name() + "[" + i + "]",
+                        path,
+                        FileCache.DirectoryProperties.PATH_HASH);
+            } else {
+                buildCacheInputs.putFile(
+                        FileCacheInputParams.CLASSPATH.name() + "[" + i + "]",
+                        path,
+                        FileCache.FileProperties.PATH_HASH);
+            }
+        }
 
         return buildCacheInputs.build();
     }

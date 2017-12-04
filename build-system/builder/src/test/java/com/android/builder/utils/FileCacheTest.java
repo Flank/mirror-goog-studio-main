@@ -1242,10 +1242,8 @@ public class FileCacheTest {
     }
 
     @Test
-    public void testInputsGetKey() throws IOException {
-        File inputDir = temporaryFolder.newFolder();
-
-        // Test all types of input parameters
+    public void testCacheInputsGetKey() throws IOException {
+        // Test realistic example
         File inputFile =
                 new File(
                         "/Users/foo/Android/Sdk/extras/android/m2repository/com/android/support/"
@@ -1259,26 +1257,128 @@ public class FileCacheTest {
                         .putBoolean("optimize", false)
                         .putBoolean("multiDex", true)
                         .putString("classpath", "foo")
+                        .putLong("cacheVersion", 1)
                         .build();
-        assertThat(inputs.toString()).isEqualTo(
-                Joiner.on(System.lineSeparator()).join(
-                        "COMMAND=TEST",
-                        "file=" + inputFile.getPath(),
-                        "buildToolsRevision=23.0.3",
-                        "jumboMode=true",
-                        "optimize=false",
-                        "multiDex=true",
-                        "classpath=foo"));
-        assertThat(inputs.getKey())
+        assertThat(inputs.toString())
                 .isEqualTo(
-                        Hashing.sha256()
-                                .hashString(inputs.toString(), StandardCharsets.UTF_8)
-                                .toString());
+                        Joiner.on(System.lineSeparator())
+                                .join(
+                                        "COMMAND=TEST",
+                                        "file=" + inputFile.getPath(),
+                                        "buildToolsRevision=23.0.3",
+                                        "jumboMode=true",
+                                        "optimize=false",
+                                        "multiDex=true",
+                                        "classpath=foo",
+                                        "cacheVersion=1"));
+        assertThat(inputs.getKey())
+                .isEqualTo(Hashing.sha256().hashUnencodedChars(inputs.toString()).toString());
 
-        // Test file hash
-        inputFile = new File(inputDir, "input");
+        // Test no input parameters
+        try {
+            new FileCache.Inputs.Builder(FileCache.Command.TEST).build();
+            fail("expected IllegalStateException");
+        } catch (IllegalStateException exception) {
+            assertThat(exception).hasMessage("Inputs must not be empty.");
+        }
+
+        // Test input parameters with duplicate names
+        try {
+            new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                    .putString("arg", "foo")
+                    .putBoolean("arg", false)
+                    .build();
+            fail("expected IllegalStateException");
+        } catch (IllegalStateException exception) {
+            assertThat(exception).hasMessage("Input parameter arg already exists");
+        }
+
+        // Test input parameters with empty strings
+        inputs = new FileCache.Inputs.Builder(FileCache.Command.TEST).putString("arg", "").build();
+        assertThat(inputs.toString())
+                .isEqualTo(Joiner.on(System.lineSeparator()).join("COMMAND=TEST", "arg="));
+        assertThat(inputs.getKey())
+                .isEqualTo(Hashing.sha256().hashUnencodedChars(inputs.toString()).toString());
+
+        // Test comparing inputs with different sizes
+        FileCache.Inputs inputs1 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putBoolean("arg1", true)
+                        .putBoolean("arg2", true)
+                        .build();
+        FileCache.Inputs inputs2 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putBoolean("arg1", true)
+                        .putBoolean("arg2", true)
+                        .putBoolean("arg3", true)
+                        .build();
+        assertThat(inputs1.toString()).isNotEqualTo(inputs2.toString());
+        assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
+
+        // Test comparing inputs with different names
+        inputs1 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putBoolean("arg1", true)
+                        .putBoolean("arg2", true)
+                        .build();
+        inputs2 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putBoolean("arg1", true)
+                        .putBoolean("arg3", true)
+                        .build();
+        assertThat(inputs1.toString()).isNotEqualTo(inputs2.toString());
+        assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
+
+        // Test comparing inputs with different orders
+        inputs1 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putString("arg1", "foo")
+                        .putBoolean("arg2", false)
+                        .build();
+        inputs2 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putBoolean("arg2", false)
+                        .putString("arg1", "foo")
+                        .build();
+        assertThat(inputs1.toString()).isNotEqualTo(inputs2.toString());
+        assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
+
+        // Test comparing inputs with different values
+        inputs1 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putBoolean("arg1", true)
+                        .putBoolean("arg2", true)
+                        .build();
+        inputs2 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putBoolean("arg1", true)
+                        .putBoolean("arg2", false)
+                        .build();
+        assertThat(inputs1.toString()).isNotEqualTo(inputs2.toString());
+        assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
+
+        // Test comparing inputs with same size, names, order, and values
+        inputs1 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putString("arg1", "foo")
+                        .putBoolean("arg2", false)
+                        .build();
+        inputs2 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putString("arg1", "foo")
+                        .putBoolean("arg2", false)
+                        .build();
+        assertThat(inputs1.toString()).isEqualTo(inputs2.toString());
+        assertThat(inputs1.getKey()).isEqualTo(inputs2.getKey());
+    }
+
+    @Test
+    public void testCacheInputsFileAsInput() throws IOException {
+        // Test identifying an input file with FileProperties.HASH
+        File inputFile = temporaryFolder.newFile("inputFile");
         writeStringToFile("Some text", inputFile);
-        inputs =
+
+        FileCache.Inputs inputs =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFile("fileHash", inputFile, FileCache.FileProperties.HASH)
                         .build();
@@ -1289,13 +1389,9 @@ public class FileCacheTest {
                                         "COMMAND=TEST",
                                         "fileHash="
                                                 + Hashing.sha256()
-                                                        .hashString(
-                                                                "Some text",
-                                                                StandardCharsets.UTF_8)));
+                                                        .hashBytes("Some text".getBytes())));
 
-        // Test file path-hash
-        inputFile = new File(inputDir, "input");
-        writeStringToFile("Some text", inputFile);
+        // Test identifying an input file with FileProperties.PATH_HASH
         inputs =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFile("file", inputFile, FileCache.FileProperties.PATH_HASH)
@@ -1308,13 +1404,9 @@ public class FileCacheTest {
                                         "file.path=" + inputFile.getPath(),
                                         "file.hash="
                                                 + Hashing.sha256()
-                                                        .hashString(
-                                                                "Some text",
-                                                                StandardCharsets.UTF_8)));
+                                                        .hashBytes("Some text".getBytes())));
 
-        // Test file path-size-timestamp
-        inputFile = new File(inputDir, "input");
-        writeStringToFile("Some text", inputFile);
+        // Test identifying an input file with FileProperties.PATH_SIZE_TIMESTAMP
         inputs =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
                         .putFile("file", inputFile, FileCache.FileProperties.PATH_SIZE_TIMESTAMP)
@@ -1328,208 +1420,236 @@ public class FileCacheTest {
                                         "file.size=" + inputFile.length(),
                                         "file.timestamp=" + inputFile.lastModified()));
 
-        // Test relative input file path
-        inputFile = new File("com.android.support/design/23.3.0/jars/classes.jar");
-        inputs =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putString("file", inputFile.getPath())
-                        .build();
-        assertThat(inputs.toString()).isEqualTo(
-                Joiner.on(System.lineSeparator()).join(
-                        "COMMAND=TEST",
-                        "file=" + inputFile.getPath()));
-
-        // Test Windows-based input file path
-        inputFile =
-                new File(
-                        "C:\\Users\\foo\\Android\\Sdk\\extras\\android\\m2repository\\"
-                                + "com\\android\\support\\support-annotations\\23.3.0\\"
-                                + "support-annotations-23.3.0.jar");
-        inputs =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putString("file", inputFile.getPath())
-                        .build();
-        assertThat(inputs.toString()).isEqualTo(
-                Joiner.on(System.lineSeparator()).join(
-                        "COMMAND=TEST",
-                        "file=" + inputFile.getPath()));
-
-        // Test unusual file path
-        inputFile = new File("foo`-=[]\\\\;',./~!@#$%^&*()_+{}|:\\\"<>?");
-        inputs =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putString("file", inputFile.getPath())
-                        .build();
-        assertThat(inputs.toString()).isEqualTo(
-                Joiner.on(System.lineSeparator()).join(
-                        "COMMAND=TEST",
-                        "file=" + inputFile.getPath()));
-
-        // Test empty file path
-        inputFile = new File("");
-        inputs =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putString("file", inputFile.getPath())
-                        .build();
-        assertThat(inputs.toString()).isEqualTo(
-                Joiner.on(System.lineSeparator()).join(
-                        "COMMAND=TEST",
-                        "file="));
-
-        // Test empty file content
-        inputFile = new File(inputDir, "input");
-        writeStringToFile("", inputFile);
-        inputs =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putFile("fileHash", inputFile, FileCache.FileProperties.HASH)
-                        .build();
-        assertThat(inputs.toString())
-                .isEqualTo(
-                        Joiner.on(System.lineSeparator())
-                                .join(
-                                        "COMMAND=TEST",
-                                        "fileHash="
-                                                + Hashing.sha256()
-                                                        .hashString("", StandardCharsets.UTF_8)));
-
-        // Test empty inputs
-        try {
-            new FileCache.Inputs.Builder(FileCache.Command.TEST).build();
-            fail("expected IllegalStateException");
-        } catch (IllegalStateException exception) {
-            assertThat(exception).hasMessage("Inputs must not be empty.");
-        }
-
-        // Test duplicate parameters with the same name and type
-        inputs =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putString("arg", "true")
-                        .putString("arg", "false")
-                        .build();
-        assertThat(inputs.toString()).isEqualTo(
-                Joiner.on(System.lineSeparator()).join(
-                        "COMMAND=TEST",
-                        "arg=false"));
-
-        // Test duplicate parameters with the same name and different types
-        inputs =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putString("arg", "true")
-                        .putBoolean("arg", false)
-                        .build();
-        assertThat(inputs.toString()).isEqualTo(
-                Joiner.on(System.lineSeparator()).join(
-                        "COMMAND=TEST",
-                        "arg=false"));
-
-        // Test duplicate parameters interleaved with other parameters
-        inputs =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putString("arg1", "true")
-                        .putString("arg2", "true")
-                        .putString("arg1", "false")
-                        .build();
-        assertThat(inputs.toString()).isEqualTo(
-                Joiner.on(System.lineSeparator()).join(
-                        "COMMAND=TEST",
-                        "arg1=false",
-                        "arg2=true"));
-
-        // Test inputs with different sizes
+        // Test input files with same hash, different paths
+        File fooFile = temporaryFolder.newFile("fooFile");
+        File barFile = temporaryFolder.newFile("barFile");
+        writeStringToFile("Some text", fooFile);
+        writeStringToFile("Some text", barFile);
         FileCache.Inputs inputs1 =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putBoolean("arg1", true)
-                        .putBoolean("arg2", true)
+                        .putFile("fileHash", fooFile, FileCache.FileProperties.HASH)
                         .build();
         FileCache.Inputs inputs2 =
                 new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putBoolean("arg1", true)
-                        .putBoolean("arg2", true)
-                        .putBoolean("arg3", true)
-                        .build();
-        assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
-
-        // Test inputs with same size, different orders
-        inputs1 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putBoolean("arg1", true)
-                        .putBoolean("arg2", true)
-                        .build();
-        inputs2 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putBoolean("arg2", true)
-                        .putBoolean("arg1", true)
-                        .build();
-        assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
-
-        // Test inputs with same size, same order, different values
-        inputs1 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putBoolean("arg1", true)
-                        .putBoolean("arg2", true)
-                        .build();
-        inputs2 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putBoolean("arg1", true)
-                        .putBoolean("arg2", false)
-                        .build();
-        assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
-
-        // Test inputs with same size, same order, same values
-        inputs1 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putBoolean("arg1", true)
-                        .putBoolean("arg2", true)
-                        .build();
-        inputs2 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putBoolean("arg1", true)
-                        .putBoolean("arg2", true)
-                        .build();
-        assertThat(inputs1.getKey()).isEqualTo(inputs2.getKey());
-
-        // Test inputs with different file paths, same canonical path
-        inputs1 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putString("file", inputDir.getParentFile().getPath())
-                        .build();
-        inputs2 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putString("file", inputDir.getPath() + "/..")
-                        .build();
-        assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
-
-        // Test inputs with same file hash
-        File fooFile = new File(inputDir, "fooInput");
-        writeStringToFile("Foo text", fooFile);
-        inputs1 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putFile("fileHash", fooFile, FileCache.FileProperties.HASH)
-                        .build();
-        inputs2 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putFile("fileHash", fooFile, FileCache.FileProperties.HASH)
-                        .build();
-        assertThat(inputs1.getKey()).isEqualTo(inputs2.getKey());
-
-        // Test inputs with different file hashes, same file path
-        File barFile = new File(inputDir, "barInput");
-        writeStringToFile("Bar text", barFile);
-        inputs1 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putString("file", fooFile.getPath())
-                        .putFile("fileHash", fooFile, FileCache.FileProperties.HASH)
-                        .build();
-        inputs2 =
-                new FileCache.Inputs.Builder(FileCache.Command.TEST)
-                        .putString("file", fooFile.getPath())
                         .putFile("fileHash", barFile, FileCache.FileProperties.HASH)
                         .build();
+        assertThat(inputs1.getKey()).isEqualTo(inputs2.getKey());
+
+        // Test input files with different hashes, same path
+        inputs1 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFile("fileHash", fooFile, FileCache.FileProperties.HASH)
+                        .build();
+        writeStringToFile("Updated text", fooFile);
+        inputs2 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putFile("fileHash", fooFile, FileCache.FileProperties.HASH)
+                        .build();
         assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
+    }
+
+    @Test
+    public void testGetFileHash() throws IOException {
+        // Test file with some contents
+        File inputFile = temporaryFolder.newFile();
+        writeStringToFile("Some text", inputFile);
+        assertThat(FileCache.Inputs.Builder.getFileHash(inputFile)).hasLength(64);
+
+        // Test file with empty contents
+        File emptyFile = temporaryFolder.newFile();
+        assertThat(FileCache.Inputs.Builder.getFileHash(emptyFile))
+                .isEqualTo(Hashing.sha256().hashUnencodedChars("").toString());
+
+        /*
+         * Test that the hash computation is based on the file's contents
+         */
+        // Update the file's contents, the hash must change
+        writeStringToFile("Foo text", inputFile);
+        String hash1 = FileCache.Inputs.Builder.getFileHash(inputFile);
+        writeStringToFile("Bar text", inputFile);
+        String hash2 = FileCache.Inputs.Builder.getFileHash(inputFile);
+        assertThat(hash1).isNotEqualTo(hash2);
+
+        // Two files having the same contents must have the same hash. This test also proves that
+        // the hash computation does not consider the path or name of the given file.
+        File fooFile = temporaryFolder.newFile("fooFile");
+        File barFile = temporaryFolder.newFile("barFile");
+        writeStringToFile("Some text", fooFile);
+        writeStringToFile("Some text", barFile);
+        assertThat(FileCache.Inputs.Builder.getFileHash(fooFile))
+                .isEqualTo(FileCache.Inputs.Builder.getFileHash(barFile));
+    }
+
+    @Test
+    public void testCacheInputsDirectoryAsInput() throws IOException {
+        // Test identifying an input directory with DirectoryProperties.HASH
+        File inputDir = temporaryFolder.newFolder("inputDir");
+        writeSampleContentsToDirectory(inputDir);
+
+        FileCache.Inputs inputs =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putDirectory("directoryHash", inputDir, FileCache.DirectoryProperties.HASH)
+                        .build();
+        assertThat(inputs.toString())
+                .contains(Joiner.on(System.lineSeparator()).join("COMMAND=TEST", "directoryHash="));
+
+        // Test identifying an input directory with DirectoryProperties.PATH_HASH
+        inputs =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putDirectory(
+                                "directory", inputDir, FileCache.DirectoryProperties.PATH_HASH)
+                        .build();
+        assertThat(inputs.toString())
+                .contains(
+                        Joiner.on(System.lineSeparator())
+                                .join(
+                                        "COMMAND=TEST",
+                                        "directory.path=" + inputDir.getPath(),
+                                        "directory.hash="));
+
+        // Test input directories with same hash, different paths
+        File fooDir = temporaryFolder.newFolder("fooDir");
+        File barDir = temporaryFolder.newFolder("barDir");
+        writeSampleContentsToDirectory(fooDir);
+        writeSampleContentsToDirectory(barDir);
+        FileCache.Inputs inputs1 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putDirectory("directoryHash", fooDir, FileCache.DirectoryProperties.HASH)
+                        .build();
+        FileCache.Inputs inputs2 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putDirectory("directoryHash", barDir, FileCache.DirectoryProperties.HASH)
+                        .build();
+        assertThat(inputs1.getKey()).isEqualTo(inputs2.getKey());
+
+        // Test input directories with different hashes, same path
+        inputs1 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putDirectory("directoryHash", fooDir, FileCache.DirectoryProperties.HASH)
+                        .build();
+        writeStringToFile("Some text", new File(fooDir, "newFile.txt"));
+        inputs2 =
+                new FileCache.Inputs.Builder(FileCache.Command.TEST)
+                        .putDirectory("directoryHash", fooDir, FileCache.DirectoryProperties.HASH)
+                        .build();
+        assertThat(inputs1.getKey()).isNotEqualTo(inputs2.getKey());
+    }
+
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @Test
+    public void testGetDirectoryHash() throws Exception {
+        // Test directory with some contents
+        File inputDir = temporaryFolder.newFolder();
+        writeSampleContentsToDirectory(inputDir);
+        assertThat(FileCache.Inputs.Builder.getDirectoryHash(inputDir)).hasLength(64);
+
+        // Test directory with empty contents
+        File emptyDir = temporaryFolder.newFile();
+        assertThat(FileCache.Inputs.Builder.getFileHash(emptyDir))
+                .isEqualTo(Hashing.sha256().hashUnencodedChars("").toString());
+
+        /*
+         * Test that the hash computation is based on the directory's contents
+         */
+        // Add a file in the directory, the hash must change
+        writeSampleContentsToDirectory(inputDir);
+        String hash1 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        writeStringToFile("Some text", new File(new File(inputDir, "foo"), "newFile.txt"));
+        String hash2 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        assertThat(hash1).isNotEqualTo(hash2);
+
+        // Update a file in the directory, the hash must change
+        writeSampleContentsToDirectory(inputDir);
+        hash1 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        writeStringToFile("Updated text", new File(new File(inputDir, "foo"), "foo1.txt"));
+        hash2 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        assertThat(hash1).isNotEqualTo(hash2);
+
+        // Delete a file in the directory, the hash must change
+        writeSampleContentsToDirectory(inputDir);
+        hash1 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        FileUtils.delete(new File(new File(inputDir, "foo"), "foo1.txt"));
+        hash2 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        assertThat(hash1).isNotEqualTo(hash2);
+
+        // Rename a file in the directory, the hash must change
+        writeSampleContentsToDirectory(inputDir);
+        hash1 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        new File(new File(inputDir, "foo"), "foo1.txt")
+                .renameTo(new File(new File(inputDir, "foo"), "foo3.txt"));
+        hash2 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        assertThat(hash1).isNotEqualTo(hash2);
+
+        // Move a file in the directory, the hash must change
+        writeSampleContentsToDirectory(inputDir);
+        hash1 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        new File(new File(inputDir, "foo"), "foo1.txt")
+                .renameTo(new File(new File(inputDir, "bar"), "foo1.txt"));
+        hash2 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        assertThat(hash1).isNotEqualTo(hash2);
+
+        // Add a subdirectory in the directory, the hash must change
+        writeSampleContentsToDirectory(inputDir);
+        hash1 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        FileUtils.mkdirs(new File(new File(inputDir, "foo"), "newDir"));
+        hash2 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        assertThat(hash1).isNotEqualTo(hash2);
+
+        // Delete a subdirectory in the directory, the hash must change
+        writeSampleContentsToDirectory(inputDir);
+        hash1 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        FileUtils.delete(new File(inputDir, "bar"));
+        hash2 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        assertThat(hash1).isNotEqualTo(hash2);
+
+        // Rename a subdirectory in the directory, the hash must change
+        writeSampleContentsToDirectory(inputDir);
+        hash1 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        new File(inputDir, "foo").renameTo(new File(inputDir, "foo2"));
+        hash2 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        assertThat(hash1).isNotEqualTo(hash2);
+
+        // Move a subdirectory in the directory, the hash must change
+        writeSampleContentsToDirectory(inputDir);
+        hash1 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        new File(inputDir, "foo").renameTo(new File(new File(inputDir, "bar"), "foo"));
+        hash2 = FileCache.Inputs.Builder.getDirectoryHash(inputDir);
+        assertThat(hash1).isNotEqualTo(hash2);
+
+        // Two directories having the same contents must have the same hash. This test also proves
+        // that the hash computation does not consider the path or name of the given directory.
+        File fooDir = temporaryFolder.newFolder("fooDir");
+        File barDir = temporaryFolder.newFolder("barDir");
+        writeSampleContentsToDirectory(fooDir);
+        writeSampleContentsToDirectory(barDir);
+        assertThat(FileCache.Inputs.Builder.getDirectoryHash(fooDir))
+                .isEqualTo(FileCache.Inputs.Builder.getDirectoryHash(barDir));
     }
     
     private static void writeStringToFile(@NonNull String content, @NonNull File file)
             throws IOException {
         Files.asCharSink(file, StandardCharsets.UTF_8).write(content);
+    }
+
+    private static void writeSampleContentsToDirectory(@NonNull File directory) throws IOException {
+        // Create a sample directory with the following structure:
+        // |- directory
+        //    |- foo
+        //       |- foo1.txt
+        //       |- foo2.txt
+        //    |- bar (empty directory)
+        //    |- baz.txt
+        File fooDir = new File(directory, "foo");
+        File foo1File = new File(fooDir, "foo1.txt");
+        File foo2File = new File(fooDir, "foo2.txt");
+        File barDir = new File(directory, "bar");
+        File bazFile = new File(directory, "baz.txt");
+
+        FileUtils.deletePath(directory);
+        FileUtils.mkdirs(fooDir);
+        FileUtils.mkdirs(barDir);
+        writeStringToFile("foo1", foo1File);
+        writeStringToFile("foo2", foo2File);
+        writeStringToFile("baz", bazFile);
     }
 }
