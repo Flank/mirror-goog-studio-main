@@ -134,7 +134,7 @@ public class LocalSourceProvider implements RepositorySourceProvider {
                         }
                     }
                 } else {
-                    progress.logWarning(
+                    progress.logInfo(
                             "File " + mLocation.getAbsolutePath() + " could not be loaded.");
                 }
             } catch (NumberFormatException | IOException e) {
