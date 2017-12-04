@@ -33,7 +33,7 @@ import org.junit.Assert;
 /** Tests for {@link Svg2Vector} and {@link VdPreview} classes. */
 public class VectorDrawableGeneratorTest extends TestCase {
     private static final int IMAGE_SIZE = 64;
-    private static final float DIFF_THRESHOLD_PERCENT = 1.5f;
+    private static final float DIFF_THRESHOLD_PERCENT = 0.1f;
 
     private static final GeneratorTester GENERATOR_TESTER =
             GeneratorTester.withTestDataRelativePath(
