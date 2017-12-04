@@ -15,7 +15,6 @@
  */
 package com.android.ide.common.vectordrawable;
 
-import com.android.SdkConstants;
 import com.android.ide.common.util.GeneratorTester;
 import com.android.testutils.TestResources;
 import com.google.common.io.Files;
@@ -33,11 +32,12 @@ import org.junit.Assert;
 
 /** Tests for {@link Svg2Vector} and {@link VdPreview} classes. */
 public class VectorDrawableGeneratorTest extends TestCase {
+    private static final int IMAGE_SIZE = 64;
+    private static final float DIFF_THRESHOLD_PERCENT = 1.5f;
+
     private static final GeneratorTester GENERATOR_TESTER =
             GeneratorTester.withTestDataRelativePath(
                     "tools/base/sdk-common/src/test/resources/testData/vectordrawable");
-
-    private static final int IMAGE_SIZE = 64;
 
     private enum FileType {
         SVG,
@@ -101,14 +101,8 @@ public class VectorDrawableGeneratorTest extends TestCase {
         } else {
             InputStream is = new FileInputStream(pngFile);
             BufferedImage goldenImage = ImageIO.read(is);
-            // Mostly, this threshold is for JDK versions. The golden image is generated
-            // on Linux with JDK 6, the expected delta is 0 on the same platform and JDK version.
-            float diffThreshold = 1.5f;
-            if (SdkConstants.currentPlatform() == SdkConstants.PLATFORM_DARWIN) {
-                diffThreshold = 5.0f;
-            }
             GeneratorTester.assertImageSimilar(
-                    imageNameWithParent, goldenImage, image, diffThreshold);
+                    imageNameWithParent, goldenImage, image, DIFF_THRESHOLD_PERCENT);
         }
     }
 
@@ -120,7 +114,8 @@ public class VectorDrawableGeneratorTest extends TestCase {
         checkVectorConversion(filename, FileType.XML, false, null);
     }
 
-    private void checkSvgConversionAndContainsError(String filename, String errorLog) throws Exception {
+    private void checkSvgConversionAndContainsError(String filename, String errorLog)
+            throws Exception {
         checkVectorConversion(filename, FileType.SVG, false, errorLog);
     }
 
