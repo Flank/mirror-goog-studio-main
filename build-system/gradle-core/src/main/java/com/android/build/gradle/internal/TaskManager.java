@@ -916,11 +916,12 @@ public abstract class TaskManager {
 
         boolean alsoOutputNotCompiledResources =
                 scope.useResourceShrinker()
-                        || globalScope
-                                .getExtension()
-                                .getTestOptions()
-                                .getUnitTests()
-                                .isIncludeAndroidResources();
+                        || (scope.getTestedVariantData() == null
+                                && globalScope
+                                        .getExtension()
+                                        .getTestOptions()
+                                        .getUnitTests()
+                                        .isIncludeAndroidResources());
 
         return basicCreateMergeResourcesTask(
                 scope,
