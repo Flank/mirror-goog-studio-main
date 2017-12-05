@@ -25,7 +25,9 @@ import com.android.tools.r8.DiagnosticsHandler;
 import com.android.tools.r8.origin.ArchiveEntryOrigin;
 import com.android.tools.r8.origin.Origin;
 import com.android.tools.r8.origin.PathOrigin;
-import com.android.tools.r8.origin.TextRangeOrigin;
+import com.android.tools.r8.position.Position;
+import com.android.tools.r8.position.TextPosition;
+import com.android.tools.r8.position.TextRange;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -86,19 +88,37 @@ class D8DiagnosticsHandler implements DiagnosticsHandler {
         String textMessage = diagnostic.getDiagnosticMessage();
 
         Origin origin = diagnostic.getOrigin();
+        Position positionInOrigin = diagnostic.getPosition();
         SourceFilePosition position;
-        if (origin instanceof TextRangeOrigin && origin.parent() instanceof PathOrigin) {
-            TextRangeOrigin textRange = (TextRangeOrigin) origin;
-            position =
-                    new SourceFilePosition(
-                            ((PathOrigin) origin.parent()).getPath().toFile(),
-                            new SourcePosition(
-                                    textRange.getStart().getLine(),
-                                    textRange.getStart().getColumn(),
-                                    -1,
-                                    textRange.getEnd().getLine(),
-                                    textRange.getEnd().getColumn(),
-                                    -1));
+        if (origin instanceof PathOrigin) {
+            TextPosition startTextPosition;
+            TextPosition endTextPosition;
+            if (positionInOrigin instanceof TextRange) {
+                TextRange textRange = (TextRange) positionInOrigin;
+                startTextPosition = textRange.getStart();
+                endTextPosition = textRange.getEnd();
+            } else if (positionInOrigin instanceof TextPosition) {
+                startTextPosition = (TextPosition) positionInOrigin;
+                endTextPosition = startTextPosition;
+            } else {
+                startTextPosition = null;
+                endTextPosition = null;
+            }
+            if (startTextPosition != null) {
+                position =
+                        new SourceFilePosition(
+                                ((PathOrigin) origin.parent()).getPath().toFile(),
+                                new SourcePosition(
+                                        startTextPosition.getLine(),
+                                        startTextPosition.getColumn(),
+                                        toIntOffset(startTextPosition.getOffset()),
+                                        endTextPosition.getLine(),
+                                        endTextPosition.getColumn(),
+                                        toIntOffset(endTextPosition.getOffset())));
+
+            } else {
+                position = SourceFilePosition.UNKNOWN;
+            }
         } else if (origin.parent() instanceof PathOrigin) {
             position =
                     new SourceFilePosition(
@@ -112,5 +132,13 @@ class D8DiagnosticsHandler implements DiagnosticsHandler {
         }
 
         return new Message(kind, textMessage, textMessage, "D8", position);
+    }
+
+    private static int toIntOffset(long offset) {
+        if (offset >= 0 && offset <= Integer.MAX_VALUE) {
+            return (int) offset;
+        } else {
+            return -1;
+        }
     }
 }
