@@ -278,6 +278,7 @@ public class ExtractAnnotationsDriver {
         }
 
         Disposer.dispose(LintCoreApplicationEnvironment.get().getParentDisposable());
+        LintCoreApplicationEnvironment.clearAccessorCache();
     }
 
     private static final String SEP_JAVA_SEP = File.separator + "java" + File.separator;

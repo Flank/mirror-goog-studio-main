@@ -164,7 +164,7 @@ class TypesTest : TestCase() {
                 "                UAnnotation (fqName = null)\n" +
                 "            ULiteralExpression (value = null)\n" +
                 "        UAnnotationMethod (name = Parent)\n",
-                file?.asRecursiveLogString())
+                file?.asRecursiveLogString()?.replace("\r", ""))
         Disposer.dispose(pair.second)
     }
 
@@ -232,7 +232,7 @@ class TypesTest : TestCase() {
                 "        sideeffect(number)\n" +
                 "" +
                 "    }\n" +
-                "}\n", file?.asRenderString())
+                "}\n", file?.asRenderString()?.replace("\r", ""))
         Disposer.dispose(pair.second)
     }
 
@@ -305,5 +305,5 @@ class TypesLogger : UastVisitor {
         level--
     }
 
-    override fun toString() = builder.toString()
+    override fun toString() = builder.toString().replace("\r", "")
 }
