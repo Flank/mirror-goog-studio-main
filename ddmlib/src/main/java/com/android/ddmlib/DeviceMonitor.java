@@ -173,6 +173,12 @@ final class DeviceMonitor implements ClientTracker {
             adbChannel.socket().setTcpNoDelay(true);
             return adbChannel;
         } catch (IOException e) {
+            Log.e(
+                    "DeviceMonitor",
+                    "Unable to open connection to: "
+                            + AndroidDebugBridge.getSocketAddress()
+                            + ", due to: "
+                            + e);
             return null;
         }
     }
