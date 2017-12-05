@@ -356,15 +356,31 @@ public class DexMergerTransformTest {
                 .hasSize(2 * NUM_INPUTS);
     }
 
+    @Test
+    public void test_native_allMergedForRelease() throws Exception {
+        Set<TransformInput> inputs = getTransformInputs(NUM_INPUTS, QualifiedContent.Scope.PROJECT);
+
+        getTransform(DexingType.NATIVE_MULTIDEX, null, false)
+                .transform(
+                        TransformTestHelper.invocationBuilder()
+                                .setInputs(inputs)
+                                .setTransformOutputProvider(outputProvider)
+                                .build());
+
+        Truth.assertThat(FileUtils.find(out.toFile(), Pattern.compile(".*\\.dex"))).hasSize(1);
+    }
+
     private DexMergerTransform getTransform(@NonNull DexingType dexingType) throws IOException {
         Preconditions.check(
                 dexingType != DexingType.LEGACY_MULTIDEX,
                 "Main dex list required for legacy multidex");
-        return getTransform(dexingType, null);
+        return getTransform(dexingType, null, true);
     }
 
     private DexMergerTransform getTransform(
-            @NonNull DexingType dexingType, @Nullable ImmutableSet<String> mainDex)
+            @NonNull DexingType dexingType,
+            @Nullable ImmutableSet<String> mainDex,
+            boolean isDebuggable)
             throws IOException {
         FileCollection collection;
         if (mainDex != null) {
@@ -379,7 +395,12 @@ public class DexMergerTransformTest {
             collection = null;
         }
         return new DexMergerTransform(
-                dexingType, collection, new NoOpMessageReceiver(), DexMergerTool.DX, 1, true);
+                dexingType,
+                collection,
+                new NoOpMessageReceiver(),
+                DexMergerTool.DX,
+                1,
+                isDebuggable);
     }
 
     @NonNull

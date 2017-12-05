@@ -2440,6 +2440,7 @@ public abstract class TaskManager {
                 .addTransform(taskFactory, variantScope, preDexTransform)
                 .ifPresent(variantScope::addColdSwapBuildTask);
 
+        boolean isDebuggable = variantScope.getVariantConfiguration().getBuildType().isDebuggable();
         if (dexingType != DexingType.LEGACY_MULTIDEX
                 && variantScope.getCodeShrinker() == null
                 && extension.getTransforms().isEmpty()) {
@@ -2448,7 +2449,7 @@ public abstract class TaskManager {
                             dexingType,
                             variantScope.getDexMerger(),
                             variantScope.getMinSdkVersion().getFeatureLevel(),
-                            variantScope.getVariantConfiguration().getBuildType().isDebuggable(),
+                            isDebuggable,
                             variantScope.getGlobalScope().getMessageReceiver(),
                             DexMergerTransformCallable::new);
 
@@ -2464,7 +2465,7 @@ public abstract class TaskManager {
                         variantScope.getGlobalScope().getMessageReceiver(),
                         variantScope.getDexMerger(),
                         variantScope.getMinSdkVersion().getFeatureLevel(),
-                        variantScope.getVariantConfiguration().getBuildType().isDebuggable());
+                        isDebuggable);
         Optional<TransformTask> dexTask =
                 transformManager.addTransform(taskFactory, variantScope, dexTransform);
         // need to manually make dex task depend on MultiDexTransform since there's no stream
