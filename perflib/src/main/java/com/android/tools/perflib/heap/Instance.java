@@ -63,12 +63,12 @@ public abstract class Instance {
     //  To save space, we only keep a primitive array here following the order in mSnapshot.mHeaps.
     private long[] mRetainedSizes;
 
-    protected final ArrayList<Instance> mHardForwardReferences = new ArrayList<Instance>();
+    protected final ArrayList<Instance> mHardForwardReferences = new ArrayList<>();
 
     protected Instance mSoftForwardReference = null;
 
     //  List of all objects that hold a live reference to this object
-    protected final ArrayList<Instance> mHardReverseReferences = new ArrayList<Instance>();
+    protected final ArrayList<Instance> mHardReverseReferences = new ArrayList<>();
 
     //  List of all objects that hold a soft/weak/phantom reference to this object.
     //  Don't create an actual list until we need to.
@@ -232,9 +232,9 @@ public abstract class Instance {
      * @param reference another instance that references this instance
      */
     public void addReverseReference(@Nullable Field field, @NonNull Instance reference) {
-        if (reference.getIsSoftReference() && field != null && field.getName().equals("referent")) {
+        if (field != null && field.getName().equals("referent") && reference.getIsSoftReference()) {
             if (mSoftReverseReferences == null) {
-                mSoftReverseReferences = new ArrayList<Instance>();
+                mSoftReverseReferences = new ArrayList<>();
             }
             mSoftReverseReferences.add(reference);
         } else {
@@ -266,7 +266,7 @@ public abstract class Instance {
      * Removes all duplicate references AND references to itself.
      */
     public void dedupeReferences() {
-        Set<Instance> dedupeSet = new HashSet<Instance>(mHardReverseReferences.size());
+        Set<Instance> dedupeSet = new HashSet<>(mHardReverseReferences.size());
         dedupeSet.addAll(mHardReverseReferences);
         dedupeSet.remove(this);
         mHardReverseReferences.clear();

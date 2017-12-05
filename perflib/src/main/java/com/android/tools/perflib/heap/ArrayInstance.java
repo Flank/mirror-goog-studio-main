@@ -18,7 +18,6 @@ package com.android.tools.perflib.heap;
 
 import com.android.annotations.NonNull;
 import com.android.tools.perflib.captures.DataBuffer;
-
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 
@@ -102,7 +101,14 @@ public class ArrayInstance extends Instance {
             return super.getClassObj();
         } else {
             // Primitive arrays don't set their classId, we need to do the lookup manually.
-            return mHeap.mSnapshot.findClass(Type.getClassNameOfPrimitiveArray(mType));
+            ClassObj primitiveArrayClassObj =
+                    mHeap.mSnapshot.findClass(mType.getClassNameOfPrimitiveArray(false));
+            if (primitiveArrayClassObj == null) {
+                // We might not be parsing an Android hprof.
+                primitiveArrayClassObj =
+                        mHeap.mSnapshot.findClass(mType.getClassNameOfPrimitiveArray(true));
+            }
+            return primitiveArrayClassObj;
         }
     }
 
