@@ -1206,7 +1206,7 @@ public abstract class TaskManager {
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
                 scope.getDexingType() == DexingType.LEGACY_MULTIDEX;
 
-        if (!isLibrary()) {
+        if (scope.getVariantData().getType().getCanHaveSplits()) {
             // split list calculation and save to this file.
             File splitListOutputFile = new File(scope.getSplitSupportDirectory(), FN_SPLIT_LIST);
             SplitsDiscovery splitsDiscoveryAndroidTask =

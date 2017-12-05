@@ -253,7 +253,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
         final Set<File> featureResourcePackages = this.featureResourcePackages.getFiles();
 
-        SplitList splitList = isLibrary ? SplitList.EMPTY : SplitList.load(splitListInput);
+        SplitList splitList =
+                splitListInput == null ? SplitList.EMPTY : SplitList.load(splitListInput);
 
         Set<File> dependencies =
                 dependenciesFileCollection != null
@@ -761,7 +762,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             // per exec
             processResources.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
 
-            if (!isLibrary) {
+            if (variantData.getType().getCanHaveSplits()) {
                 processResources.splitListInput =
                         variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
             }
@@ -944,7 +945,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             // per exec
             task.setIncrementalFolder(variantScope.getIncrementalDir(getName()));
-            if (!isLibrary) {
+            if (variantData.getType().getCanHaveSplits()) {
                 task.splitListInput =
                         variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
             }
