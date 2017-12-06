@@ -19,15 +19,53 @@ package com.android.tools.profiler.memory;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.profiler.*;
+import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.MemoryProfiler.*;
+import com.android.tools.profiler.proto.Profiler.*;
 import java.util.HashSet;
 import java.util.List;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class JniTest {
-
-    private boolean myIsOPlusDevice = true;
     private static final String ACTIVITY_CLASS = "com.activity.NativeCodeActivity";
+
+    private PerfDriver myPerfDriver;
+    private GrpcUtils myGrpc;
+    private Session mySession;
+
+    @Before
+    public void setup() throws Exception {
+        // We currently only test O+ test scenarios.
+        myPerfDriver = new PerfDriver(true);
+        myPerfDriver.start(ACTIVITY_CLASS);
+        myGrpc = myPerfDriver.getGrpc();
+
+        // For Memory tests, we need to invoke beginSession and startMonitoringApp to properly
+        // initialize the memory cache and establish the perfa->perfd connection
+        BeginSessionResponse response =
+                myGrpc.getProfilerStub()
+                        .beginSession(
+                                BeginSessionRequest.newBuilder()
+                                        .setDeviceId(1234)
+                                        .setProcessId(myGrpc.getProcessId())
+                                        .build());
+        mySession = response.getSession();
+        myGrpc.getMemoryStub()
+                .startMonitoringApp(MemoryStartRequest.newBuilder().setSession(mySession).build());
+    }
+
+    @After
+    public void tearDown() {
+        myGrpc.getProfilerStub()
+                .endSession(
+                        EndSessionRequest.newBuilder()
+                                .setSessionId(mySession.getSessionId())
+                                .build());
+        myGrpc.getMemoryStub()
+                .stopMonitoringApp(MemoryStopRequest.newBuilder().setSession(mySession).build());
+    }
 
     private int findClassTag(List<BatchAllocationSample> samples, String className) {
         for (BatchAllocationSample sample : samples) {
@@ -46,21 +84,17 @@ public class JniTest {
     // Just create native activity and see that it can load native library.
     @Test
     public void countCreatedAndDeleteRefEvents() throws Exception {
-        PerfDriver driver = new PerfDriver(myIsOPlusDevice);
-        driver.start(ACTIVITY_CLASS);
-        GrpcUtils grpc = driver.getGrpc();
-        MemoryStubWrapper stubWrapper = new MemoryStubWrapper(grpc.getMemoryStub());
-        FakeAndroidDriver androidDriver = driver.getFakeAndroidDriver();
+        FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
+        MemoryStubWrapper stubWrapper = new MemoryStubWrapper(myGrpc.getMemoryStub());
 
         // Start memory tracking.
-        TrackAllocationsResponse trackResponse =
-                stubWrapper.startAllocationTracking(grpc.getProcessId());
+        TrackAllocationsResponse trackResponse = stubWrapper.startAllocationTracking(mySession);
         assertThat(trackResponse.getStatus()).isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
-        MemoryData jvmtiData = stubWrapper.getJvmtiData(grpc.getProcessId(), 0, Long.MAX_VALUE);
+        MemoryData jvmtiData = stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE);
 
         // Wait before we start getting acutal data.
         while (jvmtiData.getAllocationSamplesList().size() == 0) {
-            jvmtiData = stubWrapper.getJvmtiData(grpc.getProcessId(), 0, Long.MAX_VALUE);
+            jvmtiData = stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE);
         }
 
         // Find JNITestEntity class tag
@@ -87,7 +121,7 @@ public class JniTest {
         // back jni ref events. This way the test won't timeout
         // even when fails.
         while (!allRefsAccounted && maxLoopCount-- > 0) {
-            jvmtiData = stubWrapper.getJvmtiData(grpc.getProcessId(), startTime, Long.MAX_VALUE);
+            jvmtiData = stubWrapper.getJvmtiData(mySession, startTime, Long.MAX_VALUE);
             long endTime = jvmtiData.getEndTimestamp();
 
             for (BatchAllocationSample sample : jvmtiData.getAllocationSamplesList()) {

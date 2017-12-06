@@ -75,7 +75,7 @@ perf_test(
 perf_test(
     name = "MemoryTest",
     srcs = [
-        "testSrcs/com/android/tools/profiler/MemoryTest.java",
+        "testSrcs/com/android/tools/profiler/memory/MemoryTest.java",
     ],
     native_lib = "//tools/base/profiler/tests/test-app:libnativetest.so",
     test_app = "//tools/base/profiler/tests/test-app:test-app",
@@ -88,7 +88,7 @@ perf_test(
 perf_test(
     name = "JniTest",
     srcs = [
-        "testSrcs/com/android/tools/profiler/JniTest.java",
+        "testSrcs/com/android/tools/profiler/memory/JniTest.java",
     ],
     native_lib = "//tools/base/profiler/tests/test-app:libnativetest.so",
     test_app = "//tools/base/profiler/tests/test-app:test-app",

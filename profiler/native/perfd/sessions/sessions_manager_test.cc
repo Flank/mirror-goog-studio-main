@@ -155,6 +155,26 @@ TEST(SessionsManager, GetSessionWorks) {
       sessions.GetSession(session.session_id() - 1, &retrieved_session));
 }
 
+TEST(SessionsManager, GetActiveSessionByPid) {
+  FakeClock clock(1000);
+  SessionsManager sessions(clock);
+
+  Session session;
+  sessions.BeginSession(-1, 1, &session);
+  clock.Elapse(500);
+
+  Session retrieved_session;
+  EXPECT_TRUE(
+      sessions.GetActiveSessionByPid(session.pid(), &retrieved_session));
+  EXPECT_EQ(session.session_id(), retrieved_session.session_id());
+  EXPECT_EQ(session.pid(), retrieved_session.pid());
+
+  // Getting an inactive sessin should return false.
+  sessions.EndSession(session.session_id(), &session);
+  EXPECT_FALSE(
+      sessions.GetActiveSessionByPid(session.pid(), &retrieved_session));
+}
+
 TEST(SessionsManager, GetSessionsByTimeRangeWorks) {
   FakeClock clock(1000);
   SessionsManager sessions(clock);

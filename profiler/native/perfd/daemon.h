@@ -22,6 +22,7 @@
 #include <grpc++/grpc++.h>
 
 #include "perfd/profiler_component.h"
+#include "perfd/sessions/sessions_manager.h"
 #include "utils/clock.h"
 #include "utils/config.h"
 #include "utils/file_cache.h"
@@ -71,7 +72,7 @@ class Daemon {
   // |cache_path| is a path where a temporary file cache will live. This
   // cache will be cleared each time the daemon starts up.
   Daemon(const std::string& config_path, const std::string& cache_path)
-      : utilities_(config_path, cache_path) {}
+      : utilities_(config_path, cache_path), sessions_(utilities_.clock()) {}
 
   // Registers profiler |component| to the daemon, in particular, the
   // component's public and internal services to daemon's server |builder|.
@@ -89,6 +90,9 @@ class Daemon {
   // Return daemon utilities that should be shared across all profilers.
   Utilities& utilities() { return utilities_; }
 
+  // Return SessionsManager shared across all profilers.
+  SessionsManager& sessions() { return sessions_; }
+
  private:
   // Builder of the gRPC server.
   grpc::ServerBuilder builder_;
@@ -96,6 +100,8 @@ class Daemon {
   std::vector<ProfilerComponent*> components_{};
   // Utility classes that should be shared across all profiler services.
   Utilities utilities_;
+  // Session management across the profiling services in perfd.
+  SessionsManager sessions_;
 };
 
 }  // namespace profiler

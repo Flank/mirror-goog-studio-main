@@ -19,17 +19,53 @@ package com.android.tools.profiler.memory;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.tools.profiler.*;
+import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.MemoryProfiler.*;
+import com.android.tools.profiler.proto.Profiler.*;
 import java.util.HashSet;
 import java.util.List;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class MemoryTest {
-
-    private boolean myIsOPlusDevice = true;
     private static final String ACTIVITY_CLASS = "com.activity.MemoryActivity";
 
-    public MemoryTest() {}
+    private PerfDriver myPerfDriver;
+    private GrpcUtils myGrpc;
+    private Session mySession;
+
+    @Before
+    public void setup() throws Exception {
+        // We currently only test O+ test scenarios.
+        myPerfDriver = new PerfDriver(true);
+        myPerfDriver.start(ACTIVITY_CLASS);
+        myGrpc = myPerfDriver.getGrpc();
+
+        // For Memory tests, we need to invoke beginSession and startMonitoringApp to properly
+        // initialize the memory cache and establish the perfa->perfd connection
+        BeginSessionResponse response =
+                myGrpc.getProfilerStub()
+                        .beginSession(
+                                BeginSessionRequest.newBuilder()
+                                        .setDeviceId(1234)
+                                        .setProcessId(myGrpc.getProcessId())
+                                        .build());
+        mySession = response.getSession();
+        myGrpc.getMemoryStub()
+                .startMonitoringApp(MemoryStartRequest.newBuilder().setSession(mySession).build());
+    }
+
+    @After
+    public void tearDown() {
+        myGrpc.getProfilerStub()
+                .endSession(
+                        EndSessionRequest.newBuilder()
+                                .setSessionId(mySession.getSessionId())
+                                .build());
+        myGrpc.getMemoryStub()
+                .stopMonitoringApp(MemoryStopRequest.newBuilder().setSession(mySession).build());
+    }
 
     private int findClassTag(List<BatchAllocationSample> samples, String className) {
         for (BatchAllocationSample sample : samples) {
@@ -47,20 +83,16 @@ public class MemoryTest {
 
     @Test
     public void countAllocationsAndDeallocation() throws Exception {
-        PerfDriver driver = new PerfDriver(myIsOPlusDevice);
-        driver.start(ACTIVITY_CLASS);
-        GrpcUtils grpc = driver.getGrpc();
-        MemoryStubWrapper stubWrapper = new MemoryStubWrapper(grpc.getMemoryStub());
+        MemoryStubWrapper stubWrapper = new MemoryStubWrapper(myGrpc.getMemoryStub());
 
         // Start memory tracking.
-        TrackAllocationsResponse trackResponse =
-                stubWrapper.startAllocationTracking(grpc.getProcessId());
+        TrackAllocationsResponse trackResponse = stubWrapper.startAllocationTracking(mySession);
         assertThat(trackResponse.getStatus()).isEqualTo(TrackAllocationsResponse.Status.SUCCESS);
-        MemoryData jvmtiData = stubWrapper.getJvmtiData(grpc.getProcessId(), 0, Long.MAX_VALUE);
+        MemoryData jvmtiData = stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE);
 
         // Wait before we start getting actual data.
         while (jvmtiData.getAllocationSamplesList().size() == 0) {
-            jvmtiData = stubWrapper.getJvmtiData(grpc.getProcessId(), 0, Long.MAX_VALUE);
+            jvmtiData = stubWrapper.getJvmtiData(mySession, 0, Long.MAX_VALUE);
         }
 
         // Find MemTestEntity class tag
@@ -68,7 +100,7 @@ public class MemoryTest {
         assertThat(memTestEntityId).isNotEqualTo(0);
         long startTime = jvmtiData.getEndTimestamp();
 
-        FakeAndroidDriver androidDriver = driver.getFakeAndroidDriver();
+        FakeAndroidDriver androidDriver = myPerfDriver.getFakeAndroidDriver();
         final int allocationCount = 10;
         int allocationsDone = 0;
         int allocationsReported = 0;
@@ -97,7 +129,7 @@ public class MemoryTest {
             // Make some allocation noise here to emulate how real apps work.
             androidDriver.triggerMethod(ACTIVITY_CLASS, "makeAllocationNoise");
 
-            jvmtiData = stubWrapper.getJvmtiData(grpc.getProcessId(), startTime, Long.MAX_VALUE);
+            jvmtiData = stubWrapper.getJvmtiData(mySession, startTime, Long.MAX_VALUE);
             long endTime = jvmtiData.getEndTimestamp();
             System.out.printf("getJvmtiData called. endTime=%d, alloc samples=%d\n",
                             endTime, jvmtiData.getAllocationSamplesList().size());

@@ -21,13 +21,15 @@
 #include "internal_memory_service.h"
 #include "memory_service.h"
 #include "perfd/profiler_component.h"
+#include "perfd/sessions/sessions_manager.h"
 
 namespace profiler {
 
 class MemoryProfilerComponent final : public ProfilerComponent {
  public:
-  explicit MemoryProfilerComponent(Daemon::Utilities* utilities)
-      : private_service_(&collectors_),
+  explicit MemoryProfilerComponent(const SessionsManager& sessions,
+                                   Daemon::Utilities* utilities)
+      : private_service_(sessions, &collectors_),
         public_service_(&private_service_, utilities, &collectors_) {}
 
   // Returns the service that talks to desktop clients (e.g., Studio).
@@ -41,8 +43,8 @@ class MemoryProfilerComponent final : public ProfilerComponent {
 
   MemoryServiceImpl public_service_;
 
-  // Mapping pid->MemoryCollector.
-  std::unordered_map<int32_t, MemoryCollector> collectors_;
+  // Mapping session id to MemoryCollector.
+  std::unordered_map<int64_t, MemoryCollector> collectors_;
 };
 
 }  // namespace profiler

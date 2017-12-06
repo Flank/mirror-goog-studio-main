@@ -105,8 +105,7 @@ service MemoryService {
 }
 
 message MemoryStartRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  Session session = 1;
 }
 
 message MemoryStartResponse {
@@ -119,8 +118,7 @@ message MemoryStartResponse {
 }
 
 message MemoryStopRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  Session session = 1;
 }
 
 message MemoryStopResponse {
@@ -133,8 +131,7 @@ message MemoryStopResponse {
 }
 
 message SuspendTrackAllocationsRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  Session session = 1;
 }
 
 message SuspendTrackAllocationsResponse {
@@ -148,8 +145,7 @@ message SuspendTrackAllocationsResponse {
 }
 
 message ResumeTrackAllocationsRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  Session session = 1;
 }
 
 message ResumeTrackAllocationsResponse {
@@ -163,10 +159,9 @@ message ResumeTrackAllocationsResponse {
 }
 
 message MemoryRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 start_time = 3;  // exclusive
-  int64 end_time = 4;    // inclusive
+  Session session = 1;
+  int64 start_time = 2;  // exclusive
+  int64 end_time = 3;    // inclusive
 }
 
 message MemoryData {
@@ -221,9 +216,8 @@ message HeapDumpInfo {
 }
 
 message TriggerHeapDumpRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 request_time = 3;
+  Session session = 1;
+  int64 request_time = 2;
 }
 
 message TriggerHeapDumpResponse {
@@ -241,9 +235,8 @@ message TriggerHeapDumpResponse {
 }
 
 message DumpDataRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 dump_time = 3;
+  Session session = 1;
+  int64 dump_time = 2;
 }
 
 message DumpDataResponse {
@@ -259,10 +252,9 @@ message DumpDataResponse {
 }
 
 message ListDumpInfosRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 start_time = 3;  // exclusive
-  int64 end_time = 4;    // inclusive
+  Session session = 1;
+  int64 start_time = 2;  // exclusive
+  int64 end_time = 3;    // inclusive
 }
 
 message ListHeapDumpInfosResponse {
@@ -302,28 +294,26 @@ message TrackAllocationsResponse {
 }
 
 message TrackAllocationsRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 request_time = 3;
+  Session session = 1;
+  int64 request_time = 2;
   // Requests whether an allocation tracking session is
   // to be enabled/disabled. If a session is already in
   // progress, re-enabling it does nothing, this is also
   // true for disabling a session when no tracking is in
   // progress.
-  bool enabled = 4;
+  bool enabled = 3;
   // A flag to indicate whether the request is initiated
   // via the legacy allocation tracking path. On pre-O
   // setups, legacy tracking would simply mark the start
   // and end times of a session. On O+ setups, perfd +
   // the agent would perform allocation tracking.
-  bool legacy = 5;
+  bool legacy = 4;
 }
 
 message LegacyAllocationEventsRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 start_time = 3; // exclusive
-  int64 end_time = 4;   // inclusive
+  Session session = 1;
+  int64 start_time = 2; // exclusive
+  int64 end_time = 3;   // inclusive
 }
 
 message LegacyAllocationEventsResponse {
@@ -340,7 +330,6 @@ message LegacyAllocationEventsResponse {
 
 message LegacyAllocationEvent {
   // capture_time associates with a particular tracking session.
-  // TODO: include endTime for de-allocation tracking
   int64 capture_time = 1;
   int64 timestamp = 2;
   int32 size = 3;
@@ -350,15 +339,13 @@ message LegacyAllocationEvent {
 }
 
 message LegacyAllocationContextsRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  repeated int32 class_ids = 3;
-  repeated int32 stack_ids = 4;
+  Session session = 1;
+  repeated int32 class_ids = 2;
+  repeated int32 stack_ids = 3;
 }
 
 message LatestAllocationTimeRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  Session session = 1;
 }
 
 message LatestAllocationTimeResponse {
@@ -366,10 +353,9 @@ message LatestAllocationTimeResponse {
 }
 
 message AllocationContextsRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 start_time = 3;
-  int64 end_time = 4;
+  Session session = 1;
+  int64 start_time = 2;
+  int64 end_time = 3;
 }
 
 message AllocationContextsResponse {
@@ -435,14 +421,13 @@ message AllocationStack {
 }
 
 message StackFrameInfoRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 method_id = 3;
+  Session session = 1;
+  int64 method_id = 2;
 }
 
 message StackFrameInfoResponse {
-  string class_name = 2;
-  string method_name = 3;
+  string class_name = 1;
+  string method_name = 2;
 }
 
 // Proto format for storing and transmitting O+ stack data efficiently.
@@ -471,29 +456,25 @@ message ThreadInfo {
 }
 
 message AllocationSnapshotRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  // The start time (id) of the tracking session from which
-  // allocation data should be returned.
-  int64 capture_time = 3;
-  int64 start_time = 4;  // inclusive;
+  Session session = 1;
+  int64 start_time = 2;  // inclusive;
   // NOTE that compared to other proto request, end_time here
   // is exclusive as ongoing live instances are set to have a
   // free_timestamp of Long.MAX_VALUE. This allows us to naturally
   // query for all current live instances by passing in MAX_VALUE
   // as the end_time, without having to special case an invalid
   // duration value.
-  int64 end_time = 5; // exclusive;
+  int64 end_time = 3; // exclusive;
 
   // Ignore |start_time| - include only objects that are still
   // alive at point in time specified by |end_time|
-  bool live_objects_only = 6;
+  bool live_objects_only = 4;
 }
 
 // Batched AllocationEvents to minimize number of grpc
 // calls compared to transferring them individually.
 message BatchAllocationSample {
-  int32 process_id = 1;
+  int32 pid = 1;
   // From Perfa->Perfd and Perfd->Studio, this marks the
   // time(ns) when the sample was first created in the agent.
   // Within Studio, this indicates the latest timestamp amongst
@@ -542,14 +523,13 @@ message JNIGlobalReferenceEvent {
 }
 
 message JNIGlobalRefsEventsRequest {
-  int32 process_id = 1;
-  Session session = 2;
-  int64 start_time = 3;  // inclusive;
-  int64 end_time = 4; // exclusive;
+  Session session = 1;
+  int64 start_time = 2;  // inclusive;
+  int64 end_time = 3; // exclusive;
 }
 
 message BatchJNIGlobalRefEvent {
-  int32 process_id = 1;
+  int32 pid = 1;
   int64 timestamp = 2;
   repeated JNIGlobalReferenceEvent events = 3;
 }
@@ -628,8 +608,7 @@ message AllocationEvent {
 }
 
 message ForceGarbageCollectionRequest {
-  int32 process_id = 1;
-  Session session = 2;
+  Session session = 1;
 }
 
 message ForceGarbageCollectionResponse {}

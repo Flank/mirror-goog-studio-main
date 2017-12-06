@@ -25,8 +25,11 @@ service InternalMemoryService {
   rpc RegisterMemoryAgent(RegisterMemoryAgentRequest)
     returns (stream MemoryControlRequest) {}
 
-  rpc RecordGcStats(GcStatsRequest) returns (EmptyMemoryReply) {}
-  rpc RecordAllocStats(AllocStatsRequest) returns (EmptyMemoryReply) {}
+  rpc RecordGcStats(GcStatsRequest)
+    returns (EmptyMemoryReply) {}
+
+  rpc RecordAllocStats(AllocStatsRequest)
+    returns (EmptyMemoryReply) {}
 
   rpc RecordAllocationEvents(BatchAllocationSample)
     returns (EmptyMemoryReply) {}
@@ -36,7 +39,7 @@ service InternalMemoryService {
 }
 
 message RegisterMemoryAgentRequest {
-  int64 pid = 1;
+  int32 pid = 1;
 }
 
 message MemoryControlRequest {
@@ -52,7 +55,7 @@ message MemoryControlRequest {
 
   message ResumeTracking {}
 
-  int64 pid = 1;
+  int32 pid = 1;
   oneof control {
     EnableTracking enable_request = 2;
     DisableTracking disable_request = 3;
@@ -62,12 +65,12 @@ message MemoryControlRequest {
 }
 
 message AllocStatsRequest {
-  int32 process_id = 1;
+  int32 pid = 1;
   MemoryData.AllocStatsSample alloc_stats_sample = 2;
 }
 
 message GcStatsRequest {
-  int32 process_id = 1;
+  int32 pid = 1;
   MemoryData.GcStatsSample gc_stats_sample = 2;
 }
 

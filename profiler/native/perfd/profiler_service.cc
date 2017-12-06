@@ -291,30 +291,30 @@ Status ProfilerServiceImpl::AttachAgent(
 Status ProfilerServiceImpl::BeginSession(
     ServerContext* context, const profiler::proto::BeginSessionRequest* request,
     profiler::proto::BeginSessionResponse* response) {
-  sessions_.BeginSession(request->device_id(), request->process_id(),
-                         response->mutable_session());
+  sessions_->BeginSession(request->device_id(), request->process_id(),
+                          response->mutable_session());
   return Status::OK;
 }
 
 Status ProfilerServiceImpl::EndSession(
     ServerContext* context, const profiler::proto::EndSessionRequest* request,
     profiler::proto::EndSessionResponse* response) {
-  sessions_.EndSession(request->session_id(), response->mutable_session());
+  sessions_->EndSession(request->session_id(), response->mutable_session());
   return Status::OK;
 }
 
 Status ProfilerServiceImpl::GetSession(
     ServerContext* context, const profiler::proto::GetSessionRequest* request,
     profiler::proto::GetSessionResponse* response) {
-  sessions_.GetSession(request->session_id(), response->mutable_session());
+  sessions_->GetSession(request->session_id(), response->mutable_session());
   return Status::OK;
 }
 
 Status ProfilerServiceImpl::GetSessions(
     ServerContext* context, const profiler::proto::GetSessionsRequest* request,
     profiler::proto::GetSessionsResponse* response) {
-  auto matching_sessions = sessions_.GetSessions(request->start_timestamp(),
-                                                 request->end_timestamp());
+  auto matching_sessions = sessions_->GetSessions(request->start_timestamp(),
+                                                  request->end_timestamp());
   for (const auto& session : matching_sessions) {
     response->add_sessions()->CopyFrom(session);
   }
@@ -325,7 +325,7 @@ Status ProfilerServiceImpl::DeleteSession(
     ServerContext* context,
     const profiler::proto::DeleteSessionRequest* request,
     profiler::proto::DeleteSessionResponse* response) {
-  sessions_.DeleteSession(request->session_id());
+  sessions_->DeleteSession(request->session_id());
   return Status::OK;
 }
 

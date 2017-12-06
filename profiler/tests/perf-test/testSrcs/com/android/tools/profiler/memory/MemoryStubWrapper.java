@@ -16,41 +16,36 @@
 
 package com.android.tools.profiler.memory;
 
+import com.android.tools.profiler.proto.Common.*;
 import com.android.tools.profiler.proto.MemoryProfiler;
 import com.android.tools.profiler.proto.MemoryServiceGrpc.MemoryServiceBlockingStub;
 
 /** Wrapper of stub calls that is shared among tests. */
 final class MemoryStubWrapper {
-    private static final int SLEEP_TIME_MS = 200;
     private final MemoryServiceBlockingStub myMemoryStub;
 
     MemoryStubWrapper(MemoryServiceBlockingStub memoryStub) {
         myMemoryStub = memoryStub;
     }
 
-    MemoryProfiler.MemoryData getJvmtiData(int processId, long startTime, long endTime) {
+    MemoryProfiler.MemoryData getJvmtiData(Session session, long startTime, long endTime) {
         return myMemoryStub.getJvmtiData(
                 MemoryProfiler.MemoryRequest.newBuilder()
-                        .setProcessId(processId)
+                        .setSession(session)
                         .setStartTime(startTime)
                         .setEndTime(endTime)
                         .build());
     }
 
-    MemoryProfiler.TrackAllocationsResponse trackAllocations(int processId) {
+    MemoryProfiler.TrackAllocationsResponse trackAllocations(Session session) {
         return myMemoryStub.trackAllocations(
-                MemoryProfiler.TrackAllocationsRequest.newBuilder()
-                        .setProcessId(processId)
-                        .build());
+                MemoryProfiler.TrackAllocationsRequest.newBuilder().setSession(session).build());
     }
 
-    MemoryProfiler.TrackAllocationsResponse startAllocationTracking(int processId) {
-        myMemoryStub.startMonitoringApp(
-                MemoryProfiler.MemoryStartRequest.newBuilder().setProcessId(processId).build());
-
+    MemoryProfiler.TrackAllocationsResponse startAllocationTracking(Session session) {
         return myMemoryStub.trackAllocations(
                 MemoryProfiler.TrackAllocationsRequest.newBuilder()
-                        .setProcessId(processId)
+                        .setSession(session)
                         .setEnabled(true)
                         .build());
     }

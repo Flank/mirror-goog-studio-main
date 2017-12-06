@@ -28,7 +28,7 @@ using std::vector;
 using proto::Session;
 
 bool SessionsManager::BeginSession(int64_t device_id, int32_t pid,
-                                   proto::Session* session) {
+                                   Session* session) {
   lock_guard<mutex> lock(sessions_mutex_);
   auto it =
       std::find_if(sessions_.begin(), sessions_.end(), [&](const Session& s) {
@@ -54,9 +54,11 @@ bool SessionsManager::BeginSession(int64_t device_id, int32_t pid,
   return new_session;
 }
 
-bool SessionsManager::EndSession(int64_t session_id, proto::Session* session) {
+bool SessionsManager::EndSession(int64_t session_id, Session* session) {
   lock_guard<mutex> lock(sessions_mutex_);
-  auto it = GetSessionIter(session_id);
+  auto it = GetSessionIter({[session_id](const Session& s) {
+    return s.session_id() == session_id;
+  }});
   if (it != sessions_.end()) {
     DoEndSession(&(*it));
     session->CopyFrom(*it);
@@ -66,10 +68,25 @@ bool SessionsManager::EndSession(int64_t session_id, proto::Session* session) {
   }
 }
 
-bool SessionsManager::GetSession(int64_t session_id,
-                                 proto::Session* session) const {
+bool SessionsManager::GetSession(int64_t session_id, Session* session) const {
   lock_guard<mutex> lock(sessions_mutex_);
-  auto it = GetSessionIter(session_id);
+  auto it = GetSessionIter({[session_id](const Session& s) {
+    return s.session_id() == session_id;
+  }});
+  if (it != sessions_.end()) {
+    session->CopyFrom(*it);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+bool SessionsManager::GetActiveSessionByPid(int32_t pid,
+                                            Session* session) const {
+  lock_guard<mutex> lock(sessions_mutex_);
+  auto it = GetSessionIter({[pid](const Session& s) {
+    return s.pid() == pid && SessionUtils::IsActive(s);
+  }});
   if (it != sessions_.end()) {
     session->CopyFrom(*it);
     return true;
@@ -94,7 +111,9 @@ std::vector<Session> SessionsManager::GetSessions(int64_t start_timestamp,
 
 void SessionsManager::DeleteSession(int64_t session_id) {
   lock_guard<mutex> lock(sessions_mutex_);
-  auto it = GetSessionIter(session_id);
+  auto it = GetSessionIter({[session_id](const Session& s) {
+    return s.session_id() == session_id;
+  }});
   if (it != sessions_.end()) {
     DoEndSession(&(*it));
     sessions_.erase(it);
@@ -102,18 +121,15 @@ void SessionsManager::DeleteSession(int64_t session_id) {
 }
 
 // This method assumes |sessions_| has already been locked
-list<Session>::iterator SessionsManager::GetSessionIter(int64_t session_id) {
-  return std::find_if(
-      sessions_.begin(), sessions_.end(),
-      [&](const Session& s) { return s.session_id() == session_id; });
+list<Session>::iterator SessionsManager::GetSessionIter(
+    const std::function<bool(const Session& s)>& match_func) {
+  return std::find_if(sessions_.begin(), sessions_.end(), match_func);
 }
 
 // This method assumes |sessions_| has already been locked
 list<Session>::const_iterator SessionsManager::GetSessionIter(
-    int64_t session_id) const {
-  return std::find_if(
-      sessions_.begin(), sessions_.end(),
-      [&](const Session& s) { return s.session_id() == session_id; });
+    const std::function<bool(const Session& s)>& match_func) const {
+  return std::find_if(sessions_.begin(), sessions_.end(), match_func);
 }
 
 // This method assumes |sessions_| has already been locked and that

@@ -6,6 +6,7 @@ cc_library(
         "daemon.h",
         "profiler_component.h",
         "profiler_service.h",
+        "//tools/base/profiler/native/perfd/sessions:sessions_manager.h",
     ],
     copts = [
         "-Itools/base/profiler/native",
