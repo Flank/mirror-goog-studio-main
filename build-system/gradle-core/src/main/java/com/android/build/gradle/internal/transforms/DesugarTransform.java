@@ -36,6 +36,7 @@ import com.android.build.api.transform.TransformInvocation;
 import com.android.build.api.transform.TransformOutputProvider;
 import com.android.build.gradle.internal.LoggerWrapper;
 import com.android.build.gradle.internal.pipeline.TransformManager;
+import com.android.builder.core.DesugarProcessArgs;
 import com.android.builder.core.DesugarProcessBuilder;
 import com.android.builder.model.Version;
 import com.android.builder.utils.FileCache;
@@ -70,7 +71,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -267,13 +267,23 @@ public class DesugarTransform extends Transform {
             processInputs(transformInvocation, additionalPaths);
             waitableExecutor.waitForTasksWithQuickFail(true);
 
+            List<String> classpath = getClasspath(transformInvocation);
+            List<String> bootclasspath = getBootclasspath();
+            List<DesugarProcessArgs> processArgs = getProcessArgs(classpath, bootclasspath);
             if (enableGradleWorkers) {
                 processNonCachedOnesWithGradleExecutor(
-                        transformInvocation.getContext().getWorkerExecutor(),
-                        getClasspath(transformInvocation));
+                        transformInvocation.getContext().getWorkerExecutor(), processArgs);
             } else {
-                processNonCachedOnes(getClasspath(transformInvocation));
-                waitableExecutor.waitForTasksWithQuickFail(true);
+                processNonCachedOnes(processArgs);
+            }
+            // feed the entries to the cache
+            for (InputEntry e : cacheMisses) {
+                if (e.getCache() != null && e.getInputs() != null) {
+                    e.getCache()
+                            .createFileInCacheIfAbsent(
+                                    e.getInputs(),
+                                    in -> Files.copy(e.getOutputPath(), in.toPath()));
+                }
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -436,7 +446,45 @@ public class DesugarTransform extends Transform {
         return inDir;
     }
 
-    private void processNonCachedOnes(List<Path> classpath) {
+    private void processNonCachedOnes(@NonNull List<DesugarProcessArgs> args)
+            throws InterruptedException {
+        for (DesugarProcessArgs arg : args) {
+            waitableExecutor.execute(
+                    () -> {
+                        DesugarProcessBuilder processBuilder =
+                                new DesugarProcessBuilder(arg, desugarJar.get());
+                        boolean isWindows =
+                                SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS;
+                        executor.execute(
+                                        processBuilder.build(isWindows),
+                                        new LoggedProcessOutputHandler(logger))
+                                .rethrowFailure()
+                                .assertNormalExitValue();
+                        return null;
+                    });
+        }
+        waitableExecutor.waitForTasksWithQuickFail(true);
+    }
+
+    @SuppressWarnings("MethodMayBeStatic")
+    private void processNonCachedOnesWithGradleExecutor(
+            @NonNull WorkerExecutor workerExecutor, @NonNull List<DesugarProcessArgs> processArgs)
+            throws IOException {
+        for (DesugarProcessArgs processArg : processArgs) {
+            DesugarWorkerItem workerItem =
+                    new DesugarWorkerItem(
+                            desugarJar.get(),
+                            processArg,
+                            PathUtils.createTmpDirToRemoveOnShutdown("gradle_lambdas"));
+
+            workerExecutor.submit(DesugarWorkerItem.DesugarAction.class, workerItem::configure);
+        }
+        workerExecutor.await();
+    }
+
+    @NonNull
+    private List<DesugarProcessArgs> getProcessArgs(
+            @NonNull List<String> classpath, @NonNull List<String> bootclasspath) {
         int parallelExecutions = waitableExecutor.getParallelism();
 
         int index = 0;
@@ -447,102 +495,45 @@ public class DesugarTransform extends Transform {
             index++;
         }
 
-        List<Path> desugarBootclasspath = getBootclasspath();
+        List<DesugarProcessArgs> args = new ArrayList<>(procBuckets.keySet().size());
         for (Integer bucketId : procBuckets.keySet()) {
-            Callable<Void> callable =
-                    () -> {
-                        Map<Path, Path> inToOut = Maps.newHashMap();
-                        for (InputEntry e : procBuckets.get(bucketId)) {
-                            inToOut.put(e.getInputPath(), e.getOutputPath());
-                        }
-
-                        DesugarProcessBuilder processBuilder =
-                                new DesugarProcessBuilder(
-                                        desugarJar.get(),
-                                        verbose,
-                                        inToOut,
-                                        classpath,
-                                        desugarBootclasspath,
-                                        minSdk,
-                                        tmpDir);
-                        boolean isWindows =
-                                SdkConstants.currentPlatform() == SdkConstants.PLATFORM_WINDOWS;
-                        executor.execute(
-                                        processBuilder.build(isWindows),
-                                        new LoggedProcessOutputHandler(logger))
-                                .rethrowFailure()
-                                .assertNormalExitValue();
-
-                        // now copy to the cache because now we have the file
-                        for (InputEntry e : procBuckets.get(bucketId)) {
-                            if (e.getCache() != null && e.getInputs() != null) {
-                                e.getCache()
-                                        .createFileInCacheIfAbsent(
-                                                e.getInputs(),
-                                                in -> Files.copy(e.getOutputPath(), in.toPath()));
-                            }
-                        }
-
-                        return null;
-                    };
-            waitableExecutor.execute(callable);
-        }
-    }
-
-    private void processNonCachedOnesWithGradleExecutor(
-            WorkerExecutor workerExecutor, List<Path> classpath)
-            throws IOException, ExecutionException {
-        List<Path> desugarBootclasspath = getBootclasspath();
-        for (InputEntry pathPathEntry : cacheMisses) {
-            DesugarWorkerItem workerItem =
-                    new DesugarWorkerItem(
-                            desugarJar.get(),
-                            PathUtils.createTmpDirToRemoveOnShutdown("gradle_lambdas"),
-                            true,
-                            pathPathEntry.getInputPath(),
-                            pathPathEntry.getOutputPath(),
-                            classpath,
-                            desugarBootclasspath,
-                            minSdk);
-
-            workerExecutor.submit(DesugarWorkerItem.DesugarAction.class, workerItem::configure);
-        }
-
-        workerExecutor.await();
-
-        for (InputEntry e : cacheMisses) {
-            if (e.getCache() != null && e.getInputs() != null) {
-                e.getCache()
-                        .createFileInCacheIfAbsent(
-                                e.getInputs(), in -> Files.copy(e.getOutputPath(), in.toPath()));
+            Map<String, String> inToOut = Maps.newHashMap();
+            for (InputEntry e : procBuckets.get(bucketId)) {
+                inToOut.put(e.getInputPath().toString(), e.getOutputPath().toString());
             }
+
+            DesugarProcessArgs processArgs =
+                    new DesugarProcessArgs(
+                            inToOut, classpath, bootclasspath, tmpDir.toString(), verbose, minSdk);
+            args.add(processArgs);
         }
+        return args;
     }
 
     @NonNull
-    private List<Path> getClasspath(@NonNull TransformInvocation transformInvocation) {
-        ImmutableList.Builder<Path> classpathEntries = ImmutableList.builder();
+    private static List<String> getClasspath(@NonNull TransformInvocation transformInvocation) {
+        ImmutableList.Builder<String> classpathEntries = ImmutableList.builder();
 
         classpathEntries.addAll(
                 TransformInputUtil.getAllFiles(transformInvocation.getInputs())
                         .stream()
-                        .map(File::toPath)
+                        .map(File::toString)
                         .iterator());
 
         classpathEntries.addAll(
                 TransformInputUtil.getAllFiles(transformInvocation.getReferencedInputs())
                         .stream()
-                        .map(File::toPath)
+                        .map(File::toString)
                         .iterator());
 
         return classpathEntries.build();
     }
 
     @NonNull
-    private List<Path> getBootclasspath() {
-        List<Path> desugarBootclasspath =
-                androidJarClasspath.get().stream().map(File::toPath).collect(Collectors.toList());
-        desugarBootclasspath.addAll(compilationBootclasspath);
+    private List<String> getBootclasspath() {
+        List<String> desugarBootclasspath =
+                androidJarClasspath.get().stream().map(File::toString).collect(Collectors.toList());
+        compilationBootclasspath.forEach(p -> desugarBootclasspath.add(p.toString()));
 
         return desugarBootclasspath;
     }

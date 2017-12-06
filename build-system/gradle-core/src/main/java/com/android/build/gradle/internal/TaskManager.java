@@ -202,7 +202,7 @@ import com.android.build.gradle.tasks.factory.ProcessJavaResConfigAction;
 import com.android.build.gradle.tasks.factory.TestServerTaskConfigAction;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.DefaultDexOptions;
-import com.android.builder.core.DesugarProcessBuilder;
+import com.android.builder.core.DesugarProcessArgs;
 import com.android.builder.core.VariantType;
 import com.android.builder.dexing.DexerTool;
 import com.android.builder.dexing.DexingType;
@@ -2431,7 +2431,7 @@ public abstract class TaskManager {
             transformManager.addTransform(taskFactory, variantScope, desugarTransform);
 
             if (minSdk.getFeatureLevel()
-                    < DesugarProcessBuilder.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
+                    < DesugarProcessArgs.MIN_SUPPORTED_API_TRY_WITH_RESOURCES) {
                 // add runtime classes for try-with-resources support
                 String taskName =
                         variantScope.getTaskName(ExtractTryWithResourcesSupportJar.TASK_NAME);
