@@ -183,6 +183,7 @@ import com.android.build.gradle.tasks.InstantRunResourcesApkBuilder;
 import com.android.build.gradle.tasks.JavaPreCompileTask;
 import com.android.build.gradle.tasks.LintGlobalTask;
 import com.android.build.gradle.tasks.LintPerVariantTask;
+import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeManifests;
 import com.android.build.gradle.tasks.MergeResources;
@@ -1201,21 +1202,10 @@ public abstract class TaskManager {
 
         variantData.calculateFilters(scope.getGlobalScope().getExtension().getSplits());
 
+        createSplitsDiscovery(scope);
+
         boolean useAaptToGenerateLegacyMultidexMainDexProguardRules =
                 scope.getDexingType() == DexingType.LEGACY_MULTIDEX;
-
-        if (scope.getVariantData().getType().getCanHaveSplits()) {
-            // split list calculation and save to this file.
-            File splitListOutputFile = new File(scope.getSplitSupportDirectory(), FN_SPLIT_LIST);
-            SplitsDiscovery splitsDiscoveryAndroidTask =
-                    taskFactory.create(
-                            new SplitsDiscovery.ConfigAction(scope, splitListOutputFile));
-
-            scope.addTaskOutput(
-                    TaskOutputHolder.TaskOutputType.SPLIT_LIST,
-                    splitListOutputFile,
-                    splitsDiscoveryAndroidTask.getName());
-        }
 
         if (Boolean.TRUE.equals(
                 scope.getGlobalScope().getExtension().getAaptOptions().getNamespaced())) {
@@ -1870,6 +1860,24 @@ public abstract class TaskManager {
         assembleUnitTests.setGroup(null);
     }
 
+    protected void createSplitsDiscovery(VariantScope variantScope) {
+        if (variantScope.getVariantData().getType().getCanHaveSplits()) {
+            // split list calculation and save to this file.
+            File splitListOutputFile =
+                    new File(
+                            new File(variantScope.getSplitSupportDirectory(), "split-list"),
+                            FN_SPLIT_LIST);
+            SplitsDiscovery splitsDiscoveryAndroidTask =
+                    taskFactory.create(
+                            new SplitsDiscovery.ConfigAction(variantScope, splitListOutputFile));
+
+            variantScope.addTaskOutput(
+                    TaskOutputHolder.TaskOutputType.SPLIT_LIST,
+                    splitListOutputFile,
+                    splitsDiscoveryAndroidTask.getName());
+        }
+    }
+
     /** Creates the tasks to build android tests. */
     public void createAndroidTestVariantTasks(@NonNull TestVariantData variantData) {
         VariantScope variantScope = variantData.getScope();
@@ -1878,6 +1886,9 @@ public abstract class TaskManager {
 
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(variantScope);
+
+        // persist variant's output
+        taskFactory.create(new MainApkListPersistence.ConfigAction(variantScope));
 
         // Add a task to process the manifest
         createProcessTestManifestTask(
@@ -1890,7 +1901,6 @@ public abstract class TaskManager {
         createRenderscriptTask(variantScope);
 
         // Add a task to merge the resource folders
-
         createMergeResourcesTask(variantScope, true);
 
         // Add a task to merge the assets folders

@@ -119,12 +119,12 @@ public class OutputScope implements Serializable {
         Optional<ApkData> universal =
                 getApkDatas()
                         .stream()
-                        .filter(split -> split.getFilterName().equals(OutputFactory.UNIVERSAL))
+                        .filter(split -> OutputFactory.UNIVERSAL.equals(split.getFilterName()))
                         .findFirst();
         if (universal.isPresent()) {
             return universal.get();
         }
-        // ok look for the first full split, it will do.
+        // ok look for the first enabled full split, it will do.
         Optional<ApkData> firstFullSplit =
                 getApkDatas()
                         .stream()
@@ -357,7 +357,7 @@ public class OutputScope implements Serializable {
 
     public void addOutputForSplit(
             VariantScope.OutputType outputType,
-            ApkData apkData,
+            ApkInfo apkData,
             @Nullable File outputFile,
             Map<String, String> properties) {
 

@@ -43,6 +43,7 @@ import com.android.build.gradle.internal.variant.FeatureVariantData;
 import com.android.build.gradle.internal.variant.MultiOutputPolicy;
 import com.android.build.gradle.options.BooleanOption;
 import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.tasks.MainApkListPersistence;
 import com.android.build.gradle.tasks.ManifestProcessorTask;
 import com.android.build.gradle.tasks.MergeManifests;
 import com.android.builder.core.AndroidBuilder;
@@ -140,6 +141,8 @@ public class FeatureTaskManager extends TaskManager {
 
         // Create all current streams (dependencies mostly at this point)
         createDependencyStreams(variantScope);
+
+        taskFactory.create(new MainApkListPersistence.ConfigAction(variantScope));
 
         if (variantScope.isBaseFeature()) {
             // Base feature specific tasks.

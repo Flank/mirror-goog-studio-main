@@ -23,7 +23,6 @@ import static com.android.build.gradle.internal.publishing.AndroidArtifacts.Arti
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ArtifactType.FEATURE_RESOURCE_PKG;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.COMPILE_CLASSPATH;
 import static com.android.build.gradle.internal.publishing.AndroidArtifacts.ConsumedConfigType.RUNTIME_CLASSPATH;
-import static com.android.build.gradle.options.BooleanOption.BUILD_ONLY_TARGET_ABI;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.android.SdkConstants;
@@ -69,34 +68,26 @@ import com.android.ide.common.blame.parser.ToolOutputParser;
 import com.android.ide.common.blame.parser.aapt.Aapt2OutputParser;
 import com.android.ide.common.blame.parser.aapt.AaptOutputParser;
 import com.android.ide.common.build.ApkData;
-import com.android.ide.common.build.SplitOutputMatcher;
 import com.android.ide.common.internal.WaitableExecutor;
 import com.android.ide.common.process.ProcessException;
 import com.android.ide.common.process.ProcessOutputHandler;
 import com.android.ide.common.symbols.SymbolIo;
-import com.android.resources.Density;
 import com.android.utils.FileUtils;
-import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import org.gradle.api.artifacts.ArtifactCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.logging.LogLevel;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.tasks.CacheableTask;
@@ -116,9 +107,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
     private static final String IR_APK_FILE_NAME = "resources";
 
     private static final Logger LOG = Logging.getLogger(LinkApplicationAndroidResourcesTask.class);
-
-    private String buildTargetAbi;
-    private Set<String> supportedAbis;
 
     @Nullable private File sourceOutputDir;
 
@@ -178,18 +166,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     private VariantScope variantScope;
 
-    @Input
-    @Optional
-    public String getBuildTargetAbi() {
-        return buildTargetAbi;
-    }
-
-    @Input
-    @Optional
-    Set<String> getSupportedAbis() {
-        return supportedAbis;
-    }
-
     @NonNull
     @Internal
     private Set<String> getSplits(@NonNull SplitList splitList) throws IOException {
@@ -226,24 +202,20 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
     private File supportDirectory;
 
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public FileCollection getApkList() {
+        return apkList;
+    }
+
+    private FileCollection apkList;
+
     // FIX-ME : make me incremental !
     @Override
     protected void doFullTaskAction() throws IOException {
 
         WaitableExecutor executor = WaitableExecutor.useGlobalSharedThreadPool();
 
-        List<ApkData> splitsToGenerate =
-                getApksToGenerate(outputScope, supportedAbis, buildTargetAbi, buildTargetDensity);
-
-        for (ApkData apkData : outputScope.getApkDatas()) {
-            if (!splitsToGenerate.contains(apkData)) {
-                getLogger()
-                        .log(
-                                LogLevel.DEBUG,
-                                "With ABI " + buildTargetAbi + ", disabled " + apkData);
-                apkData.disable();
-            }
-        }
         Collection<BuildOutput> manifestsOutputs = BuildOutputs.load(taskInputType, manifestFiles);
 
         final Set<File> packageIdFileSet =
@@ -269,8 +241,8 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
 
             // do a first pass at the list so we generate the code synchronously since it's required
             // by the full splits asynchronous processing below.
-            List<ApkData> apkDataList = new ArrayList<>(splitsToGenerate);
-            for (ApkData apkData : splitsToGenerate) {
+            List<ApkData> apkDataList = new ArrayList<>(outputScope.getApkDatas());
+            for (ApkData apkData : outputScope.getApkDatas()) {
                 if (apkData.requiresAapt()) {
                     boolean codeGen =
                             (apkData.getType() == OutputFile.OutputType.MAIN
@@ -637,54 +609,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
         return mangledName.contains("-r") ? mangledName : mangledName.replace("-", "-r");
     }
 
-    @NonNull
-    public static List<ApkData> getApksToGenerate(
-            @NonNull OutputScope outputScope,
-            @Nullable Set<String> supportedAbis,
-            @Nullable String buildTargetAbi,
-            @Nullable String buildTargetDensity) {
-        // FIX ME : the code below should move to the SplitsDiscoveryTask that should persist
-        // the list of splits and their enabled/disabled state.
-
-        // comply when the IDE restricts the full splits we should produce
-        Density density = Density.getEnum(buildTargetDensity);
-
-        List<ApkData> apksToGenerate =
-                buildTargetAbi == null
-                        ? outputScope.getApkDatas()
-                        : SplitOutputMatcher.computeBestOutput(
-                                outputScope.getApkDatas(),
-                                supportedAbis,
-                                density == null ? -1 : density.getDpiValue(),
-                                Arrays.asList(Strings.nullToEmpty(buildTargetAbi).split(",")));
-
-        if (apksToGenerate.isEmpty()) {
-            Preconditions.checkNotNull(
-                    buildTargetAbi,
-                    "buildTargetAbi should not be null when no splits are computed");
-            Preconditions.checkNotNull(
-                    supportedAbis, "supportedAbis should not be null when no splits are computed");
-            List<String> splits =
-                    outputScope
-                            .getApkDatas()
-                            .stream()
-                            .map(ApkData::getFilterName)
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toList());
-            throw new RuntimeException(
-                    String.format(
-                            "Cannot build for ABI: %1$s; no suitable splits configured: %2$s;"
-                                    + " supported ABIs are: %3$s",
-                            buildTargetAbi,
-                            splits.isEmpty() ? "none" : Joiner.on(", ").join(splits),
-                            supportedAbis.isEmpty()
-                                    ? "none"
-                                    : Joiner.on(", ").join(supportedAbis)));
-        }
-
-        return apksToGenerate;
-    }
-
     public static class ConfigAction
             implements TaskConfigAction<LinkApplicationAndroidResourcesTask> {
         protected final VariantScope variantScope;
@@ -767,6 +691,9 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
             }
 
+            processResources.apkList =
+                    variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST);
+
             processResources.multiOutputPolicy =
                     variantData.getOutputScope().getMultiOutputPolicy();
 
@@ -837,17 +764,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                             COMPILE_CLASSPATH, MODULE, FEATURE_RESOURCE_PKG);
 
             processResources.projectBaseName = baseName;
-            processResources.buildTargetAbi =
-                    projectOptions.get(BUILD_ONLY_TARGET_ABI)
-                                    || variantScope
-                                            .getGlobalScope()
-                                            .getExtension()
-                                            .getSplits()
-                                            .getAbi()
-                                            .isEnable()
-                            ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
-                            : null;
-            processResources.supportedAbis = config.getSupportedAbis();
             processResources.isLibrary = isLibrary;
             processResources.supportDirectory =
                     new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");
@@ -950,6 +866,7 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
                         variantScope.getOutput(TaskOutputHolder.TaskOutputType.SPLIT_LIST);
             }
             task.multiOutputPolicy = variantData.getOutputScope().getMultiOutputPolicy();
+            task.apkList = variantScope.getOutput(TaskOutputHolder.TaskOutputType.APK_LIST);
 
             task.sourceOutputDir = sourceOutputDir;
 
@@ -1018,17 +935,6 @@ public class LinkApplicationAndroidResourcesTask extends ProcessAndroidResources
             }
 
             task.projectBaseName = baseName;
-            task.buildTargetAbi =
-                    projectOptions.get(BUILD_ONLY_TARGET_ABI)
-                                    || variantScope
-                                            .getGlobalScope()
-                                            .getExtension()
-                                            .getSplits()
-                                            .getAbi()
-                                            .isEnable()
-                            ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
-                            : null;
-            task.supportedAbis = config.getSupportedAbis();
             task.isLibrary = isLibrary;
             task.supportDirectory =
                     new File(variantScope.getInstantRunSplitApkOutputFolder(), "resources");

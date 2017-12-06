@@ -20,6 +20,7 @@ import com.android.build.gradle.integration.common.fixture.GradleTestProject
 import com.android.build.gradle.integration.common.fixture.app.HelloWorldApp
 import com.android.build.gradle.integration.common.truth.TruthHelper
 import com.android.build.gradle.integration.common.utils.TestFileUtils
+import com.android.build.gradle.options.StringOption
 import com.android.builder.model.AndroidProject
 import com.android.builder.model.SyncIssue
 import com.google.common.truth.Truth.assertThat
@@ -67,6 +68,75 @@ class IncorrectDslUsageTest {
 
         val dslIssue = TruthHelper.assertThat(model).hasIssue(
                 SyncIssue.SEVERITY_ERROR,
+                SyncIssue.TYPE_GENERIC)
+
+        assertThat(dslIssue.message).contains("x86")
+        assertThat(dslIssue.message).contains("armeabi-v7a")
+    }
+
+    @Test
+    fun incorrectAbiRequestedWithNdkFilters() {
+
+        TestFileUtils.appendToFile(project.buildFile, "\n" +
+                "apply plugin: 'com.android.application'\n" +
+                "android {\n" +
+                "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
+                "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n" +
+                "    defaultConfig {\n" +
+                "        applicationId \"demo.bug\"\n" +
+                "        minSdkVersion 21\n" +
+                "        targetSdkVersion 27\n" +
+                "        versionCode 1\n" +
+                "        versionName \"1.0\"\n" +
+                "        ndk {\n" +
+                "            abiFilters \"x86\"\n" +
+                "        }\n" +
+                "      }\n" +
+                "}\n")
+
+        // Query the model to get the incorrect ABI target.
+        val model = project.model().with(StringOption.IDE_BUILD_TARGET_ABI, "mips")
+                .ignoreSyncIssues().single.onlyModel
+
+        val dslIssue = TruthHelper.assertThat(model).hasIssue(
+                SyncIssue.SEVERITY_WARNING,
+                SyncIssue.TYPE_GENERIC)
+
+        assertThat(dslIssue.message).contains("x86")
+        assertThat(dslIssue.message).contains("mips")
+    }
+
+    @Test
+    fun incorrectAbiRequestedWithSplits() {
+
+        TestFileUtils.appendToFile(project.buildFile, "\n" +
+                "apply plugin: 'com.android.application'\n" +
+                "android {\n" +
+                "    compileSdkVersion " + GradleTestProject.DEFAULT_COMPILE_SDK_VERSION + "\n" +
+                "    buildToolsVersion '" + GradleTestProject.DEFAULT_BUILD_TOOL_VERSION + "'\n" +
+                "    defaultConfig {\n" +
+                "        applicationId \"demo.bug\"\n" +
+                "        minSdkVersion 21\n" +
+                "        targetSdkVersion 27\n" +
+                "        versionCode 1\n" +
+                "        versionName \"1.0\"\n" +
+                "      }\n" +
+                "      splits {\n" +
+                "        abi {\n" +
+                "            enable true\n" +
+                "            reset()\n" +
+                "            include 'armeabi-v7a'\n" +
+                "            universalApk false\n" +
+                "        }\n" +
+                "      }\n" +
+                "}\n")
+
+        // Query the model to get the incorrect ABI target.
+        val model = project.model().with(StringOption.IDE_BUILD_TARGET_ABI, "x86")
+                .ignoreSyncIssues().single.onlyModel
+
+        val dslIssue = TruthHelper.assertThat(model).hasIssue(
+                SyncIssue.SEVERITY_WARNING,
                 SyncIssue.TYPE_GENERIC)
 
         assertThat(dslIssue.message).contains("x86")

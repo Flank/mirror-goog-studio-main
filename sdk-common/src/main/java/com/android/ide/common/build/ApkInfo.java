@@ -17,6 +17,7 @@
 package com.android.ide.common.build;
 
 import com.android.annotations.NonNull;
+import com.android.annotations.Nullable;
 import com.android.build.FilterData;
 import com.android.build.OutputFile;
 import com.google.common.base.MoreObjects;
@@ -47,8 +48,28 @@ public interface ApkInfo extends Serializable {
      */
     int getVersionCode();
 
+    @Nullable
+    String getVersionName();
+
+    boolean isEnabled();
+
+    @Nullable
+    String getOutputFileName();
+
     static ApkInfo of(
-            OutputFile.OutputType outputType, Collection<FilterData> filters, int versionCode) {
+            @NonNull OutputFile.OutputType outputType,
+            @NonNull Collection<FilterData> filters,
+            int versionCode) {
+        return of(outputType, filters, versionCode, null, true, null);
+    }
+
+    static ApkInfo of(
+            @NonNull OutputFile.OutputType outputType,
+            @NonNull Collection<FilterData> filters,
+            int versionCode,
+            @Nullable String versionName,
+            boolean enabled,
+            @Nullable String outputFileName) {
         return new ApkInfo() {
             @NonNull
             @Override
@@ -67,11 +88,31 @@ public interface ApkInfo extends Serializable {
                 return versionCode;
             }
 
+            @Nullable
+            @Override
+            public String getVersionName() {
+                return versionName;
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return enabled;
+            }
+
+            @Nullable
+            @Override
+            public String getOutputFileName() {
+                return outputFileName;
+            }
+
             @Override
             public String toString() {
                 return MoreObjects.toStringHelper(this)
                         .add("type", outputType)
                         .add("versionCode", versionCode)
+                        .add("versionName", versionName)
+                        .add("enabled", enabled)
+                        .add("outputFileName", outputFileName)
                         .add("filters", filters)
                         .toString();
             }

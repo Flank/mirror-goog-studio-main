@@ -33,15 +33,26 @@ import com.android.build.gradle.internal.dsl.SigningConfig;
 import com.android.build.gradle.internal.scope.GlobalScope;
 import com.android.build.gradle.internal.scope.OutputFactory;
 import com.android.build.gradle.internal.scope.OutputScope;
+import com.android.build.gradle.options.BooleanOption;
+import com.android.build.gradle.options.ProjectOptions;
+import com.android.build.gradle.options.StringOption;
 import com.android.builder.core.AndroidBuilder;
 import com.android.builder.core.VariantType;
 import com.android.builder.errors.EvalIssueReporter;
 import com.android.builder.profile.Recorder;
+import com.android.ide.common.build.ApkData;
+import com.android.ide.common.build.SplitOutputMatcher;
+import com.android.resources.Density;
 import com.android.utils.Pair;
 import com.google.common.base.Joiner;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.NamedDomainObjectContainer;
 
 /**
@@ -129,6 +140,7 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
             outputFactory.addMainApk();
         }
 
+        restrictEnabledOutputs(variantConfiguration, variant.getOutputScope().getApkDatas());
 
         return variant;
     }
@@ -156,6 +168,64 @@ public class ApplicationVariantFactory extends BaseVariantFactory implements Var
                         "Conflicting configuration : '%1$s' in ndk abiFilters "
                                 + "cannot be present when splits abi filters are set : %2$s",
                         Joiner.on(",").join(ndkConfigAbiFilters), Joiner.on(",").join(abiFilters)));
+    }
+
+    private void restrictEnabledOutputs(
+            GradleVariantConfiguration configuration, List<ApkData> apkDataList) {
+
+        Set<String> supportedAbis = configuration.getSupportedAbis();
+        ProjectOptions projectOptions = globalScope.getProjectOptions();
+        String buildTargetAbi =
+                projectOptions.get(BooleanOption.BUILD_ONLY_TARGET_ABI)
+                                || globalScope.getExtension().getSplits().getAbi().isEnable()
+                        ? projectOptions.get(StringOption.IDE_BUILD_TARGET_ABI)
+                        : null;
+        if (buildTargetAbi == null) {
+            return;
+        }
+
+        String buildTargetDensity = projectOptions.get(StringOption.IDE_BUILD_TARGET_DENSITY);
+        Density density = Density.getEnum(buildTargetDensity);
+
+        List<ApkData> apksToGenerate =
+                SplitOutputMatcher.computeBestOutput(
+                        apkDataList,
+                        supportedAbis,
+                        density == null ? -1 : density.getDpiValue(),
+                        Arrays.asList(Strings.nullToEmpty(buildTargetAbi).split(",")));
+
+        if (apksToGenerate.isEmpty()) {
+            List<String> splits =
+                    apkDataList
+                            .stream()
+                            .map(ApkData::getFilterName)
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+            globalScope
+                    .getAndroidBuilder()
+                    .getIssueReporter()
+                    .reportWarning(
+                            EvalIssueReporter.Type.GENERIC,
+                            String.format(
+                                    "Cannot build selected target ABI: %1$s, "
+                                            + (splits.isEmpty()
+                                                    ? "no suitable splits configured: %2$s;"
+                                                    : "supported ABIs are: %2$s"),
+                                    buildTargetAbi,
+                                    supportedAbis == null
+                                            ? Joiner.on(", ").join(splits)
+                                            : Joiner.on(", ").join(supportedAbis)));
+
+            // do not disable anything, build all and let the apk install figure it out.
+            return;
+        }
+
+        apkDataList.forEach(
+                apkData -> {
+                    if (!apksToGenerate.contains(apkData)) {
+                        apkData.disable();
+                    }
+                });
     }
 
     @Override

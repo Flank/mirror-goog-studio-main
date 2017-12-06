@@ -41,6 +41,7 @@ public class TasksRunTest {
                 .containsExactly(
                         ":preBuild",
                         ":preDebugBuild",
+                        ":mainApkListPersistenceDebug",
                         ":prepareLintJar",
                         ":compileDebugAidl",
                         ":compileDebugRenderscript",

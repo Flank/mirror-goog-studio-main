@@ -179,6 +179,7 @@ public interface TaskOutputHolder {
         AAR,
         INSTANTAPP_BUNDLE,
         SPLIT_LIST,
+        APK_LIST,
 
         FEATURE_IDS_DECLARATION,
         FEATURE_APPLICATION_ID_DECLARATION,

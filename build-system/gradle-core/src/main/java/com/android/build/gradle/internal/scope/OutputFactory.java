@@ -164,6 +164,7 @@ public class OutputFactory {
             setOutputFileName(fileName);
         }
 
+        @NonNull
         @Override
         public OutputFile.OutputType getType() {
             return OutputFile.OutputType.MAIN;
@@ -222,6 +223,7 @@ public class OutputFactory {
             setOutputFileName(fileName);
         }
 
+        @NonNull
         @Override
         public OutputFile.OutputType getType() {
             return OutputType.FULL_SPLIT;
@@ -309,6 +311,7 @@ public class OutputFactory {
             return sb.toString();
         }
 
+        @NonNull
         @Override
         public OutputFile.OutputType getType() {
             return OutputFile.OutputType.FULL_SPLIT;
@@ -380,6 +383,7 @@ public class OutputFactory {
             setOutputFileName(fileName);
         }
 
+        @NonNull
         @Override
         public OutputFile.OutputType getType() {
             return outputType;
