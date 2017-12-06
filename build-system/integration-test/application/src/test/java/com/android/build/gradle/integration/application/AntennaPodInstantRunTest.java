@@ -36,6 +36,7 @@ import com.google.common.truth.Expect;
 import java.io.File;
 import java.util.List;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -70,6 +71,7 @@ public class AntennaPodInstantRunTest {
     }
 
     @Test
+    @Ignore("issuetracker.google.com/63940887")
     public void buildAntennaPod() throws Exception {
         getExecutor().run("clean");
         InstantRun instantRunModel =
