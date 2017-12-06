@@ -20,6 +20,7 @@ import static com.android.SdkConstants.CLASS_APPLICATION;
 import static com.android.SdkConstants.CLASS_CONTEXT;
 import static com.android.SdkConstants.CLASS_FRAGMENT;
 import static com.android.SdkConstants.CLASS_VIEW;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -301,7 +302,7 @@ public class LeakDetector extends Detector implements Detector.UastScanner {
                             }
                             if (rhs instanceof UCallExpression) {
                                 UCallExpression call = (UCallExpression) rhs;
-                                if ("getApplicationContext".equals(call.getMethodName())) {
+                                if ("getApplicationContext".equals(getMethodName(call))) {
                                     assignedToAppContext.set(true);
                                 }
                             }

@@ -31,6 +31,7 @@ import com.android.tools.lint.detector.api.Implementation;
 import com.android.tools.lint.detector.api.Issue;
 import com.android.tools.lint.detector.api.JavaContext;
 import com.android.tools.lint.detector.api.LintFix;
+import com.android.tools.lint.detector.api.LintUtils;
 import com.android.tools.lint.detector.api.Location;
 import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Scope;
@@ -180,7 +181,7 @@ public class ObjectAnimatorDetector extends Detector implements UastScanner {
     private static String getExpectedType(
             @NonNull UCallExpression method,
             int evaluatorIndex) {
-        String methodName = method.getMethodName();
+        String methodName = LintUtils.getMethodName(method);
 
         if (methodName == null) {
             return null;
@@ -306,7 +307,7 @@ public class ObjectAnimatorDetector extends Detector implements UastScanner {
 
     private static boolean isHolderConstructionMethod(@NonNull JavaContext context,
             @NonNull UCallExpression callExpression) {
-        String referenceName = callExpression.getMethodName();
+        String referenceName = LintUtils.getMethodName(callExpression);
         if (referenceName != null && referenceName.startsWith("of")
                 // This will require more indirection; see unit test
                 && !referenceName.equals("ofKeyframe")) {

@@ -36,6 +36,7 @@ import static com.android.SdkConstants.TOOLS_URI;
 import static com.android.SdkConstants.TRANSPARENT_COLOR;
 import static com.android.SdkConstants.VALUE_DISABLED;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 import static com.android.utils.SdkUtils.getResourceFieldName;
 
 import com.android.annotations.NonNull;
@@ -521,7 +522,7 @@ public class OverdrawDetector extends LayoutDetector implements UastScanner {
 
         @Override
         public boolean visitCallExpression(UCallExpression node) {
-            if (SET_THEME.equals(node.getMethodName()) && node.getValueArgumentCount() == 1) {
+            if (SET_THEME.equals(getMethodName(node)) && node.getValueArgumentCount() == 1) {
                 // Look at argument
                 UExpression arg = node.getValueArguments().get(0);
                 ResourceReference reference = ResourceReference.get(arg);

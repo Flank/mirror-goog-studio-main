@@ -43,6 +43,7 @@ import static com.android.SdkConstants.TAG_PROVIDER;
 import static com.android.SdkConstants.TAG_RECEIVER;
 import static com.android.SdkConstants.TAG_SERVICE;
 import static com.android.tools.lint.detector.api.LintUtils.endsWith;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 import static com.android.utils.SdkUtils.endsWithIgnoreCase;
 import static java.awt.image.BufferedImage.TYPE_INT_ARGB;
 
@@ -2553,7 +2554,7 @@ public class IconDetector extends Detector implements XmlScanner, UastScanner {
         @Override
         public boolean visitCallExpression(@NonNull UCallExpression expression) {
             if (UastExpressionUtils.isMethodCall(expression)) {
-                if (SET_SMALL_ICON.equals(expression.getMethodName())) {
+                if (SET_SMALL_ICON.equals(getMethodName(expression))) {
                     List<UExpression> arguments = expression.getValueArguments();
                     if (arguments.size() == 1 && arguments.get(0) instanceof UReferenceExpression) {
                         handleSelect(arguments.get(0));

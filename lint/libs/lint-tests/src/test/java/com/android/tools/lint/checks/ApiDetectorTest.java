@@ -37,7 +37,6 @@ import com.android.tools.lint.detector.api.Project;
 import com.android.tools.lint.detector.api.Severity;
 import java.io.File;
 import org.intellij.lang.annotations.Language;
-import org.junit.Ignore;
 
 public class ApiDetectorTest extends AbstractCheckTest {
 
@@ -108,7 +107,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    public void testTag() {
+    public void testTagWarnings() {
         String expected = ""
                 + "res/layout/tag.xml:12: Warning: <tag> is only used in API level 21 and higher (current min is 1) [UnusedAttribute]\n"
                 + "        <tag id=\"@+id/test\" />\n"
@@ -2594,20 +2593,28 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .expect(expected);
     }
 
-    /* Disabled for now while we investigate test failure when switching to API 24 as stable */
     @SuppressWarnings("OnDemandImport")
-    public void ignored_testTypeAnnotations() {
+    public void testTypeAnnotations() {
         if (createClient().getHighestKnownApiLevel() < 24) {
             // This test only works if you have at least Android N installed
             return;
         }
 
         // Type annotations are not supported
-        String expected = ""
-                + "src/test/pkg/MyAnnotation2.java:9: Error: Type annotations are not supported in Android: TYPE_PARAMETER [NewApi]\n"
-                + "@Target(TYPE_PARAMETER)\n"
-                + "        ~~~~~~~~~~~~~~\n"
-                + "1 errors, 0 warnings\n";
+        String expected = "" +
+                "src/test/pkg/MyAnnotation.java:9: Error: Field requires API level 26 (current min is 15): java.lang.annotation.ElementType#TYPE_PARAMETER [NewApi]\n" +
+                "@Target({METHOD, PARAMETER, FIELD, LOCAL_VARIABLE, TYPE_PARAMETER, TYPE_USE})\n" +
+                "                                                   ~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/MyAnnotation.java:9: Error: Field requires API level 26 (current min is 15): java.lang.annotation.ElementType#TYPE_USE [NewApi]\n" +
+                "@Target({METHOD, PARAMETER, FIELD, LOCAL_VARIABLE, TYPE_PARAMETER, TYPE_USE})\n" +
+                "                                                                   ~~~~~~~~\n" +
+                "src/test/pkg/MyAnnotation2.java:9: Error: Field requires API level 26 (current min is 15): java.lang.annotation.ElementType#TYPE_PARAMETER [NewApi]\n" +
+                "@Target(TYPE_PARAMETER)\n" +
+                "        ~~~~~~~~~~~~~~\n" +
+                "src/test/pkg/MyAnnotation4.java:8: Error: Field requires API level 26 (current min is 15): java.lang.annotation.ElementType#TYPE_PARAMETER [NewApi]\n" +
+                "@Target(TYPE_PARAMETER)\n" +
+                "        ~~~~~~~~~~~~~~\n" +
+                "4 errors, 0 warnings";
         //noinspection all // Sample code
         lint().files(
                 manifest().minSdk(15),
@@ -2962,27 +2969,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expectClean();
-    }
-
-    @Ignore("http://b.android.com/266795")
-    public void ignore_testMissingApiDatabase() {
-        ApiLookup.dispose();
-        //noinspection all // Sample code
-        String expected = ""
-                + "testMissingApiDatabase: Error: Can't find API database; API check not performed [LintError]\n"
-                + "1 errors, 0 warnings\n";
-        lint().files(manifest().minSdk(1), mLayout, mThemes, mThemes2, mApiCallTest)
-                .allowCompilationErrors(false)
-                .allowSystemErrors(true)
-                .client(new com.android.tools.lint.checks.infrastructure.TestLintClient() {
-                    @Override
-                    public File findResource(@NonNull String relativePath) {
-                        return null;
-                    }
-                })
-                .checkMessage(this::checkReportedError)
-                .run()
-                .expect(expected);
     }
 
     public void testRipple() {
@@ -3623,33 +3609,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                 .checkMessage(this::checkReportedError)
                 .run()
                 .expect(expected);
-    }
-
-    @Ignore("http://b.android.com/266795")
-    public void ignore_testHigherCompileSdkVersionThanPlatformTools() {
-        // Warn if the platform tools are too old on the system
-        lint().files(
-                manifest().minSdk(14),
-                projectProperties().compileSdk(400), // in the future
-                mApiCallTest12)
-                .checkMessage(this::checkReportedError)
-                .run()
-                .expectMatches(""
-                        + "Error: The SDK platform-tools version \\([^)]+\\) is too old to check APIs compiled with API 400; please update");
-    }
-
-    @Ignore("http://b.android.com/266795")
-    public void ignore_testHigherCompileSdkVersionThanPlatformToolsInEditor() {
-        // When editing a file we place the error on the first line of the file instead
-        lint().files(
-                manifest().minSdk(14),
-                projectProperties().compileSdk(400), // in the future
-                mApiCallTest12)
-                .incremental("src/test/pkg/ApiCallTest12.java")
-                .checkMessage(this::checkReportedError)
-                .run()
-                .expectMatches(""
-                        + "src/test/pkg/ApiCallTest12.java:1: Error: The SDK platform-tools version \\([^)]+\\) is too old to check APIs compiled with API 400; please update");
     }
 
     @SuppressWarnings({"MethodMayBeStatic", "ConstantConditions", "ClassNameDiffersFromFileName"})
@@ -4698,7 +4657,7 @@ public class ApiDetectorTest extends AbstractCheckTest {
 
     // This is still broken! It works in the IDE, but from the command line, the resolve()
     // method returns the wrong method! Try to reproduce in KotlinUAST.
-    public void ignore_test69534659() {
+    public void test69534659() {
         // Regression test for issue 69534659
         //noinspection all // Sample code
         lint().files(
@@ -4717,6 +4676,21 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         "abstract class MyIterable : Iterable<String> {\n" +
                         "    fun test() {\n" +
                         "        forEach { println(it[0]) }\n" +
+                        "    }\n" +
+                        "}"),
+                kotlin("" +
+                        "import android.util.Log\n" +
+                        "import io.realm.Realm\n" +
+                        "import io.realm.RealmModel\n" +
+                        "import io.realm.kotlin.where\n" +
+                        "\n" +
+                        "class Test {\n" +
+                        "    fun method(realm: Realm) {\n" +
+                        "        realm.where<RealmModel>()\n" +
+                        "                .findAll()\n" +
+                        "                .forEach {\n" +
+                        "                    Log.i(\"tag\", it.toString())\n" +
+                        "                }\n" +
                         "    }\n" +
                         "}"))
                 .run()
@@ -4829,7 +4803,8 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         "\n" +
                         "import android.security.keystore.KeyPermanentlyInvalidatedException;\n" +
                         "\n" +
-                        "/** @noinspection ConstantConditions*/ public class ApiTest {\n" +
+                        "/** @noinspection ConstantConditions, UnnecessaryReturnStatement, ClassNameDiffersFromFileName */ " +
+                        "public class ApiTest {\n" +
                         "    public static void test(Throwable throwable) {\n" +
                         "        if (throwable instanceof KeyPermanentlyInvalidatedException) {\n" +
                         "            return;\n" +
@@ -5015,15 +4990,6 @@ public class ApiDetectorTest extends AbstractCheckTest {
                         "        UserManager userManager = (UserManager) context.getSystemService(Context.USER_SERVICE);\n" +
                         "                                   ~~~~~~~~~~~\n" +
                         "1 errors, 1 warnings\n");
-    }
-
-    @Override
-    protected boolean ignoreSystemErrors() {
-        //noinspection SimplifiableIfStatement
-        if (getName().equals("testMissingApiDatabase")) {
-            return false;
-        }
-        return super.ignoreSystemErrors();
     }
 
     @Override

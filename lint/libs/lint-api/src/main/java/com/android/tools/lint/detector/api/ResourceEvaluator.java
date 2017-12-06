@@ -24,6 +24,7 @@ import static com.android.SdkConstants.CLASS_V4_FRAGMENT;
 import static com.android.SdkConstants.CLS_TYPED_ARRAY;
 import static com.android.SdkConstants.R_CLASS;
 import static com.android.SdkConstants.SUPPORT_ANNOTATIONS_PREFIX;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -223,7 +224,7 @@ public class ResourceEvaluator {
             PsiClass containingClass = UastUtils.getContainingClass(function);
             if (function != null && containingClass != null) {
                 String qualifiedName = containingClass.getQualifiedName();
-                String name = call.getMethodName();
+                String name = getMethodName(call);
                 if ((CLASS_RESOURCES.equals(qualifiedName)
                                 || CLASS_CONTEXT.equals(qualifiedName)
                                 || CLASS_FRAGMENT.equals(qualifiedName)

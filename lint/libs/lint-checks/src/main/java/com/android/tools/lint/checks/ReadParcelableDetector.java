@@ -16,6 +16,7 @@
 package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.CLASS_PARCEL;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.detector.api.Category;
@@ -100,7 +101,7 @@ public class ReadParcelableDetector extends Detector implements UastScanner {
             String message = String.format("Using the default class loader "
                             + "will not work if you are restoring your own classes. Consider "
                             + "using for example `%1$s(getClass().getClassLoader())` instead.",
-                    node.getMethodName());
+                    getMethodName(node));
             LintFix fix = createQuickfixData(")");
             Location location = context.getCallLocation(node, false, true);
             context.report(ISSUE, node, location, message, fix);

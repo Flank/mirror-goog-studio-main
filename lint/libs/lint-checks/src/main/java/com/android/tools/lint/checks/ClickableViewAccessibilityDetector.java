@@ -18,6 +18,7 @@ package com.android.tools.lint.checks;
 
 import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.tools.lint.checks.CleanupDetector.MOTION_EVENT_CLS;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 import static com.android.tools.lint.detector.api.LintUtils.skipParentheses;
 
 import com.android.annotations.NonNull;
@@ -319,8 +320,7 @@ public class ClickableViewAccessibilityDetector extends Detector implements Uast
             // There are also methods like performContextClick and performLongClick
             // which also perform accessibility work, but they seem to have different
             // semantics than the intended onTouch to perform click check
-            if (PERFORM_CLICK.equals(node.getMethodName()) &&
-                    node.getValueArgumentCount() == 0) {
+            if (PERFORM_CLICK.equals(getMethodName(node)) && node.getValueArgumentCount() == 0) {
                 // TODO: Check receiver?
                 performsClick = true;
             }

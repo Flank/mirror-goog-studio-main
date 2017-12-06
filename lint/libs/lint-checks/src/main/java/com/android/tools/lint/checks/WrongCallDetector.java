@@ -20,6 +20,7 @@ import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.tools.lint.checks.JavaPerformanceDetector.ON_DRAW;
 import static com.android.tools.lint.checks.JavaPerformanceDetector.ON_LAYOUT;
 import static com.android.tools.lint.checks.JavaPerformanceDetector.ON_MEASURE;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.annotations.Nullable;
@@ -90,7 +91,7 @@ public class WrongCallDetector extends Detector implements UastScanner {
 
         PsiMethod method = UastUtils.getParentOfType(node, UMethod.class, true);
         if (method != null) {
-            String callName = node.getMethodName();
+            String callName = getMethodName(node);
             if (callName != null && !callName.equals(method.getName())) {
                 report(context, node, calledMethod);
             }

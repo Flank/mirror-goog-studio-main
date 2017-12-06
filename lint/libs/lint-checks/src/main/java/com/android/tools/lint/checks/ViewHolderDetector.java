@@ -19,6 +19,7 @@ package com.android.tools.lint.checks;
 import static com.android.SdkConstants.CLASS_VIEW;
 import static com.android.SdkConstants.CLASS_VIEWGROUP;
 import static com.android.tools.lint.client.api.JavaEvaluatorKt.TYPE_INT;
+import static com.android.tools.lint.detector.api.LintUtils.getMethodName;
 
 import com.android.annotations.NonNull;
 import com.android.tools.lint.client.api.JavaEvaluator;
@@ -139,7 +140,7 @@ public class ViewHolderDetector extends Detector implements UastScanner {
             UExpression receiver = node.getReceiver();
             //noinspection VariableNotUsedInsideIf
             if (receiver != null) {
-                String methodName = node.getMethodName();
+                String methodName = getMethodName(node);
                 if (INFLATE.equals(methodName)
                         && node.getValueArgumentCount() >= 1) {
                     // See if we're inside a conditional
