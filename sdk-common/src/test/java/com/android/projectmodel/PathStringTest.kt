@@ -15,10 +15,13 @@
  */
 package com.android.projectmodel
 
+import com.google.common.jimfs.Configuration
+import com.google.common.jimfs.Jimfs
 import com.google.common.truth.Truth.assertThat
 import org.junit.Ignore
 import org.junit.Test
 import java.io.File
+import java.nio.file.FileSystems
 import java.nio.file.Paths
 
 class PathStringTest {
@@ -46,9 +49,26 @@ class PathStringTest {
     }
 
     @Test
-    @Ignore
+    fun testDefaultFilesystem() {
+        val defaultFilesystemUri = PathString("").filesystemUri
+        val fileSystem = Paths.get(defaultFilesystemUri).fileSystem
+        assertThat(fileSystem).isEqualTo(FileSystems.getDefault())
+    }
+
+    @Test
     fun testToPath() {
         assertThat(PathString("/foo").toPath()).isEqualTo(Paths.get("/foo"))
+    }
+
+    @Test
+    fun testCustomUnixFilesystem() {
+        // Set up a PathString to something in an in-memory nio filesystem that can't exist on disk
+        val fs = Jimfs.newFileSystem(Configuration.unix())
+        val somePath = fs.getPath("tempFile/foo")
+        val aPath = PathString(somePath)
+
+        assertThat(aPath.toPath()).isEqualTo(somePath)
+        fs.close()
     }
 
     @Test

@@ -17,10 +17,7 @@ package com.android.projectmodel
 
 import java.io.File
 import java.net.URI
-import java.nio.file.FileSystemNotFoundException
-import java.nio.file.FileSystems
-import java.nio.file.Path
-import java.nio.file.ProviderNotFoundException
+import java.nio.file.*
 import java.util.ArrayDeque
 import java.util.ArrayList
 
@@ -106,7 +103,7 @@ class PathString private constructor(
      */
     override fun toString(): String {
         var schemeString = filesystemUri.toString()
-        if (schemeString.endsWith("/")) {
+        if (schemeString.endsWith("///")) {
             schemeString = schemeString.substring(0, schemeString.length - 1)
         }
         return schemeString + rawPath
@@ -133,7 +130,7 @@ class PathString private constructor(
      */
     fun toPath(): Path? {
         return try {
-            FileSystems.getFileSystem(filesystemUri).getPath(rawPath)
+            Paths.get(filesystemUri).fileSystem.getPath(rawPath)
         } catch (e: FileSystemNotFoundException) {
             null
         } catch (e: IllegalArgumentException) {
