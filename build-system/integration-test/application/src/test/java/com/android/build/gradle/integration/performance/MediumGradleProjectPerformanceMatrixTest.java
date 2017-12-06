@@ -53,7 +53,7 @@ public class MediumGradleProjectPerformanceMatrixTest {
 
     @Rule public final GradleTestProject project;
     @NonNull private final ProjectScenario projectScenario;
-    @NonNull private final BenchmarkRecorder recorder;
+    @NonNull private BenchmarkRecorder recorder;
 
     public MediumGradleProjectPerformanceMatrixTest(@NonNull ProjectScenario projectScenario)
             throws IOException {
@@ -63,8 +63,6 @@ public class MediumGradleProjectPerformanceMatrixTest {
                         .fromExternalProject("gradle-perf-android-medium")
                         .withHeap("1536M")
                         .create();
-
-        recorder = new BenchmarkRecorder(new ProfileCapturer(project.getProfileDirectory()));
     }
 
     @Parameterized.Parameters(name = "{0}")
@@ -111,6 +109,18 @@ public class MediumGradleProjectPerformanceMatrixTest {
             default:
                 throw new IllegalArgumentException("Unknown project scenario" + projectScenario);
         }
+    }
+
+    @Before
+    public void initializeRecorder() throws Exception {
+        /*
+         * There's an annoying temporal dependency you have to be aware of before you call
+         * project.getTestDir() (which getProfileDirectory() calls indirectly). You can't call it
+         * before createTestDirectory() has been called, which is only called in apply(), which is
+         * only called as part of the @Rule. So this has to live inside of the test body, or a
+         * @Before or @After block.
+         */
+        recorder = new BenchmarkRecorder(new ProfileCapturer(project.getProfileDirectory()));
     }
 
     @After
